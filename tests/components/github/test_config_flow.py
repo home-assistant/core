@@ -1,6 +1,7 @@
 """Test the GitHub config flow."""
 
 import asyncio
+import unittest
 from unittest.mock import AsyncMock, MagicMock
 
 from aiogithubapi import GitHubException
@@ -34,6 +35,21 @@ async def test_full_user_flow_implementation(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    data_mock = MagicMock()
+    data_mock.data.login = "Mock User"
+    github_client.user.get = AsyncMock(return_value=data_mock)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
@@ -47,17 +63,100 @@ async def test_full_user_flow_implementation(
     assert not result["errors"]
 
     schema = result["data_schema"]
-    repositories = schema.schema[CONF_REPOSITORIES].options
+    # SelectSelector stores options in config dict
+    repositories = schema.schema[CONF_REPOSITORIES].config["options"]
     assert len(repositories) == 4
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_REPOSITORIES: DEFAULT_REPOSITORIES}
     )
 
-    assert result["title"] == ""
+    assert result["title"] == "Mock User (OAuth)"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
     assert result["options"] == {CONF_REPOSITORIES: DEFAULT_REPOSITORIES}
+
+
+async def test_pat_flow_implementation(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+    github_client: AsyncMock,
+) -> None:
+    """Test the PAT user flow from start to finish."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    data_mock = MagicMock()
+    data_mock.data.login = "Mock User"
+    github_client.user.get = AsyncMock(return_value=data_mock)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "pat"}
+    )
+
+    assert result["step_id"] == "pat"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+    )
+
+    assert result["title"] == "Mock User (PAT)"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+    assert result["options"] == {CONF_REPOSITORIES: []}
+
+
+async def test_pat_flow_invalid_token(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+) -> None:
+    """Test the PAT user flow with invalid token."""
+
+    client_mock = AsyncMock()
+
+    # Ensure repos raises exception
+    def raise_github_exception(*args, **kwargs):
+        raise GitHubException("Invalid Token")
+
+    client_mock.user.repos = AsyncMock()
+
+    client_mock.user.get = AsyncMock(side_effect=raise_github_exception)
+
+    with unittest.mock.patch(
+        "homeassistant.components.github.config_flow.GitHubAPI",
+        return_value=client_mock,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["step_id"] == "user"
+        assert result["type"] is FlowResultType.MENU
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "pat"}
+        )
+
+        assert result["step_id"] == "pat"
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+        )
+
+        assert result["step_id"] == "pat"
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_access_token"}
 
 
 async def test_flow_with_registration_failure(
@@ -69,6 +168,14 @@ async def test_flow_with_registration_failure(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "could_not_register"
 
@@ -91,6 +198,13 @@ async def test_flow_with_activation_failure(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
@@ -109,6 +223,13 @@ async def test_flow_with_remove_while_activating(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
     )
 
     assert result["step_id"] == "device"
@@ -130,13 +251,32 @@ async def test_already_configured(
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="Mock User_pat")
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    # Set up the mock client to return the same username as the existing entry
+    github_client = AsyncMock()
+    data_mock = MagicMock()
+    data_mock.data.login = "Mock User"
+    github_client.user.get = AsyncMock(return_value=data_mock)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    # Patch GitHubAPI to return our mock client
+    with unittest.mock.patch(
+        "homeassistant.components.github.config_flow.GitHubAPI",
+        return_value=github_client,
+    ):
+        # We need to test the PAT flow specifically as that's where the unique ID check happens
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.MENU
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "pat"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_no_repositories(
@@ -155,6 +295,21 @@ async def test_no_repositories(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    data_mock = MagicMock()
+    data_mock.data.login = "Mock User"
+    github_client.user.get = AsyncMock(return_value=data_mock)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
@@ -168,7 +323,7 @@ async def test_no_repositories(
     assert not result["errors"]
 
     schema = result["data_schema"]
-    repositories = schema.schema[CONF_REPOSITORIES].options
+    repositories = schema.schema[CONF_REPOSITORIES].config["options"]
     assert len(repositories) == 2
 
     result = await hass.config_entries.flow.async_configure(
@@ -176,6 +331,7 @@ async def test_no_repositories(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mock User (OAuth)"
 
 
 async def test_exception_during_repository_fetch(
@@ -193,6 +349,21 @@ async def test_exception_during_repository_fetch(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    data_mock = MagicMock()
+    data_mock.data.login = "Mock User"
+    github_client.user.get = AsyncMock(return_value=data_mock)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
@@ -206,7 +377,7 @@ async def test_exception_during_repository_fetch(
     assert not result["errors"]
 
     schema = result["data_schema"]
-    repositories = schema.schema[CONF_REPOSITORIES].options
+    repositories = schema.schema[CONF_REPOSITORIES].config["options"]
     assert len(repositories) == 2
 
     result = await hass.config_entries.flow.async_configure(
@@ -244,3 +415,42 @@ async def test_options_flow(
     )
 
     assert "homeassistant/architecture" not in result["data"][CONF_REPOSITORIES]
+
+
+async def test_pat_flow_with_custom_name(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+    github_client: AsyncMock,
+) -> None:
+    """Test the PAT user flow with a custom name."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    data_mock = MagicMock()
+    data_mock.data.login = "Mock User"
+    github_client.user.get = AsyncMock(return_value=data_mock)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "pat"}
+    )
+
+    assert result["step_id"] == "pat"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
+            "name": "Work",
+        },
+    )
+
+    assert result["title"] == "Mock User (Work)"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+    assert result["options"] == {CONF_REPOSITORIES: []}
