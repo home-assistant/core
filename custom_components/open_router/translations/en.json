@@ -6,7 +6,9 @@
     "error": {
       "cannot_connect": "Failed to connect",
       "unknown": "Unknown error occurred",
-      "model_required": "Please select a model"
+      "model_required": "Please select a model",
+      "invalid_model_selected": "The chosen model does not exist",
+      "model_no_tool_support": "The selected model does not support tool use. Please select a different model or disable Assist."
     },
     "step": {
       "user": {
@@ -49,6 +51,11 @@
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
         "unknown": "Unknown error occurred",
         "reconfigure_successful": "Conversation agent updated successfully"
+      },
+      "error": {
+        "model_no_tool_support": "The selected model does not support tool use. Please select a different model or disable Assist.",
+        "model_required": "Please select a model",
+        "invalid_model_selected": "The chosen model does not exist"
       },
       "entry_type": "Conversation agent",
       "initiate_flow": {

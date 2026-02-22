@@ -40,7 +40,10 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    SECTION_MODEL,
+    SECTION_OPTIONS,
     SUPPORTED_PARAMETER_STRUCTURED_OUTPUTS,
+    SUPPORTED_PARAMETER_TOOLS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -186,6 +189,45 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
         self.options = self._get_reconfigure_subentry().data.copy()
         return await self.async_step_init(user_input)
 
+    async def validate_model_options(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Checks the selected options for errors. If there any, return them."""
+        errors: dict[str, str] = {}
+        # Flatten section data
+        flattened_input = dict(user_input)
+
+        # Extract data from sections
+        if SECTION_MODEL in flattened_input:
+            flattened_input.update(flattened_input.pop(SECTION_MODEL))
+        if SECTION_OPTIONS in flattened_input:
+            flattened_input.update(flattened_input.pop(SECTION_OPTIONS))
+
+        # Convert enable_assist checkbox to LLM_HASS_API format
+        if flattened_input.get("enable_assist"):
+            flattened_input[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
+        else:
+            flattened_input.pop(CONF_LLM_HASS_API, None)
+        flattened_input.pop("enable_assist", None)
+
+        self.options.update(flattened_input)
+
+        # Validate that we have a model selected
+        selected_model = flattened_input.get(CONF_CHAT_MODEL)
+        if not selected_model:
+            errors[SECTION_MODEL] = "model_required"
+        if selected_model not in self.models:
+            errors[SECTION_MODEL] = "invalid_model_selected"
+
+        # Validate tool support when assist is enabled
+        enable_assist = CONF_LLM_HASS_API in flattened_input
+        if enable_assist and selected_model and selected_model in self.models:
+            model = self.models[selected_model]
+            if SUPPORTED_PARAMETER_TOOLS not in model.supported_parameters:
+                errors[SECTION_MODEL] = "model_no_tool_support"
+
+        return errors
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -195,34 +237,6 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
 
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            # Flatten section data
-            flattened_input = dict(user_input)
-
-            # Extract data from sections
-            if "section_model" in flattened_input:
-                flattened_input.update(flattened_input.pop("section_model"))
-            if "section_options" in flattened_input:
-                flattened_input.update(flattened_input.pop("section_options"))
-
-            # Convert enable_assist checkbox to LLM_HASS_API format
-            if flattened_input.get("enable_assist"):
-                flattened_input[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
-            else:
-                flattened_input.pop(CONF_LLM_HASS_API, None)
-            flattened_input.pop("enable_assist", None)
-
-            self.options.update(flattened_input)
-
-            # Validate that we have a model selected
-            selected_model = flattened_input.get(CONF_CHAT_MODEL)
-            if not selected_model:
-                errors[CONF_CHAT_MODEL] = "model_required"
-
-            if not errors:
-                # Move to provider selection step
-                return await self.async_step_providers()
-
         try:
             await self._get_models()
         except OpenRouterError:
@@ -230,6 +244,12 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
+
+        if user_input is not None:
+            errors = await self.validate_model_options(user_input)
+            if not errors:
+                # Move to provider selection step
+                return await self.async_step_providers()
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
@@ -248,9 +268,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             ]
 
         # Get current model selection
-        current_model = self.options.get(CONF_CHAT_MODEL) or (
-            list(self.models.keys())[0] if self.models else None
-        )
+        current_model = self.options.get(CONF_CHAT_MODEL)
 
         model_options = [
             SelectOptionDict(value=model.id, label=model.name)
@@ -275,7 +293,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             )
         ] = TemplateSelector()
 
-        step_schema["section_model"] = section(
+        step_schema[SECTION_MODEL] = section(
             vol.Schema(
                 {
                     vol.Required(
@@ -286,13 +304,14 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             options=model_options,
                             mode=SelectSelectorMode.DROPDOWN,
                             sort=True,
+                            custom_value=True,
                         ),
                     ),
                 }
             ),
         )
 
-        step_schema["section_options"] = section(
+        step_schema[SECTION_OPTIONS] = section(
             vol.Schema(
                 {
                     vol.Optional(
@@ -310,6 +329,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             ),
         )
 
+        # Call init step one more time for validation
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
