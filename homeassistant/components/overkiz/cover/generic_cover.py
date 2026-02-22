@@ -7,6 +7,7 @@ from typing import Any, cast
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverEntity,
     CoverEntityFeature,
@@ -43,6 +44,10 @@ COMMANDS_CLOSE_TILT: list[OverkizCommand] = [
 
 COMMANDS_SET_TILT_POSITION: list[OverkizCommand] = [OverkizCommand.SET_ORIENTATION]
 
+COMMANDS_SET_CLOSURE_AND_TILT_POSITION: list[OverkizCommand] = [
+    OverkizCommand.SET_CLOSURE_AND_ORIENTATION
+]
+
 
 class OverkizGenericCover(OverkizEntity, CoverEntity):
     """Representation of an Overkiz Cover."""
@@ -66,6 +71,17 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         if command := self.executor.select_command(*COMMANDS_SET_TILT_POSITION):
             await self.executor.async_execute_command(
                 command,
+                100 - kwargs[ATTR_TILT_POSITION],
+            )
+
+    async def async_set_cover_position_and_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover and tilt to a specific position."""
+        if command := self.executor.select_command(
+            *COMMANDS_SET_CLOSURE_AND_TILT_POSITION
+        ):
+            await self.executor.async_execute_command(
+                command,
+                100 - kwargs[ATTR_POSITION],
                 100 - kwargs[ATTR_TILT_POSITION],
             )
 
