@@ -38,7 +38,6 @@ def get_app_entity_description(
         translation_key="apps",
         name=name_slug,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.apps.get(name_slug),
     )
 
@@ -52,7 +51,6 @@ def get_core_integration_entity_description(
         translation_key="core_integrations",
         name=name,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.core_integrations.get(domain),
     )
 
