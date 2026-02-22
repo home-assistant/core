@@ -41,7 +41,7 @@ async def async_get_engine(
     """Set up Pico speech component."""
     if await hass.async_add_executor_job(shutil.which, "pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
-        return False
+        return None
 
     if config[CONF_LANG] not in [
         config_entry.data[CONF_LANG]
