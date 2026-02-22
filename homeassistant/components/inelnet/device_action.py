@@ -58,7 +58,7 @@ def _device_to_host_and_channel(
         try:
             _, ch_str = str(identifier[1]).rsplit("-ch", 1)
             channel = int(ch_str)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             continue
         for entry_id in device.config_entries:
             entry = hass.config_entries.async_get_entry(entry_id)
