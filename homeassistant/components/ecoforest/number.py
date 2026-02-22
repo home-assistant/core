@@ -31,6 +31,14 @@ NUMBER_ENTITIES = (
         native_step=1,
         value_fn=lambda data: data.power,
     ),
+    EcoforestNumberEntityDescription(
+        key="setpoint_temperature",
+        translation_key="setpoint_temperature",
+        native_min_value=10,
+        native_max_value=30,
+        native_step=0.5,
+        value_fn=lambda data: data.temperature,
+    ),
 )
 
 
@@ -62,5 +70,8 @@ class EcoforestNumberEntity(EcoforestEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the native value."""
-        await self.coordinator.api.set_power(int(value))
+        if self.entity_description.key == "power_level":
+            await self.coordinator.api.set_power(int(value))
+        elif self.entity_description.key == "setpoint_temperature":
+            await self.coordinator.api.set_temperature(value)
         await self.coordinator.async_request_refresh()
