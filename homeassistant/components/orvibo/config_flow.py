@@ -30,7 +30,7 @@ def _format_mac(mac_bytes: bytes) -> str:
 
 
 class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Squeezebox."""
+    """Handle the config flow for Orvibo S20 switches."""
 
     VERSION = 1
 
