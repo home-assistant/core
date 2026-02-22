@@ -199,7 +199,7 @@ class Control4Light(Control4Entity, LightEntity):
         return self.coordinator.data[self._idx][CONTROL4_NON_DIMMER_VAR] > 0
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
             for var in CONTROL4_DIMMER_VARS:

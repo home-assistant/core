@@ -61,7 +61,7 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._insteon_device_group.value
 

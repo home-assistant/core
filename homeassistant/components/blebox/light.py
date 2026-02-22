@@ -74,7 +74,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return self._feature.is_on
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the name."""
         return self._feature.brightness
 

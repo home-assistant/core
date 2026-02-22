@@ -1041,12 +1041,12 @@ class XiaomiGatewayLight(LightEntity):
         )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(255 * self._brightness_pct / 100)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs
 
@@ -1102,7 +1102,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     _sub_device: LightBulb
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         return round((self._sub_device.status["brightness"] * 255) / 100)
 

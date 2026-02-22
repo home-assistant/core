@@ -244,7 +244,7 @@ class Luminary(LightEntity):
         return self._luminary.name()
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return last hs color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
