@@ -380,7 +380,7 @@ async def test_adam_3_climate_entity_attributes(
             HVACMode.HEAT,
             HVACMode.COOL,
         ]
-        # Test setting regulation_mode to cooling, from off
+        # Test setting regulation_mode to cooling, from off, ignoring the restored previous_action_mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -423,6 +423,7 @@ async def test_adam_3_climate_entity_attributes(
         mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
             "cooling",
         )
+        # And set_schedule_state was called with the restored last_active_schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
             "f871b8c4d63549319221e294e4f88074",
             STATE_ON,
