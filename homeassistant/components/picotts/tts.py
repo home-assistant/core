@@ -43,16 +43,11 @@ async def async_get_engine(
         _LOGGER.error("'pico2wave' was not found")
         return None
 
-    if config[CONF_LANG] not in [
-        config_entry.data[CONF_LANG]
-        for config_entry in hass.config_entries.async_entries(DOMAIN)
-    ]:
-        _LOGGER.debug("Creating config entry by importing: %s", config)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
+    )
 
     deprecate_yaml_issue(hass)
 
