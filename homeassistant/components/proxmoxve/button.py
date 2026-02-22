@@ -318,12 +318,12 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
     """Represents a Proxmox Container button entity."""
 
-    entity_description: ProxmoxNodeButtonContainerEntityDescription
+    entity_description: ProxmoxContainerButtonEntityDescription
 
     def __init__(
         self,
         coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeButtonContainerEntityDescription,
+        entity_description: ProxmoxContainerButtonEntityDescription,
         container_data: dict[str, Any],
         node_data: ProxmoxNodeData,
     ) -> None:
