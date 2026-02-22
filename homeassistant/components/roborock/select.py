@@ -26,7 +26,7 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityB01Q7, RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
 
@@ -159,14 +159,13 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockB01SelectEntity(coordinator, description, options)
-        for coordinator in config_entry.runtime_data.b01
+        for coordinator in config_entry.runtime_data.b01_q7
         for description in B01_SELECT_DESCRIPTIONS
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
         if (options := description.options_lambda(coordinator.api)) is not None
     )
 
 
-class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
+class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
     """Select entity for Roborock B01 devices."""
 
     entity_description: RoborockB01SelectDescription
