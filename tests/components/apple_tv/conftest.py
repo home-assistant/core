@@ -93,7 +93,7 @@ def full_device(mock_scan: AsyncMock, dmap_pin: MagicMock) -> AsyncMock:
             ),
             airplay_service(),
             device_info=DeviceInfo(
-                {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id"}
+                {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id-1"}
             ),
         )
     )
@@ -110,7 +110,7 @@ def mrp_device(mock_scan: AsyncMock) -> AsyncMock:
                 "MRP Device",
                 mrp_service(),
                 device_info=DeviceInfo(
-                    {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id"}
+                    {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id-1"}
                 ),
             ),
             create_conf(
@@ -118,7 +118,7 @@ def mrp_device(mock_scan: AsyncMock) -> AsyncMock:
                 "MRP Device 2",
                 mrp_service(unique_id="unrelated"),
                 device_info=DeviceInfo(
-                    {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id"}
+                    {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id-2"}
                 ),
             ),
         ]

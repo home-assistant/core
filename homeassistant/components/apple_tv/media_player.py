@@ -48,7 +48,7 @@ from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
-from .const import DOMAIN
+from .const import CONF_OUTPUT_DEVICE_ID, DOMAIN
 from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ def entity_ids_by_output_device_id(
 ) -> dict[str, str | None]:
     """Map pyatv output device IDs to MediaPlayer entity IDs.
 
-    Return a fict with the keys being the output device ID, and the values being
+    Return a dict with the keys being the output device ID, and the values being
     the mapped entity ID or None, if not entity could be found.
     """
     players = dict.fromkeys(output_device_ids, None)
@@ -127,7 +127,7 @@ def entity_ids_by_output_device_id(
                 MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
             )
             if (
-                output_device_id := config_entry.data.get("output_device_id", None)
+                output_device_id := config_entry.data.get(CONF_OUTPUT_DEVICE_ID, None)
             ) is not None and output_device_id in players:
                 players[output_device_id] = entity_id
 
@@ -139,8 +139,8 @@ def output_device_ids_by_entity_id(
 ) -> dict[str, str | None]:
     """Map MediaPlayer entity IDs to pyatv output device IDs.
 
-    Return a dict with the keys being the entity IDs, and the values being the mapped
-    output device ID or `None`, if no output device ID could not be found.
+    Return a dict with the keys being the entity IDs, and the values being the
+    mapped output device ID or `None`, if no output device ID could be found.
     """
     output_devices = dict.fromkeys(entity_ids, None)
 
@@ -153,7 +153,7 @@ def output_device_ids_by_entity_id(
             and (config_entry_id := entity_entry.config_entry_id) is not None
             and (config_entry := config_entries.async_get_entry(config_entry_id))
             is not None
-            and (output_device_id := config_entry.data.get("output_device_id", None))
+            and (output_device_id := config_entry.data.get(CONF_OUTPUT_DEVICE_ID, None))
             is not None
         ):
             output_devices[entity_id] = output_device_id
