@@ -240,7 +240,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             try:
                 await self._maps_trait.set_current_map(target_map_flag)
             except RoborockException as err:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="command_failed",
                     translation_placeholders={"command": "load_multi_map"},
