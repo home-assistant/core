@@ -103,7 +103,7 @@ async def async_setup_entry(
     entry: S20ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Setup Entry."""
+    """Set up orvibo from a config entry."""
     async_add_entities(
         [
             S20Switch(
