@@ -229,7 +229,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             )
         target_map_flag = next(iter(unique_map_flags))
         if self._maps_trait.current_map != target_map_flag:
-            # If the user is attempting to clean a area on a map that is not selected, we should try to change.
+            # If the user is attempting to clean an area on a map that is not selected, we should try to change.
             try:
                 await self._maps_trait.set_current_map(target_map_flag)
             except RoborockException as err:
