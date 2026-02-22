@@ -728,7 +728,7 @@ class AppleTvMediaPlayer(
             #   set_output_devices(*device_uids: List[str])
             # but it is used in pyatv(tests, etc) as:
             #   set_output_devices(*devices: str)
-            # mypy docs seem to suggest atv is wrong:
+            # mypy docs seem to suggest pyatv is wrong:
             # https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html#functions
             *output_device_ids  # type: ignore[arg-type]
         )
@@ -745,3 +745,48 @@ class AppleTvMediaPlayer(
 
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
+        if (atv := self.atv) is None:
+            _LOGGER.debug(
+                "%s unable to unjoin, not connected to player",
+                self.entity_id,
+            )
+            return
+
+        output_device_id = atv.device_info.output_device_id
+        output_device_ids = [device.identifier for device in atv.audio.output_devices]
+
+        if len(output_device_ids) <= 1:
+            # We don't know if we are the only device in a group or part of some other
+            # player's group, so we need to find the leader and ask it to remove us.
+            for config_entry in self.hass.config_entries.async_entries(DOMAIN):
+                if (
+                    config_entry.state == ConfigEntryState.LOADED
+                    and (mgr := config_entry.runtime_data) is not None
+                    and (leader_atv := mgr.atv) is not None
+                    and output_device_id
+                    in (dev.identifier for dev in mgr.atv.audio.output_devices)
+                ):
+                    _LOGGER.debug(
+                        "delegating unjoining to leader (%s), requesting to remove %s (%s)",
+                        leader_atv.device_info.output_device_id,
+                        self.entity_id,
+                        output_device_id,
+                    )
+                    await leader_atv.audio.remove_output_devices(output_device_id)
+                    return
+
+        elif output_device_id is not None:
+            # For now we can only unjoin a leader from a group by removing all other members,
+            # thus destroying the group.
+            # If we wanted to remove ourselves but leave the rest of the group intact,
+            # we would need to be able to transfer leadership to another player, and then
+            # remove ourselves from the group.
+
+            # Need to check typing with pyatv.
+            # The method is defined with list[str] for each arg:
+            #   set_output_devices(*device_uids: List[str])
+            # but it is used in pyatv(tests, etc) as:
+            #   set_output_devices(*devices: str)
+            # mypy docs seem to suggest pyatv is wrong:
+            # https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html#functions
+            await atv.audio.set_output_devices(output_device_id)  # type: ignore[arg-type]
