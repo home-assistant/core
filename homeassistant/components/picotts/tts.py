@@ -19,6 +19,7 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -80,6 +81,7 @@ class PicoTTSEntity(TextToSpeechEntity):
             model="Pico TTS",
             name=f"Pico TTS {lang}",
         )
+
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
