@@ -1597,6 +1597,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="speed_count",
@@ -1611,10 +1612,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="current_direction",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="oscillating",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_mode",
@@ -1624,6 +1627,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_modes",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
