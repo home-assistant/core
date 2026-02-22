@@ -222,10 +222,11 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         # we need to make sure that only one map is passed in.
         unique_map_flags = {map_flag for map_flag, _ in parsed}
         if len(unique_map_flags) > 1:
+            map_flags_str = ", ".join(str(flag) for flag in sorted(unique_map_flags))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="multiple_maps_in_clean",
-                translation_placeholders={"map_flags": str(unique_map_flags)},
+                translation_placeholders={"map_flags": map_flags_str},
             )
         target_map_flag = next(iter(unique_map_flags))
         if self._maps_trait.current_map != target_map_flag:
@@ -235,7 +236,8 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             except RoborockException as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="map_failure",
+                    translation_key="command_failed",
+                    translation_placeholders={"command": "load_multi_map"},
                 ) from err
 
         # We can now confirm all segments are on our current map, so clean them all.
