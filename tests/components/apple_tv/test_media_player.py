@@ -1,5 +1,6 @@
 """Tests for apple_tv grouping helpers and methods."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock
 
 from pyatv.interface import AppleTV
@@ -18,7 +19,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def create_player(hass: HomeAssistant, entity_registry: EntityRegistry):
+def create_player(
+    hass: HomeAssistant, entity_registry: EntityRegistry
+) -> Callable[[str], Awaitable[AppleTvMediaPlayer]]:
     """Create a mock Apple TV media player for testing."""
 
     async def create(name: str) -> AppleTvMediaPlayer:

@@ -258,7 +258,6 @@ class AppleTvMediaPlayer(
             _LOGGER.debug(
                 "%s unable to update group members, missing atv", self.entity_id
             )
-            # Should we retry at a later point?
             return
 
         output_device_ids = [dev.identifier for dev in atv.audio.output_devices]
@@ -775,6 +774,11 @@ class AppleTvMediaPlayer(
                     await leader_atv.audio.remove_output_devices(output_device_id)
                     return
 
+            _LOGGER.debug(
+                "%s unable to unjoin, could not find leader to delegate to",
+                self.entity_id,
+            )
+
         elif output_device_id is not None:
             # For now we can only unjoin a leader from a group by removing all other members,
             # thus destroying the group.
@@ -790,3 +794,6 @@ class AppleTvMediaPlayer(
             # mypy docs seem to suggest pyatv is wrong:
             # https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html#functions
             await atv.audio.set_output_devices(output_device_id)  # type: ignore[arg-type]
+
+        else:
+            _LOGGER.debug("%s unable to unjoin, no output_device_id", self.entity_id)
