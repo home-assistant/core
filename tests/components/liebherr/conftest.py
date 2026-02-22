@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import copy
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyliebherrhomeapi import (
@@ -86,6 +87,16 @@ MOCK_DEVICE_STATE = DeviceState(
 )
 
 
+@pytest.fixture(autouse=True)
+def patch_refresh_delay() -> Generator[None]:
+    """Patch REFRESH_DELAY to 0 to avoid delays in tests."""
+    with patch(
+        "homeassistant.components.liebherr.entity.REFRESH_DELAY",
+        timedelta(seconds=0),
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -125,8 +136,8 @@ def mock_liebherr_client() -> Generator[MagicMock]:
             MOCK_DEVICE_STATE
         )
         client.set_temperature = AsyncMock()
-        client.set_supercool = AsyncMock()
-        client.set_superfrost = AsyncMock()
+        client.set_super_cool = AsyncMock()
+        client.set_super_frost = AsyncMock()
         client.set_party_mode = AsyncMock()
         client.set_night_mode = AsyncMock()
         yield client

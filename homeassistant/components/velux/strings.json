@@ -68,8 +68,8 @@
   },
   "issues": {
     "deprecated_reboot_service": {
-      "description": "The `velux.reboot_gateway` service is deprecated and will be removed in Home Assistant 2026.6.0. Please use the 'Restart' button entity instead. You can find this button in the device page for your KLF 200 Gateway or by searching for 'restart' in your entity list.",
-      "title": "Velux reboot service is deprecated"
+      "description": "The `velux.reboot_gateway` action is deprecated and will be removed in Home Assistant 2026.6.0. Please use the 'Restart' button entity instead. You can find this button in the device page for your KLF 200 Gateway or by searching for 'restart' in your entity list.",
+      "title": "Velux 'Reboot gateway' action deprecated"
     }
   },
   "services": {
