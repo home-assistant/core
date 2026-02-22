@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -11,8 +10,6 @@ from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN, SUPPORT_LANGUAGES
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_LANG): vol.In(SUPPORT_LANGUAGES)})
 
