@@ -779,7 +779,7 @@ async def websocket_update_prefs(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
             connection.send_error(
                 msg["id"],
                 "alexa_relink",

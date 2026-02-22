@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from typing import Any
 
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import async_api_call
 from .const import DOMAIN
 from .coordinator import NRGkickDataUpdateCoordinator
 
@@ -55,3 +57,9 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
             device_info_typed["connections"] = connections
 
         self._attr_device_info = device_info_typed
+
+    async def _async_call_api[_T](self, awaitable: Awaitable[_T]) -> _T:
+        """Call the API, map errors, and refresh coordinator data."""
+        result = await async_api_call(awaitable)
+        await self.coordinator.async_refresh()
+        return result

@@ -21,6 +21,8 @@ from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -80,7 +82,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         return round(brightness * 100 / 255)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the light is on."""
         return self.light.mode != SpaLight.LightMode.OFF
 
