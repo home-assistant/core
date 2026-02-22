@@ -53,6 +53,16 @@
       "dual_roller_shutter_upper": {
         "name": "Upper shutter"
       }
+    },
+    "select": {
+      "velocity": {
+        "name": "Velocity",
+        "state": {
+          "default": "Default",
+          "silent": "Silent",
+          "fast": "Fast"
+        }
+      }
     }
   },
   "exceptions": {
