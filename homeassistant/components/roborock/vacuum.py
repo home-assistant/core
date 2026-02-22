@@ -24,7 +24,7 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityB01Q7, RoborockCoordinatedEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,8 +84,7 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockQ7Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+        for coordinator in config_entry.runtime_data.b01_q7
     )
 
 
@@ -303,7 +302,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         }
 
 
-class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
+class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
@@ -327,7 +326,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntityB01.__init__(
+        RoborockCoordinatedEntityB01Q7.__init__(
             self,
             coordinator.duid_slug,
             coordinator,

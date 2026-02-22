@@ -14,9 +14,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
-    RoborockDataUpdateCoordinatorB01,
 )
 
 
@@ -130,21 +130,21 @@ class RoborockCoordinatedEntityA01(
         self._attr_unique_id = unique_id
 
 
-class RoborockCoordinatedEntityB01(
-    RoborockEntity, CoordinatorEntity[RoborockDataUpdateCoordinatorB01]
+class RoborockCoordinatedEntityB01Q7(
+    RoborockEntity, CoordinatorEntity[RoborockB01Q7UpdateCoordinator]
 ):
     """Representation of coordinated Roborock Entity."""
 
     def __init__(
         self,
         unique_id: str,
-        coordinator: RoborockDataUpdateCoordinatorB01,
+        coordinator: RoborockB01Q7UpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
         RoborockEntity.__init__(
             self,
             unique_id=unique_id,
             device_info=coordinator.device_info,
         )
-        CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
