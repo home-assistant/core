@@ -258,6 +258,7 @@ async def test_adam_restore_state_climate(
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
 
+
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
 @pytest.mark.parametrize("platforms", [(CLIMATE_DOMAIN,)])
@@ -429,6 +430,7 @@ async def test_adam_3_climate_entity_attributes(
             STATE_ON,
             "Badkamer",
         )
+
 
 async def test_adam_climate_off_mode_change(
     hass: HomeAssistant,
