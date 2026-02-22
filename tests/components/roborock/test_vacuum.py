@@ -188,15 +188,22 @@ async def test_v1_refreshes_status_after_command(
     """Test v1 commands refresh status before coordinator refresh request."""
     assert fake_vacuum.v1_properties is not None
     coordinator = setup_entry.runtime_data.v1[0]
-    previous_refresh_count = fake_vacuum.v1_properties.status.refresh.call_count
 
-    async def _assert_status_refreshed_first() -> None:
-        assert (
-            fake_vacuum.v1_properties.status.refresh.call_count > previous_refresh_count
-        )
+    # Patch async_request_refresh to check ordering
+    ordering = []
+
+    async def status_refresh_side_effect(*args, **kwargs):
+        ordering.append("status_refresh")
+
+    fake_vacuum.v1_properties.status.refresh = AsyncMock(
+        side_effect=status_refresh_side_effect
+    )
+
+    async def async_request_refresh_side_effect(*args, **kwargs):
+        ordering.append("async_request_refresh")
 
     coordinator.async_request_refresh = AsyncMock(
-        side_effect=_assert_status_refreshed_first
+        side_effect=async_request_refresh_side_effect
     )
 
     await hass.services.async_call(
@@ -206,8 +213,11 @@ async def test_v1_refreshes_status_after_command(
         blocking=True,
     )
 
+    assert ordering == ["status_refresh", "async_request_refresh"], (
+        f"Ordering was {ordering}"
+    )
     assert coordinator.async_request_refresh.call_count == 1
-    assert fake_vacuum.v1_properties.status.refresh.call_count > previous_refresh_count
+    assert fake_vacuum.v1_properties.status.refresh.call_count == 1
 
 
 async def test_v1_status_refresh_failure_still_requests_coordinator_refresh(
