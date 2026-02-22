@@ -43,3 +43,9 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_create_entry(title=title, data=data)
+
+    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+        """Import Pico TTS config from yaml."""
+
+        self._async_abort_entries_match({CONF_LANG: import_info[CONF_LANG]})
+        return await self.async_step_user(import_info)
