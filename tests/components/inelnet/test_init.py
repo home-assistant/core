@@ -60,6 +60,25 @@ async def test_setup_entry_stores_runtime_data(
     assert mock_config_entry.runtime_data.channels == [1, 2]
 
 
+async def test_setup_entry_raises_not_ready_when_controller_returns_error_status(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test async_setup_entry raises ConfigEntryNotReady when controller returns HTTP error."""
+    bad_resp = AsyncMock()
+    bad_resp.status = 500
+    bad_resp.__aenter__ = AsyncMock(return_value=bad_resp)
+    bad_resp.__aexit__ = AsyncMock(return_value=None)
+    with patch(
+        "homeassistant.components.inelnet.async_get_clientsession",
+    ) as mock_session_cls:
+        mock_session = MagicMock()
+        mock_session.get = MagicMock(return_value=bad_resp)
+        mock_session_cls.return_value = mock_session
+
+        with pytest.raises(ConfigEntryNotReady, match="returned 500"):
+            await async_setup_entry(hass, mock_config_entry)
+
+
 async def test_setup_entry_raises_not_ready_on_connection_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
