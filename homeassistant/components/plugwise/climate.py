@@ -201,11 +201,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         if self.coordinator.api.cooling_present:
             if "regulation_modes" in self._gateway_data:
-                selected = self._gateway_data.get("select_regulation_mode")
-                if selected == HVACAction.COOLING.value:
-                    hvac_modes.append(HVACMode.COOL)
-                if selected == HVACAction.HEATING.value:
+                if "heating" in self._gateway_data["regulation_modes"]:
                     hvac_modes.append(HVACMode.HEAT)
+                if "cooling" in self._gateway_data["regulation_modes"]:
+                    hvac_modes.append(HVACMode.COOL)
             else:
                 hvac_modes.append(HVACMode.HEAT_COOL)
         else:
