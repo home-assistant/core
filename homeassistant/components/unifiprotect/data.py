@@ -233,10 +233,21 @@ class ProtectData:
     def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
         if device.is_adopted_by_us:
             _LOGGER.debug("Device adopted: %s", device.id)
-            async_dispatcher_send(self._hass, self.adopt_signal, device)
+            if isinstance(device, Camera) and device.feature_flags.is_ptz:
+                self._hass.async_create_task(
+                    self._async_adopt_ptz_camera(device),
+                    name="unifiprotect_adopt_ptz_camera",
+                )
+            else:
+                async_dispatcher_send(self._hass, self.adopt_signal, device)
         else:
             _LOGGER.debug("New device detected: %s", device.id)
             async_dispatcher_send(self._hass, self.add_signal, device)
+
+    async def _async_adopt_ptz_camera(self, camera: Camera) -> None:
+        """Load PTZ patrol data and dispatch adopt signal for a PTZ camera."""
+        await self.async_load_ptz_patrols_for_camera(camera)
+        async_dispatcher_send(self._hass, self.adopt_signal, camera)
 
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:

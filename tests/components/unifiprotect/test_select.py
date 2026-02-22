@@ -752,7 +752,6 @@ async def test_select_ptz_camera_adopt(
 
     await adopt_devices(hass, ufp, [ptz_camera])
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     # Should have 2 regular camera selects + 1 patrol select = 3
     assert_entity_counts(hass, Platform.SELECT, 3, 3)

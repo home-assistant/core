@@ -35,7 +35,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import TYPE_EMPTY_VALUE
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    BaseProtectEntity,
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
@@ -363,22 +362,8 @@ async def async_setup_entry(
             )
         )
         if isinstance(device, Camera) and device.feature_flags.is_ptz:
-            hass.async_create_task(
-                _async_add_ptz_patrol(data, device, entities),
-                name="unifiprotect_add_ptz_patrol",
-            )
-        else:
-            async_add_entities(entities)
-
-    async def _async_add_ptz_patrol(
-        protect_data: ProtectData,
-        camera: Camera,
-        entities: list[BaseProtectEntity],
-    ) -> None:
-        """Load PTZ patrol data and add all entities for newly adopted camera."""
-        await protect_data.async_load_ptz_patrols_for_camera(camera)
-        patrols = protect_data.ptz_patrols.get(camera.id, [])
-        entities.append(ProtectPTZPatrolSelect(protect_data, camera, patrols))
+            patrols = data.ptz_patrols.get(device.id, [])
+            entities.append(ProtectPTZPatrolSelect(data, device, patrols))
         async_add_entities(entities)
 
     data.async_subscribe_adopt(_add_new_device)
