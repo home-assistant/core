@@ -484,9 +484,6 @@
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
-    "no_segment_ids": {
-      "message": "No segment IDs provided for cleaning"
-    },
     "no_user_agreement": {
       "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
     },

@@ -200,11 +200,6 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
         parsed: list[tuple[int, int]] = []
-        if len(segment_ids) == 0:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_segment_ids",
-            )
         for seg_id in segment_ids:
             # Segment id is mapflag:segment_id
             parts = seg_id.split(":")
