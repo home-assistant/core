@@ -13,6 +13,7 @@ from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_COMMAND, CONF_ID, CONF_NAME, CONF_PATH, CONF_URL
 from homeassistant.core import (
     HomeAssistant,
@@ -20,7 +21,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
@@ -39,6 +40,16 @@ SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
+
+ALL_SERVICES = (
+    SERVICE_GET_PROCESS_BY_ID,
+    SERVICE_GET_PROCESSES_BY_NAME,
+    SERVICE_OPEN_PATH,
+    SERVICE_POWER_COMMAND,
+    SERVICE_OPEN_URL,
+    SERVICE_SEND_KEYPRESS,
+    SERVICE_SEND_TEXT,
+)
 
 POWER_COMMAND_MAP = {
     "hibernate": "power_hibernate",
@@ -60,14 +71,16 @@ def _valid_device(hass: HomeAssistant, device: str) -> str:
                 entry.entry_id
                 for entry in hass.config_entries.async_entries(DOMAIN)
                 if entry.entry_id in device_entry.config_entries
+                and entry.state is ConfigEntryState.LOADED
+                and entry.entry_id in hass.data.get(DOMAIN, {})
             )
         except StopIteration as exception:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_found",
                 translation_placeholders={"device": device},
             ) from exception
-    raise HomeAssistantError(
+    raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="device_not_found",
         translation_placeholders={"device": device},
@@ -281,3 +294,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ),
         supports_response=SupportsResponse.ONLY,
     )
+
+
+def async_unload_services(hass: HomeAssistant) -> None:
+    """Remove all System Bridge services."""
+    for service in ALL_SERVICES:
+        if hass.services.has_service(DOMAIN, service):
+            hass.services.async_remove(DOMAIN, service)

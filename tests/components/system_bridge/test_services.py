@@ -286,3 +286,30 @@ async def test_service_non_system_bridge_device(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_service_not_loaded_system_bridge_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_websocket_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test service with a System Bridge device linked to an unloaded entry."""
+    not_loaded_entry = MockConfigEntry(title="Not loaded", domain=DOMAIN)
+    not_loaded_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=not_loaded_entry.entry_id,
+        identifiers={(DOMAIN, "not-loaded-device")},
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_OPEN_URL,
+            {CONF_BRIDGE: device_entry.id, CONF_URL: "https://example.com"},
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_websocket_client.open_url.assert_not_called()
