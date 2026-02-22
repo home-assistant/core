@@ -20,4 +20,4 @@ def icloud_not_create_dir():
 def clear_photo_cache() -> None:
     """Clear the photo cache."""
 
-    PhotoCache._instance = None
+    PhotoCache.instance()._cache.clear()

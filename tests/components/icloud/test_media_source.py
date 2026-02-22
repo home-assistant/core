@@ -290,10 +290,7 @@ async def test_get_photo_asset_photo_in_cache(
 
     assert photo == mock_photo
     mock_get_icloud_account.assert_called_with(hass, identifier)
-    mock_get_photo_album.assert_called_with(
-        mock_get_icloud_account.return_value, identifier
-    )
-    mock_get_photo_album.return_value.assert_not_called()
+    mock_get_photo_album.assert_not_called()
 
 
 @patch("homeassistant.components.icloud.media_source._get_icloud_account")
@@ -1456,8 +1453,8 @@ async def test_view_get_response_headers(
             headers["Cache-Control"] == "max-age=3600"
         )  # Cache headers should be included
         assert (
-            headers["Original-Header"] == "original-value"
-        )  # Original headers should be preserved
+            "Original-Header" not in headers
+        )  # Original headers from iCloud response should not be included
 
 
 @patch("homeassistant.components.icloud.media_source._get_photo_asset")
