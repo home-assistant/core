@@ -5,6 +5,8 @@ import binascii
 from collections import OrderedDict
 from dataclasses import dataclass
 import logging
+import threading
+import urllib
 
 from aiohttp import ClientTimeout, hdrs, web
 from pyicloud.services.photos import (
@@ -53,10 +55,16 @@ def _get_icloud_account(
     entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, identifier.config_entry_id
     )
-    if entry is None or getattr(entry, "runtime_data", None) is None:
+    if entry is None:
         raise Unresolvable(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_found",
+            translation_placeholders={"entry": identifier.config_entry_id},
+        )
+    if getattr(entry, "runtime_data", None) is None:
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="account_not_initialized",
             translation_placeholders={"entry": identifier.config_entry_id},
         )
 
@@ -72,6 +80,7 @@ def _get_photo_album(
         raise Unresolvable(
             translation_domain=DOMAIN,
             translation_key="account_not_initialized",
+            translation_placeholders={"entry": identifier.config_entry_id},
         )
 
     if identifier.shared_album is True:
@@ -103,10 +112,9 @@ def _get_photo_asset(
             translation_key="incomplete_media_source_identifier",
         )
 
-    album = _get_photo_album(icloud_account, identifier)
-
     photo: PhotoAsset | None = PhotoCache.instance().get(identifier.photo_id)
     if photo is None:
+        album = _get_photo_album(icloud_account, identifier)
         for item in album.photos:
             PhotoCache.instance().set(item.id, item)
             if item.id == identifier.photo_id:
@@ -149,6 +157,7 @@ class PhotoCache:
     """Simple in-memory cache for PhotoAsset objects."""
 
     _instance: PhotoCache
+    _lock = threading.Lock()
 
     @classmethod
     def instance(cls) -> PhotoCache:
@@ -164,27 +173,29 @@ class PhotoCache:
 
     def get(self, photo_id: str) -> PhotoAsset | None:
         """Get a photo from the cache."""
-        photo = self._cache.get(photo_id)
-        if photo is not None:
-            # Move the accessed item to the end to show that it was recently used
-            self._cache.move_to_end(photo_id)
-        return photo
+        with self._lock:
+            photo = self._cache.get(photo_id)
+            if photo is not None:
+                # Move the accessed item to the end to show that it was recently used
+                self._cache.move_to_end(photo_id)
+            return photo
 
     def set(self, photo_id: str, photo: PhotoAsset) -> None:
         """Set a photo in the cache."""
-        self._cache[photo_id] = photo
-        if len(self._cache) > self._max_size:
-            self._cache.popitem(last=False)
+        with self._lock:
+            self._cache[photo_id] = photo
+            if len(self._cache) > self._max_size:
+                self._cache.popitem(last=False)
 
 
 @dataclass(kw_only=True)
 class IcloudMediaSourceIdentifier:
     """Parse and represent an iCloud media source identifier.
 
-    Example identifier format: config_entry_id|album|album_id
-    Example identifier format: config_entry_id|shared|shared_album_id
-    Example identifier format: config_entry_id|album|album_id|photo_id
-    Example identifier format: config_entry_id|shared|shared_album_id|photo_id
+    Example identifier format: config_entry_id/album/album_id
+    Example identifier format: config_entry_id/shared/shared_album_id
+    Example identifier format: config_entry_id/album/album_id/photo_id
+    Example identifier format: config_entry_id/shared/shared_album_id/photo_id
 
     """
 
@@ -513,7 +524,9 @@ class IcloudMediaSource(MediaSource):
                 media_class=(
                     MediaClass.IMAGE if photo.item_type == "image" else MediaClass.VIDEO
                 ),
-                media_content_type="",
+                media_content_type=(
+                    MediaType.IMAGE if photo.item_type == "image" else MediaType.VIDEO
+                ),
                 can_play=True,
                 can_expand=False,
                 title=photo.filename,
@@ -546,9 +559,9 @@ class IcloudMediaSourceView(HomeAssistantView):
 
         try:
             identifier = IcloudMediaSourceIdentifier.from_identifier(
-                b64decode(image_id).decode()
+                b64decode(image_id, validate=True).decode()
             )
-        except (Unresolvable, binascii.Error) as err:
+        except (Unresolvable, binascii.Error, UnicodeDecodeError) as err:
             _LOGGER.error("Error decoding iCloud media source identifier: %s", err)
             raise web.HTTPBadRequest from err
 
@@ -568,13 +581,19 @@ class IcloudMediaSourceView(HomeAssistantView):
             timeout=ClientTimeout(connect=15, sock_connect=15, sock_read=5, total=None),
         )
 
-        response_headers = dict(icloud_response.headers)
+        response_headers: dict[str, str] = {}
         response_headers.update(CACHE_HEADERS)
         response_headers[hdrs.CONTENT_DISPOSITION] = (
-            f'attachment;filename="{photo.filename}"'
+            f'attachment;filename="{urllib.parse.quote(photo.filename, safe="")}"'
         )
         response_headers[hdrs.CONTENT_TYPE] = icloud_response.headers.get(
             hdrs.CONTENT_TYPE, "application/octet-stream"
+        )
+        response_headers[hdrs.CONTENT_LENGTH] = icloud_response.headers.get(
+            hdrs.CONTENT_LENGTH, "0"
+        )
+        response_headers[hdrs.LAST_MODIFIED] = icloud_response.headers.get(
+            hdrs.LAST_MODIFIED, "0"
         )
         response = web.StreamResponse(
             status=icloud_response.status,

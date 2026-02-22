@@ -1096,7 +1096,7 @@ async def test_get_photo_list(
         title="Photo 3", id="3", filename="photo3.jpg", item_type="image"
     )
     photo4 = MagicMock(
-        title="Video 4", id="4", filename="video4.mp4", item_type="video"
+        title="Video 4", id="4", filename="video4.mp4", item_type="movie"
     )
 
     mock_album.photos.__iter__.return_value = iter([photo1, photo2, photo3, photo4])

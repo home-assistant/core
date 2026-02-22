@@ -46,7 +46,7 @@
   },
   "exceptions": {
     "account_not_initialized": {
-      "message": "Account not initialized"
+      "message": "Account not initialized: {entry}"
     },
     "album_not_found": {
       "message": "Album not found"
