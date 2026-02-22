@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-from typing import Any
+from typing import cast
 
 from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
@@ -23,6 +23,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -120,8 +121,8 @@ async def _handle_get_processes_by_name(
         service_call.data[CONF_BRIDGE]
     ]
 
-    items: list[dict[str, Any]] = [
-        asdict(process)
+    items: list[JsonValueType] = [
+        cast(JsonValueType, asdict(process))
         for process in coordinator.data.processes
         if process.name is not None
         and service_call.data[CONF_NAME].lower() in process.name.lower()
