@@ -1034,6 +1034,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
         ),
