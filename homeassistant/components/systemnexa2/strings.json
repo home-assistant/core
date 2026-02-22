@@ -36,6 +36,14 @@
         "name": "Light"
       }
     },
+    "sensor": {
+      "wifi_signal_strength": {
+        "name": "WiFi signal strength"
+      },
+      "wifi_ssid": {
+        "name": "WiFi SSID"
+      }
+    },
     "switch": {
       "433mhz": {
         "name": "433 MHz"
