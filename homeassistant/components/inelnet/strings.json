@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This instance is already configured."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the controller. Check IP and network.",
+      "invalid_channels": "Invalid channels. Enter numbers 1-16 comma-separated.",
+      "invalid_host": "Invalid IP address or hostname."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "channels": "Channels",
+          "host": "IP address"
+        },
+        "data_description": {
+          "channels": "Channel numbers comma-separated (1-16).",
+          "host": "e.g. 192.168.1.67"
+        },
+        "description": "Define all channels in this step. Enter the controller IP address and all channel numbers as a comma-separated list (e.g. 1 or 1,2,3). One device with cover and action buttons will be created per channel.",
+        "title": "Configure INELNET"
+      }
+    }
+  },
+  "device": {
+    "channel": {
+      "name": "INELNET Blinds channel {channel}"
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "down_short": "Short move down",
+      "program": "Programming mode (pair remote)",
+      "up_short": "Short move up"
+    }
+  },
+  "entity": {
+    "button": {
+      "program": {
+        "name": "Programming mode (pair remote)"
+      },
+      "short_down": {
+        "name": "Short move down"
+      },
+      "short_up": {
+        "name": "Short move up"
+      }
+    }
+  }
+}
