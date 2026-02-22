@@ -2,19 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-from aiohttp import ClientError, ClientResponseError
-from python_open_router import (
-    Model,
-    OpenRouterClient,
-    OpenRouterError,
-    SupportedParameter,
-)
+from openrouter import OpenRouter
+from openrouter.components import Model
+from openrouter.errors import OpenRouterError
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -29,7 +23,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import llm
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -47,11 +40,10 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    SUPPORTED_PARAMETER_STRUCTURED_OUTPUTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-HOST = "openrouter.ai"
 
 
 class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -77,11 +69,9 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            client = OpenRouterClient(
-                user_input[CONF_API_KEY], async_get_clientsession(self.hass)
-            )
+            client = OpenRouter(api_key=user_input[CONF_API_KEY])
             try:
-                await client.get_key_data()
+                await client.api_keys.get_current_key_metadata_async()
             except OpenRouterError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -113,16 +103,13 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
     async def _get_models(self) -> None:
         """Fetch models from OpenRouter."""
         entry = self._get_entry()
-        client = OpenRouterClient(
-            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
-        )
-        models = await client.get_models()
-        self.models = {model.id: model for model in models}
+        client = OpenRouter(api_key=entry.data[CONF_API_KEY])
+        response = await client.models.list_async()
+        self.models = {model.id: model for model in response.data}
 
     async def _get_providers_for_model(self, model_id: str) -> list[dict[str, str]]:
         """Fetch available providers for a specific model from OpenRouter API."""
         entry = self._get_entry()
-        session = async_get_clientsession(self.hass)
 
         # Parse model_id (e.g., "anthropic/claude-3-opus")
         parts = model_id.split("/")
@@ -131,63 +118,30 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         author, slug = parts
-        url = URL.build(host=HOST, scheme="https").joinpath(
-            f"api/v1/models/{author}/{slug}/endpoints"
-        )
-
-        _LOGGER.debug("Fetching providers from URL: %s", url)
-
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {entry.data[CONF_API_KEY]}",
-        }
 
         try:
-            async with asyncio.timeout(10):
-                response = await session.get(url, headers=headers)
-                response.raise_for_status()
-                data = await response.json()
+            client = OpenRouter(api_key=entry.data[CONF_API_KEY])
+            response = await client.endpoints.list_async(author=author, slug=slug)
 
-                _LOGGER.debug("Provider API response: %s", data)
+            providers = []
+            for endpoint in response.data.endpoints:
+                provider_name = str(endpoint.provider_name)
+                provider_slug = endpoint.tag
 
-                providers = []
-                endpoints_data = data.get("data", {})
+                if provider_name and provider_slug:
+                    providers.append(
+                        {
+                            "slug": provider_slug,
+                            "name": provider_name,
+                        }
+                    )
 
-                _LOGGER.debug("endpoints_data type: %s", type(endpoints_data))
-
-                # The API returns data as a dict with an "endpoints" list
-                if isinstance(endpoints_data, dict):
-                    endpoints_list = endpoints_data.get("endpoints", [])
-                elif isinstance(endpoints_data, list):
-                    endpoints_list = endpoints_data
-                else:
-                    endpoints_list = []
-
-                _LOGGER.debug("Found %d endpoints", len(endpoints_list))
-
-                for endpoint in endpoints_list:
-                    if isinstance(endpoint, dict):
-                        # Provider info is directly in the endpoint with "provider_name" and "tag" fields
-                        provider_name = endpoint.get("provider_name", "")
-                        provider_slug = endpoint.get("tag", "")
-
-                        _LOGGER.debug(
-                            "Provider: name=%s, slug=%s", provider_name, provider_slug
-                        )
-
-                        if provider_name and provider_slug:
-                            providers.append(
-                                {
-                                    "slug": provider_slug,
-                                    "name": provider_name,
-                                }
-                            )
-
-                _LOGGER.debug("Parsed %d unique providers", len(providers))
-                return providers
-        except (TimeoutError, ClientError, ClientResponseError) as err:
+            _LOGGER.debug("Found %d providers for model %s", len(providers), model_id)
+        except OpenRouterError as err:
             _LOGGER.debug("Error fetching providers: %s", err)
             return []
+        else:
+            return providers
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
@@ -467,7 +421,7 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
         options = [
             SelectOptionDict(value=model.id, label=model.name)
             for model in self.models.values()
-            if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters
+            if SUPPORTED_PARAMETER_STRUCTURED_OUTPUTS in model.supported_parameters
         ]
 
         return self.async_show_form(
