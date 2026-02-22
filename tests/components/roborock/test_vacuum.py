@@ -609,7 +609,7 @@ async def test_q7_state_changing_commands(
     # Verify the entity state was updated
     assert fake_q7_vacuum.b01_q7_properties is not None
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
 
     await coordinator.async_refresh()
     await hass.async_block_till_done()
@@ -735,7 +735,7 @@ async def test_q7_activity_none_status(
     fake_q7_vacuum.b01_q7_properties._props_data.status = None
 
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
