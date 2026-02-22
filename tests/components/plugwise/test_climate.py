@@ -210,7 +210,6 @@ async def test_adam_restore_state_climate(
             {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-        # Verify set_schedule_state was called with the restored schedule
         mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
             "heating",
         )
@@ -312,6 +311,37 @@ async def test_adam_3_climate_entity_attributes(
             HVACMode.AUTO,
             HVACMode.COOL,
         ]
+
+    data = mock_smile_adam_heat_cool.async_update.return_value
+    data["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = "off"
+    data["f2bf9048bef64cc5b6d5110154e33c81"]["climate_mode"] = "off"
+    data["f2bf9048bef64cc5b6d5110154e33c81"]["control_state"] = HVACAction.OFF
+    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"]["cooling_state"] = True
+    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"]["heating_state"] = False
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get("climate.living_room"))
+        assert state.state == "off"
+        assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+        assert state.attributes[ATTR_HVAC_MODES] == [
+            HVACMode.OFF,
+            HVACMode.AUTO,
+            HVACMode.COOL,
+        ]
+        # Test setting regulation_mode to cooling, from off
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.COOL},
+            blocking=True,
+        )
+        # Verify set_regulation_mode was called with the user-selected HVACMode
+        mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
+            "cooling",
+        )
 
 
 async def test_adam_climate_off_mode_change(
