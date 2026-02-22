@@ -147,5 +147,4 @@ class RoborockCoordinatedEntityB01Q7(
             unique_id=unique_id,
             device_info=coordinator.device_info,
         )
-        CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
