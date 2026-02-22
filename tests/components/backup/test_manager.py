@@ -47,7 +47,6 @@ from homeassistant.components.backup.manager import (
     ReceiveBackupStage,
     ReceiveBackupState,
     RestoreBackupState,
-    UploadBackupEvent,
     WrittenBackup,
 )
 from homeassistant.components.backup.util import password_to_key
@@ -3710,6 +3709,7 @@ async def test_manager_not_blocked_after_restore(
 
 async def test_upload_progress_event(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
 ) -> None:
     """Test that upload progress events are fired when an agent reports progress."""
@@ -3728,31 +3728,54 @@ async def test_upload_progress_event(
 
     remote_agent.async_upload_backup.side_effect = upload_with_progress
 
-    manager = hass.data[DATA_MANAGER]
-    received_events: list[UploadBackupEvent] = []
-    manager.async_subscribe_events(
-        lambda event: (
-            received_events.append(event)
-            if isinstance(event, UploadBackupEvent)
-            else None
-        )
-    )
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
 
     with patch("pathlib.Path.open", mock_open(read_data=b"test")):
-        await manager.async_create_backup(
-            agent_ids=agent_ids,
-            include_addons=None,
-            include_all_addons=False,
-            include_database=True,
-            include_folders=None,
-            include_homeassistant=True,
-            name=None,
-            password=None,
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": agent_ids}
         )
+        result = await ws_client.receive_json()
+        assert result["event"]["manager_state"] == BackupManagerState.CREATE_BACKUP
 
-    assert len(received_events) == 2
-    assert received_events[0].agent_id == "test.remote"
-    assert received_events[0].uploaded_bytes == 500
-    assert received_events[1].agent_id == "test.remote"
-    assert received_events[1].uploaded_bytes == 1000
-    assert all(e.total_bytes > 0 for e in received_events)
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        await hass.async_block_till_done()
+
+    # Consume intermediate stage events (home_assistant, upload_to_agents)
+    result = await ws_client.receive_json()
+    assert result["event"]["stage"] == CreateBackupStage.HOME_ASSISTANT
+
+    result = await ws_client.receive_json()
+    assert result["event"]["stage"] == CreateBackupStage.UPLOAD_TO_AGENTS
+
+    # Upload progress events for the remote agent
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 500,
+        "total_bytes": ANY,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 1000,
+        "total_bytes": ANY,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"]["state"] == CreateBackupState.COMPLETED
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
