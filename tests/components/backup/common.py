@@ -173,6 +173,7 @@ async def setup_backup_integration(
                     side_effect=RuntimeError("Local agent does not open stream")
                 ),
                 backup=backup,
+                on_progress=lambda _: None,
             )
         local_agent._loaded_backups = True
 
