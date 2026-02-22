@@ -5776,7 +5776,7 @@
     'state': '19.71',
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_battery-entry]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5814,7 +5814,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_battery-state]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -5830,7 +5830,7 @@
     'state': '76',
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_battery_type-entry]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5866,7 +5866,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_battery_type-state]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA dual button Battery type',
@@ -5879,7 +5879,7 @@
     'state': 'AAA',
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_battery_voltage-entry]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5923,7 +5923,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_battery_voltage-state]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -5939,7 +5939,7 @@
     'state': '2.82',
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_current_switch_position_1-entry]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_current_switch_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5977,7 +5977,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_current_switch_position_1-state]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_current_switch_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA dual button Current switch position (1)',
@@ -5991,7 +5991,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_current_switch_position_2-entry]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6029,7 +6029,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_bilresa_dual button][sensor.bilresa_dual_button_current_switch_position_2-state]
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA dual button Current switch position (2)',

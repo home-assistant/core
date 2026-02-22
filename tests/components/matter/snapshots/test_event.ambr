@@ -575,7 +575,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_bilresa_dual button][event.bilresa_dual_button_button_1-entry]
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -618,7 +618,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_bilresa_dual button][event.bilresa_dual_button_button_1-state]
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -639,7 +639,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_bilresa_dual button][event.bilresa_dual_button_button_2-entry]
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -682,7 +682,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_bilresa_dual button][event.bilresa_dual_button_button_2-state]
+# name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',

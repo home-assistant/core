@@ -44,7 +44,6 @@ FIXTURES = [
     "heiman_motion_sensor_m1",
     "heiman_smoke_detector",
     "ikea_air_quality_monitor",
-    "ikea_bilresa_dual button",
     "ikea_scroll_wheel",
     "ikea_bilresa_dual_button",
     "inovelli_vtm30",
