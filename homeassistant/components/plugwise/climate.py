@@ -88,7 +88,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     _attr_translation_key = DOMAIN
 
     __last_active_schedule: str | None = None
-    __previous_action_mode: str = HVACAction.HEATING.value
+    __previous_action_mode: str | None = HVACAction.HEATING.value
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -99,9 +99,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 extra_data.as_dict()
             )
             self.__last_active_schedule = plugwise_extra_data.last_active_schedule
-            self.__previous_action_mode = (
-                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
-            )
+            self.__previous_action_mode = plugwise_extra_data.previous_action_mode
 
     def __init__(
         self,
@@ -317,9 +315,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 translation_key=ERROR_NO_SCHEDULE,
             )
 
-        if self.hvac_mode == HVACMode.OFF:
-            await api.set_regulation_mode(self.__previous_action_mode)
-        await api.set_schedule_state(self._location, STATE_ON, desired_schedule)
+        if self.__previous_action_mode:
+            if self.hvac_mode == HVACMode.OFF:
+                await api.set_regulation_mode(self.__previous_action_mode)
+            await api.set_schedule_state(self._location, STATE_ON, desired_schedule)
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
