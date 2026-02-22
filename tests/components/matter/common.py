@@ -46,6 +46,7 @@ FIXTURES = [
     "ikea_air_quality_monitor",
     "ikea_bilresa_dual button",
     "ikea_scroll_wheel",
+    "ikea_bilresa_dual_button",
     "inovelli_vtm30",
     "inovelli_vtm31",
     "longan_link_thermostat",
