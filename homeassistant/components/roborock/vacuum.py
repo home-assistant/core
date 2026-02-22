@@ -1,7 +1,7 @@
 """Support for Roborock vacuum class."""
 
-from collections.abc import Callable
 import asyncio
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -602,7 +602,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         await super().async_will_remove_from_hass()
 
     @callback
-    def _handle_q10_status_update(self, _decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+    def _handle_q10_status_update(self, *_args: Any) -> None:
         """Handle updates pushed by the Q10 status trait."""
         self.schedule_update_ha_state()
 
