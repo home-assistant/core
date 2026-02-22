@@ -1,29 +1,24 @@
 """Support for Roborock vacuum class."""
 
+import asyncio
 import logging
 from typing import Any
 
 from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    GET_MAPS_SERVICE_NAME,
-    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-)
+from .const import DOMAIN, MAP_SLEEP
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockConfigEntry,
@@ -92,33 +87,6 @@ async def async_setup_entry(
         for coordinator in config_entry.runtime_data.b01
         if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
     )
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        GET_MAPS_SERVICE_NAME,
-        None,
-        RoborockVacuum.get_maps.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-        None,
-        RoborockVacuum.get_vacuum_current_position.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-        cv.make_entity_service_schema(
-            {
-                vol.Required("x"): vol.Coerce(int),
-                vol.Required("y"): vol.Coerce(int),
-            },
-        ),
-        RoborockVacuum.async_set_vacuum_goto_position.__name__,
-        supports_response=SupportsResponse.NONE,
-    )
 
 
 class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
@@ -135,6 +103,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -150,6 +119,8 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             coordinator.duid_slug,
             coordinator,
         )
+        self._home_trait = coordinator.properties_api.home
+        self._maps_trait = coordinator.properties_api.maps
 
     @property
     def fan_speed_list(self) -> list[str]:
@@ -210,6 +181,72 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Send vacuum to a specific target point."""
         await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        home_map_info = self._home_trait.home_map_info
+        if not home_map_info:
+            return []
+        return [
+            Segment(
+                id=f"{map_flag}:{room.segment_id}",
+                name=room.name,
+                group=map_info.name,
+            )
+            for map_flag, map_info in home_map_info.items()
+            for room in map_info.rooms
+        ]
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments."""
+        parsed: list[tuple[int, int]] = []
+        for seg_id in segment_ids:
+            # Segment id is mapflag:segment_id
+            parts = seg_id.split(":")
+            if len(parts) != 2:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="segment_id_parse_error",
+                    translation_placeholders={"segment_id": seg_id},
+                )
+            try:
+                # We need to make sure both parts are ints.
+                parsed.append((int(parts[0]), int(parts[1])))
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="segment_id_parse_error",
+                    translation_placeholders={"segment_id": seg_id},
+                ) from err
+
+        # Because segment_ids can overlap for each map,
+        # we need to make sure that only one map is passed in.
+        unique_map_flags = {map_flag for map_flag, _ in parsed}
+        if len(unique_map_flags) > 1:
+            map_flags_str = ", ".join(str(flag) for flag in sorted(unique_map_flags))
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multiple_maps_in_clean",
+                translation_placeholders={"map_flags": map_flags_str},
+            )
+        target_map_flag = next(iter(unique_map_flags))
+        if self._maps_trait.current_map != target_map_flag:
+            # If the user is attempting to clean an area on a map that is not selected, we should try to change.
+            try:
+                await self._maps_trait.set_current_map(target_map_flag)
+            except RoborockException as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_failed",
+                    translation_placeholders={"command": "load_multi_map"},
+                ) from err
+            await asyncio.sleep(MAP_SLEEP)
+
+        # We can now confirm all segments are on our current map, so clean them all.
+        await self.send(
+            RoborockCommand.APP_SEGMENT_CLEAN,
+            [{"segments": [seg_id for _, seg_id in parsed]}],
+        )
 
     async def async_send_command(
         self,

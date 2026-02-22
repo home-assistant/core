@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
@@ -95,7 +97,7 @@ class CecEntity(Entity):
         return self._device.type
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:

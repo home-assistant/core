@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     entry.runtime_data = HomeAssistantTuyaData(manager=manager, listener=listener)
 
     # Cleanup device registry
-    await cleanup_device_registry(hass, manager)
+    await cleanup_device_registry(hass, manager, entry)
 
     # Register known device IDs
     device_registry = dr.async_get(hass)
@@ -114,13 +114,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     return True
 
 
-async def cleanup_device_registry(hass: HomeAssistant, device_manager: Manager) -> None:
-    """Remove deleted device registry entry if there are no remaining entities."""
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_manager: Manager, entry: TuyaConfigEntry
+) -> None:
+    """Unlink device registry entry if there are no remaining entities."""
     device_registry = dr.async_get(hass)
-    for dev_id, device_entry in list(device_registry.devices.items()):
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
         for item in device_entry.identifiers:
             if item[0] == DOMAIN and item[1] not in device_manager.device_map:
-                device_registry.async_remove_device(dev_id)
+                device_registry.async_update_device(
+                    device_entry.id, remove_config_entry_id=entry.entry_id
+                )
                 break
 
 
@@ -165,7 +171,7 @@ class DeviceListener(SharingDeviceListener):
         self,
         device: CustomerDevice,
         updated_status_properties: list[str] | None = None,
-        dp_timestamps: dict | None = None,
+        dp_timestamps: dict[str, int] | None = None,
     ) -> None:
         """Update device status with optional DP timestamps."""
         LOGGER.debug(

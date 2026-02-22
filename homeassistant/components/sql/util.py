@@ -137,7 +137,7 @@ def validate_query(
         query_str = Template(query_template, hass).async_render()
     redacted_query = redact_credentials(query_str)
 
-    issue_key = unique_id if unique_id else redacted_query
+    issue_key = unique_id or redacted_query
     # If the query has a unique id and they fix it we can dismiss the issue
     # but if it doesn't have a unique id they have to ignore it instead
 

@@ -79,7 +79,7 @@ def mock_pymodbus_fixture(do_exception, register_words):
     """Mock pymodbus."""
     mock_pb = mock.AsyncMock()
     mock_pb.close = mock.MagicMock()
-    read_result = ReadResult(register_words if register_words else [])
+    read_result = ReadResult(register_words or [])
     mock_pb.read_coils.return_value = read_result
     mock_pb.read_discrete_inputs.return_value = read_result
     mock_pb.read_input_registers.return_value = read_result
