@@ -301,6 +301,10 @@ class OpenRouterEntity(Entity):
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
+            if not result.choices:
+                LOGGER.error("API returned empty choices")
+                raise HomeAssistantError("API returned empty response")
+
             result_message = result.choices[0].message
 
             model_args["messages"].extend(

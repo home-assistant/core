@@ -21,7 +21,10 @@ def _create_openrouter_error(message: str = "error") -> OpenRouterError:
     """Create an OpenRouterError with a mock response."""
     response = MagicMock(spec=httpx.Response)
     response.status_code = 500
-    response.headers = {}
+    response.headers = httpx.Headers({})
+    response.content = b""
+    response.text = ""
+    response.request = MagicMock()
     return OpenRouterError(message, response)
 
 
@@ -388,11 +391,11 @@ async def test_reconfigure_ai_task_abort(
 
 
 @pytest.mark.parametrize(
-    ("current_llm_apis", "suggested_llm_apis", "expected_options"),
+    ("current_llm_apis", "expected_enable_assist_default"),
     [
-        (["assist"], ["assist"], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        (["assist"], True),
+        (["non-existent"], False),
+        (["assist", "non-existent"], True),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(
@@ -401,10 +404,9 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     current_llm_apis: list[str],
-    suggested_llm_apis: list[str],
-    expected_options: list[str],
+    expected_enable_assist_default: bool,
 ) -> None:
-    """Test llm_hass_api field values when reconfiguring a conversation subentry."""
+    """Test enable_assist default reflects the current llm_hass_api values."""
     await setup_integration(hass, mock_config_entry)
 
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -421,8 +423,42 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-
-    # The enable_assist checkbox should reflect whether LLM APIs are configured
-    # We verify this by checking that the form is shown without errors
-    # which means the schema was constructed correctly with the right defaults
     assert not result.get("errors")
+
+    schema = result["data_schema"].schema
+    section_options = schema["section_options"]
+    enable_assist_key = next(
+        k for k in section_options.schema if "enable_assist" in str(k)
+    )
+    assert enable_assist_key.default() == expected_enable_assist_default
+
+
+async def test_conversation_agent_model_no_tool_support(
+    hass: HomeAssistant,
+    mock_open_router_client: MagicMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when selecting a model without tool support with Assist enabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Test Agent",
+            CONF_PROMPT: "you are an assistant",
+            "section_model": {"chat_model": "openai/gpt-3.5-turbo"},
+            "section_options": {"enable_assist": True, "web_search": False},
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"section_model": "model_no_tool_support"}

@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import LOGGER
+from .const import CONF_CHAT_MODEL, CONF_PROVIDER, CONF_WEB_SEARCH, LOGGER
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
@@ -25,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
         http_client=get_async_client(hass),
     )
 
-    # Cache current platform data which gets added to each request (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
@@ -56,3 +57,35 @@ async def _async_update_listener(
 async def async_unload_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -> bool:
     """Unload OpenRouter."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: OpenRouterConfigEntry
+) -> bool:
+    """Migrate entry."""
+    LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version > 1:
+        return False
+
+    if entry.version == 1 and entry.minor_version < 1:
+        for subentry in entry.subentries.values():
+            updated_data = dict(subentry.data)
+            if CONF_MODEL in updated_data:
+                updated_data[CONF_CHAT_MODEL] = updated_data.pop(CONF_MODEL)
+            if CONF_WEB_SEARCH not in updated_data:
+                updated_data[CONF_WEB_SEARCH] = False
+            if CONF_PROVIDER not in updated_data:
+                updated_data[CONF_PROVIDER] = []
+
+            hass.config_entries.async_update_subentry(
+                entry, subentry, data=MappingProxyType(updated_data)
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=1)
+
+    LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
+
+    return True

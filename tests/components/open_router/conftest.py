@@ -31,19 +31,42 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def enable_assist() -> bool:
+def enable_assist(request: pytest.FixtureRequest) -> bool:
     """Mock conversation subentry data."""
+    if hasattr(request, "param"):
+        return request.param
     return False
 
 
 @pytest.fixture
-def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
+def web_search(request: pytest.FixtureRequest) -> bool:
+    """Mock web search setting."""
+    if hasattr(request, "param"):
+        return request.param
+    return False
+
+
+@pytest.fixture
+def provider(request: pytest.FixtureRequest) -> list[str]:
+    """Mock provider list."""
+    if hasattr(request, "param"):
+        return request.param
+    return []
+
+
+@pytest.fixture
+def conversation_subentry_data(
+    enable_assist: bool, web_search: bool, provider: list[str]
+) -> dict[str, Any]:
     """Mock conversation subentry data."""
     res: dict[str, Any] = {
         CONF_NAME: "GPT-3.5 Turbo",
         "chat_model": "openai/gpt-3.5-turbo",
         CONF_PROMPT: "You are a helpful assistant.",
+        "web_search": web_search,
     }
+    if provider:
+        res["provider"] = provider
     if enable_assist:
         res[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
     return res

@@ -79,6 +79,71 @@ async def test_default_prompt(
     }
 
 
+@pytest.mark.parametrize(
+    ("web_search", "expected_model_suffix"),
+    [(True, ":online"), (False, "")],
+    ids=["web_search_enabled", "web_search_disabled"],
+    indirect=["web_search"],
+)
+async def test_web_search(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    web_search: bool,
+    expected_model_suffix: str,
+) -> None:
+    """Test that web search adds :online suffix to model."""
+    await setup_integration(hass, mock_config_entry)
+    await conversation.async_converse(
+        hass,
+        "hello",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.gpt_3_5_turbo",
+    )
+
+    call = mock_openai_client.chat.completions.create.call_args_list[0][1]
+    expected_model = f"openai/gpt-3.5-turbo{expected_model_suffix}"
+    assert call["model"] == expected_model
+
+
+@pytest.mark.parametrize(
+    ("provider", "expected_provider_order"),
+    [
+        (["openai", "azure"], ["openai", "azure"]),
+        (["deepseek"], ["deepseek"]),
+        ([], None),
+    ],
+    ids=["multiple_providers", "single_provider", "no_providers"],
+    indirect=["provider"],
+)
+async def test_provider_selection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    provider: list[str],
+    expected_provider_order: list[str] | None,
+) -> None:
+    """Test that provider selection is passed in extra_body."""
+    await setup_integration(hass, mock_config_entry)
+    await conversation.async_converse(
+        hass,
+        "hello",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.gpt_3_5_turbo",
+    )
+
+    call = mock_openai_client.chat.completions.create.call_args_list[0][1]
+    assert call["extra_body"]["require_parameters"] is True
+    if expected_provider_order:
+        assert call["extra_body"]["provider"] == {"order": expected_provider_order}
+    else:
+        assert "provider" not in call["extra_body"]
+
+
 @pytest.mark.parametrize("enable_assist", [True])
 async def test_function_call(
     hass: HomeAssistant,
