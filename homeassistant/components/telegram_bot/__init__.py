@@ -71,9 +71,9 @@ from .const import (
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_ONE_TIME_KEYBOARD,
     ATTR_OPEN_PERIOD,
     ATTR_OPTIONS,
@@ -264,7 +264,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Optional(ATTR_TITLE): cv.string,
             vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Required(ATTR_MESSAGEID): vol.Any(
+            vol.Required(ATTR_MESSAGE_ID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -281,7 +281,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
         {
             vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-            vol.Required(ATTR_MESSAGEID): vol.Any(
+            vol.Required(ATTR_MESSAGE_ID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -311,7 +311,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -325,7 +325,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -347,7 +347,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
     }
@@ -364,7 +364,7 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
 SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
     {
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -485,7 +485,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
                 for chat_id, message_id in service_response.items():
                     formatted_response = {
                         ATTR_CHAT_ID: int(chat_id),
-                        ATTR_MESSAGEID: message_id,
+                        ATTR_MESSAGE_ID: message_id,
                     }
 
                     if target_notify_entity_id:
