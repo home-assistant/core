@@ -107,11 +107,7 @@ def _get_q10_status(data: dict[Any, Any]) -> YXDeviceState | None:
     status_code = data.get(B01_Q10_DP.STATUS)
     if status_code is None:
         return None
-
-    for state in YXDeviceState:
-        if state.code == status_code:
-            return state
-    return None
+    return YXDeviceState.from_code_optional(status_code)
 
 
 def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
@@ -604,7 +600,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @callback
     def _handle_q10_status_update(self, *_args: Any) -> None:
         """Handle updates pushed by the Q10 status trait."""
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def activity(self) -> VacuumActivity | None:
