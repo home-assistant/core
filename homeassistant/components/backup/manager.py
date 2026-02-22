@@ -1401,9 +1401,10 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        self.last_event = event
-        if not isinstance(event, (BlockedEvent, IdleEvent)):
-            self.last_action_event = event
+        if not isinstance(event, UploadBackupEvent):
+            self.last_event = event
+            if not isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
