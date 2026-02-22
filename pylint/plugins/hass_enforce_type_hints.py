@@ -1951,48 +1951,58 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="code_format",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_locked",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_locking",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_unlocking",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_jammed",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="LockEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="lock",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="unlock",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="open",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
