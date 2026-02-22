@@ -168,7 +168,9 @@ class ForecastSolarOptionFlowHandler(OptionsFlowWithReload):
                 # Preserve existing planes when updating settings
                 new_options = user_input | {CONF_API_KEY: api_key or None}
                 if CONF_PLANES in self.config_entry.options:
-                    new_options[CONF_PLANES] = self.config_entry.options[CONF_PLANES]
+                    new_options[CONF_PLANES] = deepcopy(
+                        self.config_entry.options[CONF_PLANES]
+                    )
                 return self.async_create_entry(title="", data=new_options)
 
         return self.async_show_form(
