@@ -39,14 +39,14 @@ class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
 class ProxmoxVMButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox VM button description."""
 
-    press_action: Callable[[ProxmoxCoordinator, str, str], None]
+    press_action: Callable[[ProxmoxCoordinator, str, int], None]
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxContainerButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox container button description."""
 
-    press_action: Callable[[ProxmoxCoordinator, str, str], None]
+    press_action: Callable[[ProxmoxCoordinator, str, int], None]
 
 
 NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
