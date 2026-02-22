@@ -28,7 +28,7 @@ async def async_setup_entry(
 class SystemNexa2Light(SystemNexa2Entity, LightEntity):
     """Representation of a dimmable SystemNexa2 light."""
 
-    _attr_translation_key = "light"
+    _attr_translation_key = "light_1"
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 

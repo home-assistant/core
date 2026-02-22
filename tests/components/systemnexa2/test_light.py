@@ -61,7 +61,7 @@ async def test_light_only_for_dimmable_devices(
     await hass.async_block_till_done()
 
     # Light entity should NOT exist for non-dimmable device
-    state = hass.states.get("light.test_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state is None
 
 
@@ -77,7 +77,7 @@ async def test_light_control_operations(
     await hass.config_entries.async_setup(mock_dimmable_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_dimmable_device_light"
+    entity_id = "light.test_dimmable_device_light_1"
 
     # Verify initial state (should be on with 50% brightness from fixture)
     state = hass.states.get(entity_id)
@@ -165,7 +165,7 @@ async def test_light_brightness_property(
     await coordinator._async_handle_update(StateChange(state=0.5))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
@@ -174,7 +174,7 @@ async def test_light_brightness_property(
     await coordinator._async_handle_update(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255
 
@@ -182,14 +182,14 @@ async def test_light_brightness_property(
     await coordinator._async_handle_update(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_OFF
 
     # Test with state = 0.1 (10% in device scale, should be 26 in HA scale)
     await coordinator._async_handle_update(StateChange(state=0.1))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 26
 
@@ -213,14 +213,14 @@ async def test_light_is_on_property(
     await coordinator._async_handle_update(StateChange(state=0.5))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_ON
 
     # Test with state = 0 (light is off)
     await coordinator._async_handle_update(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_OFF
 
 
@@ -238,7 +238,7 @@ async def test_coordinator_connection_status(
     update_callback = find_update_callback(mock_dimmable_device)
 
     # Initially, the light should be on (state=0.5 from fixture)
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -246,7 +246,7 @@ async def test_coordinator_connection_status(
     await update_callback(ConnectionStatus(connected=False))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate reconnection and state update
@@ -254,7 +254,7 @@ async def test_coordinator_connection_status(
     await update_callback(StateChange(state=0.75))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 191  # 0.75 * 255 ≈ 191
 
@@ -276,7 +276,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -284,7 +284,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=0.25))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 64  # 0.25 * 255 ≈ 64
 
@@ -292,6 +292,6 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_dimmable_device_light")
+    state = hass.states.get("light.test_dimmable_device_light_1")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255
