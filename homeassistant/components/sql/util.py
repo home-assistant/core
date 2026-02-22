@@ -261,7 +261,7 @@ def check_and_render_sql_query(hass: HomeAssistant, query: Template | str) -> st
         raise MultipleQueryError("Multiple SQL statements are not allowed")
     if (
         len(rendered_queries) == 0
-        or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"
+        or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"  # type: ignore[no-untyped-call]
     ):
         raise UnknownQueryTypeError("SQL query is empty or unknown type")
     if query_type != "SELECT":
