@@ -6,8 +6,9 @@ import logging
 from typing import Any
 
 from openrouter import OpenRouter
-from openrouter.components import Model
+from openrouter.components import Model, ModelsListResponse
 from openrouter.errors import OpenRouterError
+from openrouter.operations import ListEndpointsResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -113,7 +114,7 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         entry = self._get_entry()
         api_key = entry.data[CONF_API_KEY]
 
-        def _sync_get_models() -> Any:
+        def _sync_get_models() -> ModelsListResponse:
             client = OpenRouter(api_key=api_key)
             return client.models.list()
 
@@ -125,14 +126,17 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         entry = self._get_entry()
         api_key = entry.data[CONF_API_KEY]
 
+        # OpenRouter model IDs follow the format "author/slug" (e.g., "openai/gpt-4")
         parts = model_id.split("/")
         if len(parts) != 2:
-            _LOGGER.debug("Invalid model_id format: %s", model_id)
+            _LOGGER.debug(
+                "Model ID does not match expected format 'author/slug': %s", model_id
+            )
             return []
 
         author, slug = parts
 
-        def _sync_get_providers() -> Any:
+        def _sync_get_providers() -> ListEndpointsResponse:
             client = OpenRouter(api_key=api_key)
             return client.endpoints.list(author=author, slug=slug)
 
@@ -188,41 +192,37 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
         self.options = self._get_reconfigure_subentry().data.copy()
         return await self.async_step_init(user_input)
 
-    async def validate_model_options(
+    def _process_model_options(
         self, user_input: dict[str, Any]
-    ) -> dict[str, str]:
-        """Checks the selected options for errors. If there any, return them."""
+    ) -> tuple[dict[str, Any], dict[str, str]]:
+        """Process and validate model options, returning (processed_options, errors)."""
         errors: dict[str, str] = {}
-        flattened_input = dict(user_input)
+        processed = dict(user_input)
 
-        if SECTION_MODEL in flattened_input:
-            flattened_input.update(flattened_input.pop(SECTION_MODEL))
-        if SECTION_OPTIONS in flattened_input:
-            flattened_input.update(flattened_input.pop(SECTION_OPTIONS))
+        if SECTION_MODEL in processed:
+            processed.update(processed.pop(SECTION_MODEL))
+        if SECTION_OPTIONS in processed:
+            processed.update(processed.pop(SECTION_OPTIONS))
 
-        if flattened_input.get("enable_assist"):
-            flattened_input[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
+        if processed.get("enable_assist"):
+            processed[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
         else:
-            flattened_input.pop(CONF_LLM_HASS_API, None)
-        flattened_input.pop("enable_assist", None)
+            processed.pop(CONF_LLM_HASS_API, None)
+        processed.pop("enable_assist", None)
 
-        self.options.update(flattened_input)
-        if CONF_LLM_HASS_API not in flattened_input:
-            self.options.pop(CONF_LLM_HASS_API, None)
-
-        selected_model = flattened_input.get(CONF_CHAT_MODEL)
+        selected_model = processed.get(CONF_CHAT_MODEL)
         if not selected_model:
             errors[SECTION_MODEL] = "model_required"
-        if selected_model not in self.models:
+        elif selected_model not in self.models:
             errors[SECTION_MODEL] = "invalid_model_selected"
 
-        enable_assist = CONF_LLM_HASS_API in flattened_input
+        enable_assist = CONF_LLM_HASS_API in processed
         if enable_assist and selected_model and selected_model in self.models:
             model = self.models[selected_model]
             if SUPPORTED_PARAMETER_TOOLS not in model.supported_parameters:
                 errors[SECTION_MODEL] = "model_no_tool_support"
 
-        return errors
+        return processed, errors
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -242,8 +242,9 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="unknown")
 
         if user_input is not None:
-            errors = await self.validate_model_options(user_input)
+            processed, errors = self._process_model_options(user_input)
             if not errors:
+                self.options = processed
                 return await self.async_step_providers()
 
         hass_apis: list[SelectOptionDict] = [
@@ -351,9 +352,6 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             )
 
         selected_model = self.options.get(CONF_CHAT_MODEL)
-
-        _LOGGER.debug("Fetching providers for model: %s", selected_model)
-        _LOGGER.debug("Available models: %s", list(self.models.keys()))
 
         if selected_model and selected_model in self.models:
             self.providers = await self._get_providers_for_model(selected_model)

@@ -21,7 +21,10 @@ def _create_openrouter_error(message: str = "error") -> OpenRouterError:
     """Create an OpenRouterError with a mock response."""
     response = MagicMock(spec=httpx.Response)
     response.status_code = 500
-    response.headers = {}
+    response.headers = httpx.Headers({})
+    response.content = b""
+    response.text = ""
+    response.request = MagicMock()
     return OpenRouterError(message, response)
 
 
@@ -426,3 +429,34 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     # We verify this by checking that the form is shown without errors
     # which means the schema was constructed correctly with the right defaults
     assert not result.get("errors")
+
+
+async def test_conversation_agent_model_no_tool_support(
+    hass: HomeAssistant,
+    mock_open_router_client: MagicMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when selecting a model without tool support with Assist enabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Test Agent",
+            CONF_PROMPT: "you are an assistant",
+            "section_model": {"chat_model": "openai/gpt-3.5-turbo"},
+            "section_options": {"enable_assist": True, "web_search": False},
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"section_model": "model_no_tool_support"}
