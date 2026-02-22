@@ -118,11 +118,11 @@ def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
     """Get wind/fan speed name from Q10 data."""
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
     fan_level = data.get(B01_Q10_DP.FAN_LEVEL)
-    if fan_level is not None:
-        # Map YXFanLevel code to value (e.g., "quiet", "normal", "strong", "max")
-        for yx_fan in YXFanLevel:
-            if yx_fan.code == fan_level:
-                return yx_fan.value.capitalize()
+    if (
+        fan_level is not None
+        and (yx_fan_level := YXFanLevel.from_code_optional(fan_level)) is not None
+    ):
+        return yx_fan_level.value.capitalize()
     return None
 
 
