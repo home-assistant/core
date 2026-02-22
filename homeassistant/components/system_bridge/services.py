@@ -129,7 +129,7 @@ async def _handle_get_processes_by_name(
 
     return {
         "count": len(items),
-        "processes": list(items),
+        "processes": items,
     }
 
 
