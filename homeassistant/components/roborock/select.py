@@ -92,25 +92,31 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         key="water_box_mode",
         translation_key="mop_intensity",
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-        value_fn=lambda api: api.status.water_box_mode_name,
+        value_fn=lambda api: api.status.water_mode_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            api.status.water_box_mode.keys()
-            if api.status.water_box_mode is not None
+            [mode.value for mode in api.status.water_mode_options]
+            if api.status.water_mode_options
             else None
         ),
-        parameter_lambda=lambda key, api: [api.status.get_mop_intensity_code(key)],
+        parameter_lambda=lambda key, api: [
+            {v: k for k, v in api.status.water_mode_mapping.items()}[key]
+        ],
     ),
     RoborockSelectDescription(
         key="mop_mode",
         translation_key="mop_mode",
         api_command=RoborockCommand.SET_MOP_MODE,
-        value_fn=lambda api: api.status.mop_mode_name,
+        value_fn=lambda api: api.status.mop_route_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            api.status.mop_mode.keys() if api.status.mop_mode is not None else None
+            [mode.value for mode in api.status.mop_route_options]
+            if api.status.mop_route_options
+            else None
         ),
-        parameter_lambda=lambda key, api: [api.status.get_mop_mode_code(key)],
+        parameter_lambda=lambda key, api: [
+            {v: k for k, v in api.status.mop_route_mapping.items()}[key]
+        ],
     ),
     RoborockSelectDescription(
         key="dust_collection_mode",

@@ -7253,7 +7253,7 @@
       "name": "Twilio",
       "integrations": {
         "twilio": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Twilio"
@@ -7274,13 +7274,13 @@
     },
     "twinkly": {
       "name": "Twinkly",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "twitch": {
       "name": "Twitch",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7362,7 +7362,7 @@
     },
     "ukraine_alarm": {
       "name": "Ukraine Alarm",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7386,7 +7386,7 @@
     },
     "upcloud": {
       "name": "UpCloud",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7415,7 +7415,7 @@
     },
     "uptimerobot": {
       "name": "UptimeRobot",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7433,7 +7433,7 @@
     },
     "v2c": {
       "name": "V2C",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7473,7 +7473,7 @@
     },
     "venstar": {
       "name": "Venstar",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7542,7 +7542,7 @@
     },
     "vilfo": {
       "name": "Vilfo Router",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7601,7 +7601,7 @@
     },
     "volumio": {
       "name": "Volumio",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
