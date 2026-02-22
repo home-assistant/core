@@ -145,20 +145,18 @@ def output_device_ids_by_entity_id(
     output_devices = dict.fromkeys(entity_ids, None)
 
     entity_registry = er.async_get(hass)
+    config_entries = hass.config_entries
 
-    for entity_id in entity_ids:
+    for entity_id in output_devices:
         if (
-            entity_entry := entity_registry.async_get(entity_id)
-        ) is not None and entity_entry.config_entry_id is not None:
-            if (
-                config_entry := hass.config_entries.async_get_entry(
-                    entity_entry.config_entry_id
-                )
-            ) is not None:
-                if (
-                    output_device_id := config_entry.data.get("output_device_id", None)
-                ) is not None:
-                    output_devices[entity_id] = output_device_id
+            (entity_entry := entity_registry.async_get(entity_id)) is not None
+            and (config_entry_id := entity_entry.config_entry_id) is not None
+            and (config_entry := config_entries.async_get_entry(config_entry_id))
+            is not None
+            and (output_device_id := config_entry.data.get("output_device_id", None))
+            is not None
+        ):
+            output_devices[entity_id] = output_device_id
 
     return output_devices
 
