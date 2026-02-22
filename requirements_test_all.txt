@@ -1493,6 +1493,9 @@ opower==0.17.0
 # homeassistant.components.oralb
 oralb-ble==1.0.2
 
+# homeassistant.components.orvibo
+orvibo==1.1.2
+
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
 
