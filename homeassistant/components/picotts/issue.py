@@ -1,6 +1,6 @@
 """Issues for Pico TTS integration."""
 
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
@@ -11,7 +11,7 @@ def deprecate_yaml_issue(hass: HomeAssistant) -> None:
     """Deprecate yaml issue."""
     async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
+        DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
         issue_domain=DOMAIN,
