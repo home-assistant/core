@@ -53,13 +53,11 @@ def _get_icloud_account(
     entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, identifier.config_entry_id
     )
-    if (
-        entry is None
-        or getattr(entry, "runtime_data", None) is None
-        or entry.runtime_data is None
-    ):
+    if entry is None or getattr(entry, "runtime_data", None) is None:
         raise Unresolvable(
-            f"iCloud config entry not found: {identifier.config_entry_id}"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"entry": identifier.config_entry_id},
         )
 
     return entry.runtime_data
@@ -71,7 +69,10 @@ def _get_photo_album(
     """Get photo album from identifier."""
     albums: AlbumContainer | None = None
     if icloud_account.api is None:
-        raise Unresolvable("iCloud account not initialized")
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="account_not_initialized",
+        )
 
     if identifier.shared_album is True:
         albums = icloud_account.api.photos.shared_streams
@@ -81,7 +82,10 @@ def _get_photo_album(
     album = albums.get(identifier.album_id) if albums else None
 
     if not album:
-        raise Unresolvable(f"Album not found: {identifier.album_id}")
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="album_not_found",
+        )
 
     return album
 
@@ -94,7 +98,10 @@ def _get_photo_asset(
     icloud_account = _get_icloud_account(hass, identifier)
 
     if identifier.album_id is None or identifier.photo_id is None:
-        raise Unresolvable(f"Incomplete media source identifier: {identifier}")
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="incomplete_media_source_identifier",
+        )
 
     album = _get_photo_album(icloud_account, identifier)
 
@@ -106,7 +113,10 @@ def _get_photo_asset(
                 photo = item
                 break
     if photo is None:
-        raise Unresolvable(f"Photo not found: {identifier.photo_id}")
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="photo_not_found",
+        )
     return photo
 
 
@@ -115,7 +125,10 @@ async def _get_media_mime_type(
 ) -> str:
     photo = await hass.async_add_executor_job(_get_photo_asset, hass, identifier)
     if photo is None:
-        raise Unresolvable(f"Photo not found: {identifier.photo_id}")
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="photo_not_found",
+        )
     match photo.item_type:
         case "image":
             if photo.filename.lower().endswith(".png"):
@@ -126,7 +139,10 @@ async def _get_media_mime_type(
         case "movie":
             return "video/mp4"
         case _:
-            raise Unresolvable("Unsupported media type")
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+            )
 
 
 class PhotoCache:
@@ -180,25 +196,21 @@ class IcloudMediaSourceIdentifier:
     @staticmethod
     def from_identifier(identifier: str) -> IcloudMediaSourceIdentifier:
         """Initialize iCloud media source identifier."""
-        config_entry_id: str | None = None
+        config_entry_id: str
         shared_album: bool | None = None
         album_id: str | None = None
         photo_id: str | None = None
-        if identifier is not None:
-            parts = identifier.split("|")
+        parts: list[str] = identifier.split("/")
 
-            for idx, part in enumerate(parts):
-                if idx == 0:
-                    config_entry_id = part
-                elif idx == 1:
-                    shared_album = part.lower() == "shared"
-                elif idx == 2:
-                    album_id = part
-                elif idx == 3:
-                    photo_id = part
-
-        if config_entry_id is None or config_entry_id == "":
-            raise Unresolvable("Invalid media source identifier")
+        for idx, part in enumerate(parts):
+            if idx == 0:
+                config_entry_id = part
+            elif idx == 1:
+                shared_album = part.lower() == "shared"
+            elif idx == 2:
+                album_id = part
+            elif idx == 3:
+                photo_id = part
 
         return IcloudMediaSourceIdentifier(
             config_entry_id=config_entry_id,
@@ -216,7 +228,7 @@ class IcloudMediaSourceIdentifier:
             parts.append(self.album_id)
         if self.photo_id is not None:
             parts.append(self.photo_id)
-        return "|".join(parts)
+        return "/".join(parts)
 
 
 class IcloudMediaSource(MediaSource):
@@ -232,13 +244,15 @@ class IcloudMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable object."""
         if item.domain != DOMAIN:
-            raise Unresolvable(f"Invalid media source domain: {item.domain}")
+            raise Unresolvable(
+                translation_domain=DOMAIN, translation_key="invalid_media_source"
+            )
 
         identifier = IcloudMediaSourceIdentifier.from_identifier(item.identifier)
         mime_type = await _get_media_mime_type(self._hass, identifier)
 
         return PlayMedia(
-            f"/api/icloud/media_source/serve/original/{b64encode(str(item.identifier).encode('utf-8')).decode('utf-8')}",
+            f"/api/icloud/media_source/serve/original/{b64encode(str(item.identifier).encode()).decode()}",
             mime_type,
         )
 
@@ -263,7 +277,9 @@ class IcloudMediaSource(MediaSource):
                     break
             else:
                 raise Unresolvable(
-                    f"iCloud config entry not found: {identifier.config_entry_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_found",
+                    translation_placeholders={"entry": identifier.config_entry_id},
                 )
 
         if identifier and identifier.shared_album is True:
@@ -275,7 +291,7 @@ class IcloudMediaSource(MediaSource):
             album = _get_photo_album(icloud_account, identifier)
             title_parts.append(album.title)
 
-        return " - ".join(title_parts)
+        return " / ".join(title_parts)
 
     async def async_browse_media(
         self,
@@ -283,7 +299,10 @@ class IcloudMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if not self._hass.config_entries.async_loaded_entries(DOMAIN):
-            raise BrowseError("iCloud config entry not loaded")
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_loaded",
+            )
 
         if not item.identifier:
             return await self._async_build_icloud_accounts()
@@ -301,7 +320,10 @@ class IcloudMediaSource(MediaSource):
         if identifier.photo_id is None:
             return await self._async_build_photos(identifier, icloud_account)
 
-        raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_media_item",
+        )
 
     async def _async_build_icloud_accounts(
         self,
@@ -429,14 +451,20 @@ class IcloudMediaSource(MediaSource):
 
         albums: AlbumContainer | None = None
         if icloud_account.api is None:
-            raise Unresolvable("iCloud account not initialized")
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="account_not_initialized",
+            )
 
         if identifier.shared_album is True:
             albums = icloud_account.api.photos.shared_streams
         elif identifier.shared_album is False:
             albums = icloud_account.api.photos.albums
         else:
-            raise Unresolvable("Album type (shared vs regular) not specified")
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="album_type_not_specified",
+            )
 
         children: list[BrowseMediaSource] = []
         if albums is not None:
@@ -479,15 +507,12 @@ class IcloudMediaSource(MediaSource):
                 photo_id=photo.id,
             )
 
-            if photo.item_type == "image":
-                media_class = MediaClass.IMAGE
-            else:
-                media_class = MediaClass.VIDEO
-
             item = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=str(photo_id),
-                media_class=media_class,
+                media_class=(
+                    MediaClass.IMAGE if photo.item_type == "image" else MediaClass.VIDEO
+                ),
                 media_content_type="",
                 can_play=True,
                 can_expand=False,
@@ -521,7 +546,7 @@ class IcloudMediaSourceView(HomeAssistantView):
 
         try:
             identifier = IcloudMediaSourceIdentifier.from_identifier(
-                b64decode(image_id).decode("utf-8")
+                b64decode(image_id).decode()
             )
         except (Unresolvable, binascii.Error) as err:
             _LOGGER.error("Error decoding iCloud media source identifier: %s", err)

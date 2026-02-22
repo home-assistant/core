@@ -1,7 +1,6 @@
 """Tests for media source of the iCloud integration."""
 
 from base64 import b64encode
-import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientTimeout, hdrs, web
@@ -192,7 +191,7 @@ async def test_get_photo_album_no_api(
         album_id="my photos",
     )
 
-    with pytest.raises(Unresolvable, match="iCloud account not initialized"):
+    with pytest.raises(Unresolvable, match="account_not_initialized"):
         _get_photo_album(mock_account, identifier)
 
 
@@ -217,7 +216,7 @@ async def test_get_photo_album_no_album(
         album_id="my photos",
     )
 
-    with pytest.raises(Unresolvable, match="Album not found: my photos"):
+    with pytest.raises(Unresolvable, match="album_not_found"):
         _get_photo_album(mock_account, identifier)
 
 
@@ -265,9 +264,7 @@ async def test_get_photo_asset_invalid_identifier(
         config_entry_id=mock_config_entry.unique_id,
         shared_album=False,
     )
-    with pytest.raises(
-        Unresolvable, match=f"Incomplete media source identifier: {identifier}"
-    ):
+    with pytest.raises(Unresolvable, match="incomplete_media_source_identifier"):
         _get_photo_asset(hass, identifier)
     mock_get_icloud_account.assert_called_with(hass, identifier)
 
@@ -326,7 +323,7 @@ async def test_get_photo_asset_photo_not_found(
         photo_id="9999",
     )
 
-    with pytest.raises(Unresolvable, match="Photo not found: 9999"):
+    with pytest.raises(Unresolvable, match="photo_not_found"):
         _get_photo_asset(hass, identifier)
 
 
@@ -344,9 +341,9 @@ async def test_get_photo_asset_photo_not_found(
             MagicMock(item_type="unknown", filename="abc.avi"),
             None,
             True,
-            "Unsupported media type",
+            "unsupported_media_type",
         ),
-        (None, None, True, "Photo not found: 1111"),
+        (None, None, True, "photo_not_found"),
     ],
 )
 @patch("homeassistant.components.icloud.media_source._get_photo_asset")
@@ -496,7 +493,7 @@ def test_icloud_media_source_identifier_to_str() -> None:
         album_id="albumA",
         photo_id="photoX",
     )
-    expected_str = "entry1|album|albumA|photoX"
+    expected_str = "entry1/album/albumA/photoX"
     assert str(identifier) == expected_str
 
     parsed_identifier = IcloudMediaSourceIdentifier.from_identifier(expected_str)
@@ -507,7 +504,7 @@ def test_icloud_media_source_identifier_to_str() -> None:
         shared_album=False,
         album_id="albumA",
     )
-    expected_str = "entry1|album|albumA"
+    expected_str = "entry1/album/albumA"
     assert str(identifier) == expected_str
 
     parsed_identifier = IcloudMediaSourceIdentifier.from_identifier(expected_str)
@@ -517,7 +514,7 @@ def test_icloud_media_source_identifier_to_str() -> None:
         config_entry_id="entry1",
         shared_album=False,
     )
-    expected_str = "entry1|album"
+    expected_str = "entry1/album"
     assert str(identifier) == expected_str
 
     parsed_identifier = IcloudMediaSourceIdentifier.from_identifier(expected_str)
@@ -531,12 +528,6 @@ def test_icloud_media_source_identifier_to_str() -> None:
 
     parsed_identifier = IcloudMediaSourceIdentifier.from_identifier(expected_str)
     assert identifier == parsed_identifier
-
-    with pytest.raises(Unresolvable, match="Invalid media source identifier"):
-        IcloudMediaSourceIdentifier.from_identifier("")
-
-    with pytest.raises(Unresolvable, match="Invalid media source identifier"):
-        IcloudMediaSourceIdentifier.from_identifier(None)
 
 
 @patch("homeassistant.components.icloud.media_source._get_media_mime_type")
@@ -574,21 +565,21 @@ async def test_icloud_media_source_resolve_media(
             IcloudMediaSourceIdentifier(
                 config_entry_id="test_account_id",
             ),
-            "iCloud Media - Test iCloud Account",
+            "iCloud Media / Test iCloud Account",
         ),
         (
             IcloudMediaSourceIdentifier(
                 config_entry_id="test_account_id",
                 shared_album=True,
             ),
-            "iCloud Media - Test iCloud Account - Shared Streams",
+            "iCloud Media / Test iCloud Account / Shared Streams",
         ),
         (
             IcloudMediaSourceIdentifier(
                 config_entry_id="test_account_id",
                 shared_album=False,
             ),
-            "iCloud Media - Test iCloud Account - Albums",
+            "iCloud Media / Test iCloud Account / Albums",
         ),
         (
             IcloudMediaSourceIdentifier(
@@ -596,7 +587,7 @@ async def test_icloud_media_source_resolve_media(
                 shared_album=False,
                 album_id="my_album",
             ),
-            "iCloud Media - Test iCloud Account - Albums - My Album",
+            "iCloud Media / Test iCloud Account / Albums / My Album",
         ),
         (
             IcloudMediaSourceIdentifier(
@@ -604,7 +595,7 @@ async def test_icloud_media_source_resolve_media(
                 shared_album=True,
                 album_id="my_shared_album",
             ),
-            "iCloud Media - Test iCloud Account - Shared Streams - My Album",
+            "iCloud Media / Test iCloud Account / Shared Streams / My Album",
         ),
     ],
 )
@@ -659,7 +650,7 @@ async def test_build_title_for_identifier_invalid(
 
     with pytest.raises(
         Unresolvable,
-        match="iCloud config entry not found: invalid_entry_id",
+        match="config_entry_not_found",
     ):
         media_source._build_title_for_identifier(
             IcloudMediaSourceIdentifier(config_entry_id="invalid_entry_id")
@@ -681,9 +672,7 @@ async def test_icloud_media_source_resolve_media_invalid_domain(
         identifier="some_identifier",
     )
 
-    with pytest.raises(
-        Unresolvable, match="Invalid media source domain: invalid_domain"
-    ):
+    with pytest.raises(Unresolvable, match="invalid_media_source"):
         await media_source.async_resolve_media(item)
 
 
@@ -699,7 +688,7 @@ async def test_icloud_media_source_browse_media_not_loaded(
         target_media_player="browser",
         identifier="some_identifier",
     )
-    with pytest.raises(BrowseError, match="iCloud config entry not loaded"):
+    with pytest.raises(BrowseError, match="config_entry_not_loaded"):
         await media_source.async_browse_media(item)
 
 
@@ -778,7 +767,7 @@ async def test_icloud_media_source_browse_albums(
         hass,
         domain=DOMAIN,
         target_media_player="browser",
-        identifier=f"{mock_config_entry.unique_id}|{False}",
+        identifier=f"{mock_config_entry.unique_id}/{False}",
     )
 
     media_item: BrowseMediaSource = await media_source.async_browse_media(item)
@@ -810,7 +799,7 @@ async def test_icloud_media_source_browse_photos(
         hass,
         domain=DOMAIN,
         target_media_player="browser",
-        identifier=f"{mock_config_entry.unique_id}|{False}|my_album",
+        identifier=f"{mock_config_entry.unique_id}/{False}/my_album",
     )
 
     media_item: BrowseMediaSource = await media_source.async_browse_media(item)
@@ -838,12 +827,12 @@ async def test_icloud_media_source_browse_invalid(
         hass,
         domain=DOMAIN,
         target_media_player="browser",
-        identifier=f"{mock_config_entry.unique_id}|{False}|my_album|aaaa",
+        identifier=f"{mock_config_entry.unique_id}/{False}/my_album/aaaa",
     )
 
     with pytest.raises(
-        Unresolvable,
-        match="Unknown media item 'test_account_id|False|my_album|aaaa' during browsing.",
+        BrowseError,
+        match="Unknown media item",
     ):
         await media_source.async_browse_media(item)
 
@@ -1064,7 +1053,7 @@ async def test_browse_albums_no_api(
         shared_album=False,
     )
 
-    with pytest.raises(Unresolvable, match="iCloud account not initialized"):
+    with pytest.raises(BrowseError, match="account_not_initialized"):
         media_source._browse_albums(mock_account, ident)
 
 
@@ -1082,9 +1071,7 @@ async def test_browse_albums_no_album_type(
         config_entry_id=mock_config_entry.unique_id,
     )
 
-    with pytest.raises(
-        Unresolvable, match=re.escape("Album type (shared vs regular) not specified")
-    ):
+    with pytest.raises(BrowseError, match="album_type_not_specified"):
         media_source._browse_albums(mock_account, ident)
 
 
@@ -1151,7 +1138,7 @@ async def test_get_photo_list(
     assert len(photos) == 4
     for i, photo in enumerate(photos):
         assert photo.title == results[i][0]
-        assert photo.identifier == f"test_account_id|album|my_album|{results[i][1]}"
+        assert photo.identifier == f"test_account_id/album/my_album/{results[i][1]}"
         assert (
             photo.thumbnail
             == f"/api/icloud/media_source/serve/thumb/{b64encode(photo.identifier.encode()).decode('utf-8')}"
