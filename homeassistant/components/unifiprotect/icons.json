@@ -246,6 +246,9 @@
       "paired_camera": {
         "default": "mdi:cctv"
       },
+      "ptz_patrol": {
+        "default": "mdi:rotate-360"
+      },
       "recording_mode": {
         "default": "mdi:video-outline"
       }
@@ -438,6 +441,9 @@
     },
     "get_user_keyring_info": {
       "service": "mdi:key-chain"
+    },
+    "ptz_goto_preset": {
+      "service": "mdi:camera-marker"
     },
     "remove_doorbell_text": {
       "service": "mdi:message-minus"
