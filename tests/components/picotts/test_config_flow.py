@@ -5,10 +5,13 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import tts
 from homeassistant.components.picotts.const import DOMAIN
 from homeassistant.components.tts import CONF_LANG
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -62,3 +65,19 @@ async def test_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_import_flow(
+    hass: HomeAssistant,
+) -> None:
+    """Test the import flow."""
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {tts.DOMAIN: {CONF_PLATFORM: DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
