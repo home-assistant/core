@@ -1,5 +1,6 @@
 """Support for Roborock vacuum class."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -17,7 +18,7 @@ from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, MAP_SLEEP
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockConfigEntry,
@@ -199,11 +200,16 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
         parsed: list[tuple[int, int]] = []
+        if len(segment_ids) == 0:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_segment_ids",
+            )
         for seg_id in segment_ids:
             # Segment id is mapflag:segment_id
             parts = seg_id.split(":")
             if len(parts) != 2:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="segment_id_parse_error",
                     translation_placeholders={"segment_id": seg_id},
@@ -212,7 +218,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 # We need to make sure both parts are ints.
                 parsed.append((int(parts[0]), int(parts[1])))
             except ValueError as err:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="segment_id_parse_error",
                     translation_placeholders={"segment_id": seg_id},
@@ -239,6 +245,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                     translation_key="command_failed",
                     translation_placeholders={"command": "load_multi_map"},
                 ) from err
+            await asyncio.sleep(MAP_SLEEP)
 
         # We can now confirm all segments are on our current map, so clean them all.
         await self.send(
