@@ -177,7 +177,7 @@ async def async_setup_entry(
     def _async_add_new_vms(
         vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
     ) -> None:
-        """Add new VM binary sensors."""
+        """Add new VM buttons."""
         async_add_entities(
             ProxmoxVMButtonEntity(coordinator, entity_description, vm, node_data)
             for (node_data, vm) in vms
@@ -187,7 +187,7 @@ async def async_setup_entry(
     def _async_add_new_containers(
         containers: list[tuple[ProxmoxNodeData, dict[str, Any]]],
     ) -> None:
-        """Add new container binary sensors."""
+        """Add new container buttons."""
         async_add_entities(
             ProxmoxContainerButtonEntity(
                 coordinator, entity_description, container, node_data
@@ -276,8 +276,6 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
         self.entity_description = entity_description
         super().__init__(coordinator, node_data)
 
-        self.node_data = node_data
-
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
 
     async def _async_press_call(self) -> None:
@@ -285,7 +283,7 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            self.node_data.node["node"],
+            self._node_data.node["node"],
         )
 
 
