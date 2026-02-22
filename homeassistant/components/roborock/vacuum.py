@@ -694,13 +694,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
             ) from err
         await self.coordinator.async_refresh()
 
-    async def async_locate(self, **kwargs: Any) -> None:
-        """Locate vacuum (not available for Q10)."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="command_not_supported",
-        )
-
     async def get_maps(self) -> ServiceResponse:
         """Get map information (not available for Q10)."""
         raise HomeAssistantError(
@@ -741,15 +734,3 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
         await self.coordinator.async_refresh()
-
-    async def async_send_command(
-        self,
-        command: str,
-        params: dict[str, Any] | list[Any] | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Send a command to a vacuum cleaner (not supported for Q10)."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="command_not_supported",
-        )
