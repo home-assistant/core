@@ -1773,30 +1773,3 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors_connectivity[binary_sensor.test_cellular-state]
-  'on'
-# ---
-# name: test_binary_sensors_connectivity[binary_sensor.test_wi_fi-state]
-  'off'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_driver_seat_belt-state]
-  'off'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_front_driver_door-state]
-  'off'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_front_driver_window-state]
-  'on'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_front_passenger_door-state]
-  'off'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_front_passenger_window-state]
-  'off'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_rear_driver_window-state]
-  'off'
-# ---
-# name: test_binary_sensors_streaming[binary_sensor.test_rear_passenger_window-state]
-  'on'
-# ---

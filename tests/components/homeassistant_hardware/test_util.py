@@ -15,6 +15,7 @@ from homeassistant.components.hassio import (
     AddonManager,
     AddonState,
 )
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_provider,
 )
@@ -72,7 +73,7 @@ ZHA_CONFIG_ENTRY2 = MockConfigEntry(
 async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
     """Test guessing the firmware type."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     assert (await guess_firmware_info(hass, "/dev/missing")) == FirmwareInfo(
         device="/dev/missing",
@@ -86,7 +87,7 @@ async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
 async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
     """Test guessing the firmware via OTBR and ZHA."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     # One instance of ZHA and two OTBRs
     zha = MockConfigEntry(domain="zha", unique_id="some_unique_id_1")
@@ -553,7 +554,7 @@ async def test_probe_silabs_firmware_type(
 
 async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
@@ -687,7 +688,7 @@ async def test_async_flash_silabs_firmware_flash_failure(
     hass: HomeAssistant, side_effect: Exception, expected_error_msg: str
 ) -> None:
     """Test async_flash_silabs_firmware flash failure."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
@@ -748,7 +749,7 @@ async def test_async_flash_silabs_firmware_flash_failure(
 
 async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware probe failure."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()

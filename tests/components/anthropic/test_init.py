@@ -9,11 +9,16 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
 )
+import httpx
 from httpx import URL, Request, Response
 import pytest
 
 from homeassistant.components.anthropic.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,17 +45,6 @@ from tests.common import MockConfigEntry
             ),
             "anthropic integration not ready yet: Your credit balance is too low to access the Claude API",
         ),
-        (
-            AuthenticationError(
-                message="invalid x-api-key",
-                response=Response(
-                    status_code=401,
-                    request=Request(method="POST", url=URL()),
-                ),
-                body={"type": "error", "error": {"type": "authentication_error"}},
-            ),
-            "Invalid API key",
-        ),
     ],
 )
 async def test_init_error(
@@ -68,6 +62,87 @@ async def test_init_error(
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+async def test_init_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth error during init errors."""
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        side_effect=AuthenticationError(
+            response=httpx.Response(
+                status_code=500, request=httpx.Request(method="GET", url="test")
+            ),
+            body=None,
+            message="",
+        ),
+    ):
+        assert await async_setup_component(hass, "anthropic", {})
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_downgrade_from_v3_to_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that migration from future versions is skipped."""
+    # Create a v3 config entry
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=3,
+        minor_version=0,
+        subentries_data=[
+            {
+                "data": {
+                    "recommended": True,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-3-haiku-20240307",
+                },
+                "subentry_id": "mock_id",
+                "subentry_type": "conversation",
+                "title": "Claude haiku",
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    conversation_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id="mock_id",
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Anthropic",
+        model="Claude",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        config_subentry_id="mock_id",
+        device_id=conversation_device.id,
+        suggested_object_id="claude",
+    )
+
+    # Run migration
+    with patch(
+        "homeassistant.components.anthropic.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify migration was skipped and version was not updated
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 0
 
 
 async def test_migration_from_v1_to_v2(

@@ -6,7 +6,6 @@ from collections.abc import Iterable
 from typing import Any
 
 from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -16,12 +15,11 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
+from .const import ATTR_ROOMS, DOMAIN, LOGGER, SHARK
 from .coordinator import SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
@@ -44,7 +42,6 @@ ATTR_ERROR_CODE = "last_error_code"
 ATTR_ERROR_MSG = "last_error_message"
 ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
-ATTR_ROOMS = "rooms"
 
 
 async def async_setup_entry(
@@ -62,17 +59,6 @@ async def async_setup_entry(
         ", ".join([d.name for d in devices]),
     )
     async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CLEAN_ROOM,
-        {
-            vol.Required(ATTR_ROOMS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_clean_room",
-    )
 
 
 class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):

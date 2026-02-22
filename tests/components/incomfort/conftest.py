@@ -157,7 +157,6 @@ def mock_incomfort(
         heater_temp: float
         tap_temp: float
         pressure: float
-        serial_no: str
         nodenr: int
         rf_message_rssi: int
         rfstatus_cntr: int

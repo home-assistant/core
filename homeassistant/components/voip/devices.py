@@ -143,7 +143,7 @@ class VoIPDevices:
             fw_version = user_agent_parts[2]
         else:
             manuf = None
-            model = user_agent if user_agent else None
+            model = user_agent or None
             fw_version = None
 
         dev_reg = dr.async_get(self.hass)
