@@ -25,13 +25,16 @@
   "entity": {
     "sensor": {
       "custom_integrations": {
-        "name": "{custom_integration_domain} (custom)"
+        "name": "{custom_integration_domain} (custom)",
+        "unit_of_measurement": "active installations"
       },
       "total_active_installations": {
-        "name": "Total active installations"
+        "name": "Total active installations",
+        "unit_of_measurement": "[%key:component::analytics_insights::entity::sensor::custom_integrations::unit_of_measurement%]"
       },
       "total_reports_integrations": {
-        "name": "Total reported integrations"
+        "name": "Total reported integrations",
+        "unit_of_measurement": "[%key:component::analytics_insights::entity::sensor::custom_integrations::unit_of_measurement%]"
       }
     }
   },
