@@ -1,0 +1,615 @@
+# serializer version: 1
+# name: test_get_config_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '127.0.0.1',
+        'nodes': list([
+          dict({
+            'containers': list([
+              200,
+              201,
+            ]),
+            'node': 'pve1',
+            'vms': list([
+              100,
+              101,
+            ]),
+          }),
+          dict({
+            'containers': list([
+              200,
+              201,
+            ]),
+            'node': 'pve2',
+            'vms': list([
+              100,
+              101,
+            ]),
+          }),
+        ]),
+        'password': '**REDACTED**',
+        'port': 8006,
+        'realm': 'pam',
+        'username': '**REDACTED**',
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'proxmoxve',
+      'entry_id': '1234',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'ProxmoxVE test',
+      'unique_id': None,
+      'version': 2,
+    }),
+    'devices': list([
+      dict({
+        'device': dict({
+          '_cache': dict({
+          }),
+          '_suggested_area': None,
+          'area_id': None,
+          'config_entries': list([
+            '1234',
+          ]),
+          'config_entries_subentries': dict({
+            '1234': list([
+              None,
+            ]),
+          }),
+          'configuration_url': 'https://127.0.0.1:8006/#v1:0:=node/pve1',
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'id': 'b2a0aaa91fd51879cd80bd648c5bd073',
+          'identifiers': list([
+            list([
+              'proxmoxve',
+              '1234_node_node/pve1',
+            ]),
+          ]),
+          'labels': list([
+          ]),
+          'manufacturer': None,
+          'model': 'Node',
+          'model_id': None,
+          'name': 'pve1',
+          'name_by_user': None,
+          'primary_config_entry': '1234',
+          'serial_number': None,
+          'sw_version': None,
+          'via_device_id': None,
+        }),
+        'entities': list([
+          dict({
+            'entry': dict({
+              '_cache': dict({
+              }),
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '1234',
+              'config_subentry_id': None,
+              'device_class': None,
+              'device_id': 'b2a0aaa91fd51879cd80bd648c5bd073',
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.pve1_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'id': '6c711175d0319ca9eb3a1e7900b815d7',
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Status',
+              'options': dict({
+              }),
+              'original_device_class': 'running',
+              'original_icon': None,
+              'original_name': 'Status',
+              'platform': 'proxmoxve',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'status',
+              'unique_id': '1234_node/pve1_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'running',
+                'friendly_name': 'pve1 Status',
+              }),
+              'entity_id': 'binary_sensor.pve1_status',
+              'last_changed': '2026-02-22T17:30:16.894338+00:00',
+              'last_reported': '2026-02-22T17:30:16.894338+00:00',
+              'last_updated': '2026-02-22T17:30:16.894338+00:00',
+              'state': 'on',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          '_cache': dict({
+          }),
+          '_suggested_area': None,
+          'area_id': None,
+          'config_entries': list([
+            '1234',
+          ]),
+          'config_entries_subentries': dict({
+            '1234': list([
+              None,
+            ]),
+          }),
+          'configuration_url': 'https://127.0.0.1:8006/#v1:0:=node/pve2',
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'id': 'c0080ba3c187000301fca899e510eac0',
+          'identifiers': list([
+            list([
+              'proxmoxve',
+              '1234_node_node/pve2',
+            ]),
+          ]),
+          'labels': list([
+          ]),
+          'manufacturer': None,
+          'model': 'Node',
+          'model_id': None,
+          'name': 'pve2',
+          'name_by_user': None,
+          'primary_config_entry': '1234',
+          'serial_number': None,
+          'sw_version': None,
+          'via_device_id': None,
+        }),
+        'entities': list([
+          dict({
+            'entry': dict({
+              '_cache': dict({
+              }),
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '1234',
+              'config_subentry_id': None,
+              'device_class': None,
+              'device_id': 'c0080ba3c187000301fca899e510eac0',
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.pve2_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'id': '810457dffc4226cf4095ad7757dc8cd3',
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Status',
+              'options': dict({
+              }),
+              'original_device_class': 'running',
+              'original_icon': None,
+              'original_name': 'Status',
+              'platform': 'proxmoxve',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'status',
+              'unique_id': '1234_node/pve2_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'running',
+                'friendly_name': 'pve2 Status',
+              }),
+              'entity_id': 'binary_sensor.pve2_status',
+              'last_changed': '2026-02-22T17:30:16.894662+00:00',
+              'last_reported': '2026-02-22T17:30:16.894662+00:00',
+              'last_updated': '2026-02-22T17:30:16.894662+00:00',
+              'state': 'on',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          '_cache': dict({
+          }),
+          '_suggested_area': None,
+          'area_id': None,
+          'config_entries': list([
+            '1234',
+          ]),
+          'config_entries_subentries': dict({
+            '1234': list([
+              None,
+            ]),
+          }),
+          'configuration_url': 'https://127.0.0.1:8006/#v1:0:=qemu/100',
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'id': 'b8cd323751d56d65c4ac1a787fe7ed66',
+          'identifiers': list([
+            list([
+              'proxmoxve',
+              '1234_vm_100',
+            ]),
+          ]),
+          'labels': list([
+          ]),
+          'manufacturer': None,
+          'model': 'VM',
+          'model_id': None,
+          'name': 'vm-web',
+          'name_by_user': None,
+          'primary_config_entry': '1234',
+          'serial_number': None,
+          'sw_version': None,
+          'via_device_id': 'b2a0aaa91fd51879cd80bd648c5bd073',
+        }),
+        'entities': list([
+          dict({
+            'entry': dict({
+              '_cache': dict({
+              }),
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '1234',
+              'config_subentry_id': None,
+              'device_class': None,
+              'device_id': 'b8cd323751d56d65c4ac1a787fe7ed66',
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.vm_web_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'id': '241b6d47bb89652c2f8cf68e1f79d97a',
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Status',
+              'options': dict({
+              }),
+              'original_device_class': 'running',
+              'original_icon': None,
+              'original_name': 'Status',
+              'platform': 'proxmoxve',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'status',
+              'unique_id': '1234_100_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'running',
+                'friendly_name': 'vm-web Status',
+              }),
+              'entity_id': 'binary_sensor.vm_web_status',
+              'last_changed': '2026-02-22T17:30:16.895435+00:00',
+              'last_reported': '2026-02-22T17:30:16.895435+00:00',
+              'last_updated': '2026-02-22T17:30:16.895435+00:00',
+              'state': 'on',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          '_cache': dict({
+          }),
+          '_suggested_area': None,
+          'area_id': None,
+          'config_entries': list([
+            '1234',
+          ]),
+          'config_entries_subentries': dict({
+            '1234': list([
+              None,
+            ]),
+          }),
+          'configuration_url': 'https://127.0.0.1:8006/#v1:0:=qemu/101',
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'id': '7f3e13dda9f7d31885190d3ecea747b8',
+          'identifiers': list([
+            list([
+              'proxmoxve',
+              '1234_vm_101',
+            ]),
+          ]),
+          'labels': list([
+          ]),
+          'manufacturer': None,
+          'model': 'VM',
+          'model_id': None,
+          'name': 'vm-db',
+          'name_by_user': None,
+          'primary_config_entry': '1234',
+          'serial_number': None,
+          'sw_version': None,
+          'via_device_id': 'b2a0aaa91fd51879cd80bd648c5bd073',
+        }),
+        'entities': list([
+          dict({
+            'entry': dict({
+              '_cache': dict({
+              }),
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '1234',
+              'config_subentry_id': None,
+              'device_class': None,
+              'device_id': '7f3e13dda9f7d31885190d3ecea747b8',
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.vm_db_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'id': 'db0d44704de73041fc1973d1fc854c23',
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Status',
+              'options': dict({
+              }),
+              'original_device_class': 'running',
+              'original_icon': None,
+              'original_name': 'Status',
+              'platform': 'proxmoxve',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'status',
+              'unique_id': '1234_101_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'running',
+                'friendly_name': 'vm-db Status',
+              }),
+              'entity_id': 'binary_sensor.vm_db_status',
+              'last_changed': '2026-02-22T17:30:16.895694+00:00',
+              'last_reported': '2026-02-22T17:30:16.895694+00:00',
+              'last_updated': '2026-02-22T17:30:16.895694+00:00',
+              'state': 'off',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          '_cache': dict({
+          }),
+          '_suggested_area': None,
+          'area_id': None,
+          'config_entries': list([
+            '1234',
+          ]),
+          'config_entries_subentries': dict({
+            '1234': list([
+              None,
+            ]),
+          }),
+          'configuration_url': 'https://127.0.0.1:8006/#v1:0:=lxc/200',
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'id': 'c87a17c622e4ec2f465bb163161f469d',
+          'identifiers': list([
+            list([
+              'proxmoxve',
+              '1234_container_200',
+            ]),
+          ]),
+          'labels': list([
+          ]),
+          'manufacturer': None,
+          'model': 'Container',
+          'model_id': None,
+          'name': 'ct-nginx',
+          'name_by_user': None,
+          'primary_config_entry': '1234',
+          'serial_number': None,
+          'sw_version': None,
+          'via_device_id': 'b2a0aaa91fd51879cd80bd648c5bd073',
+        }),
+        'entities': list([
+          dict({
+            'entry': dict({
+              '_cache': dict({
+              }),
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '1234',
+              'config_subentry_id': None,
+              'device_class': None,
+              'device_id': 'c87a17c622e4ec2f465bb163161f469d',
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.ct_nginx_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'id': 'ecb45133bc4fc87a7dd503ccd4433543',
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Status',
+              'options': dict({
+              }),
+              'original_device_class': 'running',
+              'original_icon': None,
+              'original_name': 'Status',
+              'platform': 'proxmoxve',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'status',
+              'unique_id': '1234_200_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'running',
+                'friendly_name': 'ct-nginx Status',
+              }),
+              'entity_id': 'binary_sensor.ct_nginx_status',
+              'last_changed': '2026-02-22T17:30:16.898202+00:00',
+              'last_reported': '2026-02-22T17:30:16.898202+00:00',
+              'last_updated': '2026-02-22T17:30:16.898202+00:00',
+              'state': 'on',
+            }),
+          }),
+        ]),
+      }),
+      dict({
+        'device': dict({
+          '_cache': dict({
+          }),
+          '_suggested_area': None,
+          'area_id': None,
+          'config_entries': list([
+            '1234',
+          ]),
+          'config_entries_subentries': dict({
+            '1234': list([
+              None,
+            ]),
+          }),
+          'configuration_url': 'https://127.0.0.1:8006/#v1:0:=lxc/201',
+          'connections': list([
+          ]),
+          'disabled_by': None,
+          'entry_type': None,
+          'hw_version': None,
+          'id': 'e3ce1070e748fc769c9c73db71ee9a2b',
+          'identifiers': list([
+            list([
+              'proxmoxve',
+              '1234_container_201',
+            ]),
+          ]),
+          'labels': list([
+          ]),
+          'manufacturer': None,
+          'model': 'Container',
+          'model_id': None,
+          'name': 'ct-backup',
+          'name_by_user': None,
+          'primary_config_entry': '1234',
+          'serial_number': None,
+          'sw_version': None,
+          'via_device_id': 'b2a0aaa91fd51879cd80bd648c5bd073',
+        }),
+        'entities': list([
+          dict({
+            'entry': dict({
+              '_cache': dict({
+              }),
+              'aliases': list([
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '1234',
+              'config_subentry_id': None,
+              'device_class': None,
+              'device_id': 'e3ce1070e748fc769c9c73db71ee9a2b',
+              'disabled_by': None,
+              'domain': 'binary_sensor',
+              'entity_category': 'diagnostic',
+              'entity_id': 'binary_sensor.ct_backup_status',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'id': 'e66c7cfd3aeb0392fcb205851de007f7',
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Status',
+              'options': dict({
+              }),
+              'original_device_class': 'running',
+              'original_icon': None,
+              'original_name': 'Status',
+              'platform': 'proxmoxve',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'status',
+              'unique_id': '1234_201_status',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'running',
+                'friendly_name': 'ct-backup Status',
+              }),
+              'entity_id': 'binary_sensor.ct_backup_status',
+              'last_changed': '2026-02-22T17:30:16.898505+00:00',
+              'last_reported': '2026-02-22T17:30:16.898505+00:00',
+              'last_updated': '2026-02-22T17:30:16.898505+00:00',
+              'state': 'off',
+            }),
+          }),
+        ]),
+      }),
+    ]),
+  })
+# ---
