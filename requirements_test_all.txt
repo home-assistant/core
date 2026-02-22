@@ -1481,6 +1481,9 @@ openhomedevice==2.2.0
 # homeassistant.components.openrgb
 openrgb-python==0.3.6
 
+# homeassistant.components.open_router
+openrouter==0.6.0
+
 # homeassistant.components.enigma2
 openwebifpy==4.3.1
 
@@ -2186,9 +2189,6 @@ python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.5.0
-
-# homeassistant.components.open_router
-python-open-router==0.3.3
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0

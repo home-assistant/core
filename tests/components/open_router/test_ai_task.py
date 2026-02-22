@@ -46,7 +46,7 @@ async def test_generate_data(
     """Test AI Task data generation."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "ai_task.gemini_1_5_pro"
+    entity_id = "ai_task.gpt_4"
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(
@@ -119,7 +119,7 @@ async def test_generate_structured_data(
     result = await ai_task.async_generate_data(
         hass,
         task_name="Test Task",
-        entity_id="ai_task.gemini_1_5_pro",
+        entity_id="ai_task.gpt_4",
         instructions="Generate test data",
         structure=vol.Schema(
             {
@@ -195,7 +195,7 @@ async def test_generate_invalid_structured_data(
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gpt_4",
             instructions="Generate test data",
             structure=vol.Schema(
                 {
@@ -219,7 +219,7 @@ async def test_generate_data_with_attachments(
     """Test AI Task data generation with attachments."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "ai_task.gemini_1_5_pro"
+    entity_id = "ai_task.gpt_4"
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(

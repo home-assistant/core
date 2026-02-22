@@ -23,6 +23,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "AI task",
@@ -32,10 +33,10 @@
       "step": {
         "init": {
           "data": {
-            "model": "[%key:component::open_router::config_subentries::conversation::step::init::data::model%]"
+            "chat_model": "[%key:component::open_router::config_subentries::conversation::step::init::sections::section_model::data::chat_model%]"
           },
           "data_description": {
-            "model": "The model to use for the AI task"
+            "chat_model": "The model to use for the AI task"
           },
           "description": "Configure the AI task"
         }
@@ -45,24 +46,56 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Conversation agent",
+      "error": {
+        "invalid_model_selected": "The chosen model does not exist",
+        "model_no_tool_support": "The selected model does not support tool use. Please select a different model or disable Assist.",
+        "model_required": "Please select a model"
+      },
       "initiate_flow": {
         "user": "Add conversation agent"
       },
       "step": {
         "init": {
           "data": {
-            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-            "model": "Model",
+            "name": "[%key:common::config_flow::data::name%]",
             "prompt": "[%key:common::config_flow::data::prompt%]"
           },
           "data_description": {
-            "model": "The model to use for the conversation agent",
-            "prompt": "Instruct how the LLM should respond. This can be a template."
+            "name": "The name of this conversation agent"
           },
-          "description": "Configure the conversation agent"
+          "sections": {
+            "section_model": {
+              "data": {
+                "chat_model": "Model"
+              },
+              "data_description": {
+                "chat_model": "The model to use for the conversation agent"
+              },
+              "name": "Model"
+            },
+            "section_options": {
+              "data": {
+                "enable_assist": "Enable Assist",
+                "web_search": "Enable web search"
+              },
+              "data_description": {
+                "enable_assist": "Allow the model to control Home Assistant",
+                "web_search": "Allow the model to search the web for answers"
+              },
+              "name": "Options"
+            }
+          }
+        },
+        "providers": {
+          "data": {
+            "provider": "Provider"
+          },
+          "description": "Select providers in order of priority. First selected = highest priority.\nLeave empty to use the default providers.",
+          "title": "Provider Selection"
         }
       }
     }

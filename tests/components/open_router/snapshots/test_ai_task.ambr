@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[ai_task.gemini_1_5_pro-entry]
+# name: test_all_entities[ai_task.gpt_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'ai_task',
     'entity_category': None,
-    'entity_id': 'ai_task.gemini_1_5_pro',
+    'entity_id': 'ai_task.gpt_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,14 +38,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[ai_task.gemini_1_5_pro-state]
+# name: test_all_entities[ai_task.gpt_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gemini 1.5 Pro',
+      'friendly_name': 'GPT-4',
       'supported_features': <AITaskEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'ai_task.gemini_1_5_pro',
+    'entity_id': 'ai_task.gpt_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -3,22 +3,21 @@
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
-from python_open_router import ModelsDataWrapper
 
 from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -41,7 +40,8 @@ def enable_assist() -> bool:
 def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
     """Mock conversation subentry data."""
     res: dict[str, Any] = {
-        CONF_MODEL: "openai/gpt-3.5-turbo",
+        CONF_NAME: "GPT-3.5 Turbo",
+        "chat_model": "openai/gpt-3.5-turbo",
         CONF_PROMPT: "You are a helpful assistant.",
     }
     if enable_assist:
@@ -53,7 +53,7 @@ def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
 def ai_task_data_subentry_data() -> dict[str, Any]:
     """Mock AI task subentry data."""
     return {
-        CONF_MODEL: "google/gemini-1.5-pro",
+        "chat_model": "openai/gpt-4",
     }
 
 
@@ -82,7 +82,7 @@ def mock_config_entry(
                 data=ai_task_data_subentry_data,
                 subentry_id="ABCDEG",
                 subentry_type="ai_task_data",
-                title="Gemini 1.5 Pro",
+                title="GPT-4",
                 unique_id=None,
             ),
         ],
@@ -90,11 +90,12 @@ def mock_config_entry(
 
 
 @dataclass
-class Model:
+class MockModel:
     """Mock model data."""
 
     id: str
     name: str
+    supported_parameters: list[str]
 
 
 @pytest.fixture
@@ -130,15 +131,62 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
+async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Initialize integration."""
     with patch(
-        "homeassistant.components.open_router.config_flow.OpenRouterClient",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        models = await async_load_fixture(hass, "models.json", DOMAIN)
-        client.get_models.return_value = ModelsDataWrapper.from_json(models).data
+        "homeassistant.components.open_router.config_flow.OpenRouter",
+    ) as mock_client_class:
+        client = mock_client_class.return_value
+
+        models_response = MagicMock()
+        models_response.data = [
+            MockModel(
+                id="openai/gpt-3.5-turbo",
+                name="OpenAI: GPT-3.5 Turbo",
+                supported_parameters=[
+                    "max_tokens",
+                    "temperature",
+                    "top_p",
+                    "stop",
+                    "frequency_penalty",
+                    "presence_penalty",
+                    "seed",
+                    "logit_bias",
+                    "logprobs",
+                    "top_logprobs",
+                    "response_format",
+                ],
+            ),
+            MockModel(
+                id="openai/gpt-4",
+                name="OpenAI: GPT-4",
+                supported_parameters=[
+                    "max_tokens",
+                    "temperature",
+                    "top_p",
+                    "tools",
+                    "tool_choice",
+                    "stop",
+                    "frequency_penalty",
+                    "presence_penalty",
+                    "seed",
+                    "logit_bias",
+                    "logprobs",
+                    "top_logprobs",
+                    "structured_outputs",
+                    "response_format",
+                ],
+            ),
+        ]
+        client.models.list.return_value = models_response
+
+        api_keys_response = MagicMock()
+        client.api_keys.get_current_key_metadata.return_value = api_keys_response
+
+        endpoints_response = MagicMock()
+        endpoints_response.data.endpoints = []
+        client.endpoints.list.return_value = endpoints_response
+
         yield client
 
 
