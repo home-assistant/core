@@ -21,7 +21,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Freebox router.",
-          "service_user_name": "The name you want the Freebox to remember this instance"
+          "service_user_name": "The name that the Freebox will use to identify this Home Assistant instance."
         }
       }
     }

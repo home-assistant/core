@@ -10,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import socket
 from typing import Any
 
 from freebox_api import Freepybox
@@ -57,13 +58,21 @@ def is_json(json_str: str) -> bool:
 
 def read_device_name_from_file(token_file: Path) -> str:
     """Read the device_name of the file."""
-    with open(token_file, encoding="utf-8") as f:
-        data = json.load(f)
+    try:
+        with open(token_file, encoding="utf-8") as f:
+            data = json.load(f)
         return data["device_name"]
+    except (OSError, json.JSONDecodeError, KeyError) as err:
+        _LOGGER.error(
+            "Failed to read 'device_name' from %s: %s - falling back to default device_name",
+            token_file,
+            err,
+        )
+        return socket.gethostname()
 
 
 async def get_api(
-    hass: HomeAssistant, host: str, serviceName: str | None = None
+    hass: HomeAssistant, host: str, service_name: str | None = None
 ) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
@@ -77,8 +86,8 @@ async def get_api(
         APP_DESC["device_name"] = await hass.async_add_executor_job(
             read_device_name_from_file, token_file
         )
-    elif serviceName is not None:
-        APP_DESC["device_name"] = serviceName
+    elif service_name is not None:
+        APP_DESC["device_name"] = service_name
 
     return Freepybox(APP_DESC, token_file, API_VERSION)
 
@@ -128,7 +137,6 @@ class FreeboxRouter:
         self.hass = hass
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
-        self._serviceName = APP_DESC["device_name"]
 
         self._api: Freepybox = api
         self.name: str = freebox_config["model_info"]["pretty_name"]

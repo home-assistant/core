@@ -112,4 +112,10 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         zeroconf_properties = discovery_info.properties
         host = zeroconf_properties["api_domain"]
         port = zeroconf_properties["https_port"]
-        return await self.async_step_user({CONF_HOST: host, CONF_PORT: port})
+        return await self.async_step_user(
+            {
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_SERVICE_USER_NAME: socket.gethostname(),
+            }
+        )
