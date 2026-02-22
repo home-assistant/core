@@ -210,7 +210,7 @@ async def test_adam_restore_state_climate(
             {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-        assert mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
+        mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
             "heating",
         )
         assert mock_smile_adam_heat_cool.set_regulation_mode.call_count == 1
@@ -233,7 +233,7 @@ async def test_adam_restore_state_climate(
             blocking=True,
         )
         # Verify set_schedule_state was called with the restored schedule
-        assert mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
+        mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
             "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
