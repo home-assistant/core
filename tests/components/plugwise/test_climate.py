@@ -236,6 +236,28 @@ async def test_adam_restore_state_climate(
             "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
         )
 
+    data = mock_smile_adam_heat_cool.async_update.return_value
+    data["f871b8c4d63549319221e294e4f88074"]["climate_mode"] = "heat"
+    data["f871b8c4d63549319221e294e4f88074"]["select_schedule"] = "Badkamer"
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get("climate.bathroom"))
+        assert state.state == "heat"
+
+        # Verify the __last_active_schedule is used
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
+        # Verify set_schedule_state was called
+        mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
+            "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
+        )
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
