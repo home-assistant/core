@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Browser."""
 
 from functools import partial
+from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,6 +16,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.sonos.const import MEDIA_TYPE_DIRECTORY
 from homeassistant.components.sonos.media_browser import (
     build_item_response,
+    get_media,
     get_thumbnail_url_full,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -107,6 +109,25 @@ async def test_build_item_response(
         browse_item.children[1].media_content_id
         == "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3"
     )
+
+
+def test_get_media_multisegment_album_id_uses_album_segment() -> None:
+    """Test `A:ALBUM/<album>/<artist>` uses album name as lookup search term."""
+    music_library = MagicMock()
+    music_library.get_music_library_information.return_value = []
+    result = get_media(
+        music_library,
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "album",
+    )
+
+    assert result is None
+    assert music_library.get_music_library_information.call_count == 1
+    assert music_library.get_music_library_information.call_args.args == ("albums",)
+    assert music_library.get_music_library_information.call_args.kwargs == {
+        "search_term": "Abbey Road",
+        "full_album_art_uri": True
+    }
 
 
 async def test_browse_media_root(

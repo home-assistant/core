@@ -585,10 +585,30 @@ def get_media(
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
     if item_id.startswith("A:ALBUM/") or search_type == "tracks":
-        search_term = urllib.parse.unquote(item_id.split("/")[-1])
+        # Some Sonos libraries return album ids in the shape:
+        # A:ALBUM/<album>/<artist>, where the artist part disambiguates results.
+        # Use the album segment for searching.
+        if item_id.startswith("A:ALBUM/"):
+            splits = item_id.split("/")
+            search_term = urllib.parse.unquote(splits[1]) if len(splits) > 1 else ""
+            title: str | None = search_term
+        else:
+            search_term = urllib.parse.unquote(item_id.split("/")[-1])
+            title = None
+
         matches = media_library.get_music_library_information(
             search_type, search_term=search_term, full_album_art_uri=True
         )
+        if item_id.startswith("A:ALBUM/") and len(matches) > 1:
+            if result := next(
+                (item for item in matches if item_id == item.item_id), None
+            ):
+                matches = [result]
+            elif title:
+                if result := next(
+                    (item for item in matches if title == item.title), None
+                ):
+                    matches = [result]
     elif search_type == SONOS_SHARE:
         # In order to get the MusicServiceItem, we browse the parent folder
         # and find one that matches on item_id.
