@@ -1,4 +1,4 @@
-"""Button platform for Proxmox VE b."""
+"""Button platform for Proxmox VE."""
 
 from __future__ import annotations
 
