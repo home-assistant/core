@@ -16,3 +16,62 @@ set_vicare_mode:
             - "forcedReduced"
             - "heating"
             - "standby"
+
+get_dhw_circulation_schedule:
+  target:
+    entity:
+      integration: vicare
+
+get_device_raw_features:
+  target:
+    entity:
+      integration: vicare
+
+activate_dhw_circulation_boost:
+  target:
+    entity:
+      integration: vicare
+  fields:
+    duration_minutes:
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 240
+          step: 10
+          unit_of_measurement: min
+    min_storage_temperature:
+      selector:
+        number:
+          min: 20
+          max: 70
+          step: 1
+          unit_of_measurement: °C
+    min_boost_temperature:
+      selector:
+        number:
+          min: 20
+          max: 70
+          step: 1
+          unit_of_measurement: °C
+    target_setpoint:
+      selector:
+        number:
+          min: 30
+          max: 70
+          step: 1
+          unit_of_measurement: °C
+    heat_timeout_minutes:
+      selector:
+        number:
+          min: 10
+          max: 240
+          step: 10
+          unit_of_measurement: min
+    warm_water_delay_minutes:
+      selector:
+        number:
+          min: 1
+          max: 240
+          step: 1
+          unit_of_measurement: min

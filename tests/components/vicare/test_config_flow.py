@@ -9,7 +9,12 @@ from PyViCare.PyViCareUtils import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import (
+    CONF_HEAT_TIMEOUT_MINUTES,
+    CONF_MIN_BOOST_TEMPERATURE,
+    CONF_WARM_WATER_DELAY_MINUTES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -206,3 +211,32 @@ async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow for boost defaults."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MIN_BOOST_TEMPERATURE: 46.0,
+            CONF_HEAT_TIMEOUT_MINUTES: 75,
+            CONF_WARM_WATER_DELAY_MINUTES: 18,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_MIN_BOOST_TEMPERATURE: 46.0,
+        CONF_HEAT_TIMEOUT_MINUTES: 75,
+        CONF_WARM_WATER_DELAY_MINUTES: 18,
+    }

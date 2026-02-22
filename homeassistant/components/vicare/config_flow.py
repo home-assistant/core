@@ -12,14 +12,25 @@ from PyViCare.PyViCareUtils import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    CONF_HEAT_TIMEOUT_MINUTES,
     CONF_HEATING_TYPE,
+    CONF_MIN_BOOST_TEMPERATURE,
+    CONF_WARM_WATER_DELAY_MINUTES,
+    DEFAULT_DHW_BOOST_HEAT_TIMEOUT_MINUTES,
+    DEFAULT_DHW_BOOST_MIN_TEMPERATURE,
+    DEFAULT_DHW_BOOST_WARM_WATER_DELAY_MINUTES,
     DEFAULT_HEATING_TYPE,
     DOMAIN,
     VICARE_NAME,
@@ -52,6 +63,11 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    def async_get_options_flow(config_entry: ConfigEntry) -> ViCareOptionsFlowHandler:
+        """Get options flow for this handler."""
+        return ViCareOptionsFlowHandler(config_entry)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -64,7 +80,10 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(login, self.hass, user_input)
-            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
+            except (
+                PyViCareInvalidConfigurationError,
+                PyViCareInvalidCredentialsError,
+            ):
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(title=VICARE_NAME, data=user_input)
@@ -99,7 +118,10 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(login, self.hass, data)
-            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
+            except (
+                PyViCareInvalidConfigurationError,
+                PyViCareInvalidCredentialsError,
+            ):
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=data)
@@ -129,3 +151,47 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user()
+
+
+class ViCareOptionsFlowHandler(OptionsFlow):
+    """Handle ViCare options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage ViCare options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = self._config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_MIN_BOOST_TEMPERATURE,
+                    default=options.get(
+                        CONF_MIN_BOOST_TEMPERATURE,
+                        DEFAULT_DHW_BOOST_MIN_TEMPERATURE,
+                    ),
+                ): vol.All(vol.Coerce(float), vol.Range(min=20, max=70)),
+                vol.Required(
+                    CONF_HEAT_TIMEOUT_MINUTES,
+                    default=options.get(
+                        CONF_HEAT_TIMEOUT_MINUTES,
+                        DEFAULT_DHW_BOOST_HEAT_TIMEOUT_MINUTES,
+                    ),
+                ): vol.All(cv.positive_int, vol.Range(min=10, max=240)),
+                vol.Required(
+                    CONF_WARM_WATER_DELAY_MINUTES,
+                    default=options.get(
+                        CONF_WARM_WATER_DELAY_MINUTES,
+                        DEFAULT_DHW_BOOST_WARM_WATER_DELAY_MINUTES,
+                    ),
+                ): vol.All(cv.positive_int, vol.Range(min=1, max=240)),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=schema)
