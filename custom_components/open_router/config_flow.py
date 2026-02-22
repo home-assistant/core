@@ -69,9 +69,14 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            client = OpenRouter(api_key=user_input[CONF_API_KEY])
+            api_key = user_input[CONF_API_KEY]
+
+            def _validate_api_key():
+                client = OpenRouter(api_key=api_key)
+                client.api_keys.get_current_key_metadata()
+
             try:
-                await client.api_keys.get_current_key_metadata_async()
+                await self.hass.async_add_executor_job(_validate_api_key)
             except OpenRouterError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -103,13 +108,19 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
     async def _get_models(self) -> None:
         """Fetch models from OpenRouter."""
         entry = self._get_entry()
-        client = OpenRouter(api_key=entry.data[CONF_API_KEY])
-        response = await client.models.list_async()
+        api_key = entry.data[CONF_API_KEY]
+
+        def _sync_get_models():
+            client = OpenRouter(api_key=api_key)
+            return client.models.list()
+
+        response = await self.hass.async_add_executor_job(_sync_get_models)
         self.models = {model.id: model for model in response.data}
 
     async def _get_providers_for_model(self, model_id: str) -> list[dict[str, str]]:
         """Fetch available providers for a specific model from OpenRouter API."""
         entry = self._get_entry()
+        api_key = entry.data[CONF_API_KEY]
 
         # Parse model_id (e.g., "anthropic/claude-3-opus")
         parts = model_id.split("/")
@@ -119,9 +130,12 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
 
         author, slug = parts
 
+        def _sync_get_providers():
+            client = OpenRouter(api_key=api_key)
+            return client.endpoints.list(author=author, slug=slug)
+
         try:
-            client = OpenRouter(api_key=entry.data[CONF_API_KEY])
-            response = await client.endpoints.list_async(author=author, slug=slug)
+            response = await self.hass.async_add_executor_job(_sync_get_providers)
 
             providers = []
             for endpoint in response.data.endpoints:
