@@ -11,6 +11,7 @@ from roborock.data.b01_q10.b01_q10_code_mappings import (
     YXDeviceState,
     YXFanLevel,
 )
+from roborock.data.b01_q10.b01_q10_containers import Q10Status
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -101,35 +102,55 @@ Q10_STATE_CODE_TO_STATE = {
 }
 
 
-def _get_q10_status(data: dict[Any, Any]) -> YXDeviceState | None:
-    """Get status from Q10 data."""
-    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
-    status_code = data.get(B01_Q10_DP.STATUS)
-    if status_code is None:
-        return None
-    return YXDeviceState.from_code_optional(status_code)
+def _get_q10_status(status: Q10Status | dict[Any, Any] | Any) -> YXDeviceState | None:
+    """Get status from Q10 status object or DPS dictionary."""
+    if isinstance(status, dict):
+        if (status_code := status.get(B01_Q10_DP.STATUS)) is None:
+            return None
+        return YXDeviceState.from_code_optional(status_code)
 
+    if (status_value := getattr(status, "status", None)) is not None:
+        if isinstance(status_value, YXDeviceState):
+            return status_value
+        if (
+            mapped_status := YXDeviceState.from_code_optional(status_value)
+        ) is not None:
+            return mapped_status
 
-def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
-    """Get wind/fan speed name from Q10 data."""
-    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
-    fan_level = data.get(B01_Q10_DP.FAN_LEVEL)
+    data = getattr(status, "data", None)
     if (
-        fan_level is not None
-        and (yx_fan_level := YXFanLevel.from_code_optional(fan_level)) is not None
+        isinstance(data, dict)
+        and (status_code := data.get(B01_Q10_DP.STATUS)) is not None
     ):
-        return yx_fan_level.value.capitalize()
+        return YXDeviceState.from_code_optional(status_code)
+
     return None
 
 
-def _get_q10_data(
-    coordinator: RoborockB01Q10UpdateCoordinator,
-) -> dict[B01_Q10_DP, Any]:
-    """Get normalized Q10 status data from the status trait."""
-    status_data = coordinator.get_q10_status_data()
-    if status_data:
-        return status_data
-    return coordinator.data
+def _get_q10_wind_name(status: Q10Status | dict[Any, Any] | Any) -> str | None:
+    """Get wind/fan speed name from Q10 status object or DPS dictionary."""
+    if isinstance(status, dict):
+        if (fan_level_code := status.get(B01_Q10_DP.FAN_LEVEL)) is None:
+            return None
+        if (fan_level := YXFanLevel.from_code_optional(fan_level_code)) is None:
+            return None
+        return fan_level.value.capitalize()
+
+    if (fan_level_value := getattr(status, "fan_level", None)) is not None:
+        if isinstance(fan_level_value, YXFanLevel):
+            return fan_level_value.value.capitalize()
+        if (fan_level := YXFanLevel.from_code_optional(fan_level_value)) is not None:
+            return fan_level.value.capitalize()
+
+    data = getattr(status, "data", None)
+    if (
+        isinstance(data, dict)
+        and (fan_level_code := data.get(B01_Q10_DP.FAN_LEVEL)) is not None
+    ):
+        if (fan_level := YXFanLevel.from_code_optional(fan_level_code)) is not None:
+            return fan_level.value.capitalize()
+
+    return None
 
 
 PARALLEL_UPDATES = 0
@@ -519,6 +540,29 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information (not available for Q7)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get vacuum current position (not available for Q7)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def async_set_vacuum_goto_position(
+        self, x: int, y: int, **kwargs: Any
+    ) -> None:
+        """Set vacuum goto position (not available for Q7)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
@@ -583,8 +627,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        data = _get_q10_data(self.coordinator)
-        status = _get_q10_status(data)
+        status = _get_q10_status(self.coordinator.api.status)
         if status is not None:
             return Q10_STATE_CODE_TO_STATE.get(status)
         return None
@@ -592,12 +635,12 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the current fan speed."""
-        return _get_q10_wind_name(_get_q10_data(self.coordinator))
+        return _get_q10_wind_name(self.coordinator.api.status)
 
     async def async_start(self) -> None:
         """Start the vacuum."""
         try:
-            status = _get_q10_status(_get_q10_data(self.coordinator))
+            status = _get_q10_status(self.coordinator.api.status)
             if status is YXDeviceState.PAUSE_STATE:
                 await self.coordinator.api.command.send(
                     command=B01_Q10_DP.RESUME,

@@ -656,7 +656,6 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
 
                 status_data[dps_key] = self._to_q10_dps_value(value)
         except TypeError:
-            # Test doubles may not be dataclass instances.
             pass
 
         if status_data:
