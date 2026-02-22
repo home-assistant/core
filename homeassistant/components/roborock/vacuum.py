@@ -24,7 +24,7 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityB01Q7, RoborockCoordinatedEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,8 +84,7 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockQ7Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+        for coordinator in config_entry.runtime_data.b01_q7
     )
 
 
@@ -125,7 +124,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     @property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speeds."""
-        return self._device_status.fan_power_options
+        return [mode.value for mode in self._device_status.fan_speed_options]
 
     @property
     def activity(self) -> VacuumActivity | None:
@@ -136,7 +135,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self._device_status.fan_power_name
+        return self._device_status.fan_speed_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -175,7 +174,11 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Set vacuum fan speed."""
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
-            [self._device_status.get_fan_speed_code(fan_speed)],
+            [
+                {v: k for k, v in self._device_status.fan_speed_mapping.items()}[
+                    fan_speed
+                ]
+            ],
         )
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
@@ -303,7 +306,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         }
 
 
-class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
+class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
@@ -327,7 +330,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntityB01.__init__(
+        RoborockCoordinatedEntityB01Q7.__init__(
             self,
             coordinator.duid_slug,
             coordinator,
