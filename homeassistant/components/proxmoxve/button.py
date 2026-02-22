@@ -43,7 +43,7 @@ class ProxmoxNodeButtonVMEntityDescription(ButtonEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProxmoxNodeButtonContainerEntityDescription(ButtonEntityDescription):
+class ProxmoxContainerButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox container button description."""
 
     press_action: Callable[[ProxmoxCoordinator, str, str], None]
