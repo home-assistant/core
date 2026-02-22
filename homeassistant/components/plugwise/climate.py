@@ -99,7 +99,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 extra_data.as_dict()
             )
             self.__last_active_schedule = plugwise_extra_data.last_active_schedule
-            self.__previous_action_mode = plugwise_extra_data.previous_action_mode
+            self.__previous_action_mode = (
+                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
+            )
 
     def __init__(
         self,
