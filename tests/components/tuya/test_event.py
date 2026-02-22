@@ -100,7 +100,7 @@ async def test_selective_state_update(
     mock_listener: MockDeviceListener,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test skip_update/last_reported."""
+    """Ensure event is only triggered when device reports actual data."""
     entity_id = "event.bathroom_smart_switch_button_1"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
