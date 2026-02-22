@@ -61,7 +61,7 @@ async def test_light_only_for_dimmable_devices(
     await hass.async_block_till_done()
 
     # Light entity should NOT exist for non-dimmable device
-    state = hass.states.get("light.test_dimmable_device_light_1")
+    state = hass.states.get("light.test_device")
     assert state is None
 
 
@@ -81,6 +81,7 @@ async def test_light_control_operations(
 
     # Verify initial state (should be on with 50% brightness from fixture)
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_ON
 
     # Test turn on without brightness
@@ -101,7 +102,7 @@ async def test_light_control_operations(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    device.set_brightness.assert_called_once_with(0.5)
+    device.set_brightness.assert_called_once_with(128 / 255)
     device.turn_on.assert_not_called()
     device.set_brightness.reset_mock()
 
@@ -112,7 +113,7 @@ async def test_light_control_operations(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    device.set_brightness.assert_called_once_with(1.0)
+    device.set_brightness.assert_called_once_with(255 / 255)
     device.set_brightness.reset_mock()
 
     # Test turn on with brightness=1 (minimum non-zero in HA scale)
@@ -122,7 +123,7 @@ async def test_light_control_operations(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 1},
         blocking=True,
     )
-    device.set_brightness.assert_called_once_with(0.0)
+    device.set_brightness.assert_called_once_with(1 / 255)  # ≈ 0.00392
     device.set_brightness.reset_mock()
 
     # Test turn off
@@ -157,12 +158,11 @@ async def test_light_brightness_property(
     await hass.config_entries.async_setup(mock_dimmable_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get the coordinator
-    entry = hass.config_entries.async_get_entry(mock_dimmable_config_entry.entry_id)
-    coordinator = entry.runtime_data
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_dimmable_device)
 
     # Test with state = 0.5 (50% in device scale, should be 128 in HA scale)
-    await coordinator._async_handle_update(StateChange(state=0.5))
+    await update_callback(StateChange(state=0.5))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
@@ -171,25 +171,28 @@ async def test_light_brightness_property(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
 
     # Test with state = 1.0 (100% in device scale, should be 255 in HA scale)
-    await coordinator._async_handle_update(StateChange(state=1.0))
+    await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255
 
     # Test with state = 0.0 (0% - light should be off)
-    await coordinator._async_handle_update(StateChange(state=0.0))
+    await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_OFF
 
     # Test with state = 0.1 (10% in device scale, should be 26 in HA scale)
-    await coordinator._async_handle_update(StateChange(state=0.1))
+    await update_callback(StateChange(state=0.1))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 26
 
@@ -205,22 +208,23 @@ async def test_light_is_on_property(
     await hass.config_entries.async_setup(mock_dimmable_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get the coordinator
-    entry = hass.config_entries.async_get_entry(mock_dimmable_config_entry.entry_id)
-    coordinator = entry.runtime_data
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_dimmable_device)
 
     # Test with state > 0 (light is on)
-    await coordinator._async_handle_update(StateChange(state=0.5))
+    await update_callback(StateChange(state=0.5))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_ON
 
     # Test with state = 0 (light is off)
-    await coordinator._async_handle_update(StateChange(state=0.0))
+    await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_OFF
 
 
@@ -247,6 +251,7 @@ async def test_coordinator_connection_status(
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate reconnection and state update
@@ -255,6 +260,7 @@ async def test_coordinator_connection_status(
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 191  # 0.75 * 255 ≈ 191
 
@@ -285,6 +291,7 @@ async def test_coordinator_state_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 64  # 0.25 * 255 ≈ 64
 
@@ -293,5 +300,6 @@ async def test_coordinator_state_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_dimmable_device_light_1")
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255

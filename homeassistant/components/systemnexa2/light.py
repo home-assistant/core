@@ -48,7 +48,7 @@ class SystemNexa2Light(SystemNexa2Entity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             # Convert HomeAssistant brightness (0-255) to device brightness (0-1.0)
-            value = round(brightness / 255, 2)
+            value = brightness / 255
             await self.coordinator.async_set_brightness(value)
         else:
             await self.coordinator.async_turn_on()

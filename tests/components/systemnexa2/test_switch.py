@@ -52,11 +52,9 @@ async def test_switch_turn_on_off_toggle(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get the coordinator and update it with state
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert entry
-    coordinator = entry.runtime_data
-    await coordinator._async_handle_update(StateChange(state=0.0))
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_system_nexa_2_device)
+    await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
     # Test turn on
@@ -98,22 +96,23 @@ async def test_switch_is_on_property(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get the coordinator and update it with state
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    coordinator = entry.runtime_data
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_system_nexa_2_device)
 
     # Test with state = 1.0 (on)
-    await coordinator._async_handle_update(StateChange(state=1.0))
+    await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_device_relay_1")
+    assert state is not None
     assert state.state == "on"
 
     # Test with state = 0.0 (off)
-    await coordinator._async_handle_update(StateChange(state=0.0))
+    await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_device_relay_1")
+    assert state is not None
     assert state.state == "off"
 
 
@@ -145,10 +144,9 @@ async def test_configuration_switches(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Make coordinator data available
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    coordinator = entry.runtime_data
-    await coordinator._async_handle_update(StateChange(state=1.0))
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_system_nexa_2_device)
+    await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
     # Check 433mhz switch state (should be on)
@@ -203,6 +201,7 @@ async def test_coordinator_connection_status(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_device_relay_1")
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate reconnection and state update
@@ -211,6 +210,7 @@ async def test_coordinator_connection_status(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_device_relay_1")
+    assert state is not None
     assert state.state == STATE_ON
 
 
@@ -240,6 +240,7 @@ async def test_coordinator_state_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_device_relay_1")
+    assert state is not None
     assert state.state == STATE_ON
 
 
@@ -272,4 +273,5 @@ async def test_coordinator_settings_update(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test_device_433_mhz")
+    assert state is not None
     assert state.state == STATE_OFF
