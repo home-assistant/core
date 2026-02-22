@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_diagnostics[mock_window]
+  dict({
+    'config_entry': dict({
+      'host': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+    'connection': dict({
+      'connected': True,
+      'connection_count': 3,
+    }),
+    'gateway': dict({
+      'protocol_version': None,
+      'state': '<DtoState gateway_state="GatewayState.GATEWAY_MODE_WITH_ACTUATORS" gateway_sub_state="GatewaySubState.IDLE"/>',
+      'version': None,
+    }),
+    'nodes': list([
+      dict({
+        'name': 'Test Window',
+        'node_id': 1,
+        'serial_number': '**REDACTED**',
+        'type': 'AsyncMock',
+      }),
+    ]),
+  })
+# ---
