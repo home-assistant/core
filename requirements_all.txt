@@ -38,7 +38,7 @@ PSNAWP==3.0.1
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
-Pillow==12.0.0
+Pillow==12.1.1
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
