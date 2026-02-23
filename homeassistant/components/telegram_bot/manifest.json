@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/telegram_bot",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["telegram"],
   "quality_scale": "silver",

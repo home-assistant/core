@@ -18,7 +18,7 @@ from nrgkick_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -65,7 +65,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
             control = await self.api.get_control()
             values = await self.api.get_values(raw=True)
         except NRGkickAuthenticationError as error:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from error

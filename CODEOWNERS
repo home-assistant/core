@@ -403,8 +403,8 @@ build.json @home-assistant/supervisor
 /tests/components/duke_energy/ @hunterjm
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
-/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
-/tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
+/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192
+/tests/components/dwd_weather_warnings/ @runningman84 @stephan192
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
@@ -753,6 +753,8 @@ build.json @home-assistant/supervisor
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
+/homeassistant/components/hypontech/ @jcisio
+/tests/components/hypontech/ @jcisio
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
 /homeassistant/components/iammeter/ @lewei50
@@ -786,10 +788,12 @@ build.json @home-assistant/supervisor
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
+/homeassistant/components/indevolt/ @xirtnl
+/tests/components/indevolt/ @xirtnl
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
-/homeassistant/components/influxdb/ @mdegat01
-/tests/components/influxdb/ @mdegat01
+/homeassistant/components/influxdb/ @mdegat01 @Robbie1221
+/tests/components/influxdb/ @mdegat01 @Robbie1221
 /homeassistant/components/inkbird/ @bdraco
 /tests/components/inkbird/ @bdraco
 /homeassistant/components/input_boolean/ @home-assistant/core
@@ -1068,6 +1072,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
+/homeassistant/components/mta/ @OnFreund
+/tests/components/mta/ @OnFreund
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
 /homeassistant/components/music_assistant/ @music-assistant @arturpragacz
@@ -1092,8 +1098,8 @@ build.json @home-assistant/supervisor
 /tests/components/nasweb/ @nasWebio
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
-/homeassistant/components/ness_alarm/ @nickw444
-/tests/components/ness_alarm/ @nickw444
+/homeassistant/components/ness_alarm/ @nickw444 @poshy163
+/tests/components/ness_alarm/ @nickw444 @poshy163
 /homeassistant/components/nest/ @allenporter
 /tests/components/nest/ @allenporter
 /homeassistant/components/netatmo/ @cgtobi
@@ -1277,6 +1283,8 @@ build.json @home-assistant/supervisor
 /tests/components/portainer/ @erwindouna
 /homeassistant/components/powerfox/ @klaasnicolaas
 /tests/components/powerfox/ @klaasnicolaas
+/homeassistant/components/powerfox_local/ @klaasnicolaas
+/tests/components/powerfox_local/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/prana/ @prana-dev-official
@@ -1640,6 +1648,8 @@ build.json @home-assistant/supervisor
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
+/homeassistant/components/systemnexa2/ @konsulten @slangstrom
+/tests/components/systemnexa2/ @konsulten @slangstrom
 /homeassistant/components/tado/ @erwindouna
 /tests/components/tado/ @erwindouna
 /homeassistant/components/tag/ @home-assistant/core
@@ -1665,6 +1675,8 @@ build.json @home-assistant/supervisor
 /tests/components/telegram_bot/ @hanwg
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
+/homeassistant/components/teltonika/ @karlbeecken
+/tests/components/teltonika/ @karlbeecken
 /homeassistant/components/template/ @Petro31 @home-assistant/core
 /tests/components/template/ @Petro31 @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
@@ -1731,6 +1743,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_train/ @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @gjohansson-ST
+/homeassistant/components/trane/ @bdraco
+/tests/components/trane/ @bdraco
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede

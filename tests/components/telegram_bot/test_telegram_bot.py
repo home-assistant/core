@@ -48,9 +48,9 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
@@ -209,7 +209,7 @@ async def test_send_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -307,7 +307,7 @@ async def test_send_message_with_inline_keyboard(
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -353,7 +353,7 @@ async def test_send_sticker_partial_error(
     assert mock_send_sticker.call_count == 2
     assert err.value.translation_key == "multiple_errors"
     assert err.value.translation_placeholders == {
-        "errors": "`entity_id` notify.mock_title_mock_chat_1: Action failed. mock network error\n`entity_id` notify.mock_title_mock_chat_2: Action failed. mock network error"
+        "errors": "`entity_id` notify.mock_title_mock_chat_1: mock network error\n`entity_id` notify.mock_title_mock_chat_2: mock network error"
     }
 
 
@@ -364,7 +364,7 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     ) as mock_bot:
         mock_bot.side_effect = NetworkError("mock network error")
 
-        with pytest.raises(HomeAssistantError) as err:
+        with pytest.raises(TelegramError) as err:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEND_STICKER,
@@ -377,8 +377,8 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     await hass.async_block_till_done()
 
     mock_bot.assert_called_once()
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "action_failed"
+    assert err.typename == "NetworkError"
+    assert err.value.message == "mock network error"
 
 
 async def test_send_message_with_invalid_inline_keyboard(
@@ -566,7 +566,7 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -646,14 +646,14 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     assert isinstance(events[0].context, Context)
 
 
-async def test_webhook_endpoint_generates_telegram_callback_event(
+async def test_webhook_callback_inline_query(
     hass: HomeAssistant,
     webhook_bot,
     hass_client: ClientSessionGenerator,
     update_callback_query,
     mock_generate_secret_token,
 ) -> None:
-    """POST to the configured webhook endpoint and assert fired `telegram_callback` event."""
+    """Test callback query triggered by inline query."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_callback")
 
@@ -670,6 +670,47 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+    assert isinstance(events[0].context, Context)
+
+
+async def test_webhook_callback_inline_keyboard(
+    hass: HomeAssistant,
+    webhook_bot: None,
+    hass_client: ClientSessionGenerator,
+    update_callback_inline_keyboard,
+    mock_generate_secret_token,
+) -> None:
+    """Test callback query triggered by inline keyboard button."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_callback")
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        json=update_callback_inline_keyboard,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert (
+        events[0].data["chat_id"]
+        == update_callback_inline_keyboard["callback_query"]["message"]["chat"]["id"]
+    )
+    expected_message = {
+        **update_callback_inline_keyboard["callback_query"]["message"],
+        "delete_chat_photo": False,
+        "group_chat_created": False,
+        "supergroup_chat_created": False,
+        "channel_chat_created": False,
+    }
+    assert events[0].data["message"] == expected_message
+    assert events[0].data["data"] == "/command arg1 arg2"
+    assert events[0].data["command"] == "/command"
+    assert events[0].data["args"] == ["arg1", "arg2"]
     assert isinstance(events[0].context, Context)
 
 
@@ -1012,7 +1053,7 @@ async def test_send_message_with_config_entry(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1099,7 +1140,7 @@ async def test_delete_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 1, ATTR_MESSAGEID: "last"},
+            {ATTR_CHAT_ID: 1, ATTR_MESSAGE_ID: "last"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -1123,7 +1164,7 @@ async def test_delete_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1136,7 +1177,7 @@ async def test_delete_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: "last"},
+            {ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: "last"},
             blocking=True,
         )
 
@@ -1195,7 +1236,7 @@ async def test_edit_message_media(
                 ATTR_CAPTION: "mock caption",
                 ATTR_FILE: "/tmp/mock",  # noqa: S108
                 ATTR_MEDIA_TYPE: media_type,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_CHAT_ID: 123456,
                 ATTR_KEYBOARD_INLINE: "/mock",
                 ATTR_PARSER: PARSER_MD,
@@ -1235,7 +1276,7 @@ async def test_edit_message(
             {
                 ATTR_MESSAGE: "mock message",
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_PARSER: PARSER_PLAIN_TEXT,
             },
             blocking=True,
@@ -1263,7 +1304,7 @@ async def test_edit_message(
             {
                 ATTR_CAPTION: "mock caption",
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_PARSER: PARSER_MD2,
             },
             blocking=True,
@@ -1287,7 +1328,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_REPLYMARKUP,
-            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
+            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: 12345},
             blocking=True,
         )
 
@@ -1535,7 +1576,7 @@ async def test_send_video(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1567,7 +1608,7 @@ async def test_send_video(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1593,7 +1634,7 @@ async def test_set_message_reaction(
             "set_message_reaction",
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 54321,
+                ATTR_MESSAGE_ID: 54321,
                 "reaction": "👍",
                 "is_big": True,
             },
@@ -1718,7 +1759,7 @@ async def test_send_message_multi_target(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -1748,7 +1789,7 @@ async def test_notify_entity_send_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -1802,7 +1843,7 @@ async def test_migrate_chat_id(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -2223,7 +2264,7 @@ async def test_download_file_when_bot_failed_to_get_file(
             "homeassistant.components.telegram_bot.bot.Bot.get_file",
             AsyncMock(side_effect=TelegramError("failed to get file")),
         ),
-        pytest.raises(HomeAssistantError) as err,
+        pytest.raises(TelegramError) as err,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -2232,7 +2273,9 @@ async def test_download_file_when_bot_failed_to_get_file(
             blocking=True,
         )
     await hass.async_block_till_done()
-    assert err.value.translation_key == "action_failed"
+
+    assert err.typename == "TelegramError"
+    assert err.value.message == "failed to get file"
 
 
 async def test_download_file_when_empty_file_path(
