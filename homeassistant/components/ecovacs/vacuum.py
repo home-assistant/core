@@ -459,7 +459,7 @@ class EcovacsVacuum(
             _LOGGER.warning("No map information available, cannot clean segments")
             return
 
-        valid_room_ids: list[int] = []
+        valid_room_ids: list[int | float] = []
         for composite_id in segment_ids:
             map_id, segment_id = _split_composite_id(composite_id)
             if (map_obj := self._maps.get(map_id)) is None:

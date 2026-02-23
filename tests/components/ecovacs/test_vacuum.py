@@ -3,7 +3,7 @@
 from deebot_client.events import CachedMapInfoEvent, Event, RoomsEvent
 from deebot_client.events.map import Map
 from deebot_client.models import CleanMode, Room
-from deebot_client.rs.map import RotationAngle
+from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant.components import vacuum
