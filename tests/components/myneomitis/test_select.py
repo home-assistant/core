@@ -1,4 +1,4 @@
-"""Tests for the MyNeoSelect component."""
+"""Tests for the MyNeomitis select component."""
 
 from unittest.mock import AsyncMock
 
