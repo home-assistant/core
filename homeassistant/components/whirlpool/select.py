@@ -55,11 +55,9 @@ async def async_setup_entry(
     appliances_manager = config_entry.runtime_data
 
     async_add_entities(
-        [
-            WhirlpoolSelectEntity(refrigerator, description)
-            for refrigerator in appliances_manager.refrigerators
-            for description in REFRIGERATOR_DESCRIPTIONS
-        ]
+        WhirlpoolSelectEntity(refrigerator, description)
+        for refrigerator in appliances_manager.refrigerators
+        for description in REFRIGERATOR_DESCRIPTIONS
     )
 
 
