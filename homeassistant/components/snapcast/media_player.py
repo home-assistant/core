@@ -30,7 +30,6 @@ from .entity import SnapcastCoordinatorEntity
 STREAM_STATUS = {
     "idle": MediaPlayerState.IDLE,
     "playing": MediaPlayerState.PLAYING,
-    "disabled": MediaPlayerState.OFF,
     "unknown": None,
 }
 
