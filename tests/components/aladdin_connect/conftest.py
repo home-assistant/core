@@ -43,13 +43,28 @@ def mock_aladdin_connect_api() -> Generator[AsyncMock]:
     mock_door.battery_level = 100
     mock_door.unique_id = f"{mock_door.device_id}-{mock_door.door_number}"
 
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        autospec=True,
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.AladdinConnectClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            new=mock_client,
+        ),
+    ):
         client = mock_client.return_value
         client.get_doors.return_value = [mock_door]
         yield client
+
+
+@pytest.fixture
+def mock_setup_entry() -> AsyncMock:
+    """Fixture to mock setup entry."""
+    with patch(
+        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+    ):
+        yield
 
 
 @pytest.fixture

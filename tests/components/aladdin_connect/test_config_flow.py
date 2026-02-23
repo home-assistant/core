@@ -1,6 +1,6 @@
 """Test the Aladdin Connect Garage Door config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -43,7 +43,12 @@ async def access_token(hass: HomeAssistant) -> str:
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "use_cloud",
+    "mock_setup_entry",
+    "mock_aladdin_connect_api",
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -83,17 +88,7 @@ async def test_full_flow(
         },
     )
 
-    with (
-        patch(
-            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-            autospec=True,
-        ),
-        patch(
-            "homeassistant.components.aladdin_connect.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aladdin Connect"
@@ -110,7 +105,12 @@ async def test_full_flow(
     assert result["result"].unique_id == USER_ID
 
 
-@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "use_cloud",
+    "mock_setup_entry",
+    "mock_aladdin_connect_api",
+)
 async def test_full_dhcp_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -163,17 +163,7 @@ async def test_full_dhcp_flow(
         },
     )
 
-    with (
-        patch(
-            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-            autospec=True,
-        ),
-        patch(
-            "homeassistant.components.aladdin_connect.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aladdin Connect"
@@ -190,7 +180,9 @@ async def test_full_dhcp_flow(
     assert result["result"].unique_id == USER_ID
 
 
-@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "use_cloud", "mock_aladdin_connect_api"
+)
 async def test_duplicate_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -232,11 +224,7 @@ async def test_duplicate_entry(
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        autospec=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -264,7 +252,12 @@ async def test_duplicate_dhcp_entry(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "use_cloud",
+    "mock_setup_entry",
+    "mock_aladdin_connect_api",
+)
 async def test_flow_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -316,17 +309,7 @@ async def test_flow_reauth(
         },
     )
 
-    with (
-        patch(
-            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-            autospec=True,
-        ),
-        patch(
-            "homeassistant.components.aladdin_connect.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -334,7 +317,9 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "use_cloud", "mock_aladdin_connect_api"
+)
 async def test_flow_wrong_account_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -393,11 +378,7 @@ async def test_flow_wrong_account_reauth(
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        autospec=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should abort with wrong account
     assert result["type"] == "abort"
@@ -446,6 +427,7 @@ async def test_flow_connection_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
+    mock_aladdin_connect_api: AsyncMock,
 ) -> None:
     """Test config flow aborts when API connection fails."""
     result = await hass.config_entries.flow.async_init(
@@ -473,12 +455,8 @@ async def test_flow_connection_error(
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        autospec=True,
-    ) as mock_client:
-        mock_client.return_value.get_doors.side_effect = Exception("Connection failed")
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    mock_aladdin_connect_api.get_doors.side_effect = Exception("Connection failed")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
