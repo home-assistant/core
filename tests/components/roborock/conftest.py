@@ -262,6 +262,7 @@ def create_b01_q10_trait() -> Mock:
         status_trait.update_from_dps(current_data)
 
     q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
+    q10_trait.close = AsyncMock()
 
     return q10_trait
 
