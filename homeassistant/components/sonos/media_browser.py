@@ -591,10 +591,10 @@ def get_media(
         if item_id.startswith("A:ALBUM/"):
             splits = item_id.split("/")
             search_term = urllib.parse.unquote(splits[1]) if len(splits) > 1 else ""
-            title: str | None = search_term
+            album_title: str | None = search_term
         else:
             search_term = urllib.parse.unquote(item_id.split("/")[-1])
-            title = None
+            album_title = None
 
         matches = media_library.get_music_library_information(
             search_type, search_term=search_term, full_album_art_uri=True
@@ -604,9 +604,9 @@ def get_media(
                 (item for item in matches if item_id == item.item_id), None
             ):
                 matches = [result]
-            elif title:
+            elif album_title:
                 if result := next(
-                    (item for item in matches if title == item.title), None
+                    (item for item in matches if album_title == item.title), None
                 ):
                     matches = [result]
     elif search_type == SONOS_SHARE:
