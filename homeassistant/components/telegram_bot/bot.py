@@ -73,9 +73,9 @@ from .const import (
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_MSG,
     ATTR_MSGID,
     ATTR_ONE_TIME_KEYBOARD,
@@ -319,8 +319,8 @@ class TelegramNotificationService:
         """
         message_id: Any | None = None
         inline_message_id: int | None = None
-        if ATTR_MESSAGEID in msg_data:
-            message_id = msg_data[ATTR_MESSAGEID]
+        if ATTR_MESSAGE_ID in msg_data:
+            message_id = msg_data[ATTR_MESSAGE_ID]
             if (
                 isinstance(message_id, str)
                 and (message_id == "last")
@@ -491,7 +491,7 @@ class TelegramNotificationService:
 
             event_data: dict[str, Any] = {
                 ATTR_CHAT_ID: chat_id,
-                ATTR_MESSAGEID: message_id,
+                ATTR_MESSAGE_ID: message_id,
             }
             if message_tag is not None:
                 event_data[ATTR_MESSAGE_TAG] = message_tag
