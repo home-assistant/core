@@ -100,8 +100,12 @@ class PicoTTSEntity(TextToSpeechEntity):
             with open(fname, "rb") as voice:
                 data = voice.read()
         except OSError as exc:
-            _LOGGER.error("Error trying to read %s", fname)
-            raise HomeAssistantError(exc) from exc
+            _LOGGER.debug("Full exception %s", fname)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="file_read_error",
+                translation_placeholders={"filename": fname},
+            ) from exc
         finally:
             os.remove(fname)
 
