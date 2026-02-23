@@ -22,10 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-BUTTON_DESCRIPTION = ButtonEntityDescription(
+REBOOT_BUTTON = ButtonEntityDescription(
     key="reboot",
     device_class=ButtonDeviceClass.RESTART,
-    translation_key="reboot_device",
     entity_registry_enabled_default=False,
 )
 
@@ -36,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS button from a config entry."""
-    async_add_entities([AirOSRebootButton(config_entry.runtime_data)])
+    async_add_entities([AirOSRebootButton(config_entry.runtime_data, REBOOT_BUTTON)])
 
 
 class AirOSRebootButton(AirOSEntity, ButtonEntity):
@@ -44,12 +43,16 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
 
     entity_description: ButtonEntityDescription
 
-    def __init__(self, coordinator: AirOSDataUpdateCoordinator, entity_description: ButtonEntityDescription) -> None:
+    def __init__(
+        self,
+        coordinator: AirOSDataUpdateCoordinator,
+        description: ButtonEntityDescription,
+    ) -> None:
         """Initialize the AirOS client button."""
         super().__init__(coordinator)
-        self.entity_description = ButtonEntityDescription
 
-        self._attr_unique_id = f"{coordinator.data.derived.mac}_{entity_description.key}"
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     async def async_press(self) -> None:
         """Handle the button press to reboot the device."""

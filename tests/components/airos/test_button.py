@@ -25,7 +25,7 @@ async def test_reboot_button_press_success(
     """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    entity_id = "button.nanostation_5ac_ap_name_reboot_device"
+    entity_id = "button.nanostation_5ac_ap_name_restart"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -51,7 +51,7 @@ async def test_reboot_button_press_fail(
     """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    entity_id = "button.nanostation_5ac_ap_name_reboot_device"
+    entity_id = "button.nanostation_5ac_ap_name_restart"
     mock_airos_client.reboot.return_value = False
 
     with pytest.raises(HomeAssistantError):
@@ -84,7 +84,7 @@ async def test_reboot_button_press_exceptions(
     """Test reboot failure is handled gracefully."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    entity_id = "button.nanostation_5ac_ap_name_reboot_device"
+    entity_id = "button.nanostation_5ac_ap_name_restart"
 
     mock_airos_client.login.side_effect = exception
 
