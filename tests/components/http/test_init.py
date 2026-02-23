@@ -6,6 +6,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
+import os
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
@@ -715,6 +716,10 @@ async def test_server_host(
         patch(
             "asyncio.BaseEventLoop.create_server", return_value=mock_server
         ) as mock_create_server,
+        patch(
+            "asyncio.unix_events._UnixSelectorEventLoop.create_unix_server",
+            return_value=mock_server,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -735,3 +740,54 @@ async def test_server_host(
     )
 
     assert set(issue_registry.issues) == expected_issues
+
+
+async def test_unix_socket_started_with_supervisor(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test unix socket is started when running under Supervisor."""
+    socket_path = tmp_path / "core.sock"
+    mock_server = Mock()
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch("homeassistant.components.http.SUPERVISOR_UNIX_SOCKET_PATH", socket_path),
+        patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
+        patch(
+            "asyncio.unix_events._UnixSelectorEventLoop.create_unix_server",
+            return_value=mock_server,
+        ) as mock_create_unix,
+    ):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    mock_create_unix.assert_called_once_with(
+        ANY,
+        socket_path,
+        backlog=128,
+    )
+    assert hass.http.unix_site is not None
+
+
+async def test_unix_socket_not_started_without_supervisor(
+    hass: HomeAssistant,
+) -> None:
+    """Test unix socket is not started when not running under Supervisor."""
+    mock_server = Mock()
+    with (
+        patch.dict(os.environ, {}, clear=False),
+        patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
+        patch(
+            "asyncio.unix_events._UnixSelectorEventLoop.create_unix_server",
+            return_value=mock_server,
+        ) as mock_create_unix,
+    ):
+        # Ensure SUPERVISOR is not in the environment
+        os.environ.pop("SUPERVISOR", None)
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    mock_create_unix.assert_not_called()
+    assert hass.http.unix_site is None
