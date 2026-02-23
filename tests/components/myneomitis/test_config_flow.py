@@ -1,4 +1,4 @@
-"""Test the configuration flow for MyNeoMitis integration."""
+"""Test the configuration flow for MyNeomitis integration."""
 
 from unittest.mock import AsyncMock
 
