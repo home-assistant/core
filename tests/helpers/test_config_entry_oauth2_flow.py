@@ -492,6 +492,12 @@ async def test_abort_discovered_multiple(
             "oauth_unauthorized",
             "invalid_request: Request was missing the 'redirect_uri' parameter.",
         ),
+        (
+            HTTPStatus.BAD_REQUEST,
+            "some error which is not formatted",
+            "oauth_unauthorized",
+            '"some error which is not formatted"',
+        ),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host")
