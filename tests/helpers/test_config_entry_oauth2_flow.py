@@ -480,17 +480,17 @@ async def test_abort_discovered_multiple(
             HTTPStatus.UNAUTHORIZED,
             {"error_description": "The token has expired."},
             "oauth_unauthorized",
-            "The token has expired.",
+            "unknown error: The token has expired.",
         ),
         (
             HTTPStatus.BAD_REQUEST,
             {
                 "error": "invalid_request",
                 "error_description": "Request was missing the 'redirect_uri' parameter.",
-                "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
+                "error_uri": "Sensible URI: https://authorization-server.com/docs/access_token",
             },
             "oauth_unauthorized",
-            "Request was missing the 'redirect_uri' parameter.",
+            "invalid_request: Request was missing the 'redirect_uri' parameter.",
         ),
     ],
 )
