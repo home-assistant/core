@@ -302,6 +302,8 @@ class RuntimeEntryData:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
 
+        # Make a dict of the EntityInfo by type and send
+        # them to the listeners for each specific EntityInfo type
         info_types_to_platform = INFO_TYPE_TO_PLATFORM
         infos_by_type: defaultdict[type[EntityInfo], list[EntityInfo]] = defaultdict(
             list
