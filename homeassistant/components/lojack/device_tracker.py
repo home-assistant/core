@@ -80,7 +80,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
     @property
     def available(self) -> bool:
         """Return True if vehicle is still included in the account."""
-        return super().available and self._device_id in self.coordinator.data
+        return super().available and self._vehicle is not None
 
     @property
     def source_type(self) -> SourceType:

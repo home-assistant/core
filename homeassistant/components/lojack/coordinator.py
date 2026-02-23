@@ -151,7 +151,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
     async def _async_update_data(self) -> dict[str, LoJackVehicleData]:
         """Fetch data from API."""
         try:
-            devices = await self.client.list_devices()
+            devices = await self.client.list_devices() or []
         except AuthenticationError:
             LOGGER.info("Token expired, refreshing...")
             old_client = self.client
@@ -159,7 +159,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 new_client = await LoJackClient.create(self._username, self._password)
                 self.client = new_client
                 self.update_interval = self._default_update_interval
-                devices = await self.client.list_devices()
+                devices = await self.client.list_devices() or []
             except AuthenticationError as refresh_err:
                 raise ConfigEntryAuthFailed(
                     f"Failed to refresh token: {refresh_err}"
@@ -213,7 +213,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
             vin=getattr(device, "vin", None),
             make=getattr(device, "make", None),
             model=getattr(device, "model", None),
-            year=str(getattr(device, "year", "") or ""),
+            year=getattr(device, "year", None) or None,
             latitude=_safe_float(getattr(location, "latitude", None))
             if location
             else None,

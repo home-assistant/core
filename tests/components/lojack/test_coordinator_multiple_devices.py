@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 

@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

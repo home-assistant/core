@@ -1,9 +1,5 @@
 """Tests for LoJack utility functions."""
 
-import pytest
-
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.lojack.coordinator import (
     get_device_name,
     _safe_float,

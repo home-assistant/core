@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -45,13 +43,22 @@ async def test_device_tracker_vehicle_no_longer_available(
 
         coordinator = mock_config_entry.runtime_data
         
-        # Clear coordinator data to simulate vehicle no longer available
-        coordinator.data = {}
-        
+        # Verify entity is initially available
         state = hass.states.get("device_tracker.2021_honda_accord")
-        if state:
-            # When vehicle is not in data, properties should return None
-            assert state is not None
+        assert state is not None
+        assert state.state != "unavailable"
+        
+        # Simulate vehicle removed from account - client returns empty list
+        client.list_devices = AsyncMock(return_value=[])
+        
+        # Trigger coordinator update
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        
+        # Entity should now be unavailable
+        state = hass.states.get("device_tracker.2021_honda_accord")
+        assert state is not None
+        assert state.state == "unavailable"
 
 
 async def test_device_tracker_battery_level(
