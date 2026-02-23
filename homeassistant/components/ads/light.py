@@ -68,6 +68,40 @@ def _validate_brightness_range(config: ConfigType) -> ConfigType:
     return config
 
 
+def _validate_channel_groups(config: ConfigType) -> ConfigType:
+    """Require colour channels to be configured as complete groups.
+
+    Partial definitions (e.g. only adsvar_hue without adsvar_saturation, or
+    adsvar_red without adsvar_green/adsvar_blue) would silently subscribe to
+    ADS variable updates without ever advertising the corresponding colour
+    mode, which is hard to debug.
+    """
+    has_hue = CONF_ADS_VAR_HUE in config
+    has_sat = CONF_ADS_VAR_SATURATION in config
+    if has_hue != has_sat:
+        raise vol.Invalid(
+            f"{CONF_ADS_VAR_HUE} and {CONF_ADS_VAR_SATURATION} must be"
+            " configured together"
+        )
+
+    rgb_vars = (CONF_ADS_VAR_RED, CONF_ADS_VAR_GREEN, CONF_ADS_VAR_BLUE)
+    rgb_present = [v in config for v in rgb_vars]
+    if any(rgb_present) and not all(rgb_present):
+        raise vol.Invalid(
+            f"{CONF_ADS_VAR_RED}, {CONF_ADS_VAR_GREEN}, and {CONF_ADS_VAR_BLUE}"
+            " must all be configured together"
+        )
+
+    if CONF_ADS_VAR_WHITE in config and not all(rgb_present):
+        raise vol.Invalid(
+            f"{CONF_ADS_VAR_WHITE} requires {CONF_ADS_VAR_RED},"
+            f" {CONF_ADS_VAR_GREEN}, and {CONF_ADS_VAR_BLUE} to also be"
+            " configured"
+        )
+
+    return config
+
+
 def _validate_brightness_required_for_color(config: ConfigType) -> ConfigType:
     """Require adsvar_brightness when color modes that need it are configured.
 
@@ -81,12 +115,10 @@ def _validate_brightness_required_for_color(config: ConfigType) -> ConfigType:
             f"{CONF_ADS_VAR_BRIGHTNESS} is required when"
             f" {CONF_ADS_VAR_COLOR_TEMP_KELVIN} is configured"
         )
-    if not has_brightness and (
-        CONF_ADS_VAR_HUE in config or CONF_ADS_VAR_SATURATION in config
-    ):
+    if not has_brightness and CONF_ADS_VAR_HUE in config:
         raise vol.Invalid(
             f"{CONF_ADS_VAR_BRIGHTNESS} is required when"
-            f" {CONF_ADS_VAR_HUE} or {CONF_ADS_VAR_SATURATION} is configured"
+            f" {CONF_ADS_VAR_HUE} and {CONF_ADS_VAR_SATURATION} are configured"
         )
     return config
 
@@ -116,6 +148,7 @@ PLATFORM_SCHEMA = vol.All(
         }
     ),
     _validate_brightness_range,
+    _validate_channel_groups,
     _validate_brightness_required_for_color,
 )
 
@@ -521,25 +554,89 @@ class AdsLight(AdsEntity, LightEntity):
             and self._ads_var_green is not None
             and self._ads_var_blue is not None
         ):
+            # When no dedicated brightness channel is configured, bake the
+            # requested brightness into the colour channel values.
+            # HA sends colour normalised to full brightness (0-255 per channel)
+            # and passes the actual brightness level separately, so multiplying
+            # by brightness/255 produces the correct scaled output.
+            brightness_factor = 1.0
+            if self._ads_var_brightness is None and ATTR_BRIGHTNESS in kwargs:
+                brightness_factor = kwargs[ATTR_BRIGHTNESS] / 255.0
+
             if self._ads_var_white is not None and ATTR_RGBW_COLOR in kwargs:
                 r, g, b, w = kwargs[ATTR_RGBW_COLOR]
                 to_write.extend(
                     [
-                        (self._ads_var_red, int(r)),
-                        (self._ads_var_green, int(g)),
-                        (self._ads_var_blue, int(b)),
-                        (self._ads_var_white, int(w)),
+                        (
+                            self._ads_var_red,
+                            min(255, round(int(r) * brightness_factor)),
+                        ),
+                        (
+                            self._ads_var_green,
+                            min(255, round(int(g) * brightness_factor)),
+                        ),
+                        (
+                            self._ads_var_blue,
+                            min(255, round(int(b) * brightness_factor)),
+                        ),
+                        (
+                            self._ads_var_white,
+                            min(255, round(int(w) * brightness_factor)),
+                        ),
                     ]
                 )
             elif ATTR_RGB_COLOR in kwargs:
                 r, g, b = kwargs[ATTR_RGB_COLOR]
                 to_write.extend(
                     [
-                        (self._ads_var_red, int(r)),
-                        (self._ads_var_green, int(g)),
-                        (self._ads_var_blue, int(b)),
+                        (
+                            self._ads_var_red,
+                            min(255, round(int(r) * brightness_factor)),
+                        ),
+                        (
+                            self._ads_var_green,
+                            min(255, round(int(g) * brightness_factor)),
+                        ),
+                        (
+                            self._ads_var_blue,
+                            min(255, round(int(b) * brightness_factor)),
+                        ),
                     ]
                 )
+            elif self._ads_var_brightness is None and ATTR_BRIGHTNESS in kwargs:
+                # Brightness-only command without a colour: scale the current
+                # channel values proportionally so hue/saturation is preserved.
+                target = kwargs[ATTR_BRIGHTNESS]
+                cur_r = int(self._state_dict[STATE_KEY_RED] or 0)
+                cur_g = int(self._state_dict[STATE_KEY_GREEN] or 0)
+                cur_b = int(self._state_dict[STATE_KEY_BLUE] or 0)
+                current = max(cur_r, cur_g, cur_b)
+                if current > 0:
+                    scale = target / current
+                    to_write.extend(
+                        [
+                            (self._ads_var_red, min(255, round(cur_r * scale))),
+                            (self._ads_var_green, min(255, round(cur_g * scale))),
+                            (self._ads_var_blue, min(255, round(cur_b * scale))),
+                        ]
+                    )
+                    if self._ads_var_white is not None:
+                        cur_w = int(self._state_dict[STATE_KEY_WHITE] or 0)
+                        to_write.append(
+                            (self._ads_var_white, min(255, round(cur_w * scale)))
+                        )
+                else:
+                    # All channels are zero (e.g. light was off or state not yet
+                    # received); initialise to neutral white at the requested level.
+                    to_write.extend(
+                        [
+                            (self._ads_var_red, target),
+                            (self._ads_var_green, target),
+                            (self._ads_var_blue, target),
+                        ]
+                    )
+                    if self._ads_var_white is not None:
+                        to_write.append((self._ads_var_white, target))
 
         self._ads_hub.write_list_by_name(to_write)
 
