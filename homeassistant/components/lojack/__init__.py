@@ -30,14 +30,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
         raise ConfigEntryNotReady(f"API error during setup: {err}") from err
 
     coordinator = LoJackCoordinator(hass, client, entry)
+    success = False
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception:
-        try:
-            await client.close()
-        except Exception:  # noqa: BLE001 - Cleanup during setup failure should not fail
-            LOGGER.debug("Error closing client after setup failure", exc_info=True)
-        raise
+        success = True
+    finally:
+        if not success:
+            try:
+                await client.close()
+            except Exception:  # noqa: BLE001 - Cleanup during setup failure should not fail
+                LOGGER.debug("Error closing client after setup failure", exc_info=True)
 
     entry.runtime_data = coordinator
 
