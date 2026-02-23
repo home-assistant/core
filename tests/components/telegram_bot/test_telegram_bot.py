@@ -48,9 +48,9 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
@@ -209,7 +209,7 @@ async def test_send_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -307,7 +307,7 @@ async def test_send_message_with_inline_keyboard(
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -566,7 +566,7 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -1053,7 +1053,7 @@ async def test_send_message_with_config_entry(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1140,7 +1140,7 @@ async def test_delete_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 1, ATTR_MESSAGEID: "last"},
+            {ATTR_CHAT_ID: 1, ATTR_MESSAGE_ID: "last"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -1164,7 +1164,7 @@ async def test_delete_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1177,7 +1177,7 @@ async def test_delete_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: "last"},
+            {ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: "last"},
             blocking=True,
         )
 
@@ -1236,7 +1236,7 @@ async def test_edit_message_media(
                 ATTR_CAPTION: "mock caption",
                 ATTR_FILE: "/tmp/mock",  # noqa: S108
                 ATTR_MEDIA_TYPE: media_type,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_CHAT_ID: 123456,
                 ATTR_KEYBOARD_INLINE: "/mock",
                 ATTR_PARSER: PARSER_MD,
@@ -1276,7 +1276,7 @@ async def test_edit_message(
             {
                 ATTR_MESSAGE: "mock message",
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_PARSER: PARSER_PLAIN_TEXT,
             },
             blocking=True,
@@ -1304,7 +1304,7 @@ async def test_edit_message(
             {
                 ATTR_CAPTION: "mock caption",
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_PARSER: PARSER_MD2,
             },
             blocking=True,
@@ -1328,7 +1328,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_REPLYMARKUP,
-            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
+            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: 12345},
             blocking=True,
         )
 
@@ -1576,7 +1576,7 @@ async def test_send_video(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1608,7 +1608,7 @@ async def test_send_video(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1634,7 +1634,7 @@ async def test_set_message_reaction(
             "set_message_reaction",
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 54321,
+                ATTR_MESSAGE_ID: 54321,
                 "reaction": "👍",
                 "is_big": True,
             },
@@ -1759,7 +1759,7 @@ async def test_send_message_multi_target(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -1789,7 +1789,7 @@ async def test_notify_entity_send_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -1843,7 +1843,7 @@ async def test_migrate_chat_id(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
