@@ -90,6 +90,7 @@ def mock_modems() -> Generator[AsyncMock]:
             ModemStatusFull(**modem) for modem in device_data["modems_data"]
         ]
         mock_modems_instance.get_status.return_value = response_mock
+        response_mock.success = True
 
         # Mock is_online to return True for the modem
         mock_modems_class.is_online = MagicMock(return_value=True)
