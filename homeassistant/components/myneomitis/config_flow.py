@@ -40,8 +40,10 @@ class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientResponseError as e:
                 if e.status == 401:
                     errors["base"] = "invalid_auth"
-                else:
+                elif e.status >= 500:
                     errors["base"] = "cannot_connect"
+                else:
+                    errors["base"] = "unknown"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             except aiohttp.ClientError:

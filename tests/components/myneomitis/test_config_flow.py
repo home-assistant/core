@@ -66,6 +66,7 @@ async def test_user_flow_success(
     [
         (ClientConnectionError(), "cannot_connect"),
         (make_client_response_error(401), "invalid_auth"),
+        (make_client_response_error(403), "unknown"),
         (make_client_response_error(500), "cannot_connect"),
         (ClientError("Network error"), "unknown"),
         (RuntimeError("boom"), "unknown"),
