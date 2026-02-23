@@ -556,7 +556,7 @@ async def test_get_lock_users_service(
 
     assert result
     entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result["total_users"] == 1
+    assert len(entity_result["users"]) == 1
     assert entity_result["users"][0][ATTR_USER_NAME] == "Alice"
 
 
@@ -688,7 +688,7 @@ async def test_get_lock_users_iterates_with_next_index(
     )
 
     # Should have 2 users
-    assert result["lock.mock_door_lock"]["total_users"] == 2
+    assert len(result["lock.mock_door_lock"]["users"]) == 2
     # Should only need 2 calls (using nextUserIndex)
     assert matter_client.send_device_command.call_count == 2
 
@@ -754,7 +754,7 @@ async def test_get_lock_users_next_user_index_loop_prevention(
     assert result is not None
     # Result is keyed by entity_id
     lock_users = result["lock.mock_door_lock"]
-    assert lock_users["total_users"] == 1
+    assert len(lock_users["users"]) == 1
     # Should have stopped after first user due to nextUserIndex <= current
 
 
@@ -796,7 +796,7 @@ async def test_get_lock_users_with_credentials(
     assert result is not None
     # Result is keyed by entity_id
     lock_users = result["lock.mock_door_lock"]
-    assert lock_users["total_users"] == 1
+    assert len(lock_users["users"]) == 1
     user = lock_users["users"][0]
     assert len(user["credentials"]) == 2
     assert user["credentials"][0]["type"] == "pin"

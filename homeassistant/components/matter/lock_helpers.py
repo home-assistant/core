@@ -6,25 +6,13 @@ business logic for lock user/credential management.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
-    ATTR_CREDENTIAL_INDEX,
-    ATTR_CREDENTIAL_RULE,
-    ATTR_MAX_CREDENTIALS_PER_USER,
-    ATTR_MAX_PIN_USERS,
-    ATTR_MAX_RFID_USERS,
-    ATTR_MAX_USERS,
-    ATTR_SUPPORTS_USER_MGMT,
-    ATTR_USER_INDEX,
-    ATTR_USER_NAME,
-    ATTR_USER_STATUS,
-    ATTR_USER_TYPE,
-    ATTR_USER_UNIQUE_ID,
     CLEAR_ALL_INDEX,
     CRED_TYPE_FACE,
     CRED_TYPE_FINGER_VEIN,
@@ -61,6 +49,73 @@ if TYPE_CHECKING:
 
 # DoorLock Feature bitmap from Matter SDK
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
+
+
+# --- TypedDicts for service action responses ---
+
+
+class LockUserCredentialData(TypedDict):
+    """Credential data within a user response."""
+
+    type: str
+    index: int | None
+
+
+class LockUserData(TypedDict):
+    """User data returned from lock queries."""
+
+    user_index: int | None
+    user_name: str | None
+    user_unique_id: int | None
+    user_status: str
+    user_type: str
+    credential_rule: str
+    credentials: list[LockUserCredentialData]
+    next_user_index: int | None
+
+
+class SetLockUserResult(TypedDict):
+    """Result of set_lock_user service action."""
+
+    user_index: int
+
+
+class GetLockUsersResult(TypedDict):
+    """Result of get_lock_users service action."""
+
+    max_users: int
+    users: list[LockUserData]
+
+
+class GetLockInfoResult(TypedDict):
+    """Result of get_lock_info service action."""
+
+    supports_user_management: bool
+    supported_credential_types: list[str]
+    max_users: int | None
+    max_pin_users: int | None
+    max_rfid_users: int | None
+    max_credentials_per_user: int | None
+    min_pin_length: int | None
+    max_pin_length: int | None
+    min_rfid_length: int | None
+    max_rfid_length: int | None
+
+
+class SetLockCredentialResult(TypedDict):
+    """Result of set_lock_credential service action."""
+
+    credential_index: int
+    user_index: int | None
+    next_credential_index: int | None
+
+
+class GetLockCredentialStatusResult(TypedDict):
+    """Result of get_lock_credential_status service action."""
+
+    credential_exists: bool
+    user_index: int | None
+    next_credential_index: int | None
 
 
 def _get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
@@ -122,7 +177,7 @@ def _get_supported_credential_types(feature_map: int) -> list[str]:
     return types
 
 
-def _format_user_response(user_data: Any) -> dict[str, Any] | None:
+def _format_user_response(user_data: Any) -> LockUserData | None:
     """Format GetUser response to API response format.
 
     Returns None if the user slot is empty (no userStatus).
@@ -134,31 +189,27 @@ def _format_user_response(user_data: Any) -> dict[str, Any] | None:
     if user_status is None:
         return None
 
-    credentials = []
     creds = _get_attr(user_data, "credentials")
-    if creds:
-        for cred in creds:
-            cred_type = _get_attr(cred, "credentialType")
-            cred_index = _get_attr(cred, "credentialIndex")
-            credentials.append(
-                {
-                    "type": CREDENTIAL_TYPE_MAP.get(cred_type, "unknown"),
-                    "index": cred_index,
-                }
-            )
+    credentials: list[LockUserCredentialData] = [
+        LockUserCredentialData(
+            type=CREDENTIAL_TYPE_MAP.get(_get_attr(cred, "credentialType"), "unknown"),
+            index=_get_attr(cred, "credentialIndex"),
+        )
+        for cred in (creds or [])
+    ]
 
-    return {
-        ATTR_USER_INDEX: _get_attr(user_data, "userIndex"),
-        ATTR_USER_NAME: _get_attr(user_data, "userName"),
-        ATTR_USER_UNIQUE_ID: _get_attr(user_data, "userUniqueID"),
-        ATTR_USER_STATUS: USER_STATUS_MAP.get(user_status, "unknown"),
-        ATTR_USER_TYPE: USER_TYPE_MAP.get(_get_attr(user_data, "userType"), "unknown"),
-        ATTR_CREDENTIAL_RULE: CREDENTIAL_RULE_MAP.get(
+    return LockUserData(
+        user_index=_get_attr(user_data, "userIndex"),
+        user_name=_get_attr(user_data, "userName"),
+        user_unique_id=_get_attr(user_data, "userUniqueID"),
+        user_status=USER_STATUS_MAP.get(user_status, "unknown"),
+        user_type=USER_TYPE_MAP.get(_get_attr(user_data, "userType"), "unknown"),
+        credential_rule=CREDENTIAL_RULE_MAP.get(
             _get_attr(user_data, "credentialRule"), "unknown"
         ),
-        "credentials": credentials,
-        "next_user_index": _get_attr(user_data, "nextUserIndex"),
-    }
+        credentials=credentials,
+        next_user_index=_get_attr(user_data, "nextUserIndex"),
+    )
 
 
 # --- Credential management helpers ---
@@ -253,10 +304,10 @@ def _ensure_usr_support(lock_endpoint: MatterEndpoint) -> None:
 async def get_lock_info(
     matter_client: MatterClient,
     node: MatterNode,
-) -> dict[str, Any]:
+) -> GetLockInfoResult:
     """Get lock capabilities and configuration info.
 
-    Returns a dict with lock capability information.
+    Returns a typed dict with lock capability information.
     Raises HomeAssistantError if lock endpoint not found.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -268,23 +319,31 @@ async def get_lock_info(
         or 0
     )
 
-    result: dict[str, Any] = {
-        ATTR_SUPPORTS_USER_MGMT: supports_usr,
-        "supported_credential_types": _get_supported_credential_types(feature_map),
-    }
+    result = GetLockInfoResult(
+        supports_user_management=supports_usr,
+        supported_credential_types=_get_supported_credential_types(feature_map),
+        max_users=None,
+        max_pin_users=None,
+        max_rfid_users=None,
+        max_credentials_per_user=None,
+        min_pin_length=None,
+        max_pin_length=None,
+        min_rfid_length=None,
+        max_rfid_length=None,
+    )
 
-    # Only include capacity info if USR feature is supported
+    # Populate capacity info if USR feature is supported
     if supports_usr:
-        result[ATTR_MAX_USERS] = lock_endpoint.get_attribute_value(
+        result["max_users"] = lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfTotalUsersSupported
         )
-        result[ATTR_MAX_PIN_USERS] = lock_endpoint.get_attribute_value(
+        result["max_pin_users"] = lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfPINUsersSupported
         )
-        result[ATTR_MAX_RFID_USERS] = lock_endpoint.get_attribute_value(
+        result["max_rfid_users"] = lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported
         )
-        result[ATTR_MAX_CREDENTIALS_PER_USER] = lock_endpoint.get_attribute_value(
+        result["max_credentials_per_user"] = lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfCredentialsSupportedPerUser
         )
         result["min_pin_length"] = lock_endpoint.get_attribute_value(
@@ -313,13 +372,13 @@ async def set_lock_user(
     user_status: str | None = None,
     user_type: str | None = None,
     credential_rule: str | None = None,
-) -> dict[str, Any]:
+) -> SetLockUserResult:
     """Add or update a user on the lock.
 
     When user_status, user_type, or credential_rule is None, defaults are used
     for new users and existing values are preserved for modifications.
 
-    Returns dict with user_index on success.
+    Returns typed dict with user_index on success.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -435,16 +494,16 @@ async def set_lock_user(
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
-    return {ATTR_USER_INDEX: user_index}
+    return SetLockUserResult(user_index=user_index)
 
 
 async def get_lock_users(
     matter_client: MatterClient,
     node: MatterNode,
-) -> dict[str, Any]:
+) -> GetLockUsersResult:
     """Get all users from the lock.
 
-    Returns dict with users list and metadata.
+    Returns typed dict with users list and max_users capacity.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -457,7 +516,7 @@ async def get_lock_users(
         or 0
     )
 
-    users: list[dict[str, Any]] = []
+    users: list[LockUserData] = []
     current_index = 1
 
     # Iterate through users using next_user_index for efficiency
@@ -480,11 +539,10 @@ async def get_lock_users(
             break
         current_index = next_index
 
-    return {
-        "total_users": len(users),
-        "max_users": max_users,
-        "users": users,
-    }
+    return GetLockUsersResult(
+        max_users=max_users,
+        users=users,
+    )
 
 
 async def clear_lock_user(
@@ -659,10 +717,10 @@ async def set_lock_credential(
     user_index: int | None = None,
     user_status: str | None = None,
     user_type: str | None = None,
-) -> dict[str, Any]:
+) -> SetLockCredentialResult:
     """Add or modify a credential on the lock.
 
-    Returns dict with credential_index, user_index, and next_credential_index.
+    Returns typed dict with credential_index, user_index, and next_credential_index.
     Raises ServiceValidationError for validation failures.
     Raises HomeAssistantError for device communication failures.
     """
@@ -752,11 +810,11 @@ async def set_lock_credential(
             translation_placeholders={"status": status_str},
         )
 
-    return {
-        ATTR_CREDENTIAL_INDEX: credential_index,
-        ATTR_USER_INDEX: _get_attr(set_cred_response, "userIndex"),
-        "next_credential_index": _get_attr(set_cred_response, "nextCredentialIndex"),
-    }
+    return SetLockCredentialResult(
+        credential_index=credential_index,
+        user_index=_get_attr(set_cred_response, "userIndex"),
+        next_credential_index=_get_attr(set_cred_response, "nextCredentialIndex"),
+    )
 
 
 async def clear_lock_credential(
@@ -794,10 +852,10 @@ async def get_lock_credential_status(
     *,
     credential_type: str,
     credential_index: int,
-) -> dict[str, Any]:
+) -> GetLockCredentialStatusResult:
     """Get the status of a credential slot on the lock.
 
-    Returns dict with credential_exists, user_index, next_credential_index.
+    Returns typed dict with credential_exists, user_index, next_credential_index.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -816,8 +874,8 @@ async def get_lock_credential_status(
         ),
     )
 
-    return {
-        "credential_exists": bool(_get_attr(response, "credentialExists")),
-        ATTR_USER_INDEX: _get_attr(response, "userIndex"),
-        "next_credential_index": _get_attr(response, "nextCredentialIndex"),
-    }
+    return GetLockCredentialStatusResult(
+        credential_exists=bool(_get_attr(response, "credentialExists")),
+        user_index=_get_attr(response, "userIndex"),
+        next_credential_index=_get_attr(response, "nextCredentialIndex"),
+    )

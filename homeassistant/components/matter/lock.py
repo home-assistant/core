@@ -37,6 +37,10 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .lock_helpers import (
     DoorLockFeature,
+    GetLockCredentialStatusResult,
+    GetLockInfoResult,
+    GetLockUsersResult,
+    SetLockCredentialResult,
     clear_lock_credential,
     clear_lock_user,
     get_lock_credential_status,
@@ -306,7 +310,7 @@ class MatterLock(MatterEntity, LockEntity):
                 f"Failed to clear lock user on {self.entity_id}: {err}"
             ) from err
 
-    async def async_get_lock_info(self) -> dict[str, Any]:
+    async def async_get_lock_info(self) -> GetLockInfoResult:
         """Get lock capabilities and configuration info."""
         try:
             return await get_lock_info(
@@ -318,7 +322,7 @@ class MatterLock(MatterEntity, LockEntity):
                 f"Failed to get lock info for {self.entity_id}: {err}"
             ) from err
 
-    async def async_get_lock_users(self) -> dict[str, Any]:
+    async def async_get_lock_users(self) -> GetLockUsersResult:
         """Get all users from the lock."""
         try:
             return await get_lock_users(
@@ -330,7 +334,7 @@ class MatterLock(MatterEntity, LockEntity):
                 f"Failed to get lock users for {self.entity_id}: {err}"
             ) from err
 
-    async def async_set_lock_credential(self, **kwargs: Any) -> dict[str, Any]:
+    async def async_set_lock_credential(self, **kwargs: Any) -> SetLockCredentialResult:
         """Set a credential on the lock."""
         try:
             return await set_lock_credential(
@@ -362,7 +366,9 @@ class MatterLock(MatterEntity, LockEntity):
                 f"Failed to clear lock credential on {self.entity_id}: {err}"
             ) from err
 
-    async def async_get_lock_credential_status(self, **kwargs: Any) -> dict[str, Any]:
+    async def async_get_lock_credential_status(
+        self, **kwargs: Any
+    ) -> GetLockCredentialStatusResult:
         """Get the status of a credential slot on the lock."""
         try:
             return await get_lock_credential_status(
