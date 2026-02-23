@@ -252,7 +252,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 try:
                     error_body = await resp.text()
                     error_data = json.loads(error_body)
-                    detail = error_data.get("error_description") or "unknown error"
+                    error_code = error_data.get("error", "unknown_error")
+                    error_description = error_data.get("error_description")
+                    detail = (
+                        f"{error_code}: {error_description}"
+                        if error_description
+                        else error_code
+                    )
                 except ClientError, ValueError:
                     detail = error_body[:200] if error_body else "unknown error"
                 _LOGGER.debug(
