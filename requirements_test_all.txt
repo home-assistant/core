@@ -696,7 +696,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==17.1.0
+deebot-client==18.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
@@ -1250,7 +1250,7 @@ libpyfoscamcgi==0.0.9
 libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.9.1
+librehardwaremonitor-api==1.10.1
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
