@@ -78,6 +78,7 @@ from .mock_data import (
     NETWORK_INFO_BY_DEVICE,
     Q7_B01_PROPS,
     Q10_B01_PROPS,
+    Q10_DEVICE_PRODUCT,
     Q10_HOME_DATA_DEVICE,
     Q10_STATUS_DATA,
     ROBOROCK_RRUID,
@@ -268,25 +269,18 @@ def create_b01_q10_trait() -> Mock:
 
 
 @pytest.fixture(name="q10_s5_plus_device")
-def q10_s5_plus_device_fixture() -> RoborockDevice:
+def q10_s5_plus_device_fixture() -> FakeDevice:
     """Create a mock Q10 S5+ device."""
-    device = AsyncMock(spec=RoborockDevice)
-    device.home_data = HomeDataDevice.from_dict(Q10_HOME_DATA_DEVICE)
-    device.device_id = "q10_s5_plus_duid"
-    device.name = "Roborock Q10 S5+"
-    device.model = "roborock.vacuum.q10"
-    device.product_id = "q10_product_id"
-    device.pv = "B01"
-    device.fw = "03.02.01"
-    device.mac = "AA:BB:CC:DD:EE:FF"
-    device.capabilities = []
+    device_data = HomeDataDevice.from_dict(Q10_HOME_DATA_DEVICE)
+    product_data = HomeDataProduct.from_dict(Q10_DEVICE_PRODUCT)
 
-    # Add B01 Q10 trait
+    device = FakeDevice(
+        device_info=deepcopy(device_data),
+        product=deepcopy(product_data),
+    )
+    device.is_connected = True
+    device.is_local_connected = True
     device.b01_q10_properties = create_b01_q10_trait()
-
-    # Mock async methods
-    device.disconnect = AsyncMock()
-    device.request = AsyncMock()
 
     return device
 
