@@ -1,5 +1,7 @@
 """Utility functions for the UptimeRobot integration."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
 
 from pyuptimerobot import UptimeRobotMonitor
@@ -16,17 +18,10 @@ def new_device_listener(
 
     def _check_devices() -> None:
         """Check for new devices and call callback with any new monitors."""
-        if not coordinator.data:
-            return
-
-        new_monitors: list[UptimeRobotMonitor] = []
-        for monitor in coordinator.data:
-            if monitor.id not in known_devices:
-                known_devices.add(monitor.id)
-                new_monitors.append(monitor)
-
-        if new_monitors:
-            new_devices_callback(new_monitors)
+        new_ids = coordinator.data.keys() - known_devices
+        if new_ids:
+            known_devices.update(new_ids)
+            new_devices_callback([coordinator.data[i] for i in new_ids])
 
     # Check for devices immediately
     _check_devices()

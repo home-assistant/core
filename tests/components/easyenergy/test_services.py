@@ -108,7 +108,7 @@ def config_entry_data(
             {"config_entry": "incorrect entry"},
             {"incl_vat": True},
             ServiceValidationError,
-            "service_config_entry_not_found",
+            "config entry with ID incorrect entry was not found",
         ),
         (
             {"config_entry": True},
