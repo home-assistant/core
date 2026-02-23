@@ -167,6 +167,7 @@ async def test_watcher_start_stop(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
+    mock_portainer_watcher.start.assert_called_once()
 
     mock_portainer_watcher.stop.reset_mock()
 

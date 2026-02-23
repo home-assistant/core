@@ -48,7 +48,6 @@ class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
         [Portainer, int, str],
         Awaitable[DockerContainer],
     ]
-    display_precision: int = 0
 
 
 PARALLEL_UPDATES = 1

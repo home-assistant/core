@@ -72,8 +72,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         """Stop the image watcher in the event loop."""
         watcher.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start_watcher)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
+    entry.async_on_unload(watcher.stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start_watcher)
+    )
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
+    )
 
     return True
 
@@ -86,7 +91,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Unload a config entry."""
-    entry.runtime_data.watcher.stop()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 
