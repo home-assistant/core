@@ -55,7 +55,7 @@ async def test_all_switch_entities_snapshot(
             (1, "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"),
         ),
         (
-            "switch.webstack_stack",
+            "switch.webstack",
             "start_stack",
             "stop_stack",
             (1, 1),
@@ -100,7 +100,7 @@ async def test_turn_off_on(
             "stop_container",
         ),
         (
-            "switch.webstack_stack",
+            "switch.webstack",
             "start_stack",
             "stop_stack",
         ),

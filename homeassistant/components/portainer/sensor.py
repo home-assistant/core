@@ -17,13 +17,7 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    STACK_STATUS_ACTIVE,
-    STACK_STATUS_INACTIVE,
-    STACK_TYPE_COMPOSE,
-    STACK_TYPE_KUBERNETES,
-    STACK_TYPE_SWARM,
-)
+from .const import STACK_TYPE_COMPOSE, STACK_TYPE_KUBERNETES, STACK_TYPE_SWARM
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
@@ -296,19 +290,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
 
 STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
     PortainerStackSensorEntityDescription(
-        key="stack_status",
-        translation_key="stack_status",
-        value_fn=lambda data: (
-            "active"
-            if data.stack.status == STACK_STATUS_ACTIVE
-            else "inactive"
-            if data.stack.status == STACK_STATUS_INACTIVE
-            else "unknown"
-        ),
-        device_class=SensorDeviceClass.ENUM,
-        options=["active", "inactive", "unknown"],
-    ),
-    PortainerStackSensorEntityDescription(
         key="stack_type",
         translation_key="stack_type",
         value_fn=lambda data: (
@@ -318,10 +299,10 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
             if data.stack.type == STACK_TYPE_COMPOSE
             else "kubernetes"
             if data.stack.type == STACK_TYPE_KUBERNETES
-            else "unknown"
+            else None
         ),
         device_class=SensorDeviceClass.ENUM,
-        options=["swarm", "compose", "kubernetes", "unknown"],
+        options=["swarm", "compose", "kubernetes"],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerStackSensorEntityDescription(
