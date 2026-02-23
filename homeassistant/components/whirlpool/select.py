@@ -36,9 +36,9 @@ REFRIGERATOR_DESCRIPTIONS: Final[tuple[WhirlpoolSelectDescription, ...]] = (
         key="refrigerator_temperature",
         translation_key="refrigerator_temperature",
         options=["-4", "-2", "0", "3", "5"],
-        value_fn=lambda fridge: str(val)
-        if (val := fridge.get_offset_temp()) is not None
-        else None,
+        value_fn=lambda fridge: (
+            str(val) if (val := fridge.get_offset_temp()) is not None else None
+        ),
         set_fn=lambda fridge, option: fridge.set_offset_temp(int(option)),
     ),
 )
