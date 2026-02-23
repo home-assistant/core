@@ -26,6 +26,7 @@ FIXTURES = [
     "aqara_sensor_w100",
     "aqara_thermostat_w500",
     "aqara_u200",
+    "atios_knx_bridge",
     "color_temperature_light",
     "eberle_ute3000",
     "ecovacs_deebot",
