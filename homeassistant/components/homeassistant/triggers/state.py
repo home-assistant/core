@@ -9,7 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.const import (
+    CONF_ATTRIBUTE,
+    CONF_FOR,
+    CONF_PLATFORM,
+    ENTITY_MATCH_NONE,
+    MATCH_ALL,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -43,7 +49,9 @@ CONF_NOT_TO = "not_to"
 BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "state",
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_ENTITY_ID): vol.Any(
+            ENTITY_MATCH_NONE, cv.entity_ids_or_uuids
+        ),
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
         vol.Optional(CONF_ATTRIBUTE): cv.match_all,
     }
@@ -84,9 +92,10 @@ async def async_validate_trigger_config(
         config = TRIGGER_STATE_SCHEMA(config)
 
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
-        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
-    )
+    if config[CONF_ENTITY_ID] != ENTITY_MATCH_NONE:
+        config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
+            registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+        )
 
     return config
 
@@ -101,6 +110,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     entity_ids = config[CONF_ENTITY_ID]
+
+    if entity_ids == ENTITY_MATCH_NONE:
+        return lambda: None
 
     if (from_state := config.get(CONF_FROM)) is not None:
         match_from_state = process_state_match(from_state)

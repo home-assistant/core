@@ -11,6 +11,7 @@ from homeassistant.components.homeassistant.triggers import state as state_trigg
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
 )
@@ -1769,3 +1770,29 @@ async def test_variables_priority(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == "test.entity_2 - 0:00:10"
+
+
+async def test_trigger_on_none(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test for a trigger with no entity."""
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "state", "entity_id": ENTITY_MATCH_NONE},
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
