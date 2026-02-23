@@ -88,7 +88,7 @@ async def async_setup_entry(
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
-        """Add new container update sensors."""
+        """Add new container update entities."""
 
         async_add_entities(
             PortainerContainerImageUpdateEntity(
