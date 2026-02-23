@@ -62,9 +62,7 @@ rules:
   entity-category:
     status: exempt
     comment: The device tracker entity does not require a category.
-  entity-device-class:
-    status: exempt
-    comment: TrackerEntity uses source_type rather than device_class.
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: The device tracker entity is the primary entity and should be enabled by default.
