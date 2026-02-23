@@ -51,7 +51,7 @@ async def test_user_flow_success(
         user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"MyNeo ({TEST_EMAIL})"
+    assert result["title"] == f"MyNeomitis ({TEST_EMAIL})"
     assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,

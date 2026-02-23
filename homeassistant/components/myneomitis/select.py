@@ -11,10 +11,7 @@ from typing import Any
 
 from pyaxencoapi import PyAxencoAPI
 
-from homeassistant.components.select import (
-    SelectEntity,
-    SelectEntityDescription,
-)
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -84,7 +81,7 @@ SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
         reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP,
         state_key="targetMode",
     ),
-    "UFH": MyNeoSelectEntityDescription(
+    "ufh": MyNeoSelectEntityDescription(
         key="ufh",
         translation_key="ufh",
         options=list(PRESET_MODE_MAP_UFH),
@@ -117,7 +114,7 @@ async def async_setup_entry(
             else:
                 description = SELECT_TYPES["pilote"]
         else:  # UFH
-            description = SELECT_TYPES["UFH"]
+            description = SELECT_TYPES["ufh"]
 
         return MyNeoSelect(api, device, description)
 
@@ -137,6 +134,7 @@ class MyNeoSelect(SelectEntity):
     _attr_has_entity_name = True
     _attr_name = None  # Entity represents the device itself
     _attr_should_poll = False
+
     def __init__(
         self,
         api: PyAxencoAPI,
@@ -160,6 +158,7 @@ class MyNeoSelect(SelectEntity):
         self._attr_current_option = description.reverse_preset_mode_map.get(
             current_mode
         )
+        self._unavailable_logged: bool = False
 
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
@@ -177,6 +176,13 @@ class MyNeoSelect(SelectEntity):
 
         if "connected" in new_state:
             self._attr_available = new_state["connected"]
+            if not self._attr_available:
+                if not self._unavailable_logged:
+                    _LOGGER.info("The entity %s is unavailable", self.entity_id)
+                    self._unavailable_logged = True
+            elif self._unavailable_logged:
+                _LOGGER.info("The entity %s is back online", self.entity_id)
+                self._unavailable_logged = False
 
         # Check for state updates using the description's state_key
         state_key = self.entity_description.state_key

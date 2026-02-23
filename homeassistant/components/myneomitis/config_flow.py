@@ -58,7 +58,7 @@ class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"MyNeo ({email})",
+                    title=f"MyNeomitis ({email})",
                     data={
                         CONF_EMAIL: email,
                         CONF_PASSWORD: password,

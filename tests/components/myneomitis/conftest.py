@@ -42,7 +42,7 @@ def mock_pyaxenco_client() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return a mocked config entry for the MyNeoMitis integration."""
     return MockConfigEntry(
-        title="MyNeo (test@example.com)",
+        title="MyNeomitis (test@example.com)",
         domain=DOMAIN,
         data={
             CONF_EMAIL: "test@example.com",

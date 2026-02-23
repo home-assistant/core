@@ -58,7 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
         if connected:
             try:
                 await api.disconnect_websocket()
-            except (TimeoutError, ConnectionError, aiohttp.ClientError) as disconnect_err:
+            except (
+                TimeoutError,
+                ConnectionError,
+                aiohttp.ClientError,
+            ) as disconnect_err:
                 _LOGGER.error(
                     "Error while disconnecting WebSocket for %s: %s",
                     entry.entry_id,
@@ -73,7 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
         if connected:
             try:
                 await api.disconnect_websocket()
-            except (TimeoutError, ConnectionError, aiohttp.ClientError) as disconnect_err:
+            except (
+                TimeoutError,
+                ConnectionError,
+                aiohttp.ClientError,
+            ) as disconnect_err:
                 _LOGGER.error(
                     "Error while disconnecting WebSocket for %s: %s",
                     entry.entry_id,
@@ -83,11 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
 
     entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=devices)
 
-    async def _async_disconnect_websocket(event: Event) -> None:
+    async def _async_disconnect_websocket(_event: Event) -> None:
         """Disconnect WebSocket on Home Assistant shutdown."""
         try:
             await api.disconnect_websocket()
-        except (TimeoutError, ConnectionError) as err:
+        except (TimeoutError, ConnectionError, aiohttp.ClientError) as err:
             _LOGGER.error(
                 "Error while disconnecting WebSocket for %s: %s",
                 entry.entry_id,
