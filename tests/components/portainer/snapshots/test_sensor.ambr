@@ -2405,68 +2405,7 @@
     'state': 'running',
   })
 # ---
-# name: test_all_entities[sensor.webstack-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'swarm',
-        'compose',
-        'kubernetes',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.webstack',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stack_type',
-    'unique_id': 'portainer_test_entry_123_1_stack_type',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.webstack-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'webstack',
-      'options': list([
-        'swarm',
-        'compose',
-        'kubernetes',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.webstack',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'compose',
-  })
-# ---
-# name: test_all_entities[sensor.webstack_2-entry]
+# name: test_all_entities[sensor.webstack_container_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2481,7 +2420,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.webstack_2',
+    'entity_id': 'sensor.webstack_container_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2489,12 +2428,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Container count',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Container count',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2504,17 +2443,78 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.webstack_2-state]
+# name: test_all_entities[sensor.webstack_container_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'webstack',
+      'friendly_name': 'webstack Container count',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.webstack_2',
+    'entity_id': 'sensor.webstack_container_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.webstack_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'swarm',
+        'compose',
+        'kubernetes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.webstack_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Type',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_type',
+    'unique_id': 'portainer_test_entry_123_1_stack_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.webstack_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'webstack Type',
+      'options': list([
+        'swarm',
+        'compose',
+        'kubernetes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.webstack_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'compose',
   })
 # ---

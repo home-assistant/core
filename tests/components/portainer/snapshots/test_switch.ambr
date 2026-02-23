@@ -249,7 +249,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.webstack-entry]
+# name: test_all_switch_entities_snapshot[switch.webstack_stack-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -262,7 +262,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.webstack',
+    'entity_id': 'switch.webstack_stack',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -270,12 +270,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Stack',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Stack',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -285,14 +285,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.webstack-state]
+# name: test_all_switch_entities_snapshot[switch.webstack_stack-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'webstack',
+      'friendly_name': 'webstack Stack',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.webstack',
+    'entity_id': 'switch.webstack_stack',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
