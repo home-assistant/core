@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -2291,12 +2291,10 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "reversible": False,
         "supportsFanSpeedPercent": True,
-        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
-        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeedPercent": 10})
@@ -2311,7 +2309,7 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
 
 
 async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
-    """Test FanSpeed trait speed control percentage step for fan domain."""
+    """Test FanSpeed trait falls back to percent-only when percentage_step is missing."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
         fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None
@@ -2322,6 +2320,9 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
         State(
             "fan.living_room_fan",
             STATE_ON,
+            attributes={
+                "percentage": 50,
+            },
         ),
         BASIC_CONFIG,
     )
@@ -2329,12 +2330,10 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {
         "reversible": False,
         "supportsFanSpeedPercent": True,
-        "availableFanSpeeds": ANY,
     }
-    # If a fan state has (temporary) no percentage_step attribute return 1 available
+
     assert trt.query_attributes() == {
-        "currentFanSpeedPercent": 0,
-        "currentFanSpeedSetting": "1/5",
+        "currentFanSpeedPercent": 50,
     }
 
 
@@ -2343,7 +2342,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     [
         (
             33,
-            1.0,
+            20.0,
             "2/5",
             [
                 ["Low", "Min", "Slow", "1"],
@@ -2356,7 +2355,7 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
         ),
         (
             40,
-            1.0,
+            20.0,
             "2/5",
             [
                 ["Low", "Min", "Slow", "1"],
@@ -2421,7 +2420,7 @@ async def test_fan_speed_ordered(
 
     assert trt.sync_attributes() == {
         "reversible": False,
-        "supportsFanSpeedPercent": True,
+        "supportsFanSpeedPercent": False,
         "availableFanSpeeds": {
             "ordered": True,
             "speeds": [
@@ -2435,7 +2434,6 @@ async def test_fan_speed_ordered(
     }
 
     assert trt.query_attributes() == {
-        "currentFanSpeedPercent": percentage,
         "currentFanSpeedSetting": speed,
     }
 
@@ -2484,12 +2482,10 @@ async def test_fan_reverse(
     assert trt.sync_attributes() == {
         "reversible": True,
         "supportsFanSpeedPercent": True,
-        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
-        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_REVERSE, params={})
