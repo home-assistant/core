@@ -114,7 +114,9 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def _hvac_mode_value(self) -> int | None:
         """Return the raw hvac_mode value from the coordinator."""
-        return getattr(self.coordinator.data.state.hvac_mode, "value", None)
+        if (hvac_mode := self.coordinator.data.state.hvac_mode) is None:
+            return None
+        return hvac_mode.value
 
     @property
     def hvac_mode(self) -> HVACMode | None:
