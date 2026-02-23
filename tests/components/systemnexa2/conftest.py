@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,6 +15,39 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(params=[False])
+def dimmable(request: pytest.FixtureRequest) -> bool:
+    """Return whether device is dimmable."""
+    return request.param
+
+
+@pytest.fixture
+def device_info(dimmable: bool) -> dict[str, Any]:
+    """Return device configuration based on type."""
+    # Create mock settings (same for all devices)
+    mock_setting_433mhz = MagicMock(spec=OnOffSetting)
+    mock_setting_433mhz.name = "433Mhz"
+    mock_setting_433mhz.enable = AsyncMock()
+    mock_setting_433mhz.disable = AsyncMock()
+    mock_setting_433mhz.is_enabled = MagicMock(return_value=True)
+
+    mock_setting_cloud = MagicMock(spec=OnOffSetting)
+    mock_setting_cloud.name = "Cloud Access"
+    mock_setting_cloud.enable = AsyncMock()
+    mock_setting_cloud.disable = AsyncMock()
+    mock_setting_cloud.is_enabled = MagicMock(return_value=False)
+
+    return {
+        "name": "In-Wall Dimmer" if dimmable else "Outdoor Smart Plug",
+        "model": "WBD-01" if dimmable else "WPO-01",
+        "unique_id": "aabbccddee01" if dimmable else "aabbccddee02",
+        "host": "10.0.0.101" if dimmable else "10.0.0.100",
+        "initial_state": 0.5 if dimmable else 1.0,
+        "settings": [mock_setting_433mhz, mock_setting_cloud],
+        "dimmable": dimmable,
+    }
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -24,7 +58,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_system_nexa_2_device() -> Generator[MagicMock]:
+def mock_system_nexa_2_device(device_info: dict[str, Any]) -> Generator[MagicMock]:
     """Mock the System Nexa 2 API."""
     with (
         patch(
@@ -36,30 +70,17 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
     ):
         device = mock_device.return_value
         device.info_data = InformationData(
-            name="Test Device",
-            model="Test Model",
-            unique_id="test_device_id",
+            name=device_info["name"],
+            model=device_info["model"],
+            unique_id=device_info["unique_id"],
             sw_version="Test Model Version",
             hw_version="Test HW Version",
             wifi_dbm=-50,
             wifi_ssid="Test WiFi SSID",
-            dimmable=False,
+            dimmable=device_info["dimmable"],
         )
 
-        # Create mock OnOffSettings
-        mock_setting_433mhz = MagicMock(spec=OnOffSetting)
-        mock_setting_433mhz.name = "433Mhz"
-        mock_setting_433mhz.enable = AsyncMock()
-        mock_setting_433mhz.disable = AsyncMock()
-        mock_setting_433mhz.is_enabled = MagicMock(return_value=True)
-
-        mock_setting_cloud = MagicMock(spec=OnOffSetting)
-        mock_setting_cloud.name = "Cloud Access"
-        mock_setting_cloud.enable = AsyncMock()
-        mock_setting_cloud.disable = AsyncMock()
-        mock_setting_cloud.is_enabled = MagicMock(return_value=False)
-
-        device.settings = [mock_setting_433mhz, mock_setting_cloud]
+        device.settings = device_info["settings"]
         device.get_info = AsyncMock()
         device.get_info.return_value = InformationUpdate(information=device.info_data)
 
@@ -72,7 +93,7 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
                     "on_update"
                 )
                 if on_update:
-                    await on_update(StateChange(state=1.0))
+                    await on_update(StateChange(state=device_info["initial_state"]))
 
         device.connect = AsyncMock(side_effect=mock_connect)
         device.disconnect = AsyncMock()
@@ -87,16 +108,16 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(device_info: dict[str, Any]) -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test_device_id",
+        unique_id=device_info["unique_id"],
         data={
-            CONF_HOST: "10.0.0.100",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_ID: "test_device_id",
-            CONF_MODEL: "Test Model",
+            CONF_HOST: device_info["host"],
+            CONF_NAME: device_info["name"],
+            CONF_DEVICE_ID: device_info["unique_id"],
+            CONF_MODEL: device_info["model"],
         },
     )
 
@@ -122,77 +143,5 @@ def mock_zeroconf_discovery_info():
         name="systemnexa2_test._systemnexa2._tcp.local.",
         port=80,
         type="_systemnexa2._tcp.local.",
-        properties={"id": "test_device_id", "model": "Test Model", "version": "1.0.0"},
-    )
-
-
-@pytest.fixture
-def mock_dimmable_device() -> Generator[MagicMock]:
-    """Mock a dimmable System Nexa 2 device."""
-    with (
-        patch(
-            "homeassistant.components.systemnexa2.coordinator.Device", autospec=True
-        ) as mock_device,
-        patch(
-            "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
-        ),
-    ):
-        device = mock_device.return_value
-        device.info_data = InformationData(
-            name="Test Dimmable Device",
-            model="Test Dimmable Model",
-            unique_id="test_dimmable_device_id",
-            sw_version="Test Model Version",
-            hw_version="Test HW Version",
-            wifi_dbm=-50,
-            wifi_ssid="Test WiFi SSID",
-            dimmable=True,  # This is a dimmable device
-        )
-
-        # Create mock OnOffSettings
-        mock_setting_led = MagicMock(spec=OnOffSetting)
-        mock_setting_led.name = "Led"
-        mock_setting_led.enable = AsyncMock()
-        mock_setting_led.disable = AsyncMock()
-        mock_setting_led.is_enabled = MagicMock(return_value=True)
-
-        device.settings = [mock_setting_led]
-        device.get_info = AsyncMock()
-        device.get_info.return_value = InformationUpdate(information=device.info_data)
-
-        # Mock connect to also send initial state update
-        async def mock_connect():
-            """Mock connect that sends initial state."""
-            # Get the callback that was registered
-            if mock_device.initiate_device.call_args:
-                on_update = mock_device.initiate_device.call_args.kwargs.get(
-                    "on_update"
-                )
-                if on_update:
-                    await on_update(StateChange(state=0.5))  # 50% brightness
-
-        device.connect = AsyncMock(side_effect=mock_connect)
-        device.disconnect = AsyncMock()
-        device.turn_on = AsyncMock()
-        device.turn_off = AsyncMock()
-        device.toggle = AsyncMock()
-        device.set_brightness = AsyncMock()
-        mock_device.is_device_supported = MagicMock(return_value=(True, ""))
-        mock_device.initiate_device = AsyncMock(return_value=device)
-
-        yield mock_device
-
-
-@pytest.fixture
-def mock_dimmable_config_entry() -> MockConfigEntry:
-    """Return a mock config entry for a dimmable device."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_dimmable_device_id",
-        data={
-            CONF_HOST: "10.0.0.101",
-            CONF_NAME: "Test Dimmable Device",
-            CONF_DEVICE_ID: "test_dimmable_device_id",
-            CONF_MODEL: "Test Dimmable Model",
-        },
+        properties={"id": "aabbccddee02", "model": "WPO-01", "version": "1.0.0"},
     )
