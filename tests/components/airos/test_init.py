@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import ANY, MagicMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
 
@@ -57,8 +57,9 @@ MOCK_CONFIG_V1_2 = {
 async def test_setup_entry_with_default_ssl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_airos_client: MagicMock,
     mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test setting up a config entry with default SSL options."""
     mock_config_entry.add_to_hass(hass)
@@ -82,8 +83,9 @@ async def test_setup_entry_with_default_ssl(
 
 async def test_setup_entry_without_ssl(
     hass: HomeAssistant,
-    mock_airos_client: MagicMock,
     mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test setting up a config entry adjusted to plain HTTP."""
     entry = MockConfigEntry(
@@ -114,7 +116,9 @@ async def test_setup_entry_without_ssl(
 
 
 async def test_ssl_migrate_entry(
-    hass: HomeAssistant, mock_airos_client: MagicMock
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry SSL options."""
     entry = MockConfigEntry(
@@ -145,11 +149,12 @@ async def test_ssl_migrate_entry(
 )
 async def test_uid_migrate_entry(
     hass: HomeAssistant,
-    mock_airos_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     sensor_domain: str,
     sensor_name: str,
     mock_id: str,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
     entity_registry = er.async_get(hass)
@@ -205,6 +210,7 @@ async def test_uid_migrate_entry(
 async def test_migrate_future_return(
     hass: HomeAssistant,
     mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
@@ -225,8 +231,9 @@ async def test_migrate_future_return(
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mock_airos_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test setup and unload config entry."""
     mock_config_entry.add_to_hass(hass)
