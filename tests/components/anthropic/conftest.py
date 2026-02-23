@@ -82,6 +82,12 @@ async def mock_init_component(
     model_list = AsyncPage(
         data=[
             ModelInfo(
+                id="claude-sonnet-4-6",
+                created_at=datetime.datetime(2026, 2, 17, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Sonnet 4.6",
+                type="model",
+            ),
+            ModelInfo(
                 id="claude-opus-4-6",
                 created_at=datetime.datetime(2026, 2, 4, 0, 0, tzinfo=datetime.UTC),
                 display_name="Claude Opus 4.6",
@@ -124,27 +130,9 @@ async def mock_init_component(
                 type="model",
             ),
             ModelInfo(
-                id="claude-3-7-sonnet-20250219",
-                created_at=datetime.datetime(2025, 2, 24, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Sonnet 3.7",
-                type="model",
-            ),
-            ModelInfo(
-                id="claude-3-5-haiku-20241022",
-                created_at=datetime.datetime(2024, 10, 22, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Haiku 3.5",
-                type="model",
-            ),
-            ModelInfo(
                 id="claude-3-haiku-20240307",
                 created_at=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.UTC),
                 display_name="Claude Haiku 3",
-                type="model",
-            ),
-            ModelInfo(
-                id="claude-3-opus-20240229",
-                created_at=datetime.datetime(2024, 2, 29, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Opus 3",
                 type="model",
             ),
         ]
@@ -204,7 +192,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 id="msg_1234567890ABCDEFGHIJKLMN",
                 content=[],
                 role="assistant",
-                model="claude-3-5-sonnet-20240620",
+                model=kwargs["model"],
                 usage=Usage(input_tokens=0, output_tokens=0),
             ),
             type="message_start",
