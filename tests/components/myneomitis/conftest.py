@@ -16,7 +16,8 @@ def mock_pyaxenco_client() -> Generator[AsyncMock]:
     """Mock the PyAxencoAPI client across the integration."""
     with (
         patch(
-            "homeassistant.components.myneomitis.pyaxencoapi.PyAxencoAPI", autospec=True
+            "pyaxencoapi.PyAxencoAPI",
+            autospec=True,
         ) as mock_client,
         patch(
             "homeassistant.components.myneomitis.config_flow.PyAxencoAPI",
