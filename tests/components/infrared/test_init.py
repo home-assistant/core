@@ -3,12 +3,12 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from infrared_protocols import NECCommand
 import pytest
 
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
     DOMAIN,
-    NECInfraredCommand,
     async_get_emitters,
     async_send_command,
 )
@@ -62,7 +62,7 @@ async def test_async_send_command_success(
     now = dt_util.utcnow()
     freezer.move_to(now)
 
-    command = NECInfraredCommand(address=0x04FB, command=0x08F7, modulation=38000)
+    command = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
     await async_send_command(hass, mock_infrared_entity.entity_id, command)
 
     assert len(mock_infrared_entity.send_command_calls) == 1
@@ -86,7 +86,7 @@ async def test_async_send_command_error_does_not_update_state(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    command = NECInfraredCommand(address=0x04FB, command=0x08F7, modulation=38000)
+    command = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
 
     mock_infrared_entity.async_send_command = AsyncMock(
         side_effect=HomeAssistantError("Transmission failed")
@@ -104,7 +104,7 @@ async def test_async_send_command_error_does_not_update_state(
 @pytest.mark.usefixtures("init_integration")
 async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
     """Test async_send_command raises error when entity not found."""
-    command = NECInfraredCommand(
+    command = NECCommand(
         address=0x04FB, command=0x08F7, modulation=38000, repeat_count=1
     )
 
@@ -117,7 +117,7 @@ async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
 
 async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> None:
     """Test async_send_command raises error when component not loaded."""
-    command = NECInfraredCommand(
+    command = NECCommand(
         address=0x04FB, command=0x08F7, modulation=38000, repeat_count=1
     )
 

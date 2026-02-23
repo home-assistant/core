@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import final
 
+from infrared_protocols import Command as InfraredCommand
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -19,15 +21,11 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .protocols import InfraredCommand, NECInfraredCommand, Timing
 
 __all__ = [
     "DOMAIN",
-    "InfraredCommand",
     "InfraredEntity",
     "InfraredEntityDescription",
-    "NECInfraredCommand",
-    "Timing",
     "async_get_emitters",
     "async_send_command",
 ]
