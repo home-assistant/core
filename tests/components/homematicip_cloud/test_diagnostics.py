@@ -5,7 +5,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import load_json_object_fixture
+from tests.common import async_load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -18,7 +18,7 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics for config entry."""
     mock_hap_with_service.home.download_configuration_async.return_value = (
-        load_json_object_fixture("diagnostics.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "diagnostics.json", DOMAIN)
     )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
