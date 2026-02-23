@@ -1,6 +1,6 @@
 """Test the Pico TTS config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +9,7 @@ from homeassistant.components import tts
 from homeassistant.components.picotts.const import DOMAIN
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -73,17 +73,18 @@ async def test_import_flow(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the import flow."""
-    assert not hass.config_entries.async_entries(DOMAIN)
-    assert await async_setup_component(
-        hass,
-        tts.DOMAIN,
-        {tts.DOMAIN: {CONF_PLATFORM: DOMAIN}},
-    )
-    await hass.async_block_till_done()
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN,
-        issue_id=f"deprecated_yaml_{DOMAIN}",
-    )
+    with patch("shutil.which", return_value="/usr/local/bin/pico2wave"):
+        assert not hass.config_entries.async_entries(DOMAIN)
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {CONF_PLATFORM: DOMAIN}},
+        )
+        await hass.async_block_till_done()
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert config_entry.state is config_entries.ConfigEntryState.LOADED
+        assert issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"deprecated_yaml_{DOMAIN}",
+        )
