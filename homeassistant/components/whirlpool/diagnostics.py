@@ -52,6 +52,10 @@ async def async_get_config_entry_diagnostics(
             oven.name: get_appliance_diagnostics(oven)
             for oven in appliances_manager.ovens
         },
+        "refrigerators": {
+            refrigerator.name: get_appliance_diagnostics(refrigerator)
+            for refrigerator in appliances_manager.refrigerators
+        },
     }
 
     return {

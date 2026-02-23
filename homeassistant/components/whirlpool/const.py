@@ -14,4 +14,5 @@ BRANDS_CONF_MAP = {
     "Whirlpool": Brand.Whirlpool,
     "Maytag": Brand.Maytag,
     "KitchenAid": Brand.KitchenAid,
+    "Consul": Brand.Consul,
 }
