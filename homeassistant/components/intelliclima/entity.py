@@ -27,8 +27,6 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
         """Class initializer."""
         super().__init__(coordinator=coordinator)
 
-        self._attr_unique_id = device.id
-
         # Make this HA "device" use the IntelliClima device name.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
