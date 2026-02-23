@@ -172,6 +172,7 @@ class KaleidescapeEventEntity(KaleidescapeEntity, EventEntity):
             self._debounce.cancel()
             self._debounce = None
 
+        @callback
         def _trigger() -> None:
             self._debounce = None
             self._trigger_event(

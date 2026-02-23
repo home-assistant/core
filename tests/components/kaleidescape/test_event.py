@@ -54,6 +54,7 @@ async def test_handle_user_defined_volume_event(
     last_updated = entity.state
 
     # Test repeated event updates timestamp
+    await asyncio.sleep(0.01)
     update_callback(
         kaleidescape_const.USER_DEFINED_EVENT,
         [kaleidescape_const.USER_DEFINED_EVENT_VOLUME_QUERY],
