@@ -4,8 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError, RequestInfo
 import pytest
-
-from homeassistant.components.frontend import URL
+from yarl import URL
 from homeassistant.components.myneomitis.const import CONF_USER_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
