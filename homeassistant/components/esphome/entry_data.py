@@ -250,12 +250,10 @@ class RuntimeEntryData:
         # Remove from entity registry first so the entity is fully removed
         ent_reg = er.async_get(hass)
         for info in static_infos:
-            if (platform := INFO_TYPE_TO_PLATFORM.get(type(info))) and (
-                entry := ent_reg.async_get_entity_id(
-                    platform,
-                    DOMAIN,
-                    build_device_unique_id(mac, info),
-                )
+            if entry := ent_reg.async_get_entity_id(
+                INFO_TYPE_TO_PLATFORM[type(info)],
+                DOMAIN,
+                build_device_unique_id(mac, info),
             ):
                 ent_reg.async_remove(entry)
 
