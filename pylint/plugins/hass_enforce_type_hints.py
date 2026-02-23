@@ -1850,6 +1850,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="brightness",
                     return_type=["int", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="color_mode",
@@ -1859,10 +1860,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="hs_color",
                     return_type=["tuple[float, float]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="xy_color",
                     return_type=["tuple[float, float]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="rgb_color",
@@ -1897,14 +1900,17 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="effect_list",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="effect",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="capability_attributes",
                     return_type=["dict[str, Any]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_color_modes",
