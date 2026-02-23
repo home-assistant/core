@@ -47,6 +47,7 @@ def mock_airos_client(
     client = mock_airos_class.return_value
     client.status.return_value = ap_fixture
     client.login.return_value = True
+    client.reboot.return_value = True
     return client
 
 
