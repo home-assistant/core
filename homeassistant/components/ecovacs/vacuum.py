@@ -267,6 +267,7 @@ class EcovacsVacuum(
 
             async def on_map_info(event: CachedMapInfoEvent) -> None:
                 self._maps = {map_obj.id: map_obj for map_obj in event.maps}
+                self._check_segments_changed()
 
             self._subscribe(map_caps.cached_info.event, on_map_info)
 
@@ -401,11 +402,26 @@ class EcovacsVacuum(
     def _check_segments_changed(self) -> None:
         """Check if segments have changed and create repair issue."""
         last_seen = self.last_seen_segments
-        if last_seen is None:
+        if last_seen is None or self._maps is None or self._room_event is None:
             return
 
-        current_ids = {seg.id for seg in self._get_segments()}
         last_seen_ids = {seg.id for seg in last_seen}
+
+        current_segments = self._get_segments()
+        other_map_ids = {
+            map_obj.id
+            for map_obj in self._maps.values()
+            if map_obj.id != self._room_event.map_id
+        }
+        # Include segments from the current map and any segments from other maps that were previously seen,
+        # as _get_segments only returns segments for the currently selected map, but we want to check if
+        # any segments from other maps have disappeared
+        current_ids = {
+            seg.id
+            for seg in last_seen
+            if _split_composite_id(seg.id)[0] in other_map_ids
+        }
+        current_ids.update(seg.id for seg in current_segments)
 
         if current_ids != last_seen_ids:
             self.async_create_segments_issue()
@@ -445,7 +461,7 @@ class EcovacsVacuum(
 
         valid_room_ids: list[str] = []
         for composite_id in segment_ids:
-            map_id, segment_id = composite_id.split(_SEGEMENTS_SEPARATOR, 1)
+            map_id, segment_id = _split_composite_id(composite_id)
             if (map_obj := self._maps.get(map_id)) is None:
                 _LOGGER.warning("Map ID %s not found in available maps", map_id)
                 continue
@@ -486,3 +502,10 @@ class EcovacsVacuum(
                 1,
             )
         )
+
+
+@callback
+def _split_composite_id(composite_id: str) -> tuple[str, str]:
+    """Split a composite ID into its components."""
+    map_id, _, segment_id = composite_id.partition(_SEGEMENTS_SEPARATOR)
+    return map_id, segment_id
