@@ -13,6 +13,8 @@ import struct
 from typing import TYPE_CHECKING
 
 from .const import (
+    FIRMWARE_HEADER_SIZE,
+    FIRMWARE_STATUS_INTERVAL,
     OPCODE_ENABLE_PUSH_TWIST_IND,
     OPCODE_FULL_VERIFY_REQUEST_1,
     OPCODE_FULL_VERIFY_REQUEST_2,
@@ -20,10 +22,13 @@ from .const import (
     OPCODE_INIT_BUTTON_EVENTS_REQUEST,
     OPCODE_QUICK_VERIFY_REQUEST,
     TWIST_OPCODE_ACK_BUTTON_EVENTS,
+    TWIST_OPCODE_FIRMWARE_UPDATE_DATA_IND,
+    TWIST_OPCODE_FORCE_BT_DISCONNECT_IND,
     TWIST_OPCODE_FULL_VERIFY_REQUEST_1,
     TWIST_OPCODE_FULL_VERIFY_REQUEST_2,
     TWIST_OPCODE_INIT_BUTTON_EVENTS,
     TWIST_OPCODE_QUICK_VERIFY_REQUEST,
+    TWIST_OPCODE_START_FIRMWARE_UPDATE_REQUEST,
     TWIST_OPCODE_UPDATE_TWIST_POS,
 )
 
@@ -1503,3 +1508,141 @@ class AckButtonEventsTwistRequest:
     def to_bytes(self) -> bytes:
         """Serialize to bytes."""
         return struct.pack("<BI", TWIST_OPCODE_ACK_BUTTON_EVENTS, self.event_count)
+
+
+# =============================================================================
+# Firmware Update Messages (Twist only)
+# =============================================================================
+
+
+@dataclass
+class StartFirmwareUpdateRequest:
+    """Request to start a firmware update on a Twist device.
+
+    The firmware binary has a 76-byte header:
+    - iv (8 bytes): Initialization vector
+    - length_uncompressed_words (4 bytes): Uncompressed size in 32-bit words
+    - signature (64 bytes): Ed25519 signature
+    Followed by the compressed firmware data.
+    """
+
+    length_compressed_bytes: int  # u32: length of compressed data
+    iv: bytes  # 8 bytes
+    length_uncompressed_words: int  # u32
+    signature: bytes  # 64 bytes
+    status_interval: int = FIRMWARE_STATUS_INTERVAL  # u16
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        return (
+            struct.pack(
+                "<BI",
+                TWIST_OPCODE_START_FIRMWARE_UPDATE_REQUEST,
+                self.length_compressed_bytes,
+            )
+            + self.iv  # 8 bytes
+            + struct.pack("<I", self.length_uncompressed_words)
+            + self.signature  # 64 bytes
+            + struct.pack("<H", self.status_interval)
+        )
+
+    @classmethod
+    def from_firmware_binary(cls, firmware_binary: bytes) -> StartFirmwareUpdateRequest:
+        """Create request from a firmware binary file.
+
+        Args:
+            firmware_binary: Raw firmware binary (header + compressed data)
+
+        """
+        if len(firmware_binary) < FIRMWARE_HEADER_SIZE:
+            raise ValueError(
+                f"Firmware binary too short: {len(firmware_binary)} bytes "
+                f"(minimum {FIRMWARE_HEADER_SIZE})"
+            )
+
+        iv = firmware_binary[0:8]
+        length_uncompressed_words = struct.unpack("<I", firmware_binary[8:12])[0]
+        signature = firmware_binary[12:76]
+        compressed_data = firmware_binary[FIRMWARE_HEADER_SIZE:]
+
+        return cls(
+            length_compressed_bytes=len(compressed_data),
+            iv=iv,
+            length_uncompressed_words=length_uncompressed_words,
+            signature=signature,
+        )
+
+
+@dataclass
+class StartFirmwareUpdateResponse:
+    """Response to start firmware update request.
+
+    start_pos values:
+    - 0: Start from beginning (new update)
+    - >0: Resume from this byte position
+    - -1: Invalid parameters
+    - -2: Device busy
+    - -3: Pending reboot (previous update needs reboot)
+    """
+
+    start_pos: int  # i32 signed
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> StartFirmwareUpdateResponse:
+        """Parse from bytes (includes opcode)."""
+        if len(data) < 5:
+            raise ValueError(f"Invalid StartFirmwareUpdateResponse length: {len(data)}")
+        start_pos = struct.unpack("<i", data[1:5])[0]
+        return cls(start_pos=start_pos)
+
+
+@dataclass
+class FirmwareUpdateNotification:
+    """Progress notification during firmware transfer.
+
+    pos values:
+    - >0: Bytes acknowledged so far (progress)
+    - ==total_compressed: Transfer complete
+    - ==0: Signature verification failed
+    """
+
+    pos: int  # i32 signed
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> FirmwareUpdateNotification:
+        """Parse from bytes (includes opcode)."""
+        if len(data) < 5:
+            raise ValueError(f"Invalid FirmwareUpdateNotification length: {len(data)}")
+        pos = struct.unpack("<i", data[1:5])[0]
+        return cls(pos=pos)
+
+
+@dataclass
+class FirmwareUpdateDataInd:
+    """Firmware data chunk sent to device during OTA update."""
+
+    chunk_data: bytes  # Up to FIRMWARE_DATA_CHUNK_SIZE bytes
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        return (
+            struct.pack("<B", TWIST_OPCODE_FIRMWARE_UPDATE_DATA_IND) + self.chunk_data
+        )
+
+
+@dataclass
+class ForceBtDisconnectInd:
+    """Force Bluetooth disconnect indication.
+
+    Sent after firmware transfer to trigger device reboot.
+    """
+
+    restart_adv: bool = True  # Whether to restart advertising after disconnect
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        return struct.pack(
+            "<BB",
+            TWIST_OPCODE_FORCE_BT_DISCONNECT_IND,
+            1 if self.restart_adv else 0,
+        )

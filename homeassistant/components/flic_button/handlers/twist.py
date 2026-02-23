@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 import secrets
 import struct
@@ -12,9 +13,14 @@ from ..const import (
     EVENT_TYPE_ROTATE_CLOCKWISE,
     EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
     EVENT_TYPE_SELECTOR_CHANGED,
+    FIRMWARE_DATA_CHUNK_SIZE,
+    FIRMWARE_HEADER_SIZE,
+    FIRMWARE_MAX_IN_FLIGHT,
+    FIRMWARE_UPDATE_TIMEOUT,
     PAIRING_TIMEOUT,
     TWIST_ED25519_PUBLIC_KEY,
     TWIST_OPCODE_BUTTON_EVENT,
+    TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
     TWIST_OPCODE_FULL_VERIFY_FAIL_RESPONSE,
     TWIST_OPCODE_FULL_VERIFY_RESPONSE_1,
     TWIST_OPCODE_FULL_VERIFY_RESPONSE_2,
@@ -24,6 +30,7 @@ from ..const import (
     TWIST_OPCODE_GET_FIRMWARE_VERSION_RESPONSE,
     TWIST_OPCODE_INIT_BUTTON_EVENTS_RESPONSE,
     TWIST_OPCODE_QUICK_VERIFY_RESPONSE,
+    TWIST_OPCODE_START_FIRMWARE_UPDATE_RESPONSE,
     TWIST_OPCODE_TWIST_EVENT,
     TWIST_RX_CHAR_UUID,
     TWIST_SERVICE_UUID,
@@ -31,8 +38,13 @@ from ..const import (
     PushTwistMode,
 )
 from ..flic_protocol import (
+    FirmwareUpdateDataInd,
+    FirmwareUpdateNotification,
+    ForceBtDisconnectInd,
     InitButtonEventsResponseV2,
     InitButtonEventsTwistRequest,
+    StartFirmwareUpdateRequest,
+    StartFirmwareUpdateResponse,
     TwistButtonEventNotification,
     TwistEventNotification,
     TwistFullVerifyRequest1,
@@ -136,7 +148,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> tuple[int, bytes, str, int, int]:
+    ) -> tuple[int, bytes, str, int, int, bytes]:
         """Perform full pairing verification for Flic Twist."""
         temp_conn_id = secrets.randbelow(2**32)
         _LOGGER.debug(
@@ -276,6 +288,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
             response2.serial_number,
             response2.battery_level,
             signature_variant,
+            response2.button_uuid,
         )
 
     async def quick_verify(
@@ -611,6 +624,163 @@ class TwistProtocolHandler(DeviceProtocolHandler):
             num_received_update_packets=self._twist_packet_counter,
         )
         return request.to_bytes()
+
+    async def start_firmware_update(
+        self,
+        firmware_binary: bytes,
+        write_packet: WritePacketFn,
+        wait_for_opcodes: WaitForOpcodesFn,
+    ) -> int:
+        """Start a firmware update on the device.
+
+        Args:
+            firmware_binary: Raw firmware binary (header + compressed data)
+            write_packet: Function to write authenticated packets
+            wait_for_opcodes: Function to wait for one of several opcodes
+
+        Returns:
+            start_pos from device (0=new, >0=resume position)
+
+        Raises:
+            ValueError: If device returns an error code
+
+        """
+        request = StartFirmwareUpdateRequest.from_firmware_binary(firmware_binary)
+        await write_packet(request.to_bytes(), True)
+
+        # Wait for either StartFirmwareUpdateResponse (0x0E) or
+        # FirmwareUpdateNotification (0x0F). The device may send 0x0F
+        # immediately if resuming a previous transfer.
+        response_data = await asyncio.wait_for(
+            wait_for_opcodes(
+                [
+                    TWIST_OPCODE_START_FIRMWARE_UPDATE_RESPONSE,
+                    TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
+                ]
+            ),
+            timeout=COMMAND_TIMEOUT,
+        )
+
+        opcode = response_data[0]
+        if opcode == TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION:
+            # Device is already sending progress from a previous/resumed transfer
+            notification = FirmwareUpdateNotification.from_bytes(response_data)
+            _LOGGER.debug(
+                "Received FirmwareUpdateNotification instead of StartResponse: pos=%d",
+                notification.pos,
+            )
+            return notification.pos
+
+        response = StartFirmwareUpdateResponse.from_bytes(response_data)
+
+        _LOGGER.debug("StartFirmwareUpdateResponse: start_pos=%d", response.start_pos)
+
+        if response.start_pos == -1:
+            raise ValueError("Device rejected firmware update: invalid parameters")
+        if response.start_pos == -2:
+            raise ValueError("Device rejected firmware update: device busy")
+        if response.start_pos == -3:
+            raise ValueError(
+                "Device rejected firmware update: pending reboot from previous update"
+            )
+
+        return response.start_pos
+
+    async def send_firmware_data(
+        self,
+        firmware_binary: bytes,
+        start_pos: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> bool:
+        """Send firmware data chunks to the device with flow control.
+
+        Args:
+            firmware_binary: Raw firmware binary (header + compressed data)
+            start_pos: Byte position to start/resume from
+            write_packet: Function to write authenticated packets
+            wait_for_opcode: Function to wait for a specific opcode
+            progress_callback: Called with (bytes_acked, total_bytes)
+
+        Returns:
+            True on success, False on signature verification failure
+
+        """
+        compressed_data = firmware_binary[FIRMWARE_HEADER_SIZE:]
+        total_bytes = len(compressed_data)
+        sent_pos = start_pos
+        acked_pos = start_pos
+
+        _LOGGER.debug(
+            "Starting firmware data transfer: total=%d bytes, start_pos=%d",
+            total_bytes,
+            start_pos,
+        )
+
+        while sent_pos < total_bytes:
+            # Flow control: wait if too many bytes in flight
+            while sent_pos - acked_pos >= FIRMWARE_MAX_IN_FLIGHT:
+                notification_data = await asyncio.wait_for(
+                    wait_for_opcode(TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                    timeout=FIRMWARE_UPDATE_TIMEOUT,
+                )
+                notification = FirmwareUpdateNotification.from_bytes(notification_data)
+
+                if notification.pos == 0:
+                    _LOGGER.error("Firmware signature verification failed")
+                    return False
+
+                acked_pos = notification.pos
+                if progress_callback:
+                    progress_callback(acked_pos, total_bytes)
+
+                if acked_pos >= total_bytes:
+                    _LOGGER.info("Firmware transfer complete")
+                    return True
+
+            # Send next chunk
+            chunk_end = min(sent_pos + FIRMWARE_DATA_CHUNK_SIZE, total_bytes)
+            chunk = compressed_data[sent_pos:chunk_end]
+
+            data_ind = FirmwareUpdateDataInd(chunk_data=chunk)
+            await write_packet(data_ind.to_bytes(), True)
+            sent_pos = chunk_end
+
+        # Wait for remaining acknowledgments
+        while acked_pos < total_bytes:
+            notification_data = await asyncio.wait_for(
+                wait_for_opcode(TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                timeout=FIRMWARE_UPDATE_TIMEOUT,
+            )
+            notification = FirmwareUpdateNotification.from_bytes(notification_data)
+
+            if notification.pos == 0:
+                _LOGGER.error("Firmware signature verification failed")
+                return False
+
+            acked_pos = notification.pos
+            if progress_callback:
+                progress_callback(acked_pos, total_bytes)
+
+        _LOGGER.info("Firmware transfer complete")
+        return True
+
+    async def send_force_disconnect(
+        self,
+        write_packet: WritePacketFn,
+        restart_adv: bool = True,
+    ) -> None:
+        """Send force disconnect to trigger device reboot.
+
+        Args:
+            write_packet: Function to write authenticated packets
+            restart_adv: Whether device should restart advertising after reboot
+
+        """
+        ind = ForceBtDisconnectInd(restart_adv=restart_adv)
+        await write_packet(ind.to_bytes(), True)
+        _LOGGER.debug("Sent ForceBtDisconnectInd (restart_adv=%s)", restart_adv)
 
     def _parse_twist_rotation_event(self, event_data: bytes) -> list[RotateEvent]:
         """Parse Twist rotation event."""

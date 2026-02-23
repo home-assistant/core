@@ -30,6 +30,7 @@ from . import (
     FLIC2_ADDRESS,
     FLIC2_SERIAL,
     TEST_BATTERY_LEVEL,
+    TEST_BUTTON_UUID,
     TEST_PAIRING_ID,
     TEST_PAIRING_KEY,
     TEST_SIG_BITS,
@@ -127,6 +128,7 @@ async def test_pairing_success_flic2(hass: HomeAssistant) -> None:
             FLIC2_SERIAL,
             TEST_BATTERY_LEVEL,
             TEST_SIG_BITS,
+            None,
         )
     )
 
@@ -179,6 +181,7 @@ async def test_pairing_success_duo(hass: HomeAssistant) -> None:
             DUO_SERIAL,  # "D" prefix indicates Duo
             TEST_BATTERY_LEVEL,
             TEST_SIG_BITS,
+            None,
         )
     )
 
@@ -222,6 +225,7 @@ async def test_pairing_success_twist(hass: HomeAssistant) -> None:
             TWIST_SERIAL,
             TEST_BATTERY_LEVEL,
             TEST_SIG_BITS,
+            TEST_BUTTON_UUID,
         )
     )
 
@@ -428,6 +432,7 @@ async def test_pairing_retry_after_error(hass: HomeAssistant) -> None:
             FLIC2_SERIAL,
             TEST_BATTERY_LEVEL,
             TEST_SIG_BITS,
+            None,
         )
     )
 

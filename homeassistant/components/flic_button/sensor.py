@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FlicButtonConfigEntry
-from .const import DeviceType
+from .const import CONF_BUTTON_UUID, DeviceType
 from .coordinator import FlicCoordinator
 from .entity import FlicButtonEntity
 
@@ -64,8 +64,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Flic Button sensor entities."""
     coordinator = entry.runtime_data
+    entities: list[FlicButtonEntity] = [FlicBatterySensor(coordinator)]
 
-    async_add_entities([FlicBatterySensor(coordinator)])
+    button_uuid = entry.data.get(CONF_BUTTON_UUID)
+    if button_uuid:
+        entities.append(FlicButtonUuidSensor(coordinator, button_uuid))
+
+    async_add_entities(entities)
 
 
 class FlicBatterySensor(FlicButtonEntity, SensorEntity):
@@ -103,3 +108,21 @@ class FlicBatterySensor(FlicButtonEntity, SensorEntity):
             else _DISCHARGE_CURVE_COIN_CELL
         )
         return _voltage_to_percentage(voltage, curve)
+
+
+class FlicButtonUuidSensor(FlicButtonEntity, SensorEntity):
+    """Button UUID sensor for Flic button."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "button_uuid"
+
+    def __init__(self, coordinator: FlicCoordinator, button_uuid: str) -> None:
+        """Initialize the button UUID sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.client.address}-button_uuid"
+        self._button_uuid = button_uuid
+
+    @property
+    def native_value(self) -> str:
+        """Return the button UUID."""
+        return self._button_uuid

@@ -117,7 +117,11 @@ class DeviceProtocolHandler(ABC):
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> tuple[int, bytes, str, int] | tuple[int, bytes, str, int, int]:
+    ) -> (
+        tuple[int, bytes, str, int]
+        | tuple[int, bytes, str, int, int]
+        | tuple[int, bytes, str, int, int, bytes]
+    ):
         """Perform full pairing verification.
 
         Args:

@@ -4,19 +4,23 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import contextlib
 from enum import IntEnum
 import logging
 from typing import Any
 
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
+from bleak_retry_connector import (
+    close_stale_connections_by_address,
+    establish_connection,
+)
 
 from .const import (
     CONN_PARAM_INTERVAL_MAX,
     CONN_PARAM_INTERVAL_MIN,
     CONN_PARAM_LATENCY,
     CONN_PARAM_TIMEOUT,
-    CONNECTION_TIMEOUT,
     FLIC_MAX_PACKET_SIZE,
     FLIC_MTU,
     FLIC_SIGNATURE_SIZE,
@@ -27,6 +31,7 @@ from .const import (
     TWIST_DISCONNECT_REASON_OTHER_CLIENT,
     TWIST_OPCODE_BUTTON_EVENT,
     TWIST_OPCODE_DISCONNECTED_VERIFIED_LINK,
+    TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
     TWIST_OPCODE_TWIST_EVENT,
     DeviceType,
     PushTwistMode,
@@ -65,6 +70,10 @@ class FlicPairingError(Exception):
 
 class FlicAuthenticationError(Exception):
     """Flic authentication error."""
+
+
+class FlicFirmwareUpdateError(Exception):
+    """Flic firmware update error."""
 
 
 class FlicClient:
@@ -147,6 +156,9 @@ class FlicClient:
         # Selector change callback (for Twist only)
         self.on_selector_change: Callable[[int, dict[str, Any]], None] | None = None
 
+        # Firmware update active flag (gates 0x0F notification queueing)
+        self._firmware_update_active = False
+
     @property
     def handler(self) -> DeviceProtocolHandler:
         """Return the protocol handler."""
@@ -166,10 +178,36 @@ class FlicClient:
         if not self.ble_device:
             raise FlicProtocolError(f"No BLE device available for {self.address}")
 
+        # Clean up stale state from a previous disconnected session
+        # (e.g. after firmware update reboot or unexpected disconnect)
+        if self._client:
+            _LOGGER.debug("Cleaning up stale connection to %s", self.address)
+            with contextlib.suppress(BleakError):
+                await self._client.disconnect()
+            self._client = None
+            self._state = SessionState.DISCONNECTED
+            self._handler.reset_state()
+
+        # Drain any stale messages from the response queue
+        while not self._response_queue.empty():
+            try:
+                self._response_queue.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+
+        # Reset fragment reassembly state
+        self._fragment_buffer = bytearray()
+        self._expecting_fragment = False
+
         try:
             _LOGGER.info("Connecting to Flic button at %s", self.address)
-            self._client = BleakClient(self.ble_device, timeout=CONNECTION_TIMEOUT)
-            await self._client.connect()
+            await close_stale_connections_by_address(self.address)
+            self._client = await establish_connection(
+                BleakClient,
+                self.ble_device,
+                self.address,
+                max_attempts=1,
+            )
             _LOGGER.info("BLE connection established to %s", self.address)
 
             # Check MTU size
@@ -454,11 +492,14 @@ class FlicClient:
         """Return the device type."""
         return self._device_type
 
-    async def full_verify_pairing(self) -> tuple[int, bytes, str, int, int]:
+    async def full_verify_pairing(
+        self,
+    ) -> tuple[int, bytes, str, int, int, bytes | None]:
         """Perform full pairing verification (for new pairings).
 
         Returns:
-            Tuple of (pairing_id, pairing_key, serial_number, battery_level, sig_bits)
+            Tuple of (pairing_id, pairing_key, serial_number, battery_level,
+                       sig_bits, button_uuid)
 
         """
         if self._state != SessionState.CONNECTED:
@@ -474,8 +515,18 @@ class FlicClient:
                 write_packet=self._write_packet,
             )
 
-            # Handle both 4-value (Flic2/Duo) and 5-value (Twist) returns
-            if len(result) == 5:
+            # Handle 4-value (Flic2/Duo), 5-value (old Twist), 6-value (Twist with UUID)
+            button_uuid: bytes | None = None
+            if len(result) == 6:
+                (
+                    pairing_id,
+                    pairing_key,
+                    serial_number,
+                    battery_level,
+                    sig_bits,
+                    button_uuid,
+                ) = result
+            elif len(result) == 5:
                 pairing_id, pairing_key, serial_number, battery_level, sig_bits = result
             else:
                 pairing_id, pairing_key, serial_number, battery_level = result
@@ -490,7 +541,14 @@ class FlicClient:
             _LOGGER.error("Pairing timeout")
             raise FlicPairingError("Pairing timeout") from err
         else:
-            return pairing_id, pairing_key, serial_number, battery_level, sig_bits
+            return (
+                pairing_id,
+                pairing_key,
+                serial_number,
+                battery_level,
+                sig_bits,
+                button_uuid,
+            )
 
     async def quick_verify(self) -> None:
         """Perform quick verification using stored credentials."""
@@ -603,6 +661,65 @@ class FlicClient:
         )
 
         await self._write_packet(request_bytes)
+
+    async def async_firmware_update(
+        self,
+        firmware_binary: bytes,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> bool:
+        """Perform OTA firmware update on a Twist device.
+
+        Args:
+            firmware_binary: Raw firmware binary (header + compressed data)
+            progress_callback: Called with (bytes_acked, total_bytes)
+
+        Returns:
+            True on success
+
+        Raises:
+            FlicFirmwareUpdateError: On firmware update failure
+            FlicProtocolError: If not connected or not a Twist device
+
+        """
+        if not isinstance(self._handler, TwistProtocolHandler):
+            raise FlicProtocolError(
+                "Firmware update is only supported on Twist devices"
+            )
+        if self._state != SessionState.SESSION_ESTABLISHED:
+            raise FlicProtocolError("Session not established")
+
+        self._firmware_update_active = True
+        try:
+            try:
+                start_pos = await self._handler.start_firmware_update(
+                    firmware_binary=firmware_binary,
+                    write_packet=self._write_packet,
+                    wait_for_opcodes=self._wait_for_handler_opcodes,
+                )
+            except ValueError as err:
+                raise FlicFirmwareUpdateError(str(err)) from err
+
+            success = await self._handler.send_firmware_data(
+                firmware_binary=firmware_binary,
+                start_pos=start_pos,
+                write_packet=self._write_packet,
+                wait_for_opcode=self._wait_for_handler_opcode,
+                progress_callback=progress_callback,
+            )
+
+            if not success:
+                raise FlicFirmwareUpdateError(
+                    "Firmware signature verification failed on device"
+                )
+
+            await self._handler.send_force_disconnect(
+                write_packet=self._write_packet,
+                restart_adv=True,
+            )
+
+            return True
+        finally:
+            self._firmware_update_active = False
 
     async def _write_gatt(self, char_uuid: str, data: bytes) -> None:
         """Write data to a GATT characteristic."""
@@ -919,6 +1036,17 @@ class FlicClient:
             and not rotate_events
             and opcode not in (TWIST_OPCODE_BUTTON_EVENT, TWIST_OPCODE_TWIST_EVENT)
         ):
+            # Discard firmware update notifications when no update is active.
+            # The device may send stale 0x0F notifications from a previous
+            # update attempt; queueing them would block other command responses.
+            if (
+                opcode == TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION
+                and not self._firmware_update_active
+            ):
+                _LOGGER.debug(
+                    "Discarding stale firmware notification (no update active)"
+                )
+                return
             _LOGGER.debug("Putting Twist response opcode=0x%02x in queue", opcode)
             self._response_queue.put_nowait(bytes(data))
 

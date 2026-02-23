@@ -22,6 +22,7 @@ from homeassistant.core import callback
 
 from .const import (
     CONF_BATTERY_LEVEL,
+    CONF_BUTTON_UUID,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -150,6 +151,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     serial_number,
                     battery_level,
                     sig_bits,
+                    button_uuid,
                 ) = await asyncio.wait_for(
                     self._client.full_verify_pairing(),
                     timeout=PAIRING_TIMEOUT,
@@ -171,18 +173,25 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 title = f"{model_name} ({serial_number})"
 
+                # Build config entry data
+                entry_data: dict[str, Any] = {
+                    CONF_ADDRESS: self._discovery_info.address,
+                    CONF_PAIRING_ID: pairing_id,
+                    CONF_PAIRING_KEY: pairing_key.hex(),
+                    CONF_SERIAL_NUMBER: serial_number,
+                    CONF_BATTERY_LEVEL: battery_level,
+                    CONF_DEVICE_TYPE: final_device_type.value,
+                    CONF_SIG_BITS: sig_bits,
+                }
+
+                # Store button UUID for Twist firmware updates
+                if button_uuid is not None:
+                    entry_data[CONF_BUTTON_UUID] = button_uuid.hex()
+
                 # Create config entry
                 return self.async_create_entry(
                     title=title,
-                    data={
-                        CONF_ADDRESS: self._discovery_info.address,
-                        CONF_PAIRING_ID: pairing_id,
-                        CONF_PAIRING_KEY: pairing_key.hex(),
-                        CONF_SERIAL_NUMBER: serial_number,
-                        CONF_BATTERY_LEVEL: battery_level,
-                        CONF_DEVICE_TYPE: final_device_type.value,
-                        CONF_SIG_BITS: sig_bits,
-                    },
+                    data=entry_data,
                 )
 
             except (TimeoutError, BleakError):
