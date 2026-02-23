@@ -141,14 +141,14 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
+            data = {
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_VERIFY_SSL: reauth_entry.data.get(CONF_VERIFY_SSL, False),
+            }
             try:
                 # Validate new credentials against the configured host
-                data = {
-                    CONF_HOST: reauth_entry.data[CONF_HOST],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_VERIFY_SSL: reauth_entry.data.get(CONF_VERIFY_SSL, False),
-                }
                 info = await validate_input(self.hass, data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -164,10 +164,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(
