@@ -26,7 +26,13 @@
   "entity": {
     "select": {
       "fan_mode": {
-        "name": "Fan direction mode"
+        "name": "Fan direction mode",
+        "state": {
+          "forward": "Forward",
+          "reverse": "Reverse",
+          "alternate": "Alternate",
+          "sensor": "Sensor"
+        }
       }
     }
   }
