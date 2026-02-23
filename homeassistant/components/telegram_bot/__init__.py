@@ -500,7 +500,13 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
             errors.append((ex, target))
 
     if len(errors) == 1:
-        raise errors[0][0]
+        if isinstance(errors[0][0], HomeAssistantError):
+            raise errors[0][0]
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+            translation_placeholders={"error": str(errors[0][0])},
+        ) from errors[0][0]
 
     if len(errors) > 1:
         error_messages: list[str] = []

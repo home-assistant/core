@@ -364,7 +364,7 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     ) as mock_bot:
         mock_bot.side_effect = NetworkError("mock network error")
 
-        with pytest.raises(TelegramError) as err:
+        with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEND_STICKER,
@@ -377,8 +377,10 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     await hass.async_block_till_done()
 
     mock_bot.assert_called_once()
-    assert err.typename == "NetworkError"
-    assert err.value.message == "mock network error"
+    assert err.typename == "HomeAssistantError"
+    assert "mock network error" in str(err.value)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "action_failed"
 
 
 async def test_send_message_with_invalid_inline_keyboard(
@@ -2264,7 +2266,7 @@ async def test_download_file_when_bot_failed_to_get_file(
             "homeassistant.components.telegram_bot.bot.Bot.get_file",
             AsyncMock(side_effect=TelegramError("failed to get file")),
         ),
-        pytest.raises(TelegramError) as err,
+        pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -2274,8 +2276,9 @@ async def test_download_file_when_bot_failed_to_get_file(
         )
     await hass.async_block_till_done()
 
-    assert err.typename == "TelegramError"
-    assert err.value.message == "failed to get file"
+    assert err.typename == "HomeAssistantError"
+    assert err.value.translation_key == "action_failed"
+    assert "failed to get file" in str(err.value)
 
 
 async def test_download_file_when_empty_file_path(
