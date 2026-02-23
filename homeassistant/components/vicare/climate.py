@@ -11,6 +11,8 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -222,6 +224,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             _LOGGER.error("Unable to decode data from ViCare server")
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        except PyViCareDeviceCommunicationError as comm_exception:
+            _LOGGER.warning("Device communication error: %s", comm_exception)
+        except PyViCareInternalServerError as server_exception:
+            _LOGGER.warning("Vicare server error: %s", server_exception)
 
     @property
     def hvac_mode(self) -> HVACMode | None:

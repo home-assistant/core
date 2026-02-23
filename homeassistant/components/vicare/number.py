@@ -14,6 +14,8 @@ from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -463,6 +465,10 @@ class ViCareNumber(ViCareEntity, NumberEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        except PyViCareDeviceCommunicationError as comm_exception:
+            _LOGGER.warning("Device communication error: %s", comm_exception)
+        except PyViCareInternalServerError as server_exception:
+            _LOGGER.warning("Vicare server error: %s", server_exception)
 
 
 def _get_value(
