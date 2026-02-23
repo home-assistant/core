@@ -1329,7 +1329,10 @@ async def test_q10_coordinator_refresh_returns_trait_status_data(
 
     result = await coordinator._async_update_data()
 
-    assert result == {B01_Q10_DP.STATUS: YXDeviceState.PAUSE_STATE.code}
+    # The coordinator now returns the status object directly
+    assert result is coordinator.api.status
+    # Optionally, check the .data attribute
+    assert result.data == {B01_Q10_DP.STATUS: YXDeviceState.PAUSE_STATE.code}
 
 
 async def test_q10_coordinator_refresh_with_empty_status_returns_empty(
@@ -1357,7 +1360,8 @@ async def test_q10_coordinator_refresh_with_empty_status_returns_empty(
 
     result = await coordinator._async_update_data()
 
-    assert result == {}
+    assert result is coordinator.api.status
+    assert result.data == {}
 
 
 async def test_q10_coordinator_refresh_error_is_update_failed(
@@ -1384,17 +1388,6 @@ async def test_q10_coordinator_refresh_error_is_update_failed(
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
-
-
-def test_q10_normalize_device_status_handles_empty_and_invalid() -> None:
-    """Test Q10 status normalization handles empty and invalid keys."""
-    assert RoborockB01Q10UpdateCoordinator._normalize_q10_device_status(None) == {}
-    assert (
-        RoborockB01Q10UpdateCoordinator._normalize_q10_device_status(
-            {"invalid": 1, object(): 2}
-        )
-        == {}
-    )
 
 
 @pytest.mark.parametrize(

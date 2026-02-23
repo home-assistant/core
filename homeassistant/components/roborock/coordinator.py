@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar
@@ -611,61 +611,9 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
         """Get the RoborockDevice."""
         return self._device
 
-    @staticmethod
-    def _normalize_q10_device_status(
-        raw_status: dict[Any, Any] | None,
-    ) -> dict[B01_Q10_DP, Any]:
-        """Convert HomeData device status keys to Q10 DPS enum keys."""
-        if not raw_status:
-            return {}
-
-        normalized_status: dict[B01_Q10_DP, Any] = {}
-        for key, value in raw_status.items():
-            if isinstance(key, B01_Q10_DP):
-                normalized_status[key] = value
-                continue
-
-            try:
-                code = int(key)
-            except TypeError, ValueError:
-                continue
-
-            if (dps_key := B01_Q10_DP.from_code_optional(code)) is None:
-                continue
-
-            normalized_status[dps_key] = value
-        return normalized_status
-
-    @staticmethod
-    def _to_q10_dps_value(value: Any) -> Any:
-        """Convert Q10 status trait values to raw DPS values."""
-        if hasattr(value, "code"):
-            return value.code
-        return value
-
-    def get_q10_status_data(self) -> dict[B01_Q10_DP, Any]:
-        """Return Q10 status as a DPS-keyed dictionary."""
-        status_data: dict[B01_Q10_DP, Any] = {}
-        try:
-            for field in fields(self.api.status):
-                if (dps_key := field.metadata.get("dps")) is None:
-                    continue
-
-                if (value := getattr(self.api.status, field.name)) is None:
-                    continue
-
-                status_data[dps_key] = self._to_q10_dps_value(value)
-        except TypeError:
-            pass
-
-        if status_data:
-            return status_data
-
-        return self._normalize_q10_device_status(getattr(self.api.status, "data", None))
-
     async def _async_update_data(
         self,
-    ) -> dict[B01_Q10_DP, Any]:
+    ) -> Any:
         try:
             await self.api.refresh()
         except RoborockException as ex:
@@ -674,7 +622,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
-        return self.get_q10_status_data()
+        return self.api.status
 
     async def async_shutdown(self) -> None:
         """Shut down coordinator and Q10 subscriptions."""
