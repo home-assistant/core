@@ -32,9 +32,31 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "away_mode": {
+        "name": "Away mode"
+      },
+      "continuous_fan": {
+        "name": "Continuous fan"
+      },
+      "quiet_mode": {
+        "name": "Quiet mode"
+      },
+      "turbo_mode": {
+        "name": "Turbo mode"
+      }
+    }
+  },
   "exceptions": {
+    "api_error": {
+      "message": "Failed to communicate with Actron Air device: {error}"
+    },
     "auth_error": {
       "message": "Authentication failed, please reauthenticate"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the Actron Air API: {error}"
     }
   }
 }

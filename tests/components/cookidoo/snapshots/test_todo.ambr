@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Additional purchases',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shopping list',
     'options': dict({
     }),
     'original_device_class': None,

@@ -18,12 +18,12 @@
   "entity": {
     "stt": {
       "elevenlabs_stt": {
-        "name": "Speech-to-Text"
+        "name": "Speech-to-text"
       }
     },
     "tts": {
       "elevenlabs_tts": {
-        "name": "Text-to-Speech"
+        "name": "Text-to-speech"
       }
     }
   },
@@ -34,14 +34,14 @@
           "configure_voice": "Configure advanced voice settings",
           "model": "Model",
           "stt_auto_language": "Auto-detect language",
-          "stt_model": "Speech-to-Text Model",
+          "stt_model": "Speech-to-text model",
           "voice": "Voice"
         },
         "data_description": {
           "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation.",
           "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
           "stt_auto_language": "Automatically detect the spoken language for speech-to-text.",
-          "stt_model": "Speech-to-Text model to use.",
+          "stt_model": "Speech-to-text model to use.",
           "voice": "Voice to use for text-to-speech."
         }
       },

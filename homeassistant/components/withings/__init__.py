@@ -259,10 +259,16 @@ class WithingsWebhookManager:
                     self.hass, self.entry.data[CONF_WEBHOOK_ID]
                 )
             url = URL(webhook_url)
-            if url.scheme != "https" or url.port != 443:
+            if url.scheme != "https":
                 LOGGER.warning(
-                    "Webhook not registered - "
-                    "https and port 443 is required to register the webhook"
+                    "Webhook not registered - HTTPS is required. "
+                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
+                )
+                return
+            if url.port != 443:
+                LOGGER.warning(
+                    "Webhook not registered - port 443 is required. "
+                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
                 )
                 return
 

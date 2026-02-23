@@ -1,10 +1,13 @@
 """Support for Roborock select."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
-from roborock.data import RoborockDockDustCollectionModeCode
+from roborock import B01Props, CleanTypeMapping
+from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
+from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
@@ -18,8 +21,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockCoordinatedEntityV1
+from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01Q7, RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
 
@@ -44,36 +51,80 @@ class RoborockSelectDescription(SelectEntityDescription):
     """Whether this entity is for the dock."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockB01SelectDescription(SelectEntityDescription):
+    """Class to describe a Roborock B01 select entity."""
+
+    api_fn: Callable[[Q7PropertiesApi, str], Awaitable[Any]]
+    """Function to call the API."""
+
+    value_fn: Callable[[B01Props], str | None]
+    """Function to get the current value of the select entity."""
+
+    options_lambda: Callable[[Q7PropertiesApi], list[str] | None]
+    """Function to get all options of the select entity or returns None if not supported."""
+
+
+B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
+    RoborockB01SelectDescription(
+        key="water_flow",
+        translation_key="water_flow",
+        api_fn=lambda api, value: api.set_water_level(
+            WaterLevelMapping.from_value(value)
+        ),
+        value_fn=lambda data: data.water.value if data.water else None,
+        options_lambda=lambda _: [option.value for option in WaterLevelMapping],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockB01SelectDescription(
+        key="cleaning_mode",
+        translation_key="cleaning_mode",
+        api_fn=lambda api, value: api.set_mode(CleanTypeMapping.from_value(value)),
+        value_fn=lambda data: data.mode.value if data.mode else None,
+        options_lambda=lambda _: list(CleanTypeMapping.keys()),
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
+
+
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
     RoborockSelectDescription(
         key="water_box_mode",
         translation_key="mop_intensity",
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-        value_fn=lambda api: api.status.water_box_mode_name,
+        value_fn=lambda api: api.status.water_mode_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            api.status.water_box_mode.keys()
-            if api.status.water_box_mode is not None
+            [mode.value for mode in api.status.water_mode_options]
+            if api.status.water_mode_options
             else None
         ),
-        parameter_lambda=lambda key, api: [api.status.get_mop_intensity_code(key)],
+        parameter_lambda=lambda key, api: [
+            {v: k for k, v in api.status.water_mode_mapping.items()}[key]
+        ],
     ),
     RoborockSelectDescription(
         key="mop_mode",
         translation_key="mop_mode",
         api_command=RoborockCommand.SET_MOP_MODE,
-        value_fn=lambda api: api.status.mop_mode_name,
+        value_fn=lambda api: api.status.mop_route_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            api.status.mop_mode.keys() if api.status.mop_mode is not None else None
+            [mode.value for mode in api.status.mop_route_options]
+            if api.status.mop_route_options
+            else None
         ),
-        parameter_lambda=lambda key, api: [api.status.get_mop_mode_code(key)],
+        parameter_lambda=lambda key, api: [
+            {v: k for k, v in api.status.mop_route_mapping.items()}[key]
+        ],
     ),
     RoborockSelectDescription(
         key="dust_collection_mode",
         translation_key="dust_collection_mode",
         api_command=RoborockCommand.SET_DUST_COLLECTION_MODE,
-        value_fn=lambda api: api.dust_collection_mode.mode.name,  # type: ignore[union-attr]
+        value_fn=lambda api: (
+            mode.name if (mode := api.dust_collection_mode.mode) is not None else None  # type: ignore[union-attr]
+        ),
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
             RoborockDockDustCollectionModeCode.keys()
@@ -112,6 +163,51 @@ async def async_setup_entry(
         if (home_trait := coordinator.properties_api.home) is not None
         if (map_trait := coordinator.properties_api.maps) is not None
     )
+    async_add_entities(
+        RoborockB01SelectEntity(coordinator, description, options)
+        for coordinator in config_entry.runtime_data.b01_q7
+        for description in B01_SELECT_DESCRIPTIONS
+        if (options := description.options_lambda(coordinator.api)) is not None
+    )
+
+
+class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
+    """Select entity for Roborock B01 devices."""
+
+    entity_description: RoborockB01SelectDescription
+    coordinator: RoborockB01Q7UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q7UpdateCoordinator,
+        entity_description: RoborockB01SelectDescription,
+        options: list[str],
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}", coordinator
+        )
+        self._attr_options = options
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the option."""
+        try:
+            await self.entity_description.api_fn(self.coordinator.api, option)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": self.entity_description.key,
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        return self.entity_description.value_fn(self.coordinator.data)
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):

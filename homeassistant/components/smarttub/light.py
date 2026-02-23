@@ -21,6 +21,8 @@ from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -63,7 +65,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         return self.coordinator.data[self.spa.id][ATTR_LIGHTS][self.light_zone]
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
 
         # SmartTub intensity is 0..100
@@ -80,12 +82,12 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         return round(brightness * 100 / 255)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the light is on."""
         return self.light.mode != SpaLight.LightMode.OFF
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current effect."""
         mode = self.light.mode.name.lower()
         if mode in self.effect_list:
@@ -93,7 +95,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         return None
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return [
             effect

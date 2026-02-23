@@ -10,7 +10,14 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from roborock import HomeDataRoom, MultiMapsListMapInfo, RoborockCategory
+from roborock import (
+    CleanRoutes,
+    HomeDataRoom,
+    MultiMapsListMapInfo,
+    RoborockCategory,
+    VacuumModes,
+    WaterModes,
+)
 from roborock.data import (
     CombinedMapInfo,
     DnDTimer,
@@ -22,6 +29,7 @@ from roborock.data import (
     RoborockBase,
     RoborockDyadStateCode,
     ValleyElectricityTimer,
+    WorkStatusMapping,
     ZeoError,
     ZeoState,
 )
@@ -66,6 +74,7 @@ from .mock_data import (
     MAP_DATA,
     MULTI_MAP_LIST,
     NETWORK_INFO_BY_DEVICE,
+    Q7_B01_PROPS,
     ROBOROCK_RRUID,
     ROOM_MAPPING,
     SCENES,
@@ -106,6 +115,41 @@ def create_zeo_trait() -> Mock:
     return zeo_trait
 
 
+def create_b01_q7_trait() -> Mock:
+    """Create B01 Q7 trait for B01 devices."""
+    b01_trait = AsyncMock()
+    b01_trait._props_data = deepcopy(Q7_B01_PROPS)
+
+    async def query_values_side_effect(protocols):
+        return b01_trait._props_data
+
+    b01_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
+
+    # Add API methods that update the state when called
+    async def start_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+
+    async def pause_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.PAUSED
+
+    async def stop_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
+
+    async def return_to_dock_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.DOCKING
+
+    b01_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    b01_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    b01_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    b01_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    b01_trait.find_me = AsyncMock()
+    b01_trait.set_fan_speed = AsyncMock()
+    b01_trait.set_mode = AsyncMock()
+    b01_trait.set_water_level = AsyncMock()
+    b01_trait.send = AsyncMock()
+    return b01_trait
+
+
 @pytest.fixture(name="bypass_api_client_fixture")
 def bypass_api_client_fixture() -> None:
     """Skip calls to the API client."""
@@ -140,6 +184,20 @@ class FakeDevice(RoborockDevice):
         """Close the device."""
 
 
+def set_trait_attributes(
+    trait: AsyncMock,
+    dataclass_template: RoborockBase,
+    init_none: bool = False,
+) -> None:
+    """Set attributes on a mock roborock trait."""
+    template_copy = deepcopy(dataclass_template)
+    for attr_name in dir(template_copy):
+        if attr_name.startswith("_"):
+            continue
+        attr_value = getattr(template_copy, attr_name) if not init_none else None
+        setattr(trait, attr_name, attr_value)
+
+
 def make_mock_trait(
     trait_spec: type[V1TraitMixin] | None = None,
     dataclass_template: RoborockBase | None = None,
@@ -148,12 +206,14 @@ def make_mock_trait(
     trait = AsyncMock(spec=trait_spec or V1TraitMixin)
     if dataclass_template is not None:
         # Copy all attributes and property methods (e.g. computed properties)
-        template_copy = deepcopy(dataclass_template)
-        for attr_name in dir(template_copy):
-            if attr_name.startswith("_"):
-                continue
-            setattr(trait, attr_name, getattr(template_copy, attr_name))
-    trait.refresh = AsyncMock()
+        # on the first call to refresh(). The object starts uninitialized.
+        set_trait_attributes(trait, dataclass_template, init_none=True)
+
+    async def refresh() -> None:
+        if dataclass_template is not None:
+            set_trait_attributes(trait, dataclass_template)
+
+    trait.refresh = AsyncMock(side_effect=refresh)
     return trait
 
 
@@ -254,6 +314,20 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
         trait_spec=StatusTrait,
         dataclass_template=STATUS,
     )
+    _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
+    _water_mode_mapping = {m.code: m.value for m in WaterModes}
+    _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
+    v1_properties.status.fan_speed_options = list(VacuumModes)
+    v1_properties.status.fan_speed_mapping = _fan_speed_mapping
+    v1_properties.status.fan_speed_name = _fan_speed_mapping.get(STATUS.fan_power)
+    v1_properties.status.water_mode_options = list(WaterModes)
+    v1_properties.status.water_mode_mapping = _water_mode_mapping
+    v1_properties.status.water_mode_name = _water_mode_mapping.get(
+        STATUS.water_box_mode
+    )
+    v1_properties.status.mop_route_options = list(CleanRoutes)
+    v1_properties.status.mop_route_mapping = _mop_route_mapping
+    v1_properties.status.mop_route_name = _mop_route_mapping.get(STATUS.mop_mode)
     v1_properties.dnd = make_dnd_timer(dataclass_template=DND_TIMER)
     v1_properties.clean_summary = make_mock_trait(
         trait_spec=CleanSummaryTrait,
@@ -332,6 +406,8 @@ def fake_devices_fixture() -> list[FakeDevice]:
                 fake_device.zeo = create_zeo_trait()
             else:
                 raise ValueError("Unknown A01 category in test HOME_DATA")
+        elif device_data.pv == "B01":
+            fake_device.b01_q7_properties = create_b01_q7_trait()
         else:
             raise ValueError("Unknown pv in test HOME_DATA")
         devices.append(fake_device)

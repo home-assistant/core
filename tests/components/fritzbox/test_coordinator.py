@@ -6,9 +6,11 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 from pyfritzhome import LoginError
+import pytest
 from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
@@ -20,6 +22,8 @@ from . import (
     FritzDeviceSensorMock,
     FritzDeviceSwitchMock,
     FritzEntityBaseMock,
+    FritzTriggerMock,
+    setup_config_entry,
 )
 from .const import MOCK_CONFIG
 
@@ -36,14 +40,19 @@ async def test_coordinator_update_after_reboot(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [HTTPError(), ""]
+    fritz().update_devices.side_effect = ["", HTTPError()]
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_devices.call_count == 2
+    assert fritz().update_devices.call_count == 1
     assert fritz().update_templates.call_count == 1
     assert fritz().get_devices.call_count == 1
     assert fritz().get_templates.call_count == 1
-    assert fritz().login.call_count == 2
+    assert fritz().login.call_count == 1
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_update_after_password_change(
@@ -56,14 +65,10 @@ async def test_coordinator_update_after_password_change(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = HTTPError()
-    fritz().login.side_effect = ["", LoginError("some_user")]
+    fritz().login.side_effect = [LoginError("some_user")]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert fritz().update_devices.call_count == 1
-    assert fritz().get_devices.call_count == 0
-    assert fritz().get_templates.call_count == 0
-    assert fritz().login.call_count == 2
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_update_when_unreachable(
@@ -76,9 +81,10 @@ async def test_coordinator_update_when_unreachable(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [ConnectionError(), ""]
+    fritz().update_devices.side_effect = [ConnectionError()]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -184,3 +190,27 @@ async def test_coordinator_workaround_sub_units_without_main_device(
     assert len(device_entries) == 2
     assert device_entries[0].identifiers == {(DOMAIN, "good_device")}
     assert device_entries[1].identifiers == {(DOMAIN, "bad_device")}
+
+
+@pytest.mark.parametrize(
+    ("trigger", "side_effect", "switch_entity_count"),
+    [
+        (None, None, 0),
+        (None, HTTPError(), 0),
+        (FritzTriggerMock(), None, 1),
+    ],
+)
+async def test_coordinator_has_triggers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fritz: Mock,
+    trigger: Mock | None,
+    side_effect: Exception | None,
+    switch_entity_count: int,
+) -> None:
+    """Test coordinator has_triggers property."""
+    fritz().has_triggers.side_effect = side_effect
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], fritz=fritz, trigger=trigger
+    )
+    assert len(hass.states.async_all(SWITCH_DOMAIN)) == switch_entity_count

@@ -11,6 +11,8 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -59,7 +61,7 @@ VICARE_HOLD_MODE_HOME = "home"
 VICARE_HOLD_MODE_OFF = "off"
 
 VICARE_TEMP_HEATING_MIN = 3
-VICARE_TEMP_HEATING_MAX = 37
+VICARE_TEMP_HEATING_MAX = 60
 
 VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
@@ -222,13 +224,17 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             _LOGGER.error("Unable to decode data from ViCare server")
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        except PyViCareDeviceCommunicationError as comm_exception:
+            _LOGGER.warning("Device communication error: %s", comm_exception)
+        except PyViCareInternalServerError as server_exception:
+            _LOGGER.warning("Vicare server error: %s", server_exception)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current hvac mode."""
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode, None)
+        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
@@ -282,8 +288,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._attr_target_temperature = temp
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_program is None:
+            return None
         return HeatingProgram.to_ha_preset(self._current_program)
 
     def set_preset_mode(self, preset_mode: str) -> None:

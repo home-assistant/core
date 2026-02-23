@@ -18,9 +18,8 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
@@ -32,9 +31,6 @@ from .util import get_name_key
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ERROR = "error"
-ATTR_COMPONENT_PREFIX = "component_"
-
-SERVICE_RAW_GET_POSITIONS = "raw_get_positions"
 
 
 async def async_setup_entry(
@@ -55,14 +51,6 @@ async def async_setup_entry(
     )
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_RAW_GET_POSITIONS,
-        None,
-        "async_raw_get_positions",
-        supports_response=SupportsResponse.ONLY,
-    )
 
 
 class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
@@ -350,11 +338,11 @@ class EcovacsVacuum(
                     translation_placeholders={"name": name},
                 )
 
-            if command in "spot_area":
+            if command == "spot_area":
                 await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.SPOT_AREA,
-                        str(params["rooms"]),
+                        params["rooms"],
                         params.get("cleanings", 1),
                     )
                 )
@@ -362,7 +350,7 @@ class EcovacsVacuum(
                 await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.CUSTOM_AREA,
-                        str(params["coordinates"]),
+                        params["coordinates"],
                         params.get("cleanings", 1),
                     )
                 )

@@ -63,6 +63,11 @@ async def test_form(
         CONF_SSL: False,
     }
 
+    # Verify HikCamera was called with the ssl parameter
+    mock_hikcamera.assert_called_once_with(
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+    )
+
 
 async def test_form_cannot_connect(
     hass: HomeAssistant,
@@ -70,7 +75,7 @@ async def test_form_cannot_connect(
     mock_hikcamera: MagicMock,
 ) -> None:
     """Test we handle cannot connect error and can recover."""
-    mock_hikcamera.return_value.get_id.return_value = None
+    mock_hikcamera.return_value.get_id = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -91,7 +96,7 @@ async def test_form_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Recover from error
-    mock_hikcamera.return_value.get_id.return_value = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -138,7 +143,53 @@ async def test_form_exception(
 
     # Recover from error
     mock_hikcamera.side_effect = None
-    mock_hikcamera.return_value.get_id.return_value = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_name = TEST_DEVICE_NAME
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_DEVICE_ID
+
+
+async def test_form_unknown_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test we handle unknown exception during connection and can recover."""
+    mock_hikcamera.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    # Recover from error
+    mock_hikcamera.side_effect = None
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
     mock_hikcamera.return_value.get_name = TEST_DEVICE_NAME
 
     result = await hass.config_entries.flow.async_configure(
@@ -213,6 +264,11 @@ async def test_import_flow(
         CONF_SSL: False,
     }
 
+    # Verify HikCamera was called with the ssl parameter
+    mock_hikcamera.assert_called_once_with(
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+    )
+
 
 async def test_import_flow_with_defaults(
     hass: HomeAssistant,
@@ -269,7 +325,7 @@ async def test_import_flow_no_device_id(
     mock_hikcamera: MagicMock,
 ) -> None:
     """Test YAML import flow aborts when device_id is None."""
-    mock_hikcamera.return_value.get_id.return_value = None
+    mock_hikcamera.return_value.get_id = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -285,6 +341,30 @@ async def test_import_flow_no_device_id(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_unknown_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test YAML import flow aborts on unknown exception."""
+    mock_hikcamera.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_import_flow_already_configured(
@@ -310,3 +390,33 @@ async def test_import_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_form_with_ssl(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test user flow with ssl enabled passes ssl parameter to HikCamera."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SSL] is True
+
+    # Verify HikCamera was called with ssl=True
+    mock_hikcamera.assert_called_once_with(
+        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
+    )
