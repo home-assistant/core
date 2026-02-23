@@ -427,7 +427,7 @@ async def test_model_list_error(
                     CONF_PROMPT: "Speak like a pirate",
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-opus",
+                    CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                     CONF_TEMPERATURE: 1.0,
                 },
             ),
@@ -435,7 +435,7 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-3-opus",
+                CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
             },
         ),
@@ -459,7 +459,7 @@ async def test_model_list_error(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-5-haiku-20241022",
+                    CONF_CHAT_MODEL: "claude-haiku-4-5",
                     CONF_TEMPERATURE: 1.0,
                 },
                 {
@@ -472,8 +472,9 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-3-5-haiku-20241022",
+                CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: 0,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
