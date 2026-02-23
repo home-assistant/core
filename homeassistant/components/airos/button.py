@@ -44,12 +44,12 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
 
     entity_description: ButtonEntityDescription
 
-    def __init__(self, coordinator: AirOSDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: AirOSDataUpdateCoordinator, entity_description: ButtonEntityDescription) -> None:
         """Initialize the AirOS client button."""
         super().__init__(coordinator)
-        self.entity_description = BUTTON_DESCRIPTION
+        self.entity_description = ButtonEntityDescription
 
-        self._attr_unique_id = f"{coordinator.data.derived.mac}_reboot"
+        self._attr_unique_id = f"{coordinator.data.derived.mac}_{entity_description.key}"
 
     async def async_press(self) -> None:
         """Handle the button press to reboot the device."""
