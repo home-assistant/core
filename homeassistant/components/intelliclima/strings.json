@@ -28,7 +28,7 @@
       "fan_mode": {
         "name": "Fan direction mode",
         "state": {
-          "alternate": "Alternate",
+          "alternate": "Alternating",
           "forward": "Forward",
           "reverse": "Reverse",
           "sensor": "Sensor"
