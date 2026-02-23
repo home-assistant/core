@@ -4,6 +4,8 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components import usb
+from homeassistant.components.usb import usb_unique_id_from_service_info
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -36,8 +38,16 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        await self.async_set_unique_id(discovery_info.serial_number)
-        self._abort_if_unique_id_configured()
+        unique_id = usb_unique_id_from_service_info(discovery_info)
+
+        if await self.async_set_unique_id(unique_id):
+            self._abort_if_unique_id_configured(
+                updates={CONF_DEVICE: discovery_info.device}
+            )
+
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
