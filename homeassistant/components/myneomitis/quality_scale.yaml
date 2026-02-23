@@ -39,7 +39,7 @@ rules:
   log-when-unavailable: done
   parallel-updates:
     status: exempt
-    comment: Integration uses coordinator-based updates via WebSocket push.
+    comment: Integration uses WebSocket callbacks to push updates directly to entities, not coordinator-based polling.
   reauthentication-flow: todo
   test-coverage: done
 
