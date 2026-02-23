@@ -1099,7 +1099,7 @@ homelink-integration-api==0.0.1
 homematicip==2.6.0
 
 # homeassistant.components.homevolt
-homevolt==0.4.4
+homevolt==0.5.0
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4

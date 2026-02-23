@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_switch_entities[switch.homevolt_ems_local_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.homevolt_ems_local_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Local mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Local mode',
+    'platform': 'homevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_mode',
+    'unique_id': '40580137858664_local_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.homevolt_ems_local_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homevolt EMS Local mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.homevolt_ems_local_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_turn_on_off[turn_off-disable_local_mode][state-after-turn_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homevolt EMS Local mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.homevolt_ems_local_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_turn_on_off[turn_on-enable_local_mode][state-after-turn_on]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homevolt EMS Local mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.homevolt_ems_local_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
