@@ -1696,14 +1696,17 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="distance",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="latitude",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="longitude",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
             ],
         ),
