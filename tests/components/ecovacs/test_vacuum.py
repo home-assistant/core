@@ -1,5 +1,6 @@
 """Tests for Ecovacs vacuum entities."""
 
+from dataclasses import asdict
 import logging
 
 from deebot_client.events import CachedMapInfoEvent, Event, RoomsEvent
@@ -15,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .util import notify_and_wait
+
+from tests.typing import WebSocketGenerator
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
 
@@ -387,3 +390,102 @@ async def test_raise_segment_changed_issue(
     issue_id = f"{vacuum.ISSUE_SEGMENTS_CHANGED}_{entity_entry.id}"
     issue = ir.async_get(hass).async_get_issue(vacuum.DOMAIN, issue_id)
     assert issue is not None
+
+
+@pytest.mark.parametrize(
+    ("events", "expected_segments", "expected_log_messages"),
+    [
+        ((), [], []),
+        (
+            (
+                CachedMapInfoEvent(
+                    {
+                        Map(
+                            id="1",
+                            name="Main map",
+                            using=True,
+                            built=True,
+                            angle=RotationAngle.DEG_0,
+                        ),
+                    }
+                ),
+                RoomsEvent(
+                    map_id="2",
+                    rooms=[
+                        Room(name="Kitchen", id=1, coordinates=""),
+                        Room(name="Living room", id=2, coordinates=""),
+                    ],
+                ),
+            ),
+            [],
+            [
+                (
+                    "homeassistant.components.ecovacs.vacuum",
+                    logging.WARNING,
+                    "Map ID 2 not found in available maps",
+                )
+            ],
+        ),
+        (
+            (
+                CachedMapInfoEvent(
+                    {
+                        Map(
+                            id="1",
+                            name="Main map",
+                            using=True,
+                            built=True,
+                            angle=RotationAngle.DEG_0,
+                        ),
+                    }
+                ),
+                RoomsEvent(
+                    map_id="1",
+                    rooms=[
+                        Room(name="Kitchen", id=1, coordinates=""),
+                        Room(name="Living room", id=2, coordinates=""),
+                    ],
+                ),
+            ),
+            [
+                vacuum.Segment(id="1_1", name="Kitchen", group="Main map"),
+                vacuum.Segment(id="1_2", name="Living room", group="Main map"),
+            ],
+            [],
+        ),
+    ],
+    ids=[
+        "no room event available",
+        "invalid map ID in room event",
+        "room added",
+    ],
+)
+@pytest.mark.parametrize(("device_fixture", "entity_id"), [("qhe2o2", "vacuum.dusty")])
+async def test_get_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    controller: EcovacsController,
+    entity_id: str,
+    events: tuple[Event, ...],
+    expected_segments: list[vacuum.Segment],
+    expected_log_messages: list[tuple[str, int, str]],
+) -> None:
+    """Test vacuum/get_segments websocket command."""
+    device = controller.devices[0]
+    event_bus = device.events
+
+    for event in events:
+        await notify_and_wait(hass, event_bus, event)
+
+    caplog.clear()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"segments": [asdict(seg) for seg in expected_segments]}
+    for log_message in expected_log_messages:
+        assert log_message in caplog.record_tuples
