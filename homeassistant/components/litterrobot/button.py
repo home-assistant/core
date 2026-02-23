@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, LitterRobot5, Robot
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -24,20 +24,24 @@ class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEnti
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
 
 
-ROBOT_BUTTON_MAP: dict[type[Robot], RobotButtonEntityDescription] = {
-    LitterRobot3: RobotButtonEntityDescription[LitterRobot3](
+ROBOT_BUTTON_MAP: dict[tuple[type[Robot], ...], RobotButtonEntityDescription] = {
+    (LitterRobot3, LitterRobot5): RobotButtonEntityDescription[
+        LitterRobot3 | LitterRobot5
+    ](
         key="reset_waste_drawer",
         translation_key="reset_waste_drawer",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda robot: robot.reset_waste_drawer(),
     ),
-    LitterRobot4: RobotButtonEntityDescription[LitterRobot4](
+    (LitterRobot4, LitterRobot5): RobotButtonEntityDescription[
+        LitterRobot4 | LitterRobot5
+    ](
         key="reset",
         translation_key="reset",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda robot: robot.reset(),
     ),
-    FeederRobot: RobotButtonEntityDescription[FeederRobot](
+    (FeederRobot,): RobotButtonEntityDescription[FeederRobot](
         key="give_snack",
         translation_key="give_snack",
         press_fn=lambda robot: robot.give_snack(),
