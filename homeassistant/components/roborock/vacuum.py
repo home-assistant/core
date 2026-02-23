@@ -453,7 +453,6 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     "command": "start_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -467,7 +466,6 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     "command": "pause_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
@@ -507,7 +505,6 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     "command": "find_me",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
@@ -658,7 +655,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": "start_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -672,7 +668,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": "pause_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
@@ -686,7 +681,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": "stop_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
@@ -700,7 +694,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": "return_to_dock",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot/zone."""
@@ -715,7 +708,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": "start_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information (not available for Q10)."""
