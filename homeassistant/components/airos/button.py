@@ -42,21 +42,17 @@ async def async_setup_entry(
 class AirOSRebootButton(AirOSEntity, ButtonEntity):
     """Button to reboot device."""
 
-    _attr_has_entity_name = True
-
     entity_description: ButtonEntityDescription
 
     def __init__(self, coordinator: AirOSDataUpdateCoordinator) -> None:
         """Initialize the AirOS client button."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.entity_description = BUTTON_DESCRIPTION
 
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_reboot"
+        self._attr_unique_id = f"{coordinator.data.derived.mac}_reboot"
 
     async def async_press(self) -> None:
         """Handle the button press to reboot the device."""
-        result: bool = False
         try:
             await self.coordinator.airos_device.login()
             result = await self.coordinator.airos_device.reboot()
