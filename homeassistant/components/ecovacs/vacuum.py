@@ -36,7 +36,7 @@ from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
-_SEGEMENTS_SEPARATOR = "_"
+_SEGMENTS_SEPARATOR = "_"
 
 ATTR_ERROR = "error"
 
@@ -402,7 +402,7 @@ class EcovacsVacuum(
     def _check_segments_changed(self) -> None:
         """Check if segments have changed and create repair issue."""
         last_seen = self.last_seen_segments
-        if last_seen is None or self._maps is None or self._room_event is None:
+        if last_seen is None or not self._maps or self._room_event is None:
             return
 
         last_seen_ids = {seg.id for seg in last_seen}
@@ -436,7 +436,7 @@ class EcovacsVacuum(
             _LOGGER.warning("Map ID %s not found in available maps", map_id)
             return []
 
-        id_prefix = f"{map_id}{_SEGEMENTS_SEPARATOR}"
+        id_prefix = f"{map_id}{_SEGMENTS_SEPARATOR}"
         return [
             Segment(
                 id=f"{id_prefix}{room.id}",
@@ -507,5 +507,5 @@ class EcovacsVacuum(
 @callback
 def _split_composite_id(composite_id: str) -> tuple[str, str]:
     """Split a composite ID into its components."""
-    map_id, _, segment_id = composite_id.partition(_SEGEMENTS_SEPARATOR)
+    map_id, _, segment_id = composite_id.partition(_SEGMENTS_SEPARATOR)
     return map_id, segment_id
