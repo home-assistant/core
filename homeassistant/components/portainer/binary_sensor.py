@@ -71,7 +71,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
 
 STACK_SENSORS: tuple[PortainerStackBinarySensorEntityDescription, ...] = (
     PortainerStackBinarySensorEntityDescription(
-        key="status",
+        key="stack_status",
         translation_key="status",
         state_fn=lambda data: (
             data.stack.status == STACK_STATUS_ACTIVE
