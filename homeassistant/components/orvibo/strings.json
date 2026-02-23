@@ -65,7 +65,7 @@
       "title": "Legacy YAML configuration detected {host}"
     },
     "yaml_deprecation_import_issue": {
-      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. 1) Check the error logs for details, 2) Remove the YAML block from configuration.yaml, 3) Restart Home Assistant, 4) Add the device using the UI configuration flow.",
+      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. 1) Remove the YAML block from configuration.yaml, 2) Restart Home Assistant, 3) Add the device using the UI configuration flow.",
       "title": "Legacy YAML configuration import issue for {host}"
     }
   }
