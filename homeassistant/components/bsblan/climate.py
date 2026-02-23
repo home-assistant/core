@@ -114,9 +114,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def _hvac_mode_value(self) -> int | None:
         """Return the raw hvac_mode value from the coordinator."""
-        if (hvac_mode := self.coordinator.data.state.hvac_mode) is None:
-            return None
-        return hvac_mode.value
+        return getattr(self.coordinator.data.state.hvac_mode, "value", None)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -128,9 +126,9 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac action."""
-        if (action := self.coordinator.data.state.hvac_action) is None:
-            return None
-        if action.value is None:
+        if (
+            action := self.coordinator.data.state.hvac_action
+        ) is None or action.value is None:
             return None
         category = get_hvac_action_category(action.value)
         return HVACAction(category.name.lower())

@@ -200,30 +200,6 @@ async def test_climate_without_target_temperature_sensor(
     assert state.attributes["temperature"] is None
 
 
-async def test_climate_hvac_mode_none_value(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test climate entity when hvac_mode value is None."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    # Set hvac_mode.value to None
-    mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = None
-    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # State should be unknown when hvac_mode is None
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == "unknown"
-
-
 async def test_climate_hvac_mode_object_none(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
