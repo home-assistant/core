@@ -253,5 +253,7 @@ async def test_device_tracker_address_with_numeric_values(
 
         state = hass.states.get("device_tracker.2021_honda_accord")
         assert state is not None
-        # Should successfully format address with numeric values
-        assert "address" in state.attributes or "address" not in state.attributes
+        # Should successfully format address with numeric values converted to strings
+        attrs = state.attributes
+        assert "address" in attrs
+        assert attrs["address"] == "123, City, 94102"

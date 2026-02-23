@@ -58,27 +58,24 @@ async def test_coordinator_auth_error_refresh_success(
     """Test coordinator handles token refresh successfully."""
     mock_device.get_location = AsyncMock(return_value=mock_location)
 
-    # First call raises AuthenticationError, second succeeds
+    # Initial client that will work during setup but fail later
+    old_client = AsyncMock()
+    old_client.list_devices = AsyncMock(return_value=[mock_device])
+    old_client.close = AsyncMock()
+
+    # New client after refresh
     new_client = AsyncMock()
     new_client.list_devices = AsyncMock(return_value=[mock_device])
     new_client.close = AsyncMock()
 
-    old_client = AsyncMock()
-    old_client.list_devices = AsyncMock(side_effect=MockAuthenticationError("Token expired"))
-    old_client.close = AsyncMock()
-
     with (
         patch(
             "homeassistant.components.lojack.LoJackClient.create",
-            side_effect=[old_client, new_client],
+            return_value=old_client,
         ),
         patch(
             "homeassistant.components.lojack.config_flow.LoJackClient.create",
             return_value=old_client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.LoJackClient.create",
-            return_value=new_client,
         ),
         patch(
             "homeassistant.components.lojack.coordinator.AuthenticationError",
@@ -90,11 +87,20 @@ async def test_coordinator_auth_error_refresh_success(
         await hass.async_block_till_done()
 
         coordinator = mock_config_entry.runtime_data
-        # Force update to trigger refresh
-        with patch.object(old_client, "list_devices", side_effect=MockAuthenticationError("Token expired")):
+        assert coordinator.client is old_client
+
+        # Now make the current client fail with auth error and mock new client creation
+        old_client.list_devices = AsyncMock(side_effect=MockAuthenticationError("Token expired"))
+        
+        with patch(
+            "homeassistant.components.lojack.coordinator.LoJackClient.create",
+            return_value=new_client,
+        ):
             await coordinator.async_refresh()
 
-        # Should succeed after refresh
+        # Verify new client is installed and old one was closed
+        assert coordinator.client is new_client
+        old_client.close.assert_called_once()
         assert coordinator.data is not None
 
 
