@@ -14,6 +14,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
+REBOOT_ENTITY_ID = "button.nanostation_5ac_ap_name_restart"
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_reboot_button_press_success(
@@ -25,16 +27,14 @@ async def test_reboot_button_press_success(
     """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    entity_id = "button.nanostation_5ac_ap_name_restart"
-
-    entity = entity_registry.async_get(entity_id)
+    entity = entity_registry.async_get(REBOOT_ENTITY_ID)
     assert entity
     assert entity.unique_id == f"{mock_config_entry.unique_id}_reboot"
 
     await hass.services.async_call(
         "button",
         "press",
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: REBOOT_ENTITY_ID},
         blocking=True,
     )
 
@@ -50,14 +50,13 @@ async def test_reboot_button_press_fail(
     """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    entity_id = "button.nanostation_5ac_ap_name_restart"
     mock_airos_client.reboot.return_value = False
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "button",
             "press",
-            {ATTR_ENTITY_ID: entity_id},
+            {ATTR_ENTITY_ID: REBOOT_ENTITY_ID},
             blocking=True,
         )
 
@@ -81,15 +80,13 @@ async def test_reboot_button_press_exceptions(
     """Test reboot failure is handled gracefully."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    entity_id = "button.nanostation_5ac_ap_name_restart"
-
     mock_airos_client.login.side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "button",
             "press",
-            {ATTR_ENTITY_ID: entity_id},
+            {ATTR_ENTITY_ID: REBOOT_ENTITY_ID},
             blocking=True,
         )
 
@@ -102,7 +99,7 @@ async def test_reboot_button_press_exceptions(
         await hass.services.async_call(
             "button",
             "press",
-            {ATTR_ENTITY_ID: entity_id},
+            {ATTR_ENTITY_ID: REBOOT_ENTITY_ID},
             blocking=True,
         )
 
@@ -113,7 +110,7 @@ async def test_reboot_button_press_exceptions(
     await hass.services.async_call(
         "button",
         "press",
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: REBOOT_ENTITY_ID},
         blocking=True,
     )
     mock_airos_client.reboot.assert_awaited()
