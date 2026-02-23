@@ -459,7 +459,7 @@ class EcovacsVacuum(
             _LOGGER.warning("No map information available, cannot clean segments")
             return
 
-        valid_room_ids: list[str] = []
+        valid_room_ids: list[int] = []
         for composite_id in segment_ids:
             map_id, segment_id = _split_composite_id(composite_id)
             if (map_obj := self._maps.get(map_id)) is None:
@@ -483,7 +483,7 @@ class EcovacsVacuum(
                 )
                 continue
 
-            valid_room_ids.append(segment_id)
+            valid_room_ids.append(int(segment_id))
 
         if not valid_room_ids:
             _LOGGER.warning(
@@ -498,7 +498,7 @@ class EcovacsVacuum(
         await self._device.execute_command(
             self._capability.clean.action.area(
                 CleanMode.SPOT_AREA,
-                ",".join(valid_room_ids),
+                valid_room_ids,
                 1,
             )
         )
