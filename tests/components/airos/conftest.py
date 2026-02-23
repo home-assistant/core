@@ -105,14 +105,17 @@ def mock_async_get_firmware_data(ap_fixture: AirOSData):
         mac=ap_fixture.derived.mac,
         hostname=ap_fixture.host.hostname,
     )
+
+    mock = AsyncMock(return_value=return_value)
+
     with (
         patch(
             "homeassistant.components.airos.config_flow.async_get_firmware_data",
-            new=AsyncMock(return_value=return_value),
+            new=mock,
         ),
         patch(
             "homeassistant.components.airos.async_get_firmware_data",
-            new=AsyncMock(return_value=return_value),
+            new=mock,
         ),
     ):
-        yield
+        yield mock

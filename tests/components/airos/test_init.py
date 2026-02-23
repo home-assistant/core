@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import ANY, AsyncMock, MagicMock
 
+from airos.exceptions import (
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
+)
 import pytest
 
 from homeassistant.components.airos.const import (
@@ -247,3 +253,32 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (AirOSConnectionAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (AirOSConnectionSetupError, ConfigEntryState.SETUP_RETRY),
+        (AirOSDeviceConnectionError, ConfigEntryState.SETUP_RETRY),
+        (AirOSKeyDataMissingError, ConfigEntryState.SETUP_ERROR),
+        (Exception, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_entry_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry setup failure."""
+    mock_async_get_firmware_data.side_effect = exception
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert result is False
+    assert mock_config_entry.state == state

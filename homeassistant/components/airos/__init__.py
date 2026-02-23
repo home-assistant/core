@@ -6,6 +6,13 @@ import logging
 
 from airos.airos6 import AirOS6
 from airos.airos8 import AirOS8
+from airos.exceptions import (
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
+)
 from airos.helpers import DetectDeviceData, async_get_firmware_data
 
 from homeassistant.const import (
@@ -17,6 +24,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -50,7 +62,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     }
 
     # Determine firmware version before creating the device instance
-    device_data: DetectDeviceData = await async_get_firmware_data(**conn_data)
+    try:
+        device_data: DetectDeviceData = await async_get_firmware_data(**conn_data)
+    except (
+        AirOSConnectionSetupError,
+        AirOSDeviceConnectionError,
+        TimeoutError,
+    ) as err:
+        raise ConfigEntryNotReady from err
+    except (
+        AirOSConnectionAuthenticationError,
+        AirOSDataMissingError,
+    ) as err:
+        raise ConfigEntryAuthFailed from err
+    except AirOSKeyDataMissingError as err:
+        raise ConfigEntryError("key_data_missing") from err
+    except Exception as err:
+        raise ConfigEntryError("unknown") from err
+
     airos_class: type[AirOS8 | AirOS6] = (
         AirOS8 if device_data["fw_major"] == 8 else AirOS6
     )
