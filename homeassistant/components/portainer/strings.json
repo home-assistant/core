@@ -155,6 +155,11 @@
       "container": {
         "name": "Container"
       }
+    },
+    "update": {
+      "image": {
+        "name": "Image update available"
+      }
     }
   },
   "exceptions": {
