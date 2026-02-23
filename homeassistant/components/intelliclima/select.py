@@ -68,12 +68,12 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
 
         # If in auto mode (sensor mode with auto speed), return None (handled by fan entity preset mode)
         if (
-            device_data.speed_set == FanSpeed.auto
+            device_data.speed_set == FanSpeed.auto_get
             and device_data.mode_set == FanMode.sensor
         ):
             return None
 
-        return INTELLICLIMA_MODE_TO_FAN_MODE.get(FanMode(device_data.mode_set))
+        return INTELLICLIMA_MODE_TO_FAN_MODE.get(device_data.mode_set)
 
     async def async_select_option(self, option: str) -> None:
         """Set the fan mode."""
@@ -83,7 +83,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
 
         # Determine speed: keep current speed if available, otherwise default to sleep
         if (
-            device_data.speed_set == FanSpeed.auto
+            device_data.speed_set == FanSpeed.auto_get
             or device_data.mode_set == FanMode.off
         ):
             speed = FanSpeed.sleep
