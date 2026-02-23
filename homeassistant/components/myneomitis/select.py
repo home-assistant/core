@@ -11,7 +11,11 @@ from typing import Any
 
 from pyaxencoapi import PyAxencoAPI
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    SelectEntity,
+    SelectEntityDescription,
+    callback,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -162,6 +166,7 @@ class MyNeoSelect(SelectEntity):
         ):
             self.async_on_remove(unsubscribe)
 
+    @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
         """Handle WebSocket updates for the device."""
         if not new_state:
