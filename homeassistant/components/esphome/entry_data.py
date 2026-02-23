@@ -250,10 +250,12 @@ class RuntimeEntryData:
         # Remove from entity registry first so the entity is fully removed
         ent_reg = er.async_get(hass)
         for info in static_infos:
-            if entry := ent_reg.async_get_entity_id(
-                INFO_TYPE_TO_PLATFORM[type(info)],
-                DOMAIN,
-                build_device_unique_id(mac, info),
+            if (platform := INFO_TYPE_TO_PLATFORM.get(type(info))) and (
+                entry := ent_reg.async_get_entity_id(
+                    platform,
+                    DOMAIN,
+                    build_device_unique_id(mac, info),
+                )
             ):
                 ent_reg.async_remove(entry)
 
@@ -300,7 +302,19 @@ class RuntimeEntryData:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
 
-        needed_platforms.update(INFO_TYPE_TO_PLATFORM[type(info)] for info in infos)
+        info_types_to_platform = INFO_TYPE_TO_PLATFORM
+        for info in infos:
+            info_type = type(info)
+            if info_type not in info_types_to_platform:
+                _LOGGER.warning(
+                    "Entity type %s is not supported in this version of Home Assistant",
+                    info_type,
+                )
+        needed_platforms.update(
+            info_types_to_platform[type(info)]
+            for info in infos
+            if type(info) in info_types_to_platform
+        )
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Make a dict of the EntityInfo by type and send
@@ -309,7 +323,8 @@ class RuntimeEntryData:
             list
         )
         for info in infos:
-            infos_by_type[type(info)].append(info)
+            if type(info) in info_types_to_platform:
+                infos_by_type[type(info)].append(info)
 
         for type_, callbacks in self.entity_info_callbacks.items():
             # If all entities for a type are removed, we
