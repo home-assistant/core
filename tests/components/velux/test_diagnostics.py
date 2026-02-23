@@ -15,6 +15,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2025-01-01T00:00:00+00:00")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_diagnostics(
     hass: HomeAssistant,
