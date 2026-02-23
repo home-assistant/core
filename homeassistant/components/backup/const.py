@@ -33,3 +33,5 @@ EXCLUDE_DATABASE_FROM_BACKUP = [
     "home-assistant_v2.db",
     "home-assistant_v2.db-wal",
 ]
+
+SECURETAR_CREATE_VERSION = 2

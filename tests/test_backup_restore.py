@@ -463,21 +463,3 @@ def test_remove_backup_file_after_restore(
         "error_type": None,
         "success": True,
     }
-
-
-@pytest.mark.parametrize(
-    ("password", "expected"),
-    [
-        ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
-        ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
-    ],
-)
-def test_pw_to_key(password: str | None, expected: bytes | None) -> None:
-    """Test password to key conversion."""
-    assert backup_restore.password_to_key(password) == expected
-
-
-def test_pw_to_key_none() -> None:
-    """Test password to key conversion."""
-    with pytest.raises(AttributeError):
-        backup_restore.password_to_key(None)
