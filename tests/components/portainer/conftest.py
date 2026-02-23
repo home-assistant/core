@@ -8,9 +8,11 @@ from pyportainer.models.docker import (
     DockerContainerStats,
     DockerSystemDF,
     LocalImageInformation,
+    PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
+from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -47,7 +49,20 @@ def mock_portainer_watcher() -> Generator[MagicMock]:
         "homeassistant.components.portainer.PortainerImageWatcher", autospec=True
     ) as mock_watcher_class:
         watcher = mock_watcher_class.return_value
-        watcher.results = {}
+        watcher.results = {
+            (
+                1,
+                "aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+            ): PortainerImageWatcherResult(
+                endpoint_id=1,
+                container_id="aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+                status=PortainerImageUpdateStatus(
+                    update_available=True,
+                    local_digest="sha256:c0537ff6a5218ef531ece93d4984efc99bbf3f7497c0a7726c88e2bb7584dc96",
+                    registry_digest="sha256:newdigest123456789",
+                ),
+            )
+        }
         yield watcher
 
 

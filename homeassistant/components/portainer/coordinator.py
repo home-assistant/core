@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import time
 
 from pyportainer import (
     Portainer,
@@ -100,6 +101,10 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             ]
         ] = []
 
+        self._image_cache: dict[
+            tuple[int, str], tuple[float, DockerInspect, LocalImageInformation]
+        ] = {}
+
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
         try:
@@ -180,12 +185,10 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         else None
                     )
 
-                    container_inspect = await self.portainer.inspect_container(
-                        endpoint.id, container.id
-                    )
-                    local_image = await self.portainer.get_image(
-                        endpoint.id, str(container_inspect.image)
-                    )
+                    (
+                        container_inspect,
+                        local_image,
+                    ) = await self._get_inspect_local_image(endpoint.id, container.id)
 
                     # Periodically check if Portainer Watcher has results for this container's image
                     image_status = (
@@ -289,3 +292,33 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     def _get_container_name(self, container_name: str) -> str:
         """Sanitize to get a proper container name."""
         return container_name.replace("/", " ").strip()
+
+    async def _get_inspect_local_image(
+        self, endpoint_id: int, container_id: str
+    ) -> tuple[DockerInspect, LocalImageInformation]:
+        """Fetch or retrieve cached container inspect and local image data."""
+        if cached := self._image_cache.get((endpoint_id, container_id)):
+            cached_at, container_inspect, local_image = cached
+            if (
+                self.watcher.last_check is not None
+                and cached_at >= self.watcher.last_check
+            ):
+                _LOGGER.debug(
+                    "Using cached inspect and local image for endpoint %d, container %s",
+                    endpoint_id,
+                    container_id,
+                )
+                return container_inspect, local_image
+
+        container_inspect = await self.portainer.inspect_container(
+            endpoint_id, container_id
+        )
+        local_image = await self.portainer.get_image(
+            endpoint_id, str(container_inspect.image)
+        )
+        self._image_cache[(endpoint_id, container_id)] = (
+            time.monotonic(),
+            container_inspect,
+            local_image,
+        )
+        return container_inspect, local_image

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_update_entities[update.focused_einstein-entry]
+# name: test_update_entities[update.focused_einstein_image_update_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.focused_einstein',
+    'entity_id': 'update.focused_einstein_image_update_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Image update available',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Image update available',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,13 +35,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_entities[update.focused_einstein-state]
+# name: test_update_entities[update.focused_einstein_image_update_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
-      'friendly_name': 'focused_einstein',
+      'friendly_name': 'focused_einstein Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
       'latest_version': None,
@@ -53,14 +53,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.focused_einstein',
+    'entity_id': 'update.focused_einstein_image_update_available',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_update_entities[update.funny_chatelet-entry]
+# name: test_update_entities[update.funny_chatelet_image_update_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.funny_chatelet',
+    'entity_id': 'update.funny_chatelet_image_update_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,12 +81,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Image update available',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Image update available',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -96,16 +96,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_entities[update.funny_chatelet-state]
+# name: test_update_entities[update.funny_chatelet_image_update_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
-      'friendly_name': 'funny_chatelet',
+      'friendly_name': 'funny_chatelet Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
-      'latest_version': None,
+      'latest_version': 'sha256:newdigest123456789',
       'release_summary': None,
       'release_url': None,
       'skipped_version': None,
@@ -114,14 +114,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.funny_chatelet',
+    'entity_id': 'update.funny_chatelet_image_update_available',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
-# name: test_update_entities[update.practical_morse-entry]
+# name: test_update_entities[update.practical_morse_image_update_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -134,7 +134,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.practical_morse',
+    'entity_id': 'update.practical_morse_image_update_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -142,12 +142,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Image update available',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Image update available',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -157,13 +157,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_entities[update.practical_morse-state]
+# name: test_update_entities[update.practical_morse_image_update_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
-      'friendly_name': 'practical_morse',
+      'friendly_name': 'practical_morse Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
       'latest_version': None,
@@ -175,14 +175,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.practical_morse',
+    'entity_id': 'update.practical_morse_image_update_available',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_update_entities[update.serene_banach-entry]
+# name: test_update_entities[update.serene_banach_image_update_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -195,7 +195,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.serene_banach',
+    'entity_id': 'update.serene_banach_image_update_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -203,12 +203,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Image update available',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Image update available',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -218,13 +218,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_entities[update.serene_banach-state]
+# name: test_update_entities[update.serene_banach_image_update_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
-      'friendly_name': 'serene_banach',
+      'friendly_name': 'serene_banach Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
       'latest_version': None,
@@ -236,14 +236,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.serene_banach',
+    'entity_id': 'update.serene_banach_image_update_available',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_update_entities[update.stoic_turing-entry]
+# name: test_update_entities[update.stoic_turing_image_update_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -256,7 +256,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.stoic_turing',
+    'entity_id': 'update.stoic_turing_image_update_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -264,12 +264,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Image update available',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Image update available',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -279,13 +279,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update_entities[update.stoic_turing-state]
+# name: test_update_entities[update.stoic_turing_image_update_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
-      'friendly_name': 'stoic_turing',
+      'friendly_name': 'stoic_turing Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
       'latest_version': None,
@@ -297,7 +297,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.stoic_turing',
+    'entity_id': 'update.stoic_turing_image_update_available',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

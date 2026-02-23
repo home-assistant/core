@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
     )
-    watcher = PortainerImageWatcher(client, interval=timedelta(hours=3))
+    watcher = PortainerImageWatcher(client, interval=timedelta(hours=24))
 
     coordinator = PortainerCoordinator(hass, entry, client, watcher)
     await coordinator.async_config_entry_first_refresh()

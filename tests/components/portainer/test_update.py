@@ -6,8 +6,6 @@ from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
 )
-from pyportainer.models.docker import PortainerImageUpdateStatus
-from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,9 +18,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_ID = "update.funny_chatelet"
-FUNNY_CHATELET_ID = "aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
-ENDPOINT_ID = 1
+ENTITY_ID = "update.funny_chatelet_image_update_available"
 
 
 @pytest.fixture(autouse=True)
@@ -58,18 +54,6 @@ async def test_update_install(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful container image update installation."""
-    mock_portainer_watcher.results = {
-        (ENDPOINT_ID, FUNNY_CHATELET_ID): PortainerImageWatcherResult(
-            endpoint_id=ENDPOINT_ID,
-            container_id=FUNNY_CHATELET_ID,
-            status=PortainerImageUpdateStatus(
-                update_available=True,
-                local_digest="sha256:c0537ff6a5218ef531ece93d4984efc99bbf3f7497c0a7726c88e2bb7584dc96",
-                registry_digest="sha256:newdigest123456789",
-            ),
-        )
-    }
-
     with patch(
         "homeassistant.components.portainer._PLATFORMS",
         [Platform.UPDATE],
@@ -102,17 +86,6 @@ async def test_update_install_errors(
     translation_key: str,
 ) -> None:
     """Test container image update install error handling."""
-    mock_portainer_watcher.results = {
-        (ENDPOINT_ID, FUNNY_CHATELET_ID): PortainerImageWatcherResult(
-            endpoint_id=ENDPOINT_ID,
-            container_id=FUNNY_CHATELET_ID,
-            status=PortainerImageUpdateStatus(
-                update_available=True,
-                local_digest="sha256:c0537ff6a5218ef531ece93d4984efc99bbf3f7497c0a7726c88e2bb7584dc96",
-                registry_digest="sha256:newdigest123456789",
-            ),
-        )
-    }
     mock_portainer_client.container_recreate.side_effect = exception
 
     with patch(
@@ -128,3 +101,42 @@ async def test_update_install_errors(
             {"entity_id": ENTITY_ID},
             blocking=True,
         )
+
+
+# Note to reviewer: might be that this test should be in the coordinaotor tests instead,
+# but it felt more natural to test the caching behavior since it's meant for the update
+async def test_update_using_cache(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the update entity uses the cache and doesn't call the API."""
+    mock_portainer_watcher.last_check = 1234
+
+    with (
+        patch(
+            "homeassistant.components.portainer.coordinator.time.monotonic",
+            return_value=1235.0,
+        ),
+        patch(
+            "homeassistant.components.portainer._PLATFORMS",
+            [Platform.UPDATE],
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    # Reset call counts, since it needs to be measured what happens in this sequence
+    mock_portainer_client.inspect_container.reset_mock()
+    mock_portainer_client.get_image.reset_mock()
+
+    # Trigger a refresh, but it should use the cache
+    await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_portainer_client.inspect_container.assert_not_called()
+    mock_portainer_client.get_image.assert_not_called()
