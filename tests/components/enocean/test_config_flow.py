@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
-
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
 from homeassistant.components.enocean.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import (
