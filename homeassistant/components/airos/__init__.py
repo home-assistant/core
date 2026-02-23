@@ -23,6 +23,7 @@ from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
 ]
 
