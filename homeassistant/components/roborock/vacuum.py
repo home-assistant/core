@@ -626,9 +626,8 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        status = _get_q10_status(self.coordinator.api.status)
-        if status is not None:
-            return Q10_STATE_CODE_TO_STATE.get(status)
+        if (status := self.coordinator.api.status) and (device_state := status.status) is not None:
+            return Q10_STATE_CODE_TO_STATE.get(device_state)
         return None
 
     @property
