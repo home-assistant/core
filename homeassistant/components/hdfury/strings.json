@@ -40,6 +40,14 @@
         "name": "Issue hotplug"
       }
     },
+    "number": {
+      "oled_fade": {
+        "name": "OLED fade timer"
+      },
+      "reboot_timer": {
+        "name": "Restart timer"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",

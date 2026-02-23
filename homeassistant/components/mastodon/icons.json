@@ -35,8 +35,14 @@
     "get_account": {
       "service": "mdi:account-search"
     },
+    "mute_account": {
+      "service": "mdi:account-voice-off"
+    },
     "post": {
       "service": "mdi:message-text"
+    },
+    "unmute_account": {
+      "service": "mdi:account-voice"
     }
   }
 }
