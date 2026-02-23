@@ -2,6 +2,7 @@
 
 from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
 
+from homeassistant.components.sensor import EntityDescription
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_MODEL, ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -23,9 +24,13 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO | IntelliClimaC800,
+        description: EntityDescription | None = None,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
+
+        if description is not None:
+            self.entity_description = description
 
         # Make this HA "device" use the IntelliClima device name.
         self._attr_device_info = DeviceInfo(
@@ -46,9 +51,10 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO,
+        description: EntityDescription | None = None,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator, device, description)
 
         self._attr_device_info: DeviceInfo = self.device_info or DeviceInfo()
 
