@@ -69,10 +69,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema={
             vol.Optional(ATTR_USER_INDEX): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(ATTR_USER_NAME): vol.Any(str, None),
-            vol.Optional(ATTR_USER_TYPE, default="unrestricted_user"): vol.In(
-                USER_TYPE_REVERSE_MAP.keys()
-            ),
-            vol.Optional(ATTR_CREDENTIAL_RULE, default="single"): vol.In(
+            vol.Optional(ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
+            vol.Optional(ATTR_CREDENTIAL_RULE): vol.In(
                 CREDENTIAL_RULE_REVERSE_MAP.keys()
             ),
         },

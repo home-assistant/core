@@ -6,12 +6,10 @@ business logic for lock user/credential management.
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
@@ -29,6 +27,7 @@ from .const import (
     ATTR_USER_UNIQUE_ID,
     CLEAR_ALL_INDEX,
     CRED_TYPE_FACE,
+    CRED_TYPE_FINGER_VEIN,
     CRED_TYPE_FINGERPRINT,
     CRED_TYPE_PIN,
     CRED_TYPE_RFID,
@@ -36,29 +35,35 @@ from .const import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
-    ERR_CREDENTIAL_TYPE_NOT_SUPPORTED,
-    ERR_INVALID_CREDENTIAL_DATA,
-    ERR_SET_CREDENTIAL_FAILED,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
-    SET_CREDENTIAL_STATUS_MAP,
     USER_STATUS_MAP,
     USER_STATUS_REVERSE_MAP,
     USER_TYPE_MAP,
     USER_TYPE_REVERSE_MAP,
 )
 
+# Error translation keys (used in ServiceValidationError/HomeAssistantError)
+ERR_CREDENTIAL_TYPE_NOT_SUPPORTED = "credential_type_not_supported"
+ERR_INVALID_CREDENTIAL_DATA = "invalid_credential_data"
+
+# SetCredential response status mapping (Matter DlStatus)
+_DlStatus = clusters.DoorLock.Enums.DlStatus
+SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
+    _DlStatus.kSuccess: "success",
+    _DlStatus.kFailure: "failure",
+    _DlStatus.kDuplicate: "duplicate",
+    _DlStatus.kOccupied: "occupied",
+}
+
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
-
-_LOGGER = logging.getLogger(__name__)
 
 # DoorLock Feature bitmap from Matter SDK
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 
-@callback
-def get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
+def _get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
     """Get the DoorLock endpoint from a node.
 
     Returns the first endpoint that has the DoorLock cluster, or None if not found.
@@ -77,8 +82,7 @@ def _get_feature_map(endpoint: MatterEndpoint) -> int | None:
     return value
 
 
-@callback
-def lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
+def _lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
     """Check if lock endpoint supports USR (User) feature.
 
     The USR feature indicates the lock supports user and credential management
@@ -160,7 +164,7 @@ def _format_user_response(user_data: Any) -> dict[str, Any] | None:
 # --- Credential management helpers ---
 
 
-async def clear_user_credentials(
+async def _clear_user_credentials(
     matter_client: MatterClient,
     node_id: int,
     endpoint_id: int,
@@ -226,7 +230,7 @@ class SetCredentialFailedError(HomeAssistantError):
 
 def _get_lock_endpoint_or_raise(node: MatterNode) -> MatterEndpoint:
     """Get the DoorLock endpoint from a node or raise an error."""
-    lock_endpoint = get_lock_endpoint_from_node(node)
+    lock_endpoint = _get_lock_endpoint_from_node(node)
     if lock_endpoint is None:
         raise LockEndpointNotFoundError("No lock endpoint found on this device")
     return lock_endpoint
@@ -237,7 +241,7 @@ def _ensure_usr_support(lock_endpoint: MatterEndpoint) -> None:
 
     Raises UsrFeatureNotSupportedError if the lock doesn't support user management.
     """
-    if not lock_supports_usr_feature(lock_endpoint):
+    if not _lock_supports_usr_feature(lock_endpoint):
         raise UsrFeatureNotSupportedError(
             "Lock does not support user/credential management"
         )
@@ -256,7 +260,7 @@ async def get_lock_info(
     Raises HomeAssistantError if lock endpoint not found.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
-    supports_usr = lock_supports_usr_feature(lock_endpoint)
+    supports_usr = _lock_supports_usr_feature(lock_endpoint)
 
     # Get feature map for credential type detection
     feature_map = (
@@ -307,10 +311,13 @@ async def set_lock_user(
     user_name: str | None = None,
     user_unique_id: int | None = None,
     user_status: str = "occupied_enabled",
-    user_type: str = "unrestricted_user",
-    credential_rule: str = "single",
+    user_type: str | None = None,
+    credential_rule: str | None = None,
 ) -> dict[str, Any]:
     """Add or update a user on the lock.
+
+    When user_type or credential_rule is None, defaults are used for new users
+    and existing values are preserved for modifications.
 
     Returns dict with user_index on success.
     Raises HomeAssistantError on failure.
@@ -355,13 +362,23 @@ async def set_lock_user(
                 userName=user_name,
                 userUniqueID=user_unique_id,
                 userStatus=user_status_enum,
-                userType=USER_TYPE_REVERSE_MAP.get(user_type, 0),
-                credentialRule=CREDENTIAL_RULE_REVERSE_MAP.get(credential_rule, 0),
+                userType=USER_TYPE_REVERSE_MAP.get(
+                    user_type,
+                    clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
+                )
+                if user_type is not None
+                else clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
+                credentialRule=CREDENTIAL_RULE_REVERSE_MAP.get(
+                    credential_rule,
+                    clusters.DoorLock.Enums.CredentialRuleEnum.kSingle,
+                )
+                if credential_rule is not None
+                else clusters.DoorLock.Enums.CredentialRuleEnum.kSingle,
             ),
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
     else:
-        # Updating existing user
+        # Updating existing user - preserve existing values when not specified
         get_user_response = await matter_client.send_device_command(
             node_id=node.node_id,
             endpoint_id=lock_endpoint.endpoint_id,
@@ -382,14 +399,21 @@ async def set_lock_user(
             else _get_attr(get_user_response, "userUniqueID")
         )
 
-        resolved_status = _get_attr(get_user_response, "userStatus")
-        resolved_status = USER_STATUS_REVERSE_MAP.get(user_status, resolved_status)
+        resolved_status = USER_STATUS_REVERSE_MAP.get(
+            user_status, _get_attr(get_user_response, "userStatus")
+        )
 
-        resolved_type = _get_attr(get_user_response, "userType")
-        resolved_type = USER_TYPE_REVERSE_MAP.get(user_type, resolved_type)
+        resolved_type = (
+            USER_TYPE_REVERSE_MAP[user_type]
+            if user_type is not None
+            else _get_attr(get_user_response, "userType")
+        )
 
-        resolved_rule = _get_attr(get_user_response, "credentialRule")
-        resolved_rule = CREDENTIAL_RULE_REVERSE_MAP.get(credential_rule, resolved_rule)
+        resolved_rule = (
+            CREDENTIAL_RULE_REVERSE_MAP[credential_rule]
+            if credential_rule is not None
+            else _get_attr(get_user_response, "credentialRule")
+        )
 
         await matter_client.send_device_command(
             node_id=node.node_id,
@@ -483,7 +507,7 @@ async def clear_lock_user(
         )
     else:
         # Clear credentials for this specific user before deleting them
-        await clear_user_credentials(
+        await _clear_user_credentials(
             matter_client,
             node.node_id,
             lock_endpoint.endpoint_id,
@@ -507,7 +531,7 @@ _CREDENTIAL_TYPE_FEATURE_MAP: dict[str, int] = {
     CRED_TYPE_PIN: DoorLockFeature.kPinCredential,
     CRED_TYPE_RFID: DoorLockFeature.kRfidCredential,
     CRED_TYPE_FINGERPRINT: DoorLockFeature.kFingerCredentials,
-    "finger_vein": DoorLockFeature.kFingerCredentials,
+    CRED_TYPE_FINGER_VEIN: DoorLockFeature.kFingerCredentials,
     CRED_TYPE_FACE: DoorLockFeature.kFaceCredentials,
 }
 
@@ -719,7 +743,7 @@ async def set_lock_credential(
     if status_str != "success":
         raise SetCredentialFailedError(
             translation_domain="matter",
-            translation_key=ERR_SET_CREDENTIAL_FAILED,
+            translation_key="set_credential_failed",
             translation_placeholders={"status": status_str},
         )
 

@@ -53,32 +53,12 @@ ATTR_CREDENTIAL_DATA = "credential_data"
 ATTR_CREDENTIAL_INDEX = "credential_index"
 ATTR_CREDENTIAL_TYPE = "credential_type"
 
-# Error code constants
-ERR_CREDENTIAL_TYPE_NOT_SUPPORTED = "credential_type_not_supported"
-ERR_INVALID_CREDENTIAL_DATA = "invalid_credential_data"
-ERR_SET_CREDENTIAL_FAILED = "set_credential_failed"
-
 # Credential type strings
 CRED_TYPE_FACE = "face"
 CRED_TYPE_FINGERPRINT = "fingerprint"
+CRED_TYPE_FINGER_VEIN = "finger_vein"
 CRED_TYPE_PIN = "pin"
 CRED_TYPE_RFID = "rfid"
-
-# Door lock operation source mapping (Matter DoorLock OperationSourceEnum)
-_OperationSource = clusters.DoorLock.Enums.OperationSourceEnum
-DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
-    _OperationSource.kUnspecified: "Unspecified",
-    _OperationSource.kManual: "Manual",
-    _OperationSource.kProprietaryRemote: "Proprietary Remote",
-    _OperationSource.kKeypad: "Keypad",
-    _OperationSource.kAuto: "Auto",
-    _OperationSource.kButton: "Button",
-    _OperationSource.kSchedule: "Schedule",
-    _OperationSource.kRemote: "Remote",
-    _OperationSource.kRfid: "RFID",
-    _OperationSource.kBiometric: "Biometric",
-    _OperationSource.kAliro: "Aliro",
-}
 
 # User status mapping (Matter DoorLock UserStatusEnum)
 _UserStatus = clusters.DoorLock.Enums.UserStatusEnum
@@ -112,7 +92,7 @@ CREDENTIAL_TYPE_MAP: dict[int, str] = {
     _CredentialType.kPin: CRED_TYPE_PIN,
     _CredentialType.kRfid: CRED_TYPE_RFID,
     _CredentialType.kFingerprint: CRED_TYPE_FINGERPRINT,
-    _CredentialType.kFingerVein: "finger_vein",
+    _CredentialType.kFingerVein: CRED_TYPE_FINGER_VEIN,
     _CredentialType.kFace: CRED_TYPE_FACE,
     _CredentialType.kAliroCredentialIssuerKey: "aliro_credential_issuer_key",
     _CredentialType.kAliroEvictableEndpointKey: "aliro_evictable_endpoint_key",
@@ -140,15 +120,6 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_PIN,
     CRED_TYPE_RFID,
     CRED_TYPE_FINGERPRINT,
-    "finger_vein",
+    CRED_TYPE_FINGER_VEIN,
     CRED_TYPE_FACE,
 ]
-
-# SetCredential response status mapping (Matter DlStatus)
-_DlStatus = clusters.DoorLock.Enums.DlStatus
-SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
-    _DlStatus.kSuccess: "success",
-    _DlStatus.kFailure: "failure",
-    _DlStatus.kDuplicate: "duplicate",
-    _DlStatus.kOccupied: "occupied",
-}

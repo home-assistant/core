@@ -164,7 +164,6 @@ set_lock_user:
             - expiring_user
             - schedule_restricted_user
             - remote_only_user
-      default: unrestricted_user
     credential_rule:
       selector:
         select:
@@ -172,7 +171,6 @@ set_lock_user:
             - single
             - dual
             - tri
-      default: single
 
 water_heater_boost:
   target:

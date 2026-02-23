@@ -30,13 +30,12 @@ from .const import (
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
     ATTR_USER_TYPE,
-    DOOR_LOCK_OPERATION_SOURCE,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
     LOGGER,
 )
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
-from .helpers_lock import (
+from .lock_helpers import (
     DoorLockFeature,
     clear_lock_credential,
     clear_lock_user,
@@ -47,6 +46,22 @@ from .helpers_lock import (
     set_lock_user,
 )
 from .models import MatterDiscoverySchema
+
+# Door lock operation source mapping (Matter DoorLock OperationSourceEnum)
+_OperationSource = clusters.DoorLock.Enums.OperationSourceEnum
+DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
+    _OperationSource.kUnspecified: "Unspecified",
+    _OperationSource.kManual: "Manual",
+    _OperationSource.kProprietaryRemote: "Proprietary Remote",
+    _OperationSource.kKeypad: "Keypad",
+    _OperationSource.kAuto: "Auto",
+    _OperationSource.kButton: "Button",
+    _OperationSource.kSchedule: "Schedule",
+    _OperationSource.kRemote: "Remote",
+    _OperationSource.kRfid: "RFID",
+    _OperationSource.kBiometric: "Biometric",
+    _OperationSource.kAliro: "Aliro",
+}
 
 
 async def async_setup_entry(
@@ -270,8 +285,8 @@ class MatterLock(MatterEntity, LockEntity):
                 self._endpoint.node,
                 user_index=kwargs.get(ATTR_USER_INDEX),
                 user_name=kwargs.get(ATTR_USER_NAME),
-                user_type=kwargs.get(ATTR_USER_TYPE, "unrestricted_user"),
-                credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE, "single"),
+                user_type=kwargs.get(ATTR_USER_TYPE),
+                credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE),
             )
         except MatterError as err:
             raise HomeAssistantError(
