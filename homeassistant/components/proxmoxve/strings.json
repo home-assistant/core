@@ -59,9 +59,6 @@
       "hibernate": {
         "name": "Hibernate"
       },
-      "reboot": {
-        "name": "Reboot"
-      },
       "reset": {
         "name": "Reset"
       },
