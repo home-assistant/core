@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from airos.exceptions import AirOSDataMissingError, AirOSDeviceConnectionError
+from airos.exceptions import AirOSException
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -54,8 +54,6 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
 
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_reboot"
 
-        self._attr_name = "Reboot Device"
-
     async def async_press(self) -> None:
         """Handle the button press to reboot the device."""
         result: bool = False
@@ -63,7 +61,7 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
             await self.coordinator.airos_device.login()
             result = await self.coordinator.airos_device.reboot()
 
-        except (AirOSDataMissingError, AirOSDeviceConnectionError) as err:
+        except AirOSException as err:
             _LOGGER.exception("Failed to send reboot request to device")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

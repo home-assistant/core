@@ -22,7 +22,7 @@ async def test_reboot_button_press_success(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that pressing the reboot button utilises the correct calls."""
+    """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     entity_id = "button.nanostation_5ac_ap_name_reboot_device"
@@ -48,7 +48,7 @@ async def test_reboot_button_press_fail(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that pressing the reboot button utilises the correct calls."""
+    """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     entity_id = "button.nanostation_5ac_ap_name_reboot_device"
