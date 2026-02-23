@@ -14,9 +14,8 @@ from pyaxencoapi import PyAxencoAPI
 from homeassistant.components.select import (
     SelectEntity,
     SelectEntityDescription,
-    callback,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
