@@ -433,6 +433,7 @@ async def test_reauth_flow_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.1"
 
@@ -486,7 +487,9 @@ async def test_reauth_flow_errors_with_recovery(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.1"
 
 
 async def test_reauth_flow_wrong_account(
