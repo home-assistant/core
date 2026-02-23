@@ -13289,7 +13289,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'apparent_current',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementApparentCurrent-144-7',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementApparentCurrent-144-7',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -13349,7 +13349,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementApparentPower-144-10',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementApparentPower-144-10',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -13474,7 +13474,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -13534,7 +13534,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -13770,7 +13770,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reactive_current',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementReactiveCurrent-144-6',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementReactiveCurrent-144-6',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -13830,7 +13830,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementReactivePower-144-9',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementReactivePower-144-9',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
