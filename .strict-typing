@@ -612,6 +612,7 @@ homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
 homeassistant.components.youtube.*
 homeassistant.components.zeroconf.*
+homeassistant.components.zinvolt.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*
