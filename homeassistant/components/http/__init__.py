@@ -104,8 +104,6 @@ STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
 
-SUPERVISOR_UNIX_SOCKET_PATH: Final = Path("/run/core/http.sock")
-
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
 
@@ -238,6 +236,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
+    unix_socket_path: Path | None = None
+    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
+        socket_path = Path(socket_env)
+        if socket_path.is_absolute():
+            unix_socket_path = socket_path
+        else:
+            _LOGGER.error(
+                "Invalid unix socket path %s: path must be absolute", socket_env
+            )
+
     server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
@@ -247,9 +255,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
-        unix_socket_path=SUPERVISOR_UNIX_SOCKET_PATH
-        if "SUPERVISOR" in os.environ
-        else None,
+        unix_socket_path=unix_socket_path,
     )
     await server.async_initialize(
         cors_origins=cors_origins,
