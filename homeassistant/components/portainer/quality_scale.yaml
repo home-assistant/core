@@ -63,10 +63,7 @@ rules:
     status: exempt
     comment: |
       No repair issues are implemented, currently.
-  stale-devices:
-    status: exempt
-    comment: |
-      Stale devices can also be offline endpoints. They remain there, if the user wants to reconnect later.
+  stale-devices: done
 
   # Platinum
   async-dependency: todo
