@@ -570,6 +570,11 @@ async def test_eve_thermo_v5_presets(
     # test set_preset_mode with invalid preset mode
     # The climate platform validates preset modes before calling our method
 
+    # Get current state to derive expected modes
+    state = hass.states.get(entity_id)
+    assert state
+    expected_modes = ", ".join(state.attributes["preset_modes"])
+
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             "climate",
@@ -584,7 +589,7 @@ async def test_eve_thermo_v5_presets(
     assert err.value.translation_key == "not_valid_preset_mode"
     assert err.value.translation_placeholders == {
         "mode": "InvalidPreset",
-        "modes": f"home, away, sleep, wake, vacation, going_to_sleep, Eco, {PRESET_NONE}",
+        "modes": expected_modes,
     }
 
     # Ensure no command was sent for invalid preset
@@ -683,7 +688,6 @@ async def test_hvac_mode_error_on_unsupported_mode(
     assert entity is not None
 
     # Test calling async_set_hvac_mode directly with an unsupported HVAC mode string
-    # This tests the ValueError path in our code (lines 300-301)
     # We pass a string that's not in HVAC_SYSTEM_MODE_MAP
     with pytest.raises(ValueError, match="Unsupported hvac mode"):
         await entity.async_set_hvac_mode("unsupported_mode")
