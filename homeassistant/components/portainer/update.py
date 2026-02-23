@@ -127,7 +127,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
-        """Initialize the Portainer update switch."""
+        """Initialize the Portainer update entity."""
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
