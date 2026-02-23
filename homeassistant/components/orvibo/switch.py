@@ -13,7 +13,13 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_SWITCHES
+from homeassistant.const import (
+    CONF_DISCOVERY,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_SWITCHES,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -30,6 +36,8 @@ from .util import S20ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = "Orvibo S20 Switch"
+DEFAULT_DISCOVERY = False
 
 PARALLEL_UPDATES = 1
 
@@ -40,10 +48,12 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
             [
                 {
                     vol.Required(CONF_HOST): cv.string,
-                    vol.Required(CONF_MAC): cv.string,
+                    vol.Optional(CONF_MAC): cv.string,
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 }
             ],
-        )
+        ),
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     }
 )
 
@@ -69,31 +79,32 @@ async def async_setup_platform(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"yaml_deprecation_import_issue_{switch.get('mac').replace(':', '').lower()}",
+                f"yaml_deprecation_import_issue_{switch.get('host')}_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
                 breaks_in_ha_version="2026.5.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="yaml_deprecation_import_issue",
                 translation_placeholders={
+                    "reason": str(result.get("reason")),
                     "host": switch.get("host"),
-                    "mac": switch.get("mac"),
+                    "mac": switch.get("mac", ""),
                 },
             )
-            return
+            continue
 
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"yaml_deprecation_{switch.get('mac').replace(':', '').lower()}",
+            f"yaml_deprecation_{switch.get('host')}_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
             breaks_in_ha_version="2026.5.0",
             is_fixable=False,
-            is_persistent=True,
+            is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="yaml_deprecation",
             translation_placeholders={
                 "host": switch.get("host"),
-                "mac": switch.get("mac"),
+                "mac": switch.get("mac") or "Unknown MAC",
             },
         )
 
@@ -124,7 +135,6 @@ class S20Switch(SwitchEntity):
     def __init__(self, name: str, host: str, mac: str, s20: S20) -> None:
         """Initialize the S20 device."""
 
-        self._attr_name = name
         self._attr_is_on = False
         self._host = host
         self._mac = mac
@@ -132,10 +142,10 @@ class S20Switch(SwitchEntity):
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
             identifiers={
-                # Serial numbers are unique identifiers within a specific domain
+                # MAC addresses are used as unique identifiers within this domain
                 (DOMAIN, self._attr_unique_id)
             },
-            name=self._attr_name,
+            name=name,
             manufacturer="Orvibo",
             model="S20",
             connections={(CONNECTION_NETWORK_MAC, self._mac)},

@@ -8,7 +8,7 @@ from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -20,12 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 FULL_EDIT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_MAC): cv.string,
     }
 )
 
 
-def _format_mac(mac_bytes: bytes) -> str:
+def _format_mac_bytes(mac_bytes: bytes) -> str:
     return format_mac(":".join(f"{b:02x}" for b in mac_bytes).lower())
 
 
@@ -55,7 +55,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not mac_bytes:
                     continue  # skip if no MAC
 
-                unique_id = _format_mac(mac_bytes)
+                unique_id = _format_mac_bytes(mac_bytes)
                 if unique_id not in existing_ids:
                     filtered[ip] = info
             _LOGGER.debug("New switches: %s", filtered)
@@ -82,6 +82,8 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _input_error(self, user_input: dict[str, Any]) -> str | None:
         """Validate user input."""
+        if not user_input[CONF_MAC]:
+            return "cannot_discover"
         if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
             return "invalid_mac"
 
@@ -91,6 +93,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST],
                 user_input[CONF_MAC],
             )
+
         except S20Exception:
             return "cannot_connect"
 
@@ -103,7 +106,15 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
-            user_input[CONF_MAC] = format_mac(user_input[CONF_MAC])
+            if not user_input.get(CONF_MAC):
+                switches = await self.hass.async_add_executor_job(discover)
+                if switches.get(user_input[CONF_HOST]):
+                    user_input[CONF_MAC] = _format_mac_bytes(
+                        switches[user_input[CONF_HOST]].get("mac")
+                    )
+            user_input[CONF_MAC] = (
+                format_mac(user_input[CONF_MAC]) if user_input.get(CONF_MAC) else None
+            )
             error = await self._input_error(user_input)
             if not error:
                 await self.async_set_unique_id(user_input[CONF_MAC])
@@ -123,19 +134,16 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        # 1️⃣  Start discovery if we haven't started yet
         if not self.discovery_task:
             self.discovery_task = self.hass.async_create_task(self._async_discover())
-            # Always show a progress view first so HA can schedule the task
             return self.async_show_progress(
                 step_id="start_discovery",
                 progress_action="start_discovery",
                 progress_task=self.discovery_task,
             )
-        # 2️⃣  If discovery is done, finish up
         if self.discovery_task.done():
             try:
-                self.discovery_task.result()  # propagate any errors
+                self.discovery_task.result()
             except (S20Exception, OSError) as err:
                 _LOGGER.debug("Discovery task failed: %s", err)
             self.discovery_task = None
@@ -144,7 +152,6 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                     "choose_switch" if self._discovered_switches else "discovery_failed"
                 )
             )
-        # 3️⃣  Discovery still running → keep progress UI
         return self.async_show_progress(
             step_id="start_discovery",
             progress_action="start_discovery",
@@ -162,7 +169,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             for host, data in self._discovered_switches.items():
                 if _chosen_host == host:
                     self.chosen_switch[CONF_HOST] = host
-                    self.chosen_switch[CONF_MAC] = _format_mac(data[CONF_MAC])
+                    self.chosen_switch[CONF_MAC] = _format_mac_bytes(data[CONF_MAC])
                     await self.async_set_unique_id(self.chosen_switch[CONF_MAC])
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
@@ -171,7 +178,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("discovered switches: %s", self._discovered_switches)
 
         _options = {
-            host: f"{host} ({_format_mac(data[CONF_MAC])})"
+            host: f"{host} ({_format_mac_bytes(data[CONF_MAC])})"
             for host, data in self._discovered_switches.items()
         }
         return self.async_show_form(
@@ -188,10 +195,18 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        _LOGGER.debug("Importing config: %s", user_input)
+        _LOGGER.critical("Importing config: %s", user_input)
 
-        # Normalize and validate input
-        user_input[CONF_MAC] = format_mac(user_input[CONF_MAC])
+        if not user_input.get(CONF_MAC):
+            switches = await self.hass.async_add_executor_job(discover)
+            if switches.get(user_input[CONF_HOST]):
+                user_input[CONF_MAC] = _format_mac_bytes(
+                    switches[user_input[CONF_HOST]].get("mac")
+                )
+        user_input[CONF_MAC] = (
+            format_mac(user_input[CONF_MAC]) if user_input.get(CONF_MAC) else None
+        )
+
         error = await self._input_error(user_input)
         if error:
             return self.async_abort(reason=error)
@@ -199,4 +214,6 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_MAC])
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+        return self.async_create_entry(
+            title=user_input.get(CONF_NAME, user_input[CONF_HOST]), data=user_input
+        )
