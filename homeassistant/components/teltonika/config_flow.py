@@ -167,16 +167,18 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
+        reauth_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+        suggested = {**reauth_entry.data, **(user_input or {})}
+
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(reauth_schema, suggested),
             errors=errors,
             description_placeholders={
                 "name": reauth_entry.title,
