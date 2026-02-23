@@ -126,7 +126,6 @@ def mock_config_entry() -> MockConfigEntry:
         minor_version=1,
         entry_id="01J0000000000000000000000",
         title="MTA",
-        unique_id=DOMAIN,
     )
 
 
@@ -140,7 +139,6 @@ def mock_config_entry_with_api_key() -> MockConfigEntry:
         minor_version=1,
         entry_id="01J0000000000000000000001",
         title="MTA",
-        unique_id=DOMAIN,
     )
 
 

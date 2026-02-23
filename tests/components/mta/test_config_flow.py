@@ -73,7 +73,7 @@ async def test_main_entry_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_reauth_flow(
