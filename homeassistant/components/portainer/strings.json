@@ -157,7 +157,7 @@
       }
     },
     "update": {
-      "image": {
+      "container_image_update": {
         "name": "Image update available"
       }
     }
