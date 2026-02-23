@@ -310,14 +310,14 @@ async def set_lock_user(
     user_index: int | None = None,
     user_name: str | None = None,
     user_unique_id: int | None = None,
-    user_status: str = "occupied_enabled",
+    user_status: str | None = None,
     user_type: str | None = None,
     credential_rule: str | None = None,
 ) -> dict[str, Any]:
     """Add or update a user on the lock.
 
-    When user_type or credential_rule is None, defaults are used for new users
-    and existing values are preserved for modifications.
+    When user_status, user_type, or credential_rule is None, defaults are used
+    for new users and existing values are preserved for modifications.
 
     Returns dict with user_index on success.
     Raises HomeAssistantError on failure.
@@ -348,9 +348,12 @@ async def set_lock_user(
             raise NoAvailableUserSlotsError("No available user slots on the lock")
 
         user_status_enum = (
-            clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled
-            if user_status == "occupied_enabled"
-            else clusters.DoorLock.Enums.UserStatusEnum.kOccupiedDisabled
+            USER_STATUS_REVERSE_MAP.get(
+                user_status,
+                clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
+            )
+            if user_status is not None
+            else clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled
         )
 
         await matter_client.send_device_command(
@@ -399,8 +402,10 @@ async def set_lock_user(
             else _get_attr(get_user_response, "userUniqueID")
         )
 
-        resolved_status = USER_STATUS_REVERSE_MAP.get(
-            user_status, _get_attr(get_user_response, "userStatus")
+        resolved_status = (
+            USER_STATUS_REVERSE_MAP[user_status]
+            if user_status is not None
+            else _get_attr(get_user_response, "userStatus")
         )
 
         resolved_type = (
