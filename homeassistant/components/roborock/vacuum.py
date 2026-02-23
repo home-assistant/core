@@ -481,7 +481,6 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     "command": "stop_clean",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
@@ -524,7 +523,6 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     "command": "set_fan_speed",
                 },
             ) from err
-        await self.coordinator.async_refresh()
 
     async def async_send_command(
         self,
