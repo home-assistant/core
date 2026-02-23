@@ -402,34 +402,23 @@ class EcovacsVacuum(
     def _check_segments_changed(self) -> None:
         """Check if segments have changed and create repair issue."""
         last_seen = self.last_seen_segments
-        if last_seen is None or not self._maps or self._room_event is None:
+        if last_seen is None:
             return
 
         last_seen_ids = {seg.id for seg in last_seen}
-
-        current_segments = self._get_segments()
-        other_map_ids = {
-            map_obj.id
-            for map_obj in self._maps.values()
-            if map_obj.id != self._room_event.map_id
-        }
-        # Include segments from the current map and any segments from other maps that were previously seen,
-        # as _get_segments only returns segments for the currently selected map, but we want to check if
-        # any segments from other maps have disappeared
-        current_ids = {
-            seg.id
-            for seg in last_seen
-            if _split_composite_id(seg.id)[0] in other_map_ids
-        }
-        current_ids.update(seg.id for seg in current_segments)
+        current_ids = {seg.id for seg in self._get_segments()}
 
         if current_ids != last_seen_ids:
             self.async_create_segments_issue()
 
     def _get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
-        if self._room_event is None:
-            return []
+        last_seen = self.last_seen_segments or []
+        if self._room_event is None or not self._maps:
+            # If we don't have the necessary information to determine segments, return the last
+            # seen segments to avoid temporarily losing all segments until we get the necessary
+            # information, which could cause unnecessary issues to be created
+            return last_seen
 
         map_id = self._room_event.map_id
         if (map_obj := self._maps.get(map_id)) is None:
@@ -437,14 +426,26 @@ class EcovacsVacuum(
             return []
 
         id_prefix = f"{map_id}{_SEGMENTS_SEPARATOR}"
-        return [
+        other_map_ids = {
+            map_obj.id
+            for map_obj in self._maps.values()
+            if map_obj.id != self._room_event.map_id
+        }
+        # Include segments from the current map and any segments from other maps that were
+        # previously seen, as we want to continue showing segments from other maps for
+        # mapping purposes
+        segments = [
+            seg for seg in last_seen if _split_composite_id(seg.id)[0] in other_map_ids
+        ]
+        segments.extend(
             Segment(
                 id=f"{id_prefix}{room.id}",
                 name=room.name,
                 group=map_obj.name,
             )
             for room in self._room_event.rooms
-        ]
+        )
+        return segments
 
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
