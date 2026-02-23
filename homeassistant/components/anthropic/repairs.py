@@ -82,7 +82,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                     reverse=True,
                 )
             ),
-            None,
+            vol.UNDEFINED,
         )
 
         schema = vol.Schema(
