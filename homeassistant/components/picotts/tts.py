@@ -92,10 +92,11 @@ class PicoTTSEntity(TextToSpeechEntity):
         data = None
         try:
             if result.returncode != 0:
-                _LOGGER.error(
-                    "Error running pico2wave, return code: %s", result.returncode
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="returncode_error",
+                    translation_placeholders={"returncode": str(result.returncode)},
                 )
-                return None, None
             with open(fname, "rb") as voice:
                 data = voice.read()
         except OSError as exc:
