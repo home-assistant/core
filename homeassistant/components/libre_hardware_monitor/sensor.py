@@ -9,7 +9,6 @@ from librehardwaremonitor_api.sensor_type import SensorType
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,12 +52,10 @@ class LibreHardwareMonitorSensor(
     ) -> None:
         """Initialize an LibreHardwareMonitor sensor."""
         super().__init__(coordinator)
-        self._entry_id = entry_id
-        self._is_deprecated_lhm_version = coordinator.data.is_deprecated_version
 
         self._attr_name: str = sensor_data.name
 
-        self._set_state(self._is_deprecated_lhm_version, sensor_data)
+        self._set_state(coordinator.data.is_deprecated_version, sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
 
         self._sensor_id: str = sensor_data.sensor_id
@@ -80,22 +77,13 @@ class LibreHardwareMonitorSensor(
         max_value = sensor_data.max
         unit = sensor_data.unit
 
-        if not is_deprecated_lhm_version:
-            # Check whether user has upgraded LHM from a deprecated version while the integration is running
-            if self._is_deprecated_lhm_version:
-                self._is_deprecated_lhm_version = False
-                # Clear deprecation issue
-                ir.async_delete_issue(
-                    self.hass, DOMAIN, f"deprecated_api_{self._entry_id}"
-                )
-
-            if sensor_data.type == SensorType.THROUGHPUT:
-                # Temporary fix: convert the B/s value to KB/s to not break existing entries
-                # This will be migrated properly once SensorDeviceClass is introduced
-                value = f"{(float(value) / 1024):.1f}" if value else None
-                min_value = f"{(float(min_value) / 1024):.1f}" if min_value else None
-                max_value = f"{(float(max_value) / 1024):.1f}" if max_value else None
-                unit = "KB/s"
+        if not is_deprecated_lhm_version and sensor_data.type == SensorType.THROUGHPUT:
+            # Temporary fix: convert the B/s value to KB/s to not break existing entries
+            # This will be migrated properly once SensorDeviceClass is introduced
+            value = f"{(float(value) / 1024):.1f}" if value else None
+            min_value = f"{(float(min_value) / 1024):.1f}" if min_value else None
+            max_value = f"{(float(max_value) / 1024):.1f}" if max_value else None
+            unit = "KB/s"
 
         self._attr_native_value: str | None = value
         self._attr_extra_state_attributes: dict[str, Any] = {
