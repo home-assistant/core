@@ -792,6 +792,14 @@ async def test_reconfigure_flow(
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: ""}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "192.168.1.200"},
     )
