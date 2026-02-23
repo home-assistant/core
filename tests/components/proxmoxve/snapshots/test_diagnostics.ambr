@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'host': '127.0.0.1',
+        'host': '**REDACTED**',
         'nodes': list([
           dict({
             'containers': list([
