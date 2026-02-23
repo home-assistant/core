@@ -13,7 +13,6 @@ from victron_mqtt import (
     OperationMode,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -25,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from . import VictronGxConfigEntry
 from .const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -43,7 +43,7 @@ NewMetricCallback = Callable[[VictronVenusDevice, VictronVenusMetric, DeviceInfo
 class Hub:
     """Victron MQTT Hub for managing communication and sensors."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: VictronGxConfigEntry) -> None:
         """Initialize Victron MQTT Hub.
 
         Args:
@@ -58,7 +58,7 @@ class Hub:
         self.host = config[CONF_HOST]
         self.id = entry.unique_id
 
-        self._hub: VictronVenusHub = VictronVenusHub(
+        self._hub = VictronVenusHub(
             host=self.host,
             port=config.get(CONF_PORT, 1883),
             username=config.get(CONF_USERNAME) or None,
@@ -112,20 +112,25 @@ class Hub:
     def _map_device_info(
         device: VictronVenusDevice, installation_id: str
     ) -> DeviceInfo:
-        info: DeviceInfo = {}
-        info["identifiers"] = {(DOMAIN, f"{installation_id}_{device.unique_id}")}
-        info["manufacturer"] = (
-            device.manufacturer if device.manufacturer is not None else "Victron Energy"
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{installation_id}_{device.unique_id}")},
+            manufacturer=(
+                device.manufacturer
+                if device.manufacturer is not None
+                else "Victron Energy"
+            ),
+            name=(
+                f"{device.name} (ID: {device.device_id})"
+                if device.device_id != "0"
+                else device.name
+            ),
+            model=device.model,
+            serial_number=device.serial_number,
         )
-        info["name"] = (
-            f"{device.name} (ID: {device.device_id})"
-            if device.device_id != "0"
-            else device.name
-        )
-        info["model"] = device.model
-        info["serial_number"] = device.serial_number
-
-        return info
+        # Don't set via_device for the GX device itself
+        if device.unique_id != "system_0":
+            device_info["via_device"] = (DOMAIN, f"{installation_id}_system_0")
+        return device_info
 
     def register_new_metric_callback(
         self, kind: MetricKind, new_metric_callback: NewMetricCallback
