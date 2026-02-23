@@ -29,8 +29,12 @@ if TYPE_CHECKING:
 
 # Filter lists for optimized API calls - only fetch parameters we actually use
 # This significantly reduces response time (~0.2s per parameter saved)
-STATE_INCLUDE = ["current_temperature", "target_temperature", "hvac_mode"]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature"]
+STATE_INCLUDE = [
+    "current_temperature",
+    "target_temperature",
+    "hvac_mode",
+    "hvac_action",
+]
 SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
