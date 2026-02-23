@@ -40,10 +40,10 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle usb discovery."""
         unique_id = usb_unique_id_from_service_info(discovery_info)
 
-        if await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(
-                updates={CONF_DEVICE: discovery_info.device}
-            )
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: discovery_info.device}
+        )
 
         discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
