@@ -68,6 +68,29 @@ def _validate_brightness_range(config: ConfigType) -> ConfigType:
     return config
 
 
+def _validate_brightness_required_for_color(config: ConfigType) -> ConfigType:
+    """Require adsvar_brightness when color modes that need it are configured.
+
+    COLOR_TEMP and HS do not encode brightness in their channel values, so a
+    separate brightness variable is mandatory to avoid silently dropping
+    brightness commands from Home Assistant.
+    """
+    has_brightness = CONF_ADS_VAR_BRIGHTNESS in config
+    if not has_brightness and CONF_ADS_VAR_COLOR_TEMP_KELVIN in config:
+        raise vol.Invalid(
+            f"{CONF_ADS_VAR_BRIGHTNESS} is required when"
+            f" {CONF_ADS_VAR_COLOR_TEMP_KELVIN} is configured"
+        )
+    if not has_brightness and (
+        CONF_ADS_VAR_HUE in config or CONF_ADS_VAR_SATURATION in config
+    ):
+        raise vol.Invalid(
+            f"{CONF_ADS_VAR_BRIGHTNESS} is required when"
+            f" {CONF_ADS_VAR_HUE} or {CONF_ADS_VAR_SATURATION} is configured"
+        )
+    return config
+
+
 PLATFORM_SCHEMA = vol.All(
     LIGHT_PLATFORM_SCHEMA.extend(
         {
@@ -93,6 +116,7 @@ PLATFORM_SCHEMA = vol.All(
         }
     ),
     _validate_brightness_range,
+    _validate_brightness_required_for_color,
 )
 
 
@@ -369,12 +393,31 @@ class AdsLight(AdsEntity, LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        """Return the brightness of the light (0–255)."""
+        """Return the brightness of the light (0–255).
+
+        When a dedicated brightness channel is configured it is used directly
+        (scaled from the PLC range).  For RGB/RGBW lights without a separate
+        brightness channel, brightness is derived from the maximum channel
+        value so that Home Assistant can still report and scale it correctly.
+        """
         ads_brightness = self._state_dict[STATE_KEY_BRIGHTNESS]
         if ads_brightness is not None:
             return max(
                 0, min(255, self._scale_brightness_from_ads(int(ads_brightness)))
             )
+
+        # Derive brightness from the color channels when no dedicated
+        # brightness variable is configured (RGB/RGBW modes only).
+        r = self._state_dict[STATE_KEY_RED]
+        g = self._state_dict[STATE_KEY_GREEN]
+        b = self._state_dict[STATE_KEY_BLUE]
+        w = self._state_dict[STATE_KEY_WHITE]
+        if r is not None and g is not None and b is not None:
+            candidates = [int(r), int(g), int(b)]
+            if w is not None:
+                candidates.append(int(w))
+            return max(candidates)
+
         return None
 
     @property
