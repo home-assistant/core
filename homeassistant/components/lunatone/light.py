@@ -82,7 +82,7 @@ class LunatoneLight(
         super().__init__(coordinator)
         self._device_id = device_id
         self._interface_serial_number = interface_serial_number
-        self._device = self.coordinator.data[device_id]
+        self._device = self.coordinator.data[self._device_id]
         self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
 
     @property
@@ -101,12 +101,12 @@ class LunatoneLight(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._device_id in self.coordinator.data
+        return super().available and self._device is not None
 
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self._device.is_on
+        return self._device is not None and self._device.is_on
 
     @property
     def brightness(self) -> int:
@@ -120,7 +120,7 @@ class LunatoneLight(
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device.brightness is not None:
+        if self._device is not None and self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
