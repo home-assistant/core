@@ -33,7 +33,7 @@ from homeassistant.util.async_iterator import (
 )
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import BUF_SIZE, LOGGER
+from .const import BUF_SIZE, LOGGER, SECURETAR_CREATE_VERSION
 from .models import AddonInfo, AgentBackup, Folder
 
 
@@ -323,7 +323,7 @@ def encrypt_backup(
                     bufsize=BUF_SIZE,
                     streaming=True,
                     root_key_context=key_context,
-                    create_version=2,
+                    create_version=SECURETAR_CREATE_VERSION,
                 ) as output_archive,
             ):
                 _encrypt_backup(backup, input_tar, output_archive)

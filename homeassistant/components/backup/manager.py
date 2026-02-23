@@ -56,6 +56,7 @@ from .const import (
     EXCLUDE_DATABASE_FROM_BACKUP,
     EXCLUDE_FROM_BACKUP,
     LOGGER,
+    SECURETAR_CREATE_VERSION,
 )
 from .models import (
     AddonInfo,
@@ -1855,7 +1856,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             return False
 
         with SecureTarArchive(
-            tar_file_path, "w", bufsize=BUF_SIZE, create_version=2, password=password
+            tar_file_path,
+            "w",
+            bufsize=BUF_SIZE,
+            create_version=SECURETAR_CREATE_VERSION,
+            password=password,
         ) as outer_secure_tarfile:
             raw_bytes = json_bytes(backup_data)
             fileobj = io.BytesIO(raw_bytes)
