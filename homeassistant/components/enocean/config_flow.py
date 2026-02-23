@@ -36,7 +36,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-
         await self.async_set_unique_id(discovery_info.serial_number)
         self._abort_if_unique_id_configured()
 
@@ -59,7 +58,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 ATTR_MANUFACTURER: MANUFACTURER,
                 CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
             },
-
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
