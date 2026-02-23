@@ -7,9 +7,6 @@
       "reset": {
         "default": "mdi:restart"
       },
-      "restart": {
-        "default": "mdi:restart"
-      },
       "start": {
         "default": "mdi:play"
       },

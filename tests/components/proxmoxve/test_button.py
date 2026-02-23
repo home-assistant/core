@@ -49,7 +49,7 @@ async def test_all_button_entities(
 @pytest.mark.parametrize(
     ("entity_id", "command"),
     [
-        ("button.pve1_reboot", "reboot"),
+        ("button.pve1_restart", "reboot"),
         ("button.pve1_shutdown", "shutdown"),
     ],
 )
@@ -178,9 +178,9 @@ async def test_container_buttons(
 @pytest.mark.parametrize(
     ("entity_id", "exception"),
     [
-        ("button.pve1_reboot", AuthenticationError("auth failed")),
-        ("button.pve1_reboot", SSLError("ssl error")),
-        ("button.pve1_reboot", ConnectTimeout("timeout")),
+        ("button.pve1_restart", AuthenticationError("auth failed")),
+        ("button.pve1_restart", SSLError("ssl error")),
+        ("button.pve1_restart", ConnectTimeout("timeout")),
         ("button.pve1_shutdown", ResourceException(500, "error", {})),
     ],
 )

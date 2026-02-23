@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'restart',
+    'translation_key': None,
     'unique_id': '1234_201_restart',
     'unit_of_measurement': None,
   })
@@ -178,7 +178,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'restart',
+    'translation_key': None,
     'unique_id': '1234_200_restart',
     'unit_of_measurement': None,
   })
@@ -295,7 +295,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve1_reboot-entry]
+# name: test_all_button_entities[button.pve1_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -308,7 +308,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve1_reboot',
+    'entity_id': 'button.pve1_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -316,29 +316,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reboot',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Reboot',
+    'original_name': 'Restart',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'reboot',
+    'translation_key': None,
     'unique_id': '1234_node/pve1_reboot',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve1_reboot-state]
+# name: test_all_button_entities[button.pve1_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'pve1 Reboot',
+      'friendly_name': 'pve1 Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve1_reboot',
+    'entity_id': 'button.pve1_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -492,7 +492,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve2_reboot-entry]
+# name: test_all_button_entities[button.pve2_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -505,7 +505,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve2_reboot',
+    'entity_id': 'button.pve2_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -513,29 +513,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reboot',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Reboot',
+    'original_name': 'Restart',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'reboot',
+    'translation_key': None,
     'unique_id': '1234_node/pve2_reboot',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve2_reboot-state]
+# name: test_all_button_entities[button.pve2_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'pve2 Reboot',
+      'friendly_name': 'pve2 Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve2_reboot',
+    'entity_id': 'button.pve2_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -818,7 +818,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'restart',
+    'translation_key': None,
     'unique_id': '1234_101_restart',
     'unit_of_measurement': None,
   })
@@ -1064,7 +1064,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'restart',
+    'translation_key': None,
     'unique_id': '1234_100_restart',
     'unit_of_measurement': None,
   })

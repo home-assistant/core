@@ -65,9 +65,6 @@
       "reset": {
         "name": "Reset"
       },
-      "restart": {
-        "name": "Restart"
-      },
       "shutdown": {
         "name": "Shutdown"
       },
