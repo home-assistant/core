@@ -86,7 +86,7 @@
         'role': 'assistant',
       }),
     ]),
-    'model': 'claude-3-7-sonnet-latest',
+    'model': 'claude-sonnet-4-5',
     'stream': True,
     'system': list([
       dict({

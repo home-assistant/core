@@ -112,19 +112,12 @@ async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionD
         # Resolve alias from versioned model name:
         model_alias = (
             model_info.id[:-9]
-            if model_info.id
-            not in (
-                "claude-3-haiku-20240307",
-                "claude-3-5-haiku-20241022",
-                "claude-3-opus-20240229",
-            )
+            if model_info.id != "claude-3-haiku-20240307"
             and model_info.id[-2:-1] != "-"
             else model_info.id
         )
         if short_form.search(model_alias):
             model_alias += "-0"
-        if model_alias.endswith(("haiku", "opus", "sonnet")):
-            model_alias += "-latest"
         model_options.append(
             SelectOptionDict(
                 label=model_info.display_name,
