@@ -1,0 +1,305 @@
+# serializer version: 1
+# name: test_selects[select.test_fridge_bottom_zone_icemaker-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+        'max_ice',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_fridge_bottom_zone_icemaker',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bottom zone IceMaker',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bottom zone IceMaker',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker_bottom_zone',
+    'unique_id': 'test_device_id_ice_maker_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_fridge_bottom_zone_icemaker-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Fridge Bottom zone IceMaker',
+      'options': list([
+        'off',
+        'on',
+        'max_ice',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_fridge_bottom_zone_icemaker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[select.test_fridge_top_zone_biofresh_plus-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'zero_zero',
+        'zero_minus_two',
+        'minus_two_minus_two',
+        'minus_two_zero',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_fridge_top_zone_biofresh_plus',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top zone BioFresh-Plus',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top zone BioFresh-Plus',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bio_fresh_plus_top_zone',
+    'unique_id': 'test_device_id_bio_fresh_plus_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_fridge_top_zone_biofresh_plus-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Fridge Top zone BioFresh-Plus',
+      'options': list([
+        'zero_zero',
+        'zero_minus_two',
+        'minus_two_minus_two',
+        'minus_two_zero',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_fridge_top_zone_biofresh_plus',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'zero_zero',
+  })
+# ---
+# name: test_selects[select.test_fridge_top_zone_hydrobreeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_fridge_top_zone_hydrobreeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top zone HydroBreeze',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top zone HydroBreeze',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hydro_breeze_top_zone',
+    'unique_id': 'test_device_id_hydro_breeze_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.test_fridge_top_zone_hydrobreeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Fridge Top zone HydroBreeze',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_fridge_top_zone_hydrobreeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_single_zone_select[select.single_zone_fridge_hydrobreeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.single_zone_fridge_hydrobreeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HydroBreeze',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HydroBreeze',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hydro_breeze',
+    'unique_id': 'single_zone_id_hydro_breeze_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_zone_select[select.single_zone_fridge_hydrobreeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Single Zone Fridge HydroBreeze',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.single_zone_fridge_hydrobreeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_single_zone_select[select.single_zone_fridge_icemaker-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.single_zone_fridge_icemaker',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IceMaker',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IceMaker',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker',
+    'unique_id': 'single_zone_id_ice_maker_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_zone_select[select.single_zone_fridge_icemaker-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Single Zone Fridge IceMaker',
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.single_zone_fridge_icemaker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
