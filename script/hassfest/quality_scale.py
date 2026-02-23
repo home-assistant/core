@@ -1134,7 +1134,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "anel_pwrctrl",
     "anova",
     "anthemav",
-    "anthropic",
     "aosmith",
     "apache_kafka",
     "apple_tv",
