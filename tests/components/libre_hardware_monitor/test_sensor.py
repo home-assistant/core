@@ -130,26 +130,38 @@ async def test_sensor_invalid_auth_during_startup(
     assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
 
 
+@pytest.mark.parametrize(
+    ("object_id", "sensor_id", "new_value", "state_value"),
+    [
+        (
+            "gaming_pc_amd_ryzen_7_7800x3d_package_temperature",
+            "amdcpu-0-temperature-3",
+            "42.1",
+            "42.1",
+        ),
+        (
+            "gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput",
+            "gpu-nvidia-0-throughput-1",
+            "792150000.0",
+            "773584.0",
+        ),
+    ],
+)
 async def test_sensors_are_updated(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    object_id: str,
+    sensor_id: str,
+    new_value: str,
+    state_value: str,
 ) -> None:
     """Test sensors are updated with properly formatted values."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = "sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature"
-    state = hass.states.get(entity_id)
-
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "52.8"
-
     updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
-    updated_data["amdcpu-0-temperature-3"] = replace(
-        updated_data["amdcpu-0-temperature-3"], value="42.1"
-    )
+    updated_data[sensor_id] = replace(updated_data[sensor_id], value=new_value)
     mock_lhm_client.get_data.return_value = replace(
         mock_lhm_client.get_data.return_value,
         sensor_data=MappingProxyType(updated_data),
@@ -159,11 +171,11 @@ async def test_sensors_are_updated(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"sensor.{object_id}")
 
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "42.1"
+    assert state.state == state_value
 
 
 async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
@@ -263,6 +275,7 @@ async def _mock_orphaned_device(
                 if not sensor_id.startswith(removed_device)
             }
         ),
+        is_deprecated_version=False,
     )
 
     return device_registry.async_get_or_create(
@@ -287,6 +300,7 @@ async def test_integration_does_not_log_new_devices_on_first_refresh(
             }
         ),
         sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
+        is_deprecated_version=False,
     )
 
     with caplog.at_level(logging.WARNING):
