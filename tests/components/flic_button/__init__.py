@@ -37,6 +37,7 @@ TEST_PAIRING_ID = 12345
 TEST_PAIRING_KEY = bytes(16)  # 16 zero bytes
 TEST_SIG_BITS = 0
 TEST_BATTERY_LEVEL = 800  # Raw battery level (0-1024)
+TEST_BUTTON_UUID = bytes(16)  # 16 zero bytes for testing
 
 
 def create_flic2_service_info() -> BluetoothServiceInfoBleak:
@@ -184,6 +185,7 @@ def create_mock_flic_client(
             serial_number,
             TEST_BATTERY_LEVEL,
             TEST_SIG_BITS,
+            None,
         )
     )
     mock_client.quick_verify = MagicMock(return_value=None)

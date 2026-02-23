@@ -3,35 +3,44 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
 import logging
 from typing import Any
 
 from bleak import BleakError
 
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CONF_BUTTON_UUID,
     DEVICE_TYPE_MODEL_NAMES,
     DOMAIN,
     EVENT_TYPE_DUO_DIAL_CHANGED,
     EVENT_TYPE_SLOT_CHANGED,
     FLIC_BUTTON_EVENT,
+    FLIC_FIRMWARE_API_URL,
     DeviceType,
 )
-from .flic_client import FlicClient, FlicProtocolError
+from .flic_client import FlicClient, FlicFirmwareUpdateError, FlicProtocolError
 from .handlers import DeviceCapabilities, DeviceProtocolHandler
 
 _LOGGER = logging.getLogger(__name__)
 
 SLOT_STORE_VERSION = 1
 SLOT_SAVE_DELAY = 5  # seconds to debounce slot value saves
+FIRMWARE_RECONNECT_INITIAL_DELAY = 30  # seconds to wait before first attempt
+FIRMWARE_RECONNECT_INTERVAL = 10  # seconds between subsequent attempts
+FIRMWARE_RECONNECT_ATTEMPTS = 15  # ~3 minutes of retries after initial delay
 
 SIGNAL_BUTTON_EVENT = f"{DOMAIN}_button_event_{{0}}"
 SIGNAL_ROTATE_EVENT = f"{DOMAIN}_rotate_event_{{0}}"
@@ -123,6 +132,14 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._battery_level = battery_level
         self._firmware_version: int | None = None
 
+        # Firmware update state (Twist only)
+        self._latest_firmware_version: int | None = None
+        self._firmware_download_url: str | None = None
+        self._firmware_binary: bytes | None = None
+        self._firmware_update_in_progress: bool = False
+        self._firmware_update_percentage: int | None = None
+        self._firmware_awaiting_reboot: bool = False
+
         # Slot value persistence (Twist devices)
         self._slot_values: dict[int, float] = {}
         self._slot_store: Store[dict[str, Any]] = Store(
@@ -208,6 +225,35 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._firmware_version
 
     @property
+    def latest_firmware_version(self) -> int | None:
+        """Return the latest available firmware version."""
+        return self._latest_firmware_version
+
+    @property
+    def firmware_download_url(self) -> str | None:
+        """Return the firmware download URL."""
+        return self._firmware_download_url
+
+    @property
+    def firmware_update_in_progress(self) -> bool:
+        """Return if a firmware update is in progress."""
+        return self._firmware_update_in_progress
+
+    @property
+    def firmware_update_percentage(self) -> int | None:
+        """Return firmware update progress percentage."""
+        return self._firmware_update_percentage
+
+    @property
+    def firmware_awaiting_reboot(self) -> bool:
+        """Return if waiting for device reboot after firmware update."""
+        return self._firmware_awaiting_reboot
+
+    def set_firmware_update_percentage(self, percentage: int) -> None:
+        """Set firmware update progress percentage."""
+        self._firmware_update_percentage = percentage
+
+    @property
     def device_id(self) -> str | None:
         """Get device ID from registry."""
         if not self.config_entry:
@@ -272,6 +318,241 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     percentage,
                 )
 
+    async def async_check_firmware_update(self) -> None:
+        """Check the Flic cloud API for firmware updates.
+
+        Only applicable for Twist devices with a stored button_uuid
+        and a known firmware version.
+        """
+        if not self.is_twist or self._firmware_version is None:
+            return
+
+        if not self.config_entry:
+            return
+
+        button_uuid_hex = self.config_entry.data.get(CONF_BUTTON_UUID)
+        if not button_uuid_hex:
+            _LOGGER.debug(
+                "No button UUID stored for %s, skipping firmware check",
+                self.client.address,
+            )
+            return
+
+        try:
+            session = async_get_clientsession(self.hass)
+            request_body = {
+                "uuid": button_uuid_hex,
+                "current_version": self._firmware_version,
+                "platform": "Linux",
+            }
+            _LOGGER.debug(
+                "Checking firmware update for %s: POST %s body=%s",
+                self.client.address,
+                FLIC_FIRMWARE_API_URL,
+                request_body,
+            )
+            response = await session.post(
+                FLIC_FIRMWARE_API_URL,
+                json=request_body,
+            )
+
+            response_body = await response.text()
+            _LOGGER.debug(
+                "Firmware API response for %s: status=%s body=%s",
+                self.client.address,
+                response.status,
+                response_body,
+            )
+
+            if response.status == 404:
+                return
+
+            response.raise_for_status()
+            data = await response.json(content_type=None)
+
+            if data is None:
+                _LOGGER.debug(
+                    "Firmware is up to date for %s (version %d)",
+                    button_uuid_hex,
+                    self._firmware_version,
+                )
+                self._latest_firmware_version = None
+                self._firmware_download_url = None
+                self.async_set_updated_data(self.data)
+                return
+
+            firmware_url = data.get("firmware_download_url")
+
+            if firmware_url:
+                self._firmware_download_url = firmware_url
+                latest_firmware_version = data.get("firmware_version")
+                # API doesn't return a version number directly;
+                # use current + 1 as a placeholder to indicate update available
+                self._latest_firmware_version = (
+                    int(latest_firmware_version)
+                    if latest_firmware_version
+                    else self._firmware_version + 1
+                )
+                _LOGGER.info(
+                    "Firmware update available for %s (current: %d, latest: %d)",
+                    self.client.address,
+                    self._firmware_version,
+                    self._latest_firmware_version,
+                )
+                self.async_set_updated_data(self.data)
+
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug(
+                "Failed to check firmware update for %s",
+                self.client.address,
+            )
+
+    async def async_download_firmware(self) -> bytes | None:
+        """Download firmware binary from the stored URL.
+
+        Returns:
+            Raw firmware binary bytes, or None on failure
+
+        """
+        if not self._firmware_download_url:
+            return None
+
+        try:
+            session = async_get_clientsession(self.hass)
+            response = await session.get(self._firmware_download_url)
+            response.raise_for_status()
+            self._firmware_binary = await response.read()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to download firmware: %s", err)
+            return None
+        else:
+            _LOGGER.debug(
+                "Downloaded firmware binary: %d bytes", len(self._firmware_binary)
+            )
+            return self._firmware_binary
+
+    async def async_install_firmware(
+        self,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> None:
+        """Install firmware update on the device.
+
+        Args:
+            progress_callback: Called with (bytes_acked, total_bytes)
+
+        Raises:
+            HomeAssistantError: On download or transfer failure
+
+        """
+        if self._firmware_binary is None:
+            firmware = await self.async_download_firmware()
+            if firmware is None:
+                raise HomeAssistantError("Failed to download firmware")
+            self._firmware_binary = firmware
+
+        firmware_binary = self._firmware_binary
+        self._firmware_update_in_progress = True
+        self._firmware_update_percentage = 0
+        try:
+            await self.client.async_firmware_update(
+                firmware_binary,
+                progress_callback=progress_callback,
+            )
+            # Reset firmware state after successful update
+            self._latest_firmware_version = None
+            self._firmware_download_url = None
+            self._firmware_binary = None
+            _LOGGER.info(
+                "Firmware update complete for %s, device will reboot",
+                self.client.address,
+            )
+
+            # Keep in_progress visible while waiting for device reboot
+            self._firmware_awaiting_reboot = True
+            self._firmware_update_percentage = 100
+
+            # Explicitly disconnect the BLE client so the adapter is free
+            # to detect new advertisements when the device reboots.
+            await self.client.disconnect()
+            self._connected = False
+            self.async_set_updated_data(self.data)
+
+            # Schedule active reconnection polling. The passive Bluetooth
+            # callback may not fire on all platforms (e.g. macOS) after an
+            # explicit disconnect, so we actively poll for the device.
+            self.hass.async_create_task(self._async_reconnect_after_firmware_update())
+        except (FlicFirmwareUpdateError, FlicProtocolError) as err:
+            self._firmware_update_in_progress = False
+            self._firmware_update_percentage = None
+            raise HomeAssistantError(f"Firmware update failed: {err}") from err
+
+    async def _async_reconnect_after_firmware_update(self) -> None:
+        """Actively poll for the device and reconnect after firmware reboot.
+
+        The passive Bluetooth callback may not fire on all platforms after
+        an explicit BLE disconnect. This method periodically checks whether
+        the device is visible again and attempts to reconnect.
+        """
+        try:
+            # Give the device time to reboot and apply the new firmware
+            _LOGGER.debug(
+                "Waiting %ds for %s to reboot after firmware update",
+                FIRMWARE_RECONNECT_INITIAL_DELAY,
+                self.client.address,
+            )
+            await asyncio.sleep(FIRMWARE_RECONNECT_INITIAL_DELAY)
+
+            for attempt in range(1, FIRMWARE_RECONNECT_ATTEMPTS + 1):
+                if attempt > 1:
+                    await asyncio.sleep(FIRMWARE_RECONNECT_INTERVAL)
+
+                if self._connected:
+                    _LOGGER.debug("Device already reconnected, stopping poll")
+                    return
+
+                ble_device = bluetooth.async_ble_device_from_address(
+                    self.hass, self.client.address.upper(), connectable=True
+                )
+                if not ble_device:
+                    _LOGGER.debug(
+                        "Firmware reconnect attempt %d/%d: device not visible",
+                        attempt,
+                        FIRMWARE_RECONNECT_ATTEMPTS,
+                    )
+                    continue
+
+                self.client.ble_device = ble_device
+                try:
+                    _LOGGER.debug(
+                        "Firmware reconnect attempt %d/%d: device found, connecting",
+                        attempt,
+                        FIRMWARE_RECONNECT_ATTEMPTS,
+                    )
+                    await self.async_connect()
+                except Exception:  # noqa: BLE001
+                    _LOGGER.debug(
+                        "Firmware reconnect attempt %d/%d failed",
+                        attempt,
+                        FIRMWARE_RECONNECT_ATTEMPTS,
+                    )
+                else:
+                    self.async_set_updated_data(self.data)
+                    _LOGGER.info(
+                        "Reconnected to %s after firmware update",
+                        self.client.address,
+                    )
+                    return
+
+            _LOGGER.warning(
+                "Could not reconnect to %s after firmware update within timeout",
+                self.client.address,
+            )
+        finally:
+            self._firmware_awaiting_reboot = False
+            self._firmware_update_in_progress = False
+            self._firmware_update_percentage = None
+            self.async_set_updated_data(self.data)
+
     async def async_connect(self) -> None:
         """Connect to button and authenticate."""
         try:
@@ -317,6 +598,10 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         device.id,
                         sw_version=str(self._firmware_version),
                     )
+
+                # Schedule firmware update check (non-blocking)
+                if self.is_twist:
+                    self.hass.async_create_task(self.async_check_firmware_update())
             except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Failed to retrieve firmware version from %s",

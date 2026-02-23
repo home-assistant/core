@@ -206,3 +206,32 @@ class PushTwistMode(StrEnum):
 
     DEFAULT = "default"
     SELECTOR = "selector"
+
+
+# ============================================================================
+# Firmware update constants
+# ============================================================================
+
+# Firmware update opcodes (Host -> Device)
+TWIST_OPCODE_FORCE_BT_DISCONNECT_IND: Final = 0x06
+TWIST_OPCODE_START_FIRMWARE_UPDATE_REQUEST: Final = 0x0F
+TWIST_OPCODE_FIRMWARE_UPDATE_DATA_IND: Final = 0x10
+
+# Firmware update opcodes (Device -> Host)
+TWIST_OPCODE_START_FIRMWARE_UPDATE_RESPONSE: Final = 0x0E
+TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION: Final = 0x0F
+
+# Firmware binary header
+FIRMWARE_HEADER_SIZE: Final = 76
+
+# Transfer constants
+FIRMWARE_DATA_CHUNK_SIZE: Final = 120  # Max payload bytes per data packet
+FIRMWARE_MAX_IN_FLIGHT: Final = 480  # Max unacknowledged bytes (4 * 120)
+FIRMWARE_STATUS_INTERVAL: Final = 2  # Device reports progress every N packets
+FIRMWARE_UPDATE_TIMEOUT: Final = 300  # 5 min timeout for firmware transfer
+
+# Flic firmware API
+FLIC_FIRMWARE_API_URL: Final = "https://api.flic.io/api/v1/buttons/versions/firmware2"
+
+# Config entry key for button UUID
+CONF_BUTTON_UUID: Final = "button_uuid"

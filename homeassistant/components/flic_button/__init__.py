@@ -35,6 +35,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 type FlicButtonConfigEntry = ConfigEntry[FlicCoordinator]

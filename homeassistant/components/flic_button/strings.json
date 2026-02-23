@@ -194,6 +194,14 @@
     "sensor": {
       "battery": {
         "name": "Battery"
+      },
+      "button_uuid": {
+        "name": "Button UUID"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
       }
     }
   },
