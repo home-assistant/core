@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
@@ -16,8 +15,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorCoordinator
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -33,19 +30,8 @@ async def async_setup_entry(
     """Set up the LibreHardwareMonitor platform."""
     lhm_coordinator = config_entry.runtime_data
 
-    is_deprecated_lhm_version = lhm_coordinator.data.is_deprecated_version
-    if is_deprecated_lhm_version:
-        _LOGGER.warning(
-            "Your version of Libre Hardware Monitor is deprecated. Please update to v0.9.5 or above for full support"
-        )
-
     async_add_entities(
-        LibreHardwareMonitorSensor(
-            lhm_coordinator,
-            config_entry.entry_id,
-            sensor_data,
-            is_deprecated_lhm_version,
-        )
+        LibreHardwareMonitorSensor(lhm_coordinator, config_entry.entry_id, sensor_data)
         for sensor_data in lhm_coordinator.data.sensor_data.values()
     )
 
@@ -63,14 +49,13 @@ class LibreHardwareMonitorSensor(
         coordinator: LibreHardwareMonitorCoordinator,
         entry_id: str,
         sensor_data: LibreHardwareMonitorSensorData,
-        is_deprecated_lhm_version: bool,
     ) -> None:
         """Initialize an LibreHardwareMonitor sensor."""
         super().__init__(coordinator)
 
         self._attr_name: str = sensor_data.name
 
-        self._set_state(is_deprecated_lhm_version, sensor_data)
+        self._set_state(coordinator.data.is_deprecated_version, sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
 
         self._sensor_id: str = sensor_data.sensor_id
