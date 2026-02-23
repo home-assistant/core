@@ -1,82 +1,96 @@
 """Support for the Pico TTS speech service."""
 
+from __future__ import annotations
+
+import io
 import logging
-import os
-import shutil
-import subprocess
-import tempfile
 from typing import Any
+import wave
 
-import voluptuous as vol
+from py_nanotts import NanoTTS
 
-from homeassistant.components.tts import (
-    CONF_LANG,
-    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
-    Provider,
-    TtsAudioType,
-)
+from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_LANGUAGES = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
-
 DEFAULT_LANG = "en-US"
 
-PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
-)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up picoTTS TTS entity from a config entry."""
+    async_add_entities([PicoTTSEntity()])
 
 
-def get_engine(hass, config, discovery_info=None):
-    """Set up Pico speech component."""
-    if shutil.which("pico2wave") is None:
-        _LOGGER.error("'pico2wave' was not found")
-        return False
-    return PicoProvider(config[CONF_LANG])
+class PicoTTSEntity(TextToSpeechEntity):
+    """picoTTS entity using NanoTTS."""
 
+    _attr_name = "PicoTTS"
+    _attr_unique_id = "picotts"
+    _attr_supported_languages = SUPPORT_LANGUAGES
+    _attr_default_language = DEFAULT_LANG
 
-class PicoProvider(Provider):
-    """The Pico TTS API provider."""
+    _attr_supported_options = ["pitch", "speed", "volume"]
 
-    def __init__(self, lang):
-        """Initialize Pico TTS provider."""
-        self._lang = lang
-        self.name = "PicoTTS"
+    def __init__(self) -> None:
+        """Initialize entity."""
+        self._engine = NanoTTS()
 
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self._lang
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
+    async def async_get_tts_audio(
+        self,
+        message: str,
+        language: str,
+        options: dict[str, Any],
     ) -> TtsAudioType:
-        """Load TTS using pico2wave."""
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
-            fname = tmpf.name
+        """Generate TTS audio.
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language]
-        result = subprocess.run(cmd, text=True, input=message, check=False)
-        data = None
+        Return (content_type, bytes) or (None, None) on failure.
+        """
+        pitch = _coerce_float(options.get("pitch"))
+        speed = _coerce_float(options.get("speed"))
+        volume = _coerce_float(options.get("volume"))
+
+        voice = language if language in SUPPORT_LANGUAGES else DEFAULT_LANG
+        if voice != language:
+            _LOGGER.debug(
+                "Unsupported language %r requested; using %r", language, voice
+            )
+
         try:
-            if result.returncode != 0:
-                _LOGGER.error(
-                    "Error running pico2wave, return code: %s", result.returncode
-                )
-                return (None, None)
-            with open(fname, "rb") as voice:
-                data = voice.read()
-        except OSError:
-            _LOGGER.error("Error trying to read %s", fname)
+            pcm = self._engine.speak(
+                message,
+                voice=voice,
+                speed=speed,
+                pitch=pitch,
+                volume=volume,
+            )
+        except Exception:
+            _LOGGER.exception("NanoTTS failed generating audio")
             return (None, None)
-        finally:
-            os.remove(fname)
 
-        if data:
-            return ("wav", data)
-        return (None, None)
+        # Wrap returned PCM frames in a WAV container (mono, 16kHz, 16-bit)
+        with io.BytesIO() as wav_io:
+            with wave.open(wav_io, "wb") as wav_file:
+                wav_file.setframerate(16000)
+                wav_file.setsampwidth(2)
+                wav_file.setnchannels(1)
+                wav_file.writeframes(pcm)
+
+            return ("wav", wav_io.getvalue())
+
+
+def _coerce_float(value: Any) -> float | None:
+    """Convert service option values to float, returning None if unset/invalid."""
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except TypeError, ValueError:
+        return None

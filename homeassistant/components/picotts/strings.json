@@ -1,0 +1,17 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "import": {
+        "description": "Imported configuration.",
+        "title": "picoTTS"
+      },
+      "user": {
+        "description": "Set up picoTTS.",
+        "title": "picoTTS"
+      }
+    }
+  }
+}
