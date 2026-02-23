@@ -179,5 +179,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
                 translation_key="cannot_connect_no_details",
             ) from ex
         else:
-            self._in_progress_old_version = None
             await self.coordinator.async_request_refresh()
+        finally:
+            self._in_progress_old_version = None
