@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -92,7 +93,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture(name="credential")
 async def mock_credential(hass: HomeAssistant) -> None:
     """Fixture that provides the ClientCredential for the test."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

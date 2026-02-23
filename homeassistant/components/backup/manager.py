@@ -20,13 +20,9 @@ import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import aiohttp
-from securetar import SecureTarFile, atomic_contents_add
+from securetar import SecureTarArchive, atomic_contents_add
 
-from homeassistant.backup_restore import (
-    RESTORE_BACKUP_FILE,
-    RESTORE_BACKUP_RESULT_FILE,
-    password_to_key,
-)
+from homeassistant.backup_restore import RESTORE_BACKUP_FILE, RESTORE_BACKUP_RESULT_FILE
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -60,6 +56,7 @@ from .const import (
     EXCLUDE_DATABASE_FROM_BACKUP,
     EXCLUDE_FROM_BACKUP,
     LOGGER,
+    SECURETAR_CREATE_VERSION,
 )
 from .models import (
     AddonInfo,
@@ -1858,20 +1855,22 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
             return False
 
-        outer_secure_tarfile = SecureTarFile(
-            tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
-        )
-        with outer_secure_tarfile as outer_secure_tarfile_tarfile:
+        with SecureTarArchive(
+            tar_file_path,
+            "w",
+            bufsize=BUF_SIZE,
+            create_version=SECURETAR_CREATE_VERSION,
+            password=password,
+        ) as outer_secure_tarfile:
             raw_bytes = json_bytes(backup_data)
             fileobj = io.BytesIO(raw_bytes)
             tar_info = tarfile.TarInfo(name="./backup.json")
             tar_info.size = len(raw_bytes)
             tar_info.mtime = int(time.time())
-            outer_secure_tarfile_tarfile.addfile(tar_info, fileobj=fileobj)
-            with outer_secure_tarfile.create_inner_tar(
+            outer_secure_tarfile.tar.addfile(tar_info, fileobj=fileobj)
+            with outer_secure_tarfile.create_tar(
                 "./homeassistant.tar.gz",
                 gzip=True,
-                key=password_to_key(password) if password is not None else None,
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,

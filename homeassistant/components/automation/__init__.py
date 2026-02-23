@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import labs, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.labs import async_listen as async_labs_listen
+from homeassistant.components.labs import async_subscribe_preview_feature
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
@@ -363,8 +363,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
         if automation_id := service_call.data.get(CONF_ID):
             await _async_process_single_config(hass, conf, component, automation_id)
         else:
@@ -386,14 +385,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema({vol.Optional(CONF_ID): str}),
     )
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
-        hass.async_create_task(
-            reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-        )
+        await reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
 
-    async_labs_listen(
+    async_subscribe_preview_feature(
         hass,
         DOMAIN,
         NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
