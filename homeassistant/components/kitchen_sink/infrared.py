@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import infrared_protocols
+
 from homeassistant.components import persistent_notification
-from homeassistant.components.infrared import InfraredCommand, InfraredEntity
+from homeassistant.components.infrared import InfraredEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -51,7 +53,7 @@ class DemoInfrared(InfraredEntity):
         )
         self._attr_name = entity_name
 
-    async def async_send_command(self, command: InfraredCommand) -> None:
+    async def async_send_command(self, command: infrared_protocols.Command) -> None:
         """Send an IR command."""
         timings = [
             interval

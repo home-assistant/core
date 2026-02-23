@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import infrared_protocols
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.components.infrared import NECInfraredCommand, async_send_command
+from homeassistant.components.infrared import async_send_command
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -102,7 +104,7 @@ class DemoInfraredFan(FanEntity):
 
     async def _send_command(self, command_code: int) -> None:
         """Send an IR command using the NEC protocol."""
-        command = NECInfraredCommand(
+        command = infrared_protocols.NECCommand(
             address=DUMMY_FAN_ADDRESS,
             command=command_code,
             modulation=38000,
