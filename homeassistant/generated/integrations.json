@@ -3754,7 +3754,7 @@
       "single_config_entry": true
     },
     "litterrobot": {
-      "name": "Litter-Robot",
+      "name": "Whisker",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
