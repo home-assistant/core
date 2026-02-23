@@ -94,14 +94,18 @@ async def test_number(
     entity_id = find_entity_id(Platform.NUMBER, zha_device_proxy, hass)
     assert entity_id is not None
 
-    assert hass.states.get(entity_id).state == "15.0"
+    hass_state = hass.states.get(entity_id)
+    assert hass_state is not None
+    assert hass_state.state == "15.0"
 
     # test attributes
-    assert hass.states.get(entity_id).attributes.get("min") == 1.0
-    assert hass.states.get(entity_id).attributes.get("max") == 100.0
-    assert hass.states.get(entity_id).attributes.get("step") == 1.1
-    assert hass.states.get(entity_id).attributes.get("icon") == "mdi:percent"
-    assert hass.states.get(entity_id).attributes.get("unit_of_measurement") == "%"
+    assert hass_state.attributes.get("min") == 1.0
+    assert hass_state.attributes.get("max") == 100.0
+    assert hass_state.attributes.get("step") == 1.1
+    assert hass_state.attributes.get("icon") == "mdi:percent"
+    assert hass_state.attributes.get("unit_of_measurement") == "%"
+    assert hass_state.attributes.get("mode") == "auto"
+    assert hass_state.attributes.get("device_class") is None
 
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
