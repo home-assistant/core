@@ -31,11 +31,5 @@ async def test_get_config_entry_diagnostics(
         exclude=props(
             "created_at",
             "modified_at",
-            "id",
-            "device_id",
-            "via_device_id",
-            "last_changed",
-            "last_reported",
-            "last_updated",
         ),
     )
