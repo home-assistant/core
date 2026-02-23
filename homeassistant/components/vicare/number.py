@@ -26,10 +26,20 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import (
+    CONF_HEAT_TIMEOUT_MINUTES,
+    CONF_MIN_BOOST_TEMPERATURE,
+    CONF_WARM_WATER_DELAY_MINUTES,
+    DEFAULT_DHW_BOOST_HEAT_TIMEOUT_MINUTES,
+    DEFAULT_DHW_BOOST_MIN_TEMPERATURE,
+    DEFAULT_DHW_BOOST_WARM_WATER_DELAY_MINUTES,
+    DOMAIN,
+)
 from .entity import ViCareEntity
 from .types import (
     HeatingProgram,
@@ -51,6 +61,55 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     min_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     max_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViCareOptionNumberEntityDescription(NumberEntityDescription):
+    """Describes ViCare option number entity."""
+
+    option_key: str
+    default_value: float
+
+
+BOOST_OPTION_ENTITY_DESCRIPTIONS: tuple[ViCareOptionNumberEntityDescription, ...] = (
+    ViCareOptionNumberEntityDescription(
+        key="boost_min_temperature",
+        translation_key="boost_min_temperature",
+        option_key=CONF_MIN_BOOST_TEMPERATURE,
+        default_value=DEFAULT_DHW_BOOST_MIN_TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=20,
+        native_max_value=70,
+        native_step=1,
+    ),
+    ViCareOptionNumberEntityDescription(
+        key="boost_heat_timeout",
+        translation_key="boost_heat_timeout",
+        option_key=CONF_HEAT_TIMEOUT_MINUTES,
+        default_value=float(DEFAULT_DHW_BOOST_HEAT_TIMEOUT_MINUTES),
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=10,
+        native_max_value=240,
+        native_step=10,
+    ),
+    ViCareOptionNumberEntityDescription(
+        key="boost_warm_water_delay",
+        translation_key="boost_warm_water_delay",
+        option_key=CONF_WARM_WATER_DELAY_MINUTES,
+        default_value=float(DEFAULT_DHW_BOOST_WARM_WATER_DELAY_MINUTES),
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=1,
+        native_max_value=240,
+        native_step=1,
+    ),
+)
 
 
 DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
@@ -356,11 +415,19 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
+    config_entry: ViCareConfigEntry,
     device_list: list[ViCareDevice],
-) -> list[ViCareNumber]:
+) -> list[NumberEntity]:
     """Create ViCare number entities for a device."""
 
-    entities: list[ViCareNumber] = []
+    entities: list[NumberEntity] = []
+    primary_device = device_list[0] if device_list else None
+
+    entities.extend(
+        ViCareOptionNumber(config_entry, description, primary_device)
+        for description in BOOST_OPTION_ENTITY_DESCRIPTIONS
+    )
+
     for device in device_list:
         # add device entities
         entities.extend(
@@ -398,6 +465,7 @@ async def async_setup_entry(
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
+            config_entry,
             config_entry.runtime_data.devices,
         )
     )
@@ -470,3 +538,55 @@ def _get_value(
     api: PyViCareHeatingDeviceComponent,
 ) -> float | None:
     return None if fn is None else fn(api)
+
+
+class ViCareOptionNumber(NumberEntity):
+    """Representation of a ViCare options-backed number."""
+
+    entity_description: ViCareOptionNumberEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        config_entry: ViCareConfigEntry,
+        description: ViCareOptionNumberEntityDescription,
+        device: ViCareDevice | None,
+    ) -> None:
+        """Initialize options-backed number entity."""
+        self.entity_description = description
+        self._config_entry = config_entry
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+        self._attr_translation_key = description.translation_key
+        if device is not None:
+            gateway_serial = device.config.getConfig().serial
+            device_id = device.config.getId()
+            device_serial = get_device_serial(device.api)
+            identifier = (
+                f"{gateway_serial}_{device_serial.replace('-', '_')}"
+                if device_serial is not None
+                else f"{gateway_serial}_{device_id}"
+            )
+            model = device.config.getModel().replace("_", " ")
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, identifier)},
+                name=model,
+                manufacturer="Viessmann",
+                model=model,
+            )
+
+    @property
+    def native_value(self) -> float:
+        """Return current value from entry options."""
+        return float(
+            self._config_entry.options.get(
+                self.entity_description.option_key,
+                self.entity_description.default_value,
+            )
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set option value."""
+        options = dict(self._config_entry.options)
+        options[self.entity_description.option_key] = value
+        self.hass.config_entries.async_update_entry(self._config_entry, options=options)
+        self.async_write_ha_state()

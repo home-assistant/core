@@ -89,6 +89,12 @@
       },
       "deactivate_onetimecharge": {
         "name": "Deactivate one-time charge"
+      },
+      "dhw_circulation_boost_30m": {
+        "name": "DHW circulation boost 30 min"
+      },
+      "dhw_circulation_boost_60m": {
+        "name": "DHW circulation boost 60 min"
       }
     },
     "climate": {
@@ -114,6 +120,15 @@
       }
     },
     "number": {
+      "boost_heat_timeout": {
+        "name": "Boost heating timeout"
+      },
+      "boost_min_temperature": {
+        "name": "Boost minimum temperature"
+      },
+      "boost_warm_water_delay": {
+        "name": "Boost warm water delay"
+      },
       "comfort_cooling_temperature": {
         "name": "Comfort cooling temperature"
       },
@@ -606,6 +621,33 @@
     }
   },
   "exceptions": {
+    "boost_device_missing": {
+      "message": "Device does not exist"
+    },
+    "boost_device_not_found": {
+      "message": "Selected device is not managed by ViCare"
+    },
+    "boost_device_required": {
+      "message": "Select a device for this service call"
+    },
+    "boost_dhw_schedule_not_supported": {
+      "message": "Domestic hot water schedule is not supported"
+    },
+    "boost_entity_no_device": {
+      "message": "Entity is not linked to a device"
+    },
+    "boost_not_supported": {
+      "message": "Domestic hot water circulation schedule is not supported"
+    },
+    "boost_setpoint_not_supported": {
+      "message": "Domestic hot water temperature is not supported"
+    },
+    "boost_storage_not_supported": {
+      "message": "Domestic hot water storage temperature is not supported"
+    },
+    "boost_too_late": {
+      "message": "Boost duration runs past midnight"
+    },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"
     },
@@ -616,7 +658,61 @@
       "message": "Cannot translate preset {preset} into a valid ViCare program"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "heat_timeout_minutes": "Heating timeout",
+          "min_boost_temperature": "Minimum boost temperature",
+          "warm_water_delay_minutes": "Warm water delay"
+        },
+        "data_description": {
+          "heat_timeout_minutes": "Maximum time to keep temporary DHW heating enabled before circulation starts.",
+          "min_boost_temperature": "Minimum storage temperature to reach before circulation starts.",
+          "warm_water_delay_minutes": "Delay after circulation starts before warm water available event is emitted."
+        }
+      }
+    }
+  },
   "services": {
+    "activate_dhw_circulation_boost": {
+      "description": "Temporarily enable domestic hot water circulation by adjusting the schedule.",
+      "fields": {
+        "duration_minutes": {
+          "description": "How long to keep circulation active.",
+          "name": "Duration"
+        },
+        "heat_timeout_minutes": {
+          "description": "Maximum time to wait for storage temperature before starting circulation.",
+          "name": "Heating timeout"
+        },
+        "min_boost_temperature": {
+          "description": "Minimum storage temperature required before circulation starts.",
+          "name": "Minimum boost temperature"
+        },
+        "min_storage_temperature": {
+          "description": "Legacy alias for minimum boost temperature.",
+          "name": "Minimum storage temperature"
+        },
+        "target_setpoint": {
+          "description": "Temporary domestic hot water setpoint to reach before circulation.",
+          "name": "Temporary setpoint"
+        },
+        "warm_water_delay_minutes": {
+          "description": "Delay after circulation starts before warm water available event is emitted.",
+          "name": "Warm water delay"
+        }
+      },
+      "name": "Activate DHW circulation boost"
+    },
+    "get_device_raw_features": {
+      "description": "Return raw device feature data from the ViCare API for each device.",
+      "name": "Get device raw features"
+    },
+    "get_dhw_circulation_schedule": {
+      "description": "Return the domestic hot water circulation schedule and supported modes for each device.",
+      "name": "Get DHW circulation schedule"
+    },
     "set_vicare_mode": {
       "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {

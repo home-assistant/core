@@ -764,6 +764,1033 @@
     'state': '7.843',
   })
 # ---
+# name: test_all_entities[sensor.model0_heating_circuits_0_dhw_pumps_circulation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_0_dhw_pumps_circulation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.0.dhw.pumps.circulation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.0.dhw.pumps.circulation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_0_dhw_pumps_circulation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_0_dhw_pumps_circulation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.0.dhw.pumps.circulation.schedule',
+      'friendly_name': 'model0 heating.circuits.0.dhw.pumps.circulation.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'on',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_0_dhw_pumps_circulation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_0_dhw_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_0_dhw_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.0.dhw.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.0.dhw.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_0_dhw_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_0_dhw_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.0.dhw.schedule',
+      'friendly_name': 'model0 heating.circuits.0.dhw.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'on',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_0_dhw_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_0_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_0_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.0.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.0.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_0_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_0_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'reduced',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.0.heating.schedule',
+      'friendly_name': 'model0 heating.circuits.0.heating.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'normal',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_0_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_1_dhw_pumps_circulation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_1_dhw_pumps_circulation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.1.dhw.pumps.circulation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.1.dhw.pumps.circulation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_1_dhw_pumps_circulation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_1_dhw_pumps_circulation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '06:30',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.1.dhw.pumps.circulation.schedule',
+      'friendly_name': 'model0 heating.circuits.1.dhw.pumps.circulation.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'on',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_1_dhw_pumps_circulation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_1_dhw_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_1_dhw_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.1.dhw.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.1.dhw.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_1_dhw_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_1_dhw_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '10:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '16:30',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '10:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '16:30',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '06:30',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '06:30',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '10:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '16:30',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '10:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '16:30',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '10:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '04:30',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '16:30',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.1.dhw.schedule',
+      'friendly_name': 'model0 heating.circuits.1.dhw.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'on',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_1_dhw_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_1_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_1_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.1.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.1.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_1_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_1_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'reduced',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.1.heating.schedule',
+      'friendly_name': 'model0 heating.circuits.1.heating.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'normal',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_1_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_2_dhw_pumps_circulation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_2_dhw_pumps_circulation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.2.dhw.pumps.circulation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.2.dhw.pumps.circulation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_2_dhw_pumps_circulation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_2_dhw_pumps_circulation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.2.dhw.pumps.circulation.schedule',
+      'friendly_name': 'model0 heating.circuits.2.dhw.pumps.circulation.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_2_dhw_pumps_circulation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_2_dhw_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_2_dhw_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.2.dhw.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.2.dhw.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_2_dhw_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_2_dhw_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.2.dhw.schedule',
+      'friendly_name': 'model0 heating.circuits.2.dhw.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_2_dhw_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_2_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_circuits_2_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.2.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.2.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_circuits_2_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_circuits_2_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.2.heating.schedule',
+      'friendly_name': 'model0 heating.circuits.2.heating.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_circuits_2_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_dhw_pumps_circulation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_dhw_pumps_circulation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.dhw.pumps.circulation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.dhw.pumps.circulation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_dhw_pumps_circulation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_dhw_pumps_circulation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.dhw.pumps.circulation.schedule',
+      'friendly_name': 'model0 heating.dhw.pumps.circulation.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_dhw_pumps_circulation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_dhw_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_dhw_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.dhw.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.dhw.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_deviceSerialVitodens300W-schedule_heating_dhw_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model0_heating_dhw_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.dhw.schedule',
+      'friendly_name': 'model0 heating.dhw.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_dhw_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
 # name: test_all_entities[sensor.model0_heating_gas_consumption_this_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2466,6 +3493,745 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.0',
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_0_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model1_heating_circuits_0_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.0.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.0.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway1_deviceSerialVitocal250A-schedule_heating_circuits_0_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_0_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'reduced',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '03:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+          dict({
+            'end': '05:00',
+            'mode': 'comfort',
+            'position': 1,
+            'start': '03:00',
+          }),
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 2,
+            'start': '05:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.0.heating.schedule',
+      'friendly_name': 'model1 heating.circuits.0.heating.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'normal',
+        'comfort',
+      ]),
+      'overlap_allowed': False,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model1_heating_circuits_0_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_1_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model1_heating_circuits_1_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.1.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.1.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway1_deviceSerialVitocal250A-schedule_heating_circuits_1_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_1_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.1.heating.schedule',
+      'friendly_name': 'model1 heating.circuits.1.heating.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model1_heating_circuits_1_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_2_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model1_heating_circuits_2_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.2.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.2.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway1_deviceSerialVitocal250A-schedule_heating_circuits_2_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_2_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.2.heating.schedule',
+      'friendly_name': 'model1 heating.circuits.2.heating.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model1_heating_circuits_2_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_3_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model1_heating_circuits_3_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.3.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.3.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway1_deviceSerialVitocal250A-schedule_heating_circuits_3_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_circuits_3_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.3.heating.schedule',
+      'friendly_name': 'model1 heating.circuits.3.heating.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model1_heating_circuits_3_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_dhw_pumps_circulation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model1_heating_dhw_pumps_circulation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.dhw.pumps.circulation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.dhw.pumps.circulation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway1_deviceSerialVitocal250A-schedule_heating_dhw_pumps_circulation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_dhw_pumps_circulation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '09:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '09:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '09:30',
+            'mode': 'on',
+            'position': 0,
+            'start': '07:00',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '09:30',
+            'mode': 'on',
+            'position': 0,
+            'start': '07:00',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '09:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '09:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '09:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '05:30',
+          }),
+          dict({
+            'end': '13:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '12:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': 'on',
+            'position': 2,
+            'start': '18:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.dhw.pumps.circulation.schedule',
+      'friendly_name': 'model1 heating.dhw.pumps.circulation.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'on',
+      ]),
+      'overlap_allowed': False,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model1_heating_dhw_pumps_circulation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_dhw_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model1_heating_dhw_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.dhw.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.dhw.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway1_deviceSerialVitocal250A-schedule_heating_dhw_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model1_heating_dhw_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '03:00',
+            'mode': 'on',
+            'position': 0,
+            'start': '01:00',
+          }),
+          dict({
+            'end': '15:00',
+            'mode': 'on',
+            'position': 1,
+            'start': '13:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.dhw.schedule',
+      'friendly_name': 'model1 heating.dhw.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'on',
+      ]),
+      'overlap_allowed': False,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model1_heating_dhw_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[sensor.model1_heating_electricity_consumption_last_seven_days-entry]
@@ -4653,6 +6419,541 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.model2_heating_circuits_0_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model2_heating_circuits_0_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.0.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.0.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway2_################-schedule_heating_circuits_0_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_circuits_0_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'standby',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+        ]),
+        'mon': list([
+        ]),
+        'sat': list([
+        ]),
+        'sun': list([
+        ]),
+        'thu': list([
+        ]),
+        'tue': list([
+        ]),
+        'wed': list([
+        ]),
+      }),
+      'feature': 'heating.circuits.0.heating.schedule',
+      'friendly_name': 'model2 heating.circuits.0.heating.schedule',
+      'max_entries': 8,
+      'modes': list([
+        'reduced',
+        'normal',
+        'fixed',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model2_heating_circuits_0_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_circuits_1_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model2_heating_circuits_1_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.1.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.1.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway2_################-schedule_heating_circuits_1_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_circuits_1_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'standby',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '24:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.circuits.1.heating.schedule',
+      'friendly_name': 'model2 heating.circuits.1.heating.schedule',
+      'max_entries': 8,
+      'modes': list([
+        'reduced',
+        'normal',
+        'fixed',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model2_heating_circuits_1_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_circuits_2_heating_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model2_heating_circuits_2_heating_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.circuits.2.heating.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.circuits.2.heating.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway2_################-schedule_heating_circuits_2_heating_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_circuits_2_heating_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': None,
+      'enabled': False,
+      'entries': dict({
+      }),
+      'feature': 'heating.circuits.2.heating.schedule',
+      'friendly_name': 'model2 heating.circuits.2.heating.schedule',
+      'max_entries': None,
+      'modes': None,
+      'overlap_allowed': None,
+      'ready': True,
+      'resolution': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model2_heating_circuits_2_heating_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_dhw_pumps_circulation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model2_heating_dhw_pumps_circulation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.dhw.pumps.circulation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.dhw.pumps.circulation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway2_################-schedule_heating_dhw_pumps_circulation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_dhw_pumps_circulation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '08:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '06:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '08:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '06:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '09:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '07:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '09:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '07:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '08:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '06:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '08:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '06:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '08:00',
+            'mode': '5/25-cycles',
+            'position': 0,
+            'start': '06:00',
+          }),
+          dict({
+            'end': '20:00',
+            'mode': '5/25-cycles',
+            'position': 1,
+            'start': '18:00',
+          }),
+        ]),
+      }),
+      'feature': 'heating.dhw.pumps.circulation.schedule',
+      'friendly_name': 'model2 heating.dhw.pumps.circulation.schedule',
+      'max_entries': 8,
+      'modes': list([
+        '5/25-cycles',
+        '5/10-cycles',
+        'on',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model2_heating_dhw_pumps_circulation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_dhw_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model2_heating_dhw_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'heating.dhw.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'heating.dhw.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway2_################-schedule_heating_dhw_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model2_heating_dhw_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'off',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '22:00',
+            'mode': 'normal',
+            'position': 0,
+            'start': '05:30',
+          }),
+        ]),
+      }),
+      'feature': 'heating.dhw.schedule',
+      'friendly_name': 'model2 heating.dhw.schedule',
+      'max_entries': 8,
+      'modes': list([
+        'top',
+        'normal',
+        'temp-2',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model2_heating_dhw_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[sensor.model2_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5233,6 +7534,125 @@
     'state': 'schedule',
   })
 # ---
+# name: test_all_entities[sensor.model2_ventilation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model2_ventilation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ventilation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ventilation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway2_################-schedule_ventilation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model2_ventilation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'levelOne',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '24:00',
+            'mode': 'levelThree',
+            'position': 0,
+            'start': '00:00',
+          }),
+        ]),
+      }),
+      'feature': 'ventilation.schedule',
+      'friendly_name': 'model2 ventilation.schedule',
+      'max_entries': 8,
+      'modes': list([
+        'levelTwo',
+        'levelThree',
+        'levelFour',
+      ]),
+      'overlap_allowed': True,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model2_ventilation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[sensor.model3_ventilation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5363,6 +7783,124 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'permanent',
+  })
+# ---
+# name: test_all_entities[sensor.model3_ventilation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model3_ventilation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ventilation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ventilation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway3_deviceSerialViAir300F-schedule_ventilation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model3_ventilation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'levelOne',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+      }),
+      'feature': 'ventilation.schedule',
+      'friendly_name': 'model3 ventilation.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'levelTwo',
+        'levelThree',
+      ]),
+      'overlap_allowed': False,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model3_ventilation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[sensor.model4_filter_hours-entry]
@@ -6141,6 +8679,126 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'sensordriven',
+  })
+# ---
+# name: test_all_entities[sensor.model4_ventilation_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model4_ventilation_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ventilation.schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ventilation.schedule',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway4_deviceId4-schedule_ventilation_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model4_ventilation_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'default_mode': 'standby',
+      'enabled': True,
+      'entries': dict({
+        'fri': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'mon': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sat': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'sun': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'thu': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'tue': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+        'wed': list([
+          dict({
+            'end': '22:00',
+            'mode': 'levelTwo',
+            'position': 0,
+            'start': '06:00',
+          }),
+        ]),
+      }),
+      'feature': 'ventilation.schedule',
+      'friendly_name': 'model4 ventilation.schedule',
+      'max_entries': 4,
+      'modes': list([
+        'levelOne',
+        'levelTwo',
+        'levelThree',
+        'levelFour',
+      ]),
+      'overlap_allowed': False,
+      'ready': True,
+      'resolution': 10,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model4_ventilation_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[sensor.model5_battery_charge_total-entry]

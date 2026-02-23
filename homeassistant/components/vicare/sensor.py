@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -1361,12 +1362,28 @@ INVERTER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
+def _discover_schedule_features(device_config: PyViCareDeviceConfig) -> list[str]:
+    """Return all schedule features exposed by the API for a device."""
+    raw_features = device_config.get_raw_json()
+    data = raw_features.get("data", [])
+
+    return sorted(
+        {
+            feature_name
+            for feature in data
+            if isinstance(feature, dict)
+            and isinstance(feature_name := feature.get("feature"), str)
+            and feature_name.endswith(".schedule")
+        }
+    )
+
+
 def _build_entities(
     device_list: list[ViCareDevice],
-) -> list[ViCareSensor]:
+) -> list[SensorEntity]:
     """Create ViCare sensor entities for a device."""
 
-    entities: list[ViCareSensor] = []
+    entities: list[SensorEntity] = []
     for device in device_list:
         # add device entities
         entities.extend(
@@ -1400,6 +1417,16 @@ def _build_entities(
                 for description in entity_description_list
                 if is_supported(description.key, description.value_getter, component)
             )
+
+        entities.extend(
+            ViCareScheduleSensor(
+                feature_name,
+                get_device_serial(device.api),
+                device.config,
+                device.api,
+            )
+            for feature_name in _discover_schedule_features(device.config)
+        )
     return entities
 
 
@@ -1471,3 +1498,96 @@ class ViCareSensor(ViCareEntity, SensorEntity):
             self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
                 vicare_unit
             )
+
+
+def _extract_property_value(data: Any) -> Any:
+    """Return an unwrapped property value."""
+    if isinstance(data, dict) and "value" in data:
+        return data["value"]
+    return data
+
+
+class ViCareScheduleSensor(ViCareEntity, SensorEntity):
+    """Representation of a ViCare schedule feature."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        feature_name: str,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+    ) -> None:
+        """Initialize the schedule sensor."""
+        super().__init__(
+            f"schedule_{feature_name.replace('.', '_')}",
+            device_serial,
+            device_config,
+            device,
+        )
+        self._feature_name = feature_name
+        self._attr_name = feature_name
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_native_value is not None
+
+    def update(self) -> None:
+        """Update state of schedule sensor."""
+        try:
+            feature = self._api.getProperty(self._feature_name)
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Unable to retrieve data from ViCare server")
+            return
+        except ValueError:
+            _LOGGER.error("Unable to decode data from ViCare server")
+            return
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+            return
+        except PyViCareInvalidDataError as invalid_data_exception:
+            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            return
+        except PyViCareNotSupportedFeatureError:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
+
+        if not isinstance(feature, dict):
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
+
+        properties = feature.get("properties", {})
+        is_enabled = bool(feature.get("isEnabled", True))
+        is_ready = bool(feature.get("isReady", True))
+        active = _extract_property_value(properties.get("active"))
+        entries = _extract_property_value(properties.get("entries"))
+        commands = feature.get("commands", {})
+        constraints = (
+            commands.get("setSchedule", {})
+            .get("params", {})
+            .get("newSchedule", {})
+            .get("constraints", {})
+        )
+
+        if not is_enabled:
+            self._attr_native_value = "disabled"
+        elif isinstance(active, bool):
+            self._attr_native_value = "on" if active else "off"
+        else:
+            self._attr_native_value = "unknown"
+
+        self._attr_extra_state_attributes = {
+            "feature": self._feature_name,
+            "enabled": is_enabled,
+            "ready": is_ready,
+            "entries": entries if isinstance(entries, dict) else {},
+            "default_mode": constraints.get("defaultMode"),
+            "modes": constraints.get("modes"),
+            "max_entries": constraints.get("maxEntries"),
+            "resolution": constraints.get("resolution"),
+            "overlap_allowed": constraints.get("overlapAllowed"),
+        }

@@ -6,6 +6,10 @@ from homeassistant.const import Platform
 
 DOMAIN = "vicare"
 
+SERVICE_GET_DHW_CIRCULATION_SCHEDULE = "get_dhw_circulation_schedule"
+SERVICE_GET_DEVICE_RAW_FEATURES = "get_device_raw_features"
+SERVICE_ACTIVATE_DHW_CIRCULATION_BOOST = "activate_dhw_circulation_boost"
+
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -31,8 +35,14 @@ VIESSMANN_DEVELOPER_PORTAL = "https://app.developer.viessmann-climatesolutions.c
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
+CONF_MIN_BOOST_TEMPERATURE = "min_boost_temperature"
+CONF_HEAT_TIMEOUT_MINUTES = "heat_timeout_minutes"
+CONF_WARM_WATER_DELAY_MINUTES = "warm_water_delay_minutes"
 
 DEFAULT_CACHE_DURATION = 60
+DEFAULT_DHW_BOOST_MIN_TEMPERATURE = 45.0
+DEFAULT_DHW_BOOST_HEAT_TIMEOUT_MINUTES = 60
+DEFAULT_DHW_BOOST_WARM_WATER_DELAY_MINUTES = 20
 
 VICARE_BAR = "bar"
 VICARE_CELSIUS = "celsius"

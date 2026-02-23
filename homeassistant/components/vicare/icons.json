@@ -155,6 +155,15 @@
     }
   },
   "services": {
+    "activate_dhw_circulation_boost": {
+      "service": "mdi:water-pump"
+    },
+    "get_device_raw_features": {
+      "service": "mdi:api"
+    },
+    "get_dhw_circulation_schedule": {
+      "service": "mdi:calendar-clock"
+    },
     "set_vicare_mode": {
       "service": "mdi:cog"
     }
