@@ -112,7 +112,7 @@ class InfraredEntity(RestoreEntity):
 
     entity_description: InfraredEntityDescription
     _attr_should_poll = False
-    _attr_state: None
+    _attr_state: None = None
 
     __last_command_sent: datetime | None = None
 
