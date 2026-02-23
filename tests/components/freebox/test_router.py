@@ -1,12 +1,18 @@
 """Tests for the Freebox utility methods."""
 
 import json
+from pathlib import Path
+import socket
 from unittest.mock import Mock
 
 from freebox_api.exceptions import HttpRequestError
 import pytest
 
-from homeassistant.components.freebox.router import get_hosts_list_if_supported, is_json
+from homeassistant.components.freebox.router import (
+    get_hosts_list_if_supported,
+    is_json,
+    read_device_name_from_file,
+)
 
 from .const import DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE, DATA_WIFI_GET_GLOBAL_CONFIG
 
@@ -58,3 +64,47 @@ async def test_get_hosts_list_if_supported_bridge_error(
     """Other exceptions must be propagated."""
     with pytest.raises(HttpRequestError):
         await get_hosts_list_if_supported(mock_router_bridge_mode_error())
+
+
+async def test_read_device_name_from_file_success(tmp_path: Path) -> None:
+    """Test reading device name from a valid token file."""
+    token_file = tmp_path / "token.conf"
+    data = {"device_name": "MyFreeboxDevice"}
+    token_file.write_text(json.dumps(data), encoding="utf-8")
+
+    assert read_device_name_from_file(token_file) == "MyFreeboxDevice"
+
+
+async def test_read_device_name_from_file_invalid_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test reading device name from a token file with invalid JSON."""
+    token_file = tmp_path / "token.conf"
+    token_file.write_text("not a json", encoding="utf-8")
+
+    monkeypatch.setattr(socket, "gethostname", lambda: "fallback-host")
+
+    assert read_device_name_from_file(token_file) == "fallback-host"
+
+
+async def test_read_device_name_from_file_missing_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test reading device name from a token file missing the device_name key."""
+    token_file = tmp_path / "token.conf"
+    token_file.write_text(json.dumps({}), encoding="utf-8")
+
+    monkeypatch.setattr(socket, "gethostname", lambda: "fallback-host-2")
+
+    assert read_device_name_from_file(token_file) == "fallback-host-2"
+
+
+async def test_read_device_name_from_file_missing_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test reading device name when the token file does not exist."""
+    token_file = tmp_path / "does_not_exist.conf"
+
+    monkeypatch.setattr(socket, "gethostname", lambda: "no-file-host")
+
+    assert read_device_name_from_file(token_file) == "no-file-host"

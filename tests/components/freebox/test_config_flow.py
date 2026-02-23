@@ -96,6 +96,7 @@ async def internal_test_link(hass: HomeAssistant) -> None:
         assert result["title"] == MOCK_HOST
         assert result["data"][CONF_HOST] == MOCK_HOST
         assert result["data"][CONF_PORT] == MOCK_PORT
+        assert result["data"][CONF_SERVICE_USER_NAME] == MOCK_CONF_SERVICE_USER_NAME
 
         assert len(mock_setup_entry.mock_calls) == 1
 

@@ -82,14 +82,16 @@ async def get_api(
 
     token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
 
+    app_desc = APP_DESC.copy()
+
     if os.path.exists(token_file):
-        APP_DESC["device_name"] = await hass.async_add_executor_job(
+        app_desc["device_name"] = await hass.async_add_executor_job(
             read_device_name_from_file, token_file
         )
     elif service_name is not None:
-        APP_DESC["device_name"] = service_name
+        app_desc["device_name"] = service_name
 
-    return Freepybox(APP_DESC, token_file, API_VERSION)
+    return Freepybox(app_desc, token_file, API_VERSION)
 
 
 async def get_hosts_list_if_supported(
