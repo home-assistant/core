@@ -1,8 +1,10 @@
 charge:
-  target:
-    entity:
-      integration: indevolt
   fields:
+    target:
+      required: true
+      selector:
+        device:
+          integration: indevolt
     target_soc:
       required: true
       selector:
@@ -21,10 +23,12 @@ charge:
           unit_of_measurement: "W"
 
 discharge:
-  target:
-    entity:
-      integration: indevolt
   fields:
+    target:
+      required: true
+      selector:
+        device:
+          integration: indevolt
     target_soc:
       required: true
       selector:
@@ -43,15 +47,20 @@ discharge:
           unit_of_measurement: "W"
 
 stop:
-  target:
-    entity:
-      integration: indevolt
+  fields:
+    target:
+      required: true
+      selector:
+        device:
+          integration: indevolt
 
 change_energy_mode:
-  target:
-    entity:
-      integration: indevolt
   fields:
+    target:
+      required: true
+      selector:
+        device:
+          integration: indevolt
     energy_mode:
       required: true
       selector:

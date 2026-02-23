@@ -317,6 +317,10 @@
         "energy_mode": {
           "description": "Energy mode to activate.",
           "name": "Mode"
+        },
+        "target": {
+          "description": "Device(s) to target for charging",
+          "name": "Target"
         }
       },
       "name": "Change mode"
@@ -327,6 +331,10 @@
         "power": {
           "description": "Maximum charging power in watts.",
           "name": "Max. Power"
+        },
+        "target": {
+          "description": "Device(s) to target for charging",
+          "name": "Target"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -342,6 +350,10 @@
           "description": "Maximum discharging power in watts.",
           "name": "Max. Power"
         },
+        "target": {
+          "description": "Device(s) to target for charging",
+          "name": "Target"
+        },
         "target_soc": {
           "description": "Target state of charge percentage.",
           "name": "Target SOC"
@@ -351,6 +363,12 @@
     },
     "stop": {
       "description": "Real-time control: Stops battery charging/discharging.",
+      "fields": {
+        "target": {
+          "description": "Device(s) to target for charging",
+          "name": "Target"
+        }
+      },
       "name": "Stop"
     }
   }

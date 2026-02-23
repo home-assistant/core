@@ -12,13 +12,21 @@ from homeassistant.components.indevolt.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
 
-TARGET_ENTITY_GEN1 = "sensor.bk1600_energy_mode"
-TARGET_ENTITY_GEN2 = "switch.cms_sf2000_allow_grid_charging"
+
+def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
+    """Return the device registry ID for the given config entry."""
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
+    assert device_entry is not None
+    return device_entry.id
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -38,7 +46,7 @@ async def test_service_change_mode(
         DOMAIN,
         "change_energy_mode",
         {
-            "entity_id": TARGET_ENTITY_GEN2,
+            "target": [_get_device_id(hass, mock_config_entry)],
             "energy_mode": "real_time_control",
         },
         blocking=True,
@@ -65,7 +73,7 @@ async def test_service_charge(
         DOMAIN,
         "charge",
         {
-            "entity_id": TARGET_ENTITY_GEN2,
+            "target": [_get_device_id(hass, mock_config_entry)],
             "power": 1200,
             "target_soc": 60,
         },
@@ -95,7 +103,7 @@ async def test_service_discharge(
         DOMAIN,
         "discharge",
         {
-            "entity_id": TARGET_ENTITY_GEN2,
+            "target": [_get_device_id(hass, mock_config_entry)],
             "power": 1200,
             "target_soc": 40,
         },
@@ -124,7 +132,7 @@ async def test_service_stop(
     await hass.services.async_call(
         DOMAIN,
         "stop",
-        {"entity_id": TARGET_ENTITY_GEN2},
+        {"target": [_get_device_id(hass, mock_config_entry)]},
         blocking=True,
     )
 
@@ -149,7 +157,7 @@ async def test_service_charge_power_too_high(
             DOMAIN,
             "charge",
             {
-                "entity_id": TARGET_ENTITY_GEN1,
+                "target": [_get_device_id(hass, mock_config_entry)],
                 "power": 1300,
                 "target_soc": 60,
             },
@@ -174,7 +182,7 @@ async def test_service_charge_target_soc_below_emergency(
             DOMAIN,
             "charge",
             {
-                "entity_id": TARGET_ENTITY_GEN2,
+                "target": [_get_device_id(hass, mock_config_entry)],
                 "power": 1000,
                 "target_soc": 1,
             },
@@ -194,12 +202,12 @@ async def test_service_missing_target(
     """Test services fail when target does not resolve to an indevolt entry."""
     await setup_integration(hass, mock_config_entry)
 
-    # Mock call with invalid target
+    # Mock call with an unknown device ID
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "stop",
-            {"entity_id": "switch.does_not_exist"},
+            {"target": ["non-existent-device-id"]},
             blocking=True,
         )
 
@@ -226,7 +234,7 @@ async def test_service_change_mode_current_mode_unavailable(
             DOMAIN,
             "change_energy_mode",
             {
-                "entity_id": TARGET_ENTITY_GEN2,
+                "target": [_get_device_id(hass, mock_config_entry)],
                 "energy_mode": "real_time_control",
             },
             blocking=True,
@@ -255,7 +263,7 @@ async def test_service_change_mode_outdoor_portable(
             DOMAIN,
             "change_energy_mode",
             {
-                "entity_id": TARGET_ENTITY_GEN2,
+                "target": [_get_device_id(hass, mock_config_entry)],
                 "energy_mode": "real_time_control",
             },
             blocking=True,
