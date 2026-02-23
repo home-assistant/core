@@ -471,12 +471,12 @@ class EcovacsVacuum(
                     (
                         segment.name
                         for segment in self.last_seen_segments or []
-                        if segment.id == segment_id
+                        if segment.id == composite_id
                     ),
                     "",
                 )
                 _LOGGER.warning(
-                    "Map %s is not currently selected, skipping segment %s (%s)",
+                    'Map "%s" is not currently selected, skipping segment "%s" (%s)',
                     map_obj.name,
                     room_name,
                     segment_id,
