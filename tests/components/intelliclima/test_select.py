@@ -58,11 +58,10 @@ async def test_all_select_entities(
     ]
     assert len(select_entries) == 1
 
-    for entity_entry in select_entries:
-        # Device should exist and match snapshot
-        assert entity_entry.device_id
-        assert (device_entry := device_registry.async_get(entity_entry.device_id))
-        assert device_entry == snapshot
+    entity_entry = select_entries[0]
+    assert entity_entry.device_id
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
