@@ -187,7 +187,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         endpoint.id, str(container_inspect.image)
                     )
 
-                    # Periododically check if Portainer Watcher has results for this container's image
+                    # Periodically check if Portainer Watcher has results for this container's image
                     image_status = (
                         result.status
                         if (
