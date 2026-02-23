@@ -40,13 +40,13 @@ class ViCareEntity(Entity):
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
         except PyViCareRateLimitError as err:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", err)
+            _LOGGER.error("ViCare API rate limit exceeded: %s", err)
         except PyViCareInvalidDataError as err:
-            _LOGGER.error("Invalid data from Vicare server: %s", err)
+            _LOGGER.error("Invalid data from ViCare server: %s", err)
         except PyViCareDeviceCommunicationError as err:
             _LOGGER.warning("Device communication error: %s", err)
         except PyViCareInternalServerError as err:
-            _LOGGER.warning("Vicare server error: %s", err)
+            _LOGGER.warning("ViCare server error: %s", err)
 
     def __init__(
         self,
