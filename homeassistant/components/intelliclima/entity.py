@@ -2,13 +2,13 @@
 
 from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
 
-from homeassistant.components.sensor import EntityDescription
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_MODEL, ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
 )
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
