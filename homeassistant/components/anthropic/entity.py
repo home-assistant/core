@@ -67,6 +67,9 @@ import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
+from homeassistant.components.openai_conversation.schema_utils import (
+    sanitize_tool_schema,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -109,7 +112,9 @@ def _format_tool(
     return ToolParam(
         name=tool.name,
         description=tool.description or "",
-        input_schema=convert(tool.parameters, custom_serializer=custom_serializer),
+        input_schema=sanitize_tool_schema(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        ),
     )
 
 

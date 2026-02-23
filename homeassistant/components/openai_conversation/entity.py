@@ -67,6 +67,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
+from .schema_utils import sanitize_tool_schema
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
@@ -156,7 +157,9 @@ def _format_tool(
     return FunctionToolParam(
         type="function",
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=sanitize_tool_schema(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        ),
         description=tool.description,
         strict=False,
     )
