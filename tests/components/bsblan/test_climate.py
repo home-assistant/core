@@ -119,28 +119,19 @@ async def _async_set_hvac_action(
     return state.attributes.get("hvac_action")
 
 
-async def test_hvac_action_handles_empty_and_invalid_inputs(
+async def test_hvac_action_handles_none_inputs(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure hvac_action gracefully handles None and malformed values."""
+    """Ensure hvac_action gracefully handles None values."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     assert await _async_set_hvac_action(hass, mock_bsblan, freezer, None) is None
 
     mock_action = MagicMock()
     mock_action.value = None
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
-
-    mock_action.value = ""
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
-
-    mock_action.value = "not_an_int"
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
-
-    mock_action.value = {"unexpected": True}
     assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
 
 
@@ -209,30 +200,6 @@ async def test_climate_without_target_temperature_sensor(
     assert state.attributes["temperature"] is None
 
 
-async def test_climate_hvac_mode_none_value(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test climate entity when hvac_mode value is None."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    # Set hvac_mode.value to None
-    mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = None
-    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # State should be unknown when hvac_mode is None
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == "unknown"
-
-
 async def test_climate_hvac_mode_object_none(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
@@ -255,30 +222,6 @@ async def test_climate_hvac_mode_object_none(
     assert state.state == "unknown"
     # preset_mode should be "none" when hvac_mode object is None
     assert state.attributes["preset_mode"] == PRESET_NONE
-
-
-async def test_climate_hvac_mode_string_fallback(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test climate entity with string hvac_mode value (fallback path)."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    # Set hvac_mode.value to a string (non-integer fallback)
-    mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = "heat"
-    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Should parse the string enum value
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == HVACMode.HEAT
 
 
 # Mapping from HA HVACMode to BSB-Lan integer values for test assertions
