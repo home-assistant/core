@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 # This significantly reduces response time (~0.2s per parameter saved)
 STATE_INCLUDE = ["current_temperature", "target_temperature", "hvac_mode"]
 SENSOR_INCLUDE = ["current_temperature", "outside_temperature"]
+SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
