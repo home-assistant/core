@@ -126,8 +126,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
         self.data["rate_limit"] = TadoRateLimit(
-            limit=int(rate_limit_info.get("per-day") or 0),
-            remaining=int(rate_limit_info.get("remaining") or 0),
+            limit=int(rate_limit_info["per-day"]),
+            remaining=int(rate_limit_info["remaining"]),
         )
 
         refresh_token = await self.hass.async_add_executor_job(
