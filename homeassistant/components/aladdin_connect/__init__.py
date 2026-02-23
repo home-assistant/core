@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -31,11 +33,27 @@ async def async_setup_entry(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed(err) from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
+
     client = AladdinConnectClient(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
 
-    doors = await client.get_doors()
+    try:
+        doors = await client.get_doors()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed(err) from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     entry.runtime_data = {
         door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)
