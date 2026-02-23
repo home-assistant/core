@@ -168,7 +168,7 @@ def test_validate_password_with_error(
     mock_path = Mock()
 
     with (
-        patch("homeassistant.components.backup.util.tarfile.open"),
+        patch("securetar.tarfile.open"),
         patch(
             "homeassistant.components.backup.util.SecureTarFile",
         ) as mock_secure_tar,
@@ -182,11 +182,9 @@ def test_validate_password_no_homeassistant() -> None:
     mock_path = Mock()
 
     with (
-        patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar,
+        patch("securetar.tarfile.open") as mock_open_tar,
     ):
-        mock_open_tar.return_value.__enter__.return_value.extractfile.side_effect = (
-            KeyError
-        )
+        mock_open_tar.return_value.extractfile.side_effect = KeyError
         assert validate_password(mock_path, "hunter2") is False
 
 

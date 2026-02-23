@@ -165,7 +165,7 @@ def validate_password(path: Path, password: str | None) -> bool:
             ):
                 # If we can read the tar file, the password is correct
                 return True
-        except tarfile.ReadError:
+        except tarfile.ReadError, SecureTarReadError:
             LOGGER.debug("Invalid password")
             return False
         except Exception:  # noqa: BLE001
