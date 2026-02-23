@@ -43,7 +43,7 @@ async def test_all_sensor_entities(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # There should be exactly one sensor entity
+    # There should be exactly three sensor entities
     sensor_entries = [
         entry
         for entry in entity_registry.entities.values()
