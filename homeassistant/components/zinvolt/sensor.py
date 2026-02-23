@@ -30,7 +30,6 @@ class ZinvoltBatteryStateDescription(SensorEntityDescription):
 SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
     ZinvoltBatteryStateDescription(
         key="state_of_charge",
-        translation_key="state_of_charge",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,

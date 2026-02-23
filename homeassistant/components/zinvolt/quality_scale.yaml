@@ -28,7 +28,9 @@ rules:
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: There are no configuration parameters
   docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
@@ -53,11 +55,13 @@ rules:
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: There are no repairable issues
   stale-devices: todo
 
   # Platinum

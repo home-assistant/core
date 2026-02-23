@@ -87,10 +87,9 @@ async def test_form_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zinvolt_client")
 async def test_duplicate_entry(
-    hass: HomeAssistant,
-    mock_zinvolt_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we handle duplicate entries."""
     mock_config_entry.add_to_hass(hass)
