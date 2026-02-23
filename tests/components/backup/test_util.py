@@ -160,15 +160,25 @@ def test_validate_password(
 
 
 @pytest.mark.parametrize("password", [None, "hunter2"])
-@pytest.mark.parametrize("secure_tar_side_effect", [tarfile.ReadError, Exception])
+@pytest.mark.parametrize(
+    ("secure_tar_side_effect", "expected_message"),
+    [
+        (tarfile.ReadError, "Invalid password"),
+        (securetar.SecureTarReadError, "Invalid password"),
+        (Exception, "Unexpected error validating password"),
+    ],
+)
 def test_validate_password_with_error(
-    password: str | None, secure_tar_side_effect: type[Exception]
+    password: str | None,
+    secure_tar_side_effect: type[Exception],
+    expected_message: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating a password."""
     mock_path = Mock()
 
     with (
-        patch("homeassistant.components.backup.util.tarfile.open"),
+        patch("securetar.tarfile.open"),
         patch(
             "homeassistant.components.backup.util.SecureTarFile",
         ) as mock_secure_tar,
@@ -176,18 +186,20 @@ def test_validate_password_with_error(
         mock_secure_tar.return_value.__enter__.side_effect = secure_tar_side_effect
         assert validate_password(mock_path, password) is False
 
+    assert expected_message in caplog.text
 
-def test_validate_password_no_homeassistant() -> None:
+
+def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) -> None:
     """Test validating a password."""
     mock_path = Mock()
 
     with (
-        patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar,
+        patch("securetar.tarfile.open") as mock_open_tar,
     ):
-        mock_open_tar.return_value.__enter__.return_value.extractfile.side_effect = (
-            KeyError
-        )
+        mock_open_tar.return_value.extractfile.side_effect = KeyError
         assert validate_password(mock_path, "hunter2") is False
+
+    assert "No homeassistant.tar or homeassistant.tar.gz found" in caplog.text
 
 
 @pytest.mark.parametrize(
