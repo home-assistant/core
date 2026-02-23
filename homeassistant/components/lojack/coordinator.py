@@ -81,7 +81,6 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         self._username = entry.data[CONF_USERNAME]
         self._password = entry.data[CONF_PASSWORD]
         self._default_update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
-        self._last_rate_limit: datetime | None = None
 
         super().__init__(
             hass,
@@ -120,7 +119,6 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
 
     def _handle_rate_limit(self, err: Exception) -> None:
         """Handle rate limiting by adjusting update interval."""
-        self._last_rate_limit = datetime.now(tz=UTC)
         retry_after = self._extract_retry_after(err)
 
         if retry_after is not None:
@@ -151,7 +149,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         return "429" in err_str or "Too Many Requests" in err_str
 
     async def _async_update_data(self) -> dict[str, LoJackVehicleData]:
-        """Fetch data from LoJack API."""
+        """Fetch data from API."""
         try:
             devices = await self.client.list_devices()
         except AuthenticationError:
@@ -233,13 +231,12 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         )
 
         LOGGER.debug(
-            "Location data for device %s: lat=%s, lon=%s, accuracy=%s, "
-            "heading=%s, timestamp=%s",
+            "Location data for device %s: present=%s, has_accuracy=%s, "
+            "has_heading=%s, timestamp=%s",
             device_id,
-            vehicle.latitude,
-            vehicle.longitude,
-            vehicle.accuracy,
-            vehicle.heading,
+            vehicle.latitude is not None and vehicle.longitude is not None,
+            vehicle.accuracy is not None,
+            vehicle.heading is not None,
             vehicle.timestamp,
         )
 
