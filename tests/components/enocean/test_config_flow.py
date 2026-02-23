@@ -202,17 +202,21 @@ async def test_usb_discovery(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     # test device path
     with (
         patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(
+            "homeassistant.components.usb.get_serial_by_id",
+            side_effect=lambda x: x,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
     assert result["data"] == {"device": device}
-    assert result["context"]["unique_id"] == "1234"
+    assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
     assert result["result"].state is ConfigEntryState.LOADED
