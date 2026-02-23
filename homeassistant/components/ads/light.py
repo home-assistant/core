@@ -178,8 +178,10 @@ def _map_color_mode(raw: int) -> ColorMode:
       Bit 4 (16) – RGB
       Bit 5 (32) – white channel
     RGBW is indicated by bits 4 and 5 set simultaneously (value 48).
-    When only bit 5 is set, BRIGHTNESS is returned because ColorMode.WHITE
-    must not be the only supported mode (Home Assistant requirement).
+    When bit 5 is set without bit 4 (i.e. white without RGB), ColorMode.WHITE
+    is avoided: if bit 2 (color temperature) is also set, WHITE is returned so
+    the caller can choose; otherwise BRIGHTNESS is returned because Home
+    Assistant requires at least one other mode alongside WHITE.
     """
     if (raw & 16) and (raw & 32):
         return ColorMode.RGBW
@@ -188,10 +190,10 @@ def _map_color_mode(raw: int) -> ColorMode:
     if raw & 8:
         return ColorMode.HS
     if raw & 32:
-        # ColorMode.WHITE must not be the only supported mode; use BRIGHTNESS when only bit 5 set.
-        if not (raw & 16) and not (raw & 8) and not (raw & 4):
-            return ColorMode.BRIGHTNESS
-        return ColorMode.WHITE
+        # Bit 4 (RGB) and bit 3 (HS) are guaranteed 0 here (handled above).
+        # Return BRIGHTNESS when only the white channel is active; ColorMode.WHITE
+        # must not be the only supported mode per Home Assistant requirements.
+        return ColorMode.BRIGHTNESS if not (raw & 4) else ColorMode.WHITE
     if raw & 4:
         return ColorMode.COLOR_TEMP
     if raw & 2:
@@ -302,9 +304,18 @@ class AdsLight(AdsEntity, LightEntity):
             color_modes.add(ColorMode.COLOR_TEMP)
         if ads_var_hue is not None and ads_var_saturation is not None:
             color_modes.add(ColorMode.HS)
-        if ads_var_red and ads_var_green and ads_var_blue and ads_var_white:
+        if (
+            ads_var_red is not None
+            and ads_var_green is not None
+            and ads_var_blue is not None
+            and ads_var_white is not None
+        ):
             color_modes.add(ColorMode.RGBW)
-        elif ads_var_red and ads_var_green and ads_var_blue:
+        elif (
+            ads_var_red is not None
+            and ads_var_green is not None
+            and ads_var_blue is not None
+        ):
             color_modes.add(ColorMode.RGB)
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
