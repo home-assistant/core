@@ -186,7 +186,7 @@ async def async_setup_entry(
         AirOSSensor(coordinator, description) for description in COMMON_SENSORS
     )
 
-    if coordinator.device_data.get("fw_major") == 8:
+    if coordinator.device_data["fw_major"] == 8:
         async_add_entities(
             AirOSSensor(coordinator, description) for description in AIROS8_SENSORS
         )
