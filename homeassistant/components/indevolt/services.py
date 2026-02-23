@@ -44,7 +44,7 @@ CHANGE_MODE_SERVICE_SCHEMA = vol.Schema(
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for My Integration."""
+    """Set up services for Indevolt integration."""
 
     async def set_mode(call: ServiceCall) -> None:
         """Handle the service call to change the energy mode."""
