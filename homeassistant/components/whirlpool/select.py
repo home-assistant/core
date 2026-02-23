@@ -21,8 +21,6 @@ from .entity import WhirlpoolEntity
 
 PARALLEL_UPDATES = 1
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass(frozen=True, kw_only=True)
 class WhirlpoolSelectDescription(SelectEntityDescription):
