@@ -18,6 +18,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .common import (
     set_node_attribute,
@@ -674,8 +675,8 @@ async def test_preset_mode_error_on_invalid_preset(
     """Test preset mode error when calling entity method directly with invalid preset."""
     entity_id = "climate.eve_thermo_20ecd1701"
 
-    # Get the entity object directly via component
-    component = hass.data.get("entity_components", {}).get("climate")
+    # Get the entity object directly via component using DATA_INSTANCES helper
+    component = hass.data.get(DATA_INSTANCES, {}).get(Platform.CLIMATE)
     assert component is not None
 
     entity = component.get_entity(entity_id)
@@ -699,8 +700,8 @@ async def test_hvac_mode_error_on_unsupported_mode(
     """Test HVAC mode error when calling entity method directly with unsupported mode."""
     entity_id = "climate.longan_link_hvac"
 
-    # Get the entity object directly via component
-    component = hass.data.get("entity_components", {}).get("climate")
+    # Get the entity object directly via component using DATA_INSTANCES helper
+    component = hass.data.get(DATA_INSTANCES, {}).get(Platform.CLIMATE)
     assert component is not None
 
     entity = component.get_entity(entity_id)
@@ -777,7 +778,6 @@ async def test_preset_mode_with_unnamed_preset(
         assert state.attributes["preset_mode"] == "Preset8"
 
         # Test that preset_mode is PRESET_NONE when ActivePresetHandle is cleared
-        # after adding an unnamed preset
         set_node_attribute(
             matter_node,
             1,
