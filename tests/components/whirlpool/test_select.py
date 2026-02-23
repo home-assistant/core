@@ -32,7 +32,7 @@ async def test_all_entities(
     ),
     [
         (
-            "select.beer_fridge_temperature",
+            "select.beer_fridge_temperature_level",
             "mock_refrigerator_api",
             "get_offset_temp",
             "set_offset_temp",
@@ -89,7 +89,7 @@ async def test_select_option_value_error(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.beer_fridge_temperature",
+                ATTR_ENTITY_ID: "select.beer_fridge_temperature_level",
                 ATTR_OPTION: "something",
             },
             blocking=True,

@@ -10,6 +10,7 @@ from typing import Final, override
 from whirlpool.appliance import Appliance
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -33,9 +34,10 @@ class WhirlpoolSelectDescription(SelectEntityDescription):
 
 REFRIGERATOR_DESCRIPTIONS: Final[tuple[WhirlpoolSelectDescription, ...]] = (
     WhirlpoolSelectDescription(
-        key="refrigerator_temperature",
-        translation_key="refrigerator_temperature",
+        key="refrigerator_temperature_level",
+        translation_key="refrigerator_temperature_level",
         options=["-4", "-2", "0", "3", "5"],
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda fridge: (
             str(val) if (val := fridge.get_offset_temp()) is not None else None
         ),

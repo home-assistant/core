@@ -47,8 +47,8 @@
   },
   "entity": {
     "select": {
-      "refrigerator_temperature": {
-        "name": "Temperature"
+      "refrigerator_temperature_level": {
+        "name": "Temperature level"
       }
     },
     "sensor": {

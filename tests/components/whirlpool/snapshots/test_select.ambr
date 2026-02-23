@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[select.beer_fridge_temperature-entry]
+# name: test_all_entities[select.beer_fridge_temperature_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.beer_fridge_temperature',
+    'entity_id': 'select.beer_fridge_temperature_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,25 +28,25 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': 'Temperature level',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Temperature level',
     'platform': 'whirlpool',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'refrigerator_temperature',
-    'unique_id': 'said_refrigerator-refrigerator_temperature',
-    'unit_of_measurement': None,
+    'translation_key': 'refrigerator_temperature_level',
+    'unique_id': 'said_refrigerator-refrigerator_temperature_level',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[select.beer_fridge_temperature-state]
+# name: test_all_entities[select.beer_fridge_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Beer fridge Temperature',
+      'friendly_name': 'Beer fridge Temperature level',
       'options': list([
         '-4',
         '-2',
@@ -54,9 +54,10 @@
         '3',
         '5',
       ]),
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.beer_fridge_temperature',
+    'entity_id': 'select.beer_fridge_temperature_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
