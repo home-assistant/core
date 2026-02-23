@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 
+from airos.discovery import airos_discover_devices
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
     AirOSConnectionSetupError,
     AirOSDataMissingError,
     AirOSDeviceConnectionError,
+    AirOSEndpointError,
     AirOSKeyDataMissingError,
+    AirOSListenerError,
 )
 import voluptuous as vol
 
@@ -36,15 +40,27 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
+from .const import (
+    DEFAULT_SSL,
+    DEFAULT_USERNAME,
+    DEFAULT_VERIFY_SSL,
+    DEVICE_NAME,
+    DOMAIN,
+    HOSTNAME,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    SECTION_ADVANCED_SETTINGS,
+)
 from .coordinator import AirOS8
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+# Discovery duration in seconds, airOS announces every 20 seconds
+DISCOVER_INTERVAL: int = 30
+
+STEP_DISCOVERY_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME, default="ubnt"): str,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
@@ -58,6 +74,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_MANUAL_DATA_SCHEMA = STEP_DISCOVERY_DATA_SCHEMA.extend(
+    {vol.Required(CONF_HOST): str}
+)
+
 
 class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
@@ -65,13 +85,28 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 1
 
+    _discovery_task: asyncio.Task | None = None
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
         self.airos_device: AirOS8
         self.errors: dict[str, str] = {}
+        self.discovered_devices: dict[str, dict[str, Any]] = {}
+        self.discovery_abort_reason: str | None = None
+        self.selected_device_info: dict[str, Any] = {}
 
     async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        self.errors = {}
+
+        return self.async_show_menu(
+            step_id="user", menu_options=["discovery", "manual"]
+        )
+
+    async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the manual input of host and credentials."""
@@ -84,7 +119,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=validated_info["data"],
                 )
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=self.errors
+            step_id="manual", data_schema=STEP_MANUAL_DATA_SCHEMA, errors=self.errors
         )
 
     async def _validate_and_get_device_info(
@@ -220,3 +255,163 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=self.errors,
         )
+
+    async def async_step_discovery(
+        self,
+        discovery_info: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Start the discovery process."""
+        if self._discovery_task and self._discovery_task.done():
+            self._discovery_task = None
+
+            # Handle appropriate 'errors' as abort through progress_done
+            if self.discovery_abort_reason:
+                return self.async_show_progress_done(
+                    next_step_id=self.discovery_abort_reason
+                )
+
+            # Abort through progress_done if no devices were found
+            if not self.discovered_devices:
+                _LOGGER.debug(
+                    "No (new or unconfigured) airOS devices found during discovery"
+                )
+                return self.async_show_progress_done(
+                    next_step_id="discovery_no_devices"
+                )
+
+            # Skip selecting a device if only one new/unconfigured device was found
+            if len(self.discovered_devices) == 1:
+                self.selected_device_info = list(self.discovered_devices.values())[0]
+                return self.async_show_progress_done(next_step_id="configure_device")
+
+            return self.async_show_progress_done(next_step_id="select_device")
+
+        if not self._discovery_task:
+            self.discovered_devices = {}
+            self._discovery_task = self.hass.async_create_task(
+                self._async_run_discovery_with_progress()
+            )
+
+        # Show the progress bar and wait for discovery to complete
+        return self.async_show_progress(
+            step_id="discovery",
+            progress_action="discovering",
+            progress_task=self._discovery_task,
+            description_placeholders={"seconds": str(DISCOVER_INTERVAL)},
+        )
+
+    async def async_step_select_device(
+        self,
+        discovery_info: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Select a discovered device."""
+        if discovery_info is not None:
+            selected_mac = discovery_info[MAC_ADDRESS]
+            self.selected_device_info = self.discovered_devices[selected_mac]
+            return await self.async_step_configure_device()
+
+        list_options = {
+            mac: f"{device.get(HOSTNAME, mac)} ({device.get(IP_ADDRESS, DEVICE_NAME)})"
+            for mac, device in self.discovered_devices.items()
+        }
+
+        return self.async_show_form(
+            step_id="select_device",
+            data_schema=vol.Schema({vol.Required(MAC_ADDRESS): vol.In(list_options)}),
+        )
+
+    async def async_step_configure_device(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Configure the selected device."""
+        self.errors = {}
+
+        if user_input is not None:
+            config_data = {
+                **user_input,
+                CONF_HOST: self.selected_device_info[IP_ADDRESS],
+            }
+            validated_info = await self._validate_and_get_device_info(config_data)
+
+            if validated_info:
+                return self.async_create_entry(
+                    title=validated_info["title"],
+                    data=validated_info["data"],
+                )
+
+        device_name = self.selected_device_info.get(
+            HOSTNAME, self.selected_device_info.get(IP_ADDRESS, DEVICE_NAME)
+        )
+        return self.async_show_form(
+            step_id="configure_device",
+            data_schema=STEP_DISCOVERY_DATA_SCHEMA,
+            errors=self.errors,
+            description_placeholders={"device_name": device_name},
+        )
+
+    async def _async_run_discovery_with_progress(self) -> None:
+        """Run discovery with an embedded progress update loop."""
+        progress_bar = self.hass.async_create_task(self._async_update_progress_bar())
+
+        known_mac_addresses = {
+            entry.unique_id.lower()
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.unique_id
+        }
+
+        try:
+            devices = await airos_discover_devices(DISCOVER_INTERVAL)
+        except AirOSEndpointError:
+            self.discovery_abort_reason = "discovery_detect_error"
+        except AirOSListenerError:
+            self.discovery_abort_reason = "discovery_listen_error"
+        except Exception:
+            self.discovery_abort_reason = "discovery_failed"
+            _LOGGER.exception("An error occurred during discovery")
+        else:
+            self.discovered_devices = {
+                mac_addr: info
+                for mac_addr, info in devices.items()
+                if mac_addr.lower() not in known_mac_addresses
+            }
+            _LOGGER.debug(
+                "Discovery task finished. Found %s new devices",
+                len(self.discovered_devices),
+            )
+        finally:
+            progress_bar.cancel()
+
+    async def _async_update_progress_bar(self) -> None:
+        """Update progress bar every second."""
+        try:
+            for i in range(DISCOVER_INTERVAL):
+                progress = (i + 1) / DISCOVER_INTERVAL
+                self.async_update_progress(progress)
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            pass
+
+    async def async_step_discovery_no_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort if discovery finds no (unconfigured) devices."""
+        return self.async_abort(reason="no_devices_found")
+
+    async def async_step_discovery_listen_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort if discovery is unable to listen on the port."""
+        return self.async_abort(reason="listen_error")
+
+    async def async_step_discovery_detect_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort if discovery receives incorrect broadcasts."""
+        return self.async_abort(reason="detect_error")
+
+    async def async_step_discovery_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort if discovery fails for other reasons."""
+        return self.async_abort(reason="discovery_failed")
