@@ -46,7 +46,7 @@
   "title": "Schedule",
   "triggers": {
     "turned_off": {
-      "description": "Triggers after one or more schedules turn off.",
+      "description": "Triggers when a schedule block ends.",
       "fields": {
         "behavior": {
           "description": "[%key:component::schedule::common::trigger_behavior_description%]",
@@ -56,7 +56,7 @@
       "name": "Schedule turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more schedules turn on.",
+      "description": "Triggers when a schedule block starts.",
       "fields": {
         "behavior": {
           "description": "[%key:component::schedule::common::trigger_behavior_description%]",
