@@ -1282,6 +1282,9 @@ lxml==6.0.1
 # homeassistant.components.matrix
 matrix-nio==0.25.2
 
+# homeassistant.components.matter
+matter-python-client==0.4.1
+
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
 
@@ -2175,9 +2178,6 @@ python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
 python-linkplay==0.2.12
-
-# homeassistant.components.matter
-python-matter-server==8.1.2
 
 # homeassistant.components.melcloud
 python-melcloud==0.1.2
