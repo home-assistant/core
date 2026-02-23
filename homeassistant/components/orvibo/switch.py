@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from orvibo.s20 import S20, S20Exception
@@ -31,12 +30,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .util import S20ConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Orvibo S20 Switch"
 DEFAULT_DISCOVERY = False
 
 PARALLEL_UPDATES = 1
@@ -140,6 +136,8 @@ class S20Switch(SwitchEntity):
         self._mac = mac
         self._s20 = s20
         self._attr_unique_id = self._mac
+        self._name = name
+        self._attr_name = None
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # MAC addresses are used as unique identifiers within this domain
@@ -159,7 +157,7 @@ class S20Switch(SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_error",
-                translation_placeholders={"name": str(self._attr_name)},
+                translation_placeholders={"name": self._name},
             ) from err
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -170,7 +168,7 @@ class S20Switch(SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_error",
-                translation_placeholders={"name": str(self._attr_name)},
+                translation_placeholders={"name": self._name},
             ) from err
 
     def update(self) -> None:
