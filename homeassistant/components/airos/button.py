@@ -61,15 +61,13 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
             result = await self.coordinator.airos_device.reboot()
 
         except AirOSException as err:
-            _LOGGER.exception("Failed to send reboot request to device")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
-        else:
-            if not result:
-                _LOGGER.error("Device indicates it failed to initiate reboot")
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="reboot_failed",
-                ) from None
+
+        if not result:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reboot_failed",
+            ) from None

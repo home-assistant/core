@@ -46,7 +46,6 @@ async def test_reboot_button_press_fail(
     hass: HomeAssistant,
     mock_airos_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that pressing the reboot button utilizes the correct calls."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
@@ -63,7 +62,6 @@ async def test_reboot_button_press_fail(
         )
 
     mock_airos_client.reboot.assert_awaited_once()
-    assert "failed to initiate" in caplog.text
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -79,7 +77,6 @@ async def test_reboot_button_press_exceptions(
     mock_airos_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reboot failure is handled gracefully."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
@@ -97,7 +94,6 @@ async def test_reboot_button_press_exceptions(
         )
 
     mock_airos_client.reboot.assert_not_awaited()
-    assert "Failed to send" in caplog.text
 
     mock_airos_client.login.side_effect = None
     mock_airos_client.reboot.side_effect = exception
@@ -111,7 +107,6 @@ async def test_reboot_button_press_exceptions(
         )
 
     mock_airos_client.reboot.assert_awaited_once()
-    assert "Failed to send" in caplog.text
 
     mock_airos_client.reboot.side_effect = None
 
