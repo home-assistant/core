@@ -94,6 +94,9 @@ async def async_setup_entry(
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_api",
+            translation_placeholders={
+                "lhm_releases_url": "https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases"
+            },
         )
 
     config_entry.runtime_data = lhm_coordinator
