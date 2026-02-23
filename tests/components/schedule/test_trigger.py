@@ -232,24 +232,11 @@ async def test_schedule_state_trigger_behavior_last(
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_trigger_states(
-            trigger="schedule.turned_on",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
-        ),
-    ],
-)
 async def test_schedule_state_trigger_back_to_back(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     freezer: FrozenDateTimeFactory,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when transitioning between two back-to-back schedule blocks."""
     freezer.move_to("2022-08-30 13:20:00-07:00")
