@@ -40,7 +40,7 @@ async def test_user_flow_success(
     mock_pyaxenco_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test successful user flow for MyNeoMitis integration."""
+    """Test successful user flow for MyNeomitis integration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
