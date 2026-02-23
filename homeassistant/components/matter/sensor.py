@@ -908,6 +908,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentPower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -924,6 +925,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactivePower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -939,6 +941,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -956,6 +959,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSVoltage,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -973,6 +977,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -990,6 +995,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1007,6 +1013,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1024,6 +1031,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1039,6 +1047,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
         ),
@@ -1058,6 +1067,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
         ),
