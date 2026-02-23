@@ -219,4 +219,7 @@ async def test_usb_discovery(
     assert result["title"] == MANUFACTURER
     assert result["data"] == {"device": device}
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
+    assert result["context"]["title_placeholders"] == {
+        "name": "USB 300 - /dev/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
+    }
     assert result["result"].state is ConfigEntryState.LOADED

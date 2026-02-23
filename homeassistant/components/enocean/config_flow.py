@@ -5,7 +5,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import usb
-from homeassistant.components.usb import usb_unique_id_from_service_info
+from homeassistant.components.usb import (
+    human_readable_device_name,
+    usb_unique_id_from_service_info,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -51,7 +54,14 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
-            CONF_NAME: f"{discovery_info.description} {discovery_info.manufacturer} ({discovery_info.serial_number})",
+            CONF_NAME: human_readable_device_name(
+                discovery_info.device,
+                discovery_info.serial_number,
+                discovery_info.manufacturer,
+                discovery_info.description,
+                discovery_info.vid,
+                discovery_info.pid,
+            )
         }
         return await self.async_step_usb_confirm()
 
