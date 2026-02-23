@@ -176,7 +176,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         list[dict[str, Any]], list[tuple[list[dict[str, Any]], list[dict[str, Any]]]]
     ]:
         """Fetch all nodes, and then proceed to the VMs and containers."""
-        nodes = self.proxmox.nodes.get()
+        nodes = self.proxmox.nodes.get() or []
         vms_containers = [self._get_vms_containers(node) for node in nodes]
         return nodes, vms_containers
 
