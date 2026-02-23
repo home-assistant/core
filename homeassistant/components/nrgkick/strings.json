@@ -18,6 +18,17 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::nrgkick::config::step::user_auth::data_description::password%]",
+          "username": "[%key:component::nrgkick::config::step::user_auth::data_description::username%]"
+        },
+        "description": "Reauthenticate with your NRGkick device.\n\nGet your username and password in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Under Authentication (JSON), check or set your username and password"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -37,17 +48,6 @@
           "username": "[%key:component::nrgkick::config::step::user_auth::data_description::username%]"
         },
         "description": "[%key:component::nrgkick::config::step::user_auth::description%]"
-      },
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "[%key:component::nrgkick::config::step::user_auth::data_description::password%]",
-          "username": "[%key:component::nrgkick::config::step::user_auth::data_description::username%]"
-        },
-        "description": "Reauthenticate with your NRGkick device.\n\nGet your username and password in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Under Authentication (JSON), check or set your username and password"
       },
       "user": {
         "data": {
