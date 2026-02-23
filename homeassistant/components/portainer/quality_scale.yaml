@@ -65,6 +65,6 @@ rules:
       No repair issues are implemented, currently.
   stale-devices: done
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
   strict-typing: done
