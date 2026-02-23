@@ -338,11 +338,11 @@ class EcovacsVacuum(
                     translation_placeholders={"name": name},
                 )
 
-            if command in "spot_area":
+            if command == "spot_area":
                 await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.SPOT_AREA,
-                        str(params["rooms"]),
+                        params["rooms"],
                         params.get("cleanings", 1),
                     )
                 )
@@ -350,7 +350,7 @@ class EcovacsVacuum(
                 await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.CUSTOM_AREA,
-                        str(params["coordinates"]),
+                        params["coordinates"],
                         params.get("cleanings", 1),
                     )
                 )
