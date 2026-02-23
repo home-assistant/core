@@ -84,6 +84,7 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_downgrade_from_v3_to_v2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -133,18 +134,15 @@ async def test_downgrade_from_v3_to_v2(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify migration was skipped and version was not updated
     assert mock_config_entry.version == 3
     assert mock_config_entry.minor_version == 0
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_to_v2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -185,12 +183,8 @@ async def test_migration_from_v1_to_v2(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
     assert mock_config_entry.minor_version == 3
@@ -303,6 +297,7 @@ async def test_migration_from_v1_to_v2(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_disabled(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -383,12 +378,8 @@ async def test_migration_from_v1_disabled(
     devices = [device_1, device_2]
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -441,6 +432,7 @@ async def test_migration_from_v1_disabled(
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_to_v2_with_multiple_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -506,12 +498,8 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
@@ -534,6 +522,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1_to_v2_with_same_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -599,12 +588,8 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Should have only one entry left (consolidated)
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -637,6 +622,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v2_1_to_v2_2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -724,12 +710,8 @@ async def test_migration_from_v2_1_to_v2_2(
     )
 
     # Run migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -890,6 +872,7 @@ async def test_migration_from_v2_1_to_v2_2(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migrate_entry_to_v2_3(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -959,13 +942,9 @@ async def test_migrate_entry_to_v2_3(
     assert conversation_entity.disabled_by == entity_disabled_by
 
     # Run setup to trigger migration
-    with patch(
-        "homeassistant.components.anthropic.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        assert result is setup_result
-        await hass.async_block_till_done()
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert result is setup_result
+    await hass.async_block_till_done()
 
     # Verify migration completed
     entries = hass.config_entries.async_entries(DOMAIN)
