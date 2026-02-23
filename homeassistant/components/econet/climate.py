@@ -194,7 +194,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
         """Return the fan modes."""
         # Remove the MEDLO MEDHI once we figure out how to handle it
         return [
-            mode
+            ECONET_FAN_SPEED_TO_HA[mode]
             for mode in self._econet.fan_speeds
             if mode
             not in [

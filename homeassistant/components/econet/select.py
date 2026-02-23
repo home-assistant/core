@@ -6,7 +6,6 @@ from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import Thermostat, ThermostatFanMode
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -21,15 +20,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the econet thermostat select entity."""
     equipment = entry.runtime_data
-    for thermostat in equipment[EquipmentType.THERMOSTAT]:
-        if thermostat.supports_fan_mode:
-            async_add_entities([EconetFanModeSelect(thermostat)])
+    async_add_entities(
+        EconetFanModeSelect(thermostat)
+        for thermostat in equipment[EquipmentType.THERMOSTAT]
+        if thermostat.supports_fan_mode
+    )
 
 
 class EconetFanModeSelect(EcoNetEntity[Thermostat], SelectEntity):
     """Select entity."""
-
-    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, thermostat: Thermostat) -> None:
         """Initialize EcoNet platform."""
@@ -42,12 +41,12 @@ class EconetFanModeSelect(EcoNetEntity[Thermostat], SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return available select options."""
-        return [e.name for e in self._econet.fan_modes]
+        return [e.value for e in self._econet.fan_modes]
 
     @property
     def current_option(self) -> str:
         """Return current select option."""
-        return self._econet.fan_mode.name
+        return self._econet.fan_mode.value
 
     def select_option(self, option: str) -> None:
         """Set the selected option."""
