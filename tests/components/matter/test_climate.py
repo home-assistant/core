@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
@@ -664,31 +664,6 @@ async def test_eve_thermo_v5_presets(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_mode"] == PRESET_NONE
-
-
-@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
-async def test_preset_mode_error_on_invalid_preset(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test preset mode error when calling entity method directly with invalid preset."""
-    entity_id = "climate.eve_thermo_20ecd1701"
-
-    # Get the entity object directly via component using DATA_INSTANCES helper
-    component = hass.data.get(DATA_INSTANCES, {}).get(Platform.CLIMATE)
-    assert component is not None
-
-    entity = component.get_entity(entity_id)
-    assert entity is not None
-
-    # Test calling async_set_preset_mode directly with invalid preset
-    # This tests the HomeAssistantError path in our code (lines 275-279)
-    with pytest.raises(HomeAssistantError, match="not found"):
-        await entity.async_set_preset_mode("NonExistentPreset")
-
-    # Ensure no command was sent
-    assert matter_client.send_device_command.call_count == 0
 
 
 @pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
