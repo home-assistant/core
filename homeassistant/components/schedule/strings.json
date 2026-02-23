@@ -53,7 +53,7 @@
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
         }
       },
-      "name": "Schedule turned off"
+      "name": "Schedule block ended"
     },
     "turned_on": {
       "description": "Triggers when a schedule block starts.",
@@ -63,7 +63,7 @@
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
         }
       },
-      "name": "Schedule turned on"
+      "name": "Schedule block started"
     }
   }
 }
