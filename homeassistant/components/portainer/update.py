@@ -23,7 +23,6 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -31,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
+    PortainerConfigEntry,
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
@@ -79,7 +79,7 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PortainerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer update entities based on a config entry."""
