@@ -281,9 +281,8 @@ def q10_s5_plus_device_fixture() -> RoborockDevice:
     device.mac = "AA:BB:CC:DD:EE:FF"
     device.capabilities = []
 
-    # Add B01 trait for Q10
-    device.b01_properties = create_b01_q10_trait()
-    device.status_trait = create_b01_q10_trait()
+    # Add B01 Q10 trait
+    device.b01_q10_properties = create_b01_q10_trait()
 
     # Mock async methods
     device.disconnect = AsyncMock()
