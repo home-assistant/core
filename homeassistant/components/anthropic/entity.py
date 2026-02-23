@@ -132,10 +132,20 @@ class ContentDetails:
     """Native data for AssistantContent."""
 
     citation_details: list[CitationDetails] = field(default_factory=list)
+    thinking_signature: str | None = None
+    redacted_thinking: str | None = None
 
     def has_content(self) -> bool:
-        """Check if there is any content."""
+        """Check if there is any text content."""
         return any(detail.length > 0 for detail in self.citation_details)
+
+    def __bool__(self) -> bool:
+        """Check if there is any thinking content or citations."""
+        return (
+            self.thinking_signature is not None
+            or self.redacted_thinking is not None
+            or self.has_citations()
+        )
 
     def has_citations(self) -> bool:
         """Check if there are any citations."""
@@ -246,29 +256,28 @@ def _convert_content(
                         content=[],
                     )
                 )
+            elif isinstance(messages[-1]["content"], str):
+                messages[-1]["content"] = [
+                    TextBlockParam(type="text", text=messages[-1]["content"]),
+                ]
 
-            if isinstance(content.native, ThinkingBlock):
-                messages[-1]["content"].append(  # type: ignore[union-attr]
-                    ThinkingBlockParam(
-                        type="thinking",
-                        thinking=content.thinking_content or "",
-                        signature=content.native.signature,
+            if isinstance(content.native, ContentDetails):
+                if content.native.thinking_signature:
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        ThinkingBlockParam(
+                            type="thinking",
+                            thinking=content.thinking_content or "",
+                            signature=content.native.thinking_signature,
+                        )
                     )
-                )
-            elif isinstance(content.native, RedactedThinkingBlock):
-                redacted_thinking_block = RedactedThinkingBlockParam(
-                    type="redacted_thinking",
-                    data=content.native.data,
-                )
-                if isinstance(messages[-1]["content"], str):
-                    messages[-1]["content"] = [
-                        TextBlockParam(type="text", text=messages[-1]["content"]),
-                        redacted_thinking_block,
-                    ]
-                else:
-                    messages[-1]["content"].append(  # type: ignore[attr-defined]
-                        redacted_thinking_block
+                if content.native.redacted_thinking:
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        RedactedThinkingBlockParam(
+                            type="redacted_thinking",
+                            data=content.native.redacted_thinking,
+                        )
                     )
+
             if content.content:
                 current_index = 0
                 for detail in (
@@ -309,6 +318,7 @@ def _convert_content(
                             text=content.content[current_index:],
                         )
                     )
+
             if content.tool_calls:
                 messages[-1]["content"].extend(  # type: ignore[union-attr]
                     [
@@ -328,6 +338,14 @@ def _convert_content(
                         for tool_call in content.tool_calls
                     ]
                 )
+
+            if (
+                isinstance(messages[-1]["content"], list)
+                and len(messages[-1]["content"]) == 1
+                and messages[-1]["content"][0]["type"] == "text"
+            ):
+                # If there is only one text block, simplify the content to a string
+                messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
             # Note: We don't pass SystemContent here as its passed to the API as the prompt
             raise TypeError(f"Unexpected content type: {type(content)}")
@@ -379,8 +397,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     content_details = ContentDetails()
     content_details.add_citation_detail()
     input_usage: Usage | None = None
-    has_native = False
-    first_block: bool
+    first_block: bool = True
 
     async for response in stream:
         LOGGER.debug("Received response: %s", response)
@@ -401,13 +418,12 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
                     if first_block or content_details.has_content():
-                        if content_details.has_citations():
+                        if content_details:
                             content_details.delete_empty()
                             yield {"native": content_details}
                         content_details = ContentDetails()
                         content_details.add_citation_detail()
                         yield {"role": "assistant"}
-                        has_native = False
                         first_block = False
             elif isinstance(response.content_block, TextBlock):
                 if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
@@ -418,12 +434,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                         and content_details.has_content()
                     )
                 ):
-                    if content_details.has_citations():
+                    if content_details:
                         content_details.delete_empty()
                         yield {"native": content_details}
                     content_details = ContentDetails()
                     yield {"role": "assistant"}
-                    has_native = False
                     first_block = False
                 content_details.add_citation_detail()
                 if response.content_block.text:
@@ -432,14 +447,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     )
                     yield {"content": response.content_block.text}
             elif isinstance(response.content_block, ThinkingBlock):
-                if first_block or has_native:
-                    if content_details.has_citations():
+                if first_block or content_details.thinking_signature:
+                    if content_details:
                         content_details.delete_empty()
                         yield {"native": content_details}
                     content_details = ContentDetails()
                     content_details.add_citation_detail()
                     yield {"role": "assistant"}
-                    has_native = False
                     first_block = False
             elif isinstance(response.content_block, RedactedThinkingBlock):
                 LOGGER.debug(
@@ -447,17 +461,15 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "encrypted for safety reasons. This doesn’t affect the quality of "
                     "responses"
                 )
-                if has_native:
-                    if content_details.has_citations():
+                if first_block or content_details.redacted_thinking:
+                    if content_details:
                         content_details.delete_empty()
                         yield {"native": content_details}
                     content_details = ContentDetails()
                     content_details.add_citation_detail()
                     yield {"role": "assistant"}
-                    has_native = False
                     first_block = False
-                yield {"native": response.content_block}
-                has_native = True
+                content_details.redacted_thinking = response.content_block.data
             elif isinstance(response.content_block, ServerToolUseBlock):
                 current_tool_block = ServerToolUseBlockParam(
                     type="server_tool_use",
@@ -467,7 +479,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 )
                 current_tool_args = ""
             elif isinstance(response.content_block, WebSearchToolResultBlock):
-                if content_details.has_citations():
+                if content_details:
                     content_details.delete_empty()
                     yield {"native": content_details}
                 content_details = ContentDetails()
@@ -510,19 +522,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 else:
                     current_tool_args += response.delta.partial_json
             elif isinstance(response.delta, TextDelta):
-                content_details.citation_details[-1].length += len(response.delta.text)
-                yield {"content": response.delta.text}
-            elif isinstance(response.delta, ThinkingDelta):
-                yield {"thinking_content": response.delta.thinking}
-            elif isinstance(response.delta, SignatureDelta):
-                yield {
-                    "native": ThinkingBlock(
-                        type="thinking",
-                        thinking="",
-                        signature=response.delta.signature,
+                if response.delta.text:
+                    content_details.citation_details[-1].length += len(
+                        response.delta.text
                     )
-                }
-                has_native = True
+                    yield {"content": response.delta.text}
+            elif isinstance(response.delta, ThinkingDelta):
+                if response.delta.thinking:
+                    yield {"thinking_content": response.delta.thinking}
+            elif isinstance(response.delta, SignatureDelta):
+                content_details.thinking_signature = response.delta.signature
             elif isinstance(response.delta, CitationsDelta):
                 content_details.add_citation(response.delta.citation)
         elif isinstance(response, RawContentBlockStopEvent):
@@ -549,7 +558,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             if response.delta.stop_reason == "refusal":
                 raise HomeAssistantError("Potential policy violation detected")
         elif isinstance(response, RawMessageStopEvent):
-            if content_details.has_citations():
+            if content_details:
                 content_details.delete_empty()
                 yield {"native": content_details}
             content_details = ContentDetails()

@@ -4,16 +4,16 @@
       "abort": {
         "fw_download_failed": "{firmware_name} firmware for your {model} failed to download. Make sure Home Assistant has internet access and try again.",
         "fw_install_failed": "{firmware_name} firmware failed to install, check Home Assistant logs for more information.",
-        "not_hassio_thread": "The OpenThread Border Router add-on can only be installed with Home Assistant OS. If you would like to use the {model} as a Thread border router, please manually set up OpenThread Border Router to communicate with it.",
-        "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again.",
-        "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
-        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device.",
+        "not_hassio_thread": "The OpenThread Border Router app can only be installed with Home Assistant OS. If you would like to use the {model} as a Thread border router, please manually set up OpenThread Border Router to communicate with it.",
+        "otbr_addon_already_running": "The OpenThread Border Router app is already running, it cannot be installed again.",
+        "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router app. If you use the Thread network, make sure you have alternative border routers. Uninstall the app and try again.",
+        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or app is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device.",
         "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again."
       },
       "progress": {
         "install_firmware": "Installing {firmware_name} firmware.\n\nDo not make any changes to your hardware or software until this finishes.",
-        "install_otbr_addon": "Installing add-on",
-        "start_otbr_addon": "Starting add-on"
+        "install_otbr_addon": "Installing app",
+        "start_otbr_addon": "Starting app"
       },
       "step": {
         "confirm_otbr": {
@@ -34,7 +34,7 @@
           "title": "Updating adapter"
         },
         "otbr_failed": {
-          "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the Internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists.",
+          "description": "The OpenThread Border Router app installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the Internet and can install other apps, and try again. Check the Supervisor logs if the problem persists.",
           "title": "Failed to set up OpenThread Border Router"
         },
         "pick_firmware": {
@@ -89,11 +89,11 @@
   "silabs_multiprotocol_hardware": {
     "options": {
       "abort": {
-        "addon_already_running": "Failed to start the {addon_name} add-on because it is already running.",
-        "addon_info_failed": "Failed to get {addon_name} add-on info.",
-        "addon_install_failed": "Failed to install the {addon_name} add-on.",
+        "addon_already_running": "Failed to start the {addon_name} app because it is already running.",
+        "addon_info_failed": "Failed to get {addon_name} app info.",
+        "addon_install_failed": "Failed to install the {addon_name} app.",
         "addon_set_config_failed": "Failed to set {addon_name} configuration.",
-        "addon_start_failed": "Failed to start the {addon_name} add-on.",
+        "addon_start_failed": "Failed to start the {addon_name} app.",
         "not_hassio": "The hardware options can only be configured on Home Assistant OS installations.",
         "zha_migration_failed": "The ZHA migration did not succeed."
       },
@@ -101,8 +101,8 @@
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "progress": {
-        "install_addon": "Please wait while the {addon_name} add-on installation finishes. This can take several minutes.",
-        "start_addon": "Please wait while the {addon_name} add-on start completes. This may take some seconds."
+        "install_addon": "Please wait while the {addon_name} app installation finishes. This can take several minutes.",
+        "start_addon": "Please wait while the {addon_name} app start completes. This may take some seconds."
       },
       "step": {
         "addon_installed_other_device": {
@@ -129,7 +129,7 @@
           "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]"
         },
         "install_addon": {
-          "title": "The Silicon Labs Multiprotocol add-on installation has started"
+          "title": "The Silicon Labs Multiprotocol app installation has started"
         },
         "notify_channel_change": {
           "description": "A Zigbee and Thread channel change has been initiated and will finish in {delay_minutes} minutes.",
@@ -143,7 +143,7 @@
           "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support"
         },
         "start_addon": {
-          "title": "The Silicon Labs Multiprotocol add-on is starting."
+          "title": "The Silicon Labs Multiprotocol app is starting."
         },
         "uninstall_addon": {
           "data": {

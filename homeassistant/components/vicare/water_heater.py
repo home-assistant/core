@@ -10,6 +10,8 @@ from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -143,6 +145,10 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             _LOGGER.error("Unable to decode data from ViCare server")
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        except PyViCareDeviceCommunicationError as comm_exception:
+            _LOGGER.warning("Device communication error: %s", comm_exception)
+        except PyViCareInternalServerError as server_exception:
+            _LOGGER.warning("Vicare server error: %s", server_exception)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""

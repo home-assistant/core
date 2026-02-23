@@ -110,12 +110,11 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
-        if (operating_mode := self.coordinator.data.dhw.operating_mode) is None:
+        if (
+            operating_mode := self.coordinator.data.dhw.operating_mode
+        ) is None or operating_mode.value is None:
             return None
-        # The operating_mode.value is an integer (0=Off, 1=On, 2=Eco)
-        if isinstance(operating_mode.value, int):
-            return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
-        return None
+        return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
 
     @property
     def current_temperature(self) -> float | None:
