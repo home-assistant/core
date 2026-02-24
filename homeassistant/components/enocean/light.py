@@ -6,7 +6,7 @@ import math
 from typing import Any
 
 from enocean.utils import combine_hex
-from enocean_async.erp1.telegram import ERP1Telegram
+from enocean_async import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.light import (

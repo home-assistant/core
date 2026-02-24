@@ -1,8 +1,13 @@
 """Representation of an EnOcean device."""
 
 from enocean.protocol.packet import Packet
-from enocean_async.erp1.address import EURID, Address, BaseAddress, SenderAddress
-from enocean_async.erp1.telegram import ERP1Telegram
+from enocean_async import (
+    EnOceanAddress,
+    EnOceanBaseAddress,
+    EnOceanSenderAddress,
+    EnOceanUniqueRadioID,
+    ERP1Telegram,
+)
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -15,14 +20,14 @@ class EnOceanEntity(Entity):
 
     def __init__(self, dev_id: list[int]) -> None:
         """Initialize the device."""
-        self.address: SenderAddress | None = None
+        self.address: EnOceanSenderAddress | None = None
 
         try:
-            address = Address.from_bytelist(dev_id)
+            address = EnOceanAddress.from_bytelist(dev_id)
             if address.is_eurid():
-                self.address = EURID.from_number(address.to_number())
+                self.address = EnOceanUniqueRadioID.from_number(address.to_number())
             elif address.is_base_address():
-                self.address = BaseAddress.from_number(address.to_number())
+                self.address = EnOceanBaseAddress.from_number(address.to_number())
         except ValueError:
             self.address = None
 

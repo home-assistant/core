@@ -6,11 +6,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from enocean.utils import combine_hex
-from enocean_async.eep.db import EEP_DATABASE
-from enocean_async.eep.handler import EEPHandler
-from enocean_async.eep.id import EEPID
-from enocean_async.eep.message import EEPMessage
-from enocean_async.erp1.telegram import ERP1Telegram
+from enocean_async import (
+    EEPID,
+    ENOCEAN_EEP_DATABASE,
+    EEPHandler,
+    EEPMessage,
+    ERP1Telegram,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -187,14 +189,14 @@ class EnOceanPowerSensor(EnOceanSensor):
         if telegram.rorg != 0xA5:
             return
 
-        if eep := EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01)) is None:
+        if eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01)) is None:
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
-        if "DT" in msg.values and msg.values["DT"] == 1:
+        if "DT" in msg.values and msg.values["DT"].raw == 1:
             # this packet reports the current value
-            raw_val = msg.values["MR"]
-            divisor = msg.values["DIV"]
+            raw_val = msg.values["MR"].raw
+            divisor = msg.values["DIV"].raw
             self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 

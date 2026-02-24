@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enocean.utils import combine_hex
-from enocean_async.erp1.telegram import ERP1Telegram
+from enocean_async import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (

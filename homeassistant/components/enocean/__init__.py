@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean_async.gateway import Gateway
+from enocean_async import EnOceanGateway
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -16,14 +16,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
-type EnOceanConfigEntry = ConfigEntry[Gateway]
+type EnOceanConfigEntry = ConfigEntry[EnOceanGateway]
 
 
 @dataclass
 class EnOceanHassData:
     """Store gateway and dispatcher in hass.data (TEMPORARY until legacy code is removed)."""
 
-    gateway: Gateway
+    gateway: EnOceanGateway
     disconnect_handle: Callable | None
 
 
@@ -56,7 +56,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
     """Set up an EnOcean dongle for the given entry."""
-    gateway = Gateway(port=config_entry.data[CONF_DEVICE])
+    gateway = EnOceanGateway(port=config_entry.data[CONF_DEVICE])
 
     gateway.add_erp1_received_callback(
         lambda packet: dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
