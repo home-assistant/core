@@ -27,17 +27,15 @@ from .light import get_available_color_modes
 _LOGGER = logging.getLogger(__name__)
 
 
-SERVICE_UUID = "0000fe0f-0000-1000-8000-00805f9b34fb"
-SERVICE_DATA_UUID = "0000fe0f-0000-1000-8000-00805f9b34fb"
+SERVICE_UUID = SERVICE_DATA_UUID = "0000fe0f-0000-1000-8000-00805f9b34fb"
 
 
 def device_filter(advertisement_data: AdvertisementData) -> bool:
     """Return True if the device is supported."""
-    uuids = advertisement_data.service_uuids
-    if SERVICE_UUID in uuids or SERVICE_DATA_UUID in uuids:
-        return True
-
-    return False
+    return (
+        SERVICE_UUID in advertisement_data.service_uuids
+        and SERVICE_DATA_UUID in advertisement_data.service_data
+    )
 
 
 async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
