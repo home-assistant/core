@@ -118,12 +118,12 @@ class EzvizSensor(EzvizEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Expose url as attributes."""
         if (
-            self._sensor_name == "last_alarm_pic" 
-            and self.coordinator.data 
+            self._sensor_name == "last_alarm_pic"
+            and self.coordinator.data
             and self.data
         ):
             return {
-                 "url": self.data[self._sensor_name],
+                "url": self.data[self._sensor_name],
             }
 
         return {}
