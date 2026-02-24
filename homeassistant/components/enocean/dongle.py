@@ -1,6 +1,5 @@
 """Representation of an EnOcean dongle."""
 
-import glob
 import logging
 from os.path import basename, normpath
 
@@ -60,20 +59,6 @@ class EnOceanDongle:
         if isinstance(packet, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", packet)
             dispatcher_send(self.hass, SIGNAL_RECEIVE_MESSAGE, packet)
-
-
-def detect():
-    """Return a list of candidate paths for USB EnOcean dongles.
-
-    This method is currently a bit simplistic, it may need to be
-    improved to support more configurations and OS.
-    """
-    globs_to_test = ["/dev/tty*FTOA2PV*", "/dev/serial/by-id/*EnOcean*"]
-    found_paths = []
-    for current_glob in globs_to_test:
-        found_paths.extend(glob.glob(current_glob))
-
-    return found_paths
 
 
 def validate_path(path: str):
