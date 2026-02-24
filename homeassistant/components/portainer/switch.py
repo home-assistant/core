@@ -87,8 +87,6 @@ async def perform_container_action(
         ) from err
 
 
-# Note to reviewer: there's a PR in review to optimize the actions: https://github.com/home-assistant/core/pull/163520
-# For the sake of consistency and comparability of the code, I kept it the same style as we have in production
 async def perform_stack_action(
     action: str, portainer: Portainer, endpoint_id: int, stack_id: int
 ) -> None:
