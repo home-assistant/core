@@ -59,6 +59,7 @@ def setup_platform(
 class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
+    _attr_assumed_state = True
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
@@ -71,51 +72,30 @@ class LW12WiFi(LightEntity):
         :param lw12_light: Instance of the LW12 controller.
         """
         self._light = lw12_light
-        self._name = name
-        self._state = None
+        self._attr_name = name
         self._effect = None
         self._rgb_color = [255, 255, 255]
-        self._brightness = 255
+        self._attr_brightness = 255
 
     @property
-    def name(self):
-        """Return the display name of the controlled light."""
-        return self._name
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Read back the hue-saturation of the light."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return current light effect."""
         if self._effect is None:
             return None
         return self._effect.replace("_", " ").title()
 
     @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
-
-    @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return a list of available effects.
 
         Use the Enum element name for display.
         """
         return [effect.name.replace("_", " ").title() for effect in lw12.LW12_EFFECT]
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return True
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -125,8 +105,8 @@ class LW12WiFi(LightEntity):
             self._light.set_color(*self._rgb_color)
             self._effect = None
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int(self._brightness / 255 * 100)
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = int(self._attr_brightness / 255 * 100)
             self._light.set_light_option(lw12.LW12_LIGHT.BRIGHTNESS, brightness)
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT].replace(" ", "_").upper()
@@ -142,9 +122,9 @@ class LW12WiFi(LightEntity):
         if ATTR_TRANSITION in kwargs:
             transition_speed = int(kwargs[ATTR_TRANSITION])
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
-        self._state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()
-        self._state = False
+        self._attr_is_on = False

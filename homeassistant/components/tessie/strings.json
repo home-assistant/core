@@ -81,6 +81,9 @@
       "grid_services_active": {
         "name": "Grid services active"
       },
+      "grid_status": {
+        "name": "Grid status"
+      },
       "state": {
         "name": "Status"
       },
@@ -328,6 +331,18 @@
       }
     },
     "sensor": {
+      "battery_energy_exported": {
+        "name": "Battery discharged"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery charged from generator"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery charged from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery charged from solar"
+      },
       "battery_power": {
         "name": "Battery power"
       },
@@ -336,6 +351,14 @@
       },
       "charge_state_charge_energy_added": {
         "name": "Charge energy added"
+      },
+      "charge_state_charge_port_latch": {
+        "name": "Charge port latch",
+        "state": {
+          "blocking": "Blocking",
+          "disengaged": "Disengaged",
+          "engaged": "Engaged"
+        }
       },
       "charge_state_charge_rate": {
         "name": "Charge rate"
@@ -360,6 +383,12 @@
           "stopped": "[%key:common::state::stopped%]"
         }
       },
+      "charge_state_conn_charge_cable": {
+        "name": "Charge cable"
+      },
+      "charge_state_energy_remaining": {
+        "name": "Energy remaining"
+      },
       "charge_state_est_battery_range": {
         "name": "Battery range estimate"
       },
@@ -383,6 +412,18 @@
       },
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
+      },
+      "consumer_energy_imported_from_battery": {
+        "name": "Energy consumed from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Energy consumed from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Energy consumed from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Energy consumed from solar"
       },
       "drive_state_active_route_destination": {
         "name": "Destination"
@@ -417,26 +458,96 @@
       "energy_left": {
         "name": "Energy left"
       },
+      "energy_remaining": {
+        "name": "Energy remaining"
+      },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
       "generator_power": {
         "name": "Generator power"
+      },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
       },
       "grid_power": {
         "name": "Grid power"
       },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
+      },
       "grid_services_power": {
         "name": "Grid services power"
+      },
+      "island_status": {
+        "name": "Island status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "off_grid": "Off-grid",
+          "off_grid_intentional": "Off-grid intentional",
+          "off_grid_unintentional": "Off-grid unintentional",
+          "on_grid": "On-grid"
+        }
+      },
+      "lifetime_energy_used": {
+        "name": "Lifetime energy used"
       },
       "load_power": {
         "name": "Load power"
       },
+      "module_temp_max": {
+        "name": "Battery module temperature max"
+      },
+      "module_temp_min": {
+        "name": "Battery module temperature min"
+      },
+      "pack_current": {
+        "name": "Battery pack current"
+      },
+      "pack_voltage": {
+        "name": "Battery pack voltage"
+      },
       "percentage_charged": {
         "name": "Percentage charged"
+      },
+      "phantom_drain_percent": {
+        "name": "Phantom drain"
+      },
+      "solar_energy_exported": {
+        "name": "Solar exported"
       },
       "solar_power": {
         "name": "Solar power"
       },
+      "total_battery_charge": {
+        "name": "Total battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Total battery discharged"
+      },
+      "total_grid_energy_exported": {
+        "name": "Total grid exported"
+      },
+      "total_home_usage": {
+        "name": "Total home usage"
+      },
       "total_pack_energy": {
         "name": "Total pack energy"
+      },
+      "total_solar_generation": {
+        "name": "Total solar generated"
       },
       "vehicle_state_odometer": {
         "name": "Odometer"
@@ -517,6 +628,9 @@
     "already_inactive": {
       "message": "{name} is already inactive."
     },
+    "auth_failed": {
+      "message": "Authentication failed."
+    },
     "cable_connected": {
       "message": "Charge cable is connected."
     },
@@ -528,6 +642,9 @@
     },
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
+    },
+    "invalid_energy_history_data": {
+      "message": "Invalid energy history data."
     },
     "no_cable": {
       "message": "Insert cable to lock"

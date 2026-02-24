@@ -14,6 +14,8 @@ from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -109,7 +111,9 @@ DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         ),
         min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMin(),
         max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMax(),
-        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffStepping(),
+        stepping_getter=lambda api: (
+            api.getDomesticHotWaterHysteresisSwitchOffStepping()
+        ),
     ),
 )
 
@@ -123,8 +127,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
         value_getter=lambda api: api.getHeatingCurveShift(),
-        value_setter=lambda api, shift: (
-            api.setHeatingCurve(shift, api.getHeatingCurveSlope())
+        value_setter=lambda api, shift: api.setHeatingCurve(
+            shift, api.getHeatingCurveSlope()
         ),
         min_value_getter=lambda api: api.getHeatingCurveShiftMin(),
         max_value_getter=lambda api: api.getHeatingCurveShiftMax(),
@@ -139,8 +143,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
         value_getter=lambda api: api.getHeatingCurveSlope(),
-        value_setter=lambda api, slope: (
-            api.setHeatingCurve(api.getHeatingCurveShift(), slope)
+        value_setter=lambda api, slope: api.setHeatingCurve(
+            api.getHeatingCurveShift(), slope
         ),
         min_value_getter=lambda api: api.getHeatingCurveSlopeMin(),
         max_value_getter=lambda api: api.getHeatingCurveSlopeMax(),
@@ -461,6 +465,10 @@ class ViCareNumber(ViCareEntity, NumberEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        except PyViCareDeviceCommunicationError as comm_exception:
+            _LOGGER.warning("Device communication error: %s", comm_exception)
+        except PyViCareInternalServerError as server_exception:
+            _LOGGER.warning("Vicare server error: %s", server_exception)
 
 
 def _get_value(

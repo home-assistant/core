@@ -47,7 +47,9 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_COMFORT,
         value_func=lambda presets: presets.comfort_temperature,
-        value_set_func=lambda thermostat: thermostat.async_configure_comfort_temperature,
+        value_set_func=lambda thermostat: (
+            thermostat.async_configure_comfort_temperature
+        ),
         translation_key=ENTITY_KEY_COMFORT,
         native_min_value=EQ3_MIN_TEMP,
         native_max_value=EQ3_MAX_TEMP,
@@ -69,7 +71,9 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
         value_func=lambda presets: presets.window_open_temperature,
-        value_set_func=lambda thermostat: thermostat.async_configure_window_open_temperature,
+        value_set_func=lambda thermostat: (
+            thermostat.async_configure_window_open_temperature
+        ),
         translation_key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
         native_min_value=EQ3_MIN_TEMP,
         native_max_value=EQ3_MAX_TEMP,
@@ -90,7 +94,9 @@ NUMBER_ENTITY_DESCRIPTIONS = [
     ),
     Eq3NumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
-        value_set_func=lambda thermostat: thermostat.async_configure_window_open_duration,
+        value_set_func=lambda thermostat: (
+            thermostat.async_configure_window_open_duration
+        ),
         value_func=lambda presets: presets.window_open_time.total_seconds() / 60,
         translation_key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
         native_min_value=0,
