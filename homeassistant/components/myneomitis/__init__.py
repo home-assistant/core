@@ -22,8 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SELECT]
-
+PLATFORMS = [Platform.SELECT, Platform.CLIMATE]
 
 @dataclass
 class MyNeomitisRuntimeData:
