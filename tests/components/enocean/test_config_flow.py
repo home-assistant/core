@@ -223,3 +223,40 @@ async def test_usb_discovery(
         "name": "USB 300 - /dev/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
     }
     assert result["result"].state is ConfigEntryState.LOADED
+
+
+async def test_usb_discovery_already_configured_updates_path(
+    hass: HomeAssistant,
+) -> None:
+    """Test usb discovery aborts when already configured and updates device path."""
+    # Existing entry with the same unique_id but an old device path
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: "/dev/enocean-old"},
+        unique_id="0403:6001_1234_EnOcean GmbH_USB 300",
+    )
+    existing_entry.add_to_hass(hass)
+
+    # New USB discovery for the same dongle but with an updated device path
+    usb_discovery_info = UsbServiceInfo(
+        device="/dev/enocean-new",
+        pid="6001",
+        vid="0403",
+        serial_number="1234",
+        description="USB 300",
+        manufacturer="EnOcean GmbH",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=usb_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Ensure the existing entry's device path was updated
+    updated_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_DEVICE] == "/dev/enocean-new"
