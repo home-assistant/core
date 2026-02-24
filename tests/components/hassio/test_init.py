@@ -39,7 +39,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
@@ -1555,3 +1555,32 @@ async def test_mount_reload_action_failure(
             "hassio", "mount_reload", {"device_id": device.id}, blocking=True
         )
     assert str(exc.value) == "Failed to reload mount NAS: test failure"
+
+
+async def test_mount_reload_unknown_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with unknown device ID."""
+    await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": "1234"}, blocking=True
+        )
+    assert str(exc.value) == "Device ID not found: 1234"
+
+
+async def test_mount_reload_unnamed_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with unnamed device."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    device_registry.async_update_device(device.id, name=None)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == f"Device is unnamed: {device.id}"

@@ -35,7 +35,7 @@ from homeassistant.core import (
     async_get_hass_or_none,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -466,16 +466,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        # These conditions are always true as they were verified by SCHEMA_MOUNT_RELOAD.
-        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) and device.name:
-            try:
-                await supervisor_client.mounts.reload_mount(device.name)
-            except SupervisorError as error:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="mount_reload_error",
-                    translation_placeholders={"name": device.name, "error": str(error)},
-                ) from error
+        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mount_reload_unknown_device_id",
+                translation_placeholders={"device_id": service.data[ATTR_DEVICE_ID]},
+            )
+        if device.name is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mount_reload_unnamed_device",
+                translation_placeholders={"device_id": service.data[ATTR_DEVICE_ID]},
+            )
+        try:
+            await supervisor_client.mounts.reload_mount(device.name)
+        except SupervisorError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mount_reload_error",
+                translation_placeholders={"name": device.name, "error": str(error)},
+            ) from error
 
     hass.services.async_register(
         DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD

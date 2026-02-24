@@ -46,6 +46,12 @@
   "exceptions": {
     "mount_reload_error": {
       "message": "Failed to reload mount {name}: {error}"
+    },
+    "mount_reload_unknown_device_id": {
+      "message": "Device ID not found: {device_id}"
+    },
+    "mount_reload_unnamed_device": {
+      "message": "Device is unnamed: {device_id}"
     }
   },
   "issues": {
