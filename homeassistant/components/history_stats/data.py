@@ -249,8 +249,8 @@ class HistoryStats:
                 # We are entering a matching state.
                 # This marks the start of a new candidate block that may later
                 # qualify if it lasts at least min_state_duration.
-                last_state_change_timestamp = math.floor(
-                    max(start_timestamp, state_change_timestamp)
+                last_state_change_timestamp = max(
+                    start_timestamp, state_change_timestamp
                 )
             elif previous_state_matches and not current_state_matches:
                 # We are leaving a matching state.
@@ -271,7 +271,7 @@ class HistoryStats:
             # measurement window. This block has not been closed by a
             # transition, so we evaluate it up to measure_end.
             measure_end = min(end_timestamp, now_timestamp)
-            last_state_duration = measure_end - last_state_change_timestamp
+            last_state_duration = max(0, measure_end - last_state_change_timestamp)
             if last_state_duration >= self._min_state_duration:
                 # The open block lasted long enough so we increment match count
                 # and accumulate its duration.
