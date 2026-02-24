@@ -55,6 +55,29 @@
         "name": "Status"
       }
     },
+    "button": {
+      "hibernate": {
+        "name": "Hibernate"
+      },
+      "reset": {
+        "name": "Reset"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "start_all": {
+        "name": "Start all"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "stop_all": {
+        "name": "Stop all"
+      }
+    },
     "sensor": {
       "container_cpu": {
         "name": "CPU usage"
@@ -132,27 +155,6 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
-    "button": {
-      "hibernate": {
-        "name": "Hibernate"
-      },
-      "reset": {
-        "name": "Reset"
-      },
-      "shutdown": {
-        "name": "Shutdown"
-      },
-      "start": {
-        "name": "Start"
-      },
-      "start_all": {
-        "name": "Start all"
-      },
-      "stop": {
-        "name": "Stop"
-      },
-      "stop_all": {
-        "name": "Stop all"
       }
     }
   },

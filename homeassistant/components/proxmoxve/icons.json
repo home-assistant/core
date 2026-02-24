@@ -1,5 +1,19 @@
 {
   "entity": {
+    "button": {
+      "hibernate": {
+        "default": "mdi:power-sleep"
+      },
+      "reset": {
+        "default": "mdi:restart"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
     "sensor": {
       "container_cpu": {
         "default": "mdi:cpu-64-bit"
@@ -63,18 +77,6 @@
       },
       "vm_status": {
         "default": "mdi:server"
-    "button": {
-      "hibernate": {
-        "default": "mdi:power-sleep"
-      },
-      "reset": {
-        "default": "mdi:restart"
-      },
-      "start": {
-        "default": "mdi:play"
-      },
-      "stop": {
-        "default": "mdi:stop"
       }
     }
   }
