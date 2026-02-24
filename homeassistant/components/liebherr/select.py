@@ -18,9 +18,11 @@ from pyliebherrhomeapi import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import ZONE_POSITION_MAP, LiebherrEntity
 
@@ -109,15 +111,13 @@ SELECT_TYPES: list[LiebherrSelectEntityDescription] = [
 ]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: LiebherrConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Liebherr select entities."""
+def _create_select_entities(
+    coordinators: list[LiebherrCoordinator],
+) -> list[LiebherrSelectEntity]:
+    """Create select entities for the given coordinators."""
     entities: list[LiebherrSelectEntity] = []
 
-    for coordinator in entry.runtime_data.values():
+    for coordinator in coordinators:
         has_multiple_zones = len(coordinator.data.get_temperature_controls()) > 1
 
         for control in coordinator.data.controls:
@@ -137,7 +137,29 @@ async def async_setup_entry(
                         )
                     )
 
-    async_add_entities(entities)
+    return entities
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LiebherrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Liebherr select entities."""
+    async_add_entities(
+        _create_select_entities(list(entry.runtime_data.coordinators.values()))
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[LiebherrCoordinator]) -> None:
+        """Add select entities for new devices."""
+        async_add_entities(_create_select_entities(coordinators))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_device_{entry.entry_id}", _async_new_device
+        )
+    )
 
 
 class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
