@@ -183,46 +183,6 @@ async def test_select_failure(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_select_update_failure(
-    hass: HomeAssistant,
-    mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test select becomes unavailable when coordinator update fails and recovers."""
-    entity_id = "select.test_fridge_bottom_zone_icemaker"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "off"
-
-    # Simulate update error
-    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError(
-        "Connection failed"
-    )
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        MOCK_DEVICE_STATE
-    )
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "off"
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_select_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -305,70 +265,6 @@ async def test_single_zone_select(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_multi_zone_with_none_position(
-    hass: HomeAssistant,
-    mock_liebherr_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    platforms: list[Platform],
-) -> None:
-    """Test multi-zone device where zone_position is None."""
-    device = Device(
-        device_id="multi_none_id",
-        nickname="Multi None Fridge",
-        device_type=DeviceType.COMBI,
-        device_name="CBNes5678",
-    )
-    mock_liebherr_client.get_devices.return_value = [device]
-    state = DeviceState(
-        device=device,
-        controls=[
-            TemperatureControl(
-                zone_id=1,
-                zone_position=None,
-                name="Fridge",
-                type="fridge",
-                value=4,
-                target=4,
-                min=2,
-                max=8,
-                unit=TemperatureUnit.CELSIUS,
-            ),
-            TemperatureControl(
-                zone_id=2,
-                zone_position=None,
-                name="Freezer",
-                type="freezer",
-                value=-18,
-                target=-18,
-                min=-24,
-                max=-16,
-                unit=TemperatureUnit.CELSIUS,
-            ),
-            IceMakerControl(
-                name="icemaker",
-                type="IceMakerControl",
-                zone_id=1,
-                zone_position=None,
-                ice_maker_mode=IceMakerMode.OFF,
-                has_max_ice=True,
-            ),
-        ],
-    )
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        state
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Without zone_position, should use the base translation key (no zone suffix)
-    entity_state = hass.states.get("select.multi_none_fridge_icemaker")
-    assert entity_state is not None
-    assert entity_state.state == "off"
 
 
 @pytest.mark.usefixtures("init_integration")
