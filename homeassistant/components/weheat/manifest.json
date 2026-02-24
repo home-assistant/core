@@ -1,7 +1,7 @@
 {
   "domain": "weheat",
   "name": "Weheat",
-  "codeowners": ["@jesperraemaekers"],
+  "codeowners": ["@barryvdh"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/weheat",
