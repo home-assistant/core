@@ -179,5 +179,5 @@ class S20Switch(SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"name": str(self._attr_name)},
+                translation_placeholders={"name": self._name},
             ) from err
