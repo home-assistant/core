@@ -49,6 +49,7 @@ from homeassistant.components.vizio.const import (
     DOMAIN,
 )
 from homeassistant.components.vizio.services import SERVICE_UPDATE_SETTING
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -76,8 +77,6 @@ from .const import (
     UNKNOWN_APP_CONFIG,
     VOLUME_STEP,
 )
-
-from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -171,9 +170,7 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool) -> None:
             assert attr[ATTR_SOUND_MODE] == CURRENT_EQ
 
 
-async def _test_setup_speaker(
-    hass: HomeAssistant, vizio_power_state: bool
-) -> None:
+async def _test_setup_speaker(hass: HomeAssistant, vizio_power_state: bool) -> None:
     """Test Vizio Speaker entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
 
@@ -607,9 +604,7 @@ async def test_setup_with_apps_additional_apps_config(
 
     # Test that invalid app does nothing
     with (
-        patch(
-            "homeassistant.components.vizio.VizioAsync.launch_app"
-        ) as service_call1,
+        patch("homeassistant.components.vizio.VizioAsync.launch_app") as service_call1,
         patch(
             "homeassistant.components.vizio.VizioAsync.launch_app_config"
         ) as service_call2,
