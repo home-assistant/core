@@ -39,6 +39,11 @@ async def async_setup_entry(
         ]:
             entities.append(SureBattery(surepy_entity.id, coordinator))
 
+        # Add curfew time sensors for flaps that support locking
+        if surepy_entity.type in [EntityType.CAT_FLAP, EntityType.PET_FLAP]:
+            entities.append(CurfewTime(surepy_entity.id, coordinator, "lock"))
+            entities.append(CurfewTime(surepy_entity.id, coordinator, "unlock"))
+
         if surepy_entity.type == EntityType.FELAQUA:
             entities.append(Felaqua(surepy_entity.id, coordinator))
 
@@ -108,3 +113,33 @@ class Felaqua(SurePetcareEntity, SensorEntity):
         """Update the state."""
         surepy_entity = cast(SurepyFelaqua, surepy_entity)
         self._attr_native_value = surepy_entity.water_remaining
+
+
+class CurfewTime(SurePetcareEntity, SensorEntity):
+    """A sensor implementation for Sure Petcare curfew times."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:clock-outline"
+
+    def __init__(
+        self,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
+        time_type: str,
+    ) -> None:
+        """Initialize a Sure Petcare curfew time sensor."""
+        self._time_type = time_type
+        super().__init__(surepetcare_id, coordinator)
+
+        self._attr_name = f"{self._device_name} Curfew {time_type.capitalize()} Time"
+        self._attr_unique_id = f"{self._device_id}-curfew-{time_type}-time"
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state."""
+        status = surepy_entity.raw_data()["status"]
+        curfew = status.get("locking", {}).get("curfew", {})
+
+        # Get the appropriate time based on sensor type
+        time_value = curfew.get(f"{self._time_type}_time")
+        self._attr_native_value = time_value

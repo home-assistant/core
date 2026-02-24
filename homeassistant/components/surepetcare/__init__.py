@@ -19,8 +19,11 @@ from .const import (
     ATTR_FLAP_ID,
     ATTR_LOCATION,
     ATTR_LOCK_STATE,
+    ATTR_LOCK_TIME,
     ATTR_PET_NAME,
+    ATTR_UNLOCK_TIME,
     DOMAIN,
+    SERVICE_SET_CURFEW,
     SERVICE_SET_LOCK_STATE,
     SERVICE_SET_PET_LOCATION,
 )
@@ -86,6 +89,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_SET_PET_LOCATION,
         coordinator.handle_set_pet_location,
         schema=set_pet_location_schema,
+    )
+
+    curfew_service_schema = vol.Schema(
+        {
+            vol.Required(ATTR_FLAP_ID): vol.All(
+                cv.positive_int, vol.In(coordinator.data.keys())
+            ),
+            vol.Required(ATTR_LOCK_TIME): cv.time,
+            vol.Required(ATTR_UNLOCK_TIME): cv.time,
+        }
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CURFEW,
+        coordinator.handle_set_curfew,
+        schema=curfew_service_schema,
     )
 
     return True

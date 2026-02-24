@@ -21,3 +21,8 @@ ATTR_FLAP_ID = "flap_id"
 ATTR_LOCATION = "location"
 ATTR_LOCK_STATE = "lock_state"
 ATTR_PET_NAME = "pet_name"
+
+# curfew
+SERVICE_SET_CURFEW = "set_curfew"
+ATTR_LOCK_TIME = "lock_time"
+ATTR_UNLOCK_TIME = "unlock_time"

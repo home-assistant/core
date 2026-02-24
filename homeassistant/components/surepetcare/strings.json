@@ -26,6 +26,24 @@
     }
   },
   "services": {
+    "set_curfew": {
+      "description": "Sets curfew times for a flap.",
+      "fields": {
+        "flap_id": {
+          "description": "Flap ID to configure curfew for.",
+          "name": "Flap ID"
+        },
+        "lock_time": {
+          "description": "Time to lock the flap.",
+          "name": "Lock time"
+        },
+        "unlock_time": {
+          "description": "Time to unlock the flap.",
+          "name": "Unlock time"
+        }
+      },
+      "name": "Set curfew"
+    },
     "set_lock_state": {
       "description": "Sets lock state.",
       "fields": {

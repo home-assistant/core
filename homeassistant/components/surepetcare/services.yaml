@@ -30,3 +30,21 @@ set_pet_location:
           options:
             - "Inside"
             - "Outside"
+
+set_curfew:
+  fields:
+    flap_id:
+      required: true
+      example: "123456"
+      selector:
+        text:
+    lock_time:
+      required: true
+      example: "22:00:00"
+      selector:
+        time:
+    unlock_time:
+      required: true
+      example: "07:00:00"
+      selector:
+        time:

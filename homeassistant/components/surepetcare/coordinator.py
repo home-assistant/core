@@ -20,7 +20,9 @@ from .const import (
     ATTR_FLAP_ID,
     ATTR_LOCATION,
     ATTR_LOCK_STATE,
+    ATTR_LOCK_TIME,
     ATTR_PET_NAME,
+    ATTR_UNLOCK_TIME,
     DOMAIN,
     SURE_API_TIMEOUT,
 )
@@ -88,4 +90,16 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
         location = call.data[ATTR_LOCATION]
         device_id = self.get_pets()[pet_name]
         await self.surepy.sac.set_pet_location(device_id, Location[location.upper()])
+        await self.async_request_refresh()
+
+    async def handle_set_curfew(self, call: ServiceCall) -> None:
+        """Call when setting curfew times."""
+        flap_id = call.data[ATTR_FLAP_ID]
+        lock_time = call.data[ATTR_LOCK_TIME]
+        unlock_time = call.data[ATTR_UNLOCK_TIME]
+        await self.surepy.sac.set_curfew(
+            flap_id,
+            lock_time=lock_time,
+            unlock_time=unlock_time,
+        )
         await self.async_request_refresh()
