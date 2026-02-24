@@ -48,20 +48,11 @@ async def test_stt_entity_properties(
     assert stt.AudioChannels.CHANNEL_STEREO in entity.supported_channels
 
 
-@pytest.mark.parametrize(
-    ("audio_format", "call_convert_to_wav"),
-    [
-        (stt.AudioFormats.WAV, True),
-        (stt.AudioFormats.OGG, False),
-    ],
-)
 @pytest.mark.usefixtures("mock_init_component")
-async def test_stt_process_audio_stream_success(
+async def test_stt_process_audio_stream_success_wav(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_transcription: AsyncMock,
-    audio_format: stt.AudioFormats,
-    call_convert_to_wav: bool,
 ) -> None:
     """Test STT processing audio stream successfully."""
     entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
@@ -69,7 +60,7 @@ async def test_stt_process_audio_stream_success(
 
     metadata = stt.SpeechMetadata(
         language="en-US",
-        format=audio_format,
+        format=stt.AudioFormats.WAV,
         codec=stt.AudioCodecs.PCM,
         bit_rate=stt.AudioBitRates.BITRATE_16,
         sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
@@ -99,25 +90,71 @@ async def test_stt_process_audio_stream_success(
     assert result.result == stt.SpeechResultState.SUCCESS
     assert result.text == "This is a test transcription."
 
-    if call_convert_to_wav:
-        mock_wave_open.assert_called_once()
-        mock_wf.setnchannels.assert_called_once_with(1)
-        mock_wf.setsampwidth.assert_called_once_with(2)
-        mock_wf.setframerate.assert_called_once_with(16000)
-    else:
-        mock_wave_open.assert_not_called()
+    mock_wave_open.assert_called_once()
+    mock_wf.setnchannels.assert_called_once_with(1)
+    mock_wf.setsampwidth.assert_called_once_with(2)
+    mock_wf.setframerate.assert_called_once_with(16000)
 
     mock_create_transcription.assert_called_once()
     call_args = mock_create_transcription.call_args
     assert call_args.kwargs["model"] == "gpt-4o-mini-transcribe"
 
     contents = call_args.kwargs["file"]
-    if call_convert_to_wav:
-        assert contents[0].endswith(".wav")
-        assert contents[1] == b"converted_wav_bytes"
-    else:
-        assert contents[0].endswith(".ogg")
-        assert contents[1] == b"test_audio_bytes"
+    assert contents[0].endswith(".wav")
+    assert contents[1] == b"converted_wav_bytes"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_stt_process_audio_stream_success_ogg(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_transcription: AsyncMock,
+) -> None:
+    """Test STT processing audio stream successfully."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
+    mock_create_transcription.return_value = "This is a test transcription."
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.PCM,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    wav_buffer = None
+    mock_wf = MagicMock()
+    mock_wf.writeframes.side_effect = lambda data: wav_buffer.write(
+        b"converted_wav_bytes"
+    )
+
+    def mock_open(buffer, mode):
+        nonlocal wav_buffer
+        wav_buffer = buffer
+        mock_cm = MagicMock()
+        mock_cm.__enter__.return_value = mock_wf
+        return mock_cm
+
+    with patch(
+        "homeassistant.components.openai_conversation.stt.wave.open",
+        side_effect=mock_open,
+    ) as mock_wave_open:
+        result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.text == "This is a test transcription."
+
+    mock_wave_open.assert_not_called()
+
+    mock_create_transcription.assert_called_once()
+    call_args = mock_create_transcription.call_args
+    assert call_args.kwargs["model"] == "gpt-4o-mini-transcribe"
+
+    contents = call_args.kwargs["file"]
+    assert contents[0].endswith(".ogg")
+    assert contents[1] == b"test_audio_bytes"
 
 
 @pytest.mark.usefixtures("mock_init_component")
