@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
@@ -690,9 +691,11 @@ async def test_dhcp_ip_changed_updates_entry(
     """DHCP event with new IP should update the config entry and reload."""
     mock_config_entry.add_to_hass(hass)
 
-    macaddress = mock_config_entry.unique_id.lower().replace(":", "").replace("-", "")
+    macaddress = format_mac(mock_config_entry.unique_id)
 
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as mock_reload:
         macaddress = mock_config_entry.unique_id.lower().replace(":", "")
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -708,6 +711,7 @@ async def test_dhcp_ip_changed_updates_entry(
     assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 async def test_dhcp_mac_mismatch(

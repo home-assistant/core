@@ -34,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -399,17 +400,11 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Automatically handle a DHCP discovered IP change."""
         ip_address = discovery_info.ip
         # python-airos defaults to upper for derived mac_address
-        mac_address = discovery_info.macaddress.upper()
-        normalized_mac = ":".join(mac_address[i : i + 2] for i in range(0, 12, 2))
+        normalized_mac = format_mac(discovery_info.macaddress).upper()
         await self.async_set_unique_id(normalized_mac)
 
-        current_entry = next(
-            (
-                entry
-                for entry in self._async_current_entries()
-                if entry.unique_id == normalized_mac
-            ),
-            None,
+        current_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, normalized_mac
         )
         if current_entry is None:
             return self.async_abort(reason="no_devices_found")
