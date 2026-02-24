@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -16,6 +17,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_APPS, DOMAIN
 from .coordinator import VizioAppsDataUpdateCoordinator
 from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -36,14 +39,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
         store: Store[list[dict[str, Any]]] = Store(hass, 1, DOMAIN)
-        hass.data[DOMAIN][CONF_APPS] = coordinator = VizioAppsDataUpdateCoordinator(
+        coordinator = VizioAppsDataUpdateCoordinator(
             hass, store
         )
-        await asyncio.gather(
-            coordinator.async_register_shutdown(),
-            coordinator.async_setup(),
-        )
-        await coordinator.async_refresh()
+        try:
+            await asyncio.gather(
+                coordinator.async_register_shutdown(),
+                coordinator.async_setup(),
+            )
+        except Exception:
+            _LOGGER.warning("Failed to set up apps coordinator", exc_info=True)
+        else:
+            hass.data[DOMAIN][CONF_APPS] = coordinator
+            await coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
