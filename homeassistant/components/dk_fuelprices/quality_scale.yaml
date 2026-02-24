@@ -14,22 +14,10 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional actions.
-  docs-high-level-description:
-    status: exempt
-    comment: |
-      The integration documentation is not created yet - work in progress.
-  docs-installation-instructions:
-    status: exempt
-    comment: |
-      The integration documentation is not created yet - work in progress.
-  docs-removal-instructions:
-    status: exempt
-    comment: |
-      The integration documentation is not created yet - work in progress.
-  entity-event-setup:
-    status: exempt
-    comment: |
-      Entities of this integration does not explicitly subscribe to events.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done

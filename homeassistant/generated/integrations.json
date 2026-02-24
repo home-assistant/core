@@ -1392,6 +1392,7 @@
       "iot_class": "cloud_polling"
     },
     "dk_fuelprices": {
+      "name": "Fuelprices.dk",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8240,7 +8241,6 @@
     "cpuspeed",
     "demo",
     "derivative",
-    "dk_fuelprices",
     "emulated_roku",
     "energenie_power_sockets",
     "filesize",

@@ -126,6 +126,5 @@
         "description": "Vælg de produkter du vil have priser for - der oprettes 1 sensor pr. produkt"
       }
     }
-  },
-  "title": "Fuelprices.dk"
+  }
 }
