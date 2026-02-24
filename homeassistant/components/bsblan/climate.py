@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from bsblan import BSBLANError
+from bsblan import BSBLANError, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE
@@ -20,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.enum import try_parse_enum
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
@@ -100,19 +100,19 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.coordinator.data.state.current_temperature is None:
+        if (current_temp := self.coordinator.data.state.current_temperature) is None:
             return None
-        return self.coordinator.data.state.current_temperature.value
+        return current_temp.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.coordinator.data.state.target_temperature is None:
+        if (target_temp := self.coordinator.data.state.target_temperature) is None:
             return None
-        return self.coordinator.data.state.target_temperature.value
+        return target_temp.value
 
     @property
-    def _hvac_mode_value(self) -> int | str | None:
+    def _hvac_mode_value(self) -> int | None:
         """Return the raw hvac_mode value from the coordinator."""
         if (hvac_mode := self.coordinator.data.state.hvac_mode) is None:
             return None
@@ -123,10 +123,17 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         """Return hvac operation ie. heat, cool mode."""
         if (hvac_mode_value := self._hvac_mode_value) is None:
             return None
-        # BSB-Lan returns integer values: 0=off, 1=auto, 2=eco, 3=heat
-        if isinstance(hvac_mode_value, int):
-            return BSBLAN_TO_HA_HVAC_MODE.get(hvac_mode_value)
-        return try_parse_enum(HVACMode, hvac_mode_value)
+        return BSBLAN_TO_HA_HVAC_MODE.get(hvac_mode_value)
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac action."""
+        if (
+            action := self.coordinator.data.state.hvac_action
+        ) is None or action.value is None:
+            return None
+        category = get_hvac_action_category(action.value)
+        return HVACAction(category.name.lower())
 
     @property
     def preset_mode(self) -> str | None:

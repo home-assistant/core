@@ -51,8 +51,11 @@ runs:
       run: |
         cosign verify \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-          --certificate-identity-regexp "${{ inputs.cosign-base-identity }}" \
-          "${{ inputs.base-image }}"
+          --certificate-identity-regexp "${INPUTS_COSIGN_BASE_IDENTITY}" \
+          "${INPUTS_BASE_IMAGE}"
+      env:
+        INPUTS_COSIGN_BASE_IDENTITY: ${{ inputs.cosign-base-identity }}
+        INPUTS_BASE_IMAGE: ${{ inputs.base-image }}
 
     - name: Verify cache image signature
       id: cache
@@ -62,7 +65,9 @@ runs:
         cosign verify \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
           --certificate-identity-regexp "https://github.com/home-assistant/core/.*" \
-          "ghcr.io/home-assistant/${{ inputs.arch }}-homeassistant:latest"
+          "ghcr.io/home-assistant/${INPUTS_ARCH}-homeassistant:latest"
+      env:
+        INPUTS_ARCH: ${{ inputs.arch }}
 
     - name: Prepare labels
       id: labels
@@ -73,17 +78,17 @@ runs:
 
         # Build default labels array
         LABELS=(
-          "io.hass.arch=${{ inputs.arch }}"
-          "io.hass.version=${{ inputs.version }}"
+          "io.hass.arch=${INPUTS_ARCH}"
+          "io.hass.version=${INPUTS_VERSION}"
           "org.opencontainers.image.created=${CREATED}"
-          "org.opencontainers.image.version=${{ inputs.version }}"
+          "org.opencontainers.image.version=${INPUTS_VERSION}"
         )
 
         # Append additional labels if provided
-        if [ -n "${{ inputs.additional-labels }}" ]; then
+        if [ -n "${INPUTS_ADDITIONAL_LABELS}" ]; then
           while IFS= read -r label; do
             [ -n "$label" ] && LABELS+=("$label")
-          done <<< "${{ inputs.additional-labels }}"
+          done <<< "${INPUTS_ADDITIONAL_LABELS}"
         fi
 
         # Output the combined labels using EOF delimiter for multiline
@@ -92,6 +97,10 @@ runs:
           printf '%s\n' "${LABELS[@]}"
           echo 'EOF'
         } >> "$GITHUB_OUTPUT"
+      env:
+        INPUTS_ARCH: ${{ inputs.arch }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_ADDITIONAL_LABELS: ${{ inputs.additional-labels }}
 
     - name: Build base image
       id: build
@@ -114,5 +123,8 @@ runs:
       run: |
         # Sign each tag
         while IFS= read -r tag; do
-          [ -n "$tag" ] && cosign sign --yes "${tag}@${{ steps.build.outputs.digest }}"
-        done <<< "${{ inputs.tags }}"
+          [ -n "$tag" ] && cosign sign --yes "${tag}@${STEPS_BUILD_OUTPUTS_DIGEST}"
+        done <<< "${INPUTS_TAGS}"
+      env:
+        STEPS_BUILD_OUTPUTS_DIGEST: ${{ steps.build.outputs.digest }}
+        INPUTS_TAGS: ${{ inputs.tags }}

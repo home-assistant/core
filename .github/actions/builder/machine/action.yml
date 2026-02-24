@@ -20,20 +20,20 @@ runs:
       id: vars
       shell: bash
       run: |
-        echo "base_image=ghcr.io/home-assistant/${{ inputs.arch }}-homeassistant:${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+        echo "base_image=ghcr.io/home-assistant/${INPUTS_ARCH}-homeassistant:${INPUTS_VERSION}" >> "$GITHUB_OUTPUT"
 
         # Build tags array with version-specific tag
         TAGS=(
-          "ghcr.io/home-assistant/${{ inputs.machine }}-homeassistant:${{ inputs.version }}"
+          "ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:${INPUTS_VERSION}"
         )
 
         # Add general tag based on version
-        if [[ "${{ inputs.version }}" =~ d ]]; then
-          TAGS+=("ghcr.io/home-assistant/${{ inputs.machine }}-homeassistant:dev")
-        elif [[ "${{ inputs.version }}" =~ b ]]; then
-          TAGS+=("ghcr.io/home-assistant/${{ inputs.machine }}-homeassistant:beta")
+        if [[ "${INPUTS_VERSION}" =~ d ]]; then
+          TAGS+=("ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:dev")
+        elif [[ "${INPUTS_VERSION}" =~ b ]]; then
+          TAGS+=("ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:beta")
         else
-          TAGS+=("ghcr.io/home-assistant/${{ inputs.machine }}-homeassistant:stable")
+          TAGS+=("ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:stable")
         fi
 
         # Output tags using EOF delimiter for multiline
@@ -45,7 +45,7 @@ runs:
 
         LABELS=(
           "io.hass.type=core"
-          "io.hass.machine=${{ inputs.machine }}"
+          "io.hass.machine=${INPUTS_MACHINE}"
           "org.opencontainers.image.source=https://github.com/home-assistant/core"
         )
 
@@ -55,6 +55,10 @@ runs:
           printf '%s\n' "${LABELS[@]}"
           echo 'EOF'
         } >> "$GITHUB_OUTPUT"
+      env:
+        INPUTS_ARCH: ${{ inputs.arch }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
 
     - name: Build machine image
       uses: ./.github/actions/builder/generic
