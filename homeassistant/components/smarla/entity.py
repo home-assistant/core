@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from pysmarlaapi import Federwiege
 
@@ -49,7 +50,7 @@ class SmarlaBaseEntity(Entity):
         """Return True if entity is available."""
         return self._federwiege.available
 
-    async def on_availability_change(self, _) -> None:
+    async def on_availability_change(self, available: bool) -> None:
         """Handle availability changes."""
         if not self.available and not self._unavailable_logged:
             _LOGGER.info("Entity %s is unavailable", self.entity_id)
@@ -61,7 +62,7 @@ class SmarlaBaseEntity(Entity):
         # Notify ha that state changed
         self.async_write_ha_state()
 
-    async def on_change(self, _):
+    async def on_change(self, value: Any) -> None:
         """Notify ha when state changes."""
         self.async_write_ha_state()
 
