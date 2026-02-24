@@ -40,7 +40,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
-        errors: dict[str, str] = {}
+        errors = {}
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
@@ -102,7 +102,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle re-authentication confirmation."""
-        errors: dict[str, str] = {}
+        errors = {}
 
         if user_input is not None:
             self._api_key = user_input[CONF_API_KEY]
