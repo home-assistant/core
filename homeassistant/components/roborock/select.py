@@ -264,6 +264,7 @@ async def async_setup_entry(
         RoborockSelectEntityA01(coordinator, description)
         for coordinator in config_entry.runtime_data.a01
         for description in A01_SELECT_DESCRIPTIONS
+        if description.data_protocol in coordinator.request_protocols
     )
 
 

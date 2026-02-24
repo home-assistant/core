@@ -118,6 +118,7 @@ async def async_setup_entry(
         )
         for coordinator in config_entry.runtime_data.a01
         for description in A01_SWITCH_DESCRIPTIONS
+        if description.data_protocol in coordinator.request_protocols
     )
 
 
