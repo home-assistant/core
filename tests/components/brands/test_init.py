@@ -13,7 +13,6 @@ import pytest
 
 from homeassistant.components.brands.const import (
     BRANDS_CDN_URL,
-    BROWSER_CACHE_TTL,
     CACHE_TTL,
     DOMAIN,
     TOKEN_CHANGE_INTERVAL,
@@ -84,7 +83,6 @@ async def test_integration_view_serves_from_cdn(
     assert resp.status == HTTPStatus.OK
     assert resp.content_type == "image/png"
     assert await resp.read() == FAKE_PNG
-    assert resp.headers["Cache-Control"] == f"public, max-age={BROWSER_CACHE_TTL}"
 
 
 async def test_integration_view_with_placeholder_fallback(

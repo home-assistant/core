@@ -17,7 +17,6 @@ PLACEHOLDER: Final = "_placeholder"
 
 # Caching
 CACHE_TTL: Final = 30 * 24 * 60 * 60  # 30 days in seconds
-BROWSER_CACHE_TTL: Final = 86400  # 1 day in seconds
 
 # Access token
 TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=30)

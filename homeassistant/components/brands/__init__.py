@@ -11,7 +11,6 @@ import time
 from typing import Any, Final
 
 from aiohttp import ClientError, hdrs, web
-from aiohttp.hdrs import CACHE_CONTROL
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -26,7 +25,6 @@ from homeassistant.loader import async_get_custom_components
 from .const import (
     ALLOWED_IMAGES,
     BRANDS_CDN_URL,
-    BROWSER_CACHE_TTL,
     CACHE_TTL,
     CATEGORY_RE,
     CDN_TIMEOUT,
@@ -225,7 +223,6 @@ class _BrandsBaseView(HomeAssistantView):
         return web.Response(
             body=data,
             content_type="image/png",
-            headers={CACHE_CONTROL: f"public, max-age={BROWSER_CACHE_TTL}"},
         )
 
 
