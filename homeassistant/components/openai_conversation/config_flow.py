@@ -114,7 +114,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
+    await client.models.list(timeout=10.0)
 
 
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
