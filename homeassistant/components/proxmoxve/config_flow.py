@@ -201,20 +201,30 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the user input. Return nodes data and/or errors."""
         errors: dict[str, str] = {}
         proxmox_nodes: list[dict[str, Any]] = []
+        err: ProxmoxError | None = None
         try:
             proxmox_nodes = await self.hass.async_add_executor_job(
                 _get_nodes_data, user_input
             )
-        except ProxmoxConnectTimeout:
+        except ProxmoxConnectTimeout as exc:
             errors["base"] = "connect_timeout"
-        except ProxmoxAuthenticationError:
+            err = exc
+        except ProxmoxAuthenticationError as exc:
             errors["base"] = "invalid_auth"
-        except ProxmoxSSLError:
+            err = exc
+        except ProxmoxSSLError as exc:
             errors["base"] = "ssl_error"
-        except ProxmoxNoNodesFound:
+            err = exc
+        except ProxmoxNoNodesFound as exc:
             errors["base"] = "no_nodes_found"
-        except ProxmoxConnectionError:
+            err = exc
+        except ProxmoxConnectionError as exc:
             errors["base"] = "cannot_connect"
+            err = exc
+
+        if err is not None:
+            _LOGGER.debug("Error: %s: %s", errors["base"], err)
+
         return proxmox_nodes, errors
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
