@@ -403,27 +403,8 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         normalized_mac = format_mac(discovery_info.macaddress).upper()
         await self.async_set_unique_id(normalized_mac)
 
-        current_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, normalized_mac
-        )
-        if current_entry is None:
-            return self.async_abort(reason="no_devices_found")
-
-        if current_entry.data[CONF_HOST] == ip_address:
-            return self.async_abort(reason="already_configured")
-
-        updated_data = {**current_entry.data, CONF_HOST: ip_address}
-
-        self.hass.config_entries.async_update_entry(current_entry, data=updated_data)
-        await self.hass.config_entries.async_reload(current_entry.entry_id)
-
-        _LOGGER.info(
-            "DHCP airOS device with mac address %s has new ip address %s, updating config entry accordingly",
-            normalized_mac,
-            ip_address,
-        )
-
-        return self.async_abort(reason="reconfigure_successful")
+        self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
+        return self.async_abort(reason="unreachable")
 
     async def async_step_discovery_no_devices(
         self, user_input: dict[str, Any] | None = None

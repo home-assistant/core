@@ -1,7 +1,7 @@
 """Test the Ubiquiti airOS config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
@@ -32,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
@@ -691,27 +690,22 @@ async def test_dhcp_ip_changed_updates_entry(
     """DHCP event with new IP should update the config entry and reload."""
     mock_config_entry.add_to_hass(hass)
 
-    macaddress = format_mac(mock_config_entry.unique_id)
+    macaddress = mock_config_entry.unique_id.lower().replace(":", "").replace("-", "")
 
-    with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as mock_reload:
-        macaddress = mock_config_entry.unique_id.lower().replace(":", "")
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_DHCP},
-            data=DhcpServiceInfo(
-                ip="1.1.1.2",
-                hostname="airos",
-                macaddress=macaddress,
-            ),
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2",
+            hostname="airos",
+            macaddress=macaddress,
+        ),
+    )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == "already_configured"
 
     assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
-    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 async def test_dhcp_mac_mismatch(
@@ -732,7 +726,7 @@ async def test_dhcp_mac_mismatch(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "unreachable"
 
 
 async def test_dhcp_ip_unchanged(
