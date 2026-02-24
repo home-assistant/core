@@ -51,7 +51,13 @@ async def _validate_device_and_get_info(
             # upnp_device = await UpnpDevice.async_create_device(requester, location)
             factory = UpnpFactory(requester)
             upnp_device = await factory.async_create_device(location)
-            actual_host = urlparse(location).hostname or actual_host
+            return {
+                CONF_UDN: upnp_device.udn,
+                CONF_NAME: upnp_device.friendly_name,
+                "model": upnp_device.model_name or "WiiM Device",
+                CONF_HOST: urlparse(location).hostname or actual_host,
+                CONF_UPNP_LOCATION: location or upnp_device.device_url,
+            }
         elif "uuid:" in host_or_udn.lower():
             raise CannotConnect(
                 f"Validation by UDN ({host_or_udn}) alone is not supported for connection. Use IP/host or discovery."
