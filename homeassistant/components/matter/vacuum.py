@@ -157,7 +157,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
     @property
-    def _current_segments(self) -> list[Segment]:
+    def _current_segments(self) -> dict[str, Segment]:
         """Return the current cleanable segments reported by the device."""
         supported_areas: list[clusters.ServiceArea.Structs.AreaStruct] = (
             self.get_matter_attribute_value(
@@ -165,19 +165,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             )
         )
 
-        segments: list[Segment] = []
+        segments: dict[str, Segment] = {}
         for area in supported_areas:
             area_name = None
             if area.areaInfo and area.areaInfo.locationInfo:
                 area_name = area.areaInfo.locationInfo.locationName
 
             if area_name:
-                segments.append(
-                    Segment(
-                        id=str(area.areaID),
-                        name=area_name,
-                    )
-                )
+                segment_id = str(area.areaID)
+                segments[segment_id] = Segment(id=segment_id, name=area_name)
 
         return segments
 
@@ -186,7 +182,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         Returns a list of segments containing their ids and names.
         """
-        return self._current_segments
+        return list(self._current_segments.values())
 
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments.
@@ -252,7 +248,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             VacuumEntityFeature.CLEAN_AREA in self.supported_features
             and self.registry_entry is not None
             and (last_seen_segments := self.last_seen_segments) is not None
-            and self._current_segments != last_seen_segments
+            and self._current_segments != {s.id: s for s in last_seen_segments}
         ):
             self.async_create_segments_issue()
 
