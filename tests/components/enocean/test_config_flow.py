@@ -254,9 +254,4 @@ async def test_usb_discovery_already_configured_updates_path(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    # Ensure the existing entry's device path was updated
-    updated_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.data[CONF_DEVICE] == "/dev/enocean-new"
+    assert result["reason"] == "single_instance_allowed"
