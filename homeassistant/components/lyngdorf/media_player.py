@@ -67,9 +67,9 @@ def _to_ha_volume(volume_db: float) -> float:
 
 
 def _to_lyngdorf_volume(volume: float) -> float:
-    """Convert HA 0..1 volume to Lyngdorf dB scale, clamped to max."""
+    """Convert HA 0..1 volume to Lyngdorf dB scale, clamped to min and max."""
     volume_db = volume * VOLUME_RANGE + MIN_VOLUME_DB
-    return min(volume_db, MAX_VOLUME_DB)
+    return max(MIN_VOLUME_DB, min(volume_db, MAX_VOLUME_DB))
 
 
 class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
@@ -203,14 +203,16 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_title(self) -> str | None:
         """Return title of the current media."""
-        response: str = ""
-        if self.state == MediaPlayerState.PLAYING:
-            if self._playing_audio:
-                response = f"audio: {self._receiver.audio_information} "
-            if self._playing_video:
-                response = f"{response}video: {self._receiver.video_information}"
-            return response
-        return None
+        if self.state != MediaPlayerState.PLAYING:
+            return None
+
+        parts: list[str] = []
+        if self._playing_audio:
+            parts.append(f"audio: {self._receiver.audio_information}")
+        if self._playing_video:
+            parts.append(f"video: {self._receiver.video_information}")
+
+        return " ".join(parts) if parts else None
 
     @property
     def _playing_video(self) -> bool:
@@ -233,9 +235,11 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Return the content type of the current media."""
         if self.state != MediaPlayerState.PLAYING:
             return None
-        if self._receiver.video_information:
+        if self._playing_video:
             return MediaType.VIDEO
-        return MediaType.MUSIC
+        if self._playing_audio:
+            return MediaType.MUSIC
+        return None
 
     @property
     def source_list(self) -> list[str] | None:

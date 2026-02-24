@@ -32,6 +32,7 @@ class LyngdorfEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister notification callback when removed from hass."""
+        await super().async_will_remove_from_hass()
         self._receiver.un_register_notification_callback(self._handle_receiver_update)
 
     @callback

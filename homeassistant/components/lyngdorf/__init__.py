@@ -43,10 +43,10 @@ async def async_setup_entry(
             translation_placeholders={"host": config_entry.data[CONF_HOST]},
         ) from err
 
+    assert config_entry.unique_id
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, config_entry.entry_id)},
+        identifiers={(DOMAIN, config_entry.unique_id)},
         manufacturer=lyngdorf_model.manufacturer,
-        name=config_entry.title,
         serial_number=config_entry.data.get(CONF_SERIAL_NUMBER),
         model=lyngdorf_model.model_name,
     )
@@ -73,5 +73,9 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    await config_entry.runtime_data.receiver.async_disconnect()
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        await config_entry.runtime_data.receiver.async_disconnect()
+    return unload_ok

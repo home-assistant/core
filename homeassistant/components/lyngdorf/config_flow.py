@@ -65,7 +65,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 model = await async_find_receiver_model(self._host)
             except TimeoutError:
                 errors["base"] = "timeout_connect"
-            except ConnectionError, OSError:
+            except OSError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"

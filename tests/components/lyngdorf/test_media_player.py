@@ -363,8 +363,8 @@ def test_entity_properties(mock_receiver: MagicMock) -> None:
 
     main = LyngdorfMainDevice(mock_receiver, config_entry, device_info)
     assert main.state is MediaPlayerState.PLAYING
-    assert main.media_title == "audio: Stereo "
-    assert main.media_content_type is MediaType.VIDEO
+    assert main.media_title == "audio: Stereo"
+    assert main.media_content_type is MediaType.MUSIC
     assert main.source_list == ["HDMI"]
     assert main.sound_mode_list == ["Movie"]
     assert main.is_volume_muted is mock_receiver.mute_enabled
