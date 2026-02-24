@@ -111,4 +111,7 @@ class HomeAssistantUnixSite(web.BaseSite):
             server,
             self._path,
             backlog=self._backlog,
+            start_serving=False,
         )
+        self._path.chmod(0o600)
+        await self._server.start_serving()
