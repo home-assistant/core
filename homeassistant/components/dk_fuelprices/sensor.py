@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,8 +16,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify as util_slugify
 
-from .api import APIClient
+from . import DkFuelpricesConfigEntry
 from .const import DOMAIN
+from .coordinator import APIClient
 
 SENSORS = [
     SensorEntityDescription(
@@ -42,7 +42,7 @@ SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[dict[str, APIClient]],
+    entry: DkFuelpricesConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform for Braendstofpriser integration."""
