@@ -4382,8 +4382,7 @@
       "name": "MTA New York City Transit",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "mullvad": {
       "name": "Mullvad VPN",
