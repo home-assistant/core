@@ -77,6 +77,85 @@
       "stop_all": {
         "name": "Stop all"
       }
+    },
+    "sensor": {
+      "container_cpu": {
+        "name": "CPU usage"
+      },
+      "container_disk": {
+        "name": "Disk usage"
+      },
+      "container_max_cpu": {
+        "name": "Max CPU"
+      },
+      "container_max_disk": {
+        "name": "Max disk usage"
+      },
+      "container_max_memory": {
+        "name": "Max memory usage"
+      },
+      "container_memory": {
+        "name": "Memory usage"
+      },
+      "container_status": {
+        "name": "Status",
+        "state": {
+          "running": "Running",
+          "stopped": "Stopped",
+          "suspended": "Suspended"
+        }
+      },
+      "node_cpu": {
+        "name": "CPU usage"
+      },
+      "node_disk": {
+        "name": "Disk usage"
+      },
+      "node_max_cpu": {
+        "name": "Max CPU"
+      },
+      "node_max_disk": {
+        "name": "Max disk usage"
+      },
+      "node_max_memory": {
+        "name": "Max memory usage"
+      },
+      "node_memory": {
+        "name": "Memory usage"
+      },
+      "node_status": {
+        "name": "Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
+      "vm_cpu": {
+        "name": "CPU usage"
+      },
+      "vm_disk": {
+        "name": "Disk usage"
+      },
+      "vm_max_cpu": {
+        "name": "Max CPU"
+      },
+      "vm_max_disk": {
+        "name": "Max disk usage"
+      },
+      "vm_max_memory": {
+        "name": "Max memory usage"
+      },
+      "vm_memory": {
+        "name": "Memory usage"
+      },
+      "vm_status": {
+        "name": "Status",
+        "state": {
+          "running": "Running",
+          "stopped": "Stopped",
+          "suspended": "Suspended"
+        }
+      }
     }
   },
   "exceptions": {
