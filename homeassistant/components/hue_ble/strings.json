@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_unsupported": "Discovery flow is not supported by the Hue BLE integration.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
