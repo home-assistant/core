@@ -26,6 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 
+from .api import async_create_controller
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
@@ -34,7 +35,6 @@ from .coordinator import (
 )
 from .services import async_setup_services
 from .types import RainbirdConfigEntry, RainbirdData
-from .api import async_create_controller
 
 _LOGGER = logging.getLogger(__name__)
 

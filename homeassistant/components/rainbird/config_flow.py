@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
 from . import RainbirdConfigEntry
+from .api import async_create_controller
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -25,7 +26,6 @@ from .const import (
     DOMAIN,
     TIMEOUT_SECONDS,
 )
-from .api import async_create_controller
 from .coordinator import async_create_clientsession
 from .util import normalize_rainbird_host
 
@@ -141,7 +141,9 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         clientsession = async_create_clientsession()
         try:
             async with asyncio.timeout(TIMEOUT_SECONDS):
-                controller = await async_create_controller(clientsession, host, password)
+                controller = await async_create_controller(
+                    clientsession, host, password
+                )
                 return await asyncio.gather(
                     controller.get_serial_number(),
                     controller.get_wifi_params(),

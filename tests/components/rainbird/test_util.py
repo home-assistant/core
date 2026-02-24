@@ -31,4 +31,3 @@ from homeassistant.components.rainbird.util import normalize_rainbird_host
 def test_normalize_rainbird_host(host: str, expected: str) -> None:
     """Test host normalization utility."""
     assert normalize_rainbird_host(host) == expected
-
