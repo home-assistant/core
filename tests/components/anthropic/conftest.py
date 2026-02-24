@@ -21,16 +21,6 @@ from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
 from homeassistant.components.anthropic.const import (
-    CONF_CHAT_MODEL,
-    CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
-    CONF_WEB_SEARCH,
-    CONF_WEB_SEARCH_CITY,
-    CONF_WEB_SEARCH_COUNTRY,
-    CONF_WEB_SEARCH_MAX_USES,
-    CONF_WEB_SEARCH_REGION,
-    CONF_WEB_SEARCH_TIMEZONE,
-    CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
 )
@@ -85,85 +75,18 @@ def mock_config_entry_with_assist(
 
 
 @pytest.fixture
-def mock_config_entry_with_extended_thinking(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with extended thinking."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
-            CONF_THINKING_BUDGET: 1500,
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_adaptive_thinking(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with adaptive thinking."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
-            CONF_THINKING_EFFORT: "medium",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_web_search(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with server tools enabled."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_MAX_USES: 5,
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_no_structured_output(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with a model without structured outputs support."""
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                CONF_CHAT_MODEL: "claude-sonnet-4-0",
-            },
-        )
-    return mock_config_entry
-
-
-@pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
     model_list = AsyncPage(
         data=[
+            ModelInfo(
+                id="claude-sonnet-4-6",
+                created_at=datetime.datetime(2026, 2, 17, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Sonnet 4.6",
+                type="model",
+            ),
             ModelInfo(
                 id="claude-opus-4-6",
                 created_at=datetime.datetime(2026, 2, 4, 0, 0, tzinfo=datetime.UTC),
@@ -207,27 +130,9 @@ async def mock_init_component(
                 type="model",
             ),
             ModelInfo(
-                id="claude-3-7-sonnet-20250219",
-                created_at=datetime.datetime(2025, 2, 24, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Sonnet 3.7",
-                type="model",
-            ),
-            ModelInfo(
-                id="claude-3-5-haiku-20241022",
-                created_at=datetime.datetime(2024, 10, 22, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Haiku 3.5",
-                type="model",
-            ),
-            ModelInfo(
                 id="claude-3-haiku-20240307",
                 created_at=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.UTC),
                 display_name="Claude Haiku 3",
-                type="model",
-            ),
-            ModelInfo(
-                id="claude-3-opus-20240229",
-                created_at=datetime.datetime(2024, 2, 29, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Opus 3",
                 type="model",
             ),
         ]
@@ -246,6 +151,16 @@ async def mock_init_component(
 async def setup_ha(hass: HomeAssistant) -> None:
     """Set up Home Assistant."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setup entry."""
+    with patch(
+        "homeassistant.components.anthropic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture
@@ -277,7 +192,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 id="msg_1234567890ABCDEFGHIJKLMN",
                 content=[],
                 role="assistant",
-                model="claude-3-5-sonnet-20240620",
+                model=kwargs["model"],
                 usage=Usage(input_tokens=0, output_tokens=0),
             ),
             type="message_start",
