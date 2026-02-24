@@ -39,9 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
         store: Store[list[dict[str, Any]]] = Store(hass, 1, DOMAIN)
-        coordinator = VizioAppsDataUpdateCoordinator(
-            hass, store
-        )
+        coordinator = VizioAppsDataUpdateCoordinator(hass, store)
         try:
             await coordinator.async_setup()
         except HomeAssistantError:
