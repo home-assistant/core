@@ -223,7 +223,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> boo
         "Unloading WiiM entry: %s (UDN: %s)", entry.title, entry.data.get(CONF_UDN)
     )
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
 
     if unload_ok:
         wiim_domain_data = hass.data.get(DOMAIN)
