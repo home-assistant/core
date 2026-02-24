@@ -83,12 +83,13 @@ def _get_photo_album(
             translation_placeholders={"entry": identifier.config_entry_id},
         )
 
-    if identifier.shared_album is True:
-        albums = icloud_account.api.photos.shared_streams
-    if identifier.shared_album is False:
-        albums = icloud_account.api.photos.albums
+albums = (
+        icloud_account.api.photos.shared_streams
+        if identifier.shared_album is True
+        else icloud_account.api.photos.albums
+    )
 
-    album = albums.get(identifier.album_id) if albums else None
+    album = albums.get(identifier.album_id) if albums and identifier.album_id else None
 
     if not album:
         raise Unresolvable(
