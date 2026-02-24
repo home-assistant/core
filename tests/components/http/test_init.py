@@ -744,15 +744,15 @@ async def test_unix_socket_started_with_supervisor(
 ) -> None:
     """Test unix socket is started when running under Supervisor."""
     socket_path = tmp_path / "core.sock"
+    loop = asyncio.get_event_loop()
     mock_unix_server = AsyncMock()
     with (
         patch.dict(
             os.environ, {"SUPERVISOR_CORE_API_SOCKET": str(socket_path)}, clear=False
         ),
         patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
-        patch(
-            "asyncio.unix_events._UnixSelectorEventLoop.create_unix_server",
-            return_value=mock_unix_server,
+        patch.object(
+            loop, "create_unix_server", return_value=mock_unix_server
         ) as mock_create_unix,
         patch.object(Path, "chmod") as mock_chmod,
     ):
@@ -775,13 +775,13 @@ async def test_unix_socket_not_started_without_supervisor(
     hass: HomeAssistant,
 ) -> None:
     """Test unix socket is not started when not running under Supervisor."""
+    loop = asyncio.get_event_loop()
     mock_server = Mock()
     with (
         patch.dict(os.environ, {}, clear=False),
         patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
-        patch(
-            "asyncio.unix_events._UnixSelectorEventLoop.create_unix_server",
-            return_value=mock_server,
+        patch.object(
+            loop, "create_unix_server", return_value=mock_server
         ) as mock_create_unix,
     ):
         os.environ.pop("SUPERVISOR_CORE_API_SOCKET", None)
@@ -798,6 +798,7 @@ async def test_unix_socket_rejected_relative_path(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unix socket is rejected when path is relative."""
+    loop = asyncio.get_event_loop()
     mock_server = Mock()
     with (
         patch.dict(
@@ -806,9 +807,8 @@ async def test_unix_socket_rejected_relative_path(
             clear=False,
         ),
         patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
-        patch(
-            "asyncio.unix_events._UnixSelectorEventLoop.create_unix_server",
-            return_value=mock_server,
+        patch.object(
+            loop, "create_unix_server", return_value=mock_server
         ) as mock_create_unix,
     ):
         assert await async_setup_component(hass, "http", {"http": {}})
