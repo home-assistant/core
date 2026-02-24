@@ -210,11 +210,13 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._pending_host is not None
 
         if user_input is not None:
+            username = user_input.get(CONF_USERNAME)
+            password = user_input.get(CONF_PASSWORD)
             if info := await self._async_validate_credentials(
                 self._pending_host,
                 errors,
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
+                username=username,
+                password=password,
             ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
@@ -222,8 +224,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         CONF_HOST: self._pending_host,
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
                     },
                 )
 
@@ -253,8 +255,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             if info := await self._async_validate_credentials(
                 reauth_entry.data[CONF_HOST],
                 errors,
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
             ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_mismatch()
@@ -318,11 +320,13 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
+            username = user_input.get(CONF_USERNAME)
+            password = user_input.get(CONF_PASSWORD)
             if info := await self._async_validate_credentials(
                 self._pending_host,
                 errors,
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
+                username=username,
+                password=password,
             ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_mismatch()
@@ -330,8 +334,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                     reconfigure_entry,
                     data_updates={
                         CONF_HOST: self._pending_host,
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
                     },
                 )
 
