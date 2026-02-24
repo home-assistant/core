@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_NEW_DEVICE
+from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import ZONE_POSITION_MAP, LiebherrEntity
 
@@ -156,7 +156,9 @@ async def async_setup_entry(
         async_add_entities(_create_select_entities(coordinators))
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_NEW_DEVICE, _async_new_device)
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_device_{entry.entry_id}", _async_new_device
+        )
     )
 
 

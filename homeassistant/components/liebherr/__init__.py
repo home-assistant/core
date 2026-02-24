@@ -31,8 +31,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-SIGNAL_NEW_DEVICE = f"{DOMAIN}_new_device"
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
     """Set up Liebherr from a config entry."""
@@ -78,8 +76,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         """Scan for new devices added to the account."""
         try:
             devices = await client.get_devices()
-        except (LiebherrAuthenticationError, LiebherrConnectionError):
+        except LiebherrAuthenticationError, LiebherrConnectionError:
             _LOGGER.debug("Failed to scan for new devices")
+            return
+        except Exception:
+            _LOGGER.exception("Unexpected error scanning for new devices")
             return
 
         new_coordinators: list[LiebherrCoordinator] = []
@@ -99,7 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                 new_coordinators.append(coordinator)
 
         if new_coordinators:
-            async_dispatcher_send(hass, SIGNAL_NEW_DEVICE, new_coordinators)
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_new_device_{entry.entry_id}",
+                new_coordinators,
+            )
 
     entry.async_on_unload(
         async_track_time_interval(
