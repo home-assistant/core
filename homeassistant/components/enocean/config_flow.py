@@ -6,13 +6,17 @@ import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.components.usb import (
+    USBDevice,
     human_readable_device_name,
+    scan_serial_ports,
+    usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -29,11 +33,27 @@ MANUAL_SCHEMA = vol.Schema(
 )
 
 
+def get_human_readable_device_name(
+    info: UsbServiceInfo,
+) -> str:
+    """Return a human readable device name."""
+    return human_readable_device_name(
+        info.device,
+        info.serial_number,
+        info.manufacturer,
+        info.description,
+        info.vid,
+        info.pid,
+    )
+
+
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
     VERSION = 1
     MANUAL_PATH_VALUE = "manual"
+
+    _ports: list[USBDevice] | None = None
 
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
@@ -41,27 +61,20 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
+        # set unique id
         unique_id = usb_unique_id_from_service_info(discovery_info)
-
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={CONF_DEVICE: discovery_info.device}
         )
-
+        # normalize device path
         discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
-            CONF_NAME: human_readable_device_name(
-                discovery_info.device,
-                discovery_info.serial_number,
-                discovery_info.manufacturer,
-                discovery_info.description,
-                discovery_info.vid,
-                discovery_info.pid,
-            )
+            CONF_NAME: get_human_readable_device_name(discovery_info)
         }
         return await self.async_step_usb_confirm()
 
@@ -102,15 +115,52 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
+        if self._ports is None:
+            self._ports = []
+            self._ports.extend(
+                await self.hass.async_add_executor_job(scan_serial_ports)
+            )
+
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
+
+            selected_device = next(
+                (
+                    port
+                    for port in self._ports
+                    if port.device == user_input[CONF_DEVICE]
+                ),
+                None,
+            )
+            if selected_device is None:
+                raise ValueError("Selected device not found in detected ports")
+            # set unique id
+            unique_id = usb_unique_id_from_service_info(
+                usb_service_info_from_device(selected_device)
+            )
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(
+                updates={CONF_DEVICE: selected_device.device}
+            )
             return await self.async_step_manual(user_input)
 
-        devices = await self.hass.async_add_executor_job(dongle.detect)
-        if len(devices) == 0:
+        if len(self._ports) == 0:
+            # Move on to manual step if no ports are found
             return await self.async_step_manual()
-        devices.append(self.MANUAL_PATH_VALUE)
+
+        devices = [
+            SelectOptionDict(
+                value=port.device,
+                label=get_human_readable_device_name(
+                    usb_service_info_from_device(port)
+                ),
+            )
+            for port in self._ports
+        ]
+        devices.append(
+            SelectOptionDict(value=self.MANUAL_PATH_VALUE, label=self.MANUAL_PATH_VALUE)
+        )
 
         return self.async_show_form(
             step_id="detect",
