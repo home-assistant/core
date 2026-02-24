@@ -740,7 +740,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 validate_calls,
             )
 
-        elif source["type"] == "solar":
+        elif source["type"] in ("solar", "wind"):
             wanted_statistics_metadata.add(source["stat_energy_from"])
             validate_calls.append(
                 functools.partial(
