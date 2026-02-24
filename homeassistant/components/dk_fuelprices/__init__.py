@@ -7,7 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -17,7 +17,7 @@ from .coordinator import APIClient
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 type DkFuelpricesRuntimeData = dict[str, APIClient]
 type DkFuelpricesConfigEntry = ConfigEntry[DkFuelpricesRuntimeData]
