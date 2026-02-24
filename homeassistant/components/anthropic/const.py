@@ -37,8 +37,6 @@ DEFAULT = {
 MIN_THINKING_BUDGET = 1024
 
 NON_THINKING_MODELS = [
-    "claude-3-5",  # Both sonnet and haiku
-    "claude-3-opus",
     "claude-3-haiku",
 ]
 
@@ -51,7 +49,7 @@ NON_ADAPTIVE_THINKING_MODELS = [
     "claude-opus-4-20250514",
     "claude-sonnet-4-0",
     "claude-sonnet-4-20250514",
-    "claude-3",
+    "claude-3-haiku",
 ]
 
 UNSUPPORTED_STRUCTURED_OUTPUT_MODELS = [
@@ -60,19 +58,13 @@ UNSUPPORTED_STRUCTURED_OUTPUT_MODELS = [
     "claude-opus-4-20250514",
     "claude-sonnet-4-0",
     "claude-sonnet-4-20250514",
-    "claude-3",
+    "claude-3-haiku",
 ]
 
 WEB_SEARCH_UNSUPPORTED_MODELS = [
     "claude-3-haiku",
-    "claude-3-opus",
-    "claude-3-5-sonnet-20240620",
-    "claude-3-5-sonnet-20241022",
 ]
 
 DEPRECATED_MODELS = [
-    "claude-3-5-haiku",
-    "claude-3-7-sonnet",
-    "claude-3-5-sonnet",
-    "claude-3-opus",
+    "claude-3",
 ]
