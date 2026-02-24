@@ -37,7 +37,6 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
-    RoborockDataUpdateCoordinatorB01,
     RoborockWashingMachineUpdateCoordinator,
     RoborockWetDryVacUpdateCoordinator,
 )
