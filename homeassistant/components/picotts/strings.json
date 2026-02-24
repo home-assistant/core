@@ -13,7 +13,7 @@
   },
   "exceptions": {
     "binary_not_found": {
-      "message": "pico2wave binary could not be found."
+      "message": "pico2wave binary could not be found"
     },
     "file_read_error": {
       "message": "Error trying to read {filename}"
