@@ -1,6 +1,8 @@
 """Test Lutron fan platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -9,15 +11,19 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_fan_setup(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fan setup."""
     mock_config_entry.add_to_hass(hass)
@@ -26,12 +32,11 @@ async def test_fan_setup(
     fan.level = 0
     fan.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.FAN]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("fan.test_fan")
-    assert state is not None
-    assert state.state == STATE_OFF
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_fan_services(
@@ -44,7 +49,7 @@ async def test_fan_services(
     fan.level = 0
     fan.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "fan.test_fan"
@@ -87,7 +92,7 @@ async def test_fan_update(
     fan.level = 0
     fan.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "fan.test_fan"

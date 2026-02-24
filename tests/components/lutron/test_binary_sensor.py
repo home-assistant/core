@@ -1,18 +1,23 @@
 """Test Lutron binary sensor platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pylutron import OccupancyGroup
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_binary_sensor_setup(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test binary sensor setup."""
     mock_config_entry.add_to_hass(hass)
@@ -20,12 +25,11 @@ async def test_binary_sensor_setup(
     occ_group = mock_lutron.areas[0].occupancy_group
     occ_group.state = OccupancyGroup.State.VACANT
 
-    assert await async_setup_component(hass, "lutron", {})
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_occupancy_occupancy")
-    assert state is not None
-    assert state.state == STATE_OFF
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_binary_sensor_update(
@@ -37,7 +41,7 @@ async def test_binary_sensor_update(
     occ_group = mock_lutron.areas[0].occupancy_group
     occ_group.state = OccupancyGroup.State.VACANT
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "binary_sensor.test_occupancy_occupancy"

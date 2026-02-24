@@ -1,27 +1,32 @@
 """Test Lutron event platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pylutron import Button
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
 
 
 async def test_event_setup(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test event setup."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "lutron", {})
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.EVENT]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # The event entity name is derived from the keypad and button
-    state = hass.states.get("event.test_keypad_test_button")
-    assert state is not None
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_event_single_press(
@@ -31,7 +36,7 @@ async def test_event_single_press(
     mock_config_entry.add_to_hass(hass)
 
     button = mock_lutron.areas[0].keypads[0].buttons[0]
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Subscribe to events
@@ -58,7 +63,7 @@ async def test_event_press_release(
     button = mock_lutron.areas[0].keypads[0].buttons[0]
     button.button_type = "MasterRaiseLower"
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Subscribe to events

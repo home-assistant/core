@@ -1,6 +1,8 @@
 """Test Lutron cover platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.const import (
@@ -10,15 +12,20 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     STATE_CLOSED,
     STATE_OPEN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_cover_setup(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test cover setup."""
     mock_config_entry.add_to_hass(hass)
@@ -27,12 +34,11 @@ async def test_cover_setup(
     cover.level = 0
     cover.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.COVER]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("cover.test_cover")
-    assert state is not None
-    assert state.state == STATE_CLOSED
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_cover_services(
@@ -45,7 +51,7 @@ async def test_cover_services(
     cover.level = 0
     cover.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "cover.test_cover"
@@ -88,7 +94,7 @@ async def test_cover_update(
     cover.level = 0
     cover.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "cover.test_cover"

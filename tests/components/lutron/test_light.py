@@ -1,8 +1,9 @@
 """Test Lutron light platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,30 +17,33 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_light_setup(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test light setup."""
     mock_config_entry.add_to_hass(hass)
 
-    # The mock_lutron already has one light from conftest
     light = mock_lutron.areas[0].outputs[0]
     light.level = 0
     light.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.LIGHT]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_light")
-    assert state is not None
-    assert state.state == STATE_OFF
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_light_turn_on_off(
@@ -52,7 +56,7 @@ async def test_light_turn_on_off(
     light.level = 0
     light.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "light.test_light"
@@ -86,7 +90,7 @@ async def test_light_update(
     light.level = 0
     light.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "light.test_light"
@@ -113,7 +117,7 @@ async def test_light_transition(
     light.level = 0
     light.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "light.test_light"
@@ -148,7 +152,7 @@ async def test_light_flash(
 
     light = mock_lutron.areas[0].outputs[0]
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "light.test_light"
@@ -182,7 +186,7 @@ async def test_light_brightness_restore(
     light.level = 0
     light.last_level.return_value = 0
 
-    assert await async_setup_component(hass, "lutron", {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "light.test_light"
