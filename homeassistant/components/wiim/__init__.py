@@ -73,6 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     if upnp_location and host:
         upnp_location = upnp_location.replace(urlparse(upnp_location).hostname, host)
 
+    success = False
+
     try:
         if upnp_location:
             SDK_LOGGER.debug(
