@@ -293,7 +293,7 @@ async def test_no_unique_id(
     """Test an irrigation switch with no unique id due to migration failure."""
 
     # Failure to migrate config entry to a unique id
-    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+    responses.insert(1, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
