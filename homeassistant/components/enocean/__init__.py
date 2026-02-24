@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -20,12 +21,7 @@ type EnOceanConfigEntry = ConfigEntry[Gateway]
 
 @dataclass
 class EnOceanHassData:
-    """Store gateway and dispatcher in hass.data.
-
-    This is required to make the gateway available in async_setup / setup_platform
-    in preparation for transitioning to UI-based config; also the dispatcher is legacy,
-    hence we store it in hass.data as well
-    """
+    """Store gateway and dispatcher in hass.data (TEMPORARY until legacy code is removed)."""
 
     gateway: Gateway
     disconnect_handle: Callable | None
@@ -66,7 +62,11 @@ async def async_setup_entry(
         lambda packet: dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
     )
 
-    await gateway.start()
+    try:
+        await gateway.start()
+    except ConnectionError as err:
+        raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
+
     config_entry.runtime_data = gateway
 
     hass.data.setdefault(
