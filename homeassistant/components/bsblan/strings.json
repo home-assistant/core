@@ -66,6 +66,9 @@
       },
       "outside_temperature": {
         "name": "Outside temperature"
+      },
+      "total_energy": {
+        "name": "Total energy"
       }
     }
   },

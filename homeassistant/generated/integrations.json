@@ -1784,7 +1784,7 @@
     },
     "enocean": {
       "name": "EnOcean",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -3754,7 +3754,7 @@
       "single_config_entry": true
     },
     "litterrobot": {
-      "name": "Litter-Robot",
+      "name": "Whisker",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -4414,6 +4414,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "myneomitis": {
+      "name": "MyNeomitis",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "mysensors": {
       "name": "MySensors",
@@ -7637,13 +7643,13 @@
     },
     "wallbox": {
       "name": "Wallbox",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "waqi": {
       "name": "World Air Quality Index (WAQI)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8067,6 +8073,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "zinvolt": {
+      "name": "Zinvolt",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "zodiac": {
       "integration_type": "hub",
