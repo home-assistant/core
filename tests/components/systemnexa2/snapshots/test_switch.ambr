@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities[switch.test_device_433_mhz-entry]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_433_mhz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_device_433_mhz',
+    'entity_id': 'switch.outdoor_smart_plug_433_mhz',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,25 +31,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': '433mhz',
-    'unique_id': 'test_device_id-433Mhz',
+    'unique_id': 'aabbccddee02-433Mhz',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.test_device_433_mhz-state]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_433_mhz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Test Device 433 MHz',
+      'friendly_name': 'Outdoor Smart Plug 433 MHz',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_device_433_mhz',
+    'entity_id': 'switch.outdoor_smart_plug_433_mhz',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[switch.test_device_cloud_access-entry]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_cloud_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_device_cloud_access',
+    'entity_id': 'switch.outdoor_smart_plug_cloud_access',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,25 +81,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_access',
-    'unique_id': 'test_device_id-Cloud Access',
+    'unique_id': 'aabbccddee02-Cloud Access',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.test_device_cloud_access-state]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_cloud_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Test Device Cloud access',
+      'friendly_name': 'Outdoor Smart Plug Cloud access',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_device_cloud_access',
+    'entity_id': 'switch.outdoor_smart_plug_cloud_access',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[switch.test_device_relay_1-entry]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_relay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +112,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_device_relay_1',
+    'entity_id': 'switch.outdoor_smart_plug_relay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,28 +120,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Relay 1',
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relay 1',
+    'original_name': 'Relay',
     'platform': 'systemnexa2',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_1',
-    'unique_id': 'test_device_id-relay_1',
+    'unique_id': 'aabbccddee02-relay_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.test_device_relay_1-state]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Relay 1',
+      'friendly_name': 'Outdoor Smart Plug Relay',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_device_relay_1',
+    'entity_id': 'switch.outdoor_smart_plug_relay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
