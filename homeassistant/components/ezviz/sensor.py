@@ -105,22 +105,25 @@ class EzvizSensor(EzvizEntity, SensorEntity):
     @property
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
-        if isinstance(self.data[self._sensor_name], str) and len(self.data[self._sensor_name]) > 255:
+        if (
+            isinstance(self.data[self._sensor_name], str) 
+            and len(self.data[self._sensor_name]) > 255
+        ):
             # Truncate long strings for the state while exposing the full value
             # via extra_state_attributes.
             return self.data[self._sensor_name][:255]
-        else:
-            return self.data[self._sensor_name]
+        return self.data[self._sensor_name]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Expose url as attributes."""
-        if self._sensor_name == "last_alarm_pic" and self.coordinator.data and self.data:
-            try:
-                return {
-                    "url": self.data[self._sensor_name],
-                }
-            except Exception as err:
-                return {}
+        if (
+            self._sensor_name == "last_alarm_pic" 
+            and self.coordinator.data 
+            and self.data
+        ):
+            return {
+                 "url": self.data[self._sensor_name],
+            }
 
         return {}
