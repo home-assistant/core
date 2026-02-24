@@ -67,8 +67,6 @@ async def _validate_device_and_get_info(
                 actual_host,
             )
 
-        if device_info_from_http:
-            return device_info_from_http
         raise CannotConnect("Could not determine device information via UPnP or HTTP.")
     except UpnpConnectionError as err:
         SDK_LOGGER.warning(
