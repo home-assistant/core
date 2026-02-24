@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Never
+from typing import Any, Never
 
 import voluptuous as vol
 
@@ -166,6 +166,11 @@ async def _async_get_coordinators_from_call(
     if not device_ids:
         _raise_no_target_entries()
 
+    loaded_entries: dict[str, Any] = {
+        entry.entry_id: entry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+    }
+
     device_registry = dr.async_get(hass)
     for device_id in device_ids:
         # Retrieve device from registry
@@ -174,10 +179,11 @@ async def _async_get_coordinators_from_call(
             continue
 
         for entry_id in device.config_entries:
-            # Validate domain of the entry
-            entry = hass.config_entries.async_get_entry(entry_id)
-            if entry is None or entry.domain != DOMAIN:
+            # Check whether entry is loaded
+            if entry_id not in loaded_entries:
                 continue
+
+            entry = loaded_entries[entry_id]
 
             # Validate coordinator presence within entry
             if entry.runtime_data is None:

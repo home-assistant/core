@@ -189,7 +189,6 @@ async def test_service_charge_target_soc_below_emergency(
             blocking=True,
         )
 
-    # Check for presence of expected error message
     assert "below emergency SOC" in str(exc_info.value)
 
 
@@ -211,8 +210,7 @@ async def test_service_missing_target(
             blocking=True,
         )
 
-    # Check for presence of expected error message
-    assert "No matching Indevolt" in str(exc_info.value)
+    assert exc_info.value.translation_key == "no_matching_target_entries"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -240,8 +238,7 @@ async def test_service_change_mode_current_mode_unavailable(
             blocking=True,
         )
 
-    # Check for presence of expected error message
-    assert "Failed to retrieve current energy mode" in str(exc_info.value)
+    assert exc_info.value.translation_key == "failed_to_retrieve_current_energy_mode"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -269,5 +266,7 @@ async def test_service_change_mode_outdoor_portable(
             blocking=True,
         )
 
-    # Check for presence of expected error message key
-    assert "Outdoor/Portable mode" in str(exc_info.value)
+    assert (
+        exc_info.value.translation_key
+        == "energy_mode_change_unavailable_outdoor_portable"
+    )

@@ -97,7 +97,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (ClientError, ConnectionError, OSError) as err:
             raise HomeAssistantError(f"Device push failed: {err}") from err
 
-    async def async_switch_energy_mode(self, target_mode: int) -> bool:
+    async def async_switch_energy_mode(self, target_mode: int) -> None:
         """Attempt to switch device to given energy mode."""
         current_mode = self.data.get(ENERGY_MODE_READ_KEY)
 
@@ -115,12 +115,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="energy_mode_change_unavailable_outdoor_portable",
             )
 
-        # Switch energymode if required
+        # Switch energy mode if required
         if current_mode != target_mode:
             try:
-                # Switch device to requested energy mode
                 await self.async_push_data(ENERGY_MODE_WRITE_KEY, target_mode)
-                await self.async_request_refresh()
 
             except HomeAssistantError as err:
                 raise HomeAssistantError(
@@ -128,7 +126,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_key="failed_to_switch_energy_mode",
                 ) from err
 
-        return True
+            await self.async_request_refresh()
 
     async def async_execute_realtime_action(self, action: list[int]) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
