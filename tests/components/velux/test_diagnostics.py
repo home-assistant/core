@@ -29,6 +29,9 @@ async def test_diagnostics(
     mock_window.node_id = 1
     mock_pyvlx.connection.connected = True
     mock_pyvlx.connection.connection_counter = 3
+    mock_pyvlx.connection.frame_received_cbs = []
+    mock_pyvlx.connection.connection_opened_cbs = []
+    mock_pyvlx.connection.connection_closed_cbs = []
     mock_pyvlx.klf200.state = DtoState(
         GatewayState.GATEWAY_MODE_WITH_ACTUATORS, GatewaySubState.IDLE
     )

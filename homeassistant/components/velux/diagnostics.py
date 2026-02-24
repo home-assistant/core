@@ -27,6 +27,7 @@ async def async_get_config_entry_diagnostics(
             "name": node.name,
             "serial_number": node.serial_number,
             "type": type(node).__name__,
+            "device_updated_callbacks": node.device_updated_cbs,
         }
         for node in pyvlx.nodes
     ]
@@ -67,6 +68,9 @@ async def async_get_config_entry_diagnostics(
         "connection": {
             "connected": pyvlx.connection.connected,
             "connection_count": pyvlx.connection.connection_counter,
+            "frame_received_cbs": pyvlx.connection.frame_received_cbs,
+            "connection_opened_cbs": pyvlx.connection.connection_opened_cbs,
+            "connection_closed_cbs": pyvlx.connection.connection_closed_cbs,
         },
         "gateway": {
             "state": str(pyvlx.klf200.state) if pyvlx.klf200.state else None,
