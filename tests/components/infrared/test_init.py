@@ -12,7 +12,7 @@ from homeassistant.components.infrared import (
     async_get_emitters,
     async_send_command,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -125,15 +125,21 @@ async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> N
         await async_send_command(hass, "infrared.some_entity", command)
 
 
+@pytest.mark.parametrize(
+    ("restored_value", "expected_state"),
+    [
+        ("2026-01-01T12:00:00.000+00:00", "2026-01-01T12:00:00.000+00:00"),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+    ],
+)
 async def test_infrared_entity_state_restore(
     hass: HomeAssistant,
     mock_infrared_entity: MockInfraredEntity,
+    restored_value: str,
+    expected_state: str,
 ) -> None:
-    """Test infrared entity restores state from previous session."""
-    previous_timestamp = "2026-01-01T12:00:00.000+00:00"
-    mock_restore_cache(
-        hass, [State("infrared.test_ir_transmitter", previous_timestamp)]
-    )
+    """Test infrared entity state restore."""
+    mock_restore_cache(hass, [State("infrared.test_ir_transmitter", restored_value)])
 
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -143,4 +149,4 @@ async def test_infrared_entity_state_restore(
 
     state = hass.states.get("infrared.test_ir_transmitter")
     assert state is not None
-    assert state.state == previous_timestamp
+    assert state.state == expected_state
