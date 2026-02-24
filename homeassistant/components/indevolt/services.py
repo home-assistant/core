@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Never
 
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
 from .const import DOMAIN, POWER_LIMITS
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
 
 CHARGE_SERVICE_SCHEMA = vol.Schema(
     {
@@ -73,13 +77,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         if errors:
             raise ServiceValidationError("; ".join(errors))
 
-        # Perform actions
-        await asyncio.gather(
+        # Perform actions & process results
+        results = await asyncio.gather(
             *(
                 coordinator.async_execute_realtime_action([1, power, target_soc])
                 for coordinator in coordinators
-            )
+            ),
+            return_exceptions=True,
         )
+        _process_coordinator_results(coordinators, results)
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
@@ -109,25 +115,29 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         if errors:
             raise ServiceValidationError("; ".join(errors))
 
-        # Perform actions
-        await asyncio.gather(
+        # Perform actions & process results
+        results = await asyncio.gather(
             *(
                 coordinator.async_execute_realtime_action([2, power, target_soc])
                 for coordinator in coordinators
-            )
+            ),
+            return_exceptions=True,
         )
+        _process_coordinator_results(coordinators, results)
 
     async def stop(call: ServiceCall) -> None:
         """Handle the service call to stop the battery."""
         coordinators = await _async_get_coordinators_from_call(hass, call)
 
-        # Perform actions
-        await asyncio.gather(
+        # Perform actions & process results
+        results = await asyncio.gather(
             *(
                 coordinator.async_execute_realtime_action([0, 0, 0])
                 for coordinator in coordinators
-            )
+            ),
+            return_exceptions=True,
         )
+        _process_coordinator_results(coordinators, results)
 
     hass.services.async_register(DOMAIN, "stop", stop, schema=STOP_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
@@ -183,6 +193,19 @@ async def _async_get_coordinators_from_call(
         _raise_no_target_entries()
 
     return coordinators
+
+
+def _process_coordinator_results(coordinators, results):
+    """Log per-device results and raise consolidated exception on failure."""
+    exceptions = []
+
+    for coordinator, result in zip(coordinators, results, strict=True):
+        if isinstance(result, Exception):
+            _LOGGER.error("Coordinator %s failed: %s", coordinator.name, result)
+            exceptions.append(f"{coordinator.name}: {result}")
+
+    if exceptions:
+        raise HomeAssistantError("Some coordinators failed: " + "; ".join(exceptions))
 
 
 def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Never:

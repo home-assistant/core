@@ -226,8 +226,5 @@ async def test_charge_outdoor_portable(
             blocking=True,
         )
 
-    # Verify error is raised with correct translation key
-    assert (
-        exc_info.value.translation_key
-        == "energy_mode_change_unavailable_outdoor_portable"
-    )
+    # Verify error is raised containing the outdoor/portable reason
+    assert "outdoor/portable" in str(exc_info.value)
