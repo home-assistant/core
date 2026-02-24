@@ -465,7 +465,9 @@ async def test_assist_timer_schema_sanitized_before_openai_call(
     schema = timer_tool["parameters"]
     assert "anyOf" not in schema
     assert schema["type"] == "object"
-async def test_assist_api_tools_conversion(
+
+
+async def test_assist_api_tools_conversion
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
