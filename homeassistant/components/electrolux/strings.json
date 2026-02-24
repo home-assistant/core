@@ -24,7 +24,7 @@
           "api_key": "Your Electrolux Group for Developer API key.",
           "refresh_token": "The refresh token used to renew your access token."
         },
-        "description": "Please [click here]({portal_link}) to generate new access and refresh tokens, then paste them below.",
+        "description": "Please go to the [developer portal]({portal_link}) to generate new access and refresh tokens, then paste them below.",
         "title": "Configure your Electrolux Group account"
       }
     }
@@ -49,8 +49,8 @@
       "remote_control": {
         "name": "Remote control",
         "state": {
-          "disabled": "Disabled",
-          "enabled": "Enabled",
+          "disabled": "[%key:common::state::disabled%]",
+          "enabled": "[%key:common::state::enabled%]",
           "not_safety_relevant_enabled": "Not safety relevant enabled",
           "temporary_locked": "Temporarily locked"
         }
