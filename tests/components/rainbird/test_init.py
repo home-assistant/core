@@ -123,7 +123,7 @@ async def test_fix_unique_id(
 ) -> None:
     """Test fix of a config entry with no unique id."""
 
-    responses.insert(1, mock_json_response(WIFI_PARAMS_RESPONSE))
+    responses.insert(0, mock_json_response(WIFI_PARAMS_RESPONSE))
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -181,7 +181,7 @@ async def test_fix_unique_id_failure(
 ) -> None:
     """Test a failure during fix of a config entry with no unique id."""
 
-    responses.insert(1, initial_response)
+    responses.insert(0, initial_response)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     # Config entry is loaded, but not updated
@@ -215,12 +215,7 @@ async def test_fix_unique_id_duplicate(
     # Responses for the second config entry. This first fetches wifi params
     # to repair the unique id.
     responses_copy = [*responses]
-    responses.extend(
-        [
-            mock_response(MODEL_AND_VERSION_RESPONSE),
-            mock_json_response(WIFI_PARAMS_RESPONSE),
-        ]
-    )
+    responses.append(mock_json_response(WIFI_PARAMS_RESPONSE))
     responses.extend(responses_copy)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -456,12 +451,10 @@ async def test_fix_duplicate_device_ids(
     assert device_entry.disabled_by == expected_disabled_by
 
 
-@pytest.mark.parametrize("config_entry_data", [None])
 async def test_reload_migration_with_leading_zero_mac(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    config_entry_data: dict[str, Any] | None,
 ) -> None:
     """Test migration and reload of a device with a mac address with a leading zero."""
     mac_address = "01:02:03:04:05:06"

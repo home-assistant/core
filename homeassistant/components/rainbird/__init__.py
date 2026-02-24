@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from pyrainbird.async_client import AsyncRainbirdController, create_controller
+from pyrainbird.async_client import AsyncRainbirdController
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.const import (
@@ -34,7 +34,7 @@ from .coordinator import (
 )
 from .services import async_setup_services
 from .types import RainbirdConfigEntry, RainbirdData
-from .util import normalize_rainbird_host
+from .api import async_create_controller
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,9 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
     try:
-        controller = await create_controller(
+        controller = await async_create_controller(
             clientsession,
-            normalize_rainbird_host(entry.data[CONF_HOST]),
+            entry.data[CONF_HOST],
             entry.data[CONF_PASSWORD],
         )
 
