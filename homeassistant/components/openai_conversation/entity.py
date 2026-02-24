@@ -67,7 +67,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
-from .schema_utils import sanitize_tool_schema
+from homeassistant.helpers.llm_schema import sanitize_tool_schema
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
