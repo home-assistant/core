@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 
+from homeassistant.components.vizio import DATA_APPS
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -24,7 +25,7 @@ async def test_tv_load_and_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
-    assert DOMAIN in hass.data
+    assert DATA_APPS in hass.data
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -32,7 +33,7 @@ async def test_tv_load_and_unload(hass: HomeAssistant) -> None:
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
-    assert DOMAIN not in hass.data
+    assert DATA_APPS not in hass.data
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -45,7 +46,6 @@ async def test_speaker_load_and_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
-    assert DOMAIN in hass.data
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -53,7 +53,6 @@ async def test_speaker_load_and_unload(hass: HomeAssistant) -> None:
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
-    assert DOMAIN not in hass.data
 
 
 @pytest.mark.usefixtures(
@@ -72,7 +71,7 @@ async def test_coordinator_update_failure(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
-    assert DOMAIN in hass.data
+    assert DATA_APPS in hass.data
 
     # Failing 25 days in a row should result in a single log message
     # (first one after 10 days, next one would be at 30 days)
