@@ -1301,7 +1301,7 @@ ihcsdk==2.8.5
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.0.1
+imgw_pib==2.0.2
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.12
@@ -2397,7 +2397,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.0.5
+pyrainbird==6.1.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==3.9.0

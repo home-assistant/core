@@ -1,4 +1,4 @@
-"""Support for BSB-Lan sensors."""
+"""Support for BSB-LAN sensors."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class BSBLanSensorEntityDescription(SensorEntityDescription):
-    """Describes BSB-Lan sensor entity."""
+    """Describes BSB-LAN sensor entity."""
 
     value_fn: Callable[[BSBLanFastData], StateType]
     exists_fn: Callable[[BSBLanFastData], bool] = lambda data: True
@@ -79,7 +79,7 @@ async def async_setup_entry(
     entry: BSBLanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up BSB-Lan sensor based on a config entry."""
+    """Set up BSB-LAN sensor based on a config entry."""
     data = entry.runtime_data
 
     # Only create sensors for available data points
@@ -94,7 +94,7 @@ async def async_setup_entry(
 
 
 class BSBLanSensor(BSBLanEntity, SensorEntity):
-    """Defines a BSB-Lan sensor."""
+    """Defines a BSB-LAN sensor."""
 
     entity_description: BSBLanSensorEntityDescription
 
@@ -103,7 +103,7 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
         data: BSBLanData,
         description: BSBLanSensorEntityDescription,
     ) -> None:
-        """Initialize BSB-Lan sensor."""
+        """Initialize BSB-LAN sensor."""
         super().__init__(data.fast_coordinator, data)
         self.entity_description = description
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
