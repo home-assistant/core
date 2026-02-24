@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from pyvizio.const import APPS
 from pyvizio.util import gen_apps_list_from_url
 
 from homeassistant.core import HomeAssistant
@@ -65,4 +66,8 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             self.fail_threshold += 10
         else:
             self.fail_count += 1
+        # On first failure, fall back to stored data or built-in apps list.
+        # On subsequent failures, return the previously loaded data.
+        if self.data is None:
+            return await self.store.async_load() or APPS
         return self.data

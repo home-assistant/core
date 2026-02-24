@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyvizio.const import APPS
-
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, Platform
@@ -37,11 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
         store: Store[list[dict[str, Any]]] = Store(hass, 1, DOMAIN)
-        coordinator = VizioAppsDataUpdateCoordinator(hass, store)
+        hass.data[DOMAIN][CONF_APPS] = coordinator = VizioAppsDataUpdateCoordinator(
+            hass, store
+        )
         await coordinator.async_register_shutdown()
-        coordinator.data = await store.async_load() or APPS
         await coordinator.async_refresh()
-        hass.data[DOMAIN][CONF_APPS] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
