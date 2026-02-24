@@ -42,6 +42,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a light
         light = MagicMock()
         light.name = "Test Light"
+        light.id = "light_id"
         light.uuid = "light_uuid"
         light.legacy_uuid = "light_legacy_uuid"
         light.is_dimmable = True
@@ -52,6 +53,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a switch
         switch = MagicMock()
         switch.name = "Test Switch"
+        switch.id = "switch_id"
         switch.uuid = "switch_uuid"
         switch.legacy_uuid = "switch_legacy_uuid"
         switch.is_dimmable = False
@@ -62,6 +64,7 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a cover
         cover = MagicMock()
         cover.name = "Test Cover"
+        cover.id = "cover_id"
         cover.uuid = "cover_uuid"
         cover.legacy_uuid = "cover_legacy_uuid"
         cover.type = "SYSTEM_SHADE"
