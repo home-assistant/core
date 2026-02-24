@@ -1,5 +1,25 @@
 {
   "entity": {
+    "binary_sensor": {
+      "airing": {
+        "default": "mdi:window-open-variant"
+      },
+      "co2_alert": {
+        "default": "mdi:alert"
+      },
+      "co2_level": {
+        "default": "mdi:molecule-co2"
+      },
+      "dust_alert": {
+        "default": "mdi:alert"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
+      },
+      "temperature_alert": {
+        "default": "mdi:alert"
+      }
+    },
     "number": {
       "boiler_target_temperature": {
         "default": "mdi:water-boiler"
