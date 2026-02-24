@@ -346,7 +346,7 @@
         },
         "target": {
           "description": "The Indevolt device to start charging.",
-          "name": "Device"
+          "name": "[%key:component::indevolt::services::change_energy_mode::fields::target::name%]"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -364,11 +364,11 @@
         },
         "target": {
           "description": "The Indevolt device to start discharging.",
-          "name": "Device"
+          "name": "[%key:component::indevolt::services::change_energy_mode::fields::target::name%]"
         },
         "target_soc": {
-          "description": "Target state of charge percentage.",
-          "name": "Target SOC"
+          "description": "[%key:component::indevolt::services::charge::fields::target_soc::description%]",
+          "name": "[%key:component::indevolt::services::charge::fields::target_soc::name%]"
         }
       },
       "name": "Discharge"
@@ -378,7 +378,7 @@
       "fields": {
         "target": {
           "description": "The Indevolt device to stop charging or discharging.",
-          "name": "Device"
+          "name": "[%key:component::indevolt::services::change_energy_mode::fields::target::name%]"
         }
       },
       "name": "Stop"

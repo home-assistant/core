@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Never
+from typing import Never
 
 import voluptuous as vol
 
@@ -13,11 +13,14 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
 from .const import DOMAIN, ENERGY_MODES, POWER_LIMITS
-from .coordinator import IndevoltCoordinator
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 CHARGE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("target"): cv.ensure_list,
+        vol.Required("target"): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        ),
         vol.Required("target_soc"): vol.All(
             vol.Coerce(int),
             vol.Range(min=0, max=100),
@@ -31,13 +34,19 @@ CHARGE_SERVICE_SCHEMA = vol.Schema(
 
 STOP_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("target"): cv.ensure_list,
+        vol.Required("target"): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        ),
     }
 )
 
 CHANGE_MODE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("target"): cv.ensure_list,
+        vol.Required("target"): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        ),
         vol.Required("energy_mode"): vol.In(list(ENERGY_MODES.keys())),
     }
 )
@@ -166,7 +175,7 @@ async def _async_get_coordinators_from_call(
     if not device_ids:
         _raise_no_target_entries()
 
-    loaded_entries: dict[str, Any] = {
+    loaded_entries: dict[str, IndevoltConfigEntry] = {
         entry.entry_id: entry
         for entry in hass.config_entries.async_loaded_entries(DOMAIN)
     }
