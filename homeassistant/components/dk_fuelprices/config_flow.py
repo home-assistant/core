@@ -19,7 +19,7 @@ from .const import CONF_COMPANY, CONF_PRODUCTS, CONF_STATION, DOMAIN, WEBSITE_UR
 _LOGGER = logging.getLogger(__name__)
 
 
-class BraendstofpriserConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dk_fuelprices."""
 
     VERSION = 2
