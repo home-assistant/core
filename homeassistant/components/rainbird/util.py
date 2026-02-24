@@ -21,8 +21,12 @@ def normalize_rainbird_host(host: str) -> str:
     if parsed.hostname is None:
         return host
 
-    if parsed.port is None:
+    try:
+        port = parsed.port
+    except ValueError:
         return parsed.hostname
 
-    return f"{parsed.hostname}:{parsed.port}"
+    if port is None:
+        return parsed.hostname
 
+    return f"{parsed.hostname}:{port}"
