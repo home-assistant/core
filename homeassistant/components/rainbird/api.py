@@ -42,11 +42,21 @@ async def async_create_controller(
         return await _create_controller(clientsession, host, password)
 
     if _CreateController is not None:
-        return cast(Callable[[aiohttp.ClientSession, str, str], AsyncRainbirdController], _CreateController)(
-            clientsession, host, password
+        create_controller = cast(
+            Callable[[aiohttp.ClientSession, str, str], AsyncRainbirdController],
+            _CreateController,
         )
+        return create_controller(clientsession, host, password)
 
     from pyrainbird.async_client import AsyncRainbirdClient
 
-    return AsyncRainbirdController(AsyncRainbirdClient(clientsession, host, password))
+    # pyrainbird 6.1.0 changed AsyncRainbirdClient to be URL-based. When neither
+    # controller factory is available, fall back to the legacy HTTP endpoint.
+    try:
+        local_client = AsyncRainbirdClient(
+            clientsession, f"http://{host}/stick", password
+        )
+    except TypeError:
+        local_client = AsyncRainbirdClient(clientsession, host, password)
 
+    return AsyncRainbirdController(local_client)
