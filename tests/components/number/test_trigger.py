@@ -77,7 +77,7 @@ async def test_number_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_number_home_trigger_behavior_any(
+async def test_number_changed_trigger_behavior(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_numbers: list[str],
@@ -87,7 +87,7 @@ async def test_number_home_trigger_behavior_any(
     trigger: str,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the number home triggers when any number changes to a specific state."""
+    """Test that the number changed trigger behaves correctly."""
     other_entity_ids = set(target_numbers) - {entity_id}
 
     # Set all numbers, including the tested number, to the initial state
