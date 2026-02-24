@@ -42,9 +42,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: airOS can only be manually discovered making dynamically updating info unreliable; hence not implemented
+  discovery-update-info: done
   discovery: done
   docs-data-update: done
   docs-examples: done
