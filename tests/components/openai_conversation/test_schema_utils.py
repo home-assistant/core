@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.openai_conversation.schema_utils import sanitize_tool_schema
+from homeassistant.helpers.llm_schema import sanitize_tool_schema
 
 HASS_START_TIMER_SCHEMA = {
     "type": "object",
