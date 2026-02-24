@@ -1,4 +1,4 @@
-"""The BSB-Lan integration."""
+"""The BSB-LAN integration."""
 
 import asyncio
 import dataclasses
@@ -56,13 +56,13 @@ class BSBLanData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the BSB-Lan integration."""
+    """Set up the BSB-LAN integration."""
     async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
-    """Set up BSB-Lan from a config entry."""
+    """Set up BSB-LAN from a config entry."""
 
     # create config using BSBLANConfig
     config = BSBLANConfig(
