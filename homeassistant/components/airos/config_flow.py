@@ -34,11 +34,13 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     DEFAULT_SSL,
@@ -391,6 +393,18 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
             pass
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Automatically handle a DHCP discovered IP change."""
+        ip_address = discovery_info.ip
+        # python-airos defaults to upper for derived mac_address
+        normalized_mac = format_mac(discovery_info.macaddress).upper()
+        await self.async_set_unique_id(normalized_mac)
+
+        self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
+        return self.async_abort(reason="unreachable")
 
     async def async_step_discovery_no_devices(
         self, user_input: dict[str, Any] | None = None

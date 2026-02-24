@@ -22,7 +22,7 @@ from homeassistant.components.airos.const import (
     MAC_ADDRESS,
     SECTION_ADVANCED_SETTINGS,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -680,3 +681,72 @@ async def test_configure_device_flow_exceptions(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_dhcp_ip_changed_updates_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """DHCP event with new IP should update the config entry and reload."""
+    mock_config_entry.add_to_hass(hass)
+
+    macaddress = mock_config_entry.unique_id.lower().replace(":", "").replace("-", "")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2",
+            hostname="airos",
+            macaddress=macaddress,
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
+
+
+async def test_dhcp_mac_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """DHCP event with non-matching MAC should abort."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2",
+            hostname="airos",
+            macaddress="aabbccddeeff",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unreachable"
+
+
+async def test_dhcp_ip_unchanged(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """DHCP event with same IP should abort."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=mock_config_entry.data[CONF_HOST],
+            hostname="airos",
+            macaddress=mock_config_entry.unique_id.lower()
+            .replace(":", "")
+            .replace("-", ""),
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
