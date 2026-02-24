@@ -49,6 +49,7 @@ async def test_sensor_update_fail(
     freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test failed update of Fritz!Tools sensors."""
 

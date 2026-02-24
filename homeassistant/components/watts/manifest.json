@@ -6,6 +6,6 @@
   "dependencies": ["application_credentials", "cloud"],
   "documentation": "https://www.home-assistant.io/integrations/watts",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "platinum",
   "requirements": ["visionpluspython==1.0.2"]
 }
