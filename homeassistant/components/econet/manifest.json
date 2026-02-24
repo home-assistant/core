@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["paho_mqtt", "pyeconet"],
-  "requirements": ["pyeconet==0.1.28"]
+  "requirements": ["pyeconet==0.2.1"]
 }

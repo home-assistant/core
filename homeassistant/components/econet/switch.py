@@ -23,19 +23,20 @@ async def async_setup_entry(
     entry: EconetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the ecobee thermostat switch entity."""
+    """Set up the econet thermostat switch entity."""
     equipment = entry.runtime_data
     async_add_entities(
         EcoNetSwitchAuxHeatOnly(thermostat)
         for thermostat in equipment[EquipmentType.THERMOSTAT]
+        if ThermostatOperationMode.EMERGENCY_HEAT in thermostat.modes
     )
 
 
 class EcoNetSwitchAuxHeatOnly(EcoNetEntity[Thermostat], SwitchEntity):
-    """Representation of a aux_heat_only EcoNet switch."""
+    """Representation of an aux_heat_only EcoNet switch."""
 
     def __init__(self, thermostat: Thermostat) -> None:
-        """Initialize EcoNet ventilator platform."""
+        """Initialize EcoNet platform."""
         super().__init__(thermostat)
         self._attr_name = f"{thermostat.device_name} emergency heat"
         self._attr_unique_id = (
