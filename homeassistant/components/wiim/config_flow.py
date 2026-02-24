@@ -43,7 +43,6 @@ async def _validate_device_and_get_info(
     # session = async_get_clientsession(hass)
     requester = AiohttpRequester(timeout=10)
     actual_host = host_or_udn
-    device_info_from_http: dict[str, Any] | None = None
 
     try:
         if location:
