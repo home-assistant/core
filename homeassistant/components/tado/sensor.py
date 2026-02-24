@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -133,24 +132,6 @@ HOME_SENSORS = [
     ),
 ]
 
-RATE_LIMIT_SENSORS = [
-    TadoSensorEntityDescription(
-        key="rate_limit_remaining",
-        translation_key="rate_limit_remaining",
-        state_fn=lambda data: data.remaining,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    TadoSensorEntityDescription(
-        key="rate_limit",
-        translation_key="rate_limit",
-        state_fn=lambda data: data.limit,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-]
 
 TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="temperature",
@@ -228,14 +209,6 @@ async def async_setup_entry(
         ]
     )
 
-    # Create rate limit sensors
-    entities.extend(
-        [
-            TadoRateLimitSensor(tado, entity_description)
-            for entity_description in RATE_LIMIT_SENSORS
-        ]
-    )
-
     # Create zone sensors
     for zone in zones:
         zone_type = zone["type"]
@@ -288,34 +261,6 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_sensor_data
             )
-        super()._handle_coordinator_update()
-
-
-class TadoRateLimitSensor(TadoHomeEntity, SensorEntity):
-    """Representation of a Tado rate limit sensor."""
-
-    entity_description: TadoSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: TadoDataUpdateCoordinator,
-        entity_description: TadoSensorEntityDescription,
-    ) -> None:
-        """Initialize the Tado rate limit sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator)
-
-        self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        try:
-            tado_rate_limit_data = self.coordinator.data["rate_limit"]
-        except KeyError:
-            return
-
-        self._attr_native_value = self.entity_description.state_fn(tado_rate_limit_data)
         super()._handle_coordinator_update()
 
 
