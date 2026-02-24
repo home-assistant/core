@@ -40,7 +40,7 @@ type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
 class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching and pushing data to indevolt devices."""
 
-    friendly_name: str | None = None
+    friendly_name: str
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
 

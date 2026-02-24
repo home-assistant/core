@@ -81,14 +81,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError("; ".join(errors))
 
         # Perform actions & process results
-        results = await asyncio.gather(
-            *(
-                coordinator.async_execute_realtime_action([1, power, target_soc])
-                for coordinator in coordinators
-            ),
-            return_exceptions=True,
-        )
-        _process_coordinator_results(coordinators, results)
+        await _execute_realtime_action(coordinators, 1, power, target_soc)
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
@@ -122,28 +115,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError("; ".join(errors))
 
         # Perform actions & process results
-        results = await asyncio.gather(
-            *(
-                coordinator.async_execute_realtime_action([2, power, target_soc])
-                for coordinator in coordinators
-            ),
-            return_exceptions=True,
-        )
-        _process_coordinator_results(coordinators, results)
+        await _execute_realtime_action(coordinators, 2, power, target_soc)
 
     async def stop(call: ServiceCall) -> None:
         """Handle the service call to stop the battery."""
         coordinators = await _async_get_coordinators_from_call(hass, call)
 
         # Perform actions & process results
-        results = await asyncio.gather(
-            *(
-                coordinator.async_execute_realtime_action([0, 0, 0])
-                for coordinator in coordinators
-            ),
-            return_exceptions=True,
-        )
-        _process_coordinator_results(coordinators, results)
+        await _execute_realtime_action(coordinators, 0, 0, 0)
 
     hass.services.async_register(DOMAIN, "stop", stop, schema=STOP_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
@@ -201,15 +180,27 @@ async def _async_get_coordinators_from_call(
     return coordinators
 
 
-def _process_coordinator_results(
-    coordinators: list[IndevoltCoordinator], results: list[BaseException | None]
-) -> None:
-    """Log per-device results and raise consolidated exception on failure."""
-    exception: Exception | None = None
+async def _execute_realtime_action(
+    coordinators: list[IndevoltCoordinator],
+    action_code: int,
+    power: int,
+    target_soc: int,
+):
+    """Execute async_execute_realtime_action on all coordinators concurrently."""
+    results = await asyncio.gather(
+        *(
+            coordinator.async_execute_realtime_action([action_code, power, target_soc])
+            for coordinator in coordinators
+        ),
+        return_exceptions=True,
+    )
 
+    exception: Exception | None = None
     for coordinator, result in zip(coordinators, results, strict=True):
         if isinstance(result, Exception):
-            _LOGGER.error("Coordinator %s failed: %s", coordinator.name, result)
+            _LOGGER.error(
+                "Coordinator %s failed: %s", coordinator.friendly_name, result
+            )
             if exception is None:
                 exception = result
 
