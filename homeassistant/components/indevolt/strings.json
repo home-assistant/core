@@ -295,7 +295,7 @@
       "message": "Config entry {entry_title} is not ready"
     },
     "energy_mode_change_unavailable_outdoor_portable": {
-      "message": "Energy mode cannot be changed when device is in Outdoor/Portable mode"
+      "message": "Energy mode cannot be changed when the device is in outdoor/portable mode"
     },
     "failed_to_retrieve_current_energy_mode": {
       "message": "Failed to retrieve current energy mode"
