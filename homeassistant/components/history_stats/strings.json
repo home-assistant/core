@@ -12,7 +12,7 @@
           "duration": "Duration",
           "end": "End",
           "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
-          "min_state_duration": "Minimum state duration.",
+          "min_state_duration": "Minimum state duration",
           "start": "Start",
           "state": "[%key:component::history_stats::config::step::user::data::state%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",

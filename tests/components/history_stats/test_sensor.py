@@ -2163,7 +2163,7 @@ async def test_async_around_min_state_duration(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test we startup from history and switch to watching state changes."""
+    """Test min_state_duration boundary where block becomes valid."""
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2271,7 +2271,7 @@ async def test_async_around_min_state_duration_sliding_window(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test we startup from history and switch to watching state changes."""
+    """Test min_state_duration with sliding window where block duration crosses threshold."""
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=1, minute=0, second=0, microsecond=0)
@@ -2537,7 +2537,7 @@ async def test_open_block_precision_same_second(
                         "state": "on",
                         "start": "{{ utcnow().replace(microsecond=0) }}",
                         "duration": {"minutes": 5},
-                        "min_state_duration": 0,
+                        "min_state_duration": {"seconds": 0},
                         "type": "count",
                     },
                     {
@@ -2547,7 +2547,7 @@ async def test_open_block_precision_same_second(
                         "state": "on",
                         "start": "{{ utcnow().replace(microsecond=0) }}",
                         "duration": {"minutes": 5},
-                        "min_state_duration": 0,
+                        "min_state_duration": {"seconds": 0},
                         "type": "time",
                     },
                     {
@@ -2557,7 +2557,7 @@ async def test_open_block_precision_same_second(
                         "state": "on",
                         "start": "{{ utcnow().replace(microsecond=0) }}",
                         "duration": {"minutes": 5},
-                        "min_state_duration": 0,
+                        "min_state_duration": {"seconds": 0},
                         "type": "ratio",
                     },
                 ]
@@ -2570,6 +2570,14 @@ async def test_open_block_precision_same_second(
 
     with freeze_time(base):
         async_fire_time_changed(hass, base)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.precision_count").state == "1"
+    assert hass.states.get("sensor.precision_time").state == "0.0"
+    assert hass.states.get("sensor.precision_ratio").state == "0.0"
+
+    with freeze_time(state_change_time):
+        async_fire_time_changed(hass, state_change_time)
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.precision_count").state == "1"
