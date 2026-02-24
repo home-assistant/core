@@ -73,6 +73,8 @@ PRESET_MODE_MODELES = {
 
 
 class MyNeoClimate(ClimateEntity):
+    """Climate entity for MyNeomitis device."""
+
     _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -81,6 +83,7 @@ class MyNeoClimate(ClimateEntity):
     def __init__(
         self, api: Any, device: dict[str, Any], all_devices: list[dict[str, Any]]
     ) -> None:
+        """Initialize the MyNeoClimate entity."""
         self._api = api
         self._device = device
         self._all_devices = all_devices
@@ -132,6 +135,7 @@ class MyNeoClimate(ClimateEntity):
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
+        """Update entity state from WebSocket callback."""
         if not new_state:
             return
 
@@ -170,11 +174,13 @@ class MyNeoClimate(ClimateEntity):
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
+        """Return supported features for the climate entity."""
         return (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature for the climate entity."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
@@ -186,6 +192,7 @@ class MyNeoClimate(ClimateEntity):
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode for the climate entity."""
         if preset_mode != "standby" and self._attr_hvac_mode == HVACMode.OFF:
             self._attr_hvac_mode = HVACMode.HEAT
         if self._attr_hvac_mode == HVACMode.OFF:
@@ -201,6 +208,7 @@ class MyNeoClimate(ClimateEntity):
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the HVAC mode for the climate entity."""
         if hvac_mode == HVACMode.OFF:
             self._attr_preset_mode = "standby"
             await self._set_device_mode("standby")
@@ -211,22 +219,53 @@ class MyNeoClimate(ClimateEntity):
         self.async_write_ha_state()
 
     async def _set_device_mode(self, mode: str) -> None:
-        if self._is_sub_device:
-            await self._api.set_sub_device_mode(
-                self._parents["gateway"],
-                str(self._device["rfid"]),
-                PRESET_MODE_MAP[mode],
+        """Set the device mode via API."""
+        try:
+            if self._is_sub_device:
+                await self._api.set_sub_device_mode(
+                    self._parents["gateway"],
+                    str(self._device["rfid"]),
+                    PRESET_MODE_MAP[mode],
+                )
+            else:
+                await self._api.set_device_mode(
+                    self._device["_id"], PRESET_MODE_MAP[mode]
+                )
+        except (TimeoutError, ConnectionError) as err:
+            _LOGGER.error(
+                "Error setting device mode for %s: %s", self._device["_id"], err
             )
-        else:
-            await self._api.set_device_mode(self._device["_id"], PRESET_MODE_MAP[mode])
 
     async def _set_device_temperature(self, temperature: float) -> None:
-        if self._is_sub_device:
-            await self._api.set_sub_device_temperature(
-                self._parents["gateway"], str(self._device["rfid"]), temperature
+        """Set the device temperature via API."""
+        try:
+            if self._is_sub_device:
+                await self._api.set_sub_device_temperature(
+                    self._parents["gateway"], str(self._device["rfid"]), temperature
+                )
+            else:
+                await self._api.set_device_temperature(self._device["_id"], temperature)
+        except (TimeoutError, ConnectionError) as err:
+            _LOGGER.error(
+                "Error setting device temperature for %s: %s", self._device["_id"], err
             )
-        else:
-            await self._api.set_device_temperature(self._device["_id"], temperature)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes for the climate entity."""
+        attrs = {
+            "device_model": self._device.get("model"),
+            "device_id": self._device.get("_id"),
+            "ws_status": "connected"
+            if getattr(self._api, "sio", None) and self._api.sio.connected
+            else "disconnected",
+            "is_connected": self._attr_available,
+            "min_temp": self._attr_min_temp,
+            "max_temp": self._attr_max_temp,
+        }
+        if self._device.get("program"):
+            attrs["program_data"] = self._device["program"].get("data", {})
+        return attrs
 
 
 async def async_setup_entry(
@@ -234,6 +273,7 @@ async def async_setup_entry(
     config_entry: MyNeomitisConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
+    """Set up climate entities from a config entry."""
     api = config_entry.runtime_data.api
     devices = config_entry.runtime_data.devices
 
