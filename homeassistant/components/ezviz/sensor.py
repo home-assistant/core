@@ -108,7 +108,7 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         if isinstance(self.data[self._sensor_name], str) and len(self.data[self._sensor_name]) > 255:
             # Truncate long strings for the state while exposing the full value
             # via extra_state_attributes.
-            return value[:255]
+            return self.data[self._sensor_name][:255]
         else:
             return self.data[self._sensor_name]
 
