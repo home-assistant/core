@@ -575,47 +575,60 @@ async def test_list_backups_with_pagination(
     assert backup_ids == {"backup1", "backup2"}
 
 
-async def test_agent_list_backups_with_prefix(
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [
+        {"prefix": "backups/home"},
+        {},
+    ],
+    ids=["with_prefix", "no_prefix"],
+    indirect=["mock_config_entry"],
+)
+async def test_agent_list_backups_parametrized(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     test_backup: AgentBackup,
 ) -> None:
-    """Test agent list backups with prefix."""
-    prefix = "my-prefix"
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
-    )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
+    """Test agent list backups with and without prefix."""
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    mock_client.get_paginator.return_value.paginate.assert_called_with(
-        Bucket="test", Prefix=f"{prefix}/"
-    )
+
+    # Get prefix from config entry
+    prefix = mock_config_entry.data.get(CONF_PREFIX)
+    if prefix is not None:
+        mock_client.get_paginator.return_value.paginate.assert_called_with(
+            Bucket="test", Prefix=f"{prefix}/"
+        )
+    else:
+        # Verify no Prefix parameter when no prefix is configured
+        mock_client.get_paginator.return_value.paginate.assert_called_with(
+            Bucket="test"
+        )
 
 
-async def test_agent_delete_backup_with_prefix(
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [
+        {"prefix": "backups/home"},
+        {},
+    ],
+    ids=["with_prefix", "no_prefix"],
+    indirect=["mock_config_entry"],
+)
+async def test_agent_delete_backup_parametrized(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     test_backup: AgentBackup,
 ) -> None:
-    """Test agent delete backup with prefix."""
-    prefix = "my-prefix"
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
-    )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
+    """Test agent delete backup with and without prefix."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -630,28 +643,37 @@ async def test_agent_delete_backup_with_prefix(
     assert response["result"] == {"agent_errors": {}}
 
     tar_filename, metadata_filename = suggested_filenames(test_backup)
-    expected_tar_key = f"{prefix}/{tar_filename}"
-    expected_metadata_key = f"{prefix}/{metadata_filename}"
+
+    # Get prefix from config entry
+    prefix = mock_config_entry.data.get(CONF_PREFIX)
+    if prefix is not None:
+        expected_tar_key = f"{prefix}/{tar_filename}"
+        expected_metadata_key = f"{prefix}/{metadata_filename}"
+    else:
+        expected_tar_key = tar_filename
+        expected_metadata_key = metadata_filename
 
     mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_tar_key)
     mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_metadata_key)
 
 
-async def test_agent_upload_backup_with_prefix(
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [
+        {"prefix": "backups/home"},
+        {},
+    ],
+    ids=["with_prefix", "no_prefix"],
+    indirect=["mock_config_entry"],
+)
+async def test_agent_upload_backup_parametrized(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     test_backup: AgentBackup,
 ) -> None:
-    """Test agent upload backup with prefix."""
-    prefix = "my-prefix"
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
-    )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
+    """Test agent upload backup with and without prefix."""
     client = await hass_client()
     with (
         patch(
@@ -681,8 +703,15 @@ async def test_agent_upload_backup_with_prefix(
         assert resp.status == 201
 
         tar_filename, metadata_filename = suggested_filenames(test_backup)
-        expected_tar_key = f"{prefix}/{tar_filename}"
-        expected_metadata_key = f"{prefix}/{metadata_filename}"
+
+        # Get prefix from config entry
+        prefix = mock_config_entry.data.get(CONF_PREFIX)
+        if prefix is not None:
+            expected_tar_key = f"{prefix}/{tar_filename}"
+            expected_metadata_key = f"{prefix}/{metadata_filename}"
+        else:
+            expected_tar_key = tar_filename
+            expected_metadata_key = metadata_filename
 
         if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
             mock_client.put_object.assert_any_call(
@@ -713,21 +742,23 @@ async def test_agent_upload_backup_with_prefix(
             )
 
 
-async def test_agent_download_backup_with_prefix(
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [
+        {"prefix": "backups/home"},
+        {},
+    ],
+    ids=["with_prefix", "no_prefix"],
+    indirect=["mock_config_entry"],
+)
+async def test_agent_download_backup_parametrized(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     test_backup: AgentBackup,
 ) -> None:
-    """Test agent download backup with prefix."""
-    prefix = "my-prefix"
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
-    )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
+    """Test agent download backup with and without prefix."""
     client = await hass_client()
     backup_id = "23e64aec"
 
@@ -738,6 +769,12 @@ async def test_agent_download_backup_with_prefix(
     assert await resp.content.read() == b"backup data"
 
     tar_filename, _ = suggested_filenames(test_backup)
-    expected_tar_key = f"{prefix}/{tar_filename}"
+
+    # Get prefix from config entry
+    prefix = mock_config_entry.data.get(CONF_PREFIX)
+    if prefix is not None:
+        expected_tar_key = f"{prefix}/{tar_filename}"
+    else:
+        expected_tar_key = tar_filename
 
     mock_client.get_object.assert_any_call(Bucket="test", Key=expected_tar_key)

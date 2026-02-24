@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 
 from botocore.exceptions import BotoCoreError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aws_s3.const import CONF_PREFIX
@@ -75,6 +76,15 @@ async def test_sensor_availability(
     assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [
+        {},
+        {"prefix": "backups/home"},
+    ],
+    ids=["no_prefix", "with_prefix"],
+    indirect=["mock_config_entry"],
+)
 async def test_calculate_backups_size(
     hass: HomeAssistant,
     mock_client: AsyncMock,
@@ -82,7 +92,7 @@ async def test_calculate_backups_size(
     freezer: FrozenDateTimeFactory,
     test_backup: AgentBackup,
 ) -> None:
-    """Test the total size of backups calculation."""
+    """Test the total size of backups calculation with and without prefix."""
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
         {"Contents": []}
     ]
@@ -113,28 +123,8 @@ async def test_calculate_backups_size(
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert float(state.state) > 0
 
-
-async def test_sensor_with_prefix(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    test_backup: AgentBackup,
-) -> None:
-    """Test the AWS S3 sensor with prefix configuration."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
-    await setup_integration(hass, mock_config_entry)
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: "backups/home"}
-    )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
-    assert state.state == "0.0"
-
-    # Verify that paginate was called with the prefix
-    call_args = mock_client.get_paginator.return_value.paginate.call_args
-    assert call_args[1]["Prefix"] == "backups/home/"
+    # Verify prefix was used in API call if expected
+    prefix = mock_config_entry.data.get(CONF_PREFIX)
+    if prefix is not None:
+        call_args = mock_client.get_paginator.return_value.paginate.call_args
+        assert call_args[1]["Prefix"] == f"{prefix}/"

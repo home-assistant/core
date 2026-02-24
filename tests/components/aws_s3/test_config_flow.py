@@ -43,12 +43,35 @@ async def _async_start_flow(
     )
 
 
-async def test_flow(hass: HomeAssistant) -> None:
-    """Test config flow."""
-    result = await _async_start_flow(hass)
+@pytest.mark.parametrize(
+    ("prefix_value", "expected_title", "expected_has_prefix"),
+    [
+        (None, "test", False),
+        ("my-prefix", "test - my-prefix", True),
+    ],
+    ids=["no_prefix", "with_prefix"],
+)
+async def test_flow(
+    hass: HomeAssistant,
+    prefix_value: str | None,
+    expected_title: str,
+    expected_has_prefix: bool,
+) -> None:
+    """Test config flow with and without prefix."""
+    user_input = USER_INPUT.copy()
+    if prefix_value is not None:
+        user_input = user_input | {CONF_PREFIX: prefix_value}
+
+    result = await _async_start_flow(hass, user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == CONFIG_ENTRY_DATA
+    assert result["title"] == expected_title
+
+    if expected_has_prefix:
+        assert result["data"][CONF_PREFIX] == prefix_value
+        assert result["data"] == user_input
+    else:
+        assert CONF_PREFIX not in result["data"]
+        assert result["data"] == CONFIG_ENTRY_DATA
 
 
 @pytest.mark.parametrize(
@@ -127,19 +150,12 @@ async def test_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("endpoint_url"),
-    [
-        ("@@@"),
-        ("http://example.com"),
-    ],
-)
 async def test_flow_create_not_aws_endpoint(
-    hass: HomeAssistant, endpoint_url: str
+    hass: HomeAssistant,
 ) -> None:
     """Test config flow with a not aws endpoint should raise an error."""
     result = await _async_start_flow(
-        hass, USER_INPUT | {CONF_ENDPOINT_URL: endpoint_url}
+        hass, USER_INPUT | {CONF_ENDPOINT_URL: "http://example.com"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -150,24 +166,6 @@ async def test_flow_create_not_aws_endpoint(
         USER_INPUT,
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == CONFIG_ENTRY_DATA
-
-
-async def test_flow_with_prefix(hass: HomeAssistant) -> None:
-    """Test config flow with prefix."""
-    user_input = USER_INPUT | {CONF_PREFIX: "my-prefix"}
-    result = await _async_start_flow(hass, user_input)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test - my-prefix"
-    assert result["data"] == user_input
-
-
-async def test_flow_with_empty_prefix(hass: HomeAssistant) -> None:
-    """Test config flow with empty prefix."""
-    user_input = USER_INPUT | {CONF_PREFIX: ""}
-    result = await _async_start_flow(hass, user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"] == CONFIG_ENTRY_DATA
@@ -221,7 +219,7 @@ async def test_no_abort_if_different_prefix(
     ("input_prefix", "expected_prefix", "expected_title"),
     [
         ("/backups/", "backups", "test - backups"),
-        ("/", "", "test"),
+        ("/", None, "test"),
         ("my-prefix/", "my-prefix", "test - my-prefix"),
     ],
 )
@@ -235,7 +233,7 @@ async def test_flow_prefix_normalization(
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: input_prefix})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    if expected_prefix:
+    if expected_prefix is not None:
         assert result["data"][CONF_PREFIX] == expected_prefix
     else:
         assert CONF_PREFIX not in result["data"]

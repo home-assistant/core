@@ -76,11 +76,26 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
+    """Return the default mocked config entry.
+
+    Supports optional parametrization via request.param dict.
+
+    Example:
+        @pytest.mark.parametrize(
+            "mock_config_entry",
+            [{"prefix": "backups/home"}, {}],
+            indirect=["mock_config_entry"],
+        )
+    """
+    data = CONFIG_ENTRY_DATA.copy()  # Start with default data
+    # Check if test parametrizes this fixture
+    if hasattr(request, "param"):
+        data.update(request.param)  # Add any additional params to data
+
     return MockConfigEntry(
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=CONFIG_ENTRY_DATA,
+        data=data,
     )
