@@ -17,7 +17,12 @@ from universal_silabs_flasher.const import (
 from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import Flasher
 
-from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonManager,
+    AddonState,
+    get_supervisor_info,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +35,7 @@ from .const import (
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
     Z2M_ADDON_NAME,
-    Z2M_ADDON_SLUGS,
+    Z2M_ADDON_SLUG_REGEX,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -285,8 +290,15 @@ async def guess_hardware_owners(
                     )
                 )
 
-    # Z2M can be provided by one of many addons. Try them all.
-    for slug in Z2M_ADDON_SLUGS:
+    # Z2M can be provided by one of many add-ons, we match them by name
+    supervisor_info = get_supervisor_info(hass) or {}
+
+    for addon in supervisor_info.get("addons", []):
+        slug = addon.get("slug")
+
+        if not isinstance(slug, str) or Z2M_ADDON_SLUG_REGEX.fullmatch(slug) is None:
+            continue
+
         z2m_addon_manager = get_z2m_addon_manager(hass, slug)
 
         try:

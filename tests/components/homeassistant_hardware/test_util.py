@@ -91,13 +91,6 @@ def _mock_z2m_addon_manager(slug: str, port: str) -> AsyncMock:
     return addon_manager
 
 
-def _mock_unavailable_addon_manager(slug: str) -> AsyncMock:
-    """Create a mocked add-on manager that fails getting addon info."""
-    addon_manager = AsyncMock(spec=AddonManager)
-    addon_manager.async_get_addon_info = AsyncMock(side_effect=AddonError())
-    return addon_manager
-
-
 async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
     """Test guessing the firmware type."""
 
@@ -211,6 +204,12 @@ async def test_guess_hardware_owners_z2m_addons_two_adapters(
         z2m_slug_1: _mock_z2m_addon_manager(z2m_slug_1, adapter_1_path),
         z2m_slug_2: _mock_z2m_addon_manager(z2m_slug_2, adapter_2_path),
     }
+    supervisor_info = {
+        "addons": [
+            {"slug": z2m_slug_1, "state": "started"},
+            {"slug": z2m_slug_2, "state": "stopped"},
+        ]
+    }
 
     multipan_addon_manager = AsyncMock(spec_set=AddonManager)
     multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
@@ -233,10 +232,12 @@ async def test_guess_hardware_owners_z2m_addons_two_adapters(
             return_value=multipan_addon_manager,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.util.get_supervisor_info",
+            return_value=supervisor_info,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.util.get_z2m_addon_manager",
-            side_effect=lambda _hass, slug: z2m_addon_managers.get(
-                slug, _mock_unavailable_addon_manager(slug)
-            ),
+            side_effect=lambda _hass, slug: z2m_addon_managers[slug],
         ),
     ):
         assert (await guess_hardware_owners(hass, adapter_1_path)) == [
@@ -275,6 +276,12 @@ async def test_guess_firmware_info_z2m_addons_two_adapters(
         z2m_slug_1: _mock_z2m_addon_manager(z2m_slug_1, adapter_1_path),
         z2m_slug_2: _mock_z2m_addon_manager(z2m_slug_2, adapter_2_path),
     }
+    supervisor_info = {
+        "addons": [
+            {"slug": z2m_slug_1, "state": "started"},
+            {"slug": z2m_slug_2, "state": "stopped"},
+        ]
+    }
 
     multipan_addon_manager = AsyncMock(spec_set=AddonManager)
     multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
@@ -297,10 +304,12 @@ async def test_guess_firmware_info_z2m_addons_two_adapters(
             return_value=multipan_addon_manager,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.util.get_supervisor_info",
+            return_value=supervisor_info,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.util.get_z2m_addon_manager",
-            side_effect=lambda _hass, slug: z2m_addon_managers.get(
-                slug, _mock_unavailable_addon_manager(slug)
-            ),
+            side_effect=lambda _hass, slug: z2m_addon_managers[slug],
         ),
         patch.object(OwningAddon, "is_running", AsyncMock(return_value=True)),
     ):
@@ -335,6 +344,12 @@ async def test_async_firmware_flashing_context_z2m_addons_two_adapters(
         z2m_slug_1: _mock_z2m_addon_manager(z2m_slug_1, adapter_1_path),
         z2m_slug_2: _mock_z2m_addon_manager(z2m_slug_2, adapter_2_path),
     }
+    supervisor_info = {
+        "addons": [
+            {"slug": z2m_slug_1, "state": "started"},
+            {"slug": z2m_slug_2, "state": "stopped"},
+        ]
+    }
 
     multipan_addon_manager = AsyncMock(spec_set=AddonManager)
     multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
@@ -364,10 +379,12 @@ async def test_async_firmware_flashing_context_z2m_addons_two_adapters(
             return_value=multipan_addon_manager,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.util.get_supervisor_info",
+            return_value=supervisor_info,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.util.get_z2m_addon_manager",
-            side_effect=lambda _hass, slug: z2m_addon_managers.get(
-                slug, _mock_unavailable_addon_manager(slug)
-            ),
+            side_effect=lambda _hass, slug: z2m_addon_managers[slug],
         ),
         patch.object(OwningAddon, "is_running", AsyncMock(return_value=True)),
         patch.object(OwningAddon, "temporarily_stop", mock_temporarily_stop),
