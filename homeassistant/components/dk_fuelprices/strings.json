@@ -1,11 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "The selected station for this company is already configured",
+      "already_configured": "Integration is already configured, only one instance allowed.",
       "cannot_connect": "Cannot connect to the API. Please try again later.",
       "invalid_api_key": "Invalid API key provided",
       "rate_limit_exceeded": "Too many requests to the API. Please try again later.",
-      "reauth_successful": "API key was updated."
+      "reauth_successful": "API key was updated.",
+      "station_already_configured": "The selected station for this company is already configured"
     },
     "error": {
       "cannot_connect": "Cannot connect to the API. Please try again later.",
@@ -68,8 +69,9 @@
   "config_subentries": {
     "station": {
       "abort": {
-        "already_configured": "The selected station for this company is already configured",
-        "reconfigure_successful": "Products were updated."
+        "already_configured": "Integration is already configured, only one instance allowed.",
+        "reconfigure_successful": "Products were updated.",
+        "station_already_configured": "The selected station for this company is already configured"
       },
       "entry_type": "Station",
       "error": {

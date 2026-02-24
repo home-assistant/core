@@ -1,11 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Den valgte station ved dette selskab er allerede konfigureret!",
+      "already_configured": "Integrationen er allerede konfigureret. Kun én instans tilladt.",
       "cannot_connect": "Kan ikke forbinde til API'et. Prøv igen senere.",
       "invalid_api_key": "Ugyldig API-nøgle angivet!",
       "rate_limit_exceeded": "For mange forespørgsler mod API - prøv igen senere",
-      "reauth_successful": "API-nøgle blev opdateret."
+      "reauth_successful": "API-nøgle blev opdateret.",
+      "station_already_configured": "Den valgte station ved dette selskab er allerede konfigureret!"
     },
     "error": {
       "cannot_connect": "Kan ikke forbinde til API'et. Prøv igen senere.",
@@ -68,8 +69,9 @@
   "config_subentries": {
     "station": {
       "abort": {
-        "already_configured": "Den valgte station ved dette selskab er allerede konfigureret!",
-        "reconfigure_successful": "Produkter blev opdateret."
+        "already_configured": "Integrationen er allerede konfigureret. Kun én instans tilladt.",
+        "reconfigure_successful": "Produkter blev opdateret.",
+        "station_already_configured": "Den valgte station ved dette selskab er allerede konfigureret!"
       },
       "entry_type": "Station",
       "error": {

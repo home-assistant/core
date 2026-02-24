@@ -338,7 +338,7 @@ class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
                     if not self._reconfigure or (
                         subentry.subentry_id != self._reconfigure_subentry_id
                     ):
-                        return self.async_abort(reason="already_configured")
+                        return self.async_abort(reason="station_already_configured")
 
             # Process the user input and show next selection form
             self.user_input.update(user_input)
