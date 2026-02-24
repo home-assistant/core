@@ -1,4 +1,3 @@
-# homeassistant/components/wiim/config_flow.py
 """Config flow for WiiM integration."""
 
 from __future__ import annotations
