@@ -83,7 +83,7 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.entity_category is EntityCategory.DIAGNOSTIC
     assert (
         update.entity_picture
-        == "https://brands.home-assistant.io/_/test_platform/icon.png"
+        == "/api/brands/integration/test_platform/icon.png?fallback=placeholder"
     )
     assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"
@@ -991,7 +991,7 @@ async def test_update_percentage_backwards_compatibility(
     expected_attributes = {
         ATTR_AUTO_UPDATE: False,
         ATTR_DISPLAY_PRECISION: 0,
-        ATTR_ENTITY_PICTURE: "https://brands.home-assistant.io/_/test/icon.png",
+        ATTR_ENTITY_PICTURE: "/api/brands/integration/test/icon.png?fallback=placeholder",
         ATTR_FRIENDLY_NAME: "legacy",
         ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,
