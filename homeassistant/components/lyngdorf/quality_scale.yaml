@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Single brand, no secondary integrations.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
