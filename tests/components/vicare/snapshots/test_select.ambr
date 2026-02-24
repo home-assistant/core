@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'efficientWithMinComfort',
+        'efficient_with_min_comfort',
         'efficient',
         'off',
       ]),
@@ -46,7 +46,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW operating mode',
       'options': list([
-        'efficientWithMinComfort',
+        'efficient_with_min_comfort',
         'efficient',
         'off',
       ]),

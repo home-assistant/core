@@ -25,6 +25,14 @@ from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
+# Map API values to snake_case for HA, and back
+DHW_MODE_API_TO_HA: dict[str, str] = {
+    "efficient": "efficient",
+    "efficientWithMinComfort": "efficient_with_min_comfort",
+    "off": "off",
+}
+DHW_MODE_HA_TO_API: dict[str, str] = {v: k for k, v in DHW_MODE_API_TO_HA.items()}
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
@@ -73,19 +81,25 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
     ) -> None:
         """Initialize the DHW operating mode select entity."""
         super().__init__("dhw_operating_mode", device_serial, device_config, device)
-        self._attr_options = device.getDomesticHotWaterOperatingModes()
-        self._attr_current_option = device.getDomesticHotWaterActiveOperatingMode()
+        self._attr_options = [
+            DHW_MODE_API_TO_HA.get(mode, mode)
+            for mode in device.getDomesticHotWaterOperatingModes()
+        ]
+        active = device.getDomesticHotWaterActiveOperatingMode()
+        self._attr_current_option = DHW_MODE_API_TO_HA.get(active, active)
 
     def update(self) -> None:
         """Update state from the ViCare API."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_options = self._api.getDomesticHotWaterOperatingModes()
+                self._attr_options = [
+                    DHW_MODE_API_TO_HA.get(mode, mode)
+                    for mode in self._api.getDomesticHotWaterOperatingModes()
+                ]
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_current_option = (
-                    self._api.getDomesticHotWaterActiveOperatingMode()
-                )
+                active = self._api.getDomesticHotWaterActiveOperatingMode()
+                self._attr_current_option = DHW_MODE_API_TO_HA.get(active, active)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except PyViCareRateLimitError as limit_exception:
@@ -97,5 +111,7 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Set the DHW operating mode."""
-        self._api.setDomesticHotWaterOperatingMode(option)
+        api_mode = DHW_MODE_HA_TO_API.get(option, option)
+        self._api.setDomesticHotWaterOperatingMode(api_mode)
         self._attr_current_option = option
+        self.schedule_update_ha_state()
