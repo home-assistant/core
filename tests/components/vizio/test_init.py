@@ -4,12 +4,26 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.vizio.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.vizio.const import CONF_APPS, DOMAIN
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_DEVICE_CLASS,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import MOCK_SPEAKER_CONFIG, MOCK_USER_VALID_TV_CONFIG, UNIQUE_ID
+from .const import (
+    HOST2,
+    MOCK_SPEAKER_CONFIG,
+    MOCK_USER_VALID_TV_CONFIG,
+    NAME2,
+    UNIQUE_ID,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -82,3 +96,42 @@ async def test_coordinator_update_failure(
 
     err_msg = "Unable to retrieve the apps list from the external server"
     assert len([record for record in caplog.records if err_msg in record.msg]) == 1
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
+async def test_apps_coordinator_persists_until_last_tv_unloads(
+    hass: HomeAssistant,
+) -> None:
+    """Test shared apps coordinator is not shut down until the last TV entry unloads."""
+    config_entry_1 = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+    )
+    config_entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: NAME2,
+            CONF_HOST: HOST2,
+            CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            CONF_ACCESS_TOKEN: "deadbeef2",
+        },
+        unique_id="testid2",
+    )
+    config_entry_1.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+
+    config_entry_2.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_2.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 2
+    assert CONF_APPS in hass.data[DOMAIN]
+
+    # Unload first TV — coordinator should persist
+    assert await hass.config_entries.async_unload(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+    assert CONF_APPS in hass.data[DOMAIN]
+
+    # Unload second (last) TV — coordinator should be removed
+    assert await hass.config_entries.async_unload(config_entry_2.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN not in hass.data
