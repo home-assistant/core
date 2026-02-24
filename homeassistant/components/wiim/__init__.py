@@ -174,6 +174,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
             upnp_location or "N/A",
         )
 
+        success = True
+
     except ConfigEntryNotReady:
         if wiim_device_sdk:
             await wiim_device_sdk.disconnect()
