@@ -39,8 +39,8 @@ from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.BUTTON,
+    Platform.SENSOR,
 ]
 
 
