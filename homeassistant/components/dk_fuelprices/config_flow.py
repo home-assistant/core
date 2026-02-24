@@ -44,7 +44,6 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         self.companies: list[dict[str, Any]] = []
         self.stations: Any = {}
         self.company_name = ""
-        self._errors: dict[str, str] = {}
         self.user_input: dict[str, Any] = {}
 
     async def async_step_user(
@@ -52,6 +51,8 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step - Enter API key."""
         self._async_abort_entries_match()
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             # Test API key
             try:
@@ -60,17 +61,16 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.companies = await self.api.list_companies()
             except ClientResponseError as exc:
                 if exc.status == 401:
-                    self._errors["base"] = "invalid_api_key"
-                    return self.async_abort(reason="invalid_api_key")
-                if exc.status == 429:
-                    self._errors["base"] = "rate_limit_exceeded"
-                    return self.async_abort(reason="rate_limit_exceeded")
-                self._errors["base"] = "cannot_connect"
-                return self.async_abort(reason="cannot_connect")
+                    errors["base"] = "invalid_api_key"
+                elif exc.status == 429:
+                    errors["base"] = "rate_limit_exceeded"
+                else:
+                    errors["base"] = "cannot_connect"
 
-            # Proceed to company selection
-            self.user_input.update(user_input)
-            return await self.async_step_company_selection()
+            if not errors:
+                # Proceed to company selection
+                self.user_input.update(user_input)
+                return await self.async_step_company_selection()
 
         # Show the form to the user
         return self.async_show_form(
@@ -80,7 +80,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): str,
                 }
             ),
-            errors=self._errors,
+            errors=errors,
             description_placeholders={"website_url": WEBSITE_URL},
         )
 
@@ -95,7 +95,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_station_selection()
 
         if len(self.companies) == 0:
-            return self.async_abort(reason="rate_limit_exceeded")
+            return self.async_abort(reason="cannot_connect")
 
         # Show the form to the user
         return self.async_show_form(
@@ -107,7 +107,6 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=self._errors,
         )
 
     async def async_step_station_selection(
@@ -136,13 +135,14 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_STATION): vol.In(stations),
                 }
             ),
-            errors=self._errors,
         )
 
     async def async_step_product_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the product selection step."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             # Create the main config entry and store first subentry data
             return self.async_create_entry(
@@ -162,10 +162,11 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except ClientResponseError as exc:  # pylint: disable=broad-except
             if exc.status == 429:
-                self._errors["base"] = "rate_limit_exceeded"
-                return self.async_abort(reason="rate_limit_exceeded")
-            self._errors["base"] = "cannot_connect"
-            return self.async_abort(reason="cannot_connect")
+                errors["base"] = "rate_limit_exceeded"
+            else:
+                errors["base"] = "cannot_connect"
+
+            return self.async_abort(reason=errors["base"])
 
         # Create a list of available products
         schema = {}
@@ -176,50 +177,49 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="product_selection",
             data_schema=vol.Schema(schema),
-            errors=self._errors,
+            errors=errors,
         )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reauth flow when API key is invalid/expired."""
-        self._errors = {}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a new API key."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 api = Braendstofpriser(user_input[CONF_API_KEY])
                 await api.list_companies()
             except ClientResponseError as exc:  # pylint: disable=broad-except
                 if exc.status == 401:
-                    self._errors["base"] = "invalid_api_key"
+                    errors["base"] = "invalid_api_key"
                 elif exc.status == 429:
-                    self._errors["base"] = "rate_limit_exceeded"
+                    errors["base"] = "rate_limit_exceeded"
                 else:
-                    self._errors["base"] = "cannot_connect"
-                return self.async_show_form(
-                    step_id="reauth_confirm",
-                    data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-                    errors=self._errors,
-                )
+                    errors["base"] = "cannot_connect"
 
-            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-            if entry is not None:
-                self.hass.config_entries.async_update_entry(
-                    entry,
-                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
+            if not errors:
+                entry = self.hass.config_entries.async_get_entry(
+                    self.context["entry_id"]
                 )
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+                if entry is not None:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    )
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-            errors=self._errors,
+            errors=errors,
         )
 
 
