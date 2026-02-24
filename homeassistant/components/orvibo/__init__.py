@@ -1,4 +1,4 @@
-"""The orvibo component."""
+"""The orvibo integration."""
 
 import logging
 
