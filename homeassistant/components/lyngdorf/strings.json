@@ -41,9 +41,6 @@
     },
     "setup_timeout": {
       "message": "Timeout connecting to {host}"
-    },
-    "unsupported_model": {
-      "message": "Unsupported model: {model}"
     }
   }
 }
