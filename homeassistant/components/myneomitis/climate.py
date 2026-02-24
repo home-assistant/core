@@ -35,7 +35,7 @@ PRESET_MODE_MAP = {
 }
 REVERSE_PRESET_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
 
-PRESET_MODE_MODELES = {
+PRESET_MODE_MODELS = {
     "EV30": ["setpoint", "boost", "eco", "comfort", "auto", "antifrost", "standby"],
     "ECTRL": [
         "setpoint",
@@ -77,30 +77,40 @@ class MyNeoClimate(ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate_myneomitis"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(
-        self, api: Any, device: dict[str, Any], all_devices: list[dict[str, Any]]
-    ) -> None:
+    def __init__(self, api: Any, device: dict[str, Any]) -> None:
         """Initialize the MyNeoClimate entity."""
         self._api = api
         self._device = device
-        self._all_devices = all_devices
-        self._attr_unique_id = device["_id"]
-        self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, device["_id"])},
-            name=device["name"],
-            manufacturer="Axenco",
-            model=device["model"],
-        )
-        self._attr_available = device["connected"]
+        device_id = device.get("_id")
+        model = device.get("model", "")
+        name = device.get("name") or device_id or "MyNeomitis device"
+        connected = bool(device.get("connected", False))
+
+        if device_id:
+            self._attr_unique_id = device_id
+            self._attr_device_info = dr.DeviceInfo(
+                identifiers={(DOMAIN, device_id)},
+                name=name,
+                manufacturer="Axenco",
+                model=model,
+            )
+        else:
+            self._attr_unique_id = None
+            self._attr_device_info = dr.DeviceInfo(
+                name=name, manufacturer="Axenco", model=model
+            )
+
+        self._attr_available = connected
         self._unavailable_logged: bool = False
 
         state = device.get("state", {})
-        self._is_sub_device = device["model"] in SUPPORTED_SUB_MODELS
-        self._parents = device.get("parents", {})
-        self._attr_preset_modes = PRESET_MODE_MODELES.get(device["model"], [])
+        self._is_sub_device = model in SUPPORTED_SUB_MODELS
+        self._parents = device.get("parents") or {}
+        # Explicitly type as list[str] to satisfy static type checkers
+        self._attr_preset_modes: list[str] = PRESET_MODE_MODELS.get(model, [])
         self._attr_min_temp = state.get("comfLimitMin", 7)
         self._attr_max_temp = state.get("comfLimitMax", 30)
         self._attr_current_temperature = state.get("currentTemp")
@@ -115,8 +125,12 @@ class MyNeoClimate(ClimateEntity):
             if isinstance(target_mode, int)
             else None
         )
-        # HVAC modes
-        if device["model"] == "NTD" and state.get("changeOverUser") == 1:
+        self._last_preset_mode: str | None = (
+            self._attr_preset_mode
+            if self._attr_preset_mode and self._attr_preset_mode != "standby"
+            else None
+        )
+        if model == "NTD" and state.get("changeOverUser") == 1:
             self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
             self._attr_hvac_mode = (
                 HVACMode.OFF
@@ -131,7 +145,25 @@ class MyNeoClimate(ClimateEntity):
                 else HVACMode.HEAT
             )
 
-        api.register_listener(device["_id"], self.handle_ws_update)
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Register listener when entity is added to hass."""
+        await super().async_added_to_hass()
+        device_id = self._device.get("_id")
+        if not device_id:
+            return
+
+        if hasattr(self._api, "register_listener"):
+            try:
+                if unsubscribe := self._api.register_listener(
+                    device_id, self.handle_ws_update
+                ):
+                    self.async_on_remove(unsubscribe)
+            except AttributeError, RuntimeError, TypeError:
+                _LOGGER.debug("Failed to register ws listener for %s", device_id)
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
@@ -159,11 +191,20 @@ class MyNeoClimate(ClimateEntity):
             self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(
                 new_state["targetMode"]
             )
+            if self._attr_preset_mode and self._attr_preset_mode != "standby":
+                self._last_preset_mode = self._attr_preset_mode
             if self._attr_preset_mode == "standby":
                 self._attr_hvac_mode = HVACMode.OFF
             elif self._attr_hvac_mode == HVACMode.OFF:
-                self._attr_hvac_mode = HVACMode.HEAT
-        if "changeOverUser" in new_state and self._device["model"] == "NTD":
+                self._attr_hvac_mode = next(
+                    (
+                        mode
+                        for mode in self._attr_hvac_modes
+                        if mode is not HVACMode.OFF
+                    ),
+                    HVACMode.HEAT,
+                )
+        if "changeOverUser" in new_state and self._device.get("model") == "NTD":
             if new_state["changeOverUser"] == 1:
                 self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
                 self._attr_hvac_mode = HVACMode.COOL
@@ -172,100 +213,157 @@ class MyNeoClimate(ClimateEntity):
                 self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
 
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return supported features for the climate entity."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-        )
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature for the climate entity."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         if self._attr_preset_mode != "setpoint":
-            await self._set_device_mode("setpoint")
+            ok = await self._set_device_mode("setpoint")
+            if not ok:
+                return
             self._attr_preset_mode = "setpoint"
-        await self._set_device_temperature(temperature)
+
+        ok = await self._set_device_temperature(temperature)
+        if not ok:
+            return
+
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the climate entity."""
-        if preset_mode != "standby" and self._attr_hvac_mode == HVACMode.OFF:
-            self._attr_hvac_mode = HVACMode.HEAT
-        if self._attr_hvac_mode == HVACMode.OFF:
-            return
         if preset_mode == "standby":
             self._attr_hvac_mode = HVACMode.OFF
+        elif self._attr_hvac_mode == HVACMode.OFF:
+            self._attr_hvac_mode = HVACMode.HEAT
         mode_value = PRESET_MODE_MAP.get(preset_mode)
         if mode_value is None:
             _LOGGER.warning("Unknown preset mode: %s", preset_mode)
             return
-        await self._set_device_mode(preset_mode)
+        ok = await self._set_device_mode(preset_mode)
+        if not ok:
+            return
+
+        if preset_mode != "standby":
+            self._last_preset_mode = preset_mode
+
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
         if hvac_mode == HVACMode.OFF:
+            if self._attr_preset_mode and self._attr_preset_mode != "standby":
+                self._last_preset_mode = self._attr_preset_mode
+
+            ok = await self._set_device_mode("standby")
+            if not ok:
+                return
             self._attr_preset_mode = "standby"
-            await self._set_device_mode("standby")
         else:
-            self._attr_preset_mode = "auto"
-            await self._set_device_mode("auto")
+            preset_to_restore = None
+            if (
+                self._last_preset_mode
+                and self._last_preset_mode in self._attr_preset_modes
+            ):
+                preset_to_restore = self._last_preset_mode
+
+            if not preset_to_restore:
+                for candidate in ("comfort", "setpoint", "eco", "auto"):
+                    if candidate in self._attr_preset_modes and candidate != "standby":
+                        preset_to_restore = candidate
+                        break
+
+            if not preset_to_restore:
+                preset_to_restore = next(
+                    (p for p in self._attr_preset_modes if p != "standby"), "auto"
+                )
+
+            ok = await self._set_device_mode(preset_to_restore)
+            if not ok:
+                return
+            self._attr_preset_mode = preset_to_restore
+
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
-    async def _set_device_mode(self, mode: str) -> None:
+    async def _set_device_mode(self, mode: str) -> bool:
         """Set the device mode via API."""
         try:
+            mode_value = PRESET_MODE_MAP.get(mode)
+            if mode_value is None:
+                _LOGGER.error(
+                    "Attempt to set unknown mode %s for %s", mode, self.entity_id
+                )
+                return False
+
             if self._is_sub_device:
-                await self._api.set_sub_device_mode(
-                    self._parents["gateway"],
-                    str(self._device["rfid"]),
-                    PRESET_MODE_MAP[mode],
-                )
+                gateway = self._parents.get("gateway")
+                rfid = self._device.get("rfid")
+                if not gateway or not rfid:
+                    _LOGGER.error(
+                        "Missing gateway or rfid for sub-device %s, cannot set mode",
+                        self._attr_unique_id,
+                    )
+                    return False
+                await self._api.set_sub_device_mode(gateway, str(rfid), mode_value)
             else:
-                await self._api.set_device_mode(
-                    self._device["_id"], PRESET_MODE_MAP[mode]
-                )
+                device_id = self._device.get("_id")
+                if not device_id:
+                    _LOGGER.error("Missing device id for device, cannot set mode")
+                    return False
+                await self._api.set_device_mode(device_id, mode_value)
         except (TimeoutError, ConnectionError) as err:
             _LOGGER.error(
-                "Error setting device mode for %s: %s", self._device["_id"], err
+                "Error setting device mode for %s: %s", self._device.get("_id"), err
             )
+            return False
 
-    async def _set_device_temperature(self, temperature: float) -> None:
+        return True
+
+    async def _set_device_temperature(self, temperature: float) -> bool:
         """Set the device temperature via API."""
         try:
             if self._is_sub_device:
+                gateway = self._parents.get("gateway")
+                rfid = self._device.get("rfid")
+                if not gateway or not rfid:
+                    _LOGGER.error(
+                        "Missing gateway or rfid for sub-device %s, cannot set temperature",
+                        self._attr_unique_id,
+                    )
+                    return False
                 await self._api.set_sub_device_temperature(
-                    self._parents["gateway"], str(self._device["rfid"]), temperature
+                    gateway, str(rfid), temperature
                 )
             else:
-                await self._api.set_device_temperature(self._device["_id"], temperature)
+                device_id = self._device.get("_id")
+                if not device_id:
+                    _LOGGER.error(
+                        "Missing device id for device, cannot set temperature"
+                    )
+                    return False
+                await self._api.set_device_temperature(device_id, temperature)
         except (TimeoutError, ConnectionError) as err:
             _LOGGER.error(
-                "Error setting device temperature for %s: %s", self._device["_id"], err
+                "Error setting device temperature for %s: %s",
+                self._device.get("_id"),
+                err,
             )
+            return False
+
+        return True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes for the climate entity."""
-        attrs = {
+        return {
             "device_model": self._device.get("model"),
-            "device_id": self._device.get("_id"),
-            "ws_status": "connected"
-            if getattr(self._api, "sio", None) and self._api.sio.connected
-            else "disconnected",
             "is_connected": self._attr_available,
             "min_temp": self._attr_min_temp,
             "max_temp": self._attr_max_temp,
         }
-        if self._device.get("program"):
-            attrs["program_data"] = self._device["program"].get("data", {})
-        return attrs
 
 
 async def async_setup_entry(
@@ -278,11 +376,11 @@ async def async_setup_entry(
     devices = config_entry.runtime_data.devices
 
     def _create_entity(device: dict) -> MyNeoClimate:
-        return MyNeoClimate(api, device, devices)
+        return MyNeoClimate(api, device)
 
     climate_entities = [
         _create_entity(device)
         for device in devices
-        if device["model"] in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
+        if device.get("model") in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
     ]
     async_add_entities(climate_entities)

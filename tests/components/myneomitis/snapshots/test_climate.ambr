@@ -46,7 +46,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 17>,
-    'translation_key': 'climate_myneomitis',
+    'translation_key': None,
     'unique_id': 'climate1',
     'unit_of_measurement': None,
   })
@@ -55,11 +55,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
+      'device_model': 'EV30',
       'friendly_name': 'Climate Device',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
+      'is_connected': True,
       'max_temp': 30,
       'min_temp': 7,
       'preset_mode': 'comfort',

@@ -24,6 +24,21 @@
     }
   },
   "entity": {
+    "climate": {
+      "climate_myneomitis": {
+        "name": "MyNeomitis climate",
+        "state": {
+          "antifrost": "Frost protection",
+          "auto": "[%key:common::state::auto%]",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "comfort_plus": "Comfort +",
+          "eco": "Eco",
+          "setpoint": "Setpoint",
+          "standby": "[%key:common::state::standby%]"
+        }
+      }
+    },
     "select": {
       "pilote": {
         "state": {

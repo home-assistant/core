@@ -1,5 +1,17 @@
 {
   "entity": {
+    "climate": {
+      "climate_myneomitis": {
+        "state": {
+          "antifrost": "mdi:snowflake",
+          "auto": "mdi:refresh-auto",
+          "boost": "mdi:rocket-launch",
+          "comfort": "mdi:fire",
+          "eco": "mdi:leaf",
+          "standby": "mdi:toggle-switch-off-outline"
+        }
+      }
+    },
     "select": {
       "pilote": {
         "state": {
