@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "button": {
+      "sync_time": {
+        "default": "mdi:timer-sync-outline"
+      }
+    }
+  },
   "services": {
     "set_hot_water_schedule": {
       "service": "mdi:calendar-clock"

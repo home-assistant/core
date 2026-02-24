@@ -60,6 +60,11 @@
     }
   },
   "entity": {
+    "button": {
+      "sync_time": {
+        "name": "Sync time"
+      }
+    },
     "sensor": {
       "current_temperature": {
         "name": "Current temperature"
