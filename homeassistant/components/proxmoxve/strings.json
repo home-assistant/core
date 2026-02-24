@@ -132,15 +132,45 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
+    "button": {
+      "hibernate": {
+        "name": "Hibernate"
+      },
+      "reset": {
+        "name": "Reset"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "start_all": {
+        "name": "Start all"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "stop_all": {
+        "name": "Stop all"
       }
     }
   },
   "exceptions": {
+    "api_error_no_details": {
+      "message": "An error occurred while communicating with the Proxmox VE instance."
+    },
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Proxmox VE instance: {error}"
     },
+    "cannot_connect_no_details": {
+      "message": "Could not connect to the Proxmox VE instance."
+    },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate: {error}"
+    },
+    "invalid_auth_no_details": {
+      "message": "Authentication failed for the Proxmox VE instance."
     },
     "no_nodes_found": {
       "message": "No active nodes were found on the Proxmox VE server."
@@ -150,6 +180,9 @@
     },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance: {error}"
+    },
+    "timeout_connect_no_details": {
+      "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
     }
   },
   "issues": {

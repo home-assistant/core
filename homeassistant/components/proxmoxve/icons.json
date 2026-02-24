@@ -63,6 +63,18 @@
       },
       "vm_status": {
         "default": "mdi:server"
+    "button": {
+      "hibernate": {
+        "default": "mdi:power-sleep"
+      },
+      "reset": {
+        "default": "mdi:restart"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
       }
     }
   }
