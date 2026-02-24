@@ -299,10 +299,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         """Fetch or retrieve cached container inspect and local image data."""
         if cached := self._image_cache.get((endpoint_id, container_id)):
             cached_at, container_inspect, local_image = cached
-            if (
-                self.watcher.last_check is None
-                or cached_at >= self.watcher.last_check
-            ):
+            if self.watcher.last_check is None or cached_at >= self.watcher.last_check:
                 _LOGGER.debug(
                     "Using cached inspect and local image for endpoint %d, container %s",
                     endpoint_id,
