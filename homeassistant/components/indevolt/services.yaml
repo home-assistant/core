@@ -1,9 +1,10 @@
 charge:
   fields:
-    target:
+    device_ids:
       required: true
       selector:
         device:
+          multiple: true
           integration: indevolt
     target_soc:
       required: true
@@ -24,10 +25,11 @@ charge:
 
 discharge:
   fields:
-    target:
+    device_ids:
       required: true
       selector:
         device:
+          multiple: true
           integration: indevolt
     target_soc:
       required: true
@@ -48,8 +50,9 @@ discharge:
 
 stop:
   fields:
-    target:
+    device_ids:
       required: true
       selector:
         device:
+          multiple: true
           integration: indevolt
