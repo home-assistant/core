@@ -83,7 +83,7 @@ def _get_photo_album(
             translation_placeholders={"entry": identifier.config_entry_id},
         )
 
-albums = (
+    albums = (
         icloud_account.api.photos.shared_streams
         if identifier.shared_album is True
         else icloud_account.api.photos.albums
@@ -430,7 +430,7 @@ class IcloudMediaSource(MediaSource):
             children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._hass.async_add_executor_job(
-                    self._browse_albums, icloud_account, identifier
+                    self._browse_albums, identifier, icloud_account
                 )
             ],
         )
@@ -458,7 +458,11 @@ class IcloudMediaSource(MediaSource):
             ],
         )
 
-    def _browse_albums(self, icloud_account, identifier) -> list[BrowseMediaSource]:
+    def _browse_albums(
+        self,
+        identifier: IcloudMediaSourceIdentifier,
+        icloud_account: IcloudAccount,
+    ) -> list[BrowseMediaSource]:
         """Browse albums synchronously."""
 
         albums: AlbumContainer | None = None
