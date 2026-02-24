@@ -1,7 +1,7 @@
 """Common base for entities."""
 
 from dataclasses import dataclass
-from typing import Any
+import logging
 
 from pysmarlaapi import Federwiege
 
@@ -9,6 +9,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DEVICE_MODEL_NAME, DOMAIN, MANUFACTURER_NAME
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,6 +32,7 @@ class SmarlaBaseEntity(Entity):
     def __init__(self, federwiege: Federwiege, desc: SmarlaEntityDescription) -> None:
         """Initialise the entity."""
         self.entity_description = desc
+        self._federwiege = federwiege
         self._property = federwiege.get_property(desc.service, desc.property)
         self._attr_unique_id = f"{federwiege.serial_number}-{desc.key}"
         self._attr_device_info = DeviceInfo(
@@ -39,15 +42,35 @@ class SmarlaBaseEntity(Entity):
             manufacturer=MANUFACTURER_NAME,
             serial_number=federwiege.serial_number,
         )
+        self._unavailable_logged = False
 
-    async def on_change(self, value: Any):
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._federwiege.available
+
+    async def on_availability_change(self, _) -> None:
+        """Handle availability changes."""
+        if not self.available and not self._unavailable_logged:
+            _LOGGER.info("Entity %s is unavailable", self.entity_id)
+            self._unavailable_logged = True
+        elif self.available and self._unavailable_logged:
+            _LOGGER.info("Entity %s is back online", self.entity_id)
+            self._unavailable_logged = False
+
+        # Notify ha that state changed
+        self.async_write_ha_state()
+
+    async def on_change(self, _):
         """Notify ha when state changes."""
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
+        await self._federwiege.add_listener(self.on_availability_change)
         await self._property.add_listener(self.on_change)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         await self._property.remove_listener(self.on_change)
+        await self._federwiege.remove_listener(self.on_availability_change)
