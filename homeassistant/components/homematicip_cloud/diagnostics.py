@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .hap import HomematicIPConfigEntry
 
-TO_REDACT_CONFIG = {"city", "latitude", "longitude"}
+TO_REDACT_CONFIG = {"city", "latitude", "longitude", "refreshToken"}
 
 
 async def async_get_config_entry_diagnostics(
