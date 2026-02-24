@@ -68,6 +68,8 @@ from .const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_NAME,
+    DEFAULT_STT_PROMPT,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
@@ -78,6 +80,8 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_STT_MODEL,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
@@ -110,14 +114,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
+    await client.models.list(timeout=10.0)
 
 
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 2
-    MINOR_VERSION = 5
+    MINOR_VERSION = 6
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -156,6 +160,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "subentry_type": "ai_task_data",
                             "data": RECOMMENDED_AI_TASK_OPTIONS,
                             "title": DEFAULT_AI_TASK_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "stt",
+                            "data": RECOMMENDED_STT_OPTIONS,
+                            "title": DEFAULT_STT_NAME,
                             "unique_id": None,
                         },
                         {
@@ -204,6 +214,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": OpenAISubentryFlowHandler,
             "ai_task_data": OpenAISubentryFlowHandler,
+            "stt": OpenAISubentrySTTFlowHandler,
             "tts": OpenAISubentryTTSFlowHandler,
         }
 
@@ -593,6 +604,95 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         _LOGGER.debug("Location data: %s", location_data)
 
         return location_data
+
+
+class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
+    """Flow for managing OpenAI STT subentries."""
+
+    options: dict[str, Any]
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a subentry."""
+        self.options = RECOMMENDED_STT_OPTIONS.copy()
+        return await self.async_step_init()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a subentry."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init()
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage initial options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        options = self.options
+        errors: dict[str, str] = {}
+
+        step_schema: VolDictType = {}
+
+        if self._is_new:
+            step_schema[vol.Required(CONF_NAME, default=DEFAULT_STT_NAME)] = str
+
+        step_schema.update(
+            {
+                vol.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": options.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
+                    },
+                ): TextSelector(
+                    TextSelectorConfig(multiline=True, type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(
+                    CONF_CHAT_MODEL, default=RECOMMENDED_STT_MODEL
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            "gpt-4o-transcribe",
+                            "gpt-4o-mini-transcribe",
+                            "whisper-1",
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                    )
+                ),
+            }
+        )
+
+        if user_input is not None:
+            options.update(user_input)
+            if not errors:
+                if self._is_new:
+                    return self.async_create_entry(
+                        title=options.pop(CONF_NAME),
+                        data=options,
+                    )
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data=options,
+                )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), options
+            ),
+            errors=errors,
+        )
 
 
 class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
