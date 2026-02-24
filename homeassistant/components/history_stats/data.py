@@ -249,8 +249,8 @@ class HistoryStats:
                 # We are entering a matching state.
                 # This marks the start of a new candidate block that may later
                 # qualify if it lasts at least min_state_duration.
-                last_state_change_timestamp = max(
-                    start_timestamp, state_change_timestamp
+                last_state_change_timestamp = math.floor(
+                    max(start_timestamp, state_change_timestamp)
                 )
             elif previous_state_matches and not current_state_matches:
                 # We are leaving a matching state.
