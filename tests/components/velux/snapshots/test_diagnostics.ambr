@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_diagnostics[mock_window]
+  dict({
+    'config_entry': dict({
+      'host': '127.0.0.1',
+      'password': '**REDACTED**',
+    }),
+    'connection': dict({
+      'connected': True,
+      'connection_closed_cbs': list([
+      ]),
+      'connection_count': 3,
+      'connection_opened_cbs': list([
+      ]),
+      'frame_received_cbs': list([
+      ]),
+    }),
+    'devices': list([
+      dict({
+        'entities': list([
+        ]),
+        'name': 'KLF 200 Gateway',
+      }),
+      dict({
+        'entities': list([
+          dict({
+            'entity_id': 'cover.test_window',
+            'state': dict({
+              'attributes': dict({
+                'current_position': 70,
+                'device_class': 'window',
+                'friendly_name': 'Test Window',
+                'supported_features': 15,
+              }),
+              'entity_id': 'cover.test_window',
+              'last_changed': '2025-01-01T00:00:00+00:00',
+              'last_reported': '2025-01-01T00:00:00+00:00',
+              'last_updated': '2025-01-01T00:00:00+00:00',
+              'state': 'open',
+            }),
+            'unique_id': '123456789',
+          }),
+        ]),
+        'name': 'Test Window',
+      }),
+    ]),
+    'gateway': dict({
+      'protocol_version': None,
+      'state': '<DtoState gateway_state="GatewayState.GATEWAY_MODE_WITH_ACTUATORS" gateway_sub_state="GatewaySubState.IDLE"/>',
+      'version': None,
+    }),
+    'nodes': list([
+      dict({
+        'device_updated_callbacks': list([
+        ]),
+        'name': 'Test Window',
+        'node_id': 1,
+        'serial_number': '123456789',
+        'type': 'AsyncMock',
+      }),
+    ]),
+  })
+# ---
