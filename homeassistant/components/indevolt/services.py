@@ -67,7 +67,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     _raise_power_exceeds_max(power, max_power, coordinator.generation)
 
                 # Validate target SOC against emergency SOC threshold
-                emergency_soc = await coordinator.async_get_emergency_soc()
+                emergency_soc = coordinator.async_get_emergency_soc()
                 if target_soc < emergency_soc:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
@@ -105,7 +105,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     _raise_power_exceeds_max(power, max_power, coordinator.generation)
 
                 # Validate target SOC against emergency SOC threshold
-                emergency_soc = await coordinator.async_get_emergency_soc()
+                emergency_soc = coordinator.async_get_emergency_soc()
                 if target_soc < emergency_soc:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
@@ -195,14 +195,16 @@ async def _async_get_coordinators_from_call(
     return coordinators
 
 
-def _process_coordinator_results(coordinators, results):
+def _process_coordinator_results(
+    coordinators: list[IndevoltCoordinator], results: list[BaseException | None]
+) -> None:
     """Log per-device results and raise consolidated exception on failure."""
     exceptions = []
 
     for coordinator, result in zip(coordinators, results, strict=True):
         if isinstance(result, Exception):
             _LOGGER.error("Coordinator %s failed: %s", coordinator.name, result)
-            exceptions.append(f"{coordinator.name}: {result}")
+            exceptions.append(f"{coordinator.friendly_name}: {result}")
 
     if exceptions:
         raise HomeAssistantError("Some coordinators failed: " + "; ".join(exceptions))
