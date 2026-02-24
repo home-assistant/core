@@ -261,6 +261,11 @@
           "supporter": "Supporter"
         }
       }
+    },
+    "update": {
+      "update": {
+        "name": "ntfy version"
+      }
     }
   },
   "exceptions": {
