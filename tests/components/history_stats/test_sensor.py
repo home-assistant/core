@@ -2494,3 +2494,84 @@ async def test_measure_multiple_with_min_state_duration(
     assert hass.states.get("sensor.sensor1").state == "0.5"
     assert hass.states.get("sensor.sensor2").state == "1"
     assert hass.states.get("sensor.sensor3").state == "50.0"
+
+
+async def test_open_block_precision_same_second(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test open block precision."""
+
+    await hass.config.async_set_time_zone("UTC")
+
+    base = dt_util.utcnow().replace(microsecond=0)
+    state_change_time = base + timedelta(microseconds=500)
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.precision": [
+                ha.State(
+                    "binary_sensor.precision",
+                    "on",
+                    last_changed=state_change_time,
+                    last_updated=state_change_time,
+                ),
+            ]
+        }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(base),
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.precision",
+                        "name": "precision_count",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(microsecond=0) }}",
+                        "duration": {"minutes": 5},
+                        "min_state_duration": 0,
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.precision",
+                        "name": "precision_time",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(microsecond=0) }}",
+                        "duration": {"minutes": 5},
+                        "min_state_duration": 0,
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.precision",
+                        "name": "precision_ratio",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(microsecond=0) }}",
+                        "duration": {"minutes": 5},
+                        "min_state_duration": 0,
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, "sensor.precision_count")
+        await hass.async_block_till_done()
+
+    with freeze_time(base):
+        async_fire_time_changed(hass, base)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.precision_count").state == "1"
+    assert hass.states.get("sensor.precision_time").state == "0.0"
+    assert hass.states.get("sensor.precision_ratio").state == "0.0"
