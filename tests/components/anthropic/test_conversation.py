@@ -8,7 +8,6 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
-    ThinkingBlock,
     WebSearchResultBlock,
 )
 from freezegun import freeze_time
@@ -540,7 +539,7 @@ async def test_extended_thinking(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
             CONF_THINKING_BUDGET: 1500,
         },
     )
@@ -689,7 +688,7 @@ async def test_extended_thinking_tool_call(
                 [
                     "The user asked me to",
                     " call a test function.",
-                    "Is it a test? What",
+                    " Is it a test? What",
                     " would the function",
                     " do? Would it violate",
                     " any privacy or security",
@@ -793,12 +792,21 @@ async def test_web_search(
                 ["", '{"que', 'ry"', ": \"today's", ' news"}'],
             ),
             *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
-            *create_content_block(
+            # Test interleaved thinking (a thinking content after a tool call):
+            *create_thinking_block(
                 4,
-                ["Here's what I found on the web about today's news:\n", "1. "],
+                ["Great! All clear, let's reply to the user!"],
             ),
             *create_content_block(
                 5,
+                ["Here's what I found on the web about today's news:\n"],
+            ),
+            *create_content_block(
+                6,
+                ["1. "],
+            ),
+            *create_content_block(
+                7,
                 ["New Home Assistant release"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -810,9 +818,9 @@ async def test_web_search(
                     )
                 ],
             ),
-            *create_content_block(6, ["\n2. "]),
+            *create_content_block(8, ["\n2. "]),
             *create_content_block(
-                7,
+                9,
                 ["Something incredible happened"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -832,7 +840,7 @@ async def test_web_search(
                 ],
             ),
             *create_content_block(
-                8, ["\nThose are the main headlines making news today."]
+                10, ["\nThose are the main headlines making news today."]
             ),
         )
     ]
@@ -850,6 +858,7 @@ async def test_web_search(
     )
     # Don't test the prompt because it's not deterministic
     assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
 @pytest.mark.parametrize(
@@ -938,9 +947,7 @@ async def test_web_search(
                 agent_id="conversation.claude_conversation",
                 content="To get today's news, I'll perform a web search",
                 thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
-                native=ThinkingBlock(
-                    signature="ErU/V+ayA==", thinking="", type="thinking"
-                ),
+                native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                 tool_calls=[
                     llm.ToolInput(
                         id="srvtoolu_12345ABC",
