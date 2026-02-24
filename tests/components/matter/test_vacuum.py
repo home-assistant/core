@@ -1,17 +1,17 @@
 """Test Matter vacuum."""
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -19,6 +19,8 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -310,37 +312,65 @@ async def test_vacuum_actions_no_supported_run_modes(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
-async def test_vacuum_clean_area(
+async def test_vacuum_get_segments(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test vacuum clean_area action."""
-    # Fetch translations
+    """Test vacuum get_segments websocket command."""
     await async_setup_component(hass, "homeassistant", {})
     entity_id = "vacuum.mock_vacuum"
     state = hass.states.get(entity_id)
     assert state
 
-    # Verify CLEAN_AREA feature is supported
-    # Get the entity component to access entity
-    component = hass.data["vacuum"]
-    entity = component.get_entity(entity_id)
-    assert entity is not None
-    assert VacuumEntityFeature.CLEAN_AREA in entity.supported_features
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": entity_id}
+    )
 
-    # Get segments from the entity
-    segments = await entity.async_get_segments()
+    msg = await client.receive_json()
+    assert msg["success"]
+    segments = msg["result"]["segments"]
     assert len(segments) == 3
-    assert segments[0].id == "7"
-    assert segments[0].name == "My Location A"
-    assert segments[1].id == "1234567"
-    assert segments[1].name == "My Location B"
-    assert segments[2].id == "2290649224"
-    assert segments[2].name == "My Location C"
+    assert segments[0] == {"id": "7", "name": "My Location A", "group": None}
+    assert segments[1] == {"id": "1234567", "name": "My Location B", "group": None}
+    assert segments[2] == {"id": "2290649224", "name": "My Location C", "group": None}
 
-    # Test clean_segments method directly
-    await entity.async_clean_segments(["7", "1234567"])
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_clean_area(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum clean_area service action."""
+    await async_setup_component(hass, "homeassistant", {})
+    entity_id = "vacuum.mock_vacuum"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Set up area_mapping so the service can map area IDs to segment IDs
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_1": ["7", "1234567"]},
+            "last_seen_segments": [
+                {"id": "7", "name": "My Location A", "group": None},
+                {"id": "1234567", "name": "My Location B", "group": None},
+                {"id": "2290649224", "name": "My Location C", "group": None},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        "clean_area",
+        {"entity_id": entity_id, "cleaning_area_id": ["area_1"]},
+        blocking=True,
+    )
 
     # Verify both commands were sent: SelectAreas followed by ChangeToMode
     assert matter_client.send_device_command.call_count == 2
@@ -361,17 +391,16 @@ async def test_vacuum_clean_area(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
-async def test_vacuum_create_segments_issue_when_segments_changed(
+async def test_vacuum_raise_segments_changed_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test segments issue callback is triggered when segments changed."""
+    """Test that issue is raised on segments change."""
     entity_id = "vacuum.mock_vacuum"
-    component = hass.data["vacuum"]
-    entity = component.get_entity(entity_id)
-    assert entity is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
 
     entity_registry.async_update_entity_options(
         entity_id,
@@ -387,8 +416,11 @@ async def test_vacuum_create_segments_issue_when_segments_changed(
         },
     )
 
-    with patch.object(entity, "async_create_segments_issue") as mock_create_issue:
-        set_node_attribute(matter_node, 1, 97, 4, 0x02)
-        await trigger_subscription_callback(hass, matter_client)
+    set_node_attribute(matter_node, 1, 97, 4, 0x02)
+    await trigger_subscription_callback(hass, matter_client)
 
-    assert mock_create_issue.call_count >= 1
+    issue_reg = ir.async_get(hass)
+    issue = issue_reg.async_get_issue(
+        VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
+    )
+    assert issue is not None
