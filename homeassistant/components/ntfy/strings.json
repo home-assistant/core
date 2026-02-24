@@ -394,7 +394,7 @@
       "name": "Delete notification"
     },
     "publish": {
-      "description": "Publishes a notification message to a ntfy topic",
+      "description": "Publishes a notification message to a ntfy topic.",
       "fields": {
         "actions": {
           "description": "Up to three actions (`view`, `broadcast`, `http`, or `copy`) can be added as buttons below the notification. Actions are executed when the corresponding button is tapped or clicked.",
