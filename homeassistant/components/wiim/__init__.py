@@ -245,4 +245,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> boo
         if not hass.config_entries.async_loaded_entries(DOMAIN):
             hass.data.pop(DOMAIN, None)
             SDK_LOGGER.info("Last WiiM entry unloaded, cleaning up domain data.")
-    return unload_ok
+    return True
