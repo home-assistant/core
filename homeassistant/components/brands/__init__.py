@@ -111,7 +111,6 @@ class _BrandsBaseView(HomeAssistantView):
     """Base view for serving brand images."""
 
     requires_auth = False
-    cors_allowed = True
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the view."""
