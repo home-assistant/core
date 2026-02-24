@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 from env_canada import ECMap
 import voluptuous as vol
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
@@ -85,15 +84,13 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         # Map radar type to layer, implementing auto logic
         if self._layer_setting == "auto":
             # Choose rain for months April through October, snow otherwise
-            layer = "rain" if date.today().month in range(4, 11) else "snow"
+            layer = "rain" if dt_util.now().month in range(4, 11) else "snow"
         elif self._layer_setting == "precip type":
             layer = "precip_type"
         else:
             layer = self._layer_setting
 
-        # Clear cache to force refresh with new layer
-        self.radar_object.clear_cache()
+        # Apply new layer and clear cache to force refresh
         self.radar_object.layer = layer
         self.radar_object.clear_cache()
-        self.radar_object.precip_type = radar_type.lower()
-        await self.radar_object.update()
+        await self.coordinator.async_request_refresh()

@@ -1,6 +1,6 @@
 """Test Environment Canada camera."""
 
-from datetime import date
+from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.environment_canada.camera import SERVICE_SET_RADAR_TYPE
 from homeassistant.components.environment_canada.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import UTC
 
 from . import init_integration
 
@@ -22,6 +23,7 @@ async def test_camera_entity(hass: HomeAssistant, ec_data: dict[str, Any]) -> No
     assert state is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_radar_type_rain(
     hass: HomeAssistant, ec_data: dict[str, Any]
 ) -> None:
@@ -41,6 +43,7 @@ async def test_set_radar_type_rain(
     radar_mock.update.assert_called()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_radar_type_snow(
     hass: HomeAssistant, ec_data: dict[str, Any]
 ) -> None:
@@ -60,6 +63,7 @@ async def test_set_radar_type_snow(
     radar_mock.update.assert_called()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_radar_type_precip_type(
     hass: HomeAssistant, ec_data: dict[str, Any]
 ) -> None:
@@ -82,6 +86,7 @@ async def test_set_radar_type_precip_type(
     radar_mock.update.assert_called()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("month", "expected_layer"),
     [
@@ -110,7 +115,10 @@ async def test_set_radar_type_auto(
     radar_coordinator = config_entry.runtime_data.radar_coordinator
     radar_mock = radar_coordinator.ec_data
 
-    with patch.object(date, "today", return_value=date(2024, month, 15)):
+    with patch(
+        "homeassistant.components.environment_canada.camera.dt_util.now",
+        return_value=datetime(2024, month, 15, tzinfo=UTC),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_RADAR_TYPE,
@@ -122,6 +130,7 @@ async def test_set_radar_type_auto(
     radar_mock.update.assert_called()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_radar_type_clears_cache(
     hass: HomeAssistant, ec_data: dict[str, Any]
 ) -> None:
