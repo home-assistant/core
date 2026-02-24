@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 CONF_PATH_ZMS = "path_zms"
 
@@ -180,29 +179,27 @@ def create_mock_zm_client(
 
 
 @pytest.fixture
-def mock_zm_client():
-    """Return a factory for creating mock ZM clients."""
-    return create_mock_zm_client
-
-
-@pytest.fixture
-async def setup_zm(
-    hass: HomeAssistant, single_server_config, two_monitors
-) -> MagicMock:
-    """Set up the ZoneMinder component with mocked client and monitors.
-
-    Returns the mock ZM client for further assertions.
-    """
-    client = create_mock_zm_client(monitors=two_monitors)
-
+def mock_zoneminder_client(two_monitors: list[MagicMock]) -> Generator[MagicMock]:
+    """Mock a ZoneMinder client."""
     with patch(
         "homeassistant.components.zoneminder.ZoneMinder",
-        return_value=client,
-    ):
-        assert await async_setup_component(hass, DOMAIN, single_server_config)
-        await hass.async_block_till_done()
+        autospec=True,
+    ) as mock_cls:
+        client = mock_cls.return_value
+        client.login.return_value = True
+        client.get_monitors.return_value = two_monitors
+        client.get_active_state.return_value = "Running"
+        client.set_active_state.return_value = True
 
-    return client
+        # is_available and verify_ssl are properties in zm-py
+        type(client).is_available = PropertyMock(return_value=True)
+        type(client).verify_ssl = PropertyMock(return_value=True)
+
+        # Expose the class mock so tests can inspect constructor call_args
+        # without needing their own inline patch block.
+        client.mock_cls = mock_cls
+
+        yield client
 
 
 @pytest.fixture
