@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
         http_api = WiimApiEndpoint(
             protocol="https", port=443, endpoint=host, session=sessions
         )
-        ha_host_ip = None
+        ha_host_ip: str | None = None
 
         if hass.config.internal_url:
             if isinstance(hass.config.internal_url, str) and hass.config.internal_url:
