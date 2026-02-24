@@ -50,7 +50,8 @@ async def test_sensor_return_value_enum_sensor(
 
     state = hass.states.get("sensor.nano_color_2_ventilation_alarm")
     assert state is not None
-    assert state.state == mock_return_value if mock_return_value else "unknown"
+    expected_state = mock_return_value or "unknown"
+    assert state.state == expected_state
 
 
 async def test_sensor_enum_value_cannot_return_number(
@@ -90,7 +91,10 @@ async def test_sensor_return_value_number_sensor(
 
     state = hass.states.get("sensor.r_900_calculated_buffer_temperature")
     assert state is not None
-    assert state.state == str(mock_return_value) if mock_return_value else "unknown"
+    expected_state = (
+        str(mock_return_value) if mock_return_value is not None else "unknown"
+    )
+    assert state.state == expected_state
 
 
 async def test_sensor_number_value_cannot_return_enum(

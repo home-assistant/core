@@ -373,8 +373,14 @@
       "set_target_temperature": {
         "name": "Set target temperature"
       },
-      "tank_temperature": {
-        "name": "Tank {sensor} temperature"
+      "tank_temperature_t2": {
+        "name": "Tank T2 bottom temperature"
+      },
+      "tank_temperature_t3": {
+        "name": "Tank T3 top temperature"
+      },
+      "tank_temperature_t4": {
+        "name": "Tank T4 temperature"
       },
       "target_heating_temperature": {
         "name": "Target heating temperature"

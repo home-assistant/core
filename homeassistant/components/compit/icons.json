@@ -199,7 +199,7 @@
       "energy_consumption": {
         "default": "mdi:lightning-bolt"
       },
-      "energy_sgready_yesterday": {
+      "energy_smart_grid_yesterday": {
         "default": "mdi:lightning-bolt"
       },
       "energy_today": {
@@ -253,7 +253,13 @@
       "return_circuit_temperature": {
         "default": "mdi:thermometer"
       },
-      "tank_temperature": {
+      "tank_temperature_t2": {
+        "default": "mdi:thermometer"
+      },
+      "tank_temperature_t3": {
+        "default": "mdi:thermometer"
+      },
+      "tank_temperature_t4": {
         "default": "mdi:thermometer"
       },
       "target_heating_temperature": {
