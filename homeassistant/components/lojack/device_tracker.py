@@ -66,9 +66,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
             identifiers={(DOMAIN, vehicle.device_id)},
             name=self._device_name,
             manufacturer="Spireon LoJack",
-            model=f"{vehicle.make} {vehicle.model}"
-            if vehicle.make and vehicle.model
-            else vehicle.make,
+            model=vehicle.model if vehicle.model else None,
             serial_number=vehicle.vin,
         )
 

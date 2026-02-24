@@ -23,7 +23,7 @@
     ),
     is_new=False,
     manufacturer='Spireon LoJack',
-    model='2021 Honda Accord',
+    model='Accord',
     name='My Car',
     name_by_user=None,
     serial_number='1HGBH41JXMN109186',
