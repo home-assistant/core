@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         """Scan for new devices added to the account."""
         try:
             devices = await client.get_devices()
-        except LiebherrAuthenticationError, LiebherrConnectionError:
+        except (LiebherrAuthenticationError, LiebherrConnectionError):
             _LOGGER.debug("Failed to scan for new devices")
             return
 
