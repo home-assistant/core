@@ -13,6 +13,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     SERVICE_TURN_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
@@ -1795,4 +1796,8 @@ async def test_trigger_on_none(
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
+    # Check the automation setup successfully
+    assert hass.states.get("automation.automation_0").state == STATE_ON
+    assert hass.states.get("automation.automation_0").attributes.get("current") == 0
+    # Check that the automation has never triggered
     assert len(service_calls) == 0
