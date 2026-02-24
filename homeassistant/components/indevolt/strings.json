@@ -331,8 +331,8 @@
           "name": "Mode"
         },
         "target": {
-          "description": "The Indevolt device(s) to change the energy mode on.",
-          "name": "Target"
+          "description": "The Indevolt device to change the energy mode on.",
+          "name": "Device"
         }
       },
       "name": "Change mode"
@@ -342,11 +342,11 @@
       "fields": {
         "power": {
           "description": "Maximum charging power in watts.",
-          "name": "Max. Power"
+          "name": "Max. power"
         },
         "target": {
-          "description": "The Indevolt device(s) to start charging.",
-          "name": "Target"
+          "description": "The Indevolt device to start charging.",
+          "name": "Device"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -360,11 +360,11 @@
       "fields": {
         "power": {
           "description": "Maximum discharging power in watts.",
-          "name": "Max. Power"
+          "name": "Max. power"
         },
         "target": {
-          "description": "The Indevolt device(s) to start discharging.",
-          "name": "Target"
+          "description": "The Indevolt device to start discharging.",
+          "name": "Device"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -377,8 +377,8 @@
       "description": "Real-time control: Stops battery charging/discharging.",
       "fields": {
         "target": {
-          "description": "The Indevolt device(s) to stop charging or discharging.",
-          "name": "Target"
+          "description": "The Indevolt device to stop charging or discharging.",
+          "name": "Device"
         }
       },
       "name": "Stop"
