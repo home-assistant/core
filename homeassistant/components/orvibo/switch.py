@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DEFAULT_NAME, DOMAIN
-from .util import S20ConfigEntry
+from .models import S20ConfigEntry
 
 DEFAULT_DISCOVERY = False
 

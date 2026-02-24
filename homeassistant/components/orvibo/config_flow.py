@@ -1,4 +1,4 @@
-"""The orvibo component."""
+"""Config flow for the orvibo integration."""
 
 import asyncio
 import logging
@@ -42,7 +42,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         self.chosen_switch: dict[str, Any] = {}
 
     async def _async_discover(self) -> None:
-        async def _filter_discovered_switches(
+        def _filter_discovered_switches(
             switches: dict[str, dict[str, Any]],
         ) -> dict[str, dict[str, Any]]:
             # Get existing unique_ids from config entries
@@ -67,9 +67,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         _unfiltered_switches = await self.hass.async_add_executor_job(discover)
         _LOGGER.debug("All discovered switches: %s", _unfiltered_switches)
 
-        self._discovered_switches = await _filter_discovered_switches(
-            _unfiltered_switches
-        )
+        self._discovered_switches = _filter_discovered_switches(_unfiltered_switches)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,7 +78,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", menu_options=["start_discovery", "edit"]
         )
 
-    async def _input_error(self, user_input: dict[str, Any]) -> str | None:
+    async def _validate_input(self, user_input: dict[str, Any]) -> str | None:
         """Validate user input."""
         if not user_input[CONF_MAC]:
             return "cannot_discover"
@@ -102,7 +100,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_edit(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Edit a discovered or manually inputted server."""
+        """Edit a discovered or manually configured server."""
 
         errors = {}
         if user_input:
@@ -115,7 +113,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_MAC] = (
                 format_mac(user_input[CONF_MAC]) if user_input.get(CONF_MAC) else None
             )
-            error = await self._input_error(user_input)
+            error = await self._validate_input(user_input)
             if not error:
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
@@ -207,7 +205,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             format_mac(user_input[CONF_MAC]) if user_input.get(CONF_MAC) else None
         )
 
-        error = await self._input_error(user_input)
+        error = await self._validate_input(user_input)
         if error:
             return self.async_abort(reason=error)
 

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
-from .util import S20ConfigEntry, S20Data
+from .models import S20ConfigEntry, S20Data
 
 PLATFORMS = [Platform.SWITCH]
 
