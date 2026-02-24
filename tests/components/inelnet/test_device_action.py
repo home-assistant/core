@@ -339,6 +339,33 @@ async def test_get_actions_returns_empty_when_runtime_data_has_no_host(
     assert actions == []
 
 
+async def test_get_actions_uses_fallback_inelnet_channel_when_channel_not_in_clients(
+    hass: HomeAssistant,
+) -> None:
+    """Test get_actions uses InelnetChannel(host, channel) when channel not in runtime_data.clients."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="inelnet-fallback-entry",
+        data={"host": "192.168.1.99", "channels": [1]},
+    )
+    entry.runtime_data = InelnetRuntimeData(
+        host="192.168.1.99",
+        channels=[1],
+        clients={},  # Empty clients -> fallback to InelnetChannel(host, channel)
+    )
+    entry.add_to_hass(hass)
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "inelnet-fallback-entry-ch1")},
+        name="INELNET channel 1",
+    )
+    actions = await async_get_actions(hass, device.id)
+    assert len(actions) == 3
+    types = {a["type"] for a in actions}
+    assert types == {ACTION_UP_SHORT, ACTION_DOWN_SHORT, ACTION_PROGRAM}
+
+
 async def test_call_action_from_config_no_op_when_type_invalid(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
