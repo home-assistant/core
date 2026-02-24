@@ -28,7 +28,7 @@ DEFAULT_TIMEOUT = 5
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PIN): vol.All(vol.Coerce(str), vol.Match(r"\d{4}")),
+        vol.Required(CONF_PIN): cv.string,
         vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
