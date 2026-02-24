@@ -905,7 +905,7 @@
       "iot_class": "local_polling"
     },
     "bsblan": {
-      "name": "BSB-Lan",
+      "name": "BSB-LAN",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"

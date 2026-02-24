@@ -1,4 +1,4 @@
-"""Constants for the BSB-Lan integration."""
+"""Constants for the BSB-LAN integration."""
 
 from __future__ import annotations
 

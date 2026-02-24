@@ -1,4 +1,4 @@
-"""Support for BSB-Lan services."""
+"""Support for BSB-LAN services."""
 
 from __future__ import annotations
 
@@ -192,7 +192,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     )
 
     try:
-        # Call the BSB-Lan API to set the schedule
+        # Call the BSB-LAN API to set the schedule
         await client.set_hot_water_schedule(dhw_schedule)
     except BSBLANError as err:
         raise HomeAssistantError(
@@ -275,7 +275,7 @@ SYNC_TIME_SCHEMA = vol.Schema(
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the BSB-Lan services."""
+    """Register the BSB-LAN services."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_HOT_WATER_SCHEDULE,
