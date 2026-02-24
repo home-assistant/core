@@ -1,8 +1,9 @@
-"""Support managing StatesMeta."""
+"""Support managing StatisticsMeta."""
 
 from __future__ import annotations
 
 import logging
+from queue import SimpleQueue
 import threading
 from typing import TYPE_CHECKING, Any, Final, Literal
 
@@ -88,11 +89,35 @@ class StatisticsMetaManager:
         self._stat_id_to_id_meta: LRU[str, tuple[int, StatisticMetaData]] = LRU(
             CACHE_SIZE
         )
+        # Thread-safe queue for statistic_id renames from the event loop.
+        # Items are (old_statistic_id, new_statistic_id) tuples.
+        self._rename_queue: SimpleQueue[tuple[str, str]] = SimpleQueue()
+        # Recorder-thread-only dict mapping new_statistic_id -> old_statistic_id
+        # for renames that haven't been applied to the database yet.
+        self._pending_rename: dict[str, str] = {}
 
     def _clear_cache(self, statistic_ids: list[str]) -> None:
         """Clear the cache."""
         for statistic_id in statistic_ids:
             self._stat_id_to_id_meta.pop(statistic_id, None)
+
+    def queue_rename(self, old_statistic_id: str, new_statistic_id: str) -> None:
+        """Queue a statistic_id rename notification.
+
+        This method is thread-safe and is called from the event loop
+        to notify the recorder thread about a pending statistic_id rename.
+        """
+        self._rename_queue.put((old_statistic_id, new_statistic_id))
+
+    def drain_pending_renames(self) -> None:
+        """Drain the rename queue into the pending rename dict.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        while not self._rename_queue.empty():
+            old_statistic_id, new_statistic_id = self._rename_queue.get_nowait()
+            self._pending_rename[new_statistic_id] = old_statistic_id
 
     def _get_from_database(
         self,
@@ -293,9 +318,28 @@ class StatisticsMetaManager:
             return results
 
         # Fetch metadata from the database
-        return results | self._get_from_database(
-            session, statistic_ids=missing_statistic_id
-        )
+        results |= self._get_from_database(session, statistic_ids=missing_statistic_id)
+
+        # Check pending renames for any statistic_ids still not resolved.
+        # If a statistic_id was renamed but the database hasn't been
+        # updated yet, resolve the new statistic_id using the old one.
+        if self.recorder.thread_id == threading.get_ident() and (
+            pending_rename := self._pending_rename
+        ):
+            for statistic_id in missing_statistic_id:
+                if (
+                    statistic_id not in results
+                    and (old_id := pending_rename.get(statistic_id)) is not None
+                ):
+                    # Try cache first, then database for the old statistic_id
+                    if id_meta := self._stat_id_to_id_meta.get(old_id):
+                        results[statistic_id] = id_meta
+                    elif db_result := self._get_from_database(
+                        session, statistic_ids={old_id}
+                    ):
+                        results[statistic_id] = next(iter(db_result.values()))
+
+        return results
 
     def get_from_cache_threadsafe(
         self, statistic_ids: set[str]
@@ -377,6 +421,9 @@ class StatisticsMetaManager:
         recorder thread.
         """
         self._assert_in_recorder_thread()
+        # Clear the pending rename before the collision check so
+        # get() doesn't resolve new_statistic_id via the side channel.
+        self._pending_rename.pop(new_statistic_id, None)
         if self.get(session, new_statistic_id):
             _LOGGER.error(
                 "Cannot rename statistic_id `%s` to `%s` because the new statistic_id is already in use",

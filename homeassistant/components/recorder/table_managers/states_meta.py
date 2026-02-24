@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from queue import SimpleQueue
 from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
@@ -27,7 +28,31 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the states meta manager."""
         self._did_first_load = False
+        # Thread-safe queue for entity_id renames from the event loop.
+        # Items are (old_entity_id, new_entity_id) tuples.
+        self._rename_queue: SimpleQueue[tuple[str, str]] = SimpleQueue()
+        # Recorder-thread-only dict mapping new_entity_id -> old_entity_id
+        # for renames that haven't been applied to the database yet.
+        self._pending_rename: dict[str, str] = {}
         super().__init__(recorder, CACHE_SIZE)
+
+    def queue_rename(self, old_entity_id: str, new_entity_id: str) -> None:
+        """Queue an entity_id rename notification.
+
+        This method is thread-safe and is called from the event loop
+        to notify the recorder thread about a pending entity_id rename.
+        """
+        self._rename_queue.put((old_entity_id, new_entity_id))
+
+    def drain_pending_renames(self) -> None:
+        """Drain the rename queue into the pending rename dict.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        while not self._rename_queue.empty():
+            old_entity_id, new_entity_id = self._rename_queue.get_nowait()
+            self._pending_rename[new_entity_id] = old_entity_id
 
     def load(
         self, events: list[Event[EventStateChangedData]], session: Session
@@ -117,6 +142,21 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
                     if update_cache:
                         self._id_map[entity_id] = metadata_id
 
+        if not from_recorder:
+            return results
+
+        # Check pending renames for any entity_ids still not resolved.
+        # If an entity_id was renamed but the database hasn't been updated
+        # yet, we can resolve the new entity_id by looking up the old one.
+        pending_rename = self._pending_rename
+        for entity_id in missing:
+            if (
+                results.get(entity_id) is None
+                and (old_entity_id := pending_rename.get(entity_id)) is not None
+                and (metadata_id := self._id_map.get(old_entity_id)) is not None
+            ):
+                results[entity_id] = metadata_id
+
         return results
 
     def add_pending(self, db_states_meta: StatesMeta) -> None:
@@ -155,12 +195,18 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         new_entity_id: str,
     ) -> bool:
         """Update states metadata for an entity_id."""
+        # Clear the pending rename before the collision check so
+        # get() doesn't resolve new_entity_id via the side channel.
+        self._pending_rename.pop(new_entity_id, None)
         if self.get(new_entity_id, session, True) is not None:
             # If the new entity id already exists we have
             # a collision and should not update.
             return False
+        metadata_id = self._id_map.get(entity_id)
         session.query(StatesMeta).filter(StatesMeta.entity_id == entity_id).update(
             {StatesMeta.entity_id: new_entity_id}
         )
         self._id_map.pop(entity_id, None)
+        if metadata_id is not None:
+            self._id_map[new_entity_id] = metadata_id
         return True

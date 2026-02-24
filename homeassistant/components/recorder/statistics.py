@@ -952,7 +952,13 @@ def async_update_statistics_metadata(
                 f"for unit_class '{new_unit_class}'"
             )
 
-    get_instance(hass).async_update_statistics_metadata(
+    instance = get_instance(hass)
+    # Notify the statistics meta manager about the pending rename so
+    # that any StatisticsTask that runs before the actual database
+    # update can still resolve the new statistic_id.
+    if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
+        instance.statistics_meta_manager.queue_rename(statistic_id, new_statistic_id)
+    instance.async_update_statistics_metadata(
         statistic_id,
         new_statistic_id=new_statistic_id,
         new_unit_class=new_unit_class,

@@ -28,6 +28,11 @@ def async_setup(hass: HomeAssistant) -> None:
             assert event.data["action"] == "update" and "old_entity_id" in event.data
         old_entity_id = event.data["old_entity_id"]
         new_entity_id = event.data["entity_id"]
+        # Notify the states meta manager about the pending rename so
+        # that any StatisticsTask that runs before the actual database
+        # update can still resolve the new entity_id to the correct
+        # metadata_id.
+        instance.states_meta_manager.queue_rename(old_entity_id, new_entity_id)
         async_update_statistics_metadata(
             hass, old_entity_id, new_statistic_id=new_entity_id
         )

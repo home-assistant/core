@@ -82,6 +82,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
+        instance.statistics_meta_manager.drain_pending_renames()
         statistics.update_statistics_metadata(
             instance,
             self.statistic_id,
@@ -102,6 +103,7 @@ class UpdateStatesMetadataTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
+        instance.states_meta_manager.drain_pending_renames()
         entity_registry.update_states_metadata(
             instance,
             self.entity_id,
@@ -169,6 +171,11 @@ class StatisticsTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
+        # Drain any pending entity_id/statistic_id renames so the
+        # compilation can resolve new ids that the database doesn't
+        # know about yet.
+        instance.states_meta_manager.drain_pending_renames()
+        instance.statistics_meta_manager.drain_pending_renames()
         if statistics.compile_statistics(instance, self.start, self.fire_events):
             return
         # Schedule a new statistics task if this one didn't finish
@@ -181,6 +188,8 @@ class CompileMissingStatisticsTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task to compile missing statistics."""
+        instance.states_meta_manager.drain_pending_renames()
+        instance.statistics_meta_manager.drain_pending_renames()
         if statistics.compile_missing_statistics(instance):
             return
         # Schedule a new statistics task if this one didn't finish
