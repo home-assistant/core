@@ -1784,7 +1784,7 @@
     },
     "enocean": {
       "name": "EnOcean",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -3754,7 +3754,7 @@
       "single_config_entry": true
     },
     "litterrobot": {
-      "name": "Litter-Robot",
+      "name": "Whisker",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -4414,6 +4414,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "myneomitis": {
+      "name": "MyNeomitis",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "mysensors": {
       "name": "MySensors",
@@ -7253,7 +7259,7 @@
       "name": "Twilio",
       "integrations": {
         "twilio": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Twilio"
@@ -7274,13 +7280,13 @@
     },
     "twinkly": {
       "name": "Twinkly",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "twitch": {
       "name": "Twitch",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7362,7 +7368,7 @@
     },
     "ukraine_alarm": {
       "name": "Ukraine Alarm",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7386,7 +7392,7 @@
     },
     "upcloud": {
       "name": "UpCloud",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7415,7 +7421,7 @@
     },
     "uptimerobot": {
       "name": "UptimeRobot",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7433,7 +7439,7 @@
     },
     "v2c": {
       "name": "V2C",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7444,7 +7450,7 @@
     },
     "vallox": {
       "name": "Vallox",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7473,7 +7479,7 @@
     },
     "venstar": {
       "name": "Venstar",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7542,13 +7548,13 @@
     },
     "vilfo": {
       "name": "Vilfo Router",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "vivotek": {
       "name": "VIVOTEK",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7568,7 +7574,7 @@
           "name": "VLC media player"
         },
         "vlc_telnet": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "VLC media player via Telnet"
@@ -7601,7 +7607,7 @@
     },
     "volumio": {
       "name": "Volumio",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7631,13 +7637,13 @@
     },
     "wallbox": {
       "name": "Wallbox",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "waqi": {
       "name": "World Air Quality Index (WAQI)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8061,6 +8067,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "zinvolt": {
+      "name": "Zinvolt",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "zodiac": {
       "integration_type": "hub",

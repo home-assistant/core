@@ -173,9 +173,12 @@
           "max": "Max",
           "medium": "[%key:common::state::medium%]",
           "mild": "Mild",
+          "min": "Min",
           "moderate": "Moderate",
           "off": "[%key:common::state::off%]",
+          "slight": "Slight",
           "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
+          "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
           "vac_followed_by_mop": "Vacuum followed by mop"
         }
       },
@@ -626,6 +629,7 @@
               "max_plus": "Max plus",
               "medium": "[%key:common::state::medium%]",
               "off": "[%key:common::state::off%]",
+              "off_raise_main_brush": "Off (raised brush)",
               "quiet": "Quiet",
               "silent": "Silent",
               "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
@@ -659,6 +663,9 @@
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
     },
+    "multiple_maps_in_clean": {
+      "message": "All segments must belong to the same map. Got segments from maps: {map_flags}"
+    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
@@ -667,6 +674,9 @@
     },
     "position_not_found": {
       "message": "Robot position not found"
+    },
+    "segment_id_parse_error": {
+      "message": "Invalid segment ID format: {segment_id}"
     },
     "select_option_failed": {
       "message": "Failed to set selected option"
