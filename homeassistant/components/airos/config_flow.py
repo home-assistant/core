@@ -39,6 +39,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     DEFAULT_SSL,
@@ -391,6 +392,43 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
             pass
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Automatically handle a DHCP discovered IP change."""
+        ip_address = discovery_info.ip
+        # python-airos defaults to upper for derived mac_address
+        mac_address = discovery_info.macaddress.upper()
+        normalized_mac = ":".join(mac_address[i : i + 2] for i in range(0, 12, 2))
+        await self.async_set_unique_id(normalized_mac)
+
+        current_entry = next(
+            (
+                entry
+                for entry in self._async_current_entries()
+                if entry.unique_id == normalized_mac
+            ),
+            None,
+        )
+        if current_entry is None:
+            return self.async_abort(reason="no_devices_found")
+
+        if current_entry.data[CONF_HOST] == ip_address:
+            return self.async_abort(reason="already_configured")
+
+        updated_data = {**current_entry.data, CONF_HOST: ip_address}
+
+        self.hass.config_entries.async_update_entry(current_entry, data=updated_data)
+        await self.hass.config_entries.async_reload(current_entry.entry_id)
+
+        _LOGGER.info(
+            "DHCP airOS device with mac address %s has new ip address %s, updating config entry accordingly",
+            normalized_mac,
+            ip_address,
+        )
+
+        return self.async_abort(reason="reconfigure_successful")
 
     async def async_step_discovery_no_devices(
         self, user_input: dict[str, Any] | None = None
