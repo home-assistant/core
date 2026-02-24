@@ -32,7 +32,7 @@
   },
   "entity": {
     "light": {
-      "light_1": {
+      "light": {
         "name": "Light"
       }
     },

@@ -34,8 +34,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light_1',
-    'unique_id': 'aabbccddee01-light_1',
+    'translation_key': 'light',
+    'unique_id': 'aabbccddee01-light',
     'unit_of_measurement': None,
   })
 # ---
