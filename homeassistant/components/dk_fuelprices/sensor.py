@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -28,14 +27,6 @@ SENSORS = [
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         icon="mdi:gas-station",
-    ),
-    SensorEntityDescription(
-        key="last_updated",
-        name="Last Updated",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:clock-outline",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
