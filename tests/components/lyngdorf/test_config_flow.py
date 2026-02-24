@@ -8,10 +8,17 @@ import pytest
 
 from homeassistant.components import ssdp
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -160,3 +167,99 @@ async def test_manual_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+
+async def test_ssdp_discovery(hass: HomeAssistant) -> None:
+    """Test successful SSDP discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.100/desc.xml",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+                ATTR_UPNP_MODEL_NAME: "MP-60",
+                ATTR_UPNP_SERIAL: "123456",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = result["result"]
+    assert config_entry.unique_id == "123456"
+    assert config_entry.title == "Living Room"
+    assert config_entry.data[CONF_HOST] == "192.168.1.100"
+    assert config_entry.data[CONF_SERIAL_NUMBER] == "123456"
+
+
+async def test_ssdp_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test SSDP discovery aborts when device is already configured."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
+        data={CONF_HOST: "192.168.1.50"},
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.100/desc.xml",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+                ATTR_UPNP_MODEL_NAME: "MP-60",
+                ATTR_UPNP_SERIAL: "123456",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_discovery_no_serial(hass: HomeAssistant) -> None:
+    """Test SSDP discovery without serial uses model:host as unique ID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.100/desc.xml",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+                ATTR_UPNP_MODEL_NAME: "MP-60",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = result["result"]
+    assert config_entry.unique_id == "MP-60:192.168.1.100"
+    assert config_entry.title == "Living Room"
+    assert config_entry.data[CONF_HOST] == "192.168.1.100"
+    assert CONF_SERIAL_NUMBER not in config_entry.data
