@@ -24,14 +24,14 @@
       },
       "product_selection": {
         "data": {
-          "Blyfri95": "Blyfri95",
-          "Blyfri98": "Blyfri98",
+          "Blyfri95": "Blyfri 95",
+          "Blyfri98": "Blyfri 98",
           "Diesel": "Diesel",
           "products": "Vælg produkt(er)"
         },
         "data_description": {
-          "Blyfri95": "Vis sensor for Blyfri95",
-          "Blyfri98": "Vis sensor for Blyfri98",
+          "Blyfri95": "Vis sensor for Blyfri 95",
+          "Blyfri98": "Vis sensor for Blyfri 98",
           "Diesel": "Vis sensor for Diesel"
         },
         "description": "Vælg de produkter du vil have priser for - der oprettes 1 sensor pr. produkt"
