@@ -12,7 +12,7 @@ from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
-from .const import DOMAIN, ENERGY_MODES, POWER_LIMITS
+from .const import DOMAIN, POWER_LIMITS
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 CHARGE_SERVICE_SCHEMA = vol.Schema(
@@ -41,33 +41,9 @@ STOP_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-CHANGE_MODE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("target"): vol.All(
-            cv.ensure_list,
-            [cv.string],
-        ),
-        vol.Required("energy_mode"): vol.In(list(ENERGY_MODES.keys())),
-    }
-)
-
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Indevolt integration."""
-
-    async def set_mode(call: ServiceCall) -> None:
-        """Handle the service call to change the energy mode."""
-        coordinators = await _async_get_coordinators_from_call(hass, call)
-
-        mode_str = call.data["energy_mode"]
-        mode = ENERGY_MODES[mode_str]
-
-        await asyncio.gather(
-            *(
-                coordinator.async_switch_energy_mode(mode)
-                for coordinator in coordinators
-            )
-        )
 
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
@@ -157,9 +133,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, "discharge", discharge, schema=CHARGE_SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "change_energy_mode", set_mode, schema=CHANGE_MODE_SERVICE_SCHEMA
     )
 
 

@@ -313,30 +313,7 @@
       "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
     }
   },
-  "selector": {
-    "energy_mode": {
-      "options": {
-        "charge_discharge_schedule": "Charge/discharge schedule",
-        "real_time_control": "Real-time control",
-        "self_consumed_prioritized": "Self-consumed prioritized"
-      }
-    }
-  },
   "services": {
-    "change_energy_mode": {
-      "description": "Changes the device energy mode.",
-      "fields": {
-        "energy_mode": {
-          "description": "Energy mode to activate.",
-          "name": "Mode"
-        },
-        "target": {
-          "description": "The Indevolt device to change the energy mode on.",
-          "name": "Device"
-        }
-      },
-      "name": "Change mode"
-    },
     "charge": {
       "description": "Real-time control: Starts charging with configured power till the target SOC is reached.",
       "fields": {
@@ -346,7 +323,7 @@
         },
         "target": {
           "description": "The Indevolt device to start charging.",
-          "name": "[%key:component::indevolt::services::change_energy_mode::fields::target::name%]"
+          "name": "Device"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -364,7 +341,7 @@
         },
         "target": {
           "description": "The Indevolt device to start discharging.",
-          "name": "[%key:component::indevolt::services::change_energy_mode::fields::target::name%]"
+          "name": "[%key:component::indevolt::services::charge::fields::target::name%]"
         },
         "target_soc": {
           "description": "[%key:component::indevolt::services::charge::fields::target_soc::description%]",
@@ -378,7 +355,7 @@
       "fields": {
         "target": {
           "description": "The Indevolt device to stop charging or discharging.",
-          "name": "[%key:component::indevolt::services::change_energy_mode::fields::target::name%]"
+          "name": "[%key:component::indevolt::services::charge::fields::target::name%]"
         }
       },
       "name": "Stop"

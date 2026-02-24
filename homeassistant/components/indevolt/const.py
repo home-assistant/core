@@ -9,10 +9,14 @@ DEFAULT_PORT = 8080
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_GENERATION = "generation"
 
-# API write/read keys for energy and real-time control modes
+# API write/read keys for energy and value for outdoor/portable mode
 ENERGY_MODE_READ_KEY = "7101"
 ENERGY_MODE_WRITE_KEY = "47005"
+PORTABLE_MODE = 0
+
+# API write key and value for real-time control mode
 REALTIME_ACTION_KEY = "47015"
+REALTIME_ACTION_MODE = 4
 
 # API key fields
 SENSOR_KEYS = {
@@ -109,13 +113,6 @@ SENSOR_KEYS = {
         "6105",
         "1505",
     ],
-}
-
-# The map of Energy Modes and associated API values
-ENERGY_MODES = {
-    "self_consumed_prioritized": 1,
-    "real_time_control": 4,
-    "charge_discharge_schedule": 5,
 }
 
 # The map of Power Limits per device generation
