@@ -1,6 +1,6 @@
 """Test config flow for Swing2Sleep Smarla integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.connection.exceptions import (
     AuthenticationException,
@@ -23,7 +23,7 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_refresh_token")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
@@ -45,7 +45,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == MOCK_ACCESS_TOKEN_JSON["serialNumber"]
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_refresh_token")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
 async def test_malformed_token(hass: HomeAssistant) -> None:
     """Test we show user form on malformed token input."""
     with patch(
@@ -79,12 +79,12 @@ async def test_malformed_token(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_validation_exception(
     hass: HomeAssistant,
-    mock_refresh_token: AsyncMock,
+    mock_connection: MagicMock,
     exception: type[Exception],
     error_key: str,
 ) -> None:
     """Test we show user form on validation exception."""
-    mock_refresh_token.side_effect = exception
+    mock_connection.refresh_token.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -92,7 +92,7 @@ async def test_validation_exception(
         data=MOCK_USER_INPUT,
     )
 
-    mock_refresh_token.side_effect = None
+    mock_connection.refresh_token.side_effect = None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -106,7 +106,7 @@ async def test_validation_exception(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_refresh_token")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
 async def test_device_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -124,7 +124,7 @@ async def test_device_exists_abort(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_refresh_token")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
 async def test_reauth_successful(
     mock_config_entry: MockConfigEntry,
     hass: HomeAssistant,
@@ -148,7 +148,7 @@ async def test_reauth_successful(
     assert mock_config_entry.data == MOCK_USER_INPUT_RECONFIGURE
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_refresh_token")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
 async def test_reauth_mismatch(
     mock_config_entry: MockConfigEntry,
     hass: HomeAssistant,

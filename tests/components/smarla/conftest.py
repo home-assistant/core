@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
+from pysmarlaapi import AuthToken
 from pysmarlaapi.federwiege.services.classes import Property, Service
 import pytest
 
@@ -35,17 +36,30 @@ def mock_setup_entry() -> Generator:
 
 
 @pytest.fixture
-def mock_refresh_token() -> Generator[AsyncMock]:
-    """Mock the refresh token function."""
-    with patch(
-        "homeassistant.components.smarla.Connection.refresh_token",
-        autospec=True,
-    ) as mock_refresh:
-        yield mock_refresh
+def mock_connection() -> Generator[MagicMock]:
+    """Patch Connection object."""
+    with (
+        patch(
+            "homeassistant.components.smarla.config_flow.Connection", autospec=True
+        ) as mock_connection,
+        patch(
+            "homeassistant.components.smarla.Connection",
+            mock_connection,
+        ),
+    ):
+        connection = mock_connection.return_value
+
+        def mocked_connection(url, token_b64: str):
+            connection.token = AuthToken.from_base64(token_b64)
+            return connection
+
+        mock_connection.side_effect = mocked_connection
+
+        yield connection
 
 
 @pytest.fixture
-def mock_federwiege_cls(mock_refresh_token: MagicMock) -> Generator[MagicMock]:
+def mock_federwiege_cls(mock_connection: MagicMock) -> Generator[MagicMock]:
     """Mock the Federwiege class."""
     with patch(
         "homeassistant.components.smarla.Federwiege", autospec=True

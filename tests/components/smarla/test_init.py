@@ -28,12 +28,12 @@ from tests.common import MockConfigEntry
 async def test_init_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_refresh_token: MagicMock,
+    mock_connection: MagicMock,
     exception: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
     """Test init config setup exception."""
-    mock_refresh_token.side_effect = exception
+    mock_connection.refresh_token.side_effect = exception
 
     assert not await setup_integration(hass, mock_config_entry)
 
