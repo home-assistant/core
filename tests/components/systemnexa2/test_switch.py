@@ -61,7 +61,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay_1"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_on.assert_called_once()
@@ -70,7 +70,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay_1"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_off.assert_called_once()
@@ -79,7 +79,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay_1"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.toggle.assert_called_once()
@@ -103,7 +103,7 @@ async def test_switch_is_on_property(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == "on"
 
@@ -111,7 +111,7 @@ async def test_switch_is_on_property(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == "off"
 
@@ -180,7 +180,7 @@ async def test_coordinator_connection_status(
     update_callback = find_update_callback(mock_system_nexa_2_device)
 
     # Initially, the relay switch should be on (state=1.0 from fixture)
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -188,7 +188,7 @@ async def test_coordinator_connection_status(
     await update_callback(ConnectionStatus(connected=False))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -197,7 +197,7 @@ async def test_coordinator_connection_status(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -219,7 +219,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -227,7 +227,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.outdoor_smart_plug_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_ON
 

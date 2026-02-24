@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_light_entities[True][light.in_wall_dimmer_light_1-entry]
+# name: test_light_entities[True][light.in_wall_dimmer_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16,7 +16,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.in_wall_dimmer_light_1',
+    'entity_id': 'light.in_wall_dimmer_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,12 +24,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Light 1',
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light 1',
+    'original_name': 'Light',
     'platform': 'systemnexa2',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -39,19 +39,19 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_entities[True][light.in_wall_dimmer_light_1-state]
+# name: test_light_entities[True][light.in_wall_dimmer_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'In-Wall Dimmer Light 1',
+      'friendly_name': 'In-Wall Dimmer Light',
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.in_wall_dimmer_light_1',
+    'entity_id': 'light.in_wall_dimmer_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -79,7 +78,7 @@ async def test_light_control_operations(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.in_wall_dimmer_light_1"
+    entity_id = "light.in_wall_dimmer_light"
 
     # Verify initial state (should be on with 50% brightness from fixture)
     state = hass.states.get(entity_id)
@@ -138,15 +137,7 @@ async def test_light_control_operations(
     device.turn_off.assert_called_once()
     device.turn_off.reset_mock()
 
-    # Test toggle service (should turn off since light is on)
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    # Toggle service internally calls turn_off when light is on
-    device.turn_off.assert_called_once()
+    # No reason to test toggle service as its an internal function using turn_on/off
 
 
 @pytest.mark.parametrize("dimmable", [True], indirect=True)
@@ -168,7 +159,7 @@ async def test_light_brightness_property(
     await update_callback(StateChange(state=0.5))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
@@ -177,7 +168,7 @@ async def test_light_brightness_property(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255
@@ -186,7 +177,7 @@ async def test_light_brightness_property(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -194,7 +185,7 @@ async def test_light_brightness_property(
     await update_callback(StateChange(state=0.1))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 26
@@ -219,7 +210,7 @@ async def test_light_is_on_property(
     await update_callback(StateChange(state=0.5))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -227,7 +218,7 @@ async def test_light_is_on_property(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -247,7 +238,7 @@ async def test_coordinator_connection_status(
     update_callback = find_update_callback(mock_system_nexa_2_device)
 
     # Initially, the light should be on (state=0.5 from fixture)
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -255,7 +246,7 @@ async def test_coordinator_connection_status(
     await update_callback(ConnectionStatus(connected=False))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -264,7 +255,7 @@ async def test_coordinator_connection_status(
     await update_callback(StateChange(state=0.75))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 191  # 0.75 * 255 ≈ 191
@@ -288,7 +279,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -296,7 +287,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=0.25))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 64  # 0.25 * 255 ≈ 64
@@ -305,7 +296,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.in_wall_dimmer_light_1")
+    state = hass.states.get("light.in_wall_dimmer_light")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255

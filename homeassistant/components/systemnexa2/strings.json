@@ -33,7 +33,7 @@
   "entity": {
     "light": {
       "light_1": {
-        "name": "Light 1"
+        "name": "Light"
       }
     },
     "switch": {
@@ -50,7 +50,7 @@
         "name": "Physical button"
       },
       "relay_1": {
-        "name": "Relay 1"
+        "name": "Relay"
       }
     }
   },

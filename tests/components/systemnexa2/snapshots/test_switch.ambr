@@ -99,7 +99,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[False][switch.outdoor_smart_plug_relay_1-entry]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_relay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +112,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.outdoor_smart_plug_relay_1',
+    'entity_id': 'switch.outdoor_smart_plug_relay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,12 +120,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Relay 1',
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relay 1',
+    'original_name': 'Relay',
     'platform': 'systemnexa2',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -135,13 +135,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[False][switch.outdoor_smart_plug_relay_1-state]
+# name: test_switch_entities[False][switch.outdoor_smart_plug_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Outdoor Smart Plug Relay 1',
+      'friendly_name': 'Outdoor Smart Plug Relay',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.outdoor_smart_plug_relay_1',
+    'entity_id': 'switch.outdoor_smart_plug_relay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

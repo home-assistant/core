@@ -57,10 +57,6 @@ class SystemNexa2Light(SystemNexa2Entity, LightEntity):
         """Turn off the light."""
         await self.coordinator.async_turn_off()
 
-    async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the light."""
-        await self.coordinator.async_toggle()
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
