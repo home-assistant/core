@@ -15,6 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_CURRENT_TEMP = "sensor.bsb_lan_current_temperature"
 ENTITY_OUTSIDE_TEMP = "sensor.bsb_lan_outside_temperature"
+ENTITY_TOTAL_ENERGY = "sensor.bsb_lan_total_energy"
 
 
 async def test_sensor_entity_properties(
@@ -40,6 +41,7 @@ async def test_sensors_not_created_when_data_unavailable(
     # Set all sensor data to None to simulate no sensors available
     mock_bsblan.sensor.return_value.current_temperature = None
     mock_bsblan.sensor.return_value.outside_temperature = None
+    mock_bsblan.sensor.return_value.total_energy = None
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
@@ -58,8 +60,9 @@ async def test_partial_sensors_created_when_some_data_available(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test only available sensors are created when some sensor data is available."""
-    # Only current temperature available, outside temperature not
+    # Only current temperature available, outside temperature and energy not
     mock_bsblan.sensor.return_value.outside_temperature = None
+    mock_bsblan.sensor.return_value.total_energy = None
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 

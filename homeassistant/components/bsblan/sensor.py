@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -57,6 +57,19 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
             else None
         ),
         exists_fn=lambda data: data.sensor.outside_temperature is not None,
+    ),
+    BSBLanSensorEntityDescription(
+        key="total_energy",
+        translation_key="total_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.sensor.total_energy.value
+            if data.sensor.total_energy is not None
+            else None
+        ),
+        exists_fn=lambda data: data.sensor.total_energy is not None,
     ),
 )
 
