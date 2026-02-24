@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'current_weather_data': dict({
+      }),
+      'daily_forecast': list([
+      ]),
+      'hourly_forecast': list([
+      ]),
+    }),
+    'entry_data': dict({
+      'elevation': 1.0,
+      'latitude': '**REDACTED**',
+      'longitude': '**REDACTED**',
+      'name': 'test',
+    }),
+  })
+# ---
