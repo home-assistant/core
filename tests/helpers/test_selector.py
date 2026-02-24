@@ -489,6 +489,15 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> 
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    [({}, ("abc123",), (None,))],
+)
+def test_app_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test app selector."""
+    _test_selector("app", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123", "/backup"), (None, "abc@123", "abc 123", ""))],
 )
 def test_backup_location_selector_schema(
@@ -1295,21 +1304,23 @@ def test_attribute_selector_schema(
         (
             {},
             (
-                {"seconds": 10},
+                {
+                    "seconds": 10
+                },  # Seconds is allowed also if `enable_second` is not set
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
                 {"milliseconds": 500},
             ),
-            (None, {}),
-        ),
-        (
-            {"enable_day": True, "enable_millisecond": True},
-            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
-            (None, {}),
-        ),
-        (
-            {"allow_negative": False},
-            ({"seconds": 10}, {"days": 10}),
             (None, {}, {"seconds": -1}),
+        ),
+        (
+            {"enable_day": True, "enable_millisecond": True, "enable_second": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
+            (None, {}, {"seconds": -1}),
+        ),
+        (
+            {"allow_negative": True},
+            ({"seconds": 10}, {"seconds": -1}),
+            (None, {}),
         ),
     ],
 )

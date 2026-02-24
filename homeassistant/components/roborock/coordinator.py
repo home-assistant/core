@@ -64,17 +64,17 @@ class RoborockCoordinators:
 
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
-    b01: list[RoborockDataUpdateCoordinatorB01]
+    b01_q7: list[RoborockB01Q7UpdateCoordinator]
 
     def values(
         self,
     ) -> list[
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
-        | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
     ]:
         """Return all coordinators."""
-        return self.v1 + self.a01 + self.b01
+        return self.v1 + self.a01 + self.b01_q7
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -553,6 +553,8 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.REAL_CLEAN_TIME,
             RoborockB01Props.HYPA,
             RoborockB01Props.WIND,
+            RoborockB01Props.WATER,
+            RoborockB01Props.MODE,
         ]
 
     async def _async_update_data(

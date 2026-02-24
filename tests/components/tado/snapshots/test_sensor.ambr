@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -123,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -173,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -229,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -332,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -382,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -438,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -489,6 +498,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -541,6 +551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -591,6 +602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -649,6 +661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -702,6 +715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -754,6 +768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -804,6 +819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -962,6 +978,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic geofencing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1010,6 +1027,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Geofencing mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1060,6 +1078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1117,6 +1136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1168,6 +1188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1216,6 +1237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1265,6 +1287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1313,6 +1336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,

@@ -186,7 +186,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
             self._attr_available_modes = AVAILABLE_MODES_CA1_CB1
             self._humidity_steps = 10
-        elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
+        elif self._model == MODEL_AIRHUMIDIFIER_CA4:
             self._attr_available_modes = AVAILABLE_MODES_CA4
             self._humidity_steps = 100
         elif self._model in MODELS_HUMIDIFIER_MJJSQ:

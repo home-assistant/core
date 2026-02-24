@@ -101,6 +101,9 @@
       "methanethiol": {
         "name": "Methanethiol"
       },
+      "mold": {
+        "name": "Mold index"
+      },
       "noise": {
         "name": "Noise"
       },
@@ -116,11 +119,17 @@
       "propane": {
         "name": "Propane"
       },
+      "r32": {
+        "name": "Refrigerant R-32"
+      },
+      "r454b": {
+        "name": "Refrigerant R-454B"
+      },
+      "r454c": {
+        "name": "Refrigerant R-454C"
+      },
       "radon": {
         "name": "Radon"
-      },
-      "refigerant": {
-        "name": "Refrigerant"
       },
       "relative_pressure": {
         "name": "Relative pressure"
