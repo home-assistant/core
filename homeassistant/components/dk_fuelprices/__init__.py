@@ -132,49 +132,6 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def async_migrate_entry(
-    hass: HomeAssistant, entry: DkFuelpricesConfigEntry
-) -> bool:
-    """Migrate old config entries to the new subentry structure."""
-    if entry.version >= 2:
-        return True
-
-    _LOGGER.info(
-        "Migrating config entry %s from version %s", entry.entry_id, entry.version
-    )
-
-    company = entry.data.get(CONF_COMPANY)
-    station = entry.data.get(CONF_STATION)
-    products = entry.options.get(CONF_PRODUCTS, {})
-    api_key = entry.options.get(CONF_API_KEY)
-
-    subentry_data = {
-        CONF_COMPANY: company,
-        CONF_STATION: station,
-        CONF_PRODUCTS: products,
-    }
-    subentry_title = f"{company} - {station['name']}" if station else f"{company}"
-    unique_id = f"{company}_{station['id']}" if station else None
-
-    subentry = ConfigSubentry(
-        data=MappingProxyType(subentry_data),
-        subentry_type="station",
-        title=subentry_title,
-        unique_id=unique_id,
-    )
-
-    hass.config_entries.async_update_entry(
-        entry,
-        data={CONF_API_KEY: api_key},
-        options={},
-        version=2,
-    )
-    hass.config_entries.async_add_subentry(entry, subentry)
-
-    _LOGGER.info("Migration to version 2 successful")
-    return True
-
-
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: DkFuelpricesConfigEntry,
