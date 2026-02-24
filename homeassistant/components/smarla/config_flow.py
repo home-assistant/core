@@ -50,12 +50,9 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
         return conn.token.serialNumber
 
     async def _validate_input(
-        self, user_input: dict[str, Any] | None
+        self, user_input: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Validate the user input."""
-        if user_input is None:
-            return None
-
         token = user_input[CONF_ACCESS_TOKEN]
         serial_number = await self._handle_token(token=token)
 
@@ -75,12 +72,14 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        validated_info = await self._validate_input(user_input)
-        if validated_info is not None:
-            return self.async_create_entry(
-                title=validated_info["serial_number"],
-                data={CONF_ACCESS_TOKEN: validated_info["token"]},
-            )
+        self.errors = {}
+        if user_input is not None:
+            validated_info = await self._validate_input(user_input)
+            if validated_info is not None:
+                return self.async_create_entry(
+                    title=validated_info["serial_number"],
+                    data={CONF_ACCESS_TOKEN: validated_info["token"]},
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -98,12 +97,14 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication dialog."""
-        validated_info = await self._validate_input(user_input)
-        if validated_info is not None:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates={CONF_ACCESS_TOKEN: validated_info["token"]},
-            )
+        self.errors = {}
+        if user_input is not None:
+            validated_info = await self._validate_input(user_input)
+            if validated_info is not None:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_ACCESS_TOKEN: validated_info["token"]},
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
