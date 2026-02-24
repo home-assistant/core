@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 
         wiim_device_sdk = WiimDevice(
             upnp_device=upnp_device_instance,
-            session=session,
+            session=async_get_clientsession(hass),
             http_api_endpoint=http_api,
             ha_host_ip=ha_host_ip,
             polling_interval=DEFAULT_AVAILABILITY_POLLING_INTERVAL,
