@@ -17,6 +17,7 @@ from .const import (
     ATTR_HEADING,
     ATTR_LAST_POLLED,
     DOMAIN,
+    LOGGER,
 )
 
 PARALLEL_UPDATES = 0
@@ -58,6 +59,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         self._device_name = get_device_name(vehicle)
 
         self._attr_unique_id = vehicle.device_id
+        self._unavailable_logged = False
 
         # Device info
         self._attr_device_info = DeviceInfo(
@@ -156,4 +158,16 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        # Log when vehicle becomes unavailable or recovers
+        is_available = self.available
+        if not is_available and not self._unavailable_logged:
+            LOGGER.info(
+                "The %s is unavailable: vehicle removed from account",
+                self._device_name,
+            )
+            self._unavailable_logged = True
+        elif is_available and self._unavailable_logged:
+            LOGGER.info("The %s is back online", self._device_name)
+            self._unavailable_logged = False
+
         self.async_write_ha_state()

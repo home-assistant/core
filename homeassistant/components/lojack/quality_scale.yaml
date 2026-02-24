@@ -36,7 +36,7 @@ rules:
     comment: Documented in https://github.com/home-assistant/home-assistant.io/pull/43463
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
