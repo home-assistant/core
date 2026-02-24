@@ -169,7 +169,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         await client.value()
 
         await self.async_set_unique_id(self._device_id, raise_on_progress=False)
-        if self.source == SOURCE_USER:
-            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch()
+        else:
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
