@@ -1271,7 +1271,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.6.3
+lunatone-rest-api-client==0.7.0
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1750,7 +1750,7 @@ pydroplet==2.3.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.28
+pyeconet==0.2.1
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0
@@ -2799,7 +2799,7 @@ youless-api==2.2.0
 youtubeaio==2.1.1
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2026.02.04
+yt-dlp[default]==2026.02.21
 
 # homeassistant.components.zamg
 zamg==0.3.6
