@@ -6,16 +6,18 @@ from dataclasses import dataclass, field
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
     Base64ImageSourceParam,
     Base64PDFSourceParam,
+    BashCodeExecutionToolResultBlock,
     CitationsDelta,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    CodeExecutionTool20250825Param,
     ContentBlockParam,
     DocumentBlockParam,
     ImageBlockParam,
@@ -41,6 +43,7 @@ from anthropic.types import (
     TextCitation,
     TextCitationParam,
     TextDelta,
+    TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
     ThinkingBlockParam,
     ThinkingConfigAdaptiveParam,
@@ -51,18 +54,21 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
-    ToolResultBlockParam,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
-    WebSearchToolRequestErrorParam,
     WebSearchToolResultBlock,
-    WebSearchToolResultBlockParam,
-    WebSearchToolResultError,
+    WebSearchToolResultBlockParamContentParam,
+)
+from anthropic.types.bash_code_execution_tool_result_block_param import (
+    Content as BashCodeExecutionToolResultContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
+from anthropic.types.text_editor_code_execution_tool_result_block_param import (
+    Content as TextEditorCodeExecutionToolResultContentParam,
+)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -74,10 +80,12 @@ from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
+from homeassistant.util.json import JsonObjectType
 
 from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
@@ -194,24 +202,46 @@ def _convert_content(
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
+            external_tool = True
             if content.tool_name == "web_search":
-                tool_result_block: ContentBlockParam = WebSearchToolResultBlockParam(
-                    type="web_search_tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=content.tool_result["content"]
-                    if "content" in content.tool_result
-                    else WebSearchToolRequestErrorParam(
-                        type="web_search_tool_result_error",
-                        error_code=content.tool_result.get("error_code", "unavailable"),  # type: ignore[typeddict-item]
+                tool_result_block: ContentBlockParam = {
+                    "type": "web_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        WebSearchToolResultBlockParamContentParam,
+                        content.tool_result["content"]
+                        if "content" in content.tool_result
+                        else {
+                            "type": "web_search_tool_result_error",
+                            "error_code": content.tool_result.get(
+                                "error_code", "unavailable"
+                            ),
+                        },
                     ),
-                )
-                external_tool = True
+                }
+            elif content.tool_name == "bash_code_execution":
+                tool_result_block = {
+                    "type": "bash_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        BashCodeExecutionToolResultContentParam, content.tool_result
+                    ),
+                }
+            elif content.tool_name == "text_editor_code_execution":
+                tool_result_block = {
+                    "type": "text_editor_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        TextEditorCodeExecutionToolResultContentParam,
+                        content.tool_result,
+                    ),
+                }
             else:
-                tool_result_block = ToolResultBlockParam(
-                    type="tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=json_dumps(content.tool_result),
-                )
+                tool_result_block = {
+                    "type": "tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": json_dumps(content.tool_result),
+                }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
                 "assistant" if external_tool else "user"
@@ -325,10 +355,16 @@ def _convert_content(
                         ServerToolUseBlockParam(
                             type="server_tool_use",
                             id=tool_call.id,
-                            name="web_search",
+                            name=tool_call.tool_name,  # type: ignore[typeddict-item]
                             input=tool_call.tool_args,
                         )
-                        if tool_call.external and tool_call.tool_name == "web_search"
+                        if tool_call.external
+                        and tool_call.tool_name
+                        in [
+                            "web_search",
+                            "bash_code_execution",
+                            "text_editor_code_execution",
+                        ]
                         else ToolUseBlockParam(
                             type="tool_use",
                             id=tool_call.id,
@@ -478,7 +514,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     input={},
                 )
                 current_tool_args = ""
-            elif isinstance(response.content_block, WebSearchToolResultBlock):
+            elif isinstance(
+                response.content_block,
+                (
+                    WebSearchToolResultBlock,
+                    BashCodeExecutionToolResultBlock,
+                    TextEditorCodeExecutionToolResultBlock,
+                ),
+            ):
                 if content_details:
                     content_details.delete_empty()
                     yield {"native": content_details}
@@ -487,26 +530,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 yield {
                     "role": "tool_result",
                     "tool_call_id": response.content_block.tool_use_id,
-                    "tool_name": "web_search",
+                    "tool_name": response.content_block.type.removesuffix(
+                        "_tool_result"
+                    ),
                     "tool_result": {
-                        "type": "web_search_tool_result_error",
-                        "error_code": response.content_block.content.error_code,
+                        "content": cast(
+                            JsonObjectType, response.content_block.to_dict()["content"]
+                        )
                     }
-                    if isinstance(
-                        response.content_block.content, WebSearchToolResultError
-                    )
-                    else {
-                        "content": [
-                            {
-                                "type": "web_search_result",
-                                "encrypted_content": block.encrypted_content,
-                                "page_age": block.page_age,
-                                "title": block.title,
-                                "url": block.url,
-                            }
-                            for block in response.content_block.content
-                        ]
-                    },
+                    if isinstance(response.content_block.content, list)
+                    else cast(JsonObjectType, response.content_block.content.to_dict()),
                 }
                 first_block = True
         elif isinstance(response, RawContentBlockDeltaEvent):
@@ -673,6 +706,14 @@ class AnthropicBaseLLMEntity(Entity):
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        if options.get(CONF_CODE_EXECUTION):
+            tools.append(
+                CodeExecutionTool20250825Param(
+                    name="code_execution",
+                    type="code_execution_20250825",
+                ),
+            )
 
         if options.get(CONF_WEB_SEARCH):
             web_search = WebSearchTool20250305Param(

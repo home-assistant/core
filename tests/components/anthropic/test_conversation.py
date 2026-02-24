@@ -8,7 +8,14 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    TextEditorCodeExecutionCreateResultBlock,
+    TextEditorCodeExecutionStrReplaceResultBlock,
+    TextEditorCodeExecutionToolResultError,
+    TextEditorCodeExecutionViewResultBlock,
     WebSearchResultBlock,
+)
+from anthropic.types.text_editor_code_execution_tool_result_block import (
+    Content as TextEditorCodeExecutionToolResultBlockContent,
 )
 from freezegun import freeze_time
 from httpx import URL, Request, Response
@@ -19,6 +26,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
@@ -38,8 +46,12 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
 from . import (
+    create_bash_code_execution_block,
+    create_bash_code_execution_result_block,
     create_content_block,
     create_redacted_thinking_block,
+    create_text_editor_code_execution_block,
+    create_text_editor_code_execution_result_block,
     create_thinking_block,
     create_tool_use_block,
     create_web_search_block,
@@ -230,6 +242,7 @@ async def test_system_prompt_uses_text_block_with_cache_control(
         ([""], {}),
     ],
 )
+@freeze_time("2024-06-03 23:00:00")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -266,14 +279,13 @@ async def test_function_call(
         create_content_block(0, ["I have ", "successfully called ", "the function"]),
     ]
 
-    with freeze_time("2024-06-03 23:00:00"):
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
+        None,
+        context,
+        agent_id=agent_id,
+    )
 
     system = mock_create_stream.mock_calls[1][2]["system"]
     assert isinstance(system, list)
@@ -848,6 +860,300 @@ async def test_web_search(
     result = await conversation.async_converse(
         hass,
         "What's on the news today?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_bash_code_execution(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test bash code execution."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+        },
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(
+                0,
+                [
+                    "I'll create",
+                    " a file with a random number and save",
+                    " it to '/",
+                    "tmp/number.txt'.",
+                ],
+            ),
+            *create_bash_code_execution_block(
+                1,
+                "srvtoolu_12345ABC",
+                [
+                    "",
+                    '{"c',
+                    'ommand": "ec',
+                    "ho $RA",
+                    "NDOM > /",
+                    "tmp/",
+                    "number.txt &",
+                    "& ",
+                    "cat /t",
+                    "mp/number.",
+                    'txt"}',
+                ],
+            ),
+            *create_bash_code_execution_result_block(
+                2, "srvtoolu_12345ABC", stdout="3268\n"
+            ),
+            *create_content_block(
+                3,
+                [
+                    "Done",
+                    "! I've created the",
+                    " file '/",
+                    "tmp/number.txt' with the",
+                    " random number 3268.",
+                ],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Write a file with a random number and save it to '/tmp/number.txt'",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_bash_code_execution_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test bash code execution with error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+        },
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(
+                0,
+                [
+                    "I'll create",
+                    " a file with a random number and save",
+                    " it to '/",
+                    "tmp/number.txt'.",
+                ],
+            ),
+            *create_bash_code_execution_block(
+                1,
+                "srvtoolu_12345ABC",
+                [
+                    "",
+                    '{"c',
+                    'ommand": "ec',
+                    "ho $RA",
+                    "NDOM > /",
+                    "tmp/",
+                    "number.txt &",
+                    "& ",
+                    "cat /t",
+                    "mp/number.",
+                    'txt"}',
+                ],
+            ),
+            *create_bash_code_execution_result_block(
+                2, "srvtoolu_12345ABC", error_code="unavailable"
+            ),
+            *create_content_block(
+                3,
+                ["The container", " is currently unavailable."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Write a file with a random number and save it to '/tmp/number.txt'",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@pytest.mark.parametrize(
+    ("args_parts", "content"),
+    [
+        (
+            [
+                "",
+                '{"',
+                'command":',
+                ' "create"',
+                ', "path',
+                '": "/tmp/num',
+                "ber",
+                '.txt"',
+                ', "file_text',
+                '": "3268"}',
+            ],
+            TextEditorCodeExecutionCreateResultBlock(
+                type="text_editor_code_execution_create_result", is_file_update=False
+            ),
+        ),
+        (
+            [
+                "",
+                '{"comman',
+                'd": "str',
+                "_replace",
+                '"',
+                ', "path":',
+                ' "/',
+                "tmp/",
+                "num",
+                "be",
+                'r.txt"',
+                ', "old_str"',
+                ': "3268',
+                '"',
+                ', "new_str":',
+                ' "8623"}',
+            ],
+            TextEditorCodeExecutionStrReplaceResultBlock(
+                type="text_editor_code_execution_str_replace_result",
+                lines=[
+                    "-3268",
+                    "\\ No newline at end of file",
+                    "+8623",
+                    "\\ No newline at end of file",
+                ],
+                new_lines=1,
+                new_start=1,
+                old_lines=1,
+                old_start=1,
+            ),
+        ),
+        (
+            [
+                "",
+                '{"command',
+                '": "view',
+                '"',
+                ', "path"',
+                ': "/tmp/nu',
+                'mber.txt"}',
+            ],
+            TextEditorCodeExecutionViewResultBlock(
+                type="text_editor_code_execution_view_result",
+                content="8623",
+                file_type="text",
+                num_lines=1,
+                start_line=1,
+                total_lines=1,
+            ),
+        ),
+        (
+            [
+                "",
+                '{"com',
+                'mand"',
+                ': "view',
+                '"',
+                ', "',
+                'path"',
+                ': "/tmp/nu',
+                'mber2.txt"}',
+            ],
+            TextEditorCodeExecutionToolResultError(
+                type="text_editor_code_execution_tool_result_error",
+                error_code="unavailable",
+                error_message="Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)",
+            ),
+        ),
+    ],
+)
+@freeze_time("2025-10-31 12:00:00")
+async def test_text_editor_code_execution(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+    args_parts: list[str],
+    content: TextEditorCodeExecutionToolResultBlockContent,
+) -> None:
+    """Test text editor code execution."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+        },
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(0, ["I'll do it", "."]),
+            *create_text_editor_code_execution_block(
+                1, "srvtoolu_12345ABC", args_parts
+            ),
+            *create_text_editor_code_execution_result_block(
+                2, "srvtoolu_12345ABC", content=content
+            ),
+            *create_content_block(3, ["Done"]),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Do the needful",
         None,
         Context(),
         agent_id="conversation.claude_conversation",
