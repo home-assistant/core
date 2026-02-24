@@ -1219,12 +1219,30 @@ class GetDateTimeTool(Tool):
                 "weekday": now.strftime("%A"),
             },
         }
-        _UNSUPPORTED_ROOT_SCHEMA_KEYS: frozenset[str] = frozenset(
+
+
+_UNSUPPORTED_ROOT_SCHEMA_KEYS: frozenset[str] = frozenset(
     {"anyOf", "oneOf", "allOf", "not", "enum"}
 )
 
 
 def sanitize_tool_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Sanitize tool schema for providers that reject root combiners.
+
+    OpenAI and Anthropic reject schemas with anyOf/oneOf/allOf/not/enum
+    at the root level. Drops unsupported top-level keys and sets
+    required=[] so all fields become optional.
+    """
+    if not _UNSUPPORTED_ROOT_SCHEMA_KEYS.intersection(schema):
+        return schema
+
+    sanitized = {
+        key: value
+        for key, value in schema.items()
+        if key not in _UNSUPPORTED_ROOT_SCHEMA_KEYS
+    }
+    sanitized["required"] = []
+    return sanitized
     """Sanitize tool schema for providers that reject root combiners.
 
     OpenAI and Anthropic reject schemas with anyOf/oneOf/allOf/not/enum
