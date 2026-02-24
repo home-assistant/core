@@ -58,7 +58,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Initialize API
                 self.api = Braendstofpriser(user_input[CONF_API_KEY])
                 self.companies = await self.api.list_companies()
-            except ClientResponseError as exc:  # pylint: disable=broad-except
+            except ClientResponseError as exc:
                 if exc.status == 401:
                     self._errors["base"] = "invalid_api_key"
                     return self.async_abort(reason="invalid_api_key")
