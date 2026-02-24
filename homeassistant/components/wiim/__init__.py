@@ -1,4 +1,3 @@
-# homeassistant/components/wiim/__init__.py
 """The WiiM integration."""
 
 from __future__ import annotations
