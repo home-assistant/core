@@ -2405,7 +2405,7 @@
     'state': 'running',
   })
 # ---
-# name: test_all_entities[sensor.webstack_container_count-entry]
+# name: test_all_entities[sensor.webstack_containers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2420,7 +2420,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.webstack_container_count',
+    'entity_id': 'sensor.webstack_containers',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2428,29 +2428,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Container count',
+    'object_id_base': 'Containers',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Container count',
+    'original_name': 'Containers',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stack_containers_count',
     'unique_id': 'portainer_test_entry_123_1_stack_containers_count',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'containers',
   })
 # ---
-# name: test_all_entities[sensor.webstack_container_count-state]
+# name: test_all_entities[sensor.webstack_containers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'webstack Container count',
+      'friendly_name': 'webstack Containers',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'containers',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.webstack_container_count',
+    'entity_id': 'sensor.webstack_containers',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
