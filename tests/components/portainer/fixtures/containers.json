@@ -109,6 +109,9 @@
         "Type": "tcp"
       }
     ],
+    "Labels": {
+      "com.docker.compose.project": "webstack"
+    },
     "State": "running",
     "Status": "Up 2 days"
   },
@@ -126,6 +129,9 @@
         "Type": "tcp"
       }
     ],
+    "Labels": {
+      "com.docker.compose.project": "webstack"
+    },
     "State": "running",
     "Status": "Up 1 day"
   },

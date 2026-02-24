@@ -70,12 +70,24 @@
       "operating_system_version": {
         "default": "mdi:alpha-v-box"
       },
+      "stack_containers_count": {
+        "default": "mdi:server"
+      },
+      "stack_type": {
+        "default": "mdi:server"
+      },
       "volume_disk_usage_total_size": {
         "default": "mdi:harddisk"
       }
     },
     "switch": {
       "container": {
+        "default": "mdi:arrow-down-box",
+        "state": {
+          "on": "mdi:arrow-up-box"
+        }
+      },
+      "stack": {
         "default": "mdi:arrow-down-box",
         "state": {
           "on": "mdi:arrow-up-box"
