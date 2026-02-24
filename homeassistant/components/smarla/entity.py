@@ -28,8 +28,9 @@ class SmarlaBaseEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(self, federwiege: Federwiege, desc: SmarlaEntityDescription) -> None:
-        """Initialise the entity."""
+        """Initialize the entity."""
         self.entity_description = desc
+        self._federwiege = federwiege
         self._property = federwiege.get_property(desc.service, desc.property)
         self._attr_unique_id = f"{federwiege.serial_number}-{desc.key}"
         self._attr_device_info = DeviceInfo(
