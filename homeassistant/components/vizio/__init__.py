@@ -63,11 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
     # Create apps coordinator for TVs (shared across entries)
     apps_coordinator: VizioAppsDataUpdateCoordinator | None = None
     if device_class == MediaPlayerDeviceClass.TV:
-        if DATA_APPS not in hass.data:
-            hass.data[DATA_APPS] = VizioAppsDataUpdateCoordinator(
-                hass, entry, Store(hass, 1, DOMAIN)
-            )
-        apps_coordinator = hass.data[DATA_APPS]
+        apps_coordinator = hass.data.setdefault(
+            DATA_APPS,
+            VizioAppsDataUpdateCoordinator(hass, entry, Store(hass, 1, DOMAIN)),
+        )
         if not apps_coordinator.data:
             await apps_coordinator.async_config_entry_first_refresh()
 
