@@ -66,6 +66,7 @@ def mock_federwiege_cls(mock_connection: MagicMock) -> Generator[MagicMock]:
     ) as mock_federwiege_cls:
         mock_federwiege = mock_federwiege_cls.return_value
         mock_federwiege.serial_number = MOCK_ACCESS_TOKEN_JSON["serialNumber"]
+        mock_federwiege.available = True
 
         mock_babywiege_service = MagicMock(spec=Service)
         mock_babywiege_service.props = {
