@@ -210,13 +210,11 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._pending_host is not None
 
         if user_input is not None:
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
             if info := await self._async_validate_credentials(
                 self._pending_host,
                 errors,
-                username=username,
-                password=password,
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
             ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
@@ -224,8 +222,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         CONF_HOST: self._pending_host,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
+                        CONF_USERNAME: user_input.get(CONF_USERNAME),
+                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
                     },
                 )
 
