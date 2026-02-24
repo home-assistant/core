@@ -33,6 +33,7 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+NETATMO_OPENING_STATUS = "status"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
     "access_doorbell",
