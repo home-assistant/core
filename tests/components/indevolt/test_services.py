@@ -48,7 +48,7 @@ async def test_service_charge(
         DOMAIN,
         "charge",
         {
-            "target": [_get_device_id(hass, mock_config_entry)],
+            "device_ids": [_get_device_id(hass, mock_config_entry)],
             "power": 1200,
             "target_soc": 60,
         },
@@ -81,7 +81,7 @@ async def test_service_discharge(
         DOMAIN,
         "discharge",
         {
-            "target": [_get_device_id(hass, mock_config_entry)],
+            "device_ids": [_get_device_id(hass, mock_config_entry)],
             "power": 1200,
             "target_soc": 40,
         },
@@ -113,7 +113,7 @@ async def test_service_stop(
     await hass.services.async_call(
         DOMAIN,
         "stop",
-        {"target": [_get_device_id(hass, mock_config_entry)]},
+        {"device_ids": [_get_device_id(hass, mock_config_entry)]},
         blocking=True,
     )
 
@@ -141,7 +141,7 @@ async def test_service_charge_power_too_high(
             DOMAIN,
             "charge",
             {
-                "target": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 1300,
                 "target_soc": 60,
             },
@@ -167,7 +167,7 @@ async def test_service_charge_target_soc_below_emergency(
             DOMAIN,
             "charge",
             {
-                "target": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 1000,
                 "target_soc": 1,
             },
@@ -192,7 +192,7 @@ async def test_service_missing_target(
         await hass.services.async_call(
             DOMAIN,
             "stop",
-            {"target": ["non-existent-device-id"]},
+            {"device_ids": ["non-existent-device-id"]},
             blocking=True,
         )
 
@@ -219,7 +219,7 @@ async def test_charge_outdoor_portable(
             DOMAIN,
             "charge",
             {
-                "target": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 100,
             },

@@ -317,13 +317,13 @@
     "charge": {
       "description": "Real-time control: Starts charging with configured power till the target SOC is reached.",
       "fields": {
+        "device_ids": {
+          "description": "The Indevolt device(s) to start charging.",
+          "name": "Device(s)"
+        },
         "power": {
           "description": "Maximum charging power in watts.",
           "name": "Max. power"
-        },
-        "target": {
-          "description": "The Indevolt device to start charging.",
-          "name": "Device"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -335,13 +335,13 @@
     "discharge": {
       "description": "Real-time control: Starts discharging with configured power till the target SOC is reached.",
       "fields": {
+        "device_ids": {
+          "description": "The Indevolt device(s) to start discharging.",
+          "name": "[%key:component::indevolt::services::charge::fields::device_ids::name%]"
+        },
         "power": {
           "description": "Maximum discharging power in watts.",
           "name": "Max. power"
-        },
-        "target": {
-          "description": "The Indevolt device to start discharging.",
-          "name": "[%key:component::indevolt::services::charge::fields::target::name%]"
         },
         "target_soc": {
           "description": "[%key:component::indevolt::services::charge::fields::target_soc::description%]",
@@ -353,9 +353,9 @@
     "stop": {
       "description": "Real-time control: Stops battery charging/discharging.",
       "fields": {
-        "target": {
-          "description": "The Indevolt device to stop charging or discharging.",
-          "name": "[%key:component::indevolt::services::charge::fields::target::name%]"
+        "device_ids": {
+          "description": "The Indevolt device(s) to stop charging or discharging.",
+          "name": "[%key:component::indevolt::services::charge::fields::device_ids::name%]"
         }
       },
       "name": "Stop"

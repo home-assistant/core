@@ -17,7 +17,7 @@ from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 CHARGE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("target"): vol.All(
+        vol.Required("device_ids"): vol.All(
             cv.ensure_list,
             [cv.string],
         ),
@@ -34,7 +34,7 @@ CHARGE_SERVICE_SCHEMA = vol.Schema(
 
 STOP_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("target"): vol.All(
+        vol.Required("device_ids"): vol.All(
             cv.ensure_list,
             [cv.string],
         ),
@@ -144,7 +144,7 @@ async def _async_get_coordinators_from_call(
     coordinators: list[IndevoltCoordinator] = []
 
     # Ensure targets are provided by user
-    device_ids: list[str] = call.data.get("target") or []
+    device_ids: list[str] = call.data.get("device_ids") or []
     if not device_ids:
         _raise_no_target_entries()
 
