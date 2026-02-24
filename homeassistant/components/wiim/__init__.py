@@ -176,27 +176,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 
         success = True
 
-    except ConfigEntryNotReady:
-        if wiim_device_sdk:
-            await wiim_device_sdk.disconnect()
-        raise
     except WiimRequestException as err:
-        if wiim_device_sdk:
-            await wiim_device_sdk.disconnect()
         SDK_LOGGER.error("HTTP API request failed during setup for %s: %s", host, err)
         raise ConfigEntryNotReady(f"HTTP API request failed for {host}: {err}") from err
     except WiimDeviceException as err:
-        if wiim_device_sdk:
-            await wiim_device_sdk.disconnect()
         SDK_LOGGER.error("SDK Device Exception during setup for %s: %s", host, err)
         raise ConfigEntryNotReady(f"SDK Device error for {host}: {err}") from err
     except Exception as err:
-        if wiim_device_sdk:
-            await wiim_device_sdk.disconnect()
         SDK_LOGGER.exception(
             "Unexpected error setting up WiiM device %s: %s", host, err
         )
         raise ConfigEntryNotReady(f"Unexpected error for {host}: {err}") from err
+    finally:
+        if not success and wiim_device_sdk:
+        await wiim_device_sdk.disconnect()
 
     async def _async_shutdown_event_handler(event: Event) -> None:
         SDK_LOGGER.info(
