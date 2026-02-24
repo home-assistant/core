@@ -168,9 +168,11 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.TIME,
 }
 
@@ -228,6 +230,14 @@ class FanConf:
     """Common config keys for fan."""
 
     MAX_STEP: Final = "max_step"
+
+
+class NumberConf:
+    """Common config keys for number."""
+
+    MAX: Final = "max"
+    MIN: Final = "min"
+    STEP: Final = "step"
 
 
 class SceneConf:

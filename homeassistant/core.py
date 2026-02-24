@@ -1697,7 +1697,7 @@ class EventBus:
             # delete event_type list if empty
             if not self._listeners[event_type] and event_type != MATCH_ALL:
                 self._listeners.pop(event_type)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
             _LOGGER.exception(
@@ -2412,10 +2412,8 @@ class Service:
 
     __slots__ = [
         "description_placeholders",
-        "domain",
         "job",
         "schema",
-        "service",
         "supports_response",
     ]
 

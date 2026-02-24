@@ -18,8 +18,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 from .coordinator import OneDriveConfigEntry
@@ -77,15 +77,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def async_handle_upload(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
-        config_entry: OneDriveConfigEntry | None = hass.config_entries.async_get_entry(
-            call.data[CONF_CONFIG_ENTRY_ID]
+        config_entry: OneDriveConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
         )
-        if not config_entry:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="integration_not_found",
-                translation_placeholders={"target": DOMAIN},
-            )
         client = config_entry.runtime_data.client
         upload_tasks = []
         file_results = await hass.async_add_executor_job(

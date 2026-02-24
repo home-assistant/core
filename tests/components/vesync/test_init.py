@@ -14,7 +14,7 @@ from homeassistant.components.vesync import (
     async_remove_config_entry_device,
     async_setup_entry,
 )
-from homeassistant.components.vesync.const import DOMAIN, VS_MANAGER
+from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -72,8 +72,6 @@ async def test_async_setup_entry__no_devices(
         ]
 
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_MANAGER].devices
 
 
 async def test_async_setup_entry__loads_fans(
@@ -100,8 +98,6 @@ async def test_async_setup_entry__loads_fans(
             Platform.UPDATE,
         ]
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
 
 
 async def test_migrate_config_entry(
@@ -118,42 +114,44 @@ async def test_migrate_config_entry(
         suggested_object_id="switch",
     )
 
-    humidifer: er.RegistryEntry = entity_registry.async_get_or_create(
-        domain="humidifer",
+    humidifier: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain="humidifier",
         platform="vesync",
-        unique_id="humidifer",
+        unique_id="humidifier",
         config_entry=switch_old_id_config_entry,
-        suggested_object_id="humidifer",
+        suggested_object_id="humidifier",
     )
 
     assert switch.unique_id == "switch"
     assert switch_old_id_config_entry.minor_version == 1
-    assert humidifer.unique_id == "humidifer"
+    assert humidifier.unique_id == "humidifier"
 
     await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert switch_old_id_config_entry.minor_version == 2
+    assert switch_old_id_config_entry.minor_version == 3
 
     migrated_switch = entity_registry.async_get(switch.entity_id)
     assert migrated_switch is not None
     assert migrated_switch.entity_id.startswith("switch")
     assert migrated_switch.unique_id == "switch-device_status"
-    # Confirm humidifer was not impacted
-    migrated_humidifer = entity_registry.async_get(humidifer.entity_id)
-    assert migrated_humidifer is not None
-    assert migrated_humidifer.unique_id == "humidifer"
+    # Confirm humidifier was not impacted
+    migrated_humidifier = entity_registry.async_get(humidifier.entity_id)
+    assert migrated_humidifier is not None
+    assert migrated_humidifier.unique_id == "humidifier"
 
     # Assert that entity exists in the switch domain
     switch_entities = [
         e for e in entity_registry.entities.values() if e.domain == "switch"
     ]
-    assert len(switch_entities) == 2
+    assert len(switch_entities) == 3
 
-    humidifer_entities = [
-        e for e in entity_registry.entities.values() if e.domain == "humidifer"
+    humidifier_entities = [
+        e for e in entity_registry.entities.values() if e.domain == "humidifier"
     ]
-    assert len(humidifer_entities) == 1
+    assert len(humidifier_entities) == 2
+    assert switch_old_id_config_entry.version == 1
+    assert switch_old_id_config_entry.unique_id == "TESTACCOUNTID"
 
 
 async def test_async_remove_config_entry_device_positive(

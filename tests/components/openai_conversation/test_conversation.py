@@ -1,5 +1,6 @@
 """Tests for the OpenAI integration."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -30,6 +31,7 @@ from homeassistant.components.openai_conversation.const import (
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.helpers.llm import ToolInput
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -251,6 +253,44 @@ async def test_function_call(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function call from the assistant."""
+
+    # Add some pre-existing content from conversation.default_agent
+    mock_chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            tool_calls=[
+                ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="mock-tool-call-id",
+                    external=True,
+                )
+            ],
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="conversation.openai_conversation",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
+                "data": {"targets": [], "success": [], "failed": []},
+            },
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            content="12:00 PM",
+        )
+    )
+
     mock_create_stream.return_value = [
         # Initial conversation
         (

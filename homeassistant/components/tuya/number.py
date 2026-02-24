@@ -25,7 +25,7 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper
+from .models import DeviceWrapper, DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -488,7 +488,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
-        dpcode_wrapper: DPCodeIntegerWrapper,
+        dpcode_wrapper: DeviceWrapper[float],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
@@ -550,6 +550,20 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
