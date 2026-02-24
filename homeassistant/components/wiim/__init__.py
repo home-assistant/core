@@ -69,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     udn = entry.data[CONF_UDN]
     upnp_location = entry.data.get(CONF_UPNP_LOCATION)
 
-    session = async_get_clientsession(hass)
     requester = AiohttpRequester(timeout=10)
     upnp_device_instance: UpnpDevice | None = None
     wiim_device_sdk: WiimDevice | None = None
