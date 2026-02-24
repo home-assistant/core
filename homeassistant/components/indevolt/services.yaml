@@ -53,20 +53,3 @@ stop:
       selector:
         device:
           integration: indevolt
-
-change_energy_mode:
-  fields:
-    target:
-      required: true
-      selector:
-        device:
-          integration: indevolt
-    energy_mode:
-      required: true
-      selector:
-        select:
-          translation_key: energy_mode
-          options:
-            - self_consumed_prioritized
-            - real_time_control
-            - charge_discharge_schedule

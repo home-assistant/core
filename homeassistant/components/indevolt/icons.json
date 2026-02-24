@@ -1,8 +1,5 @@
 {
   "services": {
-    "change_energy_mode": {
-      "service": "mdi:swap-horizontal"
-    },
     "charge": {
       "service": "mdi:battery-arrow-up"
     },

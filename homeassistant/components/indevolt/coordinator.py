@@ -23,8 +23,9 @@ from .const import (
     DOMAIN,
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
-    ENERGY_MODES,
+    PORTABLE_MODE,
     REALTIME_ACTION_KEY,
+    REALTIME_ACTION_MODE,
     SENSOR_KEYS,
 )
 
@@ -109,7 +110,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         # Ensure device is not in "Outdoor/Portable mode"
-        if current_mode == 0:
+        if current_mode == PORTABLE_MODE:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="energy_mode_change_unavailable_outdoor_portable",
@@ -131,7 +132,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_execute_realtime_action(self, action: list[int]) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
-        await self.async_switch_energy_mode(ENERGY_MODES["real_time_control"])
+        await self.async_switch_energy_mode(REALTIME_ACTION_MODE)
         await self.async_push_data(REALTIME_ACTION_KEY, action)
         await self.async_request_refresh()
 

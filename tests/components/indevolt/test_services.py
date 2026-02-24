@@ -8,7 +8,9 @@ from homeassistant.components.indevolt.const import (
     DOMAIN,
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
+    PORTABLE_MODE,
     REALTIME_ACTION_KEY,
+    REALTIME_ACTION_MODE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -27,33 +29,6 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
     )
     assert device_entry is not None
     return device_entry.id
-
-
-@pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_service_change_mode(
-    hass: HomeAssistant,
-    mock_indevolt: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test change_energy_mode service."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Reset mock call count for this iteration
-    mock_indevolt.set_data.reset_mock()
-
-    # Call the service to change energy mode
-    await hass.services.async_call(
-        DOMAIN,
-        "change_energy_mode",
-        {
-            "target": [_get_device_id(hass, mock_config_entry)],
-            "energy_mode": "real_time_control",
-        },
-        blocking=True,
-    )
-
-    # Verify set_data was called with correct parameters
-    mock_indevolt.set_data.assert_called_with(ENERGY_MODE_WRITE_KEY, 4)
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -82,7 +57,10 @@ async def test_service_charge(
 
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_has_calls(
-        [call(ENERGY_MODE_WRITE_KEY, 4), call(REALTIME_ACTION_KEY, [1, 1200, 60])]
+        [
+            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
+            call(REALTIME_ACTION_KEY, [1, 1200, 60]),
+        ]
     )
 
 
@@ -112,7 +90,10 @@ async def test_service_discharge(
 
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_has_calls(
-        [call(ENERGY_MODE_WRITE_KEY, 4), call(REALTIME_ACTION_KEY, [2, 1200, 40])]
+        [
+            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
+            call(REALTIME_ACTION_KEY, [2, 1200, 40]),
+        ]
     )
 
 
@@ -138,7 +119,10 @@ async def test_service_stop(
 
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_has_calls(
-        [call(ENERGY_MODE_WRITE_KEY, 4), call(REALTIME_ACTION_KEY, [0, 0, 0])]
+        [
+            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
+            call(REALTIME_ACTION_KEY, [0, 0, 0]),
+        ]
     )
 
 
@@ -164,6 +148,7 @@ async def test_service_charge_power_too_high(
             blocking=True,
         )
 
+    # Verify error includes expected error string
     assert "exceeds maximum" in str(exc_info.value)
 
 
@@ -189,6 +174,7 @@ async def test_service_charge_target_soc_below_emergency(
             blocking=True,
         )
 
+    # Verify error includes expected error string
     assert "below emergency SOC" in str(exc_info.value)
 
 
@@ -210,62 +196,37 @@ async def test_service_missing_target(
             blocking=True,
         )
 
+    # Verify error is raised with correct translation key
     assert exc_info.value.translation_key == "no_matching_target_entries"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_service_change_mode_current_mode_unavailable(
+async def test_charge_outdoor_portable(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test change_energy_mode fails when current mode cannot be retrieved."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Remove current energy mode key from coordinator data
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data.pop(ENERGY_MODE_READ_KEY, None)
-
-    # Mock call with current energy mode unavailable
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            "change_energy_mode",
-            {
-                "target": [_get_device_id(hass, mock_config_entry)],
-                "energy_mode": "real_time_control",
-            },
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_key == "failed_to_retrieve_current_energy_mode"
-
-
-@pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_service_change_mode_outdoor_portable(
-    hass: HomeAssistant,
-    mock_indevolt: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test change_energy_mode fails when device is in outdoor/portable mode."""
+    """Test charge service fails when device is in outdoor/portable mode."""
     await setup_integration(hass, mock_config_entry)
 
     # Force outdoor/portable mode
     coordinator = mock_config_entry.runtime_data
-    coordinator.data[ENERGY_MODE_READ_KEY] = 0
+    coordinator.data[ENERGY_MODE_READ_KEY] = PORTABLE_MODE
 
-    # Mock call with current energy mode unavailable
+    # Mock call with device in outdoor/portable mode
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "change_energy_mode",
+            "charge",
             {
                 "target": [_get_device_id(hass, mock_config_entry)],
-                "energy_mode": "real_time_control",
+                "power": 500,
+                "target_soc": 100,
             },
             blocking=True,
         )
 
+    # Verify error is raised with correct translation key
     assert (
         exc_info.value.translation_key
         == "energy_mode_change_unavailable_outdoor_portable"
