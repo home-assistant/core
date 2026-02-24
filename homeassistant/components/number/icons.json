@@ -173,5 +173,10 @@
     "set_value": {
       "service": "mdi:numeric"
     }
+  },
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:counter"
+    }
   }
 }
