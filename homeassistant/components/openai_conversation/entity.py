@@ -66,6 +66,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir, l
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
+from homeassistant.helpers.llm import sanitize_tool_schema
 
 from homeassistant.helpers.llm_schema import sanitize_tool_schema
 from .const import (
