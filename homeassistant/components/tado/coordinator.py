@@ -194,7 +194,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Each refresh cycle costs 9 + len(zones) calls
         # Also take 10% of the remaining calls as buffer
-        self._remaining_calls = 1000
         self._current_interval = max(
             min_interval,
             (self._time_until_reset * (9 + len(self.zones)))
