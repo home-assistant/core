@@ -14,7 +14,7 @@
     },
     "flow_title": "{host}",
     "progress": {
-      "start_discovery": "Attempting to discover new S20 switches\n\nThis will take about 5-10 seconds",
+      "start_discovery": "Attempting to discover new S20 switches\n\nThis will take about 3 seconds",
       "title": "Orvibo S20"
     },
     "step": {

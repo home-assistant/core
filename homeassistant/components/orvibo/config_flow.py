@@ -79,21 +79,24 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_input(self, user_input: dict[str, Any]) -> str | None:
-        """Validate user input."""
-        if not user_input[CONF_MAC]:
-            return "cannot_discover"
-        if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
-            return "invalid_mac"
-
+        """Validate user input and discover MAC if missing."""
         try:
-            await self.hass.async_add_executor_job(
+            device = await self.hass.async_add_executor_job(
                 S20,
                 user_input[CONF_HOST],
-                user_input[CONF_MAC],
+                user_input.get(CONF_MAC),  # Might be None!
             )
+            if not user_input.get(CONF_MAC):
+                # Using private attribute here because S20 doesn't expose MAC, and otherwise we'd need to do discovery
+                if not device._mac:  # noqa: SLF001
+                    return "cannot_discover"
+                user_input[CONF_MAC] = _format_mac_bytes(device._mac)  # noqa: SLF001
 
         except S20Exception:
             return "cannot_connect"
+
+        if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
+            return "invalid_mac"
 
         return None
 
@@ -104,15 +107,6 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
-            if not user_input.get(CONF_MAC):
-                switches = await self.hass.async_add_executor_job(discover)
-                if switches.get(user_input[CONF_HOST]):
-                    user_input[CONF_MAC] = _format_mac_bytes(
-                        switches[user_input[CONF_HOST]].get("mac")
-                    )
-            user_input[CONF_MAC] = (
-                format_mac(user_input[CONF_MAC]) if user_input.get(CONF_MAC) else None
-            )
             error = await self._validate_input(user_input)
             if not error:
                 await self.async_set_unique_id(user_input[CONF_MAC])
@@ -193,17 +187,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        _LOGGER.critical("Importing config: %s", user_input)
-
-        if not user_input.get(CONF_MAC):
-            switches = await self.hass.async_add_executor_job(discover)
-            if switches.get(user_input[CONF_HOST]):
-                user_input[CONF_MAC] = _format_mac_bytes(
-                    switches[user_input[CONF_HOST]].get("mac")
-                )
-        user_input[CONF_MAC] = (
-            format_mac(user_input[CONF_MAC]) if user_input.get(CONF_MAC) else None
-        )
+        _LOGGER.debug("Importing config: %s", user_input)
 
         error = await self._validate_input(user_input)
         if error:
