@@ -23,7 +23,7 @@ KEY_WRITE_ENERGY_MODE = "47005"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize("generation", [2, 1], indirect=True)
 async def test_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
