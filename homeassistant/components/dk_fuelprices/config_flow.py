@@ -10,7 +10,13 @@ from aiohttp import ClientResponseError
 from pybraendstofpriser import Braendstofpriser
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
@@ -22,14 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dk_fuelprices."""
 
-    VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    VERSION = 1
 
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"station": BraendstofpriserStationSubentryFlow}
 
@@ -44,7 +49,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step - Enter API key."""
         self._async_abort_entries_match()
         if user_input is not None:
@@ -81,7 +86,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_company_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the company selection step."""
         if user_input is not None:
             # Process the user input and show next selection form
@@ -107,7 +112,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_station_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the station selection step."""
         if user_input is not None:
             # Match station name to station ID
@@ -136,7 +141,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_product_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the product selection step."""
         if user_input is not None:
             # Create the main config entry and store first subentry data
@@ -176,14 +181,14 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a reauth flow when API key is invalid/expired."""
         self._errors = {}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a new API key."""
         if user_input is not None:
             try:
@@ -218,7 +223,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class BraendstofpriserStationSubentryFlow(config_entries.ConfigSubentryFlow):
+class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
     """Handle station subentries for dk_fuelprices."""
 
     def __init__(self) -> None:
@@ -233,14 +238,14 @@ class BraendstofpriserStationSubentryFlow(config_entries.ConfigSubentryFlow):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.SubentryFlowResult:
+    ) -> SubentryFlowResult:
         """Handle the initial step for adding a station subentry."""
         await self._async_init_api()
         return await self.async_step_company_selection(user_input)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.SubentryFlowResult:
+    ) -> SubentryFlowResult:
         """Handle reconfiguring an existing station subentry."""
         self._reconfigure = True
         subentry = self._get_reconfigure_subentry()
@@ -269,7 +274,7 @@ class BraendstofpriserStationSubentryFlow(config_entries.ConfigSubentryFlow):
 
     async def async_step_company_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.SubentryFlowResult:
+    ) -> SubentryFlowResult:
         """Handle the company selection step."""
         if self._errors:
             return self.async_abort(reason=self._errors["base"])
@@ -303,7 +308,7 @@ class BraendstofpriserStationSubentryFlow(config_entries.ConfigSubentryFlow):
 
     async def async_step_station_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.SubentryFlowResult:
+    ) -> SubentryFlowResult:
         """Handle the station selection step."""
         if user_input is not None:
             # Match station name to station ID
@@ -354,7 +359,7 @@ class BraendstofpriserStationSubentryFlow(config_entries.ConfigSubentryFlow):
 
     async def async_step_product_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.SubentryFlowResult:
+    ) -> SubentryFlowResult:
         """Handle the product selection step."""
         if user_input is not None:
             # Process the user input and create/update the subentry
