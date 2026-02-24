@@ -3,6 +3,7 @@
 from datetime import datetime
 from functools import partial
 import logging
+from typing import Any
 
 from pyhomematic import HMConnection
 import voluptuous as vol
@@ -215,8 +216,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_CONF] = remotes = {}
     hass.data[DATA_STORE] = set()
 
+    interfaces: dict[str, dict[str, Any]] = conf[CONF_INTERFACES]
+    hosts: dict[str, dict[str, Any]] = conf[CONF_HOSTS]
+
     # Create hosts-dictionary for pyhomematic
-    for rname, rconfig in conf[CONF_INTERFACES].items():
+    for rname, rconfig in interfaces.items():
         remotes[rname] = {
             "ip": rconfig.get(CONF_HOST),
             "port": rconfig.get(CONF_PORT),
@@ -232,7 +236,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "connect": True,
         }
 
-    for sname, sconfig in conf[CONF_HOSTS].items():
+    for sname, sconfig in hosts.items():
         remotes[sname] = {
             "ip": sconfig.get(CONF_HOST),
             "port": sconfig[CONF_PORT],
@@ -258,7 +262,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
 
     # Init homematic hubs
-    entity_hubs = [HMHub(hass, homematic, hub_name) for hub_name in conf[CONF_HOSTS]]
+    entity_hubs = [HMHub(hass, homematic, hub_name) for hub_name in hosts]
 
     def _hm_service_virtualkey(service: ServiceCall) -> None:
         """Service to handle virtualkey servicecalls."""
@@ -294,7 +298,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _service_handle_value(service: ServiceCall) -> None:
         """Service to call setValue method for HomeMatic system variable."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
         name = service.data[ATTR_NAME]
         value = service.data[ATTR_VALUE]
 
