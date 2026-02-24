@@ -68,14 +68,6 @@ async def _validate_device_and_get_info(
                 actual_host,
             )
 
-        if upnp_device:
-            return {
-                CONF_UDN: upnp_device.udn,
-                CONF_NAME: upnp_device.friendly_name,
-                "model": upnp_device.model_name or "WiiM Device",
-                CONF_HOST: actual_host,
-                CONF_UPNP_LOCATION: location or upnp_device.device_url,
-            }
         if device_info_from_http:
             return device_info_from_http
         raise CannotConnect("Could not determine device information via UPnP or HTTP.")
