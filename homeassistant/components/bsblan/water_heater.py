@@ -63,6 +63,7 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
+    _attr_operation_list = list(HA_TO_BSBLAN_OPERATION_MODE.keys())
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -73,7 +74,6 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         """Initialize BSBLAN water heater."""
         super().__init__(data.fast_coordinator, data.slow_coordinator, data)
         self._attr_unique_id = format_mac(data.device.MAC)
-        self._attr_operation_list = list(HA_TO_BSBLAN_OPERATION_MODE.keys())
 
         # Set temperature unit
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
