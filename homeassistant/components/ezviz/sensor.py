@@ -103,4 +103,23 @@ class EzvizSensor(EzvizEntity, SensorEntity):
     @property
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
-        return self.data[self._sensor_name]
+        #if self._sensor_name == "last_alarm_pic":
+        #    return "zu lang"
+        #else:
+        if type(self.data[self._sensor_name]) is str and len(self.data[self._sensor_name])>255:
+            return "too long"
+        else:
+            return self.data[self._sensor_name]
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Expose url as attributes."""
+        if self._sensor_name == "last_alarm_pic" and self.coordinator.data:
+            try:
+                return {
+                    "url": self.data[self._sensor_name],
+                }
+            except Exception as err:
+                _LOGGER.error(f"sensor.py ezviz extra_state_attributes: {err}",exc_info=False)
+
+        return {}
