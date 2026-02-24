@@ -6,10 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyvizio.const import APPS
 from pyvizio.util import gen_apps_list_from_url
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -23,29 +21,22 @@ _LOGGER = logging.getLogger(__name__)
 class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Define an object to hold Vizio app config data."""
 
-    config_entry: ConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         store: Store[list[dict[str, Any]]],
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=config_entry,
+            config_entry=None,
             name=DOMAIN,
             update_interval=timedelta(days=1),
         )
         self.fail_count = 0
         self.fail_threshold = 10
         self.store = store
-
-    async def _async_setup(self) -> None:
-        """Refresh data for the first time when a config entry is setup."""
-        self.data = await self.store.async_load() or APPS
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
