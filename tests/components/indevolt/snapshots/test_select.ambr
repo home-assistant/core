@@ -1,0 +1,121 @@
+# serializer version: 1
+# name: test_select[1][select.bk1600_energy_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'self_consumed_prioritized',
+        'real_time_control',
+        'charge_discharge_schedule',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.bk1600_energy_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy mode',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_mode',
+    'unique_id': 'BK1600-12345678_energy_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[1][select.bk1600_energy_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BK1600 Energy mode',
+      'options': list([
+        'self_consumed_prioritized',
+        'real_time_control',
+        'charge_discharge_schedule',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bk1600_energy_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charge_discharge_schedule',
+  })
+# ---
+# name: test_select[2][select.cms_sf2000_energy_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'self_consumed_prioritized',
+        'real_time_control',
+        'charge_discharge_schedule',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.cms_sf2000_energy_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy mode',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_mode',
+    'unique_id': 'SolidFlex2000-87654321_energy_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[2][select.cms_sf2000_energy_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Energy mode',
+      'options': list([
+        'self_consumed_prioritized',
+        'real_time_control',
+        'charge_discharge_schedule',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cms_sf2000_energy_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_consumed_prioritized',
+  })
+# ---
