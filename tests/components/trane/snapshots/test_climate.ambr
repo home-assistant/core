@@ -1,0 +1,89 @@
+# serializer version: 1
+# name: test_climate_entities[climate.living_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'on',
+        'circulate',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 95,
+      'min_temp': 45,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.living_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'trane',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 395>,
+    'translation_key': 'zone',
+    'unique_id': 'test_entry_id_1_zone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities[climate.living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 45,
+      'current_temperature': 72,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'on',
+        'circulate',
+      ]),
+      'friendly_name': 'Living Room',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 95,
+      'min_temp': 45,
+      'supported_features': <ClimateEntityFeature: 395>,
+      'target_temp_high': 76,
+      'target_temp_low': 68,
+      'target_temp_step': 1.0,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---

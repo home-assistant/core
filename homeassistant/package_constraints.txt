@@ -64,7 +64,7 @@ python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.3
 requests==2.32.5
-securetar==2025.2.1
+securetar==2026.2.0
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
@@ -222,9 +222,6 @@ num2words==0.5.14
 # downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.2
-
-# Some packages don't support gql 4.0.0 yet
-gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
