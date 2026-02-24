@@ -57,7 +57,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Fuelprices.dk",
-        version=2,
+        version=1,
         data={CONF_API_KEY: TEST_API_KEY},
         subentries_data=[
             ConfigSubentryData(

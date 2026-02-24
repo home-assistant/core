@@ -78,13 +78,20 @@ async def test_full_user_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fuelprices.dk"
-    assert result["data"][CONF_API_KEY] == TEST_API_KEY
-    assert result["data"]["company"] == TEST_COMPANY
-    assert result["data"]["station"] == TEST_STATION
-    assert result["data"]["products"] == {
-        "Blyfri95": True,
-        "Diesel": False,
-        "Blyfri98": True,
+    assert result["data"] == {CONF_API_KEY: TEST_API_KEY}
+    assert len(result["subentries"]) == 1
+    subentry = result["subentries"][0]
+    assert subentry["subentry_type"] == "station"
+    assert subentry["title"] == f"{TEST_COMPANY} - {TEST_STATION['name']}"
+    assert subentry["unique_id"] == f"{TEST_COMPANY}_{TEST_STATION['id']}"
+    assert subentry["data"] == {
+        "company": TEST_COMPANY,
+        "station": TEST_STATION,
+        "products": {
+            "Blyfri95": True,
+            "Diesel": False,
+            "Blyfri98": True,
+        },
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -326,7 +333,7 @@ async def test_subentry_flow_api_init_error_no_api_key(hass: HomeAssistant) -> N
     config_entry = MockConfigEntry(
         domain="dk_fuelprices",
         title="Fuelprices.dk",
-        version=2,
+        version=1,
         data={},
         subentries_data=[],
     )

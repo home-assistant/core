@@ -39,9 +39,7 @@ async def async_setup_entry(
     """Set up sensor platform for Braendstofpriser integration."""
 
     for coordinator in entry.runtime_data.values():
-        expected_unique_ids = {
-            util_slugify(f"{coordinator.subentry_id}_last_updated_last_updated")
-        }
+        expected_unique_ids = set()
         for product_key in coordinator.products:
             expected_unique_ids.add(
                 util_slugify(f"{coordinator.subentry_id}_price_{product_key}")
@@ -62,28 +60,16 @@ async def async_setup_entry(
 
         subentry_sensors = []
         for sensor in SENSORS:
-            if sensor.key == "last_updated":
+            for product_key, product_info in coordinator.products.items():
+                product_name = product_info["name"]
                 subentry_sensors.append(
                     BraendstofpriserSensor(
                         coordinator,
-                        "last_updated",
-                        "last_updated",
+                        product_key,
+                        product_name if isinstance(product_name, str) else product_key,
                         sensor,
                     )
                 )
-            else:
-                for product_key, product_info in coordinator.products.items():
-                    product_name = product_info["name"]
-                    subentry_sensors.append(
-                        BraendstofpriserSensor(
-                            coordinator,
-                            product_key,
-                            product_name
-                            if isinstance(product_name, str)
-                            else product_key,
-                            sensor,
-                        )
-                    )
 
         async_add_devices(
             subentry_sensors,
@@ -111,10 +97,7 @@ class BraendstofpriserSensor(CoordinatorEntity[APIClient], RestoreSensor):
         self._product_key = product_key
         self._product_name = product_name
 
-        if description.key == "last_updated":
-            self._attr_name = "Last Updated"
-        else:
-            self._attr_name = f"{product_name}"
+        self._attr_name = f"{product_name}"
 
         self._attr_unique_id = util_slugify(
             f"{self.coordinator.subentry_id}_{self.entity_description.key}_{product_key}"
@@ -137,9 +120,6 @@ class BraendstofpriserSensor(CoordinatorEntity[APIClient], RestoreSensor):
 
     def get_value(self):
         """Get the current value of the sensor."""
-        if self.entity_description.key == "last_updated":
-            return self.coordinator.updated_at
-
         return self.coordinator.products[self._product_key]["price"]
 
     @callback

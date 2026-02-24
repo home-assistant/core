@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 from typing import cast
 from unittest.mock import patch
 
-from homeassistant.components.dk_fuelprices.api import APIClient
 from homeassistant.components.dk_fuelprices.const import DOMAIN
+from homeassistant.components.dk_fuelprices.coordinator import APIClient
 from homeassistant.components.dk_fuelprices.sensor import (
     SENSORS,
     BraendstofpriserSensor,
@@ -40,7 +40,7 @@ class FakeCoordinator:
 
 
 async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
-    """Test sensor setup creates one timestamp and one sensor per product."""
+    """Test sensor setup creates one sensor per product."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -72,25 +72,20 @@ async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
         cast(AddConfigEntryEntitiesCallback, _async_add_entities),
     )
 
-    assert len(added_entities) == 3
+    assert len(added_entities) == 2
     assert add_kwargs["config_subentry_id"] == coordinator.subentry_id
 
     slugified_subentry_id = util_slugify(subentry_id)
     unique_ids = {entity.unique_id for entity in added_entities}
     assert unique_ids == {
-        f"{slugified_subentry_id}_last_updated_last_updated",
         f"{slugified_subentry_id}_price_blyfri95",
         f"{slugified_subentry_id}_price_blyfri98",
     }
 
-    last_updated_entity = next(
-        entity for entity in added_entities if entity.name == "Last Updated"
-    )
     product_entity = next(
         entity for entity in added_entities if entity.name == "Blyfri95"
     )
 
-    assert last_updated_entity.native_value == datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
     assert product_entity.native_value == 14.29
     assert product_entity.device_info is not None
     assert product_entity.device_info["identifiers"] == {(DOMAIN, subentry_id)}

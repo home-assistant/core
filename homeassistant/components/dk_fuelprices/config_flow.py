@@ -51,7 +51,6 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step - Enter API key."""
         self._async_abort_entries_match()
-        errors: dict[str, str] = {}
 
         if user_input is not None:
             # Test API key
@@ -61,16 +60,14 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.companies = await self.api.list_companies()
             except ClientResponseError as exc:
                 if exc.status == 401:
-                    errors["base"] = "invalid_api_key"
-                elif exc.status == 429:
-                    errors["base"] = "rate_limit_exceeded"
-                else:
-                    errors["base"] = "cannot_connect"
+                    return self.async_abort(reason="invalid_api_key")
+                if exc.status == 429:
+                    return self.async_abort(reason="rate_limit_exceeded")
+                return self.async_abort(reason="cannot_connect")
 
-            if not errors:
-                # Proceed to company selection
-                self.user_input.update(user_input)
-                return await self.async_step_company_selection()
+            # Proceed to company selection
+            self.user_input.update(user_input)
+            return await self.async_step_company_selection()
 
         # Show the form to the user
         return self.async_show_form(
@@ -80,7 +77,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): str,
                 }
             ),
-            errors=errors,
+            errors={},
             description_placeholders={"website_url": WEBSITE_URL},
         )
 
@@ -95,7 +92,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_station_selection()
 
         if len(self.companies) == 0:
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="rate_limit_exceeded")
 
         # Show the form to the user
         return self.async_show_form(
@@ -144,15 +141,30 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Create the main config entry and store first subentry data
+            # Create the main config entry with the first station subentry
+            subentry_data = {
+                CONF_COMPANY: self.user_input[CONF_COMPANY],
+                CONF_STATION: self.user_input[CONF_STATION],
+                CONF_PRODUCTS: user_input,
+            }
+            unique_id = (
+                f"{self.user_input[CONF_COMPANY]}_{self.user_input[CONF_STATION]['id']}"
+            )
+            title = (
+                f"{self.user_input[CONF_COMPANY]} - "
+                f"{self.user_input[CONF_STATION]['name']}"
+            )
             return self.async_create_entry(
                 title="Fuelprices.dk",
-                data={
-                    CONF_API_KEY: self.user_input[CONF_API_KEY],
-                    CONF_COMPANY: self.user_input[CONF_COMPANY],
-                    CONF_STATION: self.user_input[CONF_STATION],
-                    CONF_PRODUCTS: user_input,
-                },
+                data={CONF_API_KEY: self.user_input[CONF_API_KEY]},
+                subentries=[
+                    {
+                        "subentry_type": "station",
+                        "data": subentry_data,
+                        "title": title,
+                        "unique_id": unique_id,
+                    }
+                ],
             )
 
         try:
