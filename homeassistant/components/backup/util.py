@@ -16,6 +16,7 @@ from typing import IO, Any, cast
 
 import aiohttp
 from securetar import (
+    InvalidPasswordError,
     SecureTarArchive,
     SecureTarError,
     SecureTarFile,
@@ -165,7 +166,7 @@ def validate_password(path: Path, password: str | None) -> bool:
             ):
                 # If we can read the tar file, the password is correct
                 return True
-        except tarfile.ReadError, SecureTarReadError:
+        except tarfile.ReadError, InvalidPasswordError, SecureTarReadError:
             LOGGER.debug("Invalid password")
             return False
         except Exception:  # noqa: BLE001
@@ -192,13 +193,14 @@ def validate_password_stream(
         for obj in input_archive.tar:
             if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
                 continue
-            with input_archive.extract_tar(obj) as decrypted:
-                if decrypted.plaintext_size is None:
-                    raise UnsupportedSecureTarVersion
-                try:
+            try:
+                with input_archive.extract_tar(obj) as decrypted:
+                    if decrypted.plaintext_size is None:
+                        raise UnsupportedSecureTarVersion
                     decrypted.read(1)  # Read a single byte to trigger the decryption
-                except SecureTarReadError as err:
-                    raise IncorrectPassword from err
+            except (InvalidPasswordError, SecureTarReadError) as err:
+                raise IncorrectPassword from err
+            else:
                 return
     raise BackupEmpty
 
