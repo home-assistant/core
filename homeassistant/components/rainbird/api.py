@@ -20,7 +20,9 @@ with suppress(ImportError):  # pragma: no cover
 
     _create_controller = _imported_create_controller
 
-_CreateController: Callable[[aiohttp.ClientSession, str, str], AsyncRainbirdController] | None = None
+_CreateController: (
+    Callable[[aiohttp.ClientSession, str, str], AsyncRainbirdController] | None
+) = None
 with suppress(ImportError):  # pragma: no cover
     from pyrainbird.async_client import CreateController as _imported_CreateController
 
