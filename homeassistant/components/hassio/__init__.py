@@ -472,12 +472,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 translation_key="mount_reload_unknown_device_id",
                 translation_placeholders={"device_id": service.data[ATTR_DEVICE_ID]},
             )
+
         if device.name is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_unnamed_device",
                 translation_placeholders={"device_id": service.data[ATTR_DEVICE_ID]},
             )
+
         try:
             await supervisor_client.mounts.reload_mount(device.name)
         except SupervisorError as error:
