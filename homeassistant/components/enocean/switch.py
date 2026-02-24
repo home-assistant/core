@@ -5,6 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from enocean.utils import combine_hex
+from enocean_async.eep.db import EEP_DATABASE
+from enocean_async.eep.handler import EEPHandler
+from enocean_async.eep.id import EEPID
+from enocean_async.eep.message import EEPMessage
 from enocean_async.erp1.telegram import ERP1Telegram
 import voluptuous as vol
 
@@ -122,17 +126,23 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     def value_changed(self, telegram: ERP1Telegram):
         """Update the internal state of the switch."""
-        # if packet.data[0] == 0xA5:
-        #     # power meter telegram, turn on if > 10 watts
-        #     packet.parse_eep(0x12, 0x01)
-        #     if packet.parsed["DT"]["raw_value"] == 1:
-        #         raw_val = packet.parsed["MR"]["raw_value"]
-        #         divisor = packet.parsed["DIV"]["raw_value"]
-        #         watts = raw_val / (10**divisor)
-        #         if watts > 1:
-        #             self._attr_is_on = True
-        #             self.schedule_update_ha_state()
-        # elif packet.data[0] == 0xD2:
+        if telegram.rorg == 0xA5:
+            # power meter telegram, turn on if > 10 watts
+            if eep := EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01)) is None:
+                return
+
+            msg: EEPMessage = EEPHandler(eep).decode(telegram)
+
+            if "DT" in msg.values and msg.values["DT"] == 1:
+                # this packet reports the current value
+                raw_val = msg.values["MR"]
+                divisor = msg.values["DIV"]
+                watts = raw_val / (10**divisor)
+                if watts > 1:
+                    self._attr_is_on = True
+                    self.schedule_update_ha_state()
+
+        # elif telegram.rorg == 0xD2:
         #     # actuator status telegram
         #     packet.parse_eep(0x01, 0x01)
         #     if packet.parsed["CMD"]["raw_value"] == 4:
