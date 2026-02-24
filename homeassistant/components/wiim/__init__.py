@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
                 upnp_location,
             )
             try:
-                factory = UpnpFactory(requester)
+                factory = UpnpFactory(AiohttpRequester(timeout=10))
                 upnp_device_instance = await factory.async_create_device(upnp_location)
                 SDK_LOGGER.debug(
                     "Successfully created UpnpDevice: %s",
