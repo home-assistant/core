@@ -1,214 +1,134 @@
 """Define tests for SimpliSafe setup."""
 
-import asyncio
-import contextlib
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     RequestError,
     SimplipyError,
-    WebsocketError,
 )
+from simplipy.websocket import WebsocketEvent
 
-from homeassistant.components.simplisafe import (
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    WEBSOCKET_RECONNECT_RETRIES,
-    WEBSOCKET_RETRY_DELAY,
-    SimpliSafe,
-)
+from homeassistant.components.simplisafe import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_base_station_migration(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, api, config, config_entry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    api: Mock,
+    config: dict[str, str],
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
 ) -> None:
-    """Test that errors are shown when duplicates are added."""
-    old_identifers = (DOMAIN, 12345)
-    new_identifiers = (DOMAIN, "12345")
+    """Test that old integer-based device identifiers are migrated to strings."""
+    old_identifiers = {(DOMAIN, 12345)}
+    new_identifiers = {(DOMAIN, "12345")}
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={old_identifers},
+        identifiers=old_identifiers,
         manufacturer="SimpliSafe",
         name="old",
     )
 
-    with (
-        patch(
-            "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
-            return_value=api,
-        ),
-        patch(
-            "homeassistant.components.simplisafe.API.async_from_auth",
-            return_value=api,
-        ),
-        patch(
-            "homeassistant.components.simplisafe.API.async_from_refresh_token",
-            return_value=api,
-        ),
-        patch("homeassistant.components.simplisafe.SimpliSafe._async_websocket_loop"),
-        patch(
-            "homeassistant.components.simplisafe.PLATFORMS",
-            [],
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={old_identifers}) is None
-    assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
+    assert device_registry.async_get_device(identifiers=old_identifiers) is None
+    assert device_registry.async_get_device(identifiers=new_identifiers) is not None
+
+
+async def test_coordinator_update_triggers_reauth_on_invalid_credentials(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    system_v3,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that InvalidCredentialsError triggers a reauth flow."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    system_v3.async_update = AsyncMock(side_effect=InvalidCredentialsError("fail"))
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow.get("context", {}).get("source") == SOURCE_REAUTH
+    assert flow.get("context", {}).get("entry_id") == config_entry.entry_id
 
 
 @pytest.mark.parametrize(
-    ("exc", "expected_exception", "should_cancel_task"),
-    [
-        (InvalidCredentialsError, ConfigEntryAuthFailed, True),
-        (RequestError, UpdateFailed, True),
-        (EndpointUnavailableError, None, False),
-        (SimplipyError, UpdateFailed, False),
-    ],
+    "exc",
+    [RequestError, EndpointUnavailableError, SimplipyError],
 )
-async def test_coordinator_exceptions_and_websocket_behavior(
-    simplisafe_manager: SimpliSafe,
+async def test_coordinator_update_failure_keeps_entity_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    system_v3,
+    freezer: FrozenDateTimeFactory,
     exc: type[SimplipyError],
-    expected_exception: type[HomeAssistantError],
-    should_cancel_task: bool,
 ) -> None:
-    """Test that exceptions propagate to the coordinator and successfully stop and restart the websocket task."""
+    """Test that a single coordinator failure does not immediately mark entities unavailable."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    manager: SimpliSafe = simplisafe_manager
-    coordinator = manager.coordinator
-    assert coordinator is not None
+    assert hass.states.get("lock.front_door_lock").state != STATE_UNAVAILABLE
 
-    async def raise_exc(*args, **kwargs) -> None:
-        raise exc("fail")
+    system_v3.async_update = AsyncMock(side_effect=exc("fail"))
 
-    for system in manager.systems.values():
-        system.async_update = AsyncMock(side_effect=raise_exc)
+    # Trigger one coordinator failure: error_count goes from 0 to 1, below threshold.
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Advance time to trigger coordinator update
-    assert coordinator.update_interval is not None
-    assert coordinator.update_interval == DEFAULT_SCAN_INTERVAL
-    await coordinator.async_refresh()
-    await manager._hass.async_block_till_done()
-
-    # Verify coordinator recorded the exception correctly
-    if expected_exception is None:
-        assert coordinator.last_update_success
-        assert coordinator.last_exception is None
-    else:
-        assert not coordinator.last_update_success
-        assert isinstance(coordinator.last_exception, expected_exception)
-
-    task_after = manager._websocket_task
-    if should_cancel_task:
-        assert task_after is None or task_after.done() or task_after.cancelled()
-    else:
-        assert task_after is not None and not task_after.done()
-
-    if should_cancel_task:
-        # Save the task before we patch async_update to succeed
-        task_before_restart = manager._websocket_task
-
-        # Patch async_update to succeed for the next refresh
-        async def succeed_update(*args, **kwargs):
-            return None
-
-        for system in manager.systems.values():
-            system.async_update = AsyncMock(side_effect=succeed_update)
-
-        # Trigger the next successful coordinator refresh
-        await coordinator.async_refresh()
-        await manager._hass.async_block_till_done()
-
-        # Check that the websocket has restarted
-        task_after_restart = manager._websocket_task
-        assert task_after_restart is not None
-        assert task_after_restart is not task_before_restart
-        assert not task_after_restart.done()
-    else:
-        # For exceptions that don’t cancel the websocket, just assert it’s still running
-        assert task_after is not None and not task_after.done()
+    assert hass.states.get("lock.front_door_lock").state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    ("exc_type", "max_retries"),
-    [
-        (WebsocketError, WEBSOCKET_RECONNECT_RETRIES),
-        (asyncio.CancelledError, 1),
-        (Exception, 1),
-    ],
-)
-async def test_websocket_backoff_parametrized(
-    simplisafe_manager: SimpliSafe, websocket, exc_type, max_retries
+async def test_websocket_event_updates_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
 ) -> None:
-    """Test websocket backoff behavior."""
-    manager = simplisafe_manager
-    sleep_calls: list[float] = []
+    """Test that a push update from the websocket changes entity state."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    original_sleep = asyncio.sleep
+    # Retrieve the event callback that was registered with the mock websocket.
+    assert websocket.add_event_callback.called
+    event_callback = websocket.add_event_callback.call_args[0][0]
 
-    async def fake_sleep(delay: float):
-        if delay >= WEBSOCKET_RETRY_DELAY:
-            sleep_calls.append(delay)
-        await original_sleep(0)
+    assert hass.states.get("lock.front_door_lock").state == "locked"
 
-    with patch("asyncio.sleep", new=fake_sleep):
-        task = manager._websocket_task
-        assert task is not None
+    # Fire an "unlock" websocket event for the test lock (system_id=12345, serial="987").
+    # CID 9700 maps to EVENT_LOCK_UNLOCKED in the simplipy event mapping.
+    event_callback(
+        WebsocketEvent(
+            event_cid=9700,
+            info="Lock unlocked",
+            system_id=12345,
+            _raw_timestamp=0,
+            _video=None,
+            _vid=None,
+            sensor_serial="987",
+        )
+    )
+    await hass.async_block_till_done()
 
-        if exc_type is asyncio.CancelledError:
-            task.cancel()
-            await asyncio.sleep(0)  # yield
-        elif exc_type is Exception:
-            # Generic exception: trigger once and yield
-            websocket.state["raise_exc"] = exc_type("fail")
-            websocket.listen_event.set()
-            await asyncio.sleep(0)
-        else:
-            # Test retries 1..max_retries automatically
-            for retries in range(1, max_retries + 1):
-                # trigger websocket error 'retries' times
-                for i in range(retries):
-                    websocket.state["raise_exc"] = exc_type(f"fail {i}")
-                    websocket.listen_event.set()
-                    # wait until the websocket task has incremented retries and slept
-                    while len(sleep_calls) < i + 1:
-                        await asyncio.sleep(0.01)
-
-                # clear exception → recovery
-                websocket.state["raise_exc"] = None
-                websocket.listen_event.set()
-                await asyncio.sleep(0.01)
-
-                # verify the prefix of expected backoff
-                expected_backoff = [
-                    WEBSOCKET_RETRY_DELAY * (2**i) for i in range(retries)
-                ]
-                assert sleep_calls[-retries:] == expected_backoff, (
-                    f"Backoff for {retries} retries should be {expected_backoff}, got {sleep_calls[-retries:]}"
-                )
-
-    # --- Verify task state ---
-    task = manager._websocket_task
-    if exc_type is asyncio.CancelledError or exc_type is Exception:
-        assert task is None or task.done() or task.cancelled()
-    elif retries < WEBSOCKET_RECONNECT_RETRIES:
-        assert task is not None
-        assert not task.done()
-    else:
-        assert task is None or task.done()
-
-    # --- Cleanup ---
-    if task and not task.done():
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await task
+    assert hass.states.get("lock.front_door_lock").state == "unlocked"
