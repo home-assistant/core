@@ -33,6 +33,32 @@ class WAQISensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[WAQIAirQuality], StateType]
 
 
+def _dominant_pollutant(aq: WAQIAirQuality) -> str | None:
+    """Return dominant pollutant only when reported pollutant data exists."""
+    pollutant = aq.dominant_pollutant
+    if pollutant is None:
+        return None
+
+    pollutant_values = {
+        Pollutant.CO: aq.extended_air_quality.carbon_monoxide,
+        Pollutant.NO2: aq.extended_air_quality.nitrogen_dioxide,
+        Pollutant.O3: aq.extended_air_quality.ozone,
+        Pollutant.SO2: aq.extended_air_quality.sulfur_dioxide,
+        Pollutant.PM10: aq.extended_air_quality.pm10,
+        Pollutant.PM25: aq.extended_air_quality.pm25,
+    }
+
+    try:
+        parsed_pollutant = Pollutant(pollutant)
+    except ValueError:
+        return None
+
+    if pollutant_values.get(parsed_pollutant) is None:
+        return None
+
+    return pollutant
+
+
 SENSORS: list[WAQISensorEntityDescription] = [
     WAQISensorEntityDescription(
         key="air_quality",
@@ -119,7 +145,7 @@ SENSORS: list[WAQISensorEntityDescription] = [
         translation_key="dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
         options=[pollutant.value for pollutant in Pollutant],
-        value_fn=lambda aq: aq.dominant_pollutant,
+        value_fn=_dominant_pollutant,
     ),
 ]
 
