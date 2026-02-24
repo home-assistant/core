@@ -8,12 +8,11 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.camera import CameraState
-from homeassistant.components.zoneminder.camera import setup_platform
 from homeassistant.components.zoneminder.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_HOST, create_mock_monitor, create_mock_zm_client
+from .conftest import create_mock_monitor, create_mock_zm_client
 
 from tests.common import async_fire_time_changed
 
@@ -191,14 +190,20 @@ async def test_multi_server_camera_creation(
     assert len(states) == 2
 
 
-def test_filter_urllib3_logging_called(hass: HomeAssistant) -> None:
+async def test_filter_urllib3_logging_called(
+    hass: HomeAssistant,
+    mock_zoneminder_client: MagicMock,
+    single_server_config: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test filter_urllib3_logging() is called in setup_platform."""
-    client = create_mock_zm_client(monitors=[create_mock_monitor()])
-    hass.data[DOMAIN] = {MOCK_HOST: client}
+    monitors = [create_mock_monitor(name="Front Door")]
 
     with patch(
         "homeassistant.components.zoneminder.camera.filter_urllib3_logging"
     ) as mock_filter:
-        setup_platform(hass, {}, MagicMock())
+        await _setup_zm_with_cameras(
+            hass, mock_zoneminder_client, single_server_config, monitors, freezer
+        )
 
     mock_filter.assert_called_once()

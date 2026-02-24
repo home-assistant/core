@@ -9,14 +9,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zoneminder.monitor import MonitorState, TimePeriod
 
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.zoneminder.const import DOMAIN
-from homeassistant.components.zoneminder.sensor import setup_platform
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_HOST, create_mock_monitor, create_mock_zm_client
+from .conftest import create_mock_monitor
 
 from tests.common import async_fire_time_changed
 
@@ -461,7 +459,12 @@ async def test_include_archived_flag(
     monitors[0].get_events.assert_called_with(TimePeriod.ALL, True)
 
 
-def test_sensor_count_calculation(hass: HomeAssistant) -> None:
+async def test_sensor_count_calculation(
+    hass: HomeAssistant,
+    mock_zoneminder_client: MagicMock,
+    single_server_config: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test correct number of sensors created per monitor and client.
 
     For each monitor: 1 status + N event sensors
@@ -471,17 +474,23 @@ def test_sensor_count_calculation(hass: HomeAssistant) -> None:
         create_mock_monitor(monitor_id=1, name="Cam1"),
         create_mock_monitor(monitor_id=2, name="Cam2"),
     ]
-    client = create_mock_zm_client(monitors=monitors)
-    hass.data[DOMAIN] = {MOCK_HOST: client}
-
-    entities: list[SensorEntity] = []
-    mock_add = MagicMock(side_effect=entities.extend)
-
-    config = {
-        "monitored_conditions": ["all", "hour"],
-        "include_archived": False,
+    sensor_config = {
+        "sensor": [
+            {
+                "platform": DOMAIN,
+                "monitored_conditions": ["all", "hour"],
+                "include_archived": False,
+            }
+        ]
     }
-    setup_platform(hass, config, mock_add)
+    await _setup_zm_with_sensors(
+        hass,
+        mock_zoneminder_client,
+        single_server_config,
+        monitors,
+        freezer,
+        sensor_config=sensor_config,
+    )
 
     # 2 monitors * (1 status + 2 events) + 1 run state = 7
-    assert len(entities) == 7
+    assert len(hass.states.async_all("sensor")) == 7

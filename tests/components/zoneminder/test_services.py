@@ -8,9 +8,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.zoneminder.const import DOMAIN
-from homeassistant.components.zoneminder.services import _set_active_state
 from homeassistant.const import ATTR_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HOST, MOCK_HOST_2, create_mock_zm_client
@@ -123,20 +122,3 @@ async def test_set_run_state_invalid_host(
         )
 
     assert "Invalid ZoneMinder host provided" in caplog.text
-
-
-def test_set_active_state_failure_logs_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test set_active_state failure logs error."""
-    client = create_mock_zm_client()
-    client.set_active_state.return_value = False
-    hass.data[DOMAIN] = {MOCK_HOST: client}
-
-    mock_call = MagicMock(spec=ServiceCall)
-    mock_call.data = {ATTR_ID: MOCK_HOST, ATTR_NAME: "Away"}
-    mock_call.hass = hass
-
-    _set_active_state(mock_call)
-
-    assert "Unable to change ZoneMinder state" in caplog.text

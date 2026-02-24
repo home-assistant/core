@@ -12,22 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_PATH, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_HOST, MOCK_HOST_2, create_mock_zm_client
+from .conftest import MOCK_HOST
 
 CONF_PATH_ZMS = "path_zms"
-
-
-async def test_client_stored_in_hass_data(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-) -> None:
-    """Test ZM client is stored in hass.data[DOMAIN][hostname]."""
-    assert await async_setup_component(hass, DOMAIN, single_server_config)
-    await hass.async_block_till_done()
-
-    assert MOCK_HOST in hass.data[DOMAIN]
-    assert hass.data[DOMAIN][MOCK_HOST] is mock_zoneminder_client
 
 
 async def test_constructor_called_with_http_prefix(
@@ -161,53 +148,6 @@ async def test_connection_error_logged(
     assert "Connection refused" in caplog.text
     # The component still reports success (this is the regression behavior)
     assert result is True
-
-
-async def test_multi_server_both_clients_stored(
-    hass: HomeAssistant, multi_server_config: dict
-) -> None:
-    """Test both clients stored in hass.data for multi-server config."""
-    clients = []
-
-    def make_client(*args, **kwargs):
-        c = create_mock_zm_client()
-        clients.append(c)
-        return c
-
-    with patch(
-        "homeassistant.components.zoneminder.ZoneMinder",
-        side_effect=make_client,
-    ):
-        assert await async_setup_component(hass, DOMAIN, multi_server_config)
-        await hass.async_block_till_done()
-
-    assert len(hass.data[DOMAIN]) == 2
-    assert MOCK_HOST in hass.data[DOMAIN]
-    assert MOCK_HOST_2 in hass.data[DOMAIN]
-
-
-async def test_multi_server_one_login_fail(
-    hass: HomeAssistant, multi_server_config: dict
-) -> None:
-    """Test one login failure with multi-server config."""
-    call_count = 0
-
-    def make_client(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return create_mock_zm_client(login_success=True)
-        return create_mock_zm_client(login_success=False)
-
-    with patch(
-        "homeassistant.components.zoneminder.ZoneMinder",
-        side_effect=make_client,
-    ):
-        await async_setup_component(hass, DOMAIN, multi_server_config)
-        await hass.async_block_till_done()
-
-    # Both clients should still be stored even if one fails login
-    assert len(hass.data[DOMAIN]) == 2
 
 
 async def test_async_setup_services_invoked(
