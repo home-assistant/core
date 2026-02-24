@@ -555,8 +555,6 @@ build.json @home-assistant/supervisor
 /tests/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
-/homeassistant/components/fritzbox_callmonitor/ @cdce8p
-/tests/components/fritzbox_callmonitor/ @cdce8p
 /homeassistant/components/fronius/ @farmio
 /tests/components/fronius/ @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
@@ -1968,6 +1966,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/zone/ @home-assistant/core
 /tests/components/zone/ @home-assistant/core
 /homeassistant/components/zoneminder/ @rohankapoorcom @nabbi
+/tests/components/zoneminder/ @rohankapoorcom @nabbi
 /homeassistant/components/zwave_js/ @home-assistant/z-wave
 /tests/components/zwave_js/ @home-assistant/z-wave
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS

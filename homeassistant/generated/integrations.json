@@ -905,7 +905,7 @@
       "iot_class": "local_polling"
     },
     "bsblan": {
-      "name": "BSB-Lan",
+      "name": "BSB-LAN",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5302,7 +5302,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_polling",
-          "name": "Powerfox"
+          "name": "Powerfox Cloud"
         },
         "powerfox_local": {
           "integration_type": "device",
@@ -7766,7 +7766,7 @@
     },
     "wiz": {
       "name": "WiZ",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
