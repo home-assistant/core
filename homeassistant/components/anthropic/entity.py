@@ -67,6 +67,7 @@ import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
+from homeassistant.helpers.llm import sanitize_tool_schema
 from homeassistant.helpers.llm_schema import sanitize_tool_schema
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
