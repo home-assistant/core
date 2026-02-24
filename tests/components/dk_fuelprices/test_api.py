@@ -92,13 +92,37 @@ async def test_api_client_update_last_update_none(
 async def test_api_client_setup_populates_products(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
-    """Test _async_setup repopulates selected products."""
+    """Test _async_setup does not populate products before first update."""
     client = _create_client(hass)
     client.products = {}
 
     await client._async_setup()
 
-    assert client.products == {"Blyfri95": {"name": "Blyfri95", "price": None}}
+    assert client.products == {}
+
+
+async def test_api_client_update_populates_all_available_products(
+    hass: HomeAssistant, mock_braendstofpriser
+) -> None:
+    """Test update creates sensors for all products returned by the API."""
+    client = _create_client(hass)
+    client.products = {}
+
+    client._api.get_prices.return_value = {
+        "station": {
+            "id": TEST_STATION["id"],
+            "name": TEST_STATION["name"],
+            "last_update": "2024-01-02T13:14:15",
+        },
+        "prices": {"Blyfri95": 15.55, "Diesel": 13.21},
+    }
+
+    await client._async_update_data()
+
+    assert client.products == {
+        "Blyfri95": {"name": "Blyfri95", "price": 15.55},
+        "Diesel": {"name": "Diesel", "price": 13.21},
+    }
 
 
 async def test_api_client_product_not_found_raises_entry_error(

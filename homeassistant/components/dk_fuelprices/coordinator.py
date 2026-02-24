@@ -32,7 +32,7 @@ class APIClient(DataUpdateCoordinator[None]):
         api_key: str,
         company: str,
         station: dict[str, Any],
-        products: dict[str, bool],
+        _products: dict[str, bool],
         subentry_id: str,
         config_entry: ConfigEntry,
     ) -> None:
@@ -50,22 +50,14 @@ class APIClient(DataUpdateCoordinator[None]):
         self.station_id: int = station["id"]
         self.station_name: str = station["name"]
         self.subentry_id = subentry_id
-        self._products = products
         self.products: dict[str, dict[str, str | float | None]] = {}
         self.updated_at: datetime | None = None
 
         self.name = self.company
 
-        for product, selected in self._products.items():
-            if selected:
-                self.products[product] = {"name": product, "price": None}
-
     async def _async_setup(self) -> None:
         """Initialize the API client."""
-        _LOGGER.debug("Selected products: %s", self._products)
-        for product, selected in self._products.items():
-            if selected:
-                self.products[product] = {"name": product, "price": None}
+        _LOGGER.debug("Initializing coordinator for station %s", self.station_id)
 
     async def _async_update_data(self) -> None:
         """Handle data update request from the coordinator."""
@@ -83,13 +75,18 @@ class APIClient(DataUpdateCoordinator[None]):
             else:
                 self.updated_at = dt_util.as_utc(parsed_last_update)
 
+            # Expose every available product for the station.
+            self.products = {
+                product: {"name": product, "price": price}
+                for product, price in data["prices"].items()
+            }
+
             for product, product_data in self.products.items():
                 _LOGGER.debug("Getting price for %s", product)
-                product_data["price"] = data["prices"].get(product)
                 _LOGGER.debug(
                     "Updated price for %s: %s",
                     product_data["name"],
-                    data["prices"].get(product),
+                    product_data["price"],
                 )
                 _LOGGER.debug(
                     "Updated at: %s",

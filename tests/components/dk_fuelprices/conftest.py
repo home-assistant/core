@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.dk_fuelprices.const import (
     CONF_COMPANY,
-    CONF_PRODUCTS,
     CONF_STATION,
     DOMAIN,
 )
@@ -20,7 +19,6 @@ from tests.common import MockConfigEntry
 TEST_API_KEY = "test-api-key"
 TEST_COMPANY = "Circle K"
 TEST_STATION = {"id": 1234, "name": "Aarhus C"}
-TEST_PRODUCTS = {"Blyfri95": True, "Diesel": False, "Blyfri98": True}
 TEST_PRICES = {"Blyfri95": 14.29, "Diesel": 12.99, "Blyfri98": 14.99}
 
 
@@ -67,7 +65,6 @@ def mock_config_entry() -> MockConfigEntry:
                 data={
                     CONF_COMPANY: TEST_COMPANY,
                     CONF_STATION: TEST_STATION,
-                    CONF_PRODUCTS: TEST_PRODUCTS,
                 },
             )
         ],

@@ -23,20 +23,6 @@
         },
         "description": "Select company"
       },
-      "product_selection": {
-        "data": {
-          "Blyfri95": "Unleaded 95",
-          "Blyfri98": "Unleaded 98",
-          "Diesel": "Diesel",
-          "products": "Select product(s)"
-        },
-        "data_description": {
-          "Blyfri95": "Show sensor for Unleaded 95",
-          "Blyfri98": "Show sensor for Unleaded 98",
-          "Diesel": "Show sensor for Diesel"
-        },
-        "description": "Select the products you want prices for. One sensor is created per product."
-      },
       "reauth_confirm": {
         "data": {
           "api_key": "Enter new API key"
@@ -70,7 +56,6 @@
     "station": {
       "abort": {
         "already_configured": "Integration is already configured, only one instance allowed.",
-        "reconfigure_successful": "Products were updated.",
         "station_already_configured": "The selected station for this company is already configured"
       },
       "entry_type": "Station",
@@ -80,7 +65,6 @@
         "rate_limit_exceeded": "Too many requests to the API. Please try again later."
       },
       "initiate_flow": {
-        "reconfigure": "Edit products",
         "user": "Add station"
       },
       "step": {
@@ -93,20 +77,6 @@
           },
           "description": "Select company"
         },
-        "product_selection": {
-          "data": {
-            "Blyfri95": "Unleaded 95",
-            "Blyfri98": "Unleaded 98",
-            "Diesel": "Diesel",
-            "products": "Select product(s)"
-          },
-          "data_description": {
-            "Blyfri95": "Show sensor for Unleaded 95",
-            "Blyfri98": "Show sensor for Unleaded 98",
-            "Diesel": "Show sensor for Diesel"
-          },
-          "description": "Select the products you want prices for. One sensor is created per product."
-        },
         "station_selection": {
           "data": {
             "station": "Select station"
@@ -116,16 +86,6 @@
           },
           "description": "Select station to show prices for"
         }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "product_selection": {
-        "data": {
-          "products": "Select product(s)"
-        },
-        "description": "Select the products you want prices for. One sensor is created per product."
       }
     }
   }

@@ -68,7 +68,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional icons.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: done
 

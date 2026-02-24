@@ -13,7 +13,6 @@ from homeassistant.components.dk_fuelprices import (
 )
 from homeassistant.components.dk_fuelprices.const import (
     CONF_COMPANY,
-    CONF_PRODUCTS,
     CONF_STATION,
     DOMAIN,
 )
@@ -23,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_PRODUCTS, TEST_STATION
+from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_STATION
 
 from tests.common import MockConfigEntry
 
@@ -53,7 +52,6 @@ async def test_async_setup_entry_creates_coordinator(hass: HomeAssistant) -> Non
                 data={
                     CONF_COMPANY: TEST_COMPANY,
                     CONF_STATION: TEST_STATION,
-                    CONF_PRODUCTS: TEST_PRODUCTS,
                 },
             )
         ],
@@ -91,7 +89,6 @@ async def test_async_setup_entry_returns_false_without_api_key(
                 data={
                     CONF_COMPANY: TEST_COMPANY,
                     CONF_STATION: TEST_STATION,
-                    CONF_PRODUCTS: TEST_PRODUCTS,
                 },
             )
         ],
@@ -191,7 +188,6 @@ async def test_async_setup_and_unload_entry(hass: HomeAssistant) -> None:
                 data={
                     CONF_COMPANY: TEST_COMPANY,
                     CONF_STATION: TEST_STATION,
-                    CONF_PRODUCTS: TEST_PRODUCTS,
                 },
             )
         ],

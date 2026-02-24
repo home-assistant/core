@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import CONF_COMPANY, CONF_PRODUCTS, CONF_STATION, DOMAIN
+from .const import CONF_COMPANY, CONF_STATION, DOMAIN
 from .coordinator import APIClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,20 +37,17 @@ async def async_setup_entry(
     for subentry_id, subentry in config_entry.subentries.items():
         company = subentry.data.get(CONF_COMPANY)
         station = subentry.data.get(CONF_STATION)
-        products = subentry.data.get(CONF_PRODUCTS, {})
 
         if not isinstance(company, str) or not isinstance(station, dict):
             _LOGGER.error("Invalid subentry data in %s", subentry_id)
             continue
-        if not isinstance(products, dict):
-            products = {}
 
         coordinator = APIClient(
             hass,
             api_key,
             company,
             station,
-            products,
+            {},
             subentry_id,
             config_entry,
         )
