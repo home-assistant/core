@@ -28,7 +28,6 @@ from .const import (
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
-COMMON_UPNP_HTTP_PORTS = [80, 49152, 1400]
 
 
 async def _validate_device_and_get_info(
