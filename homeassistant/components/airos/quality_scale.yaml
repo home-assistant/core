@@ -43,7 +43,9 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: exempt
+    comment: No way to detect device on the network
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
