@@ -73,9 +73,6 @@
       "stack_containers_count": {
         "default": "mdi:server"
       },
-      "stack_status": {
-        "default": "mdi:server"
-      },
       "stack_type": {
         "default": "mdi:server"
       },
