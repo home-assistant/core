@@ -1,7 +1,7 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
 import logging
 import pathlib
@@ -33,6 +33,8 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.b01_q10 import B01_Q10_DP
+from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.v1 import PropertiesApi
@@ -75,6 +77,10 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO_BY_DEVICE,
     Q7_B01_PROPS,
+    Q10_B01_PROPS,
+    Q10_DEVICE_PRODUCT,
+    Q10_HOME_DATA_DEVICE,
+    Q10_STATUS_DATA,
     ROBOROCK_RRUID,
     ROOM_MAPPING,
     SCENES,
@@ -148,6 +154,135 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
     return b01_trait
+
+
+def create_b01_q10_trait() -> Mock:
+    """Create B01 Q10 trait for Q10 devices."""
+    q10_trait = AsyncMock()
+    q10_trait._props_data = deepcopy(Q10_B01_PROPS)
+
+    # Store current status that will be reflected in MQTT data
+    q10_trait._current_status = YXDeviceState.STANDBY_STATE.code
+
+    async def query_values_side_effect(protocols):
+        return q10_trait._props_data
+
+    q10_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
+
+    # Add StatusTrait for sensor testing (moved before command definitions)
+    status_trait = AsyncMock()
+    status_trait.data = deepcopy(Q10_STATUS_DATA)
+    status_update_listeners: list[Callable[[dict], None]] = []
+
+    async def status_refresh_side_effect():
+        return status_trait.data
+
+    def add_update_listener_side_effect(
+        callback: Callable[[dict], None],
+    ) -> Callable[[], None]:
+        status_update_listeners.append(callback)
+
+        def remove_listener() -> None:
+            if callback in status_update_listeners:
+                status_update_listeners.remove(callback)
+
+        return remove_listener
+
+    # Mock update_from_dps to simulate MQTT data reception
+    def update_from_dps_side_effect(decoded_dps: dict) -> None:
+        """Simulate receiving MQTT data."""
+        status_trait.data.update(decoded_dps)
+        for callback in status_update_listeners:
+            callback(decoded_dps)
+
+    status_trait.refresh = AsyncMock(side_effect=status_refresh_side_effect)
+    status_trait.add_update_listener = Mock(side_effect=add_update_listener_side_effect)
+    status_trait.update_from_dps = Mock(side_effect=update_from_dps_side_effect)
+    q10_trait.status = status_trait
+
+    # Add API methods for Q10 that also trigger MQTT updates
+    async def start_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+        q10_trait._current_status = YXDeviceState.CLEANING_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    async def pause_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.PAUSED
+        q10_trait._current_status = YXDeviceState.PAUSE_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    async def stop_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
+        q10_trait._current_status = YXDeviceState.STANDBY_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    async def return_to_dock_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.DOCKING
+        q10_trait._current_status = YXDeviceState.TO_CHARGE_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    q10_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    q10_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    q10_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    q10_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    q10_trait.find_me = AsyncMock()
+    q10_trait.set_fan_speed = AsyncMock()
+    q10_trait.send = AsyncMock()
+
+    # Add vacuum sub-object for Q10 vacuum operations
+    vacuum_api = AsyncMock()
+    vacuum_api.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    vacuum_api.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    vacuum_api.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    vacuum_api.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    q10_trait.vacuum = vacuum_api
+
+    # Add command mock for Q10-specific commands (like fan speed)
+    q10_trait.command = AsyncMock()
+    q10_trait.command.send = AsyncMock()
+
+    # Mock start to simulate MQTT subscription initialization
+    async def start_side_effect():
+        """Simulate starting MQTT subscription by triggering update_from_dps."""
+        # Simulate receiving initial MQTT data
+        initial_data = deepcopy(Q10_STATUS_DATA)
+        initial_data[B01_Q10_DP.STATUS] = q10_trait._current_status
+        status_trait.update_from_dps(initial_data)
+
+    q10_trait.start = AsyncMock(side_effect=start_side_effect)
+
+    # Mock refresh to also trigger data update with current status
+    async def refresh_side_effect():
+        """Simulate refreshing data via MQTT with current status."""
+        current_data = deepcopy(Q10_STATUS_DATA)
+        current_data[B01_Q10_DP.STATUS] = q10_trait._current_status
+        status_trait.update_from_dps(current_data)
+
+    q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
+    q10_trait.close = AsyncMock()
+
+    return q10_trait
+
+
+@pytest.fixture(name="q10_s5_plus_device")
+def q10_s5_plus_device_fixture() -> FakeDevice:
+    """Create a mock Q10 S5+ device."""
+    device_data = HomeDataDevice.from_dict(Q10_HOME_DATA_DEVICE)
+    product_data = HomeDataProduct.from_dict(Q10_DEVICE_PRODUCT)
+
+    device = FakeDevice(
+        device_info=deepcopy(device_data),
+        product=deepcopy(product_data),
+    )
+    device.is_connected = True
+    device.is_local_connected = True
+    device.b01_q10_properties = create_b01_q10_trait()
+
+    return device
 
 
 @pytest.fixture(name="bypass_api_client_fixture")
