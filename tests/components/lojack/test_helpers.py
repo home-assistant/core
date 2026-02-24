@@ -149,6 +149,7 @@ def test_safe_float_scientific_notation() -> None:
 
 def test_safe_float_bool() -> None:
     """Test _safe_float with boolean."""
-    # bool is a subclass of int in Python, so True/False can be converted
-    assert _safe_float(True) == 1.0
-    assert _safe_float(False) == 0.0
+    # Booleans are explicitly rejected to prevent invalid coordinates
+    # (bool is a subclass of int, but True/False should not become 1.0/0.0)
+    assert _safe_float(True) is None
+    assert _safe_float(False) is None
