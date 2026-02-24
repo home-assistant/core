@@ -200,6 +200,58 @@ async def test_service_missing_target(
     assert exc_info.value.translation_key == "no_matching_target_entries"
 
 
+@pytest.mark.parametrize("generation", [1], indirect=True)
+async def test_service_discharge_power_too_high(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discharge service validation for max power."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Generation 1 max_discharge_power is 800W, calling with 1000W
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "discharge",
+            {
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "power": 1000,
+                "target_soc": 20,
+            },
+            blocking=True,
+        )
+
+    # Verify error includes expected error string
+    assert "exceeds maximum" in str(exc_info.value)
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_service_discharge_target_soc_below_emergency(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discharge service validation for target SOC."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Emergency SOC in fixture, calling with target SOC as 1
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "discharge",
+            {
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "power": 1000,
+                "target_soc": 1,
+            },
+            blocking=True,
+        )
+
+    # Verify error includes expected error string
+    assert "below emergency SOC" in str(exc_info.value)
+
+
 @pytest.mark.parametrize("generation", [2], indirect=True)
 async def test_charge_outdoor_portable(
     hass: HomeAssistant,

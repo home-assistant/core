@@ -303,7 +303,7 @@
   },
   "services": {
     "charge": {
-      "description": "Real-time control: Starts charging with configured power till the target SOC is reached.",
+      "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
       "fields": {
         "device_ids": {
           "description": "The Indevolt device(s) to start charging.",
@@ -321,7 +321,7 @@
       "name": "Charge"
     },
     "discharge": {
-      "description": "Real-time control: Starts discharging with configured power till the target SOC is reached.",
+      "description": "Real-time control: Starts discharging with configured power until the target SOC is reached.",
       "fields": {
         "device_ids": {
           "description": "The Indevolt device(s) to start discharging.",

@@ -36,7 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up indevolt services (actions)."""
 
-    await async_setup_services(hass)
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+        await async_setup_services(hass)
 
     return True
 

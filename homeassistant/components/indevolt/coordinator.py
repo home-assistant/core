@@ -136,6 +136,6 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_push_data(REALTIME_ACTION_KEY, action)
         await self.async_request_refresh()
 
-    async def async_get_emergency_soc(self) -> int:
+    def async_get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""
         return self.data.get(EMERGENCY_SOC_READ_KEY, 10)
