@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -71,11 +72,16 @@ class APIClient(DataUpdateCoordinator[None]):
         try:
             data = await self._api.get_prices(self.station_id)
             self.station_name = data["station"]["name"]
-            self.updated_at = (
-                datetime.fromisoformat(data["station"]["last_update"])
-                if data["station"]["last_update"] is not None
-                else None
-            )
+            last_update = data["station"]["last_update"]
+            if (
+                last_update is None
+                or (parsed_last_update := dt_util.parse_datetime(last_update)) is None
+            ):
+                self.updated_at = None
+            elif parsed_last_update.tzinfo is None:
+                self.updated_at = parsed_last_update.replace(tzinfo=dt_util.UTC)
+            else:
+                self.updated_at = dt_util.as_utc(parsed_last_update)
 
             for product, product_data in self.products.items():
                 _LOGGER.debug("Getting price for %s", product)

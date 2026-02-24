@@ -12,6 +12,7 @@ from homeassistant.components.dk_fuelprices.api import APIClient
 from homeassistant.components.dk_fuelprices.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_STATION
 
@@ -63,7 +64,8 @@ async def test_api_client_update_success(
 
     assert client.station_name == "Updated Station"
     assert client.updated_at is not None
-    assert client.updated_at.isoformat() == "2024-01-02T13:14:15"
+    assert client.updated_at.tzinfo == dt_util.UTC
+    assert client.updated_at.isoformat() == "2024-01-02T13:14:15+00:00"
     assert client.products["Blyfri95"]["price"] == 15.55
 
 
