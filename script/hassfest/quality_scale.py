@@ -1895,7 +1895,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "spc",
     "speedtestdotnet",
     "spider",
-    "splunk",
     "spotify",
     "sql",
     "srp_energy",
