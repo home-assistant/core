@@ -37,7 +37,10 @@ class OpenDisplayEntity(Entity):
         manufacturer = device_config.manufacturer
         display = device_config.displays[0]
 
-        hw_version = f"{manufacturer.board_type_name or f'UNKNOWN({manufacturer.board_type})'} rev. {manufacturer.board_revision}"
+        board_type = (
+            manufacturer.board_type_name or f"UNKNOWN({manufacturer.board_type})"
+        )
+        hw_version = f"{board_type} rev. {manufacturer.board_revision}"
 
         color_scheme = getattr(
             display.color_scheme_enum, "name", f"UNKNOWN({display.color_scheme})"

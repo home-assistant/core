@@ -11,7 +11,9 @@ import pytest
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.opendisplay.const import DOMAIN
 from homeassistant.components.opendisplay.entity import OpenDisplayImageExtraStoredData
+from homeassistant.components.opendisplay.image import OpenDisplayImageEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import make_service_info
 
@@ -21,6 +23,15 @@ ENTITY_ID = "image.opendisplay_1234"
 
 # Fake prepare_image result: (uncompressed, compressed, processed_pil)
 FAKE_PREPARED = (b"\x00" * 100, b"\x01" * 50, PILImage.new("RGB", (10, 10)))
+
+
+def _get_entity(hass: HomeAssistant) -> OpenDisplayImageEntity:
+    """Get the OpenDisplay image entity via entity platform."""
+    platforms = async_get_platforms(hass, DOMAIN)
+    assert platforms
+    entity = platforms[0].entities[ENTITY_ID]
+    assert isinstance(entity, OpenDisplayImageEntity)
+    return entity
 
 
 async def _setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
@@ -39,24 +50,13 @@ def _mock_upload_device() -> AsyncMock:
     return mock_device
 
 
-async def test_image_entity_created(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that the image entity is created."""
-    await _setup_entry(hass, mock_config_entry)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-
-
 async def test_image_entity_no_image_initially(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test image entity returns None when no image has been uploaded."""
     await _setup_entry(hass, mock_config_entry)
 
-    entity = hass.data["image"].get_entity(ENTITY_ID)
-    assert entity is not None
+    entity = _get_entity(hass)
     image_bytes = await entity.async_image()
     assert image_bytes is None
 
@@ -103,17 +103,13 @@ async def test_upload_image_success(
             target={"entity_id": ENTITY_ID},
             blocking=True,
         )
-        # Let background upload task complete
         await hass.async_block_till_done()
 
-    # Verify BLE upload was attempted (Phase 2)
     mock_upload_dev.upload_prepared_image.assert_awaited_once()
 
-    # Verify the preview image was updated
-    entity = hass.data["image"].get_entity(ENTITY_ID)
+    entity = _get_entity(hass)
     image_bytes = await entity.async_image()
     assert image_bytes is not None
-    assert len(image_bytes) > 0
 
 
 async def test_upload_image_non_local_media(
@@ -181,8 +177,7 @@ async def test_upload_image_non_local_media(
         )
         await hass.async_block_till_done()
 
-    # Verify the preview image was updated
-    entity = hass.data["image"].get_entity(ENTITY_ID)
+    entity = _get_entity(hass)
     image_bytes = await entity.async_image()
     assert image_bytes is not None
 
@@ -220,7 +215,6 @@ async def test_upload_ble_failure_keeps_preview(
             return_value=mock_upload_dev,
         ),
     ):
-        # Service call should NOT raise — BLE failure is in the background
         await hass.services.async_call(
             DOMAIN,
             "upload_image",
@@ -235,11 +229,8 @@ async def test_upload_ble_failure_keeps_preview(
         )
         await hass.async_block_till_done()
 
-    # Preview should still be set despite BLE failure
-    entity = hass.data["image"].get_entity(ENTITY_ID)
-    image_bytes = await entity.async_image()
-    assert image_bytes is not None
-
+    entity = _get_entity(hass)
+    assert await entity.async_image() is not None
     assert "Failed to sync image" in caplog.text
 
 
@@ -286,12 +277,8 @@ async def test_upload_device_not_found_keeps_preview(
         )
         await hass.async_block_till_done()
 
-    entity = hass.data["image"].get_entity(ENTITY_ID)
-
-    # Preview should still be set despite device not found
-    image_bytes = await entity.async_image()
-    assert image_bytes is not None
-
+    entity = _get_entity(hass)
+    assert await entity.async_image() is not None
     # Upload is queued for retry when device comes back in range
     assert entity._pending_upload is not None
 
@@ -339,12 +326,9 @@ async def test_image_persisted_to_disk(
         )
         await hass.async_block_till_done()
 
-    # Verify the image was persisted to storage
-    storage_path = Path(
-        hass.config.path(".storage", "opendisplay", "AA:BB:CC:DD:EE:FF.png")
-    )
+    storage_path = _get_entity(hass)._get_storage_path()
     assert storage_path.exists()
-    assert len(storage_path.read_bytes()) > 0
+    assert storage_path.stat().st_size > 0
 
 
 async def test_extra_restore_state_data(
@@ -353,7 +337,7 @@ async def test_extra_restore_state_data(
     """Test extra_restore_state_data returns correct metadata."""
     await _setup_entry(hass, mock_config_entry)
 
-    entity = hass.data["image"].get_entity(ENTITY_ID)
+    entity = _get_entity(hass)
 
     # Initially no image
     data = entity.extra_restore_state_data
@@ -362,13 +346,12 @@ async def test_extra_restore_state_data(
 
     # Simulate setting an image
     entity._current_image = b"\x00"
-    entity._attr_image_last_updated = None
 
     data = entity.extra_restore_state_data
     assert data.has_stored_image is True
 
 
-async def test_extra_stored_data_roundtrip() -> None:
+def test_extra_stored_data_roundtrip() -> None:
     """Test ExtraStoredData serialization roundtrip."""
     original = OpenDisplayImageExtraStoredData(
         image_last_updated="2026-02-17T12:00:00+00:00",
@@ -383,7 +366,7 @@ async def test_extra_stored_data_roundtrip() -> None:
     assert restored.has_stored_image is True
 
 
-async def test_extra_stored_data_from_dict_invalid() -> None:
+def test_extra_stored_data_from_dict_invalid() -> None:
     """Test ExtraStoredData returns None for invalid data."""
     assert OpenDisplayImageExtraStoredData.from_dict({}) is None
     assert (
@@ -434,9 +417,7 @@ async def test_upload_success_clears_pending(
         )
         await hass.async_block_till_done()
 
-    entity = hass.data["image"].get_entity(ENTITY_ID)
-    # After a successful upload, no retry is needed
-    assert entity._pending_upload is None
+    assert _get_entity(hass)._pending_upload is None
 
 
 async def test_upload_retry_on_device_seen(
@@ -482,7 +463,7 @@ async def test_upload_retry_on_device_seen(
         )
         await hass.async_block_till_done()
 
-    entity = hass.data["image"].get_entity(ENTITY_ID)
+    entity = _get_entity(hass)
     assert entity._pending_upload is not None
 
     # Simulate the device coming back in range via Bluetooth callback
@@ -493,7 +474,6 @@ async def test_upload_retry_on_device_seen(
         entity._async_on_device_seen(make_service_info(), BluetoothChange.ADVERTISEMENT)
         await hass.async_block_till_done()
 
-    # Upload should have been retried successfully
     mock_upload_dev.upload_prepared_image.assert_awaited_once()
     assert entity._pending_upload is None
 
@@ -504,7 +484,7 @@ async def test_no_double_launch_while_uploading(
     """Test that the BT callback does not launch a second upload while one is running."""
     await _setup_entry(hass, mock_config_entry)
 
-    entity = hass.data["image"].get_entity(ENTITY_ID)
+    entity = _get_entity(hass)
 
     # Simulate a pending upload with an in-progress task
     entity._pending_upload = (FAKE_PREPARED, RefreshMode.FULL)
@@ -514,5 +494,4 @@ async def test_no_double_launch_while_uploading(
 
     entity._async_on_device_seen(make_service_info(), BluetoothChange.ADVERTISEMENT)
 
-    # Task reference should not have changed — no new task was launched
     assert entity._upload_task is running_task

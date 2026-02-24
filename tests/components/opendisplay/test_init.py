@@ -2,12 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from opendisplay import (
-    BLEConnectionError,
-    BLETimeoutError,
-    GlobalConfig,
-    OpenDisplayError,
-)
+from opendisplay import BLEConnectionError, BLETimeoutError, OpenDisplayError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -91,5 +86,4 @@ async def test_setup_runtime_data_populated(
     await hass.async_block_till_done()
 
     assert mock_config_entry.runtime_data.firmware == FIRMWARE_VERSION
-    assert isinstance(mock_config_entry.runtime_data.device_config, GlobalConfig)
     assert mock_config_entry.runtime_data.device_config is DEVICE_CONFIG

@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import aiohttp
 from opendisplay import (
     BLEConnectionError,
     BLETimeoutError,
@@ -151,7 +152,7 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
         Phase 1: Resolve media, process image offline, update entity state.
         Phase 2: Upload to the device via BLE in a background task.
         """
-        image_data: dict = kwargs["image"]
+        image_data: dict[str, Any] = kwargs["image"]
         rotation: Rotation = kwargs.get("rotation", Rotation.ROTATE_0)
         dither_mode: DitherMode = kwargs.get("dither_mode", DitherMode.BURKES)
         refresh_mode: RefreshMode = kwargs.get("refresh_mode", RefreshMode.FULL)
@@ -205,20 +206,30 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
         # Track the prepared data for automatic retry on BLE failure
         self._pending_upload = (prepared_data, refresh_mode)
 
-        # Cancel any in-flight upload before starting the new one
-        if self._upload_task and not self._upload_task.done():
-            self._upload_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._upload_task
-            # Brief delay to let the device reset after BLE disconnect
-            await asyncio.sleep(CANCEL_SETTLE_DELAY)
-
-        # Phase 2: Upload to the device via BLE in the background
+        # Phase 2: Wrap cancel + settle + upload into one task so that
+        # _upload_task stays non-done throughout, preventing the BT callback
+        # from racing in during the cancel-settle yield window.
+        old_task = self._upload_task
         self._upload_task = self._entry.async_create_background_task(
             self.hass,
-            self._async_ble_upload(prepared_data, refresh_mode),
+            self._async_cancel_settle_and_upload(old_task, prepared_data, refresh_mode),
             f"opendisplay_upload_{self._address}",
         )
+
+    async def _async_cancel_settle_and_upload(
+        self,
+        old_task: asyncio.Task[None] | None,
+        prepared_data: tuple[bytes, bytes | None, PILImage.Image],
+        refresh_mode: RefreshMode,
+    ) -> None:
+        """Cancel a previous upload, wait for the device to settle, then upload."""
+        if old_task and not old_task.done():
+            old_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await old_task
+            # Brief delay to let the device reset after BLE disconnect
+            await asyncio.sleep(CANCEL_SETTLE_DELAY)
+        await self._async_ble_upload(prepared_data, refresh_mode)
 
     async def _async_ble_upload(
         self,
@@ -283,12 +294,12 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
             self.hass, url, timedelta(minutes=1), use_content_user=True
         )
         full_url = get_url(self.hass) + signed_path
-        session = async_get_clientsession(self.hass, verify_ssl=False)
+        session = async_get_clientsession(self.hass)
 
         try:
             resp = await session.get(full_url)
             resp.raise_for_status()
-        except Exception as err:
+        except aiohttp.ClientError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="media_download_error",

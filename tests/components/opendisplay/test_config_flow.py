@@ -50,9 +50,6 @@ def _patch_ble_device_not_found():
     )
 
 
-# --- Bluetooth discovery tests ---
-
-
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     """Test discovery via Bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
@@ -116,9 +113,6 @@ async def test_bluetooth_discovery_already_in_progress(hass: HomeAssistant) -> N
     assert result2["reason"] == "already_in_progress"
 
 
-# --- Bluetooth confirm error tests ---
-
-
 @pytest.mark.parametrize(
     "exception",
     [BLEConnectionError("test"), BLETimeoutError("test"), OpenDisplayError("test")],
@@ -164,9 +158,6 @@ async def test_bluetooth_confirm_ble_device_not_found(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-# --- User step tests ---
 
 
 async def test_user_step_with_devices(hass: HomeAssistant) -> None:

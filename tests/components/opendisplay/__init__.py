@@ -19,9 +19,6 @@ from tests.components.bluetooth import generate_ble_device
 
 OPENDISPLAY_MANUFACTURER_ID = 9286  # 0x2446
 
-# Legacy advertisement payload (11 bytes): battery_mv=3700, temperature_c=25, loop_counter=1
-LEGACY_ADVERTISEMENT_DATA = b"\x02\x36\x00\x6c\x00\xc3\x01\x74\x0e\x19\x01"
-
 # V1 advertisement payload (14 bytes): battery_mv=3700, temperature_c=25.0, loop_counter=1
 V1_ADVERTISEMENT_DATA = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x82\x72\x11"
 
@@ -121,13 +118,7 @@ def make_service_info(
 
 VALID_SERVICE_INFO = make_service_info()
 
-LEGACY_SERVICE_INFO = make_service_info(
-    manufacturer_data={OPENDISPLAY_MANUFACTURER_ID: LEGACY_ADVERTISEMENT_DATA},
-)
-
 NOT_OPENDISPLAY_SERVICE_INFO = make_service_info(
     name="Other Device",
     manufacturer_data={0x1234: b"\x00\x01"},
 )
-
-NO_NAME_SERVICE_INFO = make_service_info(name=None)
