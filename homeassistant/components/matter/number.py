@@ -498,6 +498,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOff,
         ),
+        product_id=(2, 16),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -514,6 +515,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
+        product_id=(2, 16),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
