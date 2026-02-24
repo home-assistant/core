@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 import io
 import logging
 import os
@@ -430,48 +430,35 @@ class TelegramNotificationService:
             params[ATTR_PARSER] = None
         return params
 
-    async def _send_msgs(
+    async def _send_msg_formatted(
         self,
-        func_send: Callable,
+        func_send: Callable[..., Awaitable[Message]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
         **kwargs_msg: Any,
     ) -> dict[str, JsonValueType]:
-        """Sends a message to each of the targets.
-
-        If there is only 1 targtet, an error is raised if the send fails.
-        For multiple targets, errors are logged and the caller is responsible for checking which target is successful/failed based on the return value.
+        """Sends a message and formats the response.
 
         :return: dict with chat_id keys and message_id values for successful sends
         """
-        chat_ids = [kwargs_msg.pop(ATTR_CHAT_ID)]
-        msg_ids: dict[str, JsonValueType] = {}
-        for chat_id in chat_ids:
-            _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
+        chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
+        _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-            for file_type in _FILE_TYPES:
-                if file_type in kwargs_msg and isinstance(
-                    kwargs_msg[file_type], io.BytesIO
-                ):
-                    kwargs_msg[file_type].seek(0)
+        response: Message = await self._send_msg(
+            func_send,
+            message_tag,
+            chat_id,
+            *args_msg,
+            context=context,
+            **kwargs_msg,
+        )
 
-            response: Message = await self._send_msg(
-                func_send,
-                message_tag,
-                chat_id,
-                *args_msg,
-                context=context,
-                **kwargs_msg,
-            )
-            if response:
-                msg_ids[str(chat_id)] = response.id
-
-        return msg_ids
+        return {str(chat_id): response.id}
 
     async def _send_msg(
         self,
-        func_send: Callable,
+        func_send: Callable[..., Awaitable[Any]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
@@ -518,7 +505,7 @@ class TelegramNotificationService:
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_message,
             params[ATTR_MESSAGE_TAG],
             text,
@@ -759,7 +746,7 @@ class TelegramNotificationService:
         )
 
         if file_type == SERVICE_SEND_PHOTO:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_photo,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -775,7 +762,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_STICKER:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_sticker,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -789,7 +776,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_VIDEO:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_video,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -805,7 +792,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_DOCUMENT:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_document,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -821,7 +808,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_VOICE:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_voice,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -836,7 +823,7 @@ class TelegramNotificationService:
             )
 
         # SERVICE_SEND_ANIMATION
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_animation,
             params[ATTR_MESSAGE_TAG],
             chat_id=kwargs[ATTR_CHAT_ID],
@@ -861,7 +848,7 @@ class TelegramNotificationService:
         stickerid = kwargs.get(ATTR_STICKER_ID)
 
         if stickerid:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_sticker,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -886,7 +873,7 @@ class TelegramNotificationService:
         latitude = float(latitude)
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_location,
             params[ATTR_MESSAGE_TAG],
             chat_id=kwargs[ATTR_CHAT_ID],
@@ -911,7 +898,7 @@ class TelegramNotificationService:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_poll,
             params[ATTR_MESSAGE_TAG],
             chat_id=kwargs[ATTR_CHAT_ID],
