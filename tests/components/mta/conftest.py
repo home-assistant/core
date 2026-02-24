@@ -122,7 +122,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: None},
-        version=2,
+        version=1,
         minor_version=1,
         entry_id="01J0000000000000000000000",
         title="MTA",
@@ -135,7 +135,7 @@ def mock_config_entry_with_api_key() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: "test_api_key"},
-        version=2,
+        version=1,
         minor_version=1,
         entry_id="01J0000000000000000000001",
         title="MTA",

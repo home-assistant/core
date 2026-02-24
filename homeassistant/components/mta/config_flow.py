@@ -10,6 +10,7 @@ from pymta import LINE_TO_FEED, BusFeed, MTAFeedError, SubwayFeed
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -45,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MTA."""
 
-    VERSION = 2
+    VERSION = 1
     MINOR_VERSION = 1
 
     @classmethod
@@ -63,37 +64,10 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title="MTA",
-                data={CONF_API_KEY: user_input.get(CONF_API_KEY) or None},
-            )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_API_KEY): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    ),
-                }
-            ),
-        )
-
-    async def async_step_reauth(
-        self, _entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth when user wants to add or update API key."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation."""
         errors: dict[str, str] = {}
-
         if user_input is not None:
             api_key = user_input.get(CONF_API_KEY)
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
             if api_key:
                 # Test the API key by trying to fetch bus data
                 session = async_get_clientsession(self.hass)
@@ -106,15 +80,19 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
                 except Exception:
                     _LOGGER.exception("Unexpected error validating API key")
                     errors["base"] = "unknown"
-
             if not errors:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_API_KEY: api_key or None},
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_API_KEY: api_key or None},
+                    )
+                return self.async_create_entry(
+                    title="MTA",
+                    data={CONF_API_KEY: api_key or None},
                 )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_API_KEY): TextSelector(
@@ -124,6 +102,12 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, _entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth when user wants to add or update API key."""
+        return await self.async_step_user()
 
 
 class SubwaySubentryFlowHandler(ConfigSubentryFlow):

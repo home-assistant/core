@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from pymta import MTAFeedError
+import pytest
 
 from homeassistant.components.mta.const import (
     CONF_LINE,
@@ -43,6 +44,7 @@ async def test_main_entry_flow_without_token(
 async def test_main_entry_flow_with_token(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_bus_feed: MagicMock,
 ) -> None:
     """Test the main config flow with API key."""
     result = await hass.config_entries.flow.async_init(
@@ -86,7 +88,7 @@ async def test_reauth_flow(
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "new_api_key"}
@@ -97,46 +99,43 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
 
 
-async def test_reauth_flow_connection_error(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (MTAFeedError("Connection error"), "cannot_connect"),
+        (RuntimeError("Unexpected error"), "unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bus_feed: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
     """Test the reauth flow with connection error."""
     mock_config_entry.add_to_hass(hass)
-    mock_bus_feed.return_value.get_stops.side_effect = MTAFeedError("Connection error")
+    mock_bus_feed.return_value.get_stops.side_effect = side_effect
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "bad_api_key"}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
-
-async def test_reauth_flow_unexpected_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bus_feed: MagicMock,
-) -> None:
-    """Test the reauth flow with unexpected error."""
-    mock_config_entry.add_to_hass(hass)
-    mock_bus_feed.return_value.get_stops.side_effect = RuntimeError("Unexpected error")
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    mock_bus_feed.return_value.get_stops.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "bad_api_key"}
+        result["flow_id"], {CONF_API_KEY: "api_key"}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 # Subway subentry tests
@@ -433,6 +432,18 @@ async def test_bus_subentry_route_fetch_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_route"}
 
+    mock_bus_feed.return_value.get_stops.side_effect = None
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE: "M15"}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "400561"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_bus_subentry_connection_test_error(
     hass: HomeAssistant,
@@ -466,6 +477,14 @@ async def test_bus_subentry_connection_test_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_bus_feed.return_value.get_arrivals.side_effect = None
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "400561"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_bus_subentry_with_direction(

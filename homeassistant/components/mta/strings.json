@@ -8,16 +8,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "API key from MTA Bus Time"
-        },
-        "description": "Enter your MTA Bus Time API key to enable or update bus tracking.",
-        "title": "Update API key"
-      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -25,8 +15,7 @@
         "data_description": {
           "api_key": "API key from MTA Bus Time. Required for bus tracking, optional for subway only."
         },
-        "description": "Enter your MTA Bus Time API key to enable bus tracking. Leave blank if you only want to track subways.",
-        "title": "Set up MTA"
+        "description": "Enter your MTA Bus Time API key to enable bus tracking. Leave blank if you only want to track subways."
       }
     }
   },
