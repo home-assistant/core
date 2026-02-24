@@ -23,7 +23,12 @@ from homeassistant.components.airos.const import (
     MAC_ADDRESS,
     SECTION_ADVANCED_SETTINGS,
 )
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
