@@ -31,16 +31,15 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-@dataclass
+@dataclass(frozen=True)
 class VizioRuntimeData:
     """Runtime data for Vizio integration."""
 
-    device: VizioAsync
     device_coordinator: VizioDeviceCoordinator
     apps_coordinator: VizioAppsDataUpdateCoordinator | None  # None for speakers
 
 
-@dataclass
+@dataclass(frozen=True)
 class VizioDeviceData:
     """Raw data fetched from Vizio device."""
 
@@ -93,12 +92,15 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, self.config_entry.unique_id)}
         )
-        if device:
-            device_registry.async_update_device(
-                device.id,
-                model=model,
-                sw_version=version,
-            )
+        if not device:
+            return
+        device_registry.async_update_device(
+            device.id,
+            model=model,
+            sw_version=version,
+        )
+        if model and version:
+            self._device_info_fetched = True
 
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
@@ -109,12 +111,11 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
                 f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
             )
 
-        # Device info - fetch once and update device registry
+        # Device info - fetch until both model and version are written to registry
         if not self._device_info_fetched:
             model = await self.device.get_model_name(log_api_exception=False)
             version = await self.device.get_version(log_api_exception=False)
             if model or version:
-                self._device_info_fetched = True
                 self._update_device_registry(model, version)
 
         # Handle device off - return minimal data

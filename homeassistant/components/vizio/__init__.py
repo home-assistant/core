@@ -72,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
 
     # Store runtime data
     entry.runtime_data = VizioRuntimeData(
-        device=device,
         device_coordinator=device_coordinator,
         apps_coordinator=apps_coordinator,
     )

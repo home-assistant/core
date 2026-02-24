@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pyvizio import VizioAsync
 from pyvizio.api.apps import AppConfig, find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
@@ -93,7 +92,6 @@ async def async_setup_entry(
 
     entity = VizioDevice(
         config_entry,
-        runtime_data.device,
         name,
         device_class,
         runtime_data.device_coordinator,
@@ -115,7 +113,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     def __init__(
         self,
         config_entry: VizioConfigEntry,
-        device: VizioAsync,
         name: str,
         device_class: MediaPlayerDeviceClass,
         coordinator: VizioDeviceCoordinator,
@@ -136,8 +133,8 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
         )
-        self._device = device
-        self._max_volume = float(device.get_max_volume())
+        self._device = coordinator.device
+        self._max_volume = float(coordinator.device.get_max_volume())
 
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)

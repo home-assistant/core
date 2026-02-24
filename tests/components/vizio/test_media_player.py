@@ -261,7 +261,7 @@ async def _test_service(
         service_data.update(additional_service_data)
 
     with patch(
-        f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
+        f"homeassistant.components.vizio.VizioAsync.{vizio_func_name}"
     ) as service_call:
         await hass.services.async_call(
             domain,
@@ -608,10 +608,10 @@ async def test_setup_with_apps_additional_apps_config(
     # Test that invalid app does nothing
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.launch_app"
+            "homeassistant.components.vizio.VizioAsync.launch_app"
         ) as service_call1,
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.launch_app_config"
+            "homeassistant.components.vizio.VizioAsync.launch_app_config"
         ) as service_call2,
     ):
         await hass.services.async_call(
