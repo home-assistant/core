@@ -8,7 +8,12 @@ from typing import Any
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError, PowerfoxLocal
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -54,7 +59,15 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
             except PowerfoxConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                return self._async_create_entry()
+                if self.source == SOURCE_USER:
+                    return self._async_create_entry()
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_API_KEY: self._api_key,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -130,6 +143,12 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()
+
     def _async_create_entry(self) -> ConfigFlowResult:
         """Create a config entry."""
         return self.async_create_entry(
@@ -149,5 +168,8 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         await client.value()
 
-        await self.async_set_unique_id(self._device_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+        await self.async_set_unique_id(self._device_id, raise_on_progress=False)
+        if self.source == SOURCE_USER:
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
