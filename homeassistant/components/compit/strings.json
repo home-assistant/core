@@ -33,6 +33,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "airing": {
+        "name": "Airing"
+      },
+      "co2_alert": {
+        "name": "CO2 alert"
+      },
+      "co2_level": {
+        "name": "CO2 level"
+      },
+      "dust_alert": {
+        "name": "Dust alert"
+      },
+      "pump_status": {
+        "name": "Pump status"
+      },
+      "temperature_alert": {
+        "name": "Temperature alert"
+      }
+    },
     "number": {
       "boiler_target_temperature": {
         "name": "Boiler target temperature"
