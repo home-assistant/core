@@ -59,6 +59,9 @@ def _safe_float(value: Any) -> float | None:
     """Safely convert a value to float."""
     if value is None:
         return None
+    # Explicitly reject booleans (bool is subclass of int, so bool would convert)
+    if isinstance(value, bool):
+        return None
     try:
         return float(value)
     except (ValueError, TypeError):
