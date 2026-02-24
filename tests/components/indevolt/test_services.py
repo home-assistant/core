@@ -148,8 +148,8 @@ async def test_service_charge_power_too_high(
             blocking=True,
         )
 
-    # Verify error includes expected error string
-    assert "exceeds maximum" in str(exc_info.value)
+    # Verify error carries the expected translation key
+    assert exc_info.value.translation_key == "power_exceeds_max"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -174,8 +174,8 @@ async def test_service_charge_target_soc_below_emergency(
             blocking=True,
         )
 
-    # Verify error includes expected error string
-    assert "below emergency SOC" in str(exc_info.value)
+    # Verify error carries the expected translation key
+    assert exc_info.value.translation_key == "soc_below_emergency"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -222,8 +222,8 @@ async def test_service_discharge_power_too_high(
             blocking=True,
         )
 
-    # Verify error includes expected error string
-    assert "exceeds maximum" in str(exc_info.value)
+    # Verify error carries the expected translation key
+    assert exc_info.value.translation_key == "power_exceeds_max"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -248,8 +248,8 @@ async def test_service_discharge_target_soc_below_emergency(
             blocking=True,
         )
 
-    # Verify error includes expected error string
-    assert "below emergency SOC" in str(exc_info.value)
+    # Verify error carries the expected translation key
+    assert exc_info.value.translation_key == "soc_below_emergency"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -278,5 +278,8 @@ async def test_charge_outdoor_portable(
             blocking=True,
         )
 
-    # Verify error is raised containing the outdoor/portable reason
-    assert "outdoor/portable" in str(exc_info.value)
+    # Verify error carries the expected translation key
+    assert (
+        exc_info.value.translation_key
+        == "energy_mode_change_unavailable_outdoor_portable"
+    )
