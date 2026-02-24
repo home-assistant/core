@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from aiostreammagic import StreamMagicClient
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import EntityCategory, PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -32,6 +32,14 @@ def room_correction_intensity(client: StreamMagicClient) -> int:
         assert client.audio.tilt_eq is not None
     return client.audio.tilt_eq.intensity
 
+
+def volume_limit_percent(client: StreamMagicClient) -> int:
+    """Get room correction intensity."""
+    if TYPE_CHECKING:
+        assert client.audio.volume_limit_percent is not None
+    return client.audio.volume_limit_percent
+
+
 CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
     CambridgeAudioNumberEntityDescription(
         key="room_correction_intensity",
@@ -53,10 +61,11 @@ CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
         exists_fn=lambda client: client.state.pre_amp_mode,
-        value_fn=lambda client: client.state.volume_limit_percent,
+        value_fn=volume_limit_percent,
         set_value_fn=lambda client, value: client.set_volume_limit(value),
-    )
+    ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
