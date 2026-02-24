@@ -37,7 +37,7 @@ async def async_get_engine(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> Provider | None:
     """Set up Pico speech component."""
     if await hass.async_add_executor_job(shutil.which, "pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
