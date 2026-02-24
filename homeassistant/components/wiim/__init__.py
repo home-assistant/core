@@ -241,12 +241,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> boo
                         "Removed %s from entity_id_to_udn_map during unload.", key
                     )
 
-        remaining_entries = [
-            e
-            for e in hass.config_entries.async_entries(DOMAIN)
-            if e.entry_id != entry.entry_id
-        ]
-        if not remaining_entries:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
             hass.data.pop(DOMAIN, None)
             SDK_LOGGER.info("Last WiiM entry unloaded, cleaning up domain data.")
     return unload_ok
