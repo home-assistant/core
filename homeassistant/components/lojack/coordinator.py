@@ -156,7 +156,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         try:
             devices = await self.client.list_devices() or []
         except AuthenticationError:
-            LOGGER.info("Token expired, refreshing...")
+            LOGGER.debug("Token expired, refreshing")
             old_client = self.client
             try:
                 new_client = await LoJackClient.create(self._username, self._password)
