@@ -39,6 +39,10 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         self.fail_threshold = 10
         self.store = store
 
+    async def async_setup(self) -> None:
+        """Load initial data from storage."""
+        self.data = await self.store.async_load() or APPS
+
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
         if data := await gen_apps_list_from_url(
@@ -66,8 +70,4 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             self.fail_threshold += 10
         else:
             self.fail_count += 1
-        # On first failure, fall back to stored data or built-in apps list.
-        # On subsequent failures, return the previously loaded data.
-        if self.data is None:
-            return await self.store.async_load() or APPS
         return self.data
