@@ -14,13 +14,14 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
@@ -156,7 +157,14 @@ class NotifyEntity(RestoreEntity):
             self.__set_state(state.state)
 
     @final
-    def _set_state(self) -> None:
+    def _set_last_notification_timestamp(self) -> None:
+        run_callback_threadsafe(
+            self.hass.loop, self._async_set_last_notification_timestamp
+        ).result()
+
+    @final
+    @callback
+    def _async_set_last_notification_timestamp(self) -> None:
         """Set last notification timestamp."""
 
         self.__set_state(dt_util.utcnow().isoformat())
@@ -169,7 +177,7 @@ class NotifyEntity(RestoreEntity):
         Should not be overridden, handle setting last notification timestamp.
         """
         await self.async_send_message(**kwargs)
-        self._set_state()
+        self._async_set_last_notification_timestamp()
 
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
