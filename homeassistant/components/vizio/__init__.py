@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -38,8 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][CONF_APPS] = coordinator = VizioAppsDataUpdateCoordinator(
             hass, store
         )
-        await coordinator.async_register_shutdown()
-        await coordinator.async_setup()
+        await asyncio.gather(
+            coordinator.async_register_shutdown(),
+            coordinator.async_setup(),
+        )
         await coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
