@@ -7,6 +7,7 @@ from typing import Any, Protocol
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlowResult,
     FlowType,
@@ -77,7 +78,8 @@ class RepairsFlow(
             flow = self.hass.config_entries.options.async_get(flow_id)
         elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
             flow = self.hass.config_entries.subentries.async_get(flow_id)
-
+        if "context" not in flow and flow["context"]["source"] != SOURCE_RECONFIGURE:
+            raise HomeAssistantError("Next flow must be a reconfigure flow")
         result["result"] = self.hass.config_entries.async_get_known_entry(
             flow["context"]["entry_id"]
         )
