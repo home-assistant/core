@@ -243,7 +243,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 

@@ -131,6 +131,7 @@ homeassistant.components.bring.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
+homeassistant.components.bsblan.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
@@ -532,6 +533,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.system_health.*
 homeassistant.components.system_log.*
 homeassistant.components.systemmonitor.*
+homeassistant.components.systemnexa2.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tailwind.*
@@ -581,6 +583,7 @@ homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.valve.*
 homeassistant.components.velbus.*
+homeassistant.components.velux.*
 homeassistant.components.vivotek.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
@@ -610,6 +613,7 @@ homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
 homeassistant.components.youtube.*
 homeassistant.components.zeroconf.*
+homeassistant.components.zinvolt.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*

@@ -1,7 +1,10 @@
 """DataUpdateCoordinator for the BSB-Lan integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from bsblan import (
     BSBLAN,
@@ -14,7 +17,6 @@ from bsblan import (
     State,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -22,10 +24,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL_FAST, SCAN_INTERVAL_SLOW
 
+if TYPE_CHECKING:
+    from . import BSBLanConfigEntry
+
 # Filter lists for optimized API calls - only fetch parameters we actually use
 # This significantly reduces response time (~0.2s per parameter saved)
-STATE_INCLUDE = ["current_temperature", "target_temperature", "hvac_mode"]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature"]
+STATE_INCLUDE = [
+    "current_temperature",
+    "target_temperature",
+    "hvac_mode",
+    "hvac_action",
+]
+SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
@@ -54,12 +64,12 @@ class BSBLanSlowData:
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
     """Base BSB-Lan coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: BSBLanConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
         name: str,
         update_interval: timedelta,
@@ -81,7 +91,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
         """Initialize the BSB-Lan fast coordinator."""
@@ -126,7 +136,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
         """Initialize the BSB-Lan slow coordinator."""
