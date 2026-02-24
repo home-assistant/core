@@ -29,18 +29,12 @@ class SystemNexa2SensorEntityDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS: tuple[SystemNexa2SensorEntityDescription, ...] = (
     SystemNexa2SensorEntityDescription(
         key="wifi_dbm",
-        translation_key="wifi_signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.info_data.wifi_dbm,
-    ),
-    SystemNexa2SensorEntityDescription(
-        key="wifi_ssid",
-        translation_key="wifi_ssid",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator: coordinator.data.info_data.wifi_ssid,
+        entity_registry_enabled_default=False,
     ),
 )
 
