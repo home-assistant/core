@@ -34,7 +34,7 @@ def room_correction_intensity(client: StreamMagicClient) -> int:
 
 
 def volume_limit_percent(client: StreamMagicClient) -> int:
-    """Get room correction intensity."""
+    """Get volume limit percent."""
     if TYPE_CHECKING:
         assert client.audio.volume_limit_percent is not None
     return client.audio.volume_limit_percent
