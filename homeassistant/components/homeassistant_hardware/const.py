@@ -37,3 +37,12 @@ SILABS_MULTIPROTOCOL_ADDON_SLUG = "core_silabs_multiprotocol"
 SILABS_FLASHER_ADDON_SLUG = "core_silabs_flasher"
 
 Z2M_EMBER_DOCS_URL = "https://www.zigbee2mqtt.io/guide/adapters/emberznet.html"
+
+# Popular ones taken from https://analytics.home-assistant.io/addons.json
+Z2M_ADDON_NAME = "Zigbee2MQTT"
+Z2M_ADDON_SLUGS = {
+    "486e6e9b_zigbee2mqtt",
+    "45df7312_zigbee2mqtt_edge",
+    "9336c2b0_zigbee2mqtt",
+    "8c77aaed_zigbee2mqtt",
+}
