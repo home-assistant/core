@@ -106,7 +106,7 @@ class EzvizSensor(EzvizEntity, SensorEntity):
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
         if (
-            isinstance(self.data[self._sensor_name], str) 
+            isinstance(self.data[self._sensor_name], str)
             and len(self.data[self._sensor_name]) > 255
         ):
             # Truncate long strings for the state while exposing the full value
