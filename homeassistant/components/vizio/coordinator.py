@@ -40,7 +40,8 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         self.store = store
 
     async def async_setup(self) -> None:
-        """Load initial data from storage."""
+        """Load initial data from storage and register shutdown."""
+        await self.async_register_shutdown()
         self.data = await self.store.async_load() or APPS
 
     async def _async_update_data(self) -> list[dict[str, Any]]:

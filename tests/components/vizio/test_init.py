@@ -1,11 +1,12 @@
 """Tests for Vizio init."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.vizio.const import CONF_APPS, DOMAIN
+from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -18,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    APP_LIST,
     HOST2,
     MOCK_SPEAKER_CONFIG,
     MOCK_USER_VALID_TV_CONFIG,
@@ -103,6 +105,7 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     hass: HomeAssistant,
 ) -> None:
     """Test shared apps coordinator is not shut down until the last TV entry unloads."""
+    now = dt_util.now()
     config_entry_1 = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
     )
@@ -124,14 +127,27 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     assert await hass.config_entries.async_setup(config_entry_2.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 2
-    assert CONF_APPS in hass.data[DOMAIN]
 
-    # Unload first TV — coordinator should persist
+    # Unload first TV — coordinator should still be fetching apps
     assert await hass.config_entries.async_unload(config_entry_1.entry_id)
     await hass.async_block_till_done()
-    assert CONF_APPS in hass.data[DOMAIN]
 
-    # Unload second (last) TV — coordinator should be removed
+    with patch(
+        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
+        return_value=APP_LIST,
+    ) as mock_fetch:
+        async_fire_time_changed(hass, now + timedelta(days=1))
+        await hass.async_block_till_done()
+        assert mock_fetch.call_count == 1
+
+    # Unload second (last) TV — coordinator should stop fetching apps
     assert await hass.config_entries.async_unload(config_entry_2.entry_id)
     await hass.async_block_till_done()
-    assert DOMAIN not in hass.data
+
+    with patch(
+        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
+        return_value=APP_LIST,
+    ) as mock_fetch:
+        async_fire_time_changed(hass, now + timedelta(days=2))
+        await hass.async_block_till_done()
+        assert mock_fetch.call_count == 0

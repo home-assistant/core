@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -10,6 +9,7 @@ from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -43,11 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, store
         )
         try:
-            await asyncio.gather(
-                coordinator.async_register_shutdown(),
-                coordinator.async_setup(),
-            )
-        except Exception:
+            await coordinator.async_setup()
+        except HomeAssistantError:
             _LOGGER.warning("Failed to set up apps coordinator", exc_info=True)
         else:
             hass.data[DOMAIN][CONF_APPS] = coordinator
