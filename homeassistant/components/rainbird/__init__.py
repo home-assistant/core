@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.async_client import AsyncRainbirdController, create_controller
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.const import (
@@ -34,6 +34,7 @@ from .coordinator import (
 )
 from .services import async_setup_services
 from .types import RainbirdConfigEntry, RainbirdData
+from .util import normalize_rainbird_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,31 +78,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     clientsession = async_create_clientsession()
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
-    controller = AsyncRainbirdController(
-        AsyncRainbirdClient(
+    try:
+        controller = await create_controller(
             clientsession,
-            entry.data[CONF_HOST],
+            normalize_rainbird_host(entry.data[CONF_HOST]),
             entry.data[CONF_PASSWORD],
         )
-    )
 
-    if not (await _async_fix_unique_id(hass, controller, entry)):
-        return False
-    if mac_address := entry.data.get(CONF_MAC):
-        _async_fix_entity_unique_id(
-            er.async_get(hass),
-            entry.entry_id,
-            format_mac(mac_address),
-            str(entry.data[CONF_SERIAL_NUMBER]),
-        )
-        _async_fix_device_id(
-            dr.async_get(hass),
-            entry.entry_id,
-            format_mac(mac_address),
-            str(entry.data[CONF_SERIAL_NUMBER]),
-        )
+        if not (await _async_fix_unique_id(hass, controller, entry)):
+            return False
+        if mac_address := entry.data.get(CONF_MAC):
+            _async_fix_entity_unique_id(
+                er.async_get(hass),
+                entry.entry_id,
+                format_mac(mac_address),
+                str(entry.data[CONF_SERIAL_NUMBER]),
+            )
+            _async_fix_device_id(
+                dr.async_get(hass),
+                entry.entry_id,
+                format_mac(mac_address),
+                str(entry.data[CONF_SERIAL_NUMBER]),
+            )
 
-    try:
         model_info = await controller.get_model_and_version()
     except RainbirdAuthException as err:
         raise ConfigEntryAuthFailed from err

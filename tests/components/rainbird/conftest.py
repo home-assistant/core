@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from http import HTTPStatus
 import json
+import re
 from typing import Any
 from unittest.mock import patch
 
@@ -23,7 +24,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 HOST = "example.com"
-URL = "http://example.com/stick"
+URL = re.compile(r"^https?://[^/]+/stick$")
 PASSWORD = "password"
 SERIAL_NUMBER = 0x12635436566
 MAC_ADDRESS = "4C:A1:61:00:11:22"

@@ -19,6 +19,7 @@ from .conftest import (
     CONFIG_ENTRY_DATA,
     HOST,
     MAC_ADDRESS_UNIQUE_ID,
+    MODEL_AND_VERSION_RESPONSE,
     PASSWORD,
     SERIAL_NUMBER,
     SERIAL_RESPONSE,
@@ -36,7 +37,11 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 @pytest.fixture(name="responses")
 def mock_responses() -> list[AiohttpClientMockResponse]:
     """Set up fake serial number response when testing the connection."""
-    return [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)]
+    return [
+        mock_response(MODEL_AND_VERSION_RESPONSE),
+        mock_response(SERIAL_RESPONSE),
+        mock_json_response(WIFI_PARAMS_RESPONSE),
+    ]
 
 
 @pytest.fixture(autouse=True)
@@ -77,6 +82,7 @@ async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowRe
     [
         (
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -85,6 +91,7 @@ async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowRe
         ),
         (
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -112,6 +119,29 @@ async def test_controller_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
+async def test_controller_flow_normalizes_host(
+    hass: HomeAssistant,
+    mock_setup: Mock,
+) -> None:
+    """Test host normalization when a URL is entered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
+    assert "flow_id" in result
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: f"https://{HOST}", CONF_PASSWORD: PASSWORD},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == HOST
+    assert dict(result["result"].data)[CONF_HOST] == HOST
+    assert len(mock_setup.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     (
         "config_entry_unique_id",
@@ -123,7 +153,11 @@ async def test_controller_flow(
         (
             "other-serial-number",
             {**CONFIG_ENTRY_DATA, "host": "other-host"},
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
         ),
         (
@@ -133,6 +167,7 @@ async def test_controller_flow(
                 "host": "other-host",
             },
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -142,6 +177,7 @@ async def test_controller_flow(
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0, "host": "other-host"},
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -185,6 +221,7 @@ async def test_multiple_config_entries(
             MAC_ADDRESS_UNIQUE_ID,
             CONFIG_ENTRY_DATA,
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -194,7 +231,11 @@ async def test_multiple_config_entries(
         (
             SERIAL_NUMBER,
             CONFIG_ENTRY_DATA,
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
         ),
         # Old unique id with no serial, but same host
@@ -202,6 +243,7 @@ async def test_multiple_config_entries(
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -214,7 +256,11 @@ async def test_multiple_config_entries(
                 **CONFIG_ENTRY_DATA,
                 "host": f"other-{HOST}",
             },
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,  # Updated the host
         ),
     ],
@@ -281,8 +327,8 @@ async def test_controller_invalid_auth(
         [
             # Incorrect password response
             AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
-            AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
             # Second attempt with the correct password
+            mock_response(MODEL_AND_VERSION_RESPONSE),
             mock_response(SERIAL_RESPONSE),
             mock_json_response(WIFI_PARAMS_RESPONSE),
         ]
@@ -346,8 +392,8 @@ async def test_controller_timeout(
             [
                 # First attempt simulate the wrong password
                 AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
-                AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
                 # Second attempt simulate the correct password
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],

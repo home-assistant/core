@@ -7,7 +7,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 import voluptuous as vol
@@ -27,6 +27,7 @@ from .const import (
     TIMEOUT_SECONDS,
 )
 from .coordinator import async_create_clientsession
+from .util import normalize_rainbird_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
-        self.host = entry_data[CONF_HOST]
+        self.host = normalize_rainbird_host(entry_data[CONF_HOST])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -105,9 +106,10 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Configure the Rain Bird device."""
         error_code: str | None = None
         if user_input:
+            host = normalize_rainbird_host(user_input[CONF_HOST])
             try:
                 serial_number, wifi_params = await self._test_connection(
-                    user_input[CONF_HOST], user_input[CONF_PASSWORD]
+                    host, user_input[CONF_PASSWORD]
                 )
             except ConfigFlowError as err:
                 _LOGGER.error("Error during config flow: %s", err)
@@ -115,7 +117,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_finish(
                     data={
-                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_HOST: host,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_SERIAL_NUMBER: serial_number,
                         CONF_MAC: wifi_params.mac_address,
@@ -137,15 +139,9 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         Raises a ConfigFlowError on failure.
         """
         clientsession = async_create_clientsession()
-        controller = AsyncRainbirdController(
-            AsyncRainbirdClient(
-                clientsession,
-                host,
-                password,
-            )
-        )
         try:
             async with asyncio.timeout(TIMEOUT_SECONDS):
+                controller = await create_controller(clientsession, host, password)
                 return await asyncio.gather(
                     controller.get_serial_number(),
                     controller.get_wifi_params(),
