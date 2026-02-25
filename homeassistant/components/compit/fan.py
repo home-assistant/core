@@ -127,7 +127,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current fan speed as a percentage."""
-        if not self.is_on:
+        if self.is_on is False:
             return 0
         mode = self.coordinator.connector.get_current_option(
             self.device_id, CompitParameter.VENTILATION_GEAR_TARGET
