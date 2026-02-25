@@ -2106,6 +2106,7 @@ NO_QUALITY_SCALE = [
     "auth",
     "automation",
     "blueprint",
+    "brands",
     "config",
     "configurator",
     "counter",
