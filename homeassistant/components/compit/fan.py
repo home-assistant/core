@@ -62,7 +62,7 @@ async def async_setup_entry(
 class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
     """Representation of a Compit fan entity."""
 
-    _attr_speed_count = 5
+    _attr_speed_count = len(COMPIT_GEAR_TO_HA)
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
@@ -87,6 +87,10 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
             name=entity_description.key,
             manufacturer=MANUFACTURER_NAME,
             model=entity_description.key,
+        )
+        self._gear_range = (
+            min(COMPIT_GEAR_TO_HA.values()),
+            max(COMPIT_GEAR_TO_HA.values()),
         )
 
     @property
@@ -136,7 +140,14 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         if mode is None:
             return None
         gear = COMPIT_GEAR_TO_HA.get(mode)
-        return None if gear is None else ranged_value_to_percentage((0, 4), int(gear))
+        return (
+            None
+            if gear is None
+            else ranged_value_to_percentage(
+                self._gear_range,
+                gear,
+            )
+        )
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed."""
@@ -144,7 +155,12 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
             await self.async_turn_off()
             return
 
-        gear = int(percentage_to_ranged_value((0, 4), percentage))
+        gear = int(
+            percentage_to_ranged_value(
+                self._gear_range,
+                percentage,
+            )
+        )
         mode = HA_STATE_TO_COMPIT.get(gear)
         if mode is None:
             return
