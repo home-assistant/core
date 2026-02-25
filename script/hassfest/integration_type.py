@@ -81,7 +81,7 @@ MISSING_INTEGRATION_TYPE = {
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate that all config flow integrations declare an integration type."""
     for integration in integrations.values():
-        if not integration.config_flow:
+        if not integration.config_flow or not integration.core:
             continue
 
         if "integration_type" in integration.manifest:
