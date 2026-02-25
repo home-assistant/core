@@ -1,13 +1,35 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Kiosker device.",
+      "invalid_auth": "Authentication failed.",
+      "invalid_host": "Invalid host or network configuration.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
-      "user": {
-        "title": "Pair Kiosker App",
-        "description": "Enable the API in Kiosker settings to pair with Home Assistant.",
+      "discovery_confirm": {
         "data": {
+          "api_token": "API Token",
+          "ssl": "Use SSL",
+          "ssl_verify": "Verify certificate"
+        },
+        "data_description": {
+          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
+          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
+          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
+        },
+        "description": "Pair `{name}` at `{host}:{port}`",
+        "title": "Pair Kiosker App"
+      },
+      "user": {
+        "data": {
+          "api_token": "API Token",
           "host": "Host",
           "port": "Port",
-          "api_token": "API Token",
           "ssl": "Use SSL",
           "ssl_verify": "Verify certificate"
         },
@@ -17,63 +39,44 @@
           "port": "The port on which the Kiosker App is running. Default is 8081.",
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
-        }
+        },
+        "description": "Enable the API in Kiosker settings to pair with Home Assistant.",
+        "title": "Pair Kiosker App"
       },
       "zeroconf": {
         "description": "Do you want to configure {name} at {host}:{port}?"
       },
       "zeroconf_confirm": {
-        "title": "Discovered Kiosker App",
+        "data": {
+          "api_token": "API Token",
+          "ssl": "Use SSL",
+          "ssl_verify": "Verify certificate"
+        },
+        "data_description": {
+          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
+          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
+          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
+        },
         "description": "You are about to pair `{name}` at `{host}:{port}` with Home Assistant.\n\nPlease provide the API token to complete setup.",
         "submit": "Pair",
-        "data": {
-          "api_token": "API Token",
-          "ssl": "Use SSL",
-          "ssl_verify": "Verify certificate"
-        },
-        "data_description": {
-          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
-          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
-          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
-        }
-      },
-      "discovery_confirm": {
-        "title": "Pair Kiosker App",
-        "description": "Pair `{name}` at `{host}:{port}`",
-        "data": {
-          "api_token": "API Token",
-          "ssl": "Use SSL",
-          "ssl_verify": "Verify certificate"
-        },
-        "data_description": {
-          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
-          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
-          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
-        }
+        "title": "Discovered Kiosker App"
       }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect to Kiosker device.",
-      "invalid_auth": "Authentication failed.",
-      "invalid_host": "Invalid host or network configuration.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   },
   "entity": {
     "sensor": {
+      "ambient_light": {
+        "name": "Ambient Light"
+      },
       "battery_level": {
         "name": "Battery level"
       },
       "battery_state": {
         "name": "Battery state",
         "state": {
-          "unknown": "Unknown",
+          "fully_charged": "Fully Charged",
           "not_charging": "Not Charging",
-          "fully_charged": "Fully Charged"
+          "unknown": "Unknown"
         }
       },
       "blackout_state": {
@@ -89,17 +92,14 @@
       "last_motion": {
         "name": "Last motion"
       },
-      "ambient_light": {
-        "name": "Ambient Light"
-      },
       "last_update": {
         "name": "Last update"
       },
       "screensaver_visibility": {
         "name": "Screensaver visibility",
         "state": {
-          "visible": "Visible",
-          "hidden": "Hidden"
+          "hidden": "Hidden",
+          "visible": "Visible"
         }
       }
     }

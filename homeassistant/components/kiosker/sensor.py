@@ -40,7 +40,7 @@ def parse_datetime(value: Any) -> datetime | None:
         return value
     try:
         return datetime.fromisoformat(str(value))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -64,18 +64,20 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         translation_key="last_interaction",
         icon="mdi:gesture-tap",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: parse_datetime(x.last_interaction)
-        if hasattr(x, "last_interaction")
-        else None,
+        value_fn=lambda x: (
+            parse_datetime(x.last_interaction)
+            if hasattr(x, "last_interaction")
+            else None
+        ),
     ),
     KioskerSensorEntityDescription(
         key="lastMotion",
         translation_key="last_motion",
         icon="mdi:motion-sensor",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: parse_datetime(x.last_motion)
-        if hasattr(x, "last_motion")
-        else None,
+        value_fn=lambda x: (
+            parse_datetime(x.last_motion) if hasattr(x, "last_motion") else None
+        ),
     ),
     KioskerSensorEntityDescription(
         key="ambientLight",
@@ -89,23 +91,23 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         translation_key="last_update",
         icon="mdi:update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: parse_datetime(x.last_update)
-        if hasattr(x, "last_update")
-        else None,
+        value_fn=lambda x: (
+            parse_datetime(x.last_update) if hasattr(x, "last_update") else None
+        ),
     ),
     KioskerSensorEntityDescription(
         key="blackoutState",
         translation_key="blackout_state",
         icon="mdi:monitor-off",
-        value_fn=lambda x: "active" if x is not None else "inactive",
+        value_fn=lambda x: "active" if x is not None and x.visible else "inactive",
     ),
     KioskerSensorEntityDescription(
         key="screensaverVisibility",
         translation_key="screensaver_visibility",
         icon="mdi:power-sleep",
-        value_fn=lambda x: "visible"
-        if hasattr(x, "visible") and x.visible
-        else "hidden",
+        value_fn=lambda x: (
+            "visible" if hasattr(x, "visible") and x.visible else "hidden"
+        ),
     ),
 )
 
@@ -152,16 +154,16 @@ class KioskerSensor(KioskerEntity, SensorEntity):
         if self.entity_description.key == "blackoutState":
             # Special handling for blackout state
             blackout_data = (
-                self.coordinator.data.get("blackout") if self.coordinator.data else None
+                self.coordinator.data.blackout if self.coordinator.data else None
             )
             if self.entity_description.value_fn:
                 value = self.entity_description.value_fn(blackout_data)
 
             # Add all blackout data as extra attributes
-            if blackout_data is not None and hasattr(blackout_data, "__dict__"):
+            if blackout_data is not None:
                 self._attr_extra_state_attributes = {
-                    key: value
-                    for key, value in blackout_data.__dict__.items()
+                    key: getattr(blackout_data, key)
+                    for key in blackout_data.__dataclass_fields__
                     if not key.startswith("_")
                 }
             else:
@@ -169,17 +171,15 @@ class KioskerSensor(KioskerEntity, SensorEntity):
         elif self.entity_description.key == "screensaverVisibility":
             # Special handling for screensaver visibility
             screensaver_data = (
-                self.coordinator.data.get("screensaver")
-                if self.coordinator.data
-                else None
+                self.coordinator.data.screensaver if self.coordinator.data else None
             )
             if self.entity_description.value_fn:
                 value = self.entity_description.value_fn(screensaver_data)
             # Clear extra attributes for screensaver sensor
             self._attr_extra_state_attributes = {}
-        elif self.coordinator.data and "status" in self.coordinator.data:
+        elif self.coordinator.data:
             # Handle status-based sensors
-            status = self.coordinator.data["status"]
+            status = self.coordinator.data.status
             if self.entity_description.value_fn:
                 value = self.entity_description.value_fn(status)
             # Clear extra attributes for non-blackout sensors

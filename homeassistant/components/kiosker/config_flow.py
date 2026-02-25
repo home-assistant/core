@@ -35,12 +35,20 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
+STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_TOKEN): str,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+        vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    Returns title and device_id for config entry setup.
     """
     api = KioskerAPI(
         host=data[CONF_HOST],
@@ -56,22 +64,23 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except (OSError, TimeoutError) as exc:
         _LOGGER.error("Failed to connect to Kiosker: %s", exc)
         raise CannotConnect from exc
-    except Exception as exc:
-        _LOGGER.error("Unexpected error connecting to Kiosker: %s", exc)
+    except (ValueError, TypeError) as exc:
+        _LOGGER.error("Invalid configuration data: %s", exc)
         raise CannotConnect from exc
 
-    # Return info that you want to store in the config entry
-    device_id = status.device_id if hasattr(status, "device_id") else data[CONF_HOST]
+    # Ensure we have a device_id from the status response
+    if not hasattr(status, "device_id") or not status.device_id:
+        _LOGGER.error("Device did not return a valid device_id")
+        raise CannotConnect
+
+    device_id = status.device_id
     # Use first 8 characters of device_id for consistency with entity naming
     display_id = device_id[:8] if len(device_id) > 8 else device_id
-    return {"title": f"Kiosker {display_id}"}
+    return {"title": f"Kiosker {display_id}", "device_id": device_id}
 
 
-class ConfigFlow(HAConfigFlow, domain=DOMAIN):
+class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kiosker."""
-
-    VERSION = 1
-    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -91,47 +100,14 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except (ValueError, TypeError) as exc:
-                _LOGGER.error("Invalid configuration data: %s", exc)
-                errors["base"] = "invalid_host"
             except Exception:
                 _LOGGER.exception("Unexpected exception during validation")
                 errors["base"] = "unknown"
             else:
-                # Get device info to determine unique ID
-                api = KioskerAPI(
-                    host=user_input[CONF_HOST],
-                    port=user_input[CONF_PORT],
-                    token=user_input[CONF_API_TOKEN],
-                    ssl=user_input[CONF_SSL],
-                    verify=user_input[CONF_SSL_VERIFY],
-                )
-                try:
-                    status = await self.hass.async_add_executor_job(api.status)
-                    device_id = (
-                        status.device_id
-                        if hasattr(status, "device_id")
-                        else f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                    )
-                except (
-                    OSError,
-                    TimeoutError,
-                    AttributeError,
-                    ValueError,
-                    TypeError,
-                    KeyError,
-                ) as exc:
-                    _LOGGER.debug("Could not get device ID from status: %s", exc)
-                    device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                except Exception as exc:  # noqa: BLE001
-                    # Broad exception in config flow for robustness during device discovery
-                    _LOGGER.debug(
-                        "Unexpected error getting device ID from status: %s", exc
-                    )
-                    device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-
                 # Use device ID as unique identifier
-                await self.async_set_unique_id(device_id, raise_on_progress=False)
+                await self.async_set_unique_id(
+                    info["device_id"], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: user_input[CONF_HOST],
@@ -158,13 +134,13 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         app_name = properties.get("app", "Kiosker")
         version = properties.get("version", "")
 
-        # Use UUID from zeroconf if available, otherwise use host:port as fallback
+        # Use UUID from zeroconf
         if uuid:
             device_name = f"{app_name} ({uuid[:8].upper()})"
             unique_id = uuid
         else:
-            device_name = f"{app_name} {host}"
-            unique_id = f"{host}:{port}"
+            _LOGGER.error("Device did not return a valid device_id")
+            raise CannotConnect
 
         # Set unique ID and check for duplicates
         await self.async_set_unique_id(unique_id)
@@ -213,27 +189,13 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, config_data)
             except CannotConnect:
                 errors[CONF_API_TOKEN] = "cannot_connect"
-            except (ValueError, TypeError) as exc:
-                _LOGGER.error("Invalid discovery data: %s", exc)
-                errors[CONF_API_TOKEN] = "invalid_auth"
-            except AttributeError as exc:
-                _LOGGER.error("Invalid discovery data structure: %s", exc)
-                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=config_data)
 
         # Show form to get API token for discovered device
-        discovery_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_TOKEN): str,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
-            }
-        )
-
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=discovery_schema,
+            data_schema=STEP_ZEROCONF_CONFIRM_DATA_SCHEMA,
             description_placeholders=self.context["title_placeholders"],
             errors=errors,
         )

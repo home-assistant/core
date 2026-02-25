@@ -40,10 +40,10 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         """Get attribute from coordinator status data."""
         if (
             self.coordinator.data
-            and "status" in self.coordinator.data
-            and hasattr(self.coordinator.data["status"], attribute)
+            and self.coordinator.data.status
+            and hasattr(self.coordinator.data.status, attribute)
         ):
-            return getattr(self.coordinator.data["status"], attribute)
+            return getattr(self.coordinator.data.status, attribute)
         return default
 
     def _get_device_id(self) -> str:
