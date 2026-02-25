@@ -23,7 +23,7 @@ async def async_get_media_browser_root_object(
             media_class=MediaClass.APP,
             media_content_id="",
             media_content_type="plex",
-            thumbnail="/api/brands/integration/plex/logo.png?fallback=placeholder",
+            thumbnail="/api/brands/integration/plex/logo.png",
             can_play=False,
             can_expand=True,
         )

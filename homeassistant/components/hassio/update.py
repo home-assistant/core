@@ -258,7 +258,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the icon of the entity."""
-        return "/api/brands/integration/hassio/icon.png"
+        return "/api/brands/integration/hassio/icon.png?placeholder=no"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -296,7 +296,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the icon of the entity."""
-        return "/api/brands/integration/homeassistant/icon.png"
+        return "/api/brands/integration/homeassistant/icon.png?placeholder=no"
 
     @property
     def release_url(self) -> str | None:

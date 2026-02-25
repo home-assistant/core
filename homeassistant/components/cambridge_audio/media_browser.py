@@ -38,7 +38,7 @@ async def _root_payload(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="presets",
-                thumbnail="/api/brands/integration/cambridge_audio/logo.png?fallback=placeholder",
+                thumbnail="/api/brands/integration/cambridge_audio/logo.png",
                 can_play=False,
                 can_expand=True,
             )

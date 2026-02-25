@@ -285,7 +285,7 @@ async def test_media_player_entity_with_source(
                     media_class=MediaClass.APP,
                     media_content_id="",
                     media_content_type="spotify",
-                    thumbnail="/api/brands/integration/spotify/logo.png?fallback=placeholder",
+                    thumbnail="/api/brands/integration/spotify/logo.png",
                     can_play=False,
                     can_expand=True,
                 )

@@ -94,7 +94,7 @@ def browse_media(  # noqa: C901
             can_expand=True,
             children=[],
             children_media_class=MediaClass.DIRECTORY,
-            thumbnail="/api/brands/integration/plex/logo.png?fallback=placeholder",
+            thumbnail="/api/brands/integration/plex/logo.png",
         )
         if platform != "sonos":
             server_info.children.append(

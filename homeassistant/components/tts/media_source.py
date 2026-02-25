@@ -214,7 +214,7 @@ class TTSMediaSource(MediaSource):
             media_class=MediaClass.APP,
             media_content_type="provider",
             title=engine_instance.name,
-            thumbnail=f"/api/brands/integration/{engine_domain}/logo.png?fallback=placeholder",
+            thumbnail=f"/api/brands/integration/{engine_domain}/logo.png",
             can_play=False,
             can_expand=True,
         )

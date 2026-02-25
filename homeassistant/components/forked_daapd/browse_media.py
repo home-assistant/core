@@ -304,7 +304,7 @@ def base_owntone_library() -> BrowseMedia:
         can_play=False,
         can_expand=True,
         children=children,
-        thumbnail="/api/brands/integration/forked_daapd/logo.png?fallback=placeholder",
+        thumbnail="/api/brands/integration/forked_daapd/logo.png",
     )
 
 
@@ -321,7 +321,7 @@ def library(other: Sequence[BrowseMedia] | None) -> BrowseMedia:
             media_content_type=MediaType.APP,
             can_play=False,
             can_expand=True,
-            thumbnail="/api/brands/integration/forked_daapd/logo.png?fallback=placeholder",
+            thumbnail="/api/brands/integration/forked_daapd/logo.png",
         )
     ]
     if other:

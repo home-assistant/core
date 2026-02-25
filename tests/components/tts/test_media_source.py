@@ -79,10 +79,7 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
     assert item_child.children is None
     assert item_child.can_play is False
     assert item_child.can_expand is True
-    assert (
-        item_child.thumbnail
-        == "/api/brands/integration/test/logo.png?fallback=placeholder"
-    )
+    assert item_child.thumbnail == "/api/brands/integration/test/logo.png"
 
     item_child = await media_source.async_browse_media(
         hass, item.children[0].media_content_id + "?message=bla"

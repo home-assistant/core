@@ -85,12 +85,12 @@ async def test_integration_view_serves_from_cdn(
     assert await resp.read() == FAKE_PNG
 
 
-async def test_integration_view_with_placeholder_fallback(
+async def test_integration_view_default_placeholder_fallback(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that fallback=placeholder serves placeholder on 404."""
+    """Test that CDN 404 serves placeholder by default."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/nonexistent/icon.png",
         status=HTTPStatus.NOT_FOUND,
@@ -101,27 +101,27 @@ async def test_integration_view_with_placeholder_fallback(
     )
 
     client = await hass_client()
-    resp = await client.get(
-        "/api/brands/integration/nonexistent/icon.png?fallback=placeholder"
-    )
+    resp = await client.get("/api/brands/integration/nonexistent/icon.png")
 
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == FAKE_PNG
 
 
-async def test_integration_view_cdn_404_without_fallback(
+async def test_integration_view_no_placeholder(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that a CDN 404 returns 404 when no fallback requested."""
+    """Test that CDN 404 returns 404 when placeholder=no is set."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/nonexistent/icon.png",
         status=HTTPStatus.NOT_FOUND,
     )
 
     client = await hass_client()
-    resp = await client.get("/api/brands/integration/nonexistent/icon.png")
+    resp = await client.get(
+        "/api/brands/integration/nonexistent/icon.png?placeholder=no"
+    )
 
     assert resp.status == HTTPStatus.NOT_FOUND
 
@@ -202,14 +202,14 @@ async def test_integration_view_cdn_error_returns_none(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that CDN connection errors result in 404."""
+    """Test that CDN connection errors result in 404 with placeholder=no."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/broken/icon.png",
         exc=ClientError(),
     )
 
     client = await hass_client()
-    resp = await client.get("/api/brands/integration/broken/icon.png")
+    resp = await client.get("/api/brands/integration/broken/icon.png?placeholder=no")
 
     assert resp.status == HTTPStatus.NOT_FOUND
 
@@ -219,14 +219,14 @@ async def test_integration_view_cdn_unexpected_status(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that unexpected CDN status codes result in 404."""
+    """Test that unexpected CDN status codes result in 404 with placeholder=no."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/broken/icon.png",
         status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
 
     client = await hass_client()
-    resp = await client.get("/api/brands/integration/broken/icon.png")
+    resp = await client.get("/api/brands/integration/broken/icon.png?placeholder=no")
 
     assert resp.status == HTTPStatus.NOT_FOUND
 
@@ -275,12 +275,12 @@ async def test_disk_cache_404_marker(
     client = await hass_client()
 
     # First request: CDN returns 404, cached as empty file
-    resp = await client.get("/api/brands/integration/nothing/icon.png")
+    resp = await client.get("/api/brands/integration/nothing/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
     assert aioclient_mock.call_count == 1
 
     # Second request: served from cached 404 marker
-    resp = await client.get("/api/brands/integration/nothing/icon.png")
+    resp = await client.get("/api/brands/integration/nothing/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
     assert aioclient_mock.call_count == 1  # No additional CDN call
 
@@ -324,12 +324,12 @@ async def test_stale_cache_triggers_background_refresh(
     assert aioclient_mock.call_count == 2
 
 
-async def test_stale_cache_404_marker_with_fallback(
+async def test_stale_cache_404_marker_with_placeholder(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that stale cached 404 with fallback serves placeholder."""
+    """Test that stale cached 404 serves placeholder by default."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/gone/icon.png",
         status=HTTPStatus.NOT_FOUND,
@@ -341,8 +341,8 @@ async def test_stale_cache_404_marker_with_fallback(
 
     client = await hass_client()
 
-    # First request caches the 404 (without fallback)
-    resp = await client.get("/api/brands/integration/gone/icon.png")
+    # First request caches the 404 (with placeholder=no)
+    resp = await client.get("/api/brands/integration/gone/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
     assert aioclient_mock.call_count == 1
 
@@ -354,20 +354,18 @@ async def test_stale_cache_404_marker_with_fallback(
     stale_time = time.time() - CACHE_TTL - 1
     os.utime(cache_path, (stale_time, stale_time))
 
-    # Stale 404 with fallback=placeholder serves the placeholder
-    resp = await client.get(
-        "/api/brands/integration/gone/icon.png?fallback=placeholder"
-    )
+    # Stale 404 with default placeholder serves the placeholder
+    resp = await client.get("/api/brands/integration/gone/icon.png")
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == FAKE_PNG
 
 
-async def test_stale_cache_404_marker_without_fallback(
+async def test_stale_cache_404_marker_no_placeholder(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that stale cached 404 without fallback returns 404."""
+    """Test that stale cached 404 with placeholder=no returns 404."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/gone/icon.png",
         status=HTTPStatus.NOT_FOUND,
@@ -376,7 +374,7 @@ async def test_stale_cache_404_marker_without_fallback(
     client = await hass_client()
 
     # First request caches the 404
-    resp = await client.get("/api/brands/integration/gone/icon.png")
+    resp = await client.get("/api/brands/integration/gone/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
     assert aioclient_mock.call_count == 1
 
@@ -388,8 +386,8 @@ async def test_stale_cache_404_marker_without_fallback(
     stale_time = time.time() - CACHE_TTL - 1
     os.utime(cache_path, (stale_time, stale_time))
 
-    # Stale 404 without fallback still returns 404
-    resp = await client.get("/api/brands/integration/gone/icon.png")
+    # Stale 404 with placeholder=no still returns 404
+    resp = await client.get("/api/brands/integration/gone/icon.png?placeholder=no")
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Background refresh should have been triggered
@@ -758,14 +756,14 @@ async def test_cdn_timeout_returns_404(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that CDN timeout results in 404."""
+    """Test that CDN timeout results in 404 with placeholder=no."""
     aioclient_mock.get(
         f"{BRANDS_CDN_URL}/brands/slow/icon.png",
         exc=TimeoutError(),
     )
 
     client = await hass_client()
-    resp = await client.get("/api/brands/integration/slow/icon.png")
+    resp = await client.get("/api/brands/integration/slow/icon.png?placeholder=no")
 
     assert resp.status == HTTPStatus.NOT_FOUND
 

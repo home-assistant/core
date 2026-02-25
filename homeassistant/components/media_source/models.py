@@ -83,7 +83,7 @@ class MediaSourceItem:
                         identifier=None,
                         media_class=MediaClass.APP,
                         media_content_type=MediaType.APP,
-                        thumbnail=f"/api/brands/integration/{source.domain}/logo.png?fallback=placeholder",
+                        thumbnail=f"/api/brands/integration/{source.domain}/logo.png",
                         title=source.name,
                         can_play=False,
                         can_expand=True,

@@ -131,7 +131,7 @@ async def root_payload(
         )
 
     for child in children:
-        child.thumbnail = "/api/brands/integration/roku/logo.png?fallback=placeholder"
+        child.thumbnail = "/api/brands/integration/roku/logo.png"
 
     try:
         browse_item = await media_source.async_browse_media(hass, None)

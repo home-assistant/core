@@ -330,7 +330,7 @@ async def root_payload(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
-                thumbnail="/api/brands/integration/sonos/logo.png?fallback=placeholder",
+                thumbnail="/api/brands/integration/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -345,7 +345,7 @@ async def root_payload(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="library",
-                thumbnail="/api/brands/integration/sonos/logo.png?fallback=placeholder",
+                thumbnail="/api/brands/integration/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -358,7 +358,7 @@ async def root_payload(
                 media_class=MediaClass.APP,
                 media_content_id="",
                 media_content_type="plex",
-                thumbnail="/api/brands/integration/plex/logo.png?fallback=placeholder",
+                thumbnail="/api/brands/integration/plex/logo.png",
                 can_play=False,
                 can_expand=True,
             )

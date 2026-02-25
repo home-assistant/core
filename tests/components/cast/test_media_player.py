@@ -2167,7 +2167,7 @@ async def test_cast_platform_browse_media(
                     media_class=MediaClass.APP,
                     media_content_id="",
                     media_content_type="spotify",
-                    thumbnail="/api/brands/integration/spotify/logo.png?fallback=placeholder",
+                    thumbnail="/api/brands/integration/spotify/logo.png",
                     can_play=False,
                     can_expand=True,
                 )
@@ -2219,7 +2219,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
-        "thumbnail": "/api/brands/integration/spotify/logo.png?fallback=placeholder",
+        "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
     assert expected_child in response["result"]["children"]

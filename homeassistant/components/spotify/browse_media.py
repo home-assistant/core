@@ -212,7 +212,7 @@ async def async_browse_media(
                 media_class=MediaClass.APP,
                 media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry.entry_id}",
                 media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
-                thumbnail="/api/brands/integration/spotify/logo.png?fallback=placeholder",
+                thumbnail="/api/brands/integration/spotify/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -223,7 +223,7 @@ async def async_browse_media(
             media_class=MediaClass.APP,
             media_content_id=MEDIA_PLAYER_PREFIX,
             media_content_type="spotify",
-            thumbnail="/api/brands/integration/spotify/logo.png?fallback=placeholder",
+            thumbnail="/api/brands/integration/spotify/logo.png",
             can_play=False,
             can_expand=True,
             children=children,

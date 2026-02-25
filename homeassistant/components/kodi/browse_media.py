@@ -219,7 +219,7 @@ async def library_payload(hass):
     )
 
     for child in library_info.children:
-        child.thumbnail = "/api/brands/integration/kodi/logo.png?fallback=placeholder"
+        child.thumbnail = "/api/brands/integration/kodi/logo.png"
 
     with contextlib.suppress(BrowseError):
         item = await media_source.async_browse_media(

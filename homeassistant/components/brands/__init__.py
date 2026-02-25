@@ -153,7 +153,7 @@ class _BrandsBaseView(HomeAssistantView):
         cdn_path: str,
         cache_subpath: str,
         *,
-        fallback_placeholder: bool = False,
+        fallback_placeholder: bool = True,
     ) -> web.Response:
         """Serve from disk cache, fetching from CDN if needed."""
         cache_path = self._cache_dir / cache_subpath
@@ -215,6 +215,7 @@ class _BrandsBaseView(HomeAssistantView):
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"_/{PLACEHOLDER}/{image}",
             cache_subpath=f"integrations/{PLACEHOLDER}/{image}",
+            fallback_placeholder=False,
         )
 
     @staticmethod
@@ -244,7 +245,7 @@ class BrandsIntegrationView(_BrandsBaseView):
         if not valid_domain(domain) or image not in ALLOWED_IMAGES:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        fallback = request.query.get("fallback") == "placeholder"
+        use_placeholder = request.query.get("placeholder") != "no"
 
         # 1. Try custom integration local files
         if (
@@ -256,7 +257,7 @@ class BrandsIntegrationView(_BrandsBaseView):
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"brands/{domain}/{image}",
             cache_subpath=f"integrations/{domain}/{image}",
-            fallback_placeholder=fallback,
+            fallback_placeholder=use_placeholder,
         )
 
 
