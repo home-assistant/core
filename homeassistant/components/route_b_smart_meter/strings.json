@@ -24,6 +24,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fault_status": {
+        "name": "Fault status"
+      }
+    },
     "sensor": {
       "instantaneous_current_r_phase": {
         "name": "Instantaneous current R phase"

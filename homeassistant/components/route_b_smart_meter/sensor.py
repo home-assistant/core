@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,12 +27,15 @@ from .const import (
 )
 from .coordinator import BRouteData, BRouteUpdateCoordinator
 
+ATTR_METER_TIMESTAMP = "meter_timestamp"
+
 
 @dataclass(frozen=True, kw_only=True)
 class SensorEntityDescriptionWithValueAccessor(SensorEntityDescription):
     """Sensor entity description with data accessor."""
 
     value_accessor: Callable[[BRouteData], StateType]
+    extra_attributes_accessor: Callable[[BRouteData], dict[str, Any]] | None = None
 
 
 SENSOR_DESCRIPTIONS = (
@@ -67,6 +70,11 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_accessor=lambda data: data.total_consumption,
+        extra_attributes_accessor=lambda data: {
+            ATTR_METER_TIMESTAMP: data.meter_timestamp.isoformat()
+            if data.meter_timestamp
+            else None
+        },
     ),
 )
 
@@ -126,3 +134,12 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_accessor(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes."""
+        if self.entity_description.extra_attributes_accessor is not None:
+            return self.entity_description.extra_attributes_accessor(
+                self.coordinator.data
+            )
+        return None

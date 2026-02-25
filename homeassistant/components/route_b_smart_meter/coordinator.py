@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Smart Meter B-route integration."""
 
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import time
 
@@ -24,6 +25,8 @@ class BRouteData:
     instantaneous_current_t_phase: float
     instantaneous_power: float
     total_consumption: float
+    fault_status: bool | None
+    meter_timestamp: datetime | None
 
 
 type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
@@ -96,11 +99,15 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     def _get_data(self) -> BRouteData:
         """Get the data from API."""
         current = self.api.get_instantaneous_current()
+        fault_status = self.api.get_fault_status()
+        fixed_time_data = self.api.get_cumulative_energy_measured_at_fixed_time()
         return BRouteData(
             instantaneous_current_r_phase=current["r phase current"],
             instantaneous_current_t_phase=current["t phase current"],
             instantaneous_power=self.api.get_instantaneous_power(),
             total_consumption=self.api.get_measured_cumulative_energy(),
+            fault_status=fault_status,
+            meter_timestamp=fixed_time_data["timestamp"],
         )
 
     async def _async_update_data(self) -> BRouteData:

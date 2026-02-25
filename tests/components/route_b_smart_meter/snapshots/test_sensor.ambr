@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_route_b_smart_meter_sensor_update[binary_sensor.route_b_smart_meter_01234567890123456789012345f789_fault_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.route_b_smart_meter_01234567890123456789012345f789_fault_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fault status',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Fault status',
+    'platform': 'route_b_smart_meter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fault_status',
+    'unique_id': '01234567890123456789012345F789_fault_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_route_b_smart_meter_sensor_update[binary_sensor.route_b_smart_meter_01234567890123456789012345f789_fault_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Fault status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.route_b_smart_meter_01234567890123456789012345f789_fault_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -216,6 +266,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Total consumption',
+      'meter_timestamp': '2025-02-01T00:00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
