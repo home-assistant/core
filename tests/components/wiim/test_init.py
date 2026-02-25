@@ -121,7 +121,6 @@ async def test_async_unload_entry_success(
 ) -> None:
     """Test successful unloading of a config entry."""
     mock_config_entry.runtime_data = mock_wiim_device
-    # mock_config_entry.state = ConfigEntryState.LOADED
 
     mock_hass.data[DOMAIN] = WiimData(
         controller=mock_wiim_controller,
