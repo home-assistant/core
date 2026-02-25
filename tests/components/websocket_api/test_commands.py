@@ -1,16 +1,16 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
+from copy import deepcopy
 import io
 import logging
 import math
-from copy import deepcopy
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
-import voluptuous as vol
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
@@ -40,14 +40,8 @@ from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
-)
-from homeassistant.helpers import (
     device_registry as dr,
-)
-from homeassistant.helpers import (
     entity_registry as er,
-)
-from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -56,6 +50,7 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
+
 from tests.common import (
     MockConfigEntry,
     MockEntity,
