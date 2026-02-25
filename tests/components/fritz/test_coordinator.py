@@ -540,8 +540,9 @@ async def test_avmwrapper_service_call_branches(
             "async_add_executor_job",
             new=AsyncMock(side_effect=FritzConnectionException("boom")),
         ),
+        pytest.raises(FritzConnectionException, match="boom"),
     ):
-        assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
+        await wrapper._async_service_call("Hosts", "1", "GetInfo")
 
 
 async def test_avmwrapper_passthrough_methods(
