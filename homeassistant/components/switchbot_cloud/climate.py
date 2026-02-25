@@ -17,7 +17,6 @@ from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
-    PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -41,7 +40,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN, SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH
+from .const import (
+    CLIMATE_PRESET_SCHEDULE,
+    DOMAIN,
+    SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH,
+)
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)
@@ -207,7 +210,7 @@ RADIATOR_PRESET_MODE_MAP: dict[str, SmartRadiatorThermostatMode] = {
     PRESET_BOOST: SmartRadiatorThermostatMode.FAST_HEATING,
     PRESET_COMFORT: SmartRadiatorThermostatMode.COMFORT,
     PRESET_HOME: SmartRadiatorThermostatMode.MANUAL,
-    PRESET_ACTIVITY: SmartRadiatorThermostatMode.SCHEDULE,
+    CLIMATE_PRESET_SCHEDULE: SmartRadiatorThermostatMode.SCHEDULE,
 }
 
 RADIATOR_HA_PRESET_MODE_MAP = {
@@ -237,7 +240,11 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
         PRESET_COMFORT,
         PRESET_HOME,
         PRESET_SLEEP,
+        CLIMATE_PRESET_SCHEDULE,
     ]
+
+    _attr_translation_key = "smart_radiator_thermostat"
+
     _attr_preset_mode = PRESET_HOME
 
     _attr_hvac_modes = [
