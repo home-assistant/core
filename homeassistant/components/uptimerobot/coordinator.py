@@ -22,9 +22,7 @@ from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
 type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
 
 
-class UptimeRobotDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, UptimeRobotMonitor]]
-):
+class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
     """Data update coordinator for UptimeRobot."""
 
     config_entry: UptimeRobotConfigEntry
@@ -45,7 +43,7 @@ class UptimeRobotDataUpdateCoordinator(
         )
         self.api = api
 
-    async def _async_update_data(self) -> dict[str, UptimeRobotMonitor]:
+    async def _async_update_data(self) -> list[UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
@@ -57,21 +55,21 @@ class UptimeRobotDataUpdateCoordinator(
         if TYPE_CHECKING:
             assert isinstance(response.data, list)
 
-        monitor_list: list[UptimeRobotMonitor] = response.data
-        monitors = {str(monitor.id): monitor for monitor in monitor_list}
+        monitors: list[UptimeRobotMonitor] = response.data
 
-        if self.data:
-            current_monitors = set(self.data.keys())
-            new_monitors = set(monitors.keys())
-            if stale_monitors := current_monitors - new_monitors:
-                for monitor_id in stale_monitors:
-                    device_registry = dr.async_get(self.hass)
-                    if device := device_registry.async_get_device(
-                        identifiers={(DOMAIN, monitor_id)}
-                    ):
-                        device_registry.async_update_device(
-                            device_id=device.id,
-                            remove_config_entry_id=self.config_entry.entry_id,
-                        )
+        current_monitors = (
+            {str(monitor.id) for monitor in self.data} if self.data else set()
+        )
+        new_monitors = {str(monitor.id) for monitor in monitors}
+        if stale_monitors := current_monitors - new_monitors:
+            for monitor_id in stale_monitors:
+                device_registry = dr.async_get(self.hass)
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, monitor_id)}
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
 
         return monitors

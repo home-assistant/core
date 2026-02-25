@@ -14,14 +14,14 @@ def new_device_listener(
     new_devices_callback: Callable[[list[UptimeRobotMonitor]], None],
 ) -> Callable[[], None]:
     """Subscribe to coordinator updates to check for new devices."""
-    known_devices: set[str] = set()
+    known_devices: set[int] = set()
 
     def _check_devices() -> None:
         """Check for new devices and call callback with any new monitors."""
         new_monitors: list[UptimeRobotMonitor] = []
-        for monitor_id, monitor in coordinator.data.items():
-            if monitor_id not in known_devices:
-                known_devices.add(monitor_id)
+        for monitor in coordinator.data:
+            if monitor.id not in known_devices:
+                known_devices.add(monitor.id)
                 new_monitors.append(monitor)
 
         if new_monitors:
