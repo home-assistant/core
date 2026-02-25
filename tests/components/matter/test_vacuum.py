@@ -365,12 +365,11 @@ async def test_vacuum_clean_area(
         },
     )
 
-    # Mock a successful SelectAreasResponse
-    matter_client.send_device_command.return_value = (
-        clusters.ServiceArea.Commands.SelectAreasResponse(
-            status=clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess,
-        )
-    )
+    # Mock a successful SelectAreasResponse (returns as dict over websocket)
+    matter_client.send_device_command.return_value = {
+        "status": clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess,
+        "statusText": "",
+    }
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
@@ -420,13 +419,11 @@ async def test_vacuum_clean_area_select_areas_failure(
         },
     )
 
-    # Mock a failed SelectAreasResponse
-    matter_client.send_device_command.return_value = (
-        clusters.ServiceArea.Commands.SelectAreasResponse(
-            status=clusters.ServiceArea.Enums.SelectAreasStatus.kUnsupportedArea,
-            statusText="Area 7 not supported",
-        )
-    )
+    # Mock a failed SelectAreasResponse (returns as dict over websocket)
+    matter_client.send_device_command.return_value = {
+        "status": clusters.ServiceArea.Enums.SelectAreasStatus.kUnsupportedArea,
+        "statusText": "Area 7 not supported",
+    }
 
     with pytest.raises(HomeAssistantError, match="Failed to select areas"):
         await hass.services.async_call(
