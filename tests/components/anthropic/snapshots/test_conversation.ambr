@@ -47,7 +47,13 @@
       'agent_id': 'conversation.claude_conversation',
       'content': "Done! I've created the file '/tmp/number.txt' with the random number 3268.",
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -139,7 +145,13 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'The container is currently unavailable.',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -214,6 +226,7 @@
 # ---
 # name: test_disabled_thinking.1
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -249,6 +262,7 @@
 # ---
 # name: test_extended_thinking
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -318,6 +332,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -332,6 +347,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -772,6 +788,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -786,6 +803,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -800,6 +818,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -852,7 +871,13 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'Done',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -951,7 +976,13 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'Done',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -1053,7 +1084,13 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'Done',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -1145,7 +1182,13 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'Done',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -1240,6 +1283,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -1291,6 +1335,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -1342,6 +1387,7 @@
             'length': 29,
           }),
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': None,
       }),

@@ -3,6 +3,7 @@
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -18,6 +19,7 @@ from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
+    Container,
     ContentBlockParam,
     DocumentBlockParam,
     ImageBlockParam,
@@ -142,6 +144,7 @@ class ContentDetails:
     citation_details: list[CitationDetails] = field(default_factory=list)
     thinking_signature: str | None = None
     redacted_thinking: str | None = None
+    container: Container | None = None
 
     def has_content(self) -> bool:
         """Check if there is any text content."""
@@ -152,6 +155,7 @@ class ContentDetails:
         return (
             self.thinking_signature is not None
             or self.redacted_thinking is not None
+            or self.container is not None
             or self.has_citations()
         )
 
@@ -196,9 +200,10 @@ class ContentDetails:
 
 def _convert_content(
     chat_content: Iterable[conversation.Content],
-) -> list[MessageParam]:
+) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
+    container_id: str | None = None
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
@@ -307,6 +312,11 @@ def _convert_content(
                             data=content.native.redacted_thinking,
                         )
                     )
+                if (
+                    content.native.container is not None
+                    and content.native.container.expires_at > datetime.now(UTC)
+                ):
+                    container_id = content.native.container.id
 
             if content.content:
                 current_index = 0
@@ -386,7 +396,7 @@ def _convert_content(
             # Note: We don't pass SystemContent here as its passed to the API as the prompt
             raise TypeError(f"Unexpected content type: {type(content)}")
 
-    return messages
+    return messages, container_id
 
 
 async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
@@ -588,6 +598,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         elif isinstance(response, RawMessageDeltaEvent):
             if (usage := response.usage) is not None:
                 chat_log.async_trace(_create_token_stats(input_usage, usage))
+            content_details.container = response.delta.container
             if response.delta.stop_reason == "refusal":
                 raise HomeAssistantError("Potential policy violation detected")
         elif isinstance(response, RawMessageStopEvent):
@@ -659,7 +670,7 @@ class AnthropicBaseLLMEntity(Entity):
             )
         ]
 
-        messages = _convert_content(chat_log.content[1:])
+        messages, container_id = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
@@ -669,6 +680,7 @@ class AnthropicBaseLLMEntity(Entity):
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             system=system_prompt,
             stream=True,
+            container=container_id,
         )
 
         if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
@@ -825,21 +837,20 @@ class AnthropicBaseLLMEntity(Entity):
             try:
                 stream = await client.messages.create(**model_args)
 
-                messages.extend(
-                    _convert_content(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(
-                                    chat_log,
-                                    stream,
-                                    output_tool=structure_name or None,
-                                ),
-                            )
-                        ]
-                    )
+                new_messages, model_args["container"] = _convert_content(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            _transform_stream(
+                                chat_log,
+                                stream,
+                                output_tool=structure_name or None,
+                            ),
+                        )
+                    ]
                 )
+                messages.extend(new_messages)
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"

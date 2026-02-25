@@ -1167,6 +1167,58 @@ async def test_text_editor_code_execution(
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
+async def test_container_reused(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test that container is reused."""
+    mock_create_stream.return_value = [
+        (
+            *create_bash_code_execution_block(
+                0,
+                "srvtoolu_12345ABC",
+                ['{"command": "echo $RANDOM"}'],
+            ),
+            *create_bash_code_execution_result_block(
+                1, "srvtoolu_12345ABC", stdout="3268\n"
+            ),
+            *create_content_block(
+                2,
+                ["3268."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Tell me a random number",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+
+    container_id = chat_log.content[-1].native.container.id
+    assert container_id
+
+    mock_create_stream.return_value = [create_content_block(0, ["You are welcome!"])]
+
+    await conversation.async_converse(
+        hass,
+        "Thank you",
+        result.conversation_id,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert mock_create_stream.call_args.kwargs["container"] == container_id
+
+
 @pytest.mark.parametrize(
     "content",
     [
