@@ -930,7 +930,7 @@
         "name": "DC (battery) bus voltage"
       },
       "solarcharger_device_off_reason": {
-        "name": "Solar charger device off reason"
+        "name": "Solar charger device-off reason"
       },
       "solarcharger_error_code": {
         "name": "Solar charger error code"

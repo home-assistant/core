@@ -47,6 +47,7 @@ def mock_victron_hub():
     ) as mock_hub:
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
+        hub_instance.disconnect = AsyncMock()
         hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_hub.return_value = hub_instance
         yield mock_hub

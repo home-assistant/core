@@ -74,6 +74,7 @@ async def validate_input(data: dict[str, Any]) -> str:
     Returns the installation id upon success.
     """
     _LOGGER.info("Validating input: %s", data)
+    hub: VictronVenusHub | None = None
     try:
         hub = VictronVenusHub(
             host=data[CONF_HOST],
@@ -90,7 +91,11 @@ async def validate_input(data: dict[str, Any]) -> str:
         assert hub.installation_id is not None
         return hub.installation_id
     finally:
-        await hub.disconnect()
+        if hub is not None:
+            try:
+                await hub.disconnect()
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Ignoring disconnect error during config validation")
 
 
 class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):

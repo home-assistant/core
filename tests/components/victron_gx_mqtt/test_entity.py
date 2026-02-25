@@ -79,7 +79,7 @@ async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) ->
         (MetricType.ELECTRIC_STORAGE_PERCENTAGE, SensorDeviceClass.BATTERY),
         (MetricType.TEMPERATURE, SensorDeviceClass.TEMPERATURE),
         (MetricType.SPEED, SensorDeviceClass.SPEED),
-        (MetricType.LIQUID_VOLUME, SensorDeviceClass.VOLUME),
+        (MetricType.LIQUID_VOLUME, SensorDeviceClass.VOLUME_STORAGE),
         (MetricType.DURATION, SensorDeviceClass.DURATION),
         (MetricType.TIME, None),
     ]
