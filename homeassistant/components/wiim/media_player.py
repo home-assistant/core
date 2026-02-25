@@ -277,7 +277,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             # Repeat and Shuffle modes
             current_loop_mode = self._device.loop_mode
             if current_loop_mode is not None:
-                self.fromIntToRepeatShuffle(current_loop_mode)
+                self.from_int_to_repeat_shuffle(current_loop_mode)
 
             # Output Mode
             self._attr_sound_mode = self._device.output_mode
@@ -494,7 +494,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
         self._update_ha_state_from_sdk_cache()
 
-    def fromIntToRepeatShuffle(self, loopmode_val: Any) -> None:
+    def from_int_to_repeat_shuffle(self, loopmode_val: Any) -> None:
         """Maps an integer loop mode value from SDK to Home Assistant RepeatMode and Shuffle state.
 
         Note: This mapping needs to be accurate for your SDKLoopMode enum.
@@ -544,7 +544,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 loopmode_val,
             )
 
-    def fromRepeatToInt(self, repeat: RepeatMode) -> int:
+    def from_repeat_to_int(self, repeat: RepeatMode) -> int:
         """Maps Home Assistant RepeatMode and current shuffle state to an SDK integer loop mode.
 
         This mapping needs to be consistent with your SDK's expectations.
@@ -569,7 +569,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
         return SDKLoopMode.SHUFFLE_DISABLE_REPEAT_NONE.value
 
-    def fromShuffleToInt(self, shuffle: bool) -> int:
+    def from_shuffle_to_int(self, shuffle: bool) -> int:
         """Maps Home Assistant shuffle state and current repeat mode to an SDK integer loop mode.
 
         This mapping needs to be consistent with your SDK's expectations.
@@ -1234,14 +1234,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        sdk_loop_mode_int = self.fromRepeatToInt(repeat)
+        sdk_loop_mode_int = self.from_repeat_to_int(repeat)
         await self._device.async_set_loop_mode(SDKLoopMode(sdk_loop_mode_int))
         self._update_ha_state_from_sdk_cache()
 
     @exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        sdk_loop_mode_int = self.fromShuffleToInt(shuffle)
+        sdk_loop_mode_int = self.from_shuffle_to_int(shuffle)
         await self._device.async_set_loop_mode(SDKLoopMode(sdk_loop_mode_int))
         self._update_ha_state_from_sdk_cache()
 

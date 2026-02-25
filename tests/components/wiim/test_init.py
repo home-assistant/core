@@ -48,6 +48,14 @@ async def test_async_setup_entry_success(
             return_value=AsyncMock(),
         ),
         patch("homeassistant.components.wiim.const.PLATFORMS", []),
+        patch(
+            "homeassistant.components.wiim.get_url",
+            return_value="http://192.168.1.10:8123",
+        ),
+        patch(
+            "homeassistant.components.wiim.async_get_source_ip",
+            return_value="192.168.1.10",
+        ),
     ):
         mock_controller = MagicMock()
         mock_controller.add_device = AsyncMock()
