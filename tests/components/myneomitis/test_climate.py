@@ -240,7 +240,7 @@ async def test_set_temperature_api_error(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.attributes["temperature"]) == 22.0
+    assert state.attributes["temperature"] == 22.0
 
 
 async def test_set_preset_mode_api_error(
