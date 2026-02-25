@@ -124,7 +124,7 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("title") is None
     assert result.get("data") is None
-    assert result.get("errors") == {"media": "invalid_media_selected"}
+    assert result.get("errors") == {"media": "selected_media_no_images"}
     assert len(mock_setup_entry.mock_calls) == 0
 
 
