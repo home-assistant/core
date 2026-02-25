@@ -2,13 +2,19 @@
   "entity": {
     "climate": {
       "myneomitis": {
-        "state": {
-          "antifrost": "mdi:snowflake",
-          "auto": "mdi:refresh-auto",
-          "boost": "mdi:rocket-launch",
-          "comfort": "mdi:fire",
-          "eco": "mdi:leaf",
-          "standby": "mdi:toggle-switch-off-outline"
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "antifrost": "mdi:snowflake",
+              "auto": "mdi:refresh-auto",
+              "boost": "mdi:rocket-launch",
+              "comfort": "mdi:fire",
+              "comfort_plus": "mdi:fire-circle",
+              "eco": "mdi:leaf",
+              "setpoint": "mdi:thermostat",
+              "standby": "mdi:toggle-switch-off-outline"
+            }
+          }
         }
       }
     },
