@@ -22,6 +22,7 @@ from homeassistant.components.anthropic.config_flow import (
 )
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
@@ -331,6 +332,7 @@ async def test_subentry_web_search_user_location(
         "user_location": True,
         "web_search": True,
         "web_search_max_uses": 5,
+        "code_execution": False,
     }
 
 
@@ -466,6 +468,7 @@ async def test_model_list_error(
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_EXECUTION: False,
                 },
             ),
             {
@@ -478,6 +481,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Model with thinking budget options
@@ -489,6 +493,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_THINKING_BUDGET: 4096,
+                CONF_CODE_EXECUTION: True,
             },
             (
                 {
@@ -504,6 +509,7 @@ async def test_model_list_error(
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_EXECUTION: False,
                     CONF_THINKING_BUDGET: 2048,
                 },
             ),
@@ -517,6 +523,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Model with thinking effort options
@@ -527,6 +534,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
                 CONF_THINKING_EFFORT: "max",
             },
             (
@@ -543,6 +551,7 @@ async def test_model_list_error(
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_EXECUTION: True,
                     CONF_THINKING_EFFORT: "medium",
                 },
             ),
@@ -556,6 +565,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: True,
             },
         ),
         (  # Test switching from recommended to custom options
@@ -584,6 +594,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Test switching from custom to recommended options
@@ -597,6 +608,7 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: True,
             },
             (
                 {
@@ -777,6 +789,7 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_WEB_SEARCH_MAX_USES: 5,
         CONF_WEB_SEARCH_USER_LOCATION: False,
         CONF_THINKING_BUDGET: 0,
+        CONF_CODE_EXECUTION: False,
     }
 
 

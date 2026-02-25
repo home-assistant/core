@@ -69,6 +69,7 @@
         },
         "model": {
           "data": {
+            "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data::code_execution%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
             "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
@@ -76,6 +77,7 @@
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search_max_uses%]"
           },
           "data_description": {
+            "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::code_execution%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
             "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
@@ -127,6 +129,7 @@
         },
         "model": {
           "data": {
+            "code_execution": "Code execution",
             "thinking_budget": "Thinking budget",
             "thinking_effort": "Thinking effort",
             "user_location": "Include home location",
@@ -134,6 +137,7 @@
             "web_search_max_uses": "Maximum web searches"
           },
           "data_description": {
+            "code_execution": "Allow the model to execute code in a secure sandbox environment, enabling it to analyze data and perform complex calculations.",
             "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
             "thinking_effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
             "user_location": "Localize search results based on home location",
