@@ -97,11 +97,6 @@ async def async_setup_entry(
 
     device: WiimDevice = entry.runtime_data
 
-    # Store controller in hass.data if it's the first device, or update it
-    wiim_data: WiimData = hass.data[DOMAIN]
-    if not wiim_data.controller:
-        pass
-
     # Create and add the media player entity
     entity = WiimMediaPlayerEntity(device, entry)
     async_add_entities([entity])
