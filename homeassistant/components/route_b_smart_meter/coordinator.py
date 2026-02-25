@@ -67,8 +67,11 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
         self.device_info_data = BRouteDeviceInfo()
 
     async def _async_setup(self) -> None:
-        await self.hass.async_add_executor_job(self.api.open)
-        await self.hass.async_add_executor_job(self._fetch_device_info)
+        def fetch() -> None:
+            self.api.open()
+            self._fetch_device_info()
+
+        await self.hass.async_add_executor_job(fetch)
 
     def _fetch_device_info(self) -> None:
         """Fetch static device information from the smart meter."""
