@@ -128,3 +128,4 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         await self.entity_description.set_value_fn(
             self.coordinator.client, self.coordinator.battery_id, int(value)
         )
+        await self.coordinator.async_request_refresh()
