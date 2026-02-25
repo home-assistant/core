@@ -8,10 +8,16 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_LOCAL_KEY, DOMAIN
+from .const import (
+    CONF_LOCAL_KEY,
+    CONF_PROTOCOL_VERSION,
+    DEFAULT_PROTOCOL_VERSION,
+    DOMAIN,
+)
 from .model_mappings import MODEL_MAPPINGS
 
 DEFAULT_MODEL = "T2253"
+SUPPORTED_PROTOCOL_VERSIONS = ("3.3", "3.4", "3.5")
 
 USER_STEP_DATA_SCHEMA = vol.Schema(
     {
@@ -22,6 +28,9 @@ USER_STEP_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_ID): str,
         vol.Required(CONF_LOCAL_KEY): str,
+        vol.Optional(
+            CONF_PROTOCOL_VERSION, default=DEFAULT_PROTOCOL_VERSION
+        ): vol.In(SUPPORTED_PROTOCOL_VERSIONS),
     }
 )
 
