@@ -110,9 +110,7 @@ class PicoTTSEntity(TextToSpeechEntity):
         finally:
             os.remove(fname)
 
-        if data:
-            return "wav", data
-        return None, None
+        return "wav", data
 
 
 class PicoProvider(Provider):
