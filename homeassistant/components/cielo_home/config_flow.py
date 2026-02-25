@@ -51,7 +51,6 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             token = await self.client.get_or_refresh_token()
-
         except AuthenticationError:
             return {"base": "invalid_auth"}
         except ConnectionError:
@@ -64,7 +63,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception during config flow validation")
             return {"base": "unknown"}
 
-        return {"token": token}
+        return {CONF_TOKEN: token}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -72,11 +71,11 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         if user_input:
             api_key = user_input[CONF_API_KEY].strip()
-
-            # Check if this API key is already configured
-            self._async_abort_entries_match({CONF_API_KEY: api_key})
 
             validation_result = await self._async_validate_api_key(api_key)
 
@@ -87,10 +86,11 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 user_input[CONF_API_KEY] = api_key
                 user_input[CONF_TOKEN] = token
+                assert self.client is not None
 
-                # Set the API Key as the unique ID for this entry
-                await self.async_set_unique_id(api_key)
-                self._async_abort_entries_match({CONF_API_KEY: api_key})
+                username = self.client.username
+                await self.async_set_unique_id(username)
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title=f"Cielo Home ({api_key[:4]}*****************{api_key[-4:]})",

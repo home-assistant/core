@@ -34,10 +34,19 @@ def mock_cielo_client() -> Generator[AsyncMock]:
     ) as mock_client_cls:
         client = mock_client_cls.return_value
 
+        # Fake device
+        dev = MagicMock()
+        dev.id = "device_1"
+        dev.name = "Living Room"
+        dev.mac_address = "AA:BB:CC:DD:EE:FF"
+        dev.device_status = True
+        dev.preset_modes = ["sleep"]
+        dev.humidity = 40
+
         mock_data = MagicMock()
         mock_data.raw = {}
-        mock_data.parsed = {}
+        mock_data.parsed = {"device_1": dev}
 
-        client.get_devices_data.return_value = mock_data
+        client.get_devices_data = AsyncMock(return_value=mock_data)
 
         yield client

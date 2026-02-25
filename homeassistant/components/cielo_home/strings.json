@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "cannot_connect": "Cannot connect",
@@ -54,21 +55,21 @@
               "adjust": "Adjust",
               "auto": "[%key:common::state::auto%]",
               "auto-stop": "Auto-stop",
-              "pos1": "Pos 1",
-              "pos10": "Pos 10",
-              "pos11": "Pos 11",
-              "pos12": "Pos 12",
-              "pos13": "Pos 13",
-              "pos14": "Pos 14",
-              "pos15": "Pos 15",
-              "pos2": "Pos 2",
-              "pos3": "Pos 3",
-              "pos4": "Pos 4",
-              "pos5": "Pos 5",
-              "pos6": "Pos 6",
-              "pos7": "Pos 7",
-              "pos8": "Pos 8",
-              "pos9": "Pos 9",
+              "pos1": "Position 1",
+              "pos10": "Position 10",
+              "pos11": "Position 11",
+              "pos12": "Position 12",
+              "pos13": "Position 13",
+              "pos14": "Position 14",
+              "pos15": "Position 15",
+              "pos2": "Position 2",
+              "pos3": "Position 3",
+              "pos4": "Position 4",
+              "pos5": "Position 5",
+              "pos6": "Position 6",
+              "pos7": "Position 7",
+              "pos8": "Position 8",
+              "pos9": "Position 9",
               "swing": "Swing"
             }
           }

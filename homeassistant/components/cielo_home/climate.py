@@ -23,6 +23,18 @@ from .entity import CieloDeviceBaseEntity
 _T = TypeVar("_T", bound="CieloDeviceBaseEntity")
 _P = ParamSpec("_P")
 
+PARALLEL_UPDATES = 0
+
+CIELO_TO_HA_HVAC: dict[str, HVACMode] = {
+    "cool": HVACMode.COOL,
+    "heat": HVACMode.HEAT,
+    "fan": HVACMode.FAN_ONLY,
+    "dry": HVACMode.DRY,
+    "auto": HVACMode.AUTO,
+    "heat_cool": HVACMode.HEAT_COOL,
+    "off": HVACMode.OFF,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -45,18 +57,13 @@ def async_handle_api_call(
         entity: _T = args[0]
         res: Any = None
 
-        if entity.client and entity.device_data:
-            entity.client.device_data = entity.device_data
-
         try:
             async with asyncio.timeout(TIMEOUT):
                 res = await function(*args, **kwargs)
 
         except CIELO_ERRORS as err:
-            LOGGER.error("API call failed for entity %s: %s", entity.entity_id, err)
             raise HomeAssistantError from err
         except TimeoutError as err:
-            LOGGER.error("API call timed out for entity %s: %s", entity.entity_id, err)
             raise HomeAssistantError("API call timed out") from err
 
         LOGGER.debug("API call result for entity %s: %s", entity.entity_id, res)
@@ -71,20 +78,7 @@ def async_handle_api_call(
             LOGGER.error("API call response contained no 'data' payload")
             return None
 
-        if entity.device_data is None:
-            return None
-
-        try:
-            entity.device_data.apply_update(data)
-        except (KeyError, ValueError, TypeError) as err:
-            LOGGER.error(
-                "Failed to apply API response data for entity %s: %s",
-                entity.entity_id,
-                err,
-            )
-            return None
-
-        entity.async_write_ha_state()
+        await entity.coordinator.async_apply_action_result(entity.device_id, data)
         return data
 
     return wrap_api_call
@@ -95,15 +89,6 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
     _attr_name = None
     _attr_translation_key = "climate_device"
-
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.SWING_MODE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
 
     def __init__(self, coordinator: CieloDataUpdateCoordinator, device_id: str) -> None:
         """Initialize the climate device."""
@@ -118,7 +103,7 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return dynamic feature flags based on the current mode."""
-        flags = ClimateEntityFeature(0)
+        flags = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
         if self.hvac_mode == HVACMode.HEAT_COOL:
             flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -135,8 +120,6 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
         if self.device_data and self.device_data.preset_modes:
             flags |= ClimateEntityFeature.PRESET_MODE
-
-        flags |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
         return flags
 
@@ -171,7 +154,8 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
-        return self.client.hvac_modes()
+        modes = self.client.hvac_modes()
+        return [CIELO_TO_HA_HVAC[m] for m in modes if m in CIELO_TO_HA_HVAC]
 
     @property
     def current_temperature(self) -> float | None:
@@ -228,15 +212,6 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     def swing_mode(self) -> str | None:
         """Return the current swing mode."""
         return self.device_data.swing_mode if self.device_data else None
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available and online."""
-        if not super().available:
-            return False
-        if self.device_data is None:
-            return False
-        return bool(self.device_data.device_status)
 
     @property
     def precision(self) -> float:

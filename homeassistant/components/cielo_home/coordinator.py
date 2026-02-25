@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from copy import copy
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Final, NamedTuple
+from typing import Any, Final
 
 from aiohttp import ClientError
 from cieloconnectapi import CieloClient
@@ -17,6 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
@@ -24,7 +27,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 REQUEST_REFRESH_DELAY: Final[int] = 2 * 60
 
 
-class CieloData(NamedTuple):
+@dataclass(slots=True)
+class CieloData:
     """Data structure for the coordinator."""
 
     raw: dict[str, Any]
@@ -49,11 +53,13 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             hass,
             LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
+        self._known_device_ids: set[str] = set()
 
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
@@ -64,23 +70,53 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         except (TimeoutError, CieloError, ClientError) as err:
             raise UpdateFailed(err) from err
 
-        # Handle removed devices by removing this config entry from them
-        if self.data and self.data.parsed:
-            old_ids = set(self.data.parsed.keys())
-            new_ids = set(data.parsed.keys()) if data.parsed else set()
-            removed_ids = old_ids - new_ids
+        new_ids = set(data.parsed.keys()) if data.parsed else set()
+        removed_ids = self._known_device_ids - new_ids
 
-            if removed_ids:
-                dev_reg = dr.async_get(self.hass)
-                for dev_id in removed_ids:
-                    device = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
-                    if device:
-                        dev_reg.async_update_device(
-                            device.id, remove_config_entry_id=self.config_entry.entry_id
-                        )
+        if removed_ids:
+            dev_reg = dr.async_get(self.hass)
+            for dev_id in removed_ids:
+                device = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+                if device:
+                    dev_reg.async_update_device(
+                        device.id, remove_config_entry_id=self.config_entry.entry_id
+                    )
 
+        self._known_device_ids = new_ids
+        raw = dict(data.parsed or {})
         parsed = dict(data.parsed or {})
-        return CieloData(raw=data.raw, parsed=parsed)
+        return CieloData(raw=raw, parsed=parsed)
+
+    async def async_apply_action_result(
+        self, device_id: str, data: dict[str, Any]
+    ) -> None:
+        """Apply an optimistic update from an API action response.
+
+        This updates coordinator data immediately (so all entities update together),
+        then schedules a refresh to reconcile with the backend once it catches up.
+        """
+        if not self.data or not self.data.parsed or device_id not in self.data.parsed:
+            await self.async_request_refresh()
+            return
+
+        new_parsed = dict(self.data.parsed)
+        dev = copy(new_parsed[device_id])
+
+        try:
+            dev.apply_update(data)
+        except KeyError, ValueError, TypeError:
+            await self.async_request_refresh()
+            return
+
+        new_parsed[device_id] = dev
+        self.async_set_updated_data(CieloData(raw=self.data.raw, parsed=new_parsed))
+
+        def _refresh_later(_now):
+            self.hass.loop.call_soon_threadsafe(
+                self.hass.loop.create_task, self.async_request_refresh()
+            )
+
+        async_call_later(self.hass, 2.0, _refresh_later)
 
 
 # Define the ConfigEntry type here to avoid circular imports
