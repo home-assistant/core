@@ -386,6 +386,9 @@
       "battery_automatic_syncs": {
         "name": "Automatic syncs"
       },
+      "battery_average_discharge": {
+        "name": "Average discharge"
+      },
       "battery_capacity": {
         "name": "Battery capacity"
       },
@@ -404,8 +407,14 @@
       "battery_consumed_amphours": {
         "name": "Battery consumed amp-hours"
       },
+      "battery_cumulative_ah_drawn": {
+        "name": "Cumulative Ah Drawn"
+      },
       "battery_current": {
         "name": "DC bus current"
+      },
+      "battery_deepest_discharge": {
+        "name": "Deepest discharge"
       },
       "battery_discharged_energy": {
         "name": "Discharged energy"
@@ -424,6 +433,9 @@
       },
       "battery_internal_failure": {
         "name": "Battery internal failure"
+      },
+      "battery_last_discharge": {
+        "name": "Last discharge"
       },
       "battery_low_cell_voltage": {
         "name": "Battery low cell voltage"
@@ -452,6 +464,9 @@
       "battery_max_voltage_cell_id": {
         "name": "Battery maximum voltage cell ID"
       },
+      "battery_maximum_voltage": {
+        "name": "Maximum voltage"
+      },
       "battery_mid_voltage": {
         "name": "DC bus mid voltage"
       },
@@ -469,6 +484,9 @@
       },
       "battery_min_voltage_cell_id": {
         "name": "Battery minimum voltage cell ID"
+      },
+      "battery_minimum_voltage": {
+        "name": "Minimum voltage"
       },
       "battery_nr_modules_blocking_charge": {
         "name": "Battery number of modules blocking charge"
@@ -494,8 +512,14 @@
       "battery_temperature": {
         "name": "Battery temperature"
       },
+      "battery_time_since_last_full_charge": {
+        "name": "Time since last full charge"
+      },
       "battery_time_to_go": {
         "name": "Battery time to go"
+      },
+      "battery_total_charge_cycles": {
+        "name": "Total charge cycles"
       },
       "battery_voltage": {
         "name": "DC bus voltage"
@@ -1039,6 +1063,9 @@
       },
       "system_dc_battery_soc": {
         "name": "DC battery charge"
+      },
+      "system_dc_battery_state": {
+        "name": "DC battery state"
       },
       "system_dc_battery_voltage": {
         "name": "DC battery voltage"
