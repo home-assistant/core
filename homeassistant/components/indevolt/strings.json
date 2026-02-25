@@ -37,6 +37,16 @@
         "name": "Max AC output power"
       }
     },
+    "select": {
+      "energy_mode": {
+        "name": "[%key:component::indevolt::entity::sensor::energy_mode::name%]",
+        "state": {
+          "charge_discharge_schedule": "[%key:component::indevolt::entity::sensor::energy_mode::state::charge_discharge_schedule%]",
+          "real_time_control": "[%key:component::indevolt::entity::sensor::energy_mode::state::real_time_control%]",
+          "self_consumed_prioritized": "[%key:component::indevolt::entity::sensor::energy_mode::state::self_consumed_prioritized%]"
+        }
+      }
+    },
     "sensor": {
       "ac_input_power": {
         "name": "AC input power"
@@ -254,6 +264,17 @@
       },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
+      }
+    },
+    "switch": {
+      "bypass": {
+        "name": "Bypass socket"
+      },
+      "grid_charging": {
+        "name": "Allow grid charging"
+      },
+      "light": {
+        "name": "LED indicator"
       }
     }
   }

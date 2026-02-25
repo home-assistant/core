@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
+from librehardwaremonitor_api.sensor_type import SensorType
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
@@ -53,12 +54,8 @@ class LibreHardwareMonitorSensor(
         super().__init__(coordinator)
 
         self._attr_name: str = sensor_data.name
-        self._attr_native_value: str | None = sensor_data.value
-        self._attr_extra_state_attributes: dict[str, Any] = {
-            STATE_MIN_VALUE: sensor_data.min,
-            STATE_MAX_VALUE: sensor_data.max,
-        }
-        self._attr_native_unit_of_measurement = sensor_data.unit
+
+        self._set_state(coordinator.data.is_deprecated_version, sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
 
         self._sensor_id: str = sensor_data.sensor_id
@@ -70,15 +67,36 @@ class LibreHardwareMonitorSensor(
             model=sensor_data.device_type,
         )
 
+    def _set_state(
+        self,
+        is_deprecated_lhm_version: bool,
+        sensor_data: LibreHardwareMonitorSensorData,
+    ) -> None:
+        value = sensor_data.value
+        min_value = sensor_data.min
+        max_value = sensor_data.max
+        unit = sensor_data.unit
+
+        if not is_deprecated_lhm_version and sensor_data.type == SensorType.THROUGHPUT:
+            # Temporary fix: convert the B/s value to KB/s to not break existing entries
+            # This will be migrated properly once SensorDeviceClass is introduced
+            value = f"{(float(value) / 1024):.1f}" if value else None
+            min_value = f"{(float(min_value) / 1024):.1f}" if min_value else None
+            max_value = f"{(float(max_value) / 1024):.1f}" if max_value else None
+            unit = "KB/s"
+
+        self._attr_native_value: str | None = value
+        self._attr_extra_state_attributes: dict[str, Any] = {
+            STATE_MIN_VALUE: min_value,
+            STATE_MAX_VALUE: max_value,
+        }
+        self._attr_native_unit_of_measurement = unit
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if sensor_data := self.coordinator.data.sensor_data.get(self._sensor_id):
-            self._attr_native_value = sensor_data.value
-            self._attr_extra_state_attributes = {
-                STATE_MIN_VALUE: sensor_data.min,
-                STATE_MAX_VALUE: sensor_data.max,
-            }
+            self._set_state(self.coordinator.data.is_deprecated_version, sensor_data)
         else:
             self._attr_native_value = None
 
