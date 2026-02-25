@@ -93,7 +93,6 @@ class XboxGameSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Title], StateType | datetime]
     attributes_fn: Callable[[Title], Mapping[str, Any] | None] | None = None
-    entity_picture_fn: Callable[[Title], str | None] | None = None
 
 
 def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:

@@ -48,7 +48,7 @@ async def async_get_config_entry_diagnostics(
         for console in config_entry.runtime_data.consoles.data.values()
     ]
     title_info = [
-        title.model_dump()
+        async_redact_data(title.model_dump(), TO_REDACT)
         for title in config_entry.runtime_data.presence.data.title_info.values()
     ]
     title_history = {
