@@ -11,7 +11,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'update.uptime_example_org_uptime_kuma_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/uptime_kuma/icon.png',
+      'entity_picture': '/api/brands/integration/uptime_kuma/icon.png',
       'friendly_name': 'uptime.example.org Uptime Kuma version',
       'in_progress': False,
       'installed_version': '2.0.0',

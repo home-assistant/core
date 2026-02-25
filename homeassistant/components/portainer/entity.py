@@ -11,6 +11,7 @@ from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
+    PortainerStackData,
 )
 
 
@@ -75,7 +76,10 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.device_name}")
+                (
+                    DOMAIN,
+                    f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}",
+                )
             },
             manufacturer=DEFAULT_NAME,
             configuration_url=URL(
@@ -83,9 +87,13 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             ),
             model="Container",
             name=self.device_name,
+            # If the container belongs to a stack, nest it under the stack
+            # else it's the endpoint
             via_device=(
                 DOMAIN,
-                f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
+                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_{device_info.stack.name}"
+                if device_info.stack
+                else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
@@ -104,3 +112,54 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
     def container_data(self) -> PortainerContainerData:
         """Return the coordinator data for this container."""
         return self.coordinator.data[self.endpoint_id].containers[self.device_name]
+
+
+class PortainerStackEntity(PortainerCoordinatorEntity):
+    """Base implementation for Portainer stack."""
+
+    def __init__(
+        self,
+        device_info: PortainerStackData,
+        coordinator: PortainerCoordinator,
+        via_device: PortainerCoordinatorData,
+    ) -> None:
+        """Initialize a Portainer stack."""
+        super().__init__(coordinator)
+        self._device_info = device_info
+        self.stack_id = device_info.stack.id
+        self.device_name = device_info.stack.name
+        self.endpoint_id = via_device.endpoint.id
+        self.endpoint_name = via_device.endpoint.name
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}",
+                )
+            },
+            manufacturer=DEFAULT_NAME,
+            configuration_url=URL(
+                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/stacks/{self.device_name}"
+            ),
+            model="Stack",
+            name=self.device_name,
+            via_device=(
+                DOMAIN,
+                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            ),
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if the stack is available."""
+        return (
+            super().available
+            and self.endpoint_id in self.coordinator.data
+            and self.device_name in self.coordinator.data[self.endpoint_id].stacks
+        )
+
+    @property
+    def stack_data(self) -> PortainerStackData:
+        """Return the coordinator data for this stack."""
+        return self.coordinator.data[self.endpoint_id].stacks[self.device_name]
