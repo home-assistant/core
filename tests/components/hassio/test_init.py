@@ -1589,7 +1589,7 @@ async def test_mount_reload_invalid_device(
     assert str(exc.value) == "Device is not a supervisor mount point"
 
 
-async def test_mount_reload_selector_not_translated(
+async def test_mount_reload_selector_matches_device_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
