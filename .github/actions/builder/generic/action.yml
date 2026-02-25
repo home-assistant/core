@@ -108,7 +108,6 @@ runs:
       with:
         context: .
         file: ${{ inputs.dockerfile }}
-        platforms: ${{ steps.vars.outputs.platform }}
         push: ${{ inputs.push }}
         cache-from: ${{ steps.cache.outcome == 'success' && format('ghcr.io/home-assistant/{0}-homeassistant:latest', inputs.arch) || '' }}
         build-args: |
