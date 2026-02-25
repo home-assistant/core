@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import anthropic
 from anthropic import AsyncStream
@@ -365,7 +365,14 @@ def _convert_content(
                         ServerToolUseBlockParam(
                             type="server_tool_use",
                             id=tool_call.id,
-                            name=tool_call.tool_name,  # type: ignore[typeddict-item]
+                            name=cast(
+                                Literal[
+                                    "web_search",
+                                    "bash_code_execution",
+                                    "text_editor_code_execution",
+                                ],
+                                tool_call.tool_name,
+                            ),
                             input=tool_call.tool_args,
                         )
                         if tool_call.external

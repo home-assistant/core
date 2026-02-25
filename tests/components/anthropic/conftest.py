@@ -155,7 +155,7 @@ async def setup_ha(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="package")
 def build_anthropic_pydantic_schemas() -> None:
     """Build Pydantic Container schema before freezegun patches datetime."""
     Container.model_rebuild(force=True)

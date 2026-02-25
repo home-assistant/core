@@ -424,6 +424,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     default=DEFAULT[CONF_CODE_EXECUTION],
                 )
             ] = bool
+        else:
+            self.options.pop(CONF_CODE_EXECUTION, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(
