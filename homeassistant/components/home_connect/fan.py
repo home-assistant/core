@@ -200,7 +200,6 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             ),
         )
         self.update_preset_mode()
-        self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     @callback
     def _handle_coordinator_update_preset_mode(self) -> None:
@@ -258,18 +257,20 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             )
             and (option_constraints := option_definition.constraints)
             and option_constraints.allowed_values
-            and self._original_speed_modes_keys
-            != set(option_constraints.allowed_values)
+            and (
+                allowed_values_without_none := {
+                    value
+                    for value in option_constraints.allowed_values
+                    if value is not None
+                }
+            )
+            and self._original_speed_modes_keys != allowed_values_without_none
         ):
-            self._original_speed_modes_keys = {
-                value
-                for value in option_constraints.allowed_values
-                if value is not None
-            }
+            self._original_speed_modes_keys = allowed_values_without_none
             self._attr_preset_modes = [
-                FAN_SPEED_MODE_OPTIONS_INVERTED[option]
-                for option in self._original_speed_modes_keys
-                if option is not None and option in FAN_SPEED_MODE_OPTIONS_INVERTED
+                key
+                for key, value in FAN_SPEED_MODE_OPTIONS.items()
+                if value in self._original_speed_modes_keys
             ]
         match (
             self._attr_supported_features & FanEntityFeature.PRESET_MODE,
