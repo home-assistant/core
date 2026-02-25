@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
@@ -236,7 +237,8 @@ async def test_authentication_error(
     assert port_field.default() == 8080
     assert passkey_field.default() == "secret"
     assert username_field.default() == "testuser"
-    assert password_field.default() == "wrongpassword"
+    # Password should never be pre-filled for security reasons
+    assert password_field.default is vol.UNDEFINED
 
 
 async def test_authentication_error_vs_connection_error(
