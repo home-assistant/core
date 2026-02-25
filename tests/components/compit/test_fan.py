@@ -122,7 +122,7 @@ async def test_fan_set_speed(
 
     await mock_connector.select_device_option(
         2, CompitParameter.VENTILATION_ON_OFF, STATE_ON
-    )  # Turn off fan first
+    )  # Ensure fan is on before setting speed
 
     await hass.services.async_call(
         FAN_DOMAIN,
