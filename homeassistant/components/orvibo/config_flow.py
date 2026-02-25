@@ -25,10 +25,6 @@ FULL_EDIT_SCHEMA = vol.Schema(
 )
 
 
-def _format_mac_bytes(mac_bytes: bytes) -> str:
-    return format_mac(":".join(f"{b:02x}" for b in mac_bytes).lower())
-
-
 class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Orvibo S20 switches."""
 
@@ -55,7 +51,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not mac_bytes:
                     continue  # skip if no MAC
 
-                unique_id = _format_mac_bytes(mac_bytes)
+                unique_id = format_mac(mac_bytes.hex()).lower()
                 if unique_id not in existing_ids:
                     filtered[ip] = info
             _LOGGER.debug("New switches: %s", filtered)
@@ -80,23 +76,27 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_input(self, user_input: dict[str, Any]) -> str | None:
         """Validate user input and discover MAC if missing."""
+
+        if user_input.get(CONF_MAC):
+            user_input[CONF_MAC] = format_mac(user_input[CONF_MAC]).lower()
+            if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
+                return "invalid_mac"
+
         try:
             device = await self.hass.async_add_executor_job(
                 S20,
                 user_input[CONF_HOST],
-                user_input.get(CONF_MAC),  # Might be None!
+                user_input.get(CONF_MAC),
             )
+
             if not user_input.get(CONF_MAC):
-                # Using private attribute here because S20 doesn't expose MAC, and otherwise we'd need to do discovery
+                # Using private attribute access here since S20 class doesn't have a public method to get the MAC without repeating discovery
                 if not device._mac:  # noqa: SLF001
                     return "cannot_discover"
-                user_input[CONF_MAC] = _format_mac_bytes(device._mac)  # noqa: SLF001
+                user_input[CONF_MAC] = format_mac(device._mac.hex()).lower()  # noqa: SLF001
 
         except S20Exception:
             return "cannot_connect"
-
-        if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
-            return "invalid_mac"
 
         return None
 
@@ -161,7 +161,9 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             for host, data in self._discovered_switches.items():
                 if _chosen_host == host:
                     self.chosen_switch[CONF_HOST] = host
-                    self.chosen_switch[CONF_MAC] = _format_mac_bytes(data[CONF_MAC])
+                    self.chosen_switch[CONF_MAC] = format_mac(
+                        data[CONF_MAC].hex()
+                    ).lower()
                     await self.async_set_unique_id(self.chosen_switch[CONF_MAC])
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
@@ -170,7 +172,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("discovered switches: %s", self._discovered_switches)
 
         _options = {
-            host: f"{host} ({_format_mac_bytes(data[CONF_MAC])})"
+            host: f"{host} ({format_mac(data[CONF_MAC].hex()).lower()})"
             for host, data in self._discovered_switches.items()
         }
         return self.async_show_form(

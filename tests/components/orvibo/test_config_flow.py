@@ -29,13 +29,14 @@ async def test_user_menu_display(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("user_input", "expected_mac"),
+    ("user_input", "expected_mac", "mock_mac_bytes"),
     [
         (
             {CONF_HOST: "192.168.1.2", CONF_MAC: "ac:cf:23:12:34:56"},
             "ac:cf:23:12:34:56",
+            None,
         ),
-        ({CONF_HOST: "192.168.1.2"}, "aa:bb:cc:dd:ee:ff"),
+        ({CONF_HOST: "192.168.1.2"}, "aa:bb:cc:dd:ee:ff", b"\xaa\xbb\xcc\xdd\xee\xff"),
     ],
 )
 async def test_edit_flow_success(
@@ -45,8 +46,10 @@ async def test_edit_flow_success(
     mock_s20,
     user_input: dict[str, Any],
     expected_mac: str,
+    mock_mac_bytes: bytes | None,
 ) -> None:
     """Test manual flow succeeds with provided MAC or discovered MAC."""
+    mock_s20.return_value._mac = mock_mac_bytes
     mock_discover.return_value = {"192.168.1.2": {"mac": b"\xaa\xbb\xcc\xdd\xee\xff"}}
 
     result = await hass.config_entries.flow.async_init(
@@ -66,11 +69,21 @@ async def test_edit_flow_success(
 
 
 @pytest.mark.parametrize(
-    ("user_input", "expected_error"),
+    ("user_input", "expected_error", "mock_exception", "mock_mac_bytes"),
     [
-        ({CONF_HOST: "192.168.1.2", CONF_MAC: "not_a_mac"}, "invalid_mac"),
-        ({CONF_HOST: "192.168.1.99"}, "cannot_discover"),
-        ({CONF_HOST: "192.168.1.3", CONF_MAC: "ac:cf:23:12:34:56"}, "cannot_connect"),
+        (
+            {CONF_HOST: "192.168.1.2", CONF_MAC: "not_a_mac"},
+            "invalid_mac",
+            None,
+            b"dummy",
+        ),
+        ({CONF_HOST: "192.168.1.99"}, "cannot_discover", None, None),
+        (
+            {CONF_HOST: "192.168.1.3", CONF_MAC: "ac:cf:23:12:34:56"},
+            "cannot_connect",
+            S20Exception("Connection failed"),
+            b"dummy",
+        ),
     ],
 )
 async def test_edit_flow_errors(
@@ -79,10 +92,13 @@ async def test_edit_flow_errors(
     mock_discover,
     user_input: dict[str, Any],
     expected_error: str,
+    mock_exception: Exception | None,
+    mock_mac_bytes: bytes | None,
 ) -> None:
     """Test various errors in the manual (edit) step."""
     mock_discover.return_value = {}
-    mock_s20.side_effect = S20Exception("Connection failed")
+    mock_s20.side_effect = mock_exception
+    mock_s20.return_value._mac = mock_mac_bytes
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -153,13 +169,14 @@ async def test_discovery_no_devices(hass: HomeAssistant, mock_discover) -> None:
 
 
 @pytest.mark.parametrize(
-    ("import_data", "expected_mac"),
+    ("import_data", "expected_mac", "mock_mac_bytes"),
     [
         (
             {CONF_HOST: "192.168.1.5", CONF_MAC: "ac:cf:23:12:34:56"},
             "ac:cf:23:12:34:56",
+            None,
         ),
-        ({CONF_HOST: "192.168.1.5"}, "11:22:33:44:55:66"),
+        ({CONF_HOST: "192.168.1.5"}, "11:22:33:44:55:66", b"\x11\x22\x33\x44\x55\x66"),
     ],
 )
 async def test_import_flow_success(
@@ -169,8 +186,10 @@ async def test_import_flow_success(
     mock_s20,
     import_data: dict[str, Any],
     expected_mac: str,
+    mock_mac_bytes: bytes | None,
 ) -> None:
     """Test importing configuration.yaml entry succeeds with provided or discovered MAC."""
+    mock_s20.return_value._mac = mock_mac_bytes
     mock_discover.return_value = {"192.168.1.5": {"mac": b"\x11\x22\x33\x44\x55\x66"}}
 
     result = await hass.config_entries.flow.async_init(
@@ -183,10 +202,15 @@ async def test_import_flow_success(
 
 
 @pytest.mark.parametrize(
-    ("import_data", "expected_reason"),
+    ("import_data", "expected_reason", "mock_exception", "mock_mac_bytes"),
     [
-        ({CONF_HOST: "192.168.1.5"}, "cannot_discover"),
-        ({CONF_HOST: "192.168.1.5", CONF_MAC: "ac:cf:23:12:34:56"}, "cannot_connect"),
+        ({CONF_HOST: "192.168.1.5"}, "cannot_discover", None, None),
+        (
+            {CONF_HOST: "192.168.1.5", CONF_MAC: "ac:cf:23:12:34:56"},
+            "cannot_connect",
+            S20Exception("Connection failed"),
+            b"dummy",
+        ),
     ],
 )
 async def test_import_flow_errors(
@@ -195,10 +219,13 @@ async def test_import_flow_errors(
     mock_discover,
     import_data: dict[str, Any],
     expected_reason: str,
+    mock_exception: Exception | None,
+    mock_mac_bytes: bytes | None,
 ) -> None:
     """Test various abort errors in the import flow."""
     mock_discover.return_value = {}
-    mock_s20.side_effect = S20Exception("Connection failed")
+    mock_s20.side_effect = mock_exception
+    mock_s20.return_value._mac = mock_mac_bytes
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=import_data
