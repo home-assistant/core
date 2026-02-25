@@ -93,6 +93,10 @@
     "segments_changed": {
       "description": "",
       "title": "Vacuum segments have changed for {entity_id}"
+    },
+    "segments_mapping_not_configured": {
+      "description": "",
+      "title": "Vacuum segment mapping not configured for {entity_id}"
     }
   },
   "selector": {
