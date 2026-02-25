@@ -160,10 +160,10 @@ class XboxGameTitleImageEntity(XboxGameBaseEntity, ImageEntity):
         self,
         hass: HomeAssistant,
         coordinator: XboxTitleHistoryCoordinator,
-        xuid: str,
+        title_id: str,
     ) -> None:
         """Initialize the image entity."""
-        super().__init__(coordinator, xuid, self.entity_description)
+        super().__init__(coordinator, title_id, self.entity_description)
         ImageEntity.__init__(self, hass)
 
         self._attr_image_url = to_https(self.data.display_image)
