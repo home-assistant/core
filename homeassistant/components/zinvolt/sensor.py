@@ -9,8 +9,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,8 +29,8 @@ class ZinvoltBatteryStateDescription(SensorEntityDescription):
 SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
     ZinvoltBatteryStateDescription(
         key="state_of_charge",
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda state: state.current_power.state_of_charge,
     ),
