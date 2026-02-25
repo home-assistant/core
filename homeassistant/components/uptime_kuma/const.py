@@ -25,4 +25,4 @@ HAS_HOST = HAS_PORT | {
     MonitorType.DNS,
 }
 
-LOCAL_INSTANCE = ("127.0.0.1", "a0d7b954-uptime-kuma")
+LOCAL_INSTANCE = ("127.0.0.1", "localhost", "a0d7b954-uptime-kuma")
