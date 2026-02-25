@@ -67,7 +67,7 @@ class FritzConnectionMock:
             return {"CPUTEMP": "42,41,40"}
 
     def override_services(self, fc_data: dict[str, dict[str, Any]]) -> None:
-        """Overrire services data."""
+        """Override services data."""
         self._service_normalization(fc_data)
 
     def clear_cache(self) -> None:

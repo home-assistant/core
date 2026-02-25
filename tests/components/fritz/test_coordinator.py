@@ -27,7 +27,7 @@ from homeassistant.components.fritz.coordinator import (
     FritzBoxTools,
     FritzConnectionCached,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -46,7 +46,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config_entry")
-def fixture_mock_config_entry() -> ConfigEntry:
+def fixture_mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry with host, username, password, and port."""
 
     return MockConfigEntry(
@@ -249,7 +249,7 @@ async def test_async_get_wan_access_success(
 async def test_async_update_hosts_info_attributes_branches(
     fritz_tools,
 ) -> None:
-    """Test host-attributes branch including skip and WAN fallback."""
+    """Test host-attributes branch."""
 
     fritz_tools.fritz_hosts.get_hosts_attributes = MagicMock(
         return_value=[
