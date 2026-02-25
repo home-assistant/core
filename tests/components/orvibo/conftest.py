@@ -2,6 +2,12 @@
 
 from unittest.mock import patch
 
+# The orvibo library executes a global UDP socket bind on import.
+# We force the import here inside a patch context manager to prevent parallel
+# CI test workers from crashing with 'OSError: [Errno 98] Address already in use'.
+with patch("socket.socket.bind"):
+    import orvibo.s20  # noqa: F401
+
 import pytest
 
 from homeassistant.components.orvibo.const import DOMAIN
