@@ -1574,17 +1574,54 @@ async def test_mount_reload_unknown_device_id(
     assert str(exc.value) == "Device ID not found"
 
 
-async def test_mount_reload_invalid_device(
+async def test_mount_reload_no_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test reload_mount with an invalid device."""
+    """Test reload_mount with an unnamed device."""
     device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
     device_registry.async_update_device(device.id, name=None)
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_invalid_model(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with an invalid model."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    device_registry.async_update_device(device.id, model=None)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_not_supervisor_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with a device not belonging to the supervisor."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "test")},
+        name=device.name,
+        model=device.model,
+    )
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device2.id}, blocking=True
         )
     assert str(exc.value) == "Device is not a supervisor mount point"
 
