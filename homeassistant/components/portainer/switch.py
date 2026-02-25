@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import functools
 from typing import Any
 
 from pyportainer import Portainer
@@ -34,40 +33,11 @@ class PortainerSwitchEntityDescription(SwitchEntityDescription):
     """Class to hold Portainer switch description."""
 
     is_on_fn: Callable[[PortainerContainerData], bool | None]
-    turn_on_fn: Callable[[Portainer, int, str], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[Portainer, int, str], Coroutine[Any, Any, None]]
+    turn_on_fn: Callable[[Portainer], Callable[[int, str], Coroutine[Any, Any, None]]]
+    turn_off_fn: Callable[[Portainer], Callable[[int, str], Coroutine[Any, Any, None]]]
 
 
 PARALLEL_UPDATES = 1
-
-
-def perform_action(
-    func: Callable[[Portainer, int, str], Coroutine[Any, Any, None]],
-) -> Callable[[Portainer, int, str], Coroutine[Any, Any, None]]:
-    """Decorate a Portainer action with error handling."""
-
-    @functools.wraps(func)
-    async def wrapper(*args: Any, **kwargs: Any) -> None:
-        """Call the wrapped action with Portainer exception handling."""
-        try:
-            await func(*args, **kwargs)
-        except PortainerAuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth_no_details",
-            ) from err
-        except PortainerConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect_no_details",
-            ) from err
-        except PortainerTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect_no_details",
-            ) from err
-
-    return wrapper
 
 
 SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
@@ -76,16 +46,8 @@ SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
         translation_key="container",
         device_class=SwitchDeviceClass.SWITCH,
         is_on_fn=lambda data: data.container.state == "running",
-        turn_on_fn=perform_action(
-            lambda portainer, endpoint_id, container_id: portainer.start_container(
-                endpoint_id, container_id
-            )
-        ),
-        turn_off_fn=perform_action(
-            lambda portainer, endpoint_id, container_id: portainer.stop_container(
-                endpoint_id, container_id
-            )
-        ),
+        turn_on_fn=lambda portainer: portainer.start_container,
+        turn_off_fn=lambda portainer: portainer.stop_container,
     ),
 )
 
@@ -148,18 +110,37 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the container."""
-        await self.entity_description.turn_on_fn(
-            self.coordinator.portainer,
-            self.endpoint_id,
-            self.container_data.container.id,
+        await self._perform_action(
+            self.entity_description.turn_on_fn(self.coordinator.portainer)
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the container."""
-        await self.entity_description.turn_off_fn(
-            self.coordinator.portainer,
-            self.endpoint_id,
-            self.container_data.container.id,
+        await self._perform_action(
+            self.entity_description.turn_off_fn(self.coordinator.portainer)
         )
-        await self.coordinator.async_request_refresh()
+
+    async def _perform_action(
+        self,
+        action_fn: Callable[[int, str], Coroutine[Any, Any, None]],
+    ) -> None:
+        """Perform a container action with error handling."""
+        try:
+            await action_fn(self.endpoint_id, self.container_data.container.id)
+        except PortainerAuthenticationError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth_no_details",
+            ) from err
+        except PortainerConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_no_details",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect_no_details",
+            ) from err
+        else:
+            await self.coordinator.async_request_refresh()
