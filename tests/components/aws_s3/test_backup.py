@@ -297,11 +297,10 @@ async def test_agents_delete_not_throwing_on_not_found(
         "expected_upload_part_count",
         "expected_complete_multipart_upload_count",
         "expected_put_object_count",
-        "expected_final_part_log",
     ),
     [
-        (2**20, 0, 0, 0, 2, ""),  # small
-        (MULTIPART_MIN_PART_SIZE_BYTES, 1, 2, 1, 1, "Uploading final part"),  # large
+        (2**20, 0, 0, 0, 2),  # small
+        (MULTIPART_MIN_PART_SIZE_BYTES, 1, 2, 1, 1),  # large
     ],
     ids=["small", "large"],
 )
@@ -315,7 +314,6 @@ async def test_agents_upload(
     expected_upload_part_count: int,
     expected_complete_multipart_upload_count: int,
     expected_put_object_count: int,
-    expected_final_part_log: str,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
@@ -344,21 +342,29 @@ async def test_agents_upload(
             data={"file": StringIO("test")},
         )
 
-        assert resp.status == 201
-        assert f"Uploading backup {test_backup.backup_id}" in caplog.text
-        assert not expected_final_part_log or expected_final_part_log in caplog.text
-        assert (
-            mock_client.create_multipart_upload.await_count
-            == expected_multipart_upload_count
-        )
-        assert mock_client.upload_part.await_count == expected_upload_part_count
-        assert (
-            mock_client.complete_multipart_upload.await_count
-            == expected_complete_multipart_upload_count
-        )
-        assert mock_client.put_object.await_count == expected_put_object_count
+    assert resp.status == 201
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+
+    assert (
+        mock_client.create_multipart_upload.await_count
+        == expected_multipart_upload_count
+    )
+    assert mock_client.upload_part.await_count == expected_upload_part_count
+    assert (
+        mock_client.complete_multipart_upload.await_count
+        == expected_complete_multipart_upload_count
+    )
+    assert mock_client.put_object.await_count == expected_put_object_count
 
 
+@pytest.mark.parametrize(
+    "backup_size",
+    [
+        2**20,
+        MULTIPART_MIN_PART_SIZE_BYTES,
+    ],
+    ids=["small", "large"],
+)
 async def test_agents_upload_network_failure(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
