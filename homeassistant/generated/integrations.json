@@ -5096,7 +5096,7 @@
         }
       }
     },
-    "photo_frame": {
+    "photo_album": {
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated"
@@ -8147,7 +8147,7 @@
     "moon",
     "nextbus",
     "nmap_tracker",
-    "photo_frame",
+    "photo_album",
     "plant",
     "proximity",
     "random",
