@@ -209,10 +209,6 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         elif kelvin_color is not None:
             color = WarmCoolColorValue(kelvin_color)
 
-        # If user just pressed "on" with no brightness and we still have None, go full:
-        if color is None and brightness is None:
-            brightness = 255
-
         await self._async_set_brightness(brightness, color, **kwargs)
 
     async def async_turn_off(self, **kwargs: Any) -> None:

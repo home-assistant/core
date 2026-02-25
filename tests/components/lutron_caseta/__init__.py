@@ -7,7 +7,8 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.light import ColorMode
+from pylutron_caseta.color_value import ColorMode as LutronColorMode
+
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
@@ -178,7 +179,7 @@ class MockBridge:
         device_id: str,
         value: int | None = None,
         fade_time: timedelta | None = None,
-        color_value: ColorMode | None = None,
+        color_value: LutronColorMode | None = None,
     ) -> None:
         """Mock changing device state and invoke callbacks."""
         # Update internal device state so HA will later report it as on/off
