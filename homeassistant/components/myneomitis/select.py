@@ -16,43 +16,24 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyNeomitisConfigEntry
-from .const import DOMAIN
+from . import MyNeomitisConfigEntry, process_connection_update
+from .const import (
+    DOMAIN,
+    PRESET_MODE_MAP,
+    PRESET_MODE_MAP_RELAIS,
+    PRESET_MODE_MAP_UFH,
+    PRESET_MODE_SELECT_EXTRAS,
+    REVERSE_PRESET_MODE_MAP_RELAIS,
+    REVERSE_PRESET_MODE_MAP_UFH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_MODELS: frozenset[str] = frozenset({"EWS"})
 SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"UFH"})
 
-PRESET_MODE_MAP = {
-    "comfort": 1,
-    "eco": 2,
-    "antifrost": 3,
-    "standby": 4,
-    "boost": 6,
-    "setpoint": 8,
-    "comfort_plus": 20,
-    "eco_1": 40,
-    "eco_2": 41,
-    "auto": 60,
-}
-
-PRESET_MODE_MAP_RELAIS = {
-    "on": 1,
-    "off": 2,
-    "auto": 60,
-}
-
-PRESET_MODE_MAP_UFH = {
-    "heating": 0,
-    "cooling": 1,
-}
-
-REVERSE_PRESET_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
-
-REVERSE_PRESET_MODE_MAP_RELAIS = {v: k for k, v in PRESET_MODE_MAP_RELAIS.items()}
-
-REVERSE_PRESET_MODE_MAP_UFH = {v: k for k, v in PRESET_MODE_MAP_UFH.items()}
+PILOTE_MODE_MAP: dict[str, int] = {**PRESET_MODE_MAP, **PRESET_MODE_SELECT_EXTRAS}
+REVERSE_PILOTE_MODE_MAP: dict[int, str] = {v: k for k, v in PILOTE_MODE_MAP.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,9 +57,9 @@ SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
     "pilote": MyNeoSelectEntityDescription(
         key="pilote",
         translation_key="pilote",
-        options=list(PRESET_MODE_MAP),
-        preset_mode_map=PRESET_MODE_MAP,
-        reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP,
+        options=list(PILOTE_MODE_MAP),
+        preset_mode_map=PILOTE_MODE_MAP,
+        reverse_preset_mode_map=REVERSE_PILOTE_MODE_MAP,
         state_key="targetMode",
     ),
     "ufh": MyNeoSelectEntityDescription(
@@ -104,11 +85,6 @@ async def async_setup_entry(
     def _create_entity(device: dict) -> MyNeoSelect:
         """Create a select entity for a device."""
         if device["model"] == "EWS":
-            # According to the MyNeomitis API, EWS "relais" devices expose a "relayMode"
-            # field in their state, while "pilote" devices do not. We therefore use the
-            # presence of "relayMode" as an explicit heuristic to distinguish relais
-            # from pilote devices. If the upstream API changes this behavior, this
-            # detection logic must be revisited.
             if "relayMode" in device.get("state", {}):
                 description = SELECT_TYPES["relais"]
             else:
@@ -145,13 +121,15 @@ class MyNeoSelect(SelectEntity):
         self.entity_description = description
         self._api = api
         self._device = device
-        self._attr_unique_id = device["_id"]
-        self._attr_available = device["connected"]
+        device_id: str = device.get("_id") or ""
+        self._attr_unique_id = device_id
+        self._device_id = device_id
+        self._attr_available = bool(device.get("connected", False))
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, device["_id"])},
-            name=device["name"],
+            identifiers={(DOMAIN, device_id)},
+            name=device.get("name") or device_id,
             manufacturer="Axenco",
-            model=device["model"],
+            model=device.get("model", ""),
         )
         # Set current option based on device state
         current_mode = device.get("state", {}).get(description.state_key)
@@ -163,28 +141,49 @@ class MyNeoSelect(SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
-        if unsubscribe := self._api.register_listener(
-            self._device["_id"], self.handle_ws_update
-        ):
-            self.async_on_remove(unsubscribe)
+        try:
+            unsubscribe = self._api.register_listener(
+                self._device_id, self.handle_ws_update
+            )
+        except AttributeError:
+            _LOGGER.debug(
+                "API has no register_listener, skipping ws listener for %s",
+                self._device_id,
+            )
+        else:
+            if callable(unsubscribe):
+                self.async_on_remove(unsubscribe)
+            elif hasattr(unsubscribe, "unsubscribe"):
+                self.async_on_remove(unsubscribe.unsubscribe)
+            elif hasattr(unsubscribe, "close"):
+                self.async_on_remove(unsubscribe.close)
+            elif unsubscribe is None:
+                pass
+            else:
+                _LOGGER.debug(
+                    "register_listener returned unsupported type %s for %s",
+                    type(unsubscribe),
+                    self._device_id,
+                )
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
         """Handle WebSocket updates for the device."""
-        if not new_state:
-            return
 
-        if "connected" in new_state:
-            self._attr_available = new_state["connected"]
-            if not self._attr_available:
-                if not self._unavailable_logged:
+        available = process_connection_update(new_state)
+        if available is not None:
+            self._attr_available = available
+            if not available:
+                if not getattr(self, "_unavailable_logged", False):
                     _LOGGER.info("The entity %s is unavailable", self.entity_id)
                     self._unavailable_logged = True
-            elif self._unavailable_logged:
+            elif getattr(self, "_unavailable_logged", False):
                 _LOGGER.info("The entity %s is back online", self.entity_id)
                 self._unavailable_logged = False
 
-        # Check for state updates using the description's state_key
+        if not new_state:
+            return
+
         state_key = self.entity_description.state_key
         if state_key in new_state:
             mode = new_state.get(state_key)

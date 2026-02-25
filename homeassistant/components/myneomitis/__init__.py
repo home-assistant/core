@@ -114,6 +114,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
     return True
 
 
+def process_connection_update(new_state: dict) -> bool | None:
+    """Return availability from a connection update."""
+    if not new_state or "connected" not in new_state:
+        return None
+
+    return bool(new_state.get("connected"))
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

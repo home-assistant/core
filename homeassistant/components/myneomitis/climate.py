@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyaxencoapi import PyAxencoAPI
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -12,64 +14,37 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyNeomitisConfigEntry
-from .const import DOMAIN
+from . import MyNeomitisConfigEntry, process_connection_update
+from .const import DOMAIN, PRESET_MODE_MAP, PRESET_MODE_MODELS, REVERSE_PRESET_MODE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_MODELS: frozenset[str] = frozenset({"EV30", "ECTRL", "ESTAT", "RSS-ECTRL"})
 SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"NTD", "ETRV"})
 
-PRESET_MODE_MAP = {
-    "comfort": 1,
-    "eco": 2,
-    "antifrost": 3,
-    "standby": 4,
-    "boost": 6,
-    "setpoint": 8,
-    "comfort_plus": 20,
-    "auto": 60,
-}
-REVERSE_PRESET_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
 
-PRESET_MODE_MODELS = {
-    "EV30": ["setpoint", "boost", "eco", "comfort", "auto", "antifrost", "standby"],
-    "ECTRL": [
-        "setpoint",
-        "boost",
-        "eco",
-        "comfort",
-        "comfort_plus",
-        "auto",
-        "antifrost",
-        "standby",
-    ],
-    "ESTAT": [
-        "setpoint",
-        "boost",
-        "eco",
-        "comfort",
-        "comfort_plus",
-        "auto",
-        "antifrost",
-        "standby",
-    ],
-    "RSS-ECTRL": [
-        "setpoint",
-        "boost",
-        "eco",
-        "comfort",
-        "comfort_plus",
-        "auto",
-        "antifrost",
-        "standby",
-    ],
-    "NTD": ["setpoint", "eco", "comfort", "auto", "antifrost", "standby"],
-    "ETRV": ["setpoint", "eco", "comfort", "antifrost", "standby"],
-}
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: MyNeomitisConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up climate entities from a config entry."""
+    api = config_entry.runtime_data.api
+    devices = config_entry.runtime_data.devices
+
+    def _create_entity(device: dict) -> MyNeoClimate:
+        return MyNeoClimate(api, device)
+
+    climate_entities = [
+        _create_entity(device)
+        for device in devices
+        if device.get("model") in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
+    ]
+    async_add_entities(climate_entities)
 
 
 class MyNeoClimate(ClimateEntity):
@@ -77,31 +52,24 @@ class MyNeoClimate(ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_translation_key = "climate_myneomitis"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, api: Any, device: dict[str, Any]) -> None:
+    def __init__(self, api: PyAxencoAPI, device: dict[str, Any]) -> None:
         """Initialize the MyNeoClimate entity."""
         self._api = api
         self._device = device
-        device_id = device.get("_id")
+        device_id: str = device.get("_id") or ""
         model = device.get("model", "")
         name = device.get("name") or device_id or "MyNeomitis device"
         connected = bool(device.get("connected", False))
 
-        if device_id:
-            self._attr_unique_id = device_id
-            self._attr_device_info = dr.DeviceInfo(
-                identifiers={(DOMAIN, device_id)},
-                name=name,
-                manufacturer="Axenco",
-                model=model,
-            )
-        else:
-            self._attr_unique_id = None
-            self._attr_device_info = dr.DeviceInfo(
-                name=name, manufacturer="Axenco", model=model
-            )
+        self._attr_unique_id = device_id
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=name,
+            manufacturer="Axenco",
+            model=model,
+        )
 
         self._attr_available = connected
         self._unavailable_logged: bool = False
@@ -109,7 +77,6 @@ class MyNeoClimate(ClimateEntity):
         state = device.get("state", {})
         self._is_sub_device = model in SUPPORTED_SUB_MODELS
         self._parents = device.get("parents") or {}
-        # Explicitly type as list[str] to satisfy static type checkers
         self._attr_preset_modes: list[str] = PRESET_MODE_MODELS.get(model, [])
         self._attr_min_temp = state.get("comfLimitMin", 7)
         self._attr_max_temp = state.get("comfLimitMax", 30)
@@ -120,11 +87,10 @@ class MyNeoClimate(ClimateEntity):
             else state.get("overrideTemp")
         )
         target_mode = state.get("targetMode")
-        self._attr_preset_mode = (
-            REVERSE_PRESET_MODE_MAP.get(int(target_mode))
-            if isinstance(target_mode, int)
-            else None
-        )
+        if isinstance(target_mode, int):
+            self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(int(target_mode))
+        else:
+            self._attr_preset_mode = None
         self._last_preset_mode: str | None = (
             self._attr_preset_mode
             if self._attr_preset_mode and self._attr_preset_mode != "standby"
@@ -156,30 +122,44 @@ class MyNeoClimate(ClimateEntity):
         if not device_id:
             return
 
-        if hasattr(self._api, "register_listener"):
-            try:
-                if unsubscribe := self._api.register_listener(
-                    device_id, self.handle_ws_update
-                ):
-                    self.async_on_remove(unsubscribe)
-            except AttributeError, RuntimeError, TypeError:
-                _LOGGER.debug("Failed to register ws listener for %s", device_id)
+        try:
+            unsubscribe = self._api.register_listener(device_id, self.handle_ws_update)
+        except AttributeError:
+            _LOGGER.debug(
+                "API has no register_listener, skipping ws listener for %s", device_id
+            )
+        else:
+            if callable(unsubscribe):
+                self.async_on_remove(unsubscribe)
+            elif hasattr(unsubscribe, "unsubscribe"):
+                self.async_on_remove(unsubscribe.unsubscribe)
+            elif hasattr(unsubscribe, "close"):
+                self.async_on_remove(unsubscribe.close)
+            elif unsubscribe is None:
+                pass
+            else:
+                _LOGGER.debug(
+                    "register_listener returned unsupported type %s for %s",
+                    type(unsubscribe),
+                    device_id,
+                )
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
         """Update entity state from WebSocket callback."""
-        if not new_state:
-            return
-
-        if "connected" in new_state:
-            self._attr_available = new_state["connected"]
-            if not self._attr_available:
-                if not self._unavailable_logged:
+        available = process_connection_update(new_state)
+        if available is not None:
+            self._attr_available = available
+            if not available:
+                if not getattr(self, "_unavailable_logged", False):
                     _LOGGER.info("The entity %s is unavailable", self.entity_id)
                     self._unavailable_logged = True
-            elif self._unavailable_logged:
+            elif getattr(self, "_unavailable_logged", False):
                 _LOGGER.info("The entity %s is back online", self.entity_id)
                 self._unavailable_logged = False
+
+        if not new_state:
+            return
 
         if "currentTemp" in new_state:
             self._attr_current_temperature = new_state["currentTemp"]
@@ -221,12 +201,16 @@ class MyNeoClimate(ClimateEntity):
         if self._attr_preset_mode != "setpoint":
             ok = await self._set_device_mode("setpoint")
             if not ok:
-                return
+                raise HomeAssistantError(
+                    f"Failed to set preset mode 'setpoint' for {self.entity_id}"
+                )
             self._attr_preset_mode = "setpoint"
 
         ok = await self._set_device_temperature(temperature)
         if not ok:
-            return
+            raise HomeAssistantError(
+                f"Failed to set temperature to {temperature} for {self.entity_id}"
+            )
 
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
@@ -243,7 +227,9 @@ class MyNeoClimate(ClimateEntity):
             return
         ok = await self._set_device_mode(preset_mode)
         if not ok:
-            return
+            raise HomeAssistantError(
+                f"Failed to set preset mode '{preset_mode}' for {self.entity_id}"
+            )
 
         if preset_mode != "standby":
             self._last_preset_mode = preset_mode
@@ -259,7 +245,9 @@ class MyNeoClimate(ClimateEntity):
 
             ok = await self._set_device_mode("standby")
             if not ok:
-                return
+                raise HomeAssistantError(
+                    f"Failed to set standby mode for {self.entity_id}"
+                )
             self._attr_preset_mode = "standby"
         else:
             preset_to_restore = None
@@ -282,7 +270,9 @@ class MyNeoClimate(ClimateEntity):
 
             ok = await self._set_device_mode(preset_to_restore)
             if not ok:
-                return
+                raise HomeAssistantError(
+                    f"Failed to restore preset '{preset_to_restore}' for {self.entity_id}"
+                )
             self._attr_preset_mode = preset_to_restore
 
         self._attr_hvac_mode = hvac_mode
@@ -354,33 +344,3 @@ class MyNeoClimate(ClimateEntity):
             return False
 
         return True
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes for the climate entity."""
-        return {
-            "device_model": self._device.get("model"),
-            "is_connected": self._attr_available,
-            "min_temp": self._attr_min_temp,
-            "max_temp": self._attr_max_temp,
-        }
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: MyNeomitisConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up climate entities from a config entry."""
-    api = config_entry.runtime_data.api
-    devices = config_entry.runtime_data.devices
-
-    def _create_entity(device: dict) -> MyNeoClimate:
-        return MyNeoClimate(api, device)
-
-    climate_entities = [
-        _create_entity(device)
-        for device in devices
-        if device.get("model") in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
-    ]
-    async_add_entities(climate_entities)

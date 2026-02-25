@@ -1,7 +1,7 @@
 {
   "entity": {
     "climate": {
-      "climate_myneomitis": {
+      "myneomitis": {
         "state": {
           "antifrost": "mdi:snowflake",
           "auto": "mdi:refresh-auto",

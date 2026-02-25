@@ -55,13 +55,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
-      'device_model': 'EV30',
       'friendly_name': 'Climate Device',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'is_connected': True,
       'max_temp': 30,
       'min_temp': 7,
       'preset_mode': 'comfort',

@@ -25,8 +25,7 @@
   },
   "entity": {
     "climate": {
-      "climate_myneomitis": {
-        "name": "MyNeomitis climate",
+      "myneomitis": {
         "state": {
           "antifrost": "Frost protection",
           "auto": "[%key:common::state::auto%]",
