@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.zinvolt_batterij_connected_to_grid-entry]
+# name: test_all_entities[binary_sensor.zinvolt_batterij_grid_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.zinvolt_batterij_connected_to_grid',
+    'entity_id': 'binary_sensor.zinvolt_batterij_grid_connection',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Connected to grid',
+    'object_id_base': 'Grid connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Connected to grid',
+    'original_name': 'Grid connection',
     'platform': 'zinvolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,14 +35,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.zinvolt_batterij_connected_to_grid-state]
+# name: test_all_entities[binary_sensor.zinvolt_batterij_grid_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Zinvolt Batterij Connected to grid',
+      'friendly_name': 'Zinvolt Batterij Grid connection',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zinvolt_batterij_connected_to_grid',
+    'entity_id': 'binary_sensor.zinvolt_batterij_grid_connection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -24,7 +24,7 @@
   "entity": {
     "binary_sensor": {
       "on_grid": {
-        "name": "Connected to grid"
+        "name": "Grid connection"
       }
     }
   },
