@@ -31,13 +31,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SwitchBot event platform."""
     coordinator = config_entry.runtime_data
-    event_entities: list[EventEntity] = []
-    event_entities.extend(
+    async_add_entities(
         SwitchbotEventEntity(coordinator, event)
         for event in coordinator.device.parsed_data
         if event in EVENT_TYPES
     )
-    async_add_entities(event_entities)
 
 
 class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
