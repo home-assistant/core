@@ -37,7 +37,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: |
-      There is no reconfiguration flow.
+      No options flow and no configurable options after initial setup.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
