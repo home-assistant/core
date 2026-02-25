@@ -36,13 +36,13 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[BatteryState]):
             name=f"Zinvolt {battery_id}",
             update_interval=timedelta(minutes=5),
         )
-        self._battery_id = battery_id
-        self._client = client
+        self.battery_id = battery_id
+        self.client = client
 
     async def _async_update_data(self) -> BatteryState:
         """Update data from Zinvolt."""
         try:
-            return await self._client.get_battery_status(self._battery_id)
+            return await self.client.get_battery_status(self.battery_id)
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed",

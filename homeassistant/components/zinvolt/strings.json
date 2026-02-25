@@ -21,6 +21,22 @@
       }
     }
   },
+  "entity": {
+    "number": {
+      "lower_threshold": {
+        "name": "Minimum charge level"
+      },
+      "max_output": {
+        "name": "Maximum output"
+      },
+      "standby_time": {
+        "name": "Standby time"
+      },
+      "upper_threshold": {
+        "name": "Maximum charge level"
+      }
+    }
+  },
   "exceptions": {
     "update_failed": {
       "message": "An error occurred while updating the Zinvolt integration."
