@@ -9,7 +9,8 @@
           "model": "Model",
           "host": "Host",
           "id": "Device ID",
-          "local_key": "Local key"
+          "local_key": "Local key",
+          "protocol_version": "Protocol version"
         }
       }
     }

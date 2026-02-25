@@ -11,14 +11,48 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_LOCAL_KEY
+from .const import (
+    CONF_LOCAL_KEY,
+    CONF_PROTOCOL_VERSION,
+    DEFAULT_PROTOCOL_VERSION,
+    DOMAIN,
+    RoboVacCommand,
+)
+from .local_api import EufyRoboVacLocalApi, EufyRoboVacLocalApiError
 from .model_mappings import MODEL_MAPPINGS, RoboVacModelMapping
 
 _LOGGER = logging.getLogger(__name__)
+
+_STATUS_TO_ACTIVITY: dict[str, VacuumActivity] = {
+    "charge_done": VacuumActivity.DOCKED,
+    "chargecompleted": VacuumActivity.DOCKED,
+    "chargego": VacuumActivity.RETURNING,
+    "charging": VacuumActivity.DOCKED,
+    "cleaning": VacuumActivity.CLEANING,
+    "completed": VacuumActivity.DOCKED,
+    "docking": VacuumActivity.RETURNING,
+    "goto_charge": VacuumActivity.RETURNING,
+    "mop_clean": VacuumActivity.CLEANING,
+    "paused": VacuumActivity.PAUSED,
+    "recharge": VacuumActivity.RETURNING,
+    "sleep": VacuumActivity.IDLE,
+    "sleeping": VacuumActivity.IDLE,
+    "smart": VacuumActivity.CLEANING,
+    "smart_clean": VacuumActivity.CLEANING,
+    "spot_clean": VacuumActivity.CLEANING,
+    "standby": VacuumActivity.IDLE,
+}
 
 
 async def async_setup_entry(
@@ -34,13 +68,9 @@ async def async_setup_entry(
 
 
 class EufyRoboVacEntity(StateVacuumEntity):
-    """Representation of a Eufy RoboVac vacuum entity.
+    """Representation of a Eufy RoboVac vacuum entity."""
 
-    This is intentionally a minimal spike implementation for model-first wiring.
-    Cloud/local protocol execution is added in later iterations.
-    """
-
-    _attr_should_poll = False
+    _attr_should_poll = True
 
     def __init__(self, *, entry: ConfigEntry, mapping: RoboVacModelMapping) -> None:
         """Initialize the entity."""
@@ -60,7 +90,30 @@ class EufyRoboVacEntity(StateVacuumEntity):
             | VacuumEntityFeature.FAN_SPEED
             | VacuumEntityFeature.SEND_COMMAND
             | VacuumEntityFeature.LOCATE
+            | VacuumEntityFeature.STATE
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self._attr_unique_id))},
+            manufacturer="Eufy",
+            model=mapping.display_name,
+            name=self._attr_name,
+        )
+
+        self._last_status_raw: str | None = None
+        self._last_error_raw: str | None = None
+        self._dps: dict[str, Any] = {}
+        self._api = EufyRoboVacLocalApi(
+            host=entry.data[CONF_HOST],
+            device_id=entry.data[CONF_ID],
+            local_key=entry.data[CONF_LOCAL_KEY],
+            protocol_version=entry.data.get(
+                CONF_PROTOCOL_VERSION, DEFAULT_PROTOCOL_VERSION
+            ),
+        )
+
+    def _dps_code(self, command: RoboVacCommand) -> str:
+        """Return the DPS code for a given command."""
+        return str(self._mapping.commands[command])
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -69,65 +122,148 @@ class EufyRoboVacEntity(StateVacuumEntity):
             "model_code": self._mapping.model_code,
             "model_name": self._mapping.display_name,
             "host": self._entry.data[CONF_HOST],
+            "protocol_version": self._entry.data.get(
+                CONF_PROTOCOL_VERSION, DEFAULT_PROTOCOL_VERSION
+            ),
             "local_key_present": bool(self._entry.data.get(CONF_LOCAL_KEY)),
+            "status_raw": self._last_status_raw,
+            "error_raw": self._last_error_raw,
+            "dps": self._dps,
         }
 
-    async def async_start(self) -> None:
-        """Start cleaning."""
-        self._attr_activity = VacuumActivity.CLEANING
+    @staticmethod
+    def _normalize_lookup_key(value: Any) -> str:
+        """Normalize raw device values for mapping lookups."""
+        return str(value).strip().lower()
+
+    def _reverse_lookup(self, mapping: dict[str, str], raw_value: Any) -> str | None:
+        """Map a raw device value back to our canonical key names."""
+        normalized = self._normalize_lookup_key(raw_value)
+        for key, mapped_value in mapping.items():
+            if self._normalize_lookup_key(mapped_value) == normalized:
+                return key
+        return None
+
+    async def _async_send_and_refresh(self, dps: dict[str, Any]) -> None:
+        """Send DPS commands and refresh entity state."""
+        try:
+            await self._api.async_send_dps(self.hass, dps)
+        except EufyRoboVacLocalApiError as err:
+            raise HomeAssistantError(str(err)) from err
+
+        await self.async_update()
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Fetch state from the local vacuum API."""
+        try:
+            dps = await self._api.async_get_dps(self.hass)
+        except EufyRoboVacLocalApiError as err:
+            _LOGGER.warning("Failed updating %s: %s", self._attr_unique_id, err)
+            return
+
+        if not dps:
+            return
+
+        self._dps = dps
+        status_raw = dps.get(self._dps_code(RoboVacCommand.STATUS))
+        error_raw = dps.get(self._dps_code(RoboVacCommand.ERROR))
+        battery_raw = dps.get(self._dps_code(RoboVacCommand.BATTERY))
+        fan_raw = dps.get(self._dps_code(RoboVacCommand.FAN_SPEED))
+
+        if status_raw is not None:
+            self._last_status_raw = str(status_raw)
+            activity = _STATUS_TO_ACTIVITY.get(
+                self._normalize_lookup_key(status_raw), VacuumActivity.CLEANING
+            )
+            self._attr_activity = activity
+
+        if error_raw is not None:
+            self._last_error_raw = str(error_raw)
+            if str(error_raw) not in ("0", "no_error", "No error"):
+                self._attr_activity = VacuumActivity.ERROR
+
+        if battery_raw is not None:
+            try:
+                self._attr_battery_level = int(float(str(battery_raw)))
+            except (TypeError, ValueError):
+                _LOGGER.debug(
+                    "Could not parse battery for %s: %s",
+                    self._attr_unique_id,
+                    battery_raw,
+                )
+
+        if fan_raw is not None:
+            if canonical_fan := self._reverse_lookup(
+                self._mapping.fan_speed_values, fan_raw
+            ):
+                self._attr_fan_speed = canonical_fan
+
+    async def async_start(self) -> None:
+        """Start cleaning in auto mode."""
+        await self._async_send_and_refresh(
+            {
+                self._dps_code(RoboVacCommand.MODE): self._mapping.mode_values["auto"],
+            }
+        )
 
     async def async_pause(self) -> None:
         """Pause cleaning."""
-        self._attr_activity = VacuumActivity.PAUSED
-        self.async_write_ha_state()
+        await self._async_send_and_refresh(
+            {
+                self._dps_code(RoboVacCommand.START_PAUSE): "pause",
+            }
+        )
 
     async def async_stop(self, **kwargs: Any) -> None:
-        """Stop cleaning."""
-        self._attr_activity = VacuumActivity.IDLE
-        self.async_write_ha_state()
+        """Stop cleaning by returning to dock."""
+        await self.async_return_to_base(**kwargs)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
-        """Return to dock."""
-        self._attr_activity = VacuumActivity.RETURNING
-        self.async_write_ha_state()
+        """Return vacuum to dock."""
+        await self._async_send_and_refresh(
+            {
+                self._dps_code(RoboVacCommand.RETURN_HOME): "return",
+            }
+        )
 
     async def async_locate(self, **kwargs: Any) -> None:
-        """Locate the vacuum."""
-        _LOGGER.debug("Locate requested for %s", self._attr_unique_id)
+        """Trigger locate sound."""
+        locate_code = self._dps_code(RoboVacCommand.LOCATE)
+        current = self._dps.get(locate_code)
+        await self._async_send_and_refresh({locate_code: not bool(current)})
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if fan_speed not in self._mapping.fan_speed_values:
-            _LOGGER.warning(
-                "Unsupported fan speed requested for %s: %s",
-                self._attr_unique_id,
-                fan_speed,
+        normalized = fan_speed.lower().replace(" ", "_")
+        if normalized not in self._mapping.fan_speed_values:
+            raise HomeAssistantError(
+                f"Unsupported fan speed '{fan_speed}' for {self._mapping.model_code}"
             )
-            return
 
-        self._attr_fan_speed = fan_speed
-        self.async_write_ha_state()
+        await self._async_send_and_refresh(
+            {
+                self._dps_code(RoboVacCommand.FAN_SPEED): self._mapping.fan_speed_values[
+                    normalized
+                ],
+            }
+        )
 
     async def async_send_command(
         self, command: str, params: list[str] | None = None, **kwargs: Any
     ) -> None:
-        """Send a command to the vacuum.
+        """Send a custom command to the vacuum.
 
-        Supported in this spike: mapped cleaning mode names via `command`.
+        Supported in this MVP:
+        - direct mode names: auto, small_room, spot, edge, nosweep
         """
         if command not in self._mapping.mode_values:
-            _LOGGER.warning(
-                "Unsupported send_command for %s: %s (params=%s)",
-                self._attr_unique_id,
-                command,
-                params,
+            raise HomeAssistantError(
+                f"Unsupported command '{command}' for {self._mapping.model_code}"
             )
-            return
 
-        _LOGGER.debug(
-            "send_command mapped for %s: %s -> %s",
-            self._attr_unique_id,
-            command,
-            self._mapping.mode_values[command],
+        await self._async_send_and_refresh(
+            {
+                self._dps_code(RoboVacCommand.MODE): self._mapping.mode_values[command],
+            }
         )

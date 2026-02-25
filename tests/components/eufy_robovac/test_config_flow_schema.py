@@ -19,6 +19,7 @@ def test_user_schema_accepts_t2253() -> None:
     )
 
     assert data["model"] == "T2253"
+    assert data["protocol_version"] == "3.3"
 
 
 def test_user_schema_rejects_unknown_model() -> None:

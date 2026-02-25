@@ -8,6 +8,8 @@ DOMAIN = "eufy_robovac"
 PLATFORMS: list[Platform] = [Platform.VACUUM]
 
 CONF_LOCAL_KEY = "local_key"
+CONF_PROTOCOL_VERSION = "protocol_version"
+DEFAULT_PROTOCOL_VERSION = "3.3"
 
 
 class RoboVacCommand(StrEnum):
