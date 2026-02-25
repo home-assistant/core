@@ -33,8 +33,19 @@ class BRouteData:
 type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
 
 
+@dataclass
+class BRouteDeviceInfo:
+    """Static device information fetched once at setup."""
+
+    serial_number: str | None = None
+    manufacturer_code: str | None = None
+    echonet_version: str | None = None
+
+
 class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     """The B Route update coordinator."""
+
+    device_info_data: BRouteDeviceInfo
 
     def __init__(
         self,
@@ -57,10 +68,34 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+        self.device_info_data = BRouteDeviceInfo()
+
     async def _async_setup(self) -> None:
-        await self.hass.async_add_executor_job(
-            self.api.open,
-        )
+        def fetch() -> None:
+            self.api.open()
+            self._fetch_device_info()
+
+        await self.hass.async_add_executor_job(fetch)
+
+    def _fetch_device_info(self) -> None:
+        """Fetch static device information from the smart meter."""
+        try:
+            self.device_info_data.serial_number = self.api.get_serial_number()
+        except MomongaError:
+            _LOGGER.debug("Failed to fetch serial number", exc_info=True)
+
+        time.sleep(self.api.internal_xmit_interval)
+        try:
+            raw = self.api.get_manufacturer_code()
+            self.device_info_data.manufacturer_code = raw.hex().upper()
+        except MomongaError:
+            _LOGGER.debug("Failed to fetch manufacturer code", exc_info=True)
+
+        time.sleep(self.api.internal_xmit_interval)
+        try:
+            self.device_info_data.echonet_version = self.api.get_standard_version()
+        except MomongaError:
+            _LOGGER.debug("Failed to fetch ECHONET Lite version", exc_info=True)
 
     def _get_data(self) -> BRouteData:
         """Get the data from API."""

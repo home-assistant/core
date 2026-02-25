@@ -324,7 +324,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.0
+aiontfy==0.8.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -2621,6 +2621,9 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
+tuya-device-handlers==0.0.10
+
+# homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
 
 # homeassistant.components.twentemilieu
@@ -2814,7 +2817,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.90
+zha==1.0.0
 
 # homeassistant.components.zinvolt
 zinvolt==0.1.0
