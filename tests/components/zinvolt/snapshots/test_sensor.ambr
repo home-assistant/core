@@ -11,7 +11,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.zinvolt_batterij_battery',
     'has_entity_name': True,
     'hidden_by': None,
