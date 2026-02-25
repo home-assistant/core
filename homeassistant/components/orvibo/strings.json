@@ -14,7 +14,7 @@
     },
     "flow_title": "{host}",
     "progress": {
-      "start_discovery": "Attempting to discover new S20 switches\n\nThis will take about 3 seconds",
+      "start_discovery": "Attempting to discover new S20 switches\n\nThis will take about 3 seconds\n\nDiscovery may fail if the switch is asleep. If your switch does not appear, please power toggle your switch before re-running discovery.",
       "title": "Orvibo S20"
     },
     "step": {
@@ -25,9 +25,10 @@
         "title": "Discovered switches"
       },
       "discovery_failed": {
-        "description": "No S20 switches were discovered on the network.",
+        "description": "No S20 switches were discovered on the network.  Discovery may fail if the switch is asleep.",
         "menu_options": {
-          "edit": "Enter configuration manually"
+          "edit": "Enter configuration manually",
+          "start_discovery": "Try discovering again"
         },
         "title": "Discovery failed"
       },

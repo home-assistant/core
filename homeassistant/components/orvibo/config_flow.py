@@ -185,7 +185,9 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a failed discovery."""
 
-        return self.async_show_menu(step_id="discovery_failed", menu_options=["edit"])
+        return self.async_show_menu(
+            step_id="discovery_failed", menu_options=["start_discovery", "edit"]
+        )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
