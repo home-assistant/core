@@ -7,21 +7,24 @@ from unittest.mock import patch
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
 from wyoming.handle import Handled, NotHandled
+from wyoming.info import Info
 from wyoming.intent import Entity, Intent, NotRecognized
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 
-from . import MockAsyncTcpClient
+from . import HANDLE_INFO, INTENT_INFO, MockAsyncTcpClient
 
 
 async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> None:
     """Test when an intent is recognized."""
     agent_id = "conversation.test_intent"
-
     conversation_id = "conversation-1234"
+    satellite_id = "satellite-1234"
+
     test_intent = Intent(
         name="TestIntent",
         entities=[Entity(name="entity", value="value")],
@@ -40,9 +43,10 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
 
     intent.async_register(hass, TestIntentHandler())
 
+    client = MockAsyncTcpClient([test_intent.event()])
     with patch(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
-        MockAsyncTcpClient([test_intent.event()]),
+        client,
     ):
         result = await conversation.async_converse(
             hass=hass,
@@ -51,7 +55,16 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
             context=Context(),
             language=hass.config.language,
             agent_id=agent_id,
+            satellite_id=satellite_id,
         )
+
+    # Ensure language and context are sent
+    assert client.transcript is not None
+    assert client.transcript.language == hass.config.language
+    assert client.transcript.context == {
+        "conversation_id": conversation_id,
+        "satellite_id": satellite_id,
+    }
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
@@ -123,12 +136,13 @@ async def test_not_recognized(
 async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> None:
     """Test when an intent is handled."""
     agent_id = "conversation.test_handle"
-
     conversation_id = "conversation-1234"
+    satellite_id = "satellite-1234"
 
+    client = MockAsyncTcpClient([Handled(text="success").event()])
     with patch(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
-        MockAsyncTcpClient([Handled(text="success").event()]),
+        client,
     ):
         result = await conversation.async_converse(
             hass=hass,
@@ -137,7 +151,16 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
             context=Context(),
             language=hass.config.language,
             agent_id=agent_id,
+            satellite_id=satellite_id,
         )
+
+    # Ensure language and context are sent
+    assert client.transcript is not None
+    assert client.transcript.language == hass.config.language
+    assert client.transcript.context == {
+        "conversation_id": conversation_id,
+        "satellite_id": satellite_id,
+    }
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
@@ -222,3 +245,39 @@ async def test_oserror(
     assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == snapshot
+
+
+async def test_intent_all_languages(
+    hass: HomeAssistant, intent_config_entry: ConfigEntry
+) -> None:
+    """Tests that an empty list of supported languages means the intent recognizer supports all languages."""
+    with (
+        patch.object(INTENT_INFO.intent[0].models[0], "languages", []),
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=Info(intent=INTENT_INFO.intent),
+        ),
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+    agent = conversation.async_get_agent(hass, "conversation.test_intent")
+    assert agent is not None
+    assert agent.supported_languages == MATCH_ALL
+
+
+async def test_handle_all_languages(
+    hass: HomeAssistant, handle_config_entry: ConfigEntry
+) -> None:
+    """Tests that an empty list of supported languages means the intent handler supports all languages."""
+    with (
+        patch.object(HANDLE_INFO.handle[0].models[0], "languages", []),
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=Info(handle=HANDLE_INFO.handle),
+        ),
+    ):
+        await hass.config_entries.async_setup(handle_config_entry.entry_id)
+
+    agent = conversation.async_get_agent(hass, "conversation.test_handle")
+    assert agent is not None
+    assert agent.supported_languages == MATCH_ALL
