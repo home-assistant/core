@@ -9,7 +9,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -53,6 +53,7 @@ class UptimeKumaUpdateEntity(
     entity_description = UpdateEntityDescription(
         key=UptimeKumaUpdate.UPDATE,
         translation_key=UptimeKumaUpdate.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
     _attr_has_entity_name = True
