@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from airos.exceptions import AirOSException
 
 from homeassistant.components.button import (
@@ -17,8 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DOMAIN, AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
