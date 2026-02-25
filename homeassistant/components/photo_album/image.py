@@ -106,9 +106,10 @@ class PhotoAlbumImageEntity(ImageEntity):
             await self.get_next_image()
 
         if self.hass.state != CoreState.running:
-            self.hass.bus.async_listen_once(
+            remove_listener = self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, get_next_image_on_start
             )
+            self.async_on_remove(remove_listener)
         else:
             await get_next_image_on_start()
 
