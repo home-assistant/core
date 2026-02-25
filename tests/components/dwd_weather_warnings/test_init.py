@@ -1,9 +1,23 @@
 """Tests for Deutscher Wetterdienst (DWD) Weather Warnings integration."""
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from homeassistant.components.dwd_weather_warnings.const import (
+    API_ATTR_WARNING_COLOR,
+    API_ATTR_WARNING_DESCRIPTION,
+    API_ATTR_WARNING_END,
+    API_ATTR_WARNING_HEADLINE,
+    API_ATTR_WARNING_INSTRUCTION,
+    API_ATTR_WARNING_LEVEL,
+    API_ATTR_WARNING_NAME,
+    API_ATTR_WARNING_PARAMETERS,
+    API_ATTR_WARNING_START,
+    API_ATTR_WARNING_TYPE,
+    ATTR_WARNING_COUNT,
     CONF_REGION_DEVICE_TRACKER,
+    CONF_REGION_IDENTIFIER,
+    CURRENT_WARNING_SENSOR,
     DOMAIN,
 )
 from homeassistant.components.dwd_weather_warnings.coordinator import (
@@ -18,6 +32,22 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from . import init_integration
 
 from tests.common import MockConfigEntry
+
+
+def _warning(level: int, end_time: datetime) -> dict[str, object]:
+    """Return a warning payload for tests."""
+    return {
+        API_ATTR_WARNING_NAME: f"Warning {level}",
+        API_ATTR_WARNING_TYPE: level,
+        API_ATTR_WARNING_LEVEL: level,
+        API_ATTR_WARNING_HEADLINE: f"Headline {level}",
+        API_ATTR_WARNING_DESCRIPTION: "Description",
+        API_ATTR_WARNING_INSTRUCTION: "Instruction",
+        API_ATTR_WARNING_START: end_time - timedelta(hours=1),
+        API_ATTR_WARNING_END: end_time,
+        API_ATTR_WARNING_PARAMETERS: {},
+        API_ATTR_WARNING_COLOR: "#ffffff",
+    }
 
 
 async def test_load_unload_entry(
@@ -136,3 +166,36 @@ async def test_load_valid_device_tracker(
 
     assert mock_tracker_entry.state is ConfigEntryState.LOADED
     assert isinstance(mock_tracker_entry.runtime_data, DwdWeatherWarningsCoordinator)
+
+
+async def test_filter_expired_warnings(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_dwdwfsapi: MagicMock
+) -> None:
+    """Test expired-warning filtering."""
+    now = datetime.now(UTC)
+    mock_dwdwfsapi.data_valid = True
+    mock_dwdwfsapi.warncell_id = "803000000"
+    mock_dwdwfsapi.warncell_name = "Test region"
+    mock_dwdwfsapi.current_warnings = [
+        _warning(4, now - timedelta(minutes=30)),
+        _warning(2, now + timedelta(minutes=30)),
+    ]
+    mock_dwdwfsapi.expected_warnings = []
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_REGION_IDENTIFIER: "803000000"},
+        unique_id="803000000",
+    )
+    await init_integration(hass, entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.unique_id}-{CURRENT_WARNING_SENSOR}"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2"
+    assert state.attributes[ATTR_WARNING_COUNT] == 1
+    assert "warning_2" not in state.attributes
