@@ -290,12 +290,32 @@ async def test_agents_delete_not_throwing_on_not_found(
     assert mock_client.delete_object.call_count == 0
 
 
+@pytest.mark.parametrize(
+    (
+        "backup_size",
+        "expected_multipart_upload_count",
+        "expected_upload_part_count",
+        "expected_complete_multipart_upload_count",
+        "expected_put_object_count",
+        "expected_final_part_log",
+    ),
+    [
+        (2**20, 0, 0, 0, 2, ""),  # small
+        (MULTIPART_MIN_PART_SIZE_BYTES, 1, 2, 1, 1, "Uploading final part"),  # large
+    ],
+    ids=["small", "large"],
+)
 async def test_agents_upload(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     test_backup: AgentBackup,
+    expected_multipart_upload_count: int,
+    expected_upload_part_count: int,
+    expected_complete_multipart_upload_count: int,
+    expected_put_object_count: int,
+    expected_final_part_log: str,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
@@ -326,17 +346,17 @@ async def test_agents_upload(
 
         assert resp.status == 201
         assert f"Uploading backup {test_backup.backup_id}" in caplog.text
-        if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
-            # single part + metadata both as regular upload (no multiparts)
-            assert mock_client.create_multipart_upload.await_count == 0
-            assert mock_client.put_object.await_count == 2
-        else:
-            assert "Uploading final part" in caplog.text
-            # 2 parts as multipart + metadata as regular upload
-            assert mock_client.create_multipart_upload.await_count == 1
-            assert mock_client.upload_part.await_count == 2
-            assert mock_client.complete_multipart_upload.await_count == 1
-            assert mock_client.put_object.await_count == 1
+        assert not expected_final_part_log or expected_final_part_log in caplog.text
+        assert (
+            mock_client.create_multipart_upload.await_count
+            == expected_multipart_upload_count
+        )
+        assert mock_client.upload_part.await_count == expected_upload_part_count
+        assert (
+            mock_client.complete_multipart_upload.await_count
+            == expected_complete_multipart_upload_count
+        )
+        assert mock_client.put_object.await_count == expected_put_object_count
 
 
 async def test_agents_upload_network_failure(

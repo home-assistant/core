@@ -6,10 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.aws_s3.backup import (
-    MULTIPART_MIN_PART_SIZE_BYTES,
-    suggested_filenames,
-)
+from homeassistant.components.aws_s3.backup import suggested_filenames
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
@@ -18,11 +15,14 @@ from .const import USER_INPUT
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(
-    params=[2**20, MULTIPART_MIN_PART_SIZE_BYTES],
-    ids=["small", "large"],
-)
-def test_backup(request: pytest.FixtureRequest) -> None:
+@pytest.fixture
+def backup_size() -> int:
+    """Backup size, override in tests to change defaults."""
+    return 2**20
+
+
+@pytest.fixture
+def test_backup(backup_size: int) -> None:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -35,7 +35,7 @@ def test_backup(request: pytest.FixtureRequest) -> None:
         homeassistant_version="2024.12.0.dev0",
         name="Core 2024.12.0.dev0",
         protected=False,
-        size=request.param,
+        size=backup_size,
     )
 
 
