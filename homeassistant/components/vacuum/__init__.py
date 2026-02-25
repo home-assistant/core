@@ -63,6 +63,7 @@ SERVICE_STOP = "stop"
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
+ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED = "segments_mapping_not_configured"
 
 _BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
@@ -189,6 +190,9 @@ class StateVacuumEntity(
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
+    _segments_not_configured_issue_created: bool = False
+    _segments_changed_last_seen: list[dict[str, Any]] | None = None
+
     __vacuum_legacy_battery_level: bool = False
     __vacuum_legacy_battery_icon: bool = False
     __vacuum_legacy_battery_feature: bool = False
@@ -231,6 +235,17 @@ class StateVacuumEntity(
             self._report_deprecated_battery_properties("battery_level")
         if self.__vacuum_legacy_battery_icon:
             self._report_deprecated_battery_properties("battery_icon")
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        super().async_write_ha_state()
+        self._async_check_segments_issues()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_check_segments_issues()
 
     @callback
     def _report_deprecated_battery_properties(self, property: str) -> None:
@@ -489,6 +504,61 @@ class StateVacuumEntity(
                 "entity_id": self.entity_id,
             },
         )
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        self._segments_changed_last_seen = options.get("last_seen_segments")
+
+    @callback
+    def _async_check_segments_issues(self) -> None:
+        """Create or delete segment-related repair issues."""
+        if self.registry_entry is None:
+            return
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        should_have_not_configured_issue = (
+            VacuumEntityFeature.CLEAN_AREA in self.supported_features
+            and options.get("area_mapping") is None
+        )
+
+        if (
+            should_have_not_configured_issue
+            and not self._segments_not_configured_issue_created
+        ):
+            issue_id = (
+                f"{ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED}_{self.registry_entry.id}"
+            )
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id,
+                data={
+                    "entry_id": self.registry_entry.id,
+                    "entity_id": self.entity_id,
+                },
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED,
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+            self._segments_not_configured_issue_created = True
+        elif (
+            not should_have_not_configured_issue
+            and self._segments_not_configured_issue_created
+        ):
+            issue_id = (
+                f"{ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED}_{self.registry_entry.id}"
+            )
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            self._segments_not_configured_issue_created = False
+
+        if self._segments_changed_last_seen is not None and (
+            VacuumEntityFeature.CLEAN_AREA not in self.supported_features
+            or options.get("last_seen_segments") != self._segments_changed_last_seen
+        ):
+            issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            self._segments_changed_last_seen = None
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
