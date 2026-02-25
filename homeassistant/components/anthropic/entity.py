@@ -60,7 +60,7 @@ from anthropic.types import (
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
-    WebSearchTool20250305Param,
+    WebSearchTool20260209Param,
     WebSearchToolResultBlock,
     WebSearchToolResultBlockParamContentParam,
 )
@@ -735,9 +735,9 @@ class AnthropicBaseLLMEntity(Entity):
             )
 
         if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20250305Param(
+            web_search = WebSearchTool20260209Param(
                 name="web_search",
-                type="web_search_20250305",
+                type="web_search_20260209",
                 max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
             )
             if options.get(CONF_WEB_SEARCH_USER_LOCATION):

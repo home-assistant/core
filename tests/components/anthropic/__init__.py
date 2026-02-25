@@ -24,6 +24,7 @@ from anthropic.types import (
     ToolUseBlock,
     WebSearchResultBlock,
     WebSearchToolResultBlock,
+    WebSearchToolResultError,
 )
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
@@ -169,7 +170,7 @@ def create_web_search_block(
 
 
 def create_web_search_result_block(
-    index: int, id: str, results: list[WebSearchResultBlock]
+    index: int, id: str, results: list[WebSearchResultBlock] | WebSearchToolResultError
 ) -> list[RawMessageStreamEvent]:
     """Create a server tool result block for web search results."""
     return [

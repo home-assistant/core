@@ -13,6 +13,7 @@ from anthropic.types import (
     TextEditorCodeExecutionToolResultError,
     TextEditorCodeExecutionViewResultBlock,
     WebSearchResultBlock,
+    WebSearchToolResultError,
 )
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
@@ -853,6 +854,82 @@ async def test_web_search(
             ),
             *create_content_block(
                 10, ["\nThose are the main headlines making news today."]
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's on the news today?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_web_search_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web search error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        },
+    )
+
+    web_search_results = WebSearchToolResultError(
+        type="web_search_tool_result_error",
+        error_code="too_many_requests",
+    )
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                [
+                    "The user is",
+                    " asking about today's news, which",
+                    " requires current, real-time information",
+                    ". This is clearly something that requires recent",
+                    " information beyond my knowledge cutoff.",
+                    " I should use the web",
+                    "_search tool to fin",
+                    "d today's news.",
+                ],
+            ),
+            *create_content_block(
+                1, ["To get today's news, I'll perform a web search"]
+            ),
+            *create_web_search_block(
+                2,
+                "srvtoolu_12345ABC",
+                ["", '{"que', 'ry"', ": \"today's", ' news"}'],
+            ),
+            *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
+            *create_content_block(
+                4,
+                ["I am unable to perform the web search at this time."],
             ),
         )
     ]
