@@ -1,4 +1,4 @@
-"""The tests for the Photo Frame image platform."""
+"""The tests for the Photo Album image platform."""
 
 from http import HTTPStatus
 from pathlib import Path
@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
-from homeassistant.components.photo_frame.const import DOMAIN
+from homeassistant.components.photo_album.const import DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 
@@ -37,7 +37,7 @@ async def test_image(
 
         with (
             patch(
-                "homeassistant.components.photo_frame.image.async_browse_media",
+                "homeassistant.components.photo_album.image.async_browse_media",
                 return_value=BrowseMediaSource(
                     domain=None,
                     identifier=None,
@@ -67,7 +67,7 @@ async def test_image(
                 ),
             ),
             patch(
-                "homeassistant.components.photo_frame.image.async_resolve_media",
+                "homeassistant.components.photo_album.image.async_resolve_media",
                 return_value=PlayMedia(
                     url="fake",
                     mime_type="image/png",
@@ -119,7 +119,7 @@ async def test_image_during_startup(
 
         with (
             patch(
-                "homeassistant.components.photo_frame.image.async_browse_media",
+                "homeassistant.components.photo_album.image.async_browse_media",
                 return_value=BrowseMediaSource(
                     domain=None,
                     identifier=None,
@@ -149,7 +149,7 @@ async def test_image_during_startup(
                 ),
             ),
             patch(
-                "homeassistant.components.photo_frame.image.async_resolve_media",
+                "homeassistant.components.photo_album.image.async_resolve_media",
                 return_value=PlayMedia(
                     url="fake",
                     mime_type="image/png",
@@ -196,7 +196,7 @@ async def test_no_images(
         )
 
         with patch(
-            "homeassistant.components.photo_frame.image.async_browse_media",
+            "homeassistant.components.photo_album.image.async_browse_media",
             return_value=BrowseMediaSource(
                 domain=None,
                 identifier=None,

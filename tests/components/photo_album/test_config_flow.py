@@ -1,11 +1,11 @@
-"""Test the Photo Frame config flow."""
+"""Test the Photo Album config flow."""
 
 from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource
-from homeassistant.components.photo_frame.const import DOMAIN
+from homeassistant.components.photo_album.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -21,11 +21,11 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.photo_frame.async_setup_entry",
+            "homeassistant.components.photo_album.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.photo_frame.config_flow.async_browse_media",
+            "homeassistant.components.photo_album.config_flow.async_browse_media",
             return_value=BrowseMediaSource(
                 domain=None,
                 identifier=None,
@@ -92,11 +92,11 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.photo_frame.async_setup_entry",
+            "homeassistant.components.photo_album.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.photo_frame.config_flow.async_browse_media",
+            "homeassistant.components.photo_album.config_flow.async_browse_media",
             return_value=BrowseMediaSource(
                 domain=None,
                 identifier=None,
@@ -139,7 +139,7 @@ async def test_config_flow_with_exception(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.photo_frame.async_setup_entry",
+            "homeassistant.components.photo_album.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
     ):

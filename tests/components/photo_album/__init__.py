@@ -1,1 +1,1 @@
-"""Tests for the Photo Frame component."""
+"""Tests for the Photo Album component."""
