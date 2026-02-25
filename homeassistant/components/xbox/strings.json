@@ -126,10 +126,16 @@
     "sensor": {
       "current_achievements": {
         "name": "Earned achievements",
+        "state_attributes": {
+          "total_achievements": { "name": "Total achievements" }
+        },
         "unit_of_measurement": "achievements"
       },
       "current_gamerscore": {
         "name": "Earned Gamerscore",
+        "state_attributes": {
+          "total_gamerscore": { "name": "Total Gamerscore" }
+        },
         "unit_of_measurement": "points"
       },
       "follower": {
@@ -189,14 +195,6 @@
       },
       "status": {
         "name": "Status"
-      },
-      "total_achievements": {
-        "name": "Total achievements",
-        "unit_of_measurement": "achievements"
-      },
-      "total_gamerscore": {
-        "name": "Total Gamerscore",
-        "unit_of_measurement": "points"
       },
       "total_storage": {
         "name": "Total space - {name}"

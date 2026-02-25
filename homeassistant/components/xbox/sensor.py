@@ -65,8 +65,6 @@ class XboxSensor(StrEnum):
     JOIN_RESTRICTIONS = "join_restrictions"
     TOTAL_STORAGE = "total_storage"
     FREE_STORAGE = "free_storage"
-    TOTAL_ACHIEVEMENTS = "total_achievements"
-    TOTAL_GAMERSCORE = "total_gamerscore"
     CURRENT_ACHIEVEMENTS = "current_achievements"
     CURRENT_GAMERSCORE = "current_gamerscore"
     PROGRESS = "progress"
@@ -158,7 +156,7 @@ def join_restrictions(person: Person, _: Title | None = None) -> str | None:
     )
 
 
-def title_logo(title: Title | None) -> str | None:
+def title_logo(_: Person, title: Title | None) -> str | None:
     """Get the game logo."""
 
     return (
@@ -217,7 +215,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         translation_key=XboxSensor.NOW_PLAYING,
         value_fn=lambda _, title: title.name if title else None,
         attributes_fn=now_playing_attributes,
-        entity_picture_fn=lambda _, x: title_logo(x),
+        entity_picture_fn=title_logo,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.FRIENDS,
@@ -269,28 +267,30 @@ STORAGE_SENSOR_DESCRIPTIONS: tuple[XboxStorageDeviceSensorEntityDescription, ...
 
 GAME_SENSOR_DESCRIPTIONS: tuple[XboxGameSensorEntityDescription, ...] = (
     XboxGameSensorEntityDescription(
-        key=XboxSensor.TOTAL_ACHIEVEMENTS,
-        translation_key=XboxSensor.TOTAL_ACHIEVEMENTS,
-        value_fn=lambda x: x.achievement.total_achievements if x.achievement else None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    XboxGameSensorEntityDescription(
-        key=XboxSensor.TOTAL_GAMERSCORE,
-        translation_key=XboxSensor.TOTAL_GAMERSCORE,
-        value_fn=lambda x: x.achievement.total_gamerscore if x.achievement else None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    XboxGameSensorEntityDescription(
         key=XboxSensor.CURRENT_ACHIEVEMENTS,
         translation_key=XboxSensor.CURRENT_ACHIEVEMENTS,
         value_fn=(
             lambda x: x.achievement.current_achievements if x.achievement else None
+        ),
+        attributes_fn=(
+            lambda x: {
+                "total_achievements": x.achievement.total_achievements
+                if x.achievement
+                else None
+            }
         ),
     ),
     XboxGameSensorEntityDescription(
         key=XboxSensor.CURRENT_GAMERSCORE,
         translation_key=XboxSensor.CURRENT_GAMERSCORE,
         value_fn=lambda x: x.achievement.current_gamerscore if x.achievement else None,
+        attributes_fn=(
+            lambda x: {
+                "total_gamerscore": x.achievement.total_gamerscore
+                if x.achievement
+                else None
+            }
+        ),
     ),
     XboxGameSensorEntityDescription(
         key=XboxSensor.PROGRESS,
@@ -509,15 +509,4 @@ class XboxGameSensorEntity(
             fn(self.data)
             if (fn := self.entity_description.attributes_fn)
             else super().extra_state_attributes
-        )
-
-    @property
-    def entity_picture(self) -> str | None:
-        """Return the entity picture."""
-
-        return (
-            entity_picture
-            if (fn := self.entity_description.entity_picture_fn) is not None
-            and (entity_picture := fn(self.data)) is not None
-            else super().entity_picture
         )

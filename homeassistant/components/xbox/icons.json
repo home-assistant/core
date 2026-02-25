@@ -66,12 +66,6 @@
       },
       "status": {
         "default": "mdi:message-text-outline"
-      },
-      "total_achievements": {
-        "default": "mdi:trophy-variant-outline"
-      },
-      "total_gamerscore": {
-        "default": "mdi:alpha-g-circle"
       }
     }
   }
