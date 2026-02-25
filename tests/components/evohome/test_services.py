@@ -125,7 +125,7 @@ async def test_zone_clear_zone_override(
     with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
-            EvoService.RESET_ZONE_OVERRIDE,
+            EvoService.CLEAR_ZONE_OVERRIDE,
             {
                 ATTR_ENTITY_ID: zone_id,
             },
