@@ -1584,3 +1584,13 @@ async def test_mount_reload_unnamed_device(
             "hassio", "mount_reload", {"device_id": device.id}, blocking=True
         )
     assert str(exc.value) == f"Device is unnamed: {device.id}"
+
+
+async def test_mount_model_not_translated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that mount's model is not translated since it's used by services.yaml."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    assert str(device.model) == "Home Assistant Mount"
