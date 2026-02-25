@@ -183,85 +183,22 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         existing_entry = self._get_reauth_entry()
 
         if user_input is None:
-            # Preserve existing values as defaults
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=existing_entry.data.get(CONF_PASSKEY)
-                            or vol.UNDEFINED,
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=existing_entry.data.get(CONF_USERNAME)
-                            or vol.UNDEFINED,
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
+                data_schema=self._build_credentials_schema(existing_entry.data),
             )
 
-        # Combine existing data with the user's new input for validation.
-        # This correctly handles adding, changing, and clearing credentials.
+        # Merge existing data with user input for validation
         validate_data = {**existing_entry.data, **user_input}
+        errors = await self._async_validate_credentials(validate_data)
 
-        self.host = validate_data[CONF_HOST]
-        self.port = validate_data[CONF_PORT]
-        self.passkey = validate_data.get(CONF_PASSKEY)
-        self.username = validate_data.get(CONF_USERNAME)
-        self.password = validate_data.get(CONF_PASSWORD)
-
-        try:
-            await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
-        except BSBLANAuthError:
+        if errors:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
-                errors={"base": "invalid_auth"},
-            )
-        except BSBLANError:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
-                errors={"base": "cannot_connect"},
+                data_schema=self._build_credentials_schema(user_input),
+                errors=errors,
             )
 
-        # Update only the fields that were provided by the user
         return self.async_update_reload_and_abort(
             existing_entry, data_updates=user_input, reason="reauth_successful"
         )
@@ -275,103 +212,18 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_HOST,
-                            default=existing_entry.data.get(CONF_HOST, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PORT,
-                            default=existing_entry.data.get(CONF_PORT, DEFAULT_PORT),
-                        ): int,
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=existing_entry.data.get(CONF_PASSKEY)
-                            or vol.UNDEFINED,
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=existing_entry.data.get(CONF_USERNAME)
-                            or vol.UNDEFINED,
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
+                data_schema=self._build_connection_schema(existing_entry.data),
             )
 
-        # Merge existing data with user input so optional fields
-        # not re-entered (like password) are preserved during validation
+        # Merge existing data with user input for validation
         validate_data = {**existing_entry.data, **user_input}
+        errors = await self._async_validate_credentials(validate_data)
 
-        self.host = validate_data[CONF_HOST]
-        self.port = validate_data.get(CONF_PORT, DEFAULT_PORT)
-        self.passkey = validate_data.get(CONF_PASSKEY)
-        self.username = validate_data.get(CONF_USERNAME)
-        self.password = validate_data.get(CONF_PASSWORD)
-
-        try:
-            await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
-        except BSBLANAuthError:
+        if errors:
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_HOST,
-                            default=user_input.get(CONF_HOST, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PORT,
-                            default=user_input.get(CONF_PORT, DEFAULT_PORT),
-                        ): int,
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
-                errors={"base": "invalid_auth"},
-            )
-        except BSBLANError:
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_HOST,
-                            default=user_input.get(CONF_HOST, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PORT,
-                            default=user_input.get(CONF_PORT, DEFAULT_PORT),
-                        ): int,
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
-                errors={"base": "cannot_connect"},
+                data_schema=self._build_connection_schema(user_input),
+                errors=errors,
             )
 
         # Prevent reconfiguring to a different physical device
@@ -383,37 +235,79 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             reason="reconfigure_successful",
         )
 
+    async def _async_validate_credentials(self, data: dict[str, Any]) -> dict[str, str]:
+        """Validate connection credentials and return errors dict."""
+        self.host = data[CONF_HOST]
+        self.port = data.get(CONF_PORT, DEFAULT_PORT)
+        self.passkey = data.get(CONF_PASSKEY)
+        self.username = data.get(CONF_USERNAME)
+        self.password = data.get(CONF_PASSWORD)
+
+        errors: dict[str, str] = {}
+        try:
+            await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
+        except BSBLANAuthError:
+            errors["base"] = "invalid_auth"
+        except BSBLANError:
+            errors["base"] = "cannot_connect"
+        return errors
+
+    @callback
+    def _build_credentials_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+        """Build schema for credentials-only forms (reauth)."""
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_PASSKEY,
+                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_USERNAME,
+                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD,
+                    default=vol.UNDEFINED,
+                ): str,
+            }
+        )
+
+    @callback
+    def _build_connection_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+        """Build schema for full connection forms (user and reconfigure)."""
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST,
+                    default=defaults.get(CONF_HOST, vol.UNDEFINED),
+                ): str,
+                vol.Optional(
+                    CONF_PORT,
+                    default=defaults.get(CONF_PORT, DEFAULT_PORT),
+                ): int,
+                vol.Optional(
+                    CONF_PASSKEY,
+                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_USERNAME,
+                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD,
+                    default=defaults.get(CONF_PASSWORD) or vol.UNDEFINED,
+                ): str,
+            }
+        )
+
     @callback
     def _show_setup_form(
         self, errors: dict | None = None, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
-        # Preserve user input if provided, otherwise use defaults
-        defaults = user_input or {}
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=defaults.get(CONF_HOST, vol.UNDEFINED)
-                    ): str,
-                    vol.Optional(
-                        CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
-                    ): int,
-                    vol.Optional(
-                        CONF_PASSKEY, default=defaults.get(CONF_PASSKEY, vol.UNDEFINED)
-                    ): str,
-                    vol.Optional(
-                        CONF_USERNAME,
-                        default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
-                    ): str,
-                    vol.Optional(
-                        CONF_PASSWORD,
-                        default=defaults.get(CONF_PASSWORD, vol.UNDEFINED),
-                    ): str,
-                }
-            ),
+            data_schema=self._build_connection_schema(user_input or {}),
             errors=errors or {},
         )
 
