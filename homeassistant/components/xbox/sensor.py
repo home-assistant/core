@@ -22,21 +22,18 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SUBENTRY_TYPE_FRIEND, SUBENTRY_TYPE_GAME
-from .coordinator import (
-    XboxConfigEntry,
-    XboxConsolesCoordinator,
-    XboxTitleHistoryCoordinator,
-)
+from .coordinator import XboxConfigEntry, XboxConsolesCoordinator
 from .entity import (
     MAP_MODEL,
     XboxBaseEntity,
     XboxBaseEntityDescription,
+    XboxGameBaseEntity,
     check_deprecated_entity,
     to_https,
 )
@@ -454,47 +451,10 @@ class XboxStorageDeviceSensorEntity(
         return self.entity_description.value_fn(self.data) if self.data else None
 
 
-class XboxGameSensorEntity(
-    CoordinatorEntity[XboxTitleHistoryCoordinator], SensorEntity
-):
+class XboxGameSensorEntity(XboxGameBaseEntity, SensorEntity):
     """Representation of a Xbox game title sensor."""
 
-    _attr_has_entity_name = True
     entity_description: XboxGameSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: XboxTitleHistoryCoordinator,
-        title_id: str,
-        entity_description: XboxGameSensorEntityDescription,
-    ) -> None:
-        """Initialize Xbox entity."""
-        super().__init__(coordinator)
-        self.xuid = coordinator.client.xuid
-        self.title_id = title_id
-        self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{coordinator.client.xuid}_{title_id}_{entity_description.key}"
-        )
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{coordinator.client.xuid}_{title_id}")},
-            manufacturer=(
-                (self.data.detail.developer_name or self.data.detail.publisher_name)
-                if self.data.detail
-                else None
-            ),
-            model=self.data.name,
-            name=self.data.name,
-            via_device=(DOMAIN, coordinator.client.xuid),
-        )
-
-    @property
-    def data(self) -> Title:
-        """Return coordinator data for this person."""
-        return self.coordinator.data[self.title_id]
 
     @property
     def native_value(self) -> StateType | datetime:
