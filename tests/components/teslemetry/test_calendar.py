@@ -339,6 +339,49 @@ async def test_calendar_week_crossing_get_events(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_midnight_crossing_local_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test async_get_events includes overnight period when query starts at local midnight."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    # Use local-timezone timestamps so UTC-to-local shift does not
+    # accidentally push the start back to the previous day.
+    start = datetime(2024, 1, 1, 0, 0, 0, tzinfo=tz)
+    end = datetime(2024, 1, 2, 0, 0, 0, tzinfo=tz)
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_BUY],
+            EVENT_START_DATETIME: start,
+            EVENT_END_DATETIME: end,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result[ENTITY_BUY]["events"]
+
+    # Expect 2 events on Jan 1:
+    # 1) OFF_PEAK that started Dec 31 21:00 and ends Jan 1 16:00
+    # 2) ON_PEAK from Jan 1 16:00 to Jan 1 21:00
+    # The OFF_PEAK starting Jan 1 21:00 (ending Jan 2 16:00) also overlaps,
+    # so 3 events total.
+    assert len(events) == 3
+
+    starts = [dt_util.parse_datetime(e["start"]) for e in events]
+    assert starts[0].day == 31  # Dec 31 21:00 (previous evening)
+    assert starts[1].day == 1  # Jan 1 16:00
+    assert starts[2].day == 1  # Jan 1 21:00
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_calendar_invalid_price(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

@@ -158,7 +158,9 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         start_date = dt_util.as_local(start_date)
         end_date = dt_util.as_local(end_date)
 
-        current_day = dt_util.start_of_local_day(start_date)
+        # Start one day earlier to catch TOU periods that cross midnight
+        # from the previous evening into the query range.
+        current_day = dt_util.start_of_local_day(start_date) - timedelta(days=1)
         while current_day < end_date:
             season_name = self._get_current_season(current_day)
             if not season_name or not self.seasons.get(season_name):
