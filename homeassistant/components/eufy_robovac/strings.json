@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Eufy RoboVac",
+        "description": "Configure a Eufy RoboVac using local device details.",
+        "data": {
+          "name": "Name",
+          "model": "Model",
+          "host": "Host",
+          "id": "Device ID",
+          "local_key": "Local key"
+        }
+      }
+    }
+  }
+}
