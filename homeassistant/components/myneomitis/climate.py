@@ -221,7 +221,15 @@ class MyNeoClimate(ClimateEntity):
         if preset_mode == "standby":
             self._attr_hvac_mode = HVACMode.OFF
         elif self._attr_hvac_mode == HVACMode.OFF:
-            self._attr_hvac_mode = HVACMode.HEAT
+            # When leaving standby, select the first supported non-OFF HVAC mode
+            next_mode: HVACMode | None = None
+            if getattr(self, "_attr_hvac_modes", None):
+                next_mode = next(
+                    (mode for mode in self._attr_hvac_modes if mode != HVACMode.OFF),
+                    None,
+                )
+            if next_mode is not None:
+                self._attr_hvac_mode = next_mode
         mode_value = PRESET_MODE_MAP.get(preset_mode)
         if mode_value is None:
             _LOGGER.warning("Unknown preset mode: %s", preset_mode)
