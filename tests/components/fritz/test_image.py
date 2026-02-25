@@ -1,20 +1,19 @@
 """Tests for Fritz!Tools image platform."""
 
-from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests.exceptions import ReadTimeout
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
 
@@ -126,8 +125,8 @@ async def test_image_entity(
         "friendly_name": "Mock Title GuestWifi",
     }
 
-    entity_entry = entity_registry.async_get("image.mock_title_guestwifi")
-    assert entity_entry.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
+    assert (state := entity_registry.async_get("image.mock_title_guestwifi"))
+    assert state.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
 
     # test image download
     client = await hass_client()
@@ -143,6 +142,7 @@ async def test_image_update(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -166,7 +166,9 @@ async def test_image_update(
     assert resp.status == HTTPStatus.OK
 
     fc_class_mock().override_services({**MOCK_FB_SERVICES, **GUEST_WIFI_CHANGED})
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
@@ -179,10 +181,13 @@ async def test_image_update(
 @pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
 async def test_image_update_unavailable(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
     """Test image update when fritzbox is unavailable."""
+
+    entity_id = "image.mock_title_guestwifi"
 
     # setup component with image platform only
     with patch(
@@ -196,21 +201,24 @@ async def test_image_update_unavailable(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("image.mock_title_guestwifi")
-    assert state
+    assert hass.states.get(entity_id)
 
     # fritzbox becomes unavailable
     fc_class_mock().call_action_side_effect(ReadTimeout)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("image.mock_title_guestwifi")
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
     # fritzbox is available again
     fc_class_mock().call_action_side_effect(None)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("image.mock_title_guestwifi")
+    assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNKNOWN

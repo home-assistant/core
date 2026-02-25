@@ -17,7 +17,7 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
 from homeassistant.components.http import DOMAIN as HTTP_GROUP
 from homeassistant.components.light import LightEntityFeature
-from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED
 from homeassistant.components.websocket_api.automation import (
@@ -31,7 +31,7 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import CONF_EXTERNAL_URL, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -824,16 +824,16 @@ async def test_get_services(
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration that has services and check cache is updated
-    assert await async_setup_component(hass, DOMAIN_GROUP, {DOMAIN_GROUP: {}})
+    assert await async_setup_component(hass, GROUP_DOMAIN, {GROUP_DOMAIN: {}})
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 3,
-        "result": {DOMAIN_GROUP: ANY, HTTP_GROUP: ANY},
+        "result": {GROUP_DOMAIN: ANY, HTTP_GROUP: ANY},
         "success": True,
         "type": "result",
     }
-    group_services = msg["result"][DOMAIN_GROUP]
+    group_services = msg["result"][GROUP_DOMAIN]
     assert group_services == snapshot
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
 
@@ -843,7 +843,7 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 4,
-        "result": {DOMAIN_GROUP: group_services, HTTP_GROUP: ANY},
+        "result": {GROUP_DOMAIN: group_services, HTTP_GROUP: ANY},
         "success": True,
         "type": "result",
     }
@@ -879,7 +879,7 @@ async def test_get_services(
             "set_level": None,
         }
 
-    await async_setup_component(hass, DOMAIN_LOGGER, {DOMAIN_LOGGER: {}})
+    await async_setup_component(hass, LOGGER_DOMAIN, {LOGGER_DOMAIN: {}})
     await hass.async_block_till_done()
 
     with (
@@ -894,14 +894,14 @@ async def test_get_services(
     assert msg == {
         "id": 5,
         "result": {
-            DOMAIN_LOGGER: ANY,
-            DOMAIN_GROUP: group_services,
+            LOGGER_DOMAIN: ANY,
+            GROUP_DOMAIN: group_services,
             HTTP_GROUP: ANY,
         },
         "success": True,
         "type": "result",
     }
-    logger_services = msg["result"][DOMAIN_LOGGER]
+    logger_services = msg["result"][LOGGER_DOMAIN]
     assert logger_services == snapshot
 
 
@@ -1075,8 +1075,18 @@ async def test_subscribe_triggers(
     assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
 
 
-async def test_get_config(hass: HomeAssistant, websocket_client: MockHAClientWebSocket) -> None:
+@pytest.mark.parametrize(
+    ("local_only_user", "forbidden_keys"), [(False, []), (True, [CONF_EXTERNAL_URL])]
+)
+async def test_get_config(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    local_only_user: bool,
+    forbidden_keys: list[str],
+) -> None:
     """Test get_config command."""
+    hass_admin_user.local_only = local_only_user
     await websocket_client.send_json_auto_id({"type": "get_config"})
 
     msg = await websocket_client.receive_json()
@@ -1096,6 +1106,10 @@ async def test_get_config(hass: HomeAssistant, websocket_client: MockHAClientWeb
         if key in result:
             result[key] = set(result[key])
             config[key] = set(config[key])
+
+    for key in forbidden_keys:
+        assert key in config
+        config.pop(key)
 
     assert result == config
 

@@ -47,8 +47,10 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return {
-        appliance.info.ha_id: await _generate_appliance_diagnostics(appliance)
-        for appliance in entry.runtime_data.data.values()
+        appliance_coordinator.data.info.ha_id: await _generate_appliance_diagnostics(
+            appliance_coordinator.data
+        )
+        for appliance_coordinator in entry.runtime_data.appliance_coordinators.values()
     }
 
 
@@ -59,4 +61,6 @@ async def async_get_device_diagnostics(
     ha_id = next(
         (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
     )
-    return await _generate_appliance_diagnostics(entry.runtime_data.data[ha_id])
+    return await _generate_appliance_diagnostics(
+        entry.runtime_data.appliance_coordinators[ha_id].data
+    )

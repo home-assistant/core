@@ -32,6 +32,15 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
             model=(
                 data.info.device_identification.value
                 if data.info.device_identification
+                and data.info.device_identification.value
+                else None
+            ),
+            model_id=(
+                f"{data.info.controller_family.value}_{data.info.controller_variant.value}"
+                if data.info.controller_family
+                and data.info.controller_variant
+                and data.info.controller_family.value
+                and data.info.controller_variant.value
                 else None
             ),
             sw_version=data.device.version,
