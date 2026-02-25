@@ -18,6 +18,6 @@ class ZinvoltEntity(CoordinatorEntity[ZinvoltDeviceCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             manufacturer="Zinvolt",
-            name=coordinator.data.name,
+            name=coordinator.battery.name,
             serial_number=coordinator.data.serial_number,
         )
