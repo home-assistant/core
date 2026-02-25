@@ -1,5 +1,6 @@
 """Volvo services."""
 
+import asyncio
 import logging
 from typing import Any
 from urllib import parse
@@ -10,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 from .coordinator import VolvoConfigEntry
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CONFIG_ENTRY_ID = "entry"
 CONF_IMAGE_TYPES = "images"
 SERVICE_GET_IMAGE_URL = "get_image_url"
-SERVICE_REFRESH_SCHEMA = vol.Schema(
+SERVICE_GET_IMAGE_URL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONFIG_ENTRY_ID): str,
         vol.Optional(CONF_IMAGE_TYPES): list[str],
@@ -59,7 +60,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_GET_IMAGE_URL,
         _get_image_url,
-        schema=SERVICE_REFRESH_SCHEMA,
+        schema=SERVICE_GET_IMAGE_URL_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -70,35 +71,42 @@ async def _get_image_url(call: ServiceCall) -> dict[str, Any]:
 
     entry = _async_get_config_entry(call.hass, entry_id)
     image_types = _get_requested_image_types(requested_images)
+    client = get_async_client(call.hass)
 
-    client = create_async_httpx_client(call.hass)
-    client.headers.update(_HEADERS)
-
-    images = []
+    # Build (type, url) pairs for all requested image types up front
+    candidates: list[tuple[str, str]] = []
 
     for image_type in image_types:
         if image_type == "interior":
-            images.append(
-                {
-                    "type": "interior",
-                    "url": entry.runtime_data.context.vehicle.images.internal_image_url,
-                }
-            )
+            url = entry.runtime_data.context.vehicle.images.internal_image_url or ""
         else:
             url = _parse_exterior_image_url(
                 entry.runtime_data.context.vehicle.images.exterior_image_url,
                 _PARAM_IMAGE_ANGLE_MAP[image_type],
             )
 
-            if await _async_image_exists(client, url):
-                images.append(
-                    {
-                        "type": image_type,
-                        "url": url,
-                    }
-                )
+        candidates.append((image_type, url))
 
-    return {"images": images}
+    # Interior images exist if their URL is populated; exterior images require an HTTP check
+    async def _check_exists(image_type: str, url: str) -> bool:
+        if image_type == "interior":
+            return bool(url)
+        return await _async_image_exists(client, url)
+
+    # Run checks in parallel
+    exists_results = await asyncio.gather(
+        *(_check_exists(image_type, url) for image_type, url in candidates)
+    )
+
+    return {
+        "images": [
+            {"type": image_type, "url": url}
+            for (image_type, url), exists in zip(
+                candidates, exists_results, strict=True
+            )
+            if exists
+        ]
+    }
 
 
 def _async_get_config_entry(hass: HomeAssistant, entry_id: str) -> VolvoConfigEntry:
@@ -120,14 +128,14 @@ def _async_get_config_entry(hass: HomeAssistant, entry_id: str) -> VolvoConfigEn
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_entry",
-            translation_placeholders={"entry_id": entry.title},
+            translation_placeholders={"entry_id": entry.entry_id},
         )
 
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_loaded",
-            translation_placeholders={"entry_id": entry.title},
+            translation_placeholders={"entry_id": entry.entry_id},
         )
 
     return entry
@@ -139,9 +147,12 @@ def _get_requested_image_types(requested_image_types: list[str]) -> list[str]:
     if not requested_image_types:
         return allowed_image_types
 
-    image_types = []
+    image_types: list[str] = []
 
-    for image_type in set(requested_image_types):
+    for image_type in requested_image_types:
+        if image_type in image_types:
+            continue
+
         if image_type not in allowed_image_types:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -178,11 +189,22 @@ async def _async_image_exists(client: AsyncClient, url: str) -> bool:
         return False
 
     try:
-        response = await client.get(url, timeout=10, follow_redirects=True)
+        response = await client.get(
+            url, headers=_HEADERS, timeout=10, follow_redirects=True
+        )
         response.raise_for_status()
-    except HTTPStatusError:
-        _LOGGER.debug("Image does not exist: %s", url)
-        return False
+    except HTTPStatusError as ex:
+        status = ex.response.status_code if ex.response is not None else None
+
+        if status in (404, 410):
+            _LOGGER.debug("Image does not exist: %s", url)
+            return False
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="image_error",
+            translation_placeholders={"url": url},
+        ) from ex
     except HTTPError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

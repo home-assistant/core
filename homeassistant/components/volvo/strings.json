@@ -370,7 +370,7 @@
       "message": "Entry not loaded: {entry_id}"
     },
     "image_error": {
-      "message": "Error while checking image url: {url}"
+      "message": "Unable to load vehicle image from: {url}"
     },
     "invalid_entry": {
       "message": "Invalid entry: {entry_id}"
@@ -411,7 +411,7 @@
   },
   "services": {
     "get_image_url": {
-      "description": "Get the URL of one or more vehicle specific images.",
+      "description": "Get the URL for one or more vehicle-specific images.",
       "fields": {
         "entry": {
           "description": "The entry to retrieve the vehicle images for.",
