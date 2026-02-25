@@ -155,7 +155,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.type,
                 ZEROCONF_TYPE_LINKPLAY,
             )
-            return self.async_abort(reason="not_supported_device")
+            return self.async_abort(reason="not_supported")
 
         host = discovery_info.host
         udn_from_txt = discovery_info.properties.get("uuid")
