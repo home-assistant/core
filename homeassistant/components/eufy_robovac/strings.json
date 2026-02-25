@@ -1,5 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the vacuum. Check host, device ID, local key, and protocol version.",
+      "unknown": "Unexpected error"
+    },
     "step": {
       "user": {
         "title": "Set up Eufy RoboVac",
