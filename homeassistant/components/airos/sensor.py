@@ -182,14 +182,14 @@ async def async_setup_entry(
     """Set up the AirOS sensors from a config entry."""
     coordinator = config_entry.runtime_data
 
-    async_add_entities(
-        AirOSSensor(coordinator, description) for description in COMMON_SENSORS
-    )
+    entities = [AirOSSensor(coordinator, description) for description in COMMON_SENSORS]
 
     if coordinator.device_data["fw_major"] == 8:
-        async_add_entities(
+        entities.extend(
             AirOSSensor(coordinator, description) for description in AIROS8_SENSORS
         )
+
+    async_add_entities(entities)
 
 
 class AirOSSensor(AirOSEntity, SensorEntity):
