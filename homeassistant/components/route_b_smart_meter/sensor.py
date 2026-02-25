@@ -70,6 +70,18 @@ SENSOR_DESCRIPTIONS = (
 )
 
 
+
+def _build_device_info(coordinator: BRouteUpdateCoordinator) -> DeviceInfo:
+    """Build device information from coordinator data."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, coordinator.bid)},
+        name=f"Route B Smart Meter {coordinator.bid}",
+        manufacturer=coordinator.device_info_data.manufacturer_code,
+        serial_number=coordinator.device_info_data.serial_number,
+        sw_version=coordinator.device_info_data.echonet_version,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BRouteConfigEntry,
@@ -98,10 +110,7 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
         super().__init__(coordinator)
         self.entity_description: SensorEntityDescriptionWithValueAccessor = description
         self._attr_unique_id = f"{coordinator.bid}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.bid)},
-            name=f"Route B Smart Meter {coordinator.bid}",
-        )
+        self._attr_device_info = _build_device_info(coordinator)
 
     @property
     def native_value(self) -> StateType:
