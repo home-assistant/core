@@ -103,7 +103,8 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
                     time.sleep(REOPEN_BACKOFF_SECONDS)
 
         raise MomongaError(
-            "Failed to recover Momonga session"
+            f"Failed to recover Momonga session after {MAX_REOPEN_ATTEMPTS}"
+            f" attempts: {last_error}"
         ) from last_error
 
     async def _async_update_data(self) -> BRouteData:
