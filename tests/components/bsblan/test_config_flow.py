@@ -1059,3 +1059,167 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
 
     # Should show the discovery_confirm form again with auth error
     _assert_form_result(result, "discovery_confirm", {"base": "invalid_auth"})
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reconfigure",
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    _assert_abort_result(result, "reconfigure_successful")
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_PORT] == 8080
+    assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+async def test_reconfigure_flow_auth_error(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with authentication error."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_bsblan.device.side_effect = BSBLANAuthError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reconfigure",
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "wrong_key",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+
+    _assert_form_result(result, "reconfigure", {"base": "invalid_auth"})
+
+    # Verify user input is preserved in the form
+    data_schema = result.get("data_schema")
+    assert data_schema is not None
+
+    host_field = next(
+        field for field in data_schema.schema if field.schema == CONF_HOST
+    )
+    passkey_field = next(
+        field for field in data_schema.schema if field.schema == CONF_PASSKEY
+    )
+    username_field = next(
+        field for field in data_schema.schema if field.schema == CONF_USERNAME
+    )
+
+    assert host_field.default() == "192.168.1.50"
+    assert passkey_field.default() == "wrong_key"
+    assert username_field.default() == "admin"
+
+
+async def test_reconfigure_flow_connection_error(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with connection error."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_bsblan.device.side_effect = BSBLANConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reconfigure",
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_form_result(result, "reconfigure", {"base": "cannot_connect"})
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts when connecting to a different device."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock device returning a different MAC address
+    device = mock_bsblan.device.return_value
+    device.MAC = "aa:bb:cc:dd:ee:ff"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reconfigure",
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.99",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_abort_result(result, "unique_id_mismatch")
