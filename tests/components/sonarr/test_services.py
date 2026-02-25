@@ -38,22 +38,30 @@ from tests.common import MockConfigEntry
 )
 async def test_services_config_entry_not_loaded_state(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     service: str,
 ) -> None:
     """Test service call when config entry is in failed state."""
-    mock_config_entry.add_to_hass(hass)
+    # Create a second config entry that's not loaded
+    unloaded_entry = MockConfigEntry(
+        title="Sonarr",
+        domain=DOMAIN,
+        unique_id="unloaded",
+    )
+    unloaded_entry.add_to_hass(hass)
 
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert unloaded_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ServiceValidationError, match="service_not_found"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: mock_config_entry.entry_id},
+            {ATTR_ENTRY_ID: unloaded_entry.entry_id},
             blocking=True,
             return_response=True,
         )
+
+    assert exc_info.value.translation_key == "not_loaded"
 
 
 @pytest.mark.parametrize(
