@@ -30,7 +30,7 @@ from tests.typing import WebSocketGenerator
 
 @pytest.fixture(autouse=True)
 def update_only() -> Generator[None]:
-    """Enable only the sensor platform."""
+    """Enable only the update platform."""
     with patch(
         "homeassistant.components.ntfy.PLATFORMS",
         [Platform.UPDATE],
