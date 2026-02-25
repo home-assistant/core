@@ -152,7 +152,8 @@ class EufyRoboVacEntity(StateVacuumEntity):
             raise HomeAssistantError(str(err)) from err
 
         await self.async_update()
-        self.async_write_ha_state()
+        if self.hass is not None:
+            self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Fetch state from the local vacuum API."""
