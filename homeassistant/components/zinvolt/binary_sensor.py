@@ -57,10 +57,10 @@ async def async_setup_entry(
         for coordinator in entry.runtime_data.values()
     ]
     entities.extend(
-        ZinvoltPointBinarySensor(coordinator, point.lower())
+        ZinvoltPointBinarySensor(coordinator, point)
         for coordinator in entry.runtime_data.values()
         for point in coordinator.data.points
-        if point.lower() in POINT_ENTITIES
+        if point in POINT_ENTITIES
     )
     async_add_entities(entities)
 

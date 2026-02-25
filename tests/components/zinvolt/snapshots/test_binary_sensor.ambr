@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.zinvolt_batterij_communication-entry]
@@ -96,7 +96,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.zinvolt_batterij_current-entry]
@@ -146,7 +146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.zinvolt_batterij_discharge-entry]
@@ -196,7 +196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.zinvolt_batterij_grid_connection-entry]
@@ -296,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.zinvolt_batterij_other_problems-entry]
@@ -346,7 +346,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.zinvolt_batterij_voltage-entry]
@@ -396,6 +396,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---

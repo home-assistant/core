@@ -68,5 +68,5 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
             battery_state,
             battery_unit.version.current_version,
             battery_unit.battery_model,
-            {point.point: point.normal for point in battery_unit.points},
+            {point.point.lower(): point.normal for point in battery_unit.points},
         )
