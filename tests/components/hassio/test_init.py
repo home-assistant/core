@@ -1537,7 +1537,9 @@ async def test_mount_reload_action(
 ) -> None:
     """Test reload_mount service call."""
     device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
-    await hass.services.async_call("hassio", "mount_reload", {"device_id": device.id})
+    await hass.services.async_call(
+        "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+    )
     supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")
 
 
@@ -1569,22 +1571,22 @@ async def test_mount_reload_unknown_device_id(
         await hass.services.async_call(
             "hassio", "mount_reload", {"device_id": "1234"}, blocking=True
         )
-    assert str(exc.value) == "Device ID not found: 1234"
+    assert str(exc.value) == "Device ID not found"
 
 
-async def test_mount_reload_unnamed_device(
+async def test_mount_reload_invalid_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test reload_mount with unnamed device."""
+    """Test reload_mount with an invalid device."""
     device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
     device_registry.async_update_device(device.id, name=None)
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             "hassio", "mount_reload", {"device_id": device.id}, blocking=True
         )
-    assert str(exc.value) == f"Device is unnamed: {device.id}"
+    assert str(exc.value) == "Device is not a supervisor mount point"
 
 
 async def test_mount_reload_selector_not_translated(

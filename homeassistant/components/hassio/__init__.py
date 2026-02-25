@@ -466,18 +466,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
+        coordinator: HassioDataUpdateCoordinator | None = None
+
         if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_unknown_device_id",
-                translation_placeholders={"device_id": service.data[ATTR_DEVICE_ID]},
             )
 
-        if device.name is None:
+        if (
+            device.name is None
+            or device.model != SupervisorEntityModel.MOUNT
+            or (coordinator := hass.data.get(ADDONS_COORDINATOR)) is None
+            or coordinator.entry_id not in device.config_entries
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="mount_reload_unnamed_device",
-                translation_placeholders={"device_id": service.data[ATTR_DEVICE_ID]},
+                translation_key="mount_reload_invalid_device",
             )
 
         try:
