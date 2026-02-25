@@ -1,5 +1,5 @@
-"""Constants for the Photo Frame integration."""
+"""Constants for the Photo Album integration."""
 
-DOMAIN = "photo_frame"
+DOMAIN = "photo_album"
 
 CONF_MEDIA = "media"

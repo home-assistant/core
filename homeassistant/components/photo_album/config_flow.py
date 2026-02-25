@@ -1,4 +1,4 @@
-"""Config flow for Photo Frame integration."""
+"""Config flow for Photo Album integration."""
 
 from __future__ import annotations
 
@@ -25,8 +25,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PhotoFrameConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Photo Frame."""
+class PhotoAlbumConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Photo Album."""
 
     VERSION = 1
     MINOR_VERSION = 1

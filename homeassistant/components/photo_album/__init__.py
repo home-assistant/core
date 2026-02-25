@@ -1,4 +1,4 @@
-"""The Photo Frame integration."""
+"""The Photo Album integration."""
 
 from __future__ import annotations
 

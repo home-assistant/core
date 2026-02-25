@@ -1,4 +1,4 @@
-"""Support for Photo Frame image."""
+"""Support for Photo Album image."""
 
 from __future__ import annotations
 
@@ -27,11 +27,11 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Photo Frame image entities."""
+    """Set up the Photo Album image entities."""
     if media := entry.data.get("media"):
         async_add_entities(
             [
-                PhotoFrameImageEntity(
+                PhotoAlbumImageEntity(
                     name=entry.title,
                     media_content_id=media.get("media_content_id"),
                     unique_id=entry.entry_id,
@@ -41,8 +41,8 @@ async def async_setup_entry(
         )
 
 
-class PhotoFrameImageEntity(ImageEntity):
-    """Implement the image entity for Photo Frame."""
+class PhotoAlbumImageEntity(ImageEntity):
+    """Implement the image entity for Photo Album."""
 
     path: Path | None
 
