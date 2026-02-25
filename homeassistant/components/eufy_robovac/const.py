@@ -2,7 +2,12 @@
 
 from enum import StrEnum
 
+from homeassistant.const import Platform
+
 DOMAIN = "eufy_robovac"
+PLATFORMS: list[Platform] = [Platform.VACUUM]
+
+CONF_LOCAL_KEY = "local_key"
 
 
 class RoboVacCommand(StrEnum):
