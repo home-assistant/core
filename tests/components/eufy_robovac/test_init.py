@@ -9,6 +9,7 @@ from homeassistant.components.eufy_robovac.const import (
     CONF_PROTOCOL_VERSION,
     DOMAIN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumActivity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
@@ -68,8 +69,16 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
         )
         assert entity_id is not None
 
+        battery_entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{config_entry.data[CONF_ID]}_battery",
+        )
+        assert battery_entity_id is not None
+
         calls_before_update = mock_get_dps.await_count
         await async_update_entity(hass, entity_id)
+        await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
         assert state is not None
@@ -79,6 +88,11 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
         assert state.attributes["status_raw"] == "standby"
         assert state.attributes["model_name"] == "G30 Hybrid"
         assert mock_get_dps.await_count == calls_before_update + 1
+
+        battery_state = hass.states.get(battery_entity_id)
+        assert battery_state is not None
+        assert battery_state.state == "72"
+        assert battery_state.attributes["device_class"] == "battery"
 
 
 async def test_unload_entry_removes_vacuum_entity(

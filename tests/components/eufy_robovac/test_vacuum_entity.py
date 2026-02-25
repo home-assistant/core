@@ -75,10 +75,9 @@ async def test_async_return_to_base_sends_return(entity: EufyRoboVacEntity) -> N
 
 @pytest.mark.asyncio
 async def test_async_update_maps_activity_and_battery(entity: EufyRoboVacEntity) -> None:
-    """Update should map standby status and battery level."""
+    """Update should map standby status and fan speed."""
     await entity.async_update()
 
     assert entity.activity == VacuumActivity.IDLE
     assert entity.extra_state_attributes["dps"]["104"] == 65
-    assert entity.battery_level == 65
     assert entity.fan_speed == "standard"
