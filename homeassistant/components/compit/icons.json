@@ -20,6 +20,15 @@
         "default": "mdi:alert"
       }
     },
+    "fan": {
+      "ventilation": {
+        "default": "mdi:fan",
+        "state": {
+          "off": "mdi:fan-off",
+          "on": "mdi:fan"
+        }
+      }
+    },
     "number": {
       "boiler_target_temperature": {
         "default": "mdi:water-boiler"
