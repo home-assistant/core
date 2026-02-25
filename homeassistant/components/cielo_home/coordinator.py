@@ -104,7 +104,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
 
         try:
             dev.apply_update(data)
-        except KeyError, ValueError, TypeError:
+        except (KeyError, ValueError, TypeError):
             await self.async_request_refresh()
             return
 
