@@ -32,9 +32,9 @@ async def async_setup_entry(
     """Set up the SwitchBot event platform."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        SwitchbotEventEntity(coordinator, event)
-        for event in coordinator.device.parsed_data
-        if event in EVENT_TYPES
+        SwitchbotEventEntity(coordinator, event, description)
+        for event, description in EVENT_TYPES.items()
+        if event in coordinator.device.parsed_data
     )
 
 
@@ -45,11 +45,12 @@ class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
         event: str,
+        description: EventEntityDescription,
     ) -> None:
         """Initialize the SwitchBot event."""
         super().__init__(coordinator)
         self._event = event
-        self.entity_description = EVENT_TYPES[event]
+        self.entity_description = description
         self._attr_unique_id = f"{coordinator.base_unique_id}-{event}"
         self._previous_value = False
 
