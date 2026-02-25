@@ -32,6 +32,7 @@ from aiohomeconnect.model.program import EnumerateProgram
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -123,7 +124,7 @@ def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -164,7 +165,7 @@ async def mock_integration_setup(
 
 
 def _get_set_program_side_effect(
-    event_queue: asyncio.Queue[list[EventMessage]], event_key: EventKey
+    event_queue: asyncio.Queue[list[EventMessage | Exception]], event_key: EventKey
 ):
     """Set program side effect."""
 
@@ -207,7 +208,7 @@ def _get_set_program_side_effect(
 
 
 def _get_set_setting_side_effect(
-    event_queue: asyncio.Queue[list[EventMessage]],
+    event_queue: asyncio.Queue[list[EventMessage | Exception]],
 ):
     """Set settings side effect."""
 
@@ -238,7 +239,7 @@ def _get_set_setting_side_effect(
 
 
 def _get_set_program_options_side_effect(
-    event_queue: asyncio.Queue[list[EventMessage]],
+    event_queue: asyncio.Queue[list[EventMessage | Exception]],
 ):
     """Set programs side effect."""
 
@@ -278,6 +279,16 @@ def _get_set_program_options_side_effect(
     return set_program_options_side_effect
 
 
+def _get_specific_appliance_side_effect(
+    appliances: list[HomeAppliance], ha_id: str
+) -> HomeAppliance:
+    """Get specific appliance side effect."""
+    for appliance_ in appliances:
+        if appliance_.ha_id == ha_id:
+            return appliance_
+    pytest.fail(f"Mock didn't include appliance with id {ha_id}")
+
+
 @pytest.fixture(name="client")
 def mock_client(
     appliances: list[HomeAppliance],
@@ -290,9 +301,9 @@ def mock_client(
         autospec=HomeConnectClient,
     )
 
-    event_queue: asyncio.Queue[list[EventMessage]] = asyncio.Queue()
+    event_queue: asyncio.Queue[list[EventMessage | Exception]] = asyncio.Queue()
 
-    async def add_events(events: list[EventMessage]) -> None:
+    async def add_events(events: list[EventMessage | Exception]) -> None:
         await event_queue.put(events)
 
     mock.add_events = add_events
@@ -326,19 +337,13 @@ def mock_client(
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
+                if isinstance(event, Exception):
+                    raise event
                 yield event
 
     mock.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances(appliances))
-
-    def _get_specific_appliance_side_effect(ha_id: str) -> HomeAppliance:
-        """Get specific appliance side effect."""
-        for appliance_ in appliances:
-            if appliance_.ha_id == ha_id:
-                return appliance_
-        raise HomeConnectApiError("error.key", "error description")
-
     mock.get_specific_appliance = AsyncMock(
-        side_effect=_get_specific_appliance_side_effect
+        side_effect=lambda ha_id: _get_specific_appliance_side_effect(appliances, ha_id)
     )
     mock.stream_all_events = stream_all_events
 
@@ -467,6 +472,9 @@ def mock_client_with_exception(
 
     appliances = [appliance] if appliance else appliances
     mock.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances(appliances))
+    mock.get_specific_appliance = AsyncMock(
+        side_effect=lambda ha_id: _get_specific_appliance_side_effect(appliances, ha_id)
+    )
     mock.stream_all_events = stream_all_events
 
     mock.start_program = AsyncMock(side_effect=exception)

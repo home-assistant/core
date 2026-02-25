@@ -238,8 +238,7 @@ async def init_integration(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         # For a first refresh
-        await entry.runtime_data.coordinator.async_refresh()
-        await entry.runtime_data.mobile_coordinator.async_refresh()
+        await entry.runtime_data.async_refresh()
         await hass.async_block_till_done()
 
         yield
