@@ -54,7 +54,7 @@ class PhotoAlbumConfigFlow(ConfigFlow, domain=DOMAIN):
                             title=user_input[CONF_NAME], data=user_input
                         )
 
-                    errors["media"] = "invalid_media_selected"
+                    errors["media"] = "selected_media_no_images"
 
         return self.async_show_form(
             step_id="user",
