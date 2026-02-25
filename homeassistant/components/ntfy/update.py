@@ -9,11 +9,13 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
+from homeassistant.const import CONF_URL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NTFY_KEY
+from .const import DEFAULT_URL
 from .coordinator import (
     NtfyConfigEntry,
     NtfyLatestReleaseUpdateCoordinator,
@@ -33,6 +35,7 @@ class NtfyUpdate(StrEnum):
 DESCRIPTION = UpdateEntityDescription(
     key=NtfyUpdate.UPDATE,
     translation_key=NtfyUpdate.UPDATE,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 
@@ -42,7 +45,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update platform."""
-    if (version_coordinator := entry.runtime_data.version).data is not None:
+    if (
+        entry.data[CONF_URL] != DEFAULT_URL
+        and (version_coordinator := entry.runtime_data.version).data is not None
+    ):
         update_coordinator = hass.data[NTFY_KEY]
         async_add_entities(
             [NtfyUpdateEntity(version_coordinator, update_coordinator, DESCRIPTION)]

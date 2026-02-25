@@ -11,7 +11,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'update.ntfy_example_ntfy_version',
     'has_entity_name': True,
     'hidden_by': None,
