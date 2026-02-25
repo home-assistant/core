@@ -148,12 +148,8 @@
     "step": {
       "init": {
         "data": {
-          "cloud_control": "Control mode",
-          "cloud_read": "Read mode"
-        },
-        "data_description": {
-          "cloud_control": "Select the endpoint to use for controlling the device",
-          "cloud_read": "Select the endpoint to use for reading data"
+          "cloud_control": "Send commands to",
+          "cloud_read": "Read data from"
         }
       }
     }
