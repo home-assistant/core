@@ -1543,7 +1543,7 @@ poolsense==0.0.8
 
 # homeassistant.components.powerfox
 # homeassistant.components.powerfox_local
-powerfox==2.1.0
+powerfox==2.1.1
 
 # homeassistant.components.prana
 prana-api-client==0.10.0
