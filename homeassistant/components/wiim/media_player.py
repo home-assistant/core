@@ -79,15 +79,6 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-SUPPORT_WIIM_SEEKABLE = (
-    MediaPlayerEntityFeature.NEXT_TRACK
-    | MediaPlayerEntityFeature.PREVIOUS_TRACK
-    | MediaPlayerEntityFeature.SEEK
-    | MediaPlayerEntityFeature.REPEAT_SET
-    | MediaPlayerEntityFeature.SHUFFLE_SET
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
