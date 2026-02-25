@@ -106,7 +106,7 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         coordinator: ZinvoltDeviceCoordinator,
         description: ZinvoltBatteryStateDescription,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the number."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.serial_number}.{description.key}"
