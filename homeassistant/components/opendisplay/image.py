@@ -91,7 +91,7 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
     def _get_storage_path(self) -> Path:
         """Return the path for storing the image on disk."""
         return Path(
-            self.hass.config.path(".storage", STORAGE_DIR, f"{self._address}.png")
+            self.hass.config.path(".storage", STORAGE_DIR, f"{self._entry_id}.png")
         )
 
     async def async_added_to_hass(self) -> None:
@@ -297,8 +297,9 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
         session = async_get_clientsession(self.hass)
 
         try:
-            resp = await session.get(full_url)
-            resp.raise_for_status()
+            async with session.get(full_url) as resp:
+                resp.raise_for_status()
+                data = await resp.read()
         except aiohttp.ClientError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -306,5 +307,4 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        data = await resp.read()
         return await self.hass.async_add_executor_job(load_image_from_bytes, data)
