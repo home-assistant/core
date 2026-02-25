@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "wiim"
-SDK_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.MEDIA_PLAYER,

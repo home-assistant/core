@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SDK_LOGGER
+from .const import DOMAIN, LOGGER
 
 
 def exception_wrap[_WiimEntityT: WiimBaseEntity, **_P, _R](
@@ -25,19 +25,17 @@ def exception_wrap[_WiimEntityT: WiimBaseEntity, **_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except WiimRequestException as err:
-            SDK_LOGGER.warning("HTTP API error for %s: %s", self.entity_id, err)
+            LOGGER.warning("HTTP API error for %s: %s", self.entity_id, err)
             raise WiimException(
                 f"HTTP API not available for action {self.entity_description.key}"
             ) from err
         except WiimDeviceException as err:
-            SDK_LOGGER.warning(
-                "Device communication error for %s: %s", self.entity_id, err
-            )
+            LOGGER.warning("Device communication error for %s: %s", self.entity_id, err)
             raise WiimException(
                 f"HTTP API not available for action {self.entity_description.key}"
             ) from err
         except WiimException as err:
-            SDK_LOGGER.warning("An SDK error occurred for %s: %s", self.entity_id, err)
+            LOGGER.warning("An SDK error occurred for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 f"An error occurred with WiiM device {self._device.name}: {err}"
             ) from err

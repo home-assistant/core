@@ -22,12 +22,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 @pytest.fixture(autouse=True)
 def mock_sdk_logger():
-    """Mocks the SDK_LOGGER to prevent actual logging and allow assertion of calls."""
+    """Mocks the LOGGER to prevent actual logging and allow assertion of calls."""
     with (
-        patch("homeassistant.components.wiim.const.SDK_LOGGER.warning") as mock_warning,
-        patch("homeassistant.components.wiim.const.SDK_LOGGER.debug") as mock_debug,
-        patch("homeassistant.components.wiim.const.SDK_LOGGER.info") as mock_info,
-        patch("homeassistant.components.wiim.const.SDK_LOGGER.error") as mock_error,
+        patch("homeassistant.components.wiim.const.LOGGER.warning") as mock_warning,
+        patch("homeassistant.components.wiim.const.LOGGER.debug") as mock_debug,
+        patch("homeassistant.components.wiim.const.LOGGER.info") as mock_info,
+        patch("homeassistant.components.wiim.const.LOGGER.error") as mock_error,
     ):
         yield mock_warning, mock_debug, mock_info, mock_error
 

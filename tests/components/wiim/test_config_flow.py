@@ -1,21 +1,18 @@
 """pytest config_flow.py."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
-from wiim.exceptions import WiimRequestException
 
 from homeassistant.components.wiim.config_flow import (
     CannotConnect,
-    NotWiimDevice,
     WiimConfigFlow,
     _validate_device_and_get_info,
 )
 from homeassistant.components.wiim.const import CONF_UDN, CONF_UPNP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 
 
 @pytest.fixture
@@ -93,111 +90,6 @@ async def test_async_step_user_already_configured(flow, mock_config_entry) -> No
         result = await _flow.async_step_user(user_input)
 
     assert result["type"] == "create_entry"
-
-
-@pytest.mark.asyncio
-async def test_async_step_import_success(mocker, flow, mock_hass) -> None:
-    """Test async_step_import creates entry when config is valid."""
-    flow = WiimConfigFlow()
-    flow.hass = mock_hass
-
-    import_config = {
-        CONF_HOST: "192.168.1.50",
-        CONF_UDN: "uuid:test-udn",
-        CONF_NAME: "My WiiM",
-        CONF_UPNP_LOCATION: "http://192.168.1.50:49152/description.xml",
-    }
-
-    # Mock methods
-    mocker.patch.object(flow, "async_set_unique_id", new=AsyncMock())
-    mocker.patch.object(flow, "_abort_if_unique_id_configured", new=AsyncMock())
-    mocker.patch.object(
-        flow, "async_create_entry", new=AsyncMock(return_value={"type": "create_entry"})
-    )
-
-    await flow.async_step_import(import_config)
-
-    flow.async_set_unique_id.assert_awaited_once_with("uuid:test-udn")
-    flow._abort_if_unique_id_configured.assert_called_once()
-    flow.async_create_entry.assert_called_once_with(
-        title="My WiiM",
-        data={
-            "host": "192.168.1.50",
-            "udn": "uuid:test-udn",
-            "name": "My WiiM",
-            "upnp_location": "http://192.168.1.50:49152/description.xml",
-        },
-    )
-
-
-@pytest.mark.asyncio
-async def test_async_step_import_missing_udn(mocker, flow, mock_hass) -> None:
-    """Test async_step_import aborts if UDN missing in config."""
-    flow = WiimConfigFlow()
-    flow.hass = mock_hass
-
-    import_config = {
-        CONF_HOST: "192.168.1.50",
-        CONF_NAME: "My WiiM",
-        CONF_UPNP_LOCATION: "http://192.168.1.50:49152/description.xml",
-    }
-
-    flow.async_abort = MagicMock(
-        return_value={"type": "abort", "reason": "invalid_import_data"}
-    )
-
-    result = await flow.async_step_import(import_config)
-
-    flow.async_abort.assert_called_once_with(reason="invalid_import_data")
-    assert result["type"] == "abort"
-
-
-@pytest.mark.asyncio
-async def test_async_step_import_already_configured(mocker, flow, mock_hass) -> None:
-    """Test async_step_import aborts if unique ID already configured."""
-    flow = WiimConfigFlow()
-    flow.hass = mock_hass
-
-    import_config = {
-        CONF_HOST: "192.168.1.50",
-        CONF_UDN: "uuid:existing-udn",
-        CONF_NAME: "Existing WiiM",
-        CONF_UPNP_LOCATION: "http://192.168.1.50:49152/description.xml",
-    }
-
-    mocker.patch.object(WiimConfigFlow, "async_set_unique_id", new=AsyncMock())
-    mocker.patch.object(
-        WiimConfigFlow,
-        "_abort_if_unique_id_configured",
-        side_effect=AbortFlow("already_configured"),
-    )
-    with pytest.raises(AbortFlow) as exc_info:
-        await flow.async_step_import(import_config)
-
-    flow.async_set_unique_id.assert_awaited_once_with("uuid:existing-udn")
-    flow._abort_if_unique_id_configured.assert_called_once()
-
-    assert "already_configured" in str(exc_info.value)
-
-
-@pytest.mark.asyncio
-async def test_async_step_user_not_wiim_device(
-    flow, mock_upnp_factory, mock_wiim_api_endpoint
-) -> None:
-    """Test the user step when discovered device is not a WiiM device."""
-    _flow, _ = flow
-    mock_wiim_api_endpoint.json_request.side_effect = WiimRequestException(
-        "Not a WiiM device"
-    )
-
-    with patch(
-        "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
-        side_effect=NotWiimDevice("Not a WiiM device"),
-    ):
-        result = await _flow.async_step_user({CONF_HOST: "192.168.1.100"})
-
-    assert result["type"] == "form"
-    assert result["errors"]["base"] == "not_wiim_device"
 
 
 class MockZeroconfServiceInfo:

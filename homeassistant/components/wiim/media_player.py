@@ -43,7 +43,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SDK_LOGGER, WiimData
+from .const import DOMAIN, LOGGER, WiimData
 from .entity import WiimBaseEntity, exception_wrap
 
 MEDIA_TYPE_WIIM_LIBRARY = "wiim_library"
@@ -186,14 +186,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Helper to get a WiimMediaPlayerEntity ID by UDN from shared data."""
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if not wiim_data:
-            SDK_LOGGER.warning("WiimData not found in hass.data.")
+            LOGGER.warning("WiimData not found in hass.data")
             return None
 
         for entity_id, stored_udn in wiim_data.entity_id_to_udn_map.items():
             if stored_udn == udn:
                 return entity_id
 
-        SDK_LOGGER.debug("No entity ID found for UDN: %s", udn)
+        LOGGER.debug("No entity ID found for UDN: %s", udn)
         return None
 
     @callback
@@ -203,7 +203,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         This is the main method for updating this entity's HA attributes.
         Crucially, it also handles propagating metadata to followers if this is a leader.
         """
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Device %s: Updating HA state from SDK cache/HTTP poll",
             self.name or self.unique_id,
         )
@@ -281,7 +281,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 try:
                     self._attr_source = self._device.play_mode
                 except ValueError:
-                    SDK_LOGGER.warning(
+                    LOGGER.warning(
                         "Device %s: Unknown play_mode value from SDK: %s",
                         self.unique_id,
                         self._device.play_mode,
@@ -334,7 +334,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 )
 
                 if leader_state and leader_entity_id != self.entity_id:
-                    SDK_LOGGER.debug(
+                    LOGGER.debug(
                         f"Follower {self.entity_id}: Actively pulling metadata from leader {leader_entity_id}"
                     )
                     # Pull metadata from leader's state machine state
@@ -373,7 +373,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         "supported_features", SUPPORT_WIIM_BASE
                     )
                 else:
-                    SDK_LOGGER.debug(
+                    LOGGER.debug(
                         f"Follower {self.entity_id}: Leader entity {leader_udn} not found or is self. Clearing own media metadata."
                     )
                     # If leader not found or is self (which means an inconsistent state), clear media info
@@ -388,7 +388,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self._attr_media_position_updated_at = None
                     self._attr_state = MediaPlayerState.IDLE
             else:
-                SDK_LOGGER.debug(
+                LOGGER.debug(
                     f"Follower {self.entity_id}: No leader UDN found in group info. Clearing own media metadata."
                 )
                 # No leader_udn in group_info for a follower, clear media info
@@ -414,14 +414,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if self._device.supports_http_api:
             self._attr_sound_mode = await self._device.get_audio_output_hw_mode()
         else:
-            SDK_LOGGER.error(
+            LOGGER.error(
                 f"Device {self.entity_id}: HTTP API not available for initial output mode fetch."
             )
 
     @callback
     def _handle_sdk_general_device_update(self, device: WiimDevice) -> None:
         """Handle general updates from the SDK (e.g., availability, polled data)."""
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Device %s: Received general SDK update from %s",
             self.entity_id,
             device.name,
@@ -450,7 +450,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         then triggers a full HA state refresh from the device's cache.
         """
 
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Device %s: Received AVTransport event: %s",
             self.entity_id,
             self._device.event_data,
@@ -464,7 +464,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 sdk_status = SDKPlayingStatus(sdk_status_str)
                 self._device.playing_status = sdk_status
                 if sdk_status == SDKPlayingStatus.STOPPED:
-                    SDK_LOGGER.debug(
+                    LOGGER.debug(
                         f"Device {self.entity_id}: TransportState is STOPPED. Resetting media position and metadata."
                     )
                     self._device.current_position = 0
@@ -477,7 +477,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         self._device.sync_device_duration_and_position()
                     )
             except ValueError:
-                SDK_LOGGER.warning(
+                LOGGER.warning(
                     "Device %s: Unknown TransportState from event: %s",
                     self.entity_id,
                     sdk_status_str,
@@ -490,7 +490,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self, service: UpnpService, state_variables: list[UpnpStateVariable]
     ) -> None:
         """Handle RenderingControl events from the SDK."""
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Device %s: Received RenderingControl event: %s",
             self.entity_id,
             state_variables,
@@ -503,7 +503,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self, service: UpnpService, state_variables: list[UpnpStateVariable]
     ) -> None:
         """Handle PlayQueue events from the SDK (if implemented)."""
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Device %s: Received PlayQueue event: %s", self.entity_id, state_variables
         )
         self._update_ha_state_from_sdk_cache()
@@ -536,7 +536,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_repeat = RepeatMode.ONE
                 self._attr_shuffle = True
             else:
-                SDK_LOGGER.warning(
+                LOGGER.warning(
                     "Device %s: Unhandled SDKLoopMode value: %s",
                     self.entity_id,
                     loopmode_val,
@@ -544,15 +544,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_repeat = RepeatMode.OFF
                 self._attr_shuffle = False
 
-            SDK_LOGGER.debug(
-                "Device %s: loopmode = %s (HA Repeat: %s, HA Shuffle: %s).",
+            LOGGER.debug(
+                "Device %s: loopmode = %s (HA Repeat: %s, HA Shuffle: %s)",
                 self.entity_id,
                 loopmode_val,
                 self._attr_repeat,
                 self._attr_shuffle,
             )
         except ValueError:
-            SDK_LOGGER.warning(
+            LOGGER.warning(
                 "Device %s: Invalid loopmode value (not an integer): %s",
                 self.entity_id,
                 loopmode_val,
@@ -626,14 +626,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 leader_features = leader_state.attributes.get("supported_features")
                 if leader_features is not None:
                     self._update_support_features(leader_features)
-                    SDK_LOGGER.debug(
+                    LOGGER.debug(
                         f"Device {self.entity_id}: Follower features synchronized from leader {leader_entity_id}."
                     )
                     return True
 
         # fallback to base features
         self._update_support_features(SUPPORT_WIIM_BASE)
-        SDK_LOGGER.debug(f"Device {self.entity_id}: Follower set to base features.")
+        LOGGER.debug(f"Device {self.entity_id}: Follower set to base features.")
         return True
 
     async def _from_device_update_supported_features(self) -> None:
@@ -644,8 +644,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         # This will ensure _is_group_leader is set based on the latest group info from controller
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if not wiim_data or not wiim_data.controller:
-            SDK_LOGGER.warning(
-                "Device %s: Controller not available for _from_device_update_supported_features. Cannot determine group role.",
+            LOGGER.warning(
+                "Device %s: Controller not available for _from_device_update_supported_features. Cannot determine group role",
                 self.entity_id,
             )
             return
@@ -655,8 +655,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         try:
             if not self._device.supports_http_api:
-                SDK_LOGGER.warning(
-                    "Device %s: HTTP API not available to fetch MEDIA_INFO for supported features.",
+                LOGGER.warning(
+                    "Device %s: HTTP API not available to fetch MEDIA_INFO for supported features",
                     self.entity_id,
                 )
 
@@ -678,8 +678,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 if not isinstance(trackSource, str):
                     trackSource = ""
 
-            SDK_LOGGER.debug(
-                "_from_device_update_supported_features PlayMedium = %s and trackSource = %s.",
+            LOGGER.debug(
+                "_from_device_update_supported_features PlayMedium = %s and trackSource = %s",
                 playMedium,
                 trackSource,
             )
@@ -715,14 +715,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             if self._attr_supported_features != current_features:
                 self._attr_supported_features = current_features
-                SDK_LOGGER.debug(
+                LOGGER.debug(
                     f"Device {self.entity_id}: Updated supported features to {current_features}"
                 )
                 if self.hass and self.entity_id:
                     self.async_write_ha_state()
 
         except WiimRequestException as e:
-            SDK_LOGGER.warning(
+            LOGGER.warning(
                 "Device %s: Failed to fetch MEDIA_INFO for supported features: %s",
                 self.entity_id,
                 e,
@@ -730,7 +730,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if self.hass and self.entity_id:
                 self.async_write_ha_state()
         except Exception as e:
-            SDK_LOGGER.error(
+            LOGGER.error(
                 "Device %s: Unexpected error in _from_device_update_supported_features: %s",
                 self.entity_id,
                 e,
@@ -756,7 +756,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._handle_sdk_rendering_control_event
             )
             self._device.play_queue_event_callback = self._handle_sdk_play_queue_event
-            SDK_LOGGER.debug(
+            LOGGER.debug(
                 "Entity %s registered callbacks with WiimDevice %s",
                 self.entity_id,
                 self._device.name,
@@ -768,11 +768,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if not init_success:
                 if not self._device.available:
                     await self._device.disconnect()
-                    SDK_LOGGER.debug(
-                        "WiiM device reported as unavailable after init attempt."
+                    LOGGER.debug(
+                        "WiiM device reported as unavailable after init attempt"
                     )
-                SDK_LOGGER.warning(
-                    "Device %s initialized with potentially limited UPnP functionality. HTTP API might be primary.",
+                LOGGER.warning(
+                    "Device %s initialized with potentially limited UPnP functionality. HTTP API might be primary",
                     self._device.name,
                 )
             else:
@@ -782,8 +782,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
             if wiim_data and self.entity_id:
                 wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
-                SDK_LOGGER.debug(
-                    "Added %s (UDN: %s) to entity maps in hass.data.",
+                LOGGER.debug(
+                    "Added %s (UDN: %s) to entity maps in hass.data",
                     self.entity_id,
                     self._device.udn,
                 )
@@ -800,7 +800,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._device.av_transport_event_callback = None
             self._device.rendering_control_event_callback = None
             self._device.play_queue_event_callback = None
-            SDK_LOGGER.debug(
+            LOGGER.debug(
                 "Entity %s unregistered callbacks from WiimDevice %s",
                 self.entity_id,
                 self._device.name,
@@ -814,12 +814,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 if self.entity_id in wiim_data.entity_id_to_udn_map:
                     try:
                         del wiim_data.entity_id_to_udn_map[self.entity_id]
-                        SDK_LOGGER.debug(
+                        LOGGER.debug(
                             "Removed %s from entity_id_to_udn_map", self.entity_id
                         )
                     except KeyError:
-                        SDK_LOGGER.debug(
-                            "Entity %s not found in entity_id_to_udn_map for removal.",
+                        LOGGER.debug(
+                            "Entity %s not found in entity_id_to_udn_map for removal",
                             self.entity_id,
                         )
 
@@ -827,7 +827,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     async def _async_handle_critical_error(self, e: WiimException) -> None:
         """Handle critical communication errors, marking device unavailable and cleaning up."""
-        SDK_LOGGER.warning(
+        LOGGER.warning(
             "Device %s encountered a critical communication error: %s",
             self.entity_id,
             e,
@@ -836,8 +836,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if not self._device.available:
             return
 
-        SDK_LOGGER.info(
-            "Device %s is now considered offline. Disconnecting UPnP subscriptions.",
+        LOGGER.info(
+            "Device %s is now considered offline. Disconnecting UPnP subscriptions",
             self.entity_id,
         )
         self._device.set_available(False)
@@ -850,16 +850,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if group_info:
             current_role = group_info.get("role")
             if current_role == "leader":
-                SDK_LOGGER.info(
-                    "Device %s was a leader. Attempting to ungroup all its followers.",
+                LOGGER.info(
+                    "Device %s was a leader. Attempting to ungroup all its followers",
                     self.entity_id,
                 )
 
                 # Cannot clear followers metadata directly anymore as we don't have access to their entities.
                 # Followers must handle leader unavailability themselves.
             elif current_role == "follower":
-                SDK_LOGGER.info(
-                    "Device %s was a follower. Attempting to unjoin from its group.",
+                LOGGER.info(
+                    "Device %s was a follower. Attempting to unjoin from its group",
                     self.entity_id,
                 )
                 # await controller.async_ungroup_device(self._device.udn)
@@ -877,7 +877,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._device.async_set_volume(int(volume * 100))
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.warning(f"Failed to set volume on {self.entity_id}: {e}")
+            LOGGER.warning(f"Failed to set volume on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(
                 f"Failed to set volume on {self.entity_id}: {e}"
@@ -890,7 +890,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._device.async_set_mute(mute)
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.warning(f"Failed to mute volume on {self.entity_id}: {e}")
+            LOGGER.warning(f"Failed to mute volume on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(
                 f"Failed to mute volume on {self.entity_id}: {e}"
@@ -900,8 +900,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Helper to call a media_player service on the group leader."""
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if not wiim_data or not wiim_data.controller:
-            SDK_LOGGER.warning(
-                "WiiM controller not available for redirection on %s.", self.entity_id
+            LOGGER.warning(
+                "WiiM controller not available for redirection on %s", self.entity_id
             )
             raise HomeAssistantError(
                 f"WiiM controller not available. Cannot redirect {service_name} command."
@@ -915,8 +915,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if leader_udn:
                 leader_entity_id = self._get_entity_id_for_udn(leader_udn)
                 if leader_entity_id and leader_entity_id != self.entity_id:
-                    SDK_LOGGER.info(
-                        "Redirecting %s command from follower %s to leader %s.",
+                    LOGGER.info(
+                        "Redirecting %s command from follower %s to leader %s",
                         service_name,
                         self.entity_id,
                         leader_entity_id,
@@ -930,8 +930,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     )
                     return
 
-                SDK_LOGGER.warning(
-                    "Follower %s could not find a valid leader entity ID (%s) for redirection. Command %s will not be executed.",
+                LOGGER.warning(
+                    "Follower %s could not find a valid leader entity ID (%s) for redirection. Command %s will not be executed",
                     self.entity_id,
                     leader_udn,
                     service_name,
@@ -939,8 +939,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 raise HomeAssistantError(
                     f"Cannot redirect {service_name} command: Leader not found or invalid."
                 )
-            SDK_LOGGER.warning(
-                "Follower %s has no leader UDN in group info. Command %s will not be executed.",
+            LOGGER.warning(
+                "Follower %s has no leader UDN in group info. Command %s will not be executed",
                 self.entity_id,
                 service_name,
             )
@@ -948,8 +948,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 f"Cannot redirect {service_name} command: No leader UDN for follower."
             )
 
-        SDK_LOGGER.warning(
-            "Attempted to redirect command %s for a non-follower device %s. This is an internal logic error.",
+        LOGGER.warning(
+            "Attempted to redirect command %s for a non-follower device %s. This is an internal logic error",
             service_name,
             self.entity_id,
         )
@@ -968,8 +968,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     await self._call_leader_service("media_play")
                 except HomeAssistantError:
                     if self._attr_available:
-                        SDK_LOGGER.warning(
-                            "Redirected play command failed for follower %s. Marking self unavailable.",
+                        LOGGER.warning(
+                            "Redirected play command failed for follower %s. Marking self unavailable",
                             self.entity_id,
                         )
                         await self._async_handle_critical_error(
@@ -980,16 +980,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     return
 
         try:
-            SDK_LOGGER.debug(
-                "Executing play command directly on %s (leader/standalone).",
+            LOGGER.debug(
+                "Executing play command directly on %s (leader/standalone)",
                 self.entity_id,
             )
             await self._device.async_play()
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.warning(
-                f"Failed to execute play command on {self.entity_id}: {e}"
-            )
+            LOGGER.warning(f"Failed to execute play command on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(f"Failed to play on {self.entity_id}: {e}") from e
 
@@ -1004,8 +1002,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     await self._call_leader_service("media_pause")
                 except HomeAssistantError:
                     if self._attr_available:
-                        SDK_LOGGER.warning(
-                            "Redirected pause command failed for follower %s. Marking self unavailable.",
+                        LOGGER.warning(
+                            "Redirected pause command failed for follower %s. Marking self unavailable",
                             self.entity_id,
                         )
                         await self._async_handle_critical_error(
@@ -1016,17 +1014,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     return
 
         try:
-            SDK_LOGGER.debug(
-                "Executing pause command directly on %s (leader/standalone).",
+            LOGGER.debug(
+                "Executing pause command directly on %s (leader/standalone)",
                 self.entity_id,
             )
             await self._device.async_pause()
             await self._device.sync_device_duration_and_position()
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.warning(
-                f"Failed to execute pause command on {self.entity_id}: {e}"
-            )
+            LOGGER.warning(f"Failed to execute pause command on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(f"Failed to pause on {self.entity_id}: {e}") from e
 
@@ -1041,8 +1037,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     await self._call_leader_service("media_stop")
                 except HomeAssistantError:
                     if self._attr_available:
-                        SDK_LOGGER.warning(
-                            "Redirected stop command failed for follower %s. Marking self unavailable.",
+                        LOGGER.warning(
+                            "Redirected stop command failed for follower %s. Marking self unavailable",
                             self.entity_id,
                         )
                         await self._async_handle_critical_error(
@@ -1053,16 +1049,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     return
 
         try:
-            SDK_LOGGER.debug(
-                "Executing stop command directly on %s (leader/standalone).",
+            LOGGER.debug(
+                "Executing stop command directly on %s (leader/standalone)",
                 self.entity_id,
             )
             await self._device.async_stop()
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.warning(
-                f"Failed to execute stop command on {self.entity_id}: {e}"
-            )
+            LOGGER.warning(f"Failed to execute stop command on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(f"Failed to stop on {self.entity_id}: {e}") from e
 
@@ -1077,8 +1071,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     await self._call_leader_service("media_next_track")
                 except HomeAssistantError:
                     if self._attr_available:
-                        SDK_LOGGER.warning(
-                            "Redirected next_track command failed for follower %s. Marking self unavailable.",
+                        LOGGER.warning(
+                            "Redirected next_track command failed for follower %s. Marking self unavailable",
                             self.entity_id,
                         )
                         await self._async_handle_critical_error(
@@ -1089,13 +1083,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     return
 
         try:
-            SDK_LOGGER.debug(
-                "Executing next_track command directly on %s (leader/standalone).",
+            LOGGER.debug(
+                "Executing next_track command directly on %s (leader/standalone)",
                 self.entity_id,
             )
             await self._device.async_next()
         except WiimException as e:
-            SDK_LOGGER.warning(
+            LOGGER.warning(
                 f"Failed to execute next_track command on {self.entity_id}: {e}"
             )
             await self._async_handle_critical_error(e)
@@ -1114,8 +1108,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     await self._call_leader_service("media_previous_track")
                 except HomeAssistantError:
                     if self._attr_available:
-                        SDK_LOGGER.warning(
-                            "Redirected previous_track command failed for follower %s. Marking self unavailable.",
+                        LOGGER.warning(
+                            "Redirected previous_track command failed for follower %s. Marking self unavailable",
                             self.entity_id,
                         )
                         await self._async_handle_critical_error(
@@ -1128,13 +1122,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     return
 
         try:
-            SDK_LOGGER.debug(
-                "Executing previous_track command directly on %s (leader/standalone).",
+            LOGGER.debug(
+                "Executing previous_track command directly on %s (leader/standalone)",
                 self.entity_id,
             )
             await self._device.async_previous()
         except WiimException as e:
-            SDK_LOGGER.warning(
+            LOGGER.warning(
                 f"Failed to execute previous_track command on {self.entity_id}: {e}"
             )
             await self._async_handle_critical_error(e)
@@ -1155,8 +1149,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     )
                 except HomeAssistantError:
                     if self._attr_available:
-                        SDK_LOGGER.warning(
-                            "Redirected seek command failed for follower %s. Marking self unavailable.",
+                        LOGGER.warning(
+                            "Redirected seek command failed for follower %s. Marking self unavailable",
                             self.entity_id,
                         )
                         await self._async_handle_critical_error(
@@ -1167,15 +1161,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     return
 
         try:
-            SDK_LOGGER.debug(
-                "Executing seek command directly on %s (leader/standalone).",
+            LOGGER.debug(
+                "Executing seek command directly on %s (leader/standalone)",
                 self.entity_id,
             )
             await self._device.async_seek(int(position))
         except WiimException as e:
-            SDK_LOGGER.warning(
-                f"Failed to execute seek command on {self.entity_id}: {e}"
-            )
+            LOGGER.warning(f"Failed to execute seek command on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(f"Failed to seek on {self.entity_id}: {e}") from e
 
@@ -1184,7 +1176,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "async_play_media: type=%s, id=%s, kwargs=%s", media_type, media_id, kwargs
         )
 
@@ -1200,8 +1192,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_media_content_type = MediaType.PLAYLIST
                 self._attr_state = MediaPlayerState.PLAYING
             except ValueError:
-                SDK_LOGGER.error(
-                    "Invalid media_id for playlist/library: %s. Expected integer preset number.",
+                LOGGER.error(
+                    "Invalid media_id for playlist/library: %s. Expected integer preset number",
                     media_id,
                 )
                 raise HomeAssistantError(
@@ -1215,8 +1207,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_media_content_type = MediaType.TRACK
                 self._attr_state = MediaPlayerState.PLAYING
             except ValueError:
-                SDK_LOGGER.error(
-                    "Invalid media_id for track: %s. Expected integer track index.",
+                LOGGER.error(
+                    "Invalid media_id for track: %s. Expected integer track index",
                     media_id,
                 )
                 raise HomeAssistantError(
@@ -1229,7 +1221,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_id = play_item.url
 
             url = async_process_play_media_url(self.hass, media_id)
-            SDK_LOGGER.warning("media_type for play_media: %s", url)
+            LOGGER.warning("HTTP media_type for play_media: %s", url)
 
             try:
                 if not self._device.supports_http_api:
@@ -1239,15 +1231,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 await self._device.play_url(url)
                 self._attr_state = MediaPlayerState.PLAYING
             except ValueError:
-                SDK_LOGGER.error(
-                    "Invalid media_id for playlist/library: %s. Expected integer preset number.",
+                LOGGER.error(
+                    "Invalid media_id for playlist/library: %s. Expected integer preset number",
                     media_id,
                 )
                 raise HomeAssistantError(
                     f"Invalid media_id: {media_id}. Expected a valid preset number."
                 ) from None
         else:
-            SDK_LOGGER.warning("Unsupported media_type for play_media: %s", media_type)
+            LOGGER.warning("Unsupported media_type for play_media: %s", media_type)
             raise ServiceValidationError(f"Unsupported media type: {media_type}")
 
         if self.hass and self.entity_id:
@@ -1274,7 +1266,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._device.async_set_play_mode(source)
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.error(f"Failed to select source on {self.entity_id}: {e}")
+            LOGGER.error(f"Failed to select source on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(
                 f"Failed to select source on {self.entity_id}: {e}"
@@ -1292,7 +1284,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._device.async_set_output_mode(sound_mode)
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            SDK_LOGGER.error(f"Failed to select output mode on {self.entity_id}: {e}")
+            LOGGER.error(f"Failed to select output mode on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(
                 f"Failed to select output mode on {self.entity_id}: {e}"
@@ -1304,7 +1296,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement media Browse helper."""
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Browsing media: content_type=%s, content_id=%s",
             media_content_type,
             media_content_id,
@@ -1390,7 +1382,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         )
                     )
             except Exception as e:
-                SDK_LOGGER.error("Error fetching favorites for browse_media: %s", e)
+                LOGGER.error("Error fetching favorites for browse_media: %s", e)
                 raise
 
             return BrowseMedia(
@@ -1423,8 +1415,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 playMedium = media_info.get("PlayMedium")
                 trackSource = media_info.get("TrackSource")
 
-                SDK_LOGGER.warning(
-                    "MEDIA_CONTENT_ID_PLAYLISTS PlayMedium = %s and trackSource = %s and trackSourceQueue = %s.",
+                LOGGER.warning(
+                    "MEDIA_CONTENT_ID_PLAYLISTS PlayMedium = %s and trackSource = %s and trackSourceQueue = %s",
                     playMedium,
                     trackSource,
                     trackSourceQueue,
@@ -1483,9 +1475,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         )
                     )
             except Exception as e:
-                SDK_LOGGER.error(
-                    "Error fetching playlist tracks for browse_media: %s", e
-                )
+                LOGGER.error("Error fetching playlist tracks for browse_media: %s", e)
                 raise
 
             return BrowseMedia(
@@ -1507,7 +1497,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 ),
             )
 
-        SDK_LOGGER.warning(
+        LOGGER.warning(
             "Unhandled browse_media request: content_type=%s, content_id=%s",
             media_content_type,
             media_content_id,

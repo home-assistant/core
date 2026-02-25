@@ -6,7 +6,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpRequester
-from async_upnp_client.client import UpnpDevice
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
 import voluptuous as vol
@@ -21,13 +20,12 @@ from .const import (
     CONF_UDN,
     CONF_UPNP_LOCATION,
     DOMAIN,
-    SDK_LOGGER,
+    LOGGER,
     ZEROCONF_TYPE_LINKPLAY,
     WiimData,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
-
 
 
 async def _validate_device_and_get_info(
@@ -39,52 +37,48 @@ async def _validate_device_and_get_info(
     Otherwise, assumes host_or_udn is an IP and tries to discover UPnP info.
     Returns device info (UDN, name, model, host, location).
     """
-    # session = async_get_clientsession(hass)
     requester = AiohttpRequester(timeout=10)
-    actual_host = host_or_udn
 
     try:
         if location:
-            SDK_LOGGER.debug("Validating UPnP device at location: %s", location)
-            # upnp_device = await UpnpDevice.async_create_device(requester, location)
+            LOGGER.debug("Validating UPnP device at location: %s", location)
             factory = UpnpFactory(requester)
             upnp_device = await factory.async_create_device(location)
             return {
                 CONF_UDN: upnp_device.udn,
                 CONF_NAME: upnp_device.friendly_name,
                 "model": upnp_device.model_name or "WiiM Device",
-                CONF_HOST: urlparse(location).hostname or actual_host,
+                CONF_HOST: urlparse(location).hostname or host_or_udn,
                 CONF_UPNP_LOCATION: location or upnp_device.device_url,
             }
-        elif "uuid:" in host_or_udn.lower():
+        if "uuid:" in host_or_udn.lower():
             raise CannotConnect(
                 f"Validation by UDN ({host_or_udn}) alone is not supported for connection. Use IP/host or discovery."
             )
-        else:
-            SDK_LOGGER.debug(
-                "No UPnP location provided for %s, attempting HTTP validation.",
-                actual_host,
-            )
+        LOGGER.debug(
+            "No UPnP location provided for %s, attempting HTTP validation",
+            host_or_udn,
+        )
 
         raise CannotConnect("Could not determine device information via UPnP or HTTP.")
     except UpnpConnectionError as err:
-        SDK_LOGGER.warning(
+        LOGGER.warning(
             "Connection error while validating WiiM device at %s: %s",
-            actual_host or location,
+            host_or_udn or location,
             err,
         )
         raise CannotConnect(f"Failed to connect to UPnP device: {err}") from err
     except UpnpError as err:
-        SDK_LOGGER.warning(
+        LOGGER.warning(
             "UPnP library error while validating WiiM device at %s: %s",
-            actual_host or location,
+            host_or_udn or location,
             err,
         )
         raise CannotConnect(f"UPnP library error: {err}") from err
     except TimeoutError as err:
-        SDK_LOGGER.warning(
+        LOGGER.warning(
             "Timeout while validating Wiiim device at %s: %s",
-            actual_host or location,
+            host_or_udn or location,
             err,
         )
         raise CannotConnect(f"Timeout connecting to device: {err}") from err
@@ -111,10 +105,8 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except NotWiimDevice:
-                errors["base"] = "not_wiim_device"
             except Exception as e:
-                SDK_LOGGER.exception(
+                LOGGER.exception(
                     "Unexpected exception during user step validation for host %s: %s",
                     host,
                     e,
@@ -139,45 +131,18 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        SDK_LOGGER.debug("Handling import step with config: %s", import_config)
-
-        host = import_config.get(CONF_HOST)
-        udn = import_config.get(CONF_UDN)
-        name = import_config.get(CONF_NAME, f"WiiM Device ({host or udn})")
-        upnp_location = import_config.get(CONF_UPNP_LOCATION)
-
-        if not udn:
-            SDK_LOGGER.warning(
-                "UDN missing in imported config for host %s. Cannot create unique entry.",
-                host,
-            )
-            return self.async_abort(reason="invalid_import_data")
-
-        await self.async_set_unique_id(udn)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_HOST: host,
-                CONF_UDN: udn,
-                CONF_NAME: name,
-                CONF_UPNP_LOCATION: upnp_location,
-            },
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
         )
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
-        SDK_LOGGER.debug(
+        LOGGER.debug(
             "Zeroconf discovery received: Name: %s, Host: %s, Port: %s, Properties: %s",
             discovery_info.name,
             discovery_info.host,
@@ -186,7 +151,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if ZEROCONF_TYPE_LINKPLAY not in discovery_info.type:
-            SDK_LOGGER.debug(
+            LOGGER.debug(
                 "Ignoring Zeroconf discovery for type: %s (expected %s)",
                 discovery_info.type,
                 ZEROCONF_TYPE_LINKPLAY,
@@ -202,8 +167,8 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # If Zeroconf TXT records provide a direct path to description.xml, construct location.
             constructed_location = f"http://{host}:49152/description.xml"
-            SDK_LOGGER.info(
-                "Zeroconf for host %s. Attempting validation (UPnP location may not be derived from this step directly).",
+            LOGGER.info(
+                "Zeroconf for host %s. Attempting validation (UPnP location may not be derived from this step directly)",
                 host,
             )
             device_info = await _validate_device_and_get_info(
@@ -215,8 +180,8 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 wiim_device_sdk = wiim_data.controller.get_device(udn_from_txt)
                 if wiim_device_sdk and not wiim_device_sdk.available:
                     if not await wiim_device_sdk.async_init_services_and_subscribe():
-                        SDK_LOGGER.warning(
-                            "Device %s initialized with potentially limited UPnP functionality (location was: %s). HTTP API might be primary.",
+                        LOGGER.warning(
+                            "Device %s initialized with potentially limited UPnP functionality (location was: %s). HTTP API might be primary",
                             udn_from_txt,
                             constructed_location or "Unknown",
                         )
@@ -228,12 +193,8 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
-            except NotWiimDevice:
-                return self.async_abort(reason="not_wiim_device")
-        except NotWiimDevice:
-            return self.async_abort(reason="not_wiim_device")
         except Exception as e:
-            SDK_LOGGER.error(
+            LOGGER.error(
                 "Unexpected error during Zeroconf validation for %s: %s",
                 host,
                 e,
@@ -280,7 +241,3 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class NotWiimDevice(HomeAssistantError):
-    """Error to indicate the device is not a WiiM device."""
