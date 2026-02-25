@@ -1692,6 +1692,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
+        if (
+            description.state_class is None
+            # For integer type DPs with "sum" report type, we can assume it's a total
+            # increasing sensor
+            and isinstance(dpcode_wrapper, DeltaIntegerWrapper)
+        ):
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self._validate_device_class_unit()
 
