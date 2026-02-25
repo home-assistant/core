@@ -76,7 +76,7 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
         # Only restore for:
         # 1. Total increasing sensors (like cumulative energy)
         # 2. FormulaMetrics (calculated values)
-        should_restore = self._attr_state_class in [
+        should_restore = self.state_class in [
             SensorStateClass.TOTAL_INCREASING,
             SensorStateClass.TOTAL,
         ] and isinstance(self._metric, VictronFormulaMetric)
@@ -94,14 +94,14 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
             try:
                 self._baseline = float(last_state.state)
                 self._attr_native_value += self._baseline
+                _LOGGER.info(
+                    "Restored baseline of %.3f for %s", self._baseline, self.entity_id
+                )
             except ValueError:
                 _LOGGER.warning(
                     "Could not restore state for %s: invalid value '%s'",
                     self.entity_id,
                     last_state.state,
                 )
-            _LOGGER.info(
-                "Restored baseline of %.3f for %s", self._baseline, self.entity_id
-            )
         # Call parent to register update callbacks
         await super().async_added_to_hass()

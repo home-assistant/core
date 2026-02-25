@@ -74,20 +74,23 @@ async def validate_input(data: dict[str, Any]) -> str:
     Returns the installation id upon success.
     """
     _LOGGER.info("Validating input: %s", data)
-    hub = VictronVenusHub(
-        host=data[CONF_HOST],
-        port=data.get(CONF_PORT, DEFAULT_PORT),
-        username=data.get(CONF_USERNAME) or None,
-        password=data.get(CONF_PASSWORD) or None,
-        use_ssl=data.get(CONF_SSL, False),
-        installation_id=data.get(CONF_INSTALLATION_ID) or None,
-        serial=data.get(CONF_SERIAL, "noserial"),
-        topic_prefix=data.get(CONF_ROOT_TOPIC_PREFIX) or None,
-    )
+    try:
+        hub = VictronVenusHub(
+            host=data[CONF_HOST],
+            port=data.get(CONF_PORT, DEFAULT_PORT),
+            username=data.get(CONF_USERNAME) or None,
+            password=data.get(CONF_PASSWORD) or None,
+            use_ssl=data.get(CONF_SSL, False),
+            installation_id=data.get(CONF_INSTALLATION_ID) or None,
+            serial=data.get(CONF_SERIAL, "noserial"),
+            topic_prefix=data.get(CONF_ROOT_TOPIC_PREFIX) or None,
+        )
 
-    await hub.connect()
-    assert hub.installation_id is not None
-    return hub.installation_id
+        await hub.connect()
+        assert hub.installation_id is not None
+        return hub.installation_id
+    finally:
+        await hub.disconnect()
 
 
 class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -142,7 +145,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         if len(errors) > 0:
             _LOGGER.warning("Showing form with errors: %s", errors)
         else:
-            _LOGGER.info("Showing form without errors")
+            _LOGGER.debug("Showing form without errors")
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
@@ -211,7 +214,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> VictronMQTTOptionsFlow:
         """Get the options flow for this handler."""
-        _LOGGER.info("Getting options flow handler")
+        _LOGGER.debug("Getting options flow handler")
         return VictronMQTTOptionsFlow()
 
     async def async_step_ssdp_auth(

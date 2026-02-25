@@ -136,7 +136,7 @@ class Hub:
         self, kind: MetricKind, new_metric_callback: NewMetricCallback
     ) -> None:
         """Register a callback to handle a new specific metric kind."""
-        _LOGGER.info("Registering NewMetricCallback. kind: %s", kind)
+        _LOGGER.debug("Registering NewMetricCallback. kind: %s", kind)
         assert kind not in self.new_metric_callbacks, (
             f"NewMetricCallback for kind {kind} is already registered"
         )
@@ -144,5 +144,5 @@ class Hub:
 
     def unregister_all_new_metric_callbacks(self) -> None:
         """Unregister all callbacks to handle new metrics for all metric kinds."""
-        _LOGGER.info("Unregistering NewMetricCallback")
+        _LOGGER.debug("Unregistering NewMetricCallback")
         self.new_metric_callbacks.clear()
