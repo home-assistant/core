@@ -264,25 +264,23 @@ async def test_service_get_diskspace_multiple_drives(
     c_drive = disks["C:\\"]
     assert c_drive["path"] == "C:\\"
     assert c_drive["label"] == "System"
-    assert c_drive["free_space_bytes"] == 100000000000
-    assert c_drive["total_space_bytes"] == 500000000000
-    assert c_drive["free_space_gb"] == round(100000000000 / (1024**3), 2)
-    assert c_drive["total_space_gb"] == round(500000000000 / (1024**3), 2)
-    assert c_drive["usage_percent"] == 80.0  # 400GB used out of 500GB
+    assert c_drive["free_space"] == 100000000000
+    assert c_drive["total_space"] == 500000000000
+    assert c_drive["unit"] == "bytes"
 
     # Check second disk (D:\Media)
     d_drive = disks["D:\\Media"]
     assert d_drive["path"] == "D:\\Media"
     assert d_drive["label"] == "Media Storage"
-    assert d_drive["free_space_bytes"] == 2000000000000
-    assert d_drive["total_space_bytes"] == 4000000000000
+    assert d_drive["free_space"] == 2000000000000
+    assert d_drive["total_space"] == 4000000000000
 
     # Check third disk (/mnt/nas)
     nas = disks["/mnt/nas"]
     assert nas["path"] == "/mnt/nas"
     assert nas["label"] == "NAS"
-    assert nas["free_space_bytes"] == 10000000000000
-    assert nas["total_space_bytes"] == 20000000000000
+    assert nas["free_space"] == 10000000000000
+    assert nas["total_space"] == 20000000000000
 
 
 async def test_service_get_upcoming(

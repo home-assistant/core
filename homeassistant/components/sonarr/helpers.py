@@ -203,30 +203,48 @@ def format_series(
     return formatted_shows
 
 
-def format_diskspace(disks: list[Diskspace]) -> dict[str, dict[str, Any]]:
-    """Format diskspace for service response."""
+# Space unit conversion factors (divisors from bytes)
+SPACE_UNITS: dict[str, int] = {
+    "bytes": 1,
+    "kb": 1000,
+    "kib": 1024,
+    "mb": 1000**2,
+    "mib": 1024**2,
+    "gb": 1000**3,
+    "gib": 1024**3,
+    "tb": 1000**4,
+    "tib": 1024**4,
+    "pb": 1000**5,
+    "pib": 1024**5,
+}
+
+
+def format_diskspace(
+    disks: list[Diskspace], space_unit: str = "bytes"
+) -> dict[str, dict[str, Any]]:
+    """Format diskspace for service response.
+
+    Args:
+        disks: List of disk space objects from Sonarr.
+        space_unit: Unit for space values (bytes, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib).
+
+    Returns:
+        Dictionary of disk information keyed by path.
+    """
     result = {}
+    divisor = SPACE_UNITS.get(space_unit, 1)
 
     for disk in disks:
         path = disk.path
-        free_bytes = disk.freeSpace
-        total_bytes = disk.totalSpace
-
-        # Convert to GB for readability
-        free_gb = free_bytes / (1024**3)
-        total_gb = total_bytes / (1024**3)
-        used_gb = total_gb - free_gb
-        usage_pct = (used_gb / total_gb * 100) if total_gb > 0 else 0
+        free_space = disk.freeSpace / divisor
+        total_space = disk.totalSpace / divisor
 
         result[path] = {
             "path": path,
             "label": getattr(disk, "label", None) or "",
-            "free_space_bytes": free_bytes,
-            "total_space_bytes": total_bytes,
-            "free_space_gb": round(free_gb, 2),
-            "total_space_gb": round(total_gb, 2),
-            "used_space_gb": round(used_gb, 2),
-            "usage_percent": round(usage_pct, 2),
+            "free_space": free_space,
+            "total_space": total_space,
+            "unit": space_unit,
         }
 
     return result

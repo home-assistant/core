@@ -29,6 +29,23 @@ get_diskspace:
       selector:
         config_entry:
           integration: sonarr
+    space_unit:
+      required: false
+      default: bytes
+      selector:
+        select:
+          options:
+            - bytes
+            - kb
+            - kib
+            - mb
+            - mib
+            - gb
+            - gib
+            - tb
+            - tib
+            - pb
+            - pib
 
 get_upcoming:
   fields:

@@ -3,14 +3,11 @@
   dict({
     'disks': dict({
       'C:\\': dict({
-        'free_space_bytes': 282500067328,
-        'free_space_gb': 263.1,
+        'free_space': 282500067328.0,
         'label': '',
         'path': 'C:\\',
-        'total_space_bytes': 499738734592,
-        'total_space_gb': 465.42,
-        'usage_percent': 43.47,
-        'used_space_gb': 202.32,
+        'total_space': 499738734592.0,
+        'unit': 'bytes',
       }),
     }),
   })

@@ -59,12 +59,6 @@
       "message": "Config entry \"{target}\" is not loaded."
     }
   },
-  "issues": {
-    "deprecated_sensor_attributes": {
-      "description": "The Sonarr sensor attributes are deprecated and will be removed in a future version. Please migrate to using the new action calls instead:\n\n- `sonarr.get_series` - Replaces the series sensor attributes\n- `sonarr.get_queue` - Replaces the queue sensor attributes\n- `sonarr.get_diskspace` - Replaces the diskspace sensor attributes\n- `sonarr.get_upcoming` - Replaces the upcoming sensor attributes\n- `sonarr.get_wanted` - Replaces the wanted sensor attributes",
-      "title": "Sensor attributes are deprecated"
-    }
-  },
   "options": {
     "step": {
       "init": {
@@ -82,6 +76,10 @@
         "entry_id": {
           "description": "ID of the config entry to use.",
           "name": "Sonarr entry"
+        },
+        "space_unit": {
+          "description": "Unit for space values. Use binary units (kib, mib, gib, tib, pib) for 1024-based values or decimal units (kb, mb, gb, tb, pb) for 1000-based values.",
+          "name": "Space unit"
         }
       },
       "name": "Get disk space"

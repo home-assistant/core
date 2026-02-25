@@ -43,6 +43,11 @@ CONF_DAYS = "days"
 CONF_MAX_ITEMS = "max_items"
 CONF_SERIES_ID = "series_id"
 CONF_SEASON_NUMBER = "season_number"
+CONF_SPACE_UNIT = "space_unit"
+
+# Valid space units
+SPACE_UNITS = ["bytes", "kb", "kib", "mb", "mib", "gb", "gib", "tb", "tib", "pb", "pib"]
+DEFAULT_SPACE_UNIT = "bytes"
 
 # Default values - 0 means no limit
 DEFAULT_MAX_ITEMS = 0
@@ -72,7 +77,11 @@ SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
-SERVICE_GET_DISKSPACE_SCHEMA = SERVICE_BASE_SCHEMA
+SERVICE_GET_DISKSPACE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_SPACE_UNIT, default=DEFAULT_SPACE_UNIT): vol.In(SPACE_UNITS),
+    }
+)
 
 SERVICE_GET_UPCOMING_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
@@ -173,11 +182,12 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
 async def _async_get_diskspace(service: ServiceCall) -> dict[str, Any]:
     """Get Sonarr diskspace information."""
     entry = _get_config_entry_from_service_data(service)
+    space_unit: str = service.data[CONF_SPACE_UNIT]
 
     api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
     disks = await _handle_api_errors(api_client.async_get_diskspace)
 
-    return {ATTR_DISKS: format_diskspace(disks)}
+    return {ATTR_DISKS: format_diskspace(disks, space_unit)}
 
 
 async def _async_get_upcoming(service: ServiceCall) -> dict[str, Any]:
