@@ -22,6 +22,7 @@ from . import KioskerConfigEntry
 from .coordinator import KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
+# Limit concurrent updates to prevent overwhelming the API
 PARALLEL_UPDATES = 3
 
 
@@ -51,49 +52,36 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.battery_level if hasattr(x, "battery_level") else None,
+        value_fn=lambda x: x.battery_level,
     ),
     KioskerSensorEntityDescription(
         key="batteryState",
         translation_key="battery_state",
-        icon="mdi:lightning-bolt",
-        value_fn=lambda x: x.battery_state if hasattr(x, "battery_state") else None,
+        value_fn=lambda x: x.battery_state,
     ),
     KioskerSensorEntityDescription(
         key="lastInteraction",
         translation_key="last_interaction",
-        icon="mdi:gesture-tap",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: (
-            parse_datetime(x.last_interaction)
-            if hasattr(x, "last_interaction")
-            else None
-        ),
+        value_fn=lambda x: parse_datetime(x.last_interaction),
     ),
     KioskerSensorEntityDescription(
         key="lastMotion",
         translation_key="last_motion",
-        icon="mdi:motion-sensor",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: (
-            parse_datetime(x.last_motion) if hasattr(x, "last_motion") else None
-        ),
+        value_fn=lambda x: parse_datetime(x.last_motion),
     ),
     KioskerSensorEntityDescription(
         key="ambientLight",
         translation_key="ambient_light",
-        icon="mdi:brightness-6",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.ambient_light if hasattr(x, "ambient_light") else None,
+        value_fn=lambda x: x.ambient_light,
     ),
     KioskerSensorEntityDescription(
         key="lastUpdate",
         translation_key="last_update",
-        icon="mdi:update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: (
-            parse_datetime(x.last_update) if hasattr(x, "last_update") else None
-        ),
+        value_fn=lambda x: parse_datetime(x.last_update),
     ),
     KioskerSensorEntityDescription(
         key="blackoutState",
@@ -104,7 +92,6 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
     KioskerSensorEntityDescription(
         key="screensaverVisibility",
         translation_key="screensaver_visibility",
-        icon="mdi:power-sleep",
         value_fn=lambda x: (
             "visible" if hasattr(x, "visible") and x.visible else "hidden"
         ),
@@ -121,9 +108,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     # Create all sensors - they will handle missing data gracefully
-    sensors = [KioskerSensor(coordinator, description) for description in SENSORS]
-
-    async_add_entities(sensors)
+    async_add_entities(
+        KioskerSensor(coordinator, description) for description in SENSORS
+    )
 
 
 class KioskerSensor(KioskerEntity, SensorEntity):
@@ -137,14 +124,7 @@ class KioskerSensor(KioskerEntity, SensorEntity):
         description: KioskerSensorEntityDescription,
     ) -> None:
         """Initialize the sensor entity."""
-
-        self.entity_description = description
-
-        super().__init__(coordinator)
-
-        # Get device ID properly for unique_id
-        device_id = self._get_device_id()
-        self._attr_unique_id = f"{device_id}_{description.translation_key}"
+        super().__init__(coordinator, description)
 
     @callback
     def _handle_coordinator_update(self) -> None:

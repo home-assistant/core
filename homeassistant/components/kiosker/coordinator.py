@@ -11,7 +11,6 @@ from kiosker import Blackout, KioskerAPI, ScreensaverState, Status
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_API_TOKEN, CONF_SSL, CONF_SSL_VERIFY, DOMAIN, POLL_INTERVAL
@@ -68,11 +67,6 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
             )
             raise UpdateFailed("Connection failed") from exception
         except Exception as exception:
-            # Check if this is an authentication error (401)
-            if self._is_auth_error(exception):
-                _LOGGER.warning("Authentication failed for Kiosker: %s", exception)
-                raise ConfigEntryError("Authentication failed") from exception
-
             _LOGGER.debug("Failed to update Kiosker data: %s", exception, exc_info=True)
             raise UpdateFailed("Unknown error") from exception
         else:
@@ -81,15 +75,3 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
                 blackout=blackout,
                 screensaver=screensaver,
             )
-
-    def _is_auth_error(self, exception: Exception) -> bool:
-        """Check if exception indicates authentication failure."""
-        error_str = str(exception).lower()
-        # Check for common HTTP 401/authentication error patterns
-        return (
-            "401" in error_str
-            or "unauthorized" in error_str
-            or "authentication" in error_str
-            or "invalid token" in error_str
-            or "access denied" in error_str
-        )

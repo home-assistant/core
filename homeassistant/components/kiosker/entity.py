@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -14,54 +16,47 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: KioskerDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: KioskerDataUpdateCoordinator,
+        description: Any | None = None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        # Get device info with fallbacks for translation detection
-        device_id = self._get_device_id()
-        model = self._get_model()
-        hw_version = self._get_hw_version()
-        sw_version = self._get_sw_version()
-        app_name = self._get_app_name()
+        if description:
+            self.entity_description = description
 
-        # Ensure device info is always created, even without coordinator data
+        # Use coordinator data if available, otherwise fallback to config entry data
+        if coordinator.data and coordinator.data.status:
+            status = coordinator.data.status
+            device_id = status.device_id
+            model = status.model
+            app_name = status.app_name
+            app_version = status.app_version
+            os_version = status.os_version
+        else:
+            # Fallback when no data is available yet
+            device_id = "unknown"
+            model = "Unknown"
+            app_name = "Kiosker"
+            app_version = "Unknown"
+            os_version = "Unknown"
+
+        # Use truncated device ID for consistency between device name and unique IDs
+        device_id_short = device_id[:8].lower() if device_id != "unknown" else "unknown"
+
+        # Set device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=f"Kiosker {device_id[:8]}" if device_id != "unknown" else "Kiosker",
+            name=f"Kiosker {device_id_short}" if device_id != "unknown" else "Kiosker",
             manufacturer="Top North",
             model=app_name,
-            sw_version=sw_version,
-            hw_version=f"{model} ({hw_version})",
+            sw_version=app_version,
+            hw_version=f"{model} ({os_version})",
             serial_number=device_id,
         )
 
-    def _get_status_attribute(self, attribute: str, default: str = "Unknown") -> str:
-        """Get attribute from coordinator status data."""
-        if (
-            self.coordinator.data
-            and self.coordinator.data.status
-            and hasattr(self.coordinator.data.status, attribute)
-        ):
-            return getattr(self.coordinator.data.status, attribute)
-        return default
-
-    def _get_device_id(self) -> str:
-        """Get device ID from coordinator data."""
-        return self._get_status_attribute("device_id", "unknown")
-
-    def _get_app_name(self) -> str:
-        """Get app name from coordinator data."""
-        return self._get_status_attribute("app_name")
-
-    def _get_model(self) -> str:
-        """Get model from coordinator data."""
-        return self._get_status_attribute("model")
-
-    def _get_sw_version(self) -> str:
-        """Get software version from coordinator data."""
-        return self._get_status_attribute("app_version")
-
-    def _get_hw_version(self) -> str:
-        """Get hardware version from coordinator data."""
-        return self._get_status_attribute("os_version")
+        # Set unique ID if description is provided - use truncated ID to match device name
+        if description and hasattr(description, "translation_key"):
+            self._attr_unique_id = f"{device_id_short}_{description.translation_key}"

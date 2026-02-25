@@ -1,1 +1,27 @@
-{}
+{
+  "entity": {
+    "sensor": {
+      "ambient_light": {
+        "default": "mdi:brightness-6"
+      },
+      "battery_state": {
+        "default": "mdi:lightning-bolt"
+      },
+      "blackout_state": {
+        "default": "mdi:monitor-off"
+      },
+      "last_interaction": {
+        "default": "mdi:gesture-tap"
+      },
+      "last_motion": {
+        "default": "mdi:motion-sensor"
+      },
+      "last_update": {
+        "default": "mdi:update"
+      },
+      "screensaver_visibility": {
+        "default": "mdi:power-sleep"
+      }
+    }
+  }
+}

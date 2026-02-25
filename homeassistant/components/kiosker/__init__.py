@@ -4,14 +4,10 @@ from __future__ import annotations
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-# Limit concurrent updates to prevent overwhelming the API
-PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> bool:
@@ -23,9 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
     )
 
     await coordinator.async_config_entry_first_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
 
     entry.runtime_data = coordinator
 
