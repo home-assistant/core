@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
@@ -24,7 +25,7 @@ SERVICE_GET_IMAGE_URL = "get_image_url"
 SERVICE_GET_IMAGE_URL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONFIG_ENTRY_ID): str,
-        vol.Optional(CONF_IMAGE_TYPES): list[str],
+        vol.Optional(CONF_IMAGE_TYPES): vol.All(cv.ensure_list, [str]),
     }
 )
 
@@ -189,10 +190,10 @@ async def _async_image_exists(client: AsyncClient, url: str) -> bool:
         return False
 
     try:
-        response = await client.get(
-            url, headers=_HEADERS, timeout=10, follow_redirects=True
-        )
-        response.raise_for_status()
+        async with client.stream(
+            "GET", url, headers=_HEADERS, timeout=10, follow_redirects=True
+        ) as response:
+            response.raise_for_status()
     except HTTPStatusError as ex:
         status = ex.response.status_code if ex.response is not None else None
 

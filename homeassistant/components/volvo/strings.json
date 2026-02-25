@@ -376,7 +376,7 @@
       "message": "Invalid entry: {entry_id}"
     },
     "invalid_entry_id": {
-      "message": "Invalid entry id: {entry_id}"
+      "message": "Invalid entry ID: {entry_id}"
     },
     "invalid_image_type": {
       "message": "Invalid image type: {image_type}"
