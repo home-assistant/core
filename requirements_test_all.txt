@@ -2683,7 +2683,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2026.1.4
+velbus-aio==2026.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
