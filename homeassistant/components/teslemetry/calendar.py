@@ -100,7 +100,9 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         for period_name, period_group in tou_periods.items():
             for period_def in period_group.get("periods", []):
                 day_of_week = now.weekday()
+                # Schema defaults from_day to Monday if not specified
                 from_day = period_def.get("fromDayOfWeek", 0)
+                # Schema defaults to_day to Sunday if not specified
                 to_day = period_def.get("toDayOfWeek", 6)
                 if not _is_day_in_range(day_of_week, from_day, to_day):
                     continue
