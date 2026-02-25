@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from orvibo.s20 import S20, S20Exception
@@ -33,8 +34,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DEFAULT_NAME, DOMAIN
 from .models import S20ConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_DISCOVERY = False
 
+# Library is not thread safe and uses global variables, so we limit to 1 update at a time
 PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
@@ -175,7 +179,16 @@ class S20Switch(SwitchEntity):
         """Update device state."""
         try:
             self._attr_is_on = self._s20.on
-        except S20Exception:
-            self._attr_available = False
-            return
-        self._attr_available = True
+
+            # If the device was previously offline, let the user know it's back!
+            if not self._attr_available:
+                _LOGGER.info("Orvibo switch %s reconnected", self._name)
+                self._attr_available = True
+
+        except S20Exception as err:
+            # Only log the error if this is the FIRST time it failed
+            if self._attr_available:
+                _LOGGER.error(
+                    "Error communicating with Orvibo switch %s: %s", self._name, err
+                )
+                self._attr_available = False
