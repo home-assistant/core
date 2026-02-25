@@ -81,7 +81,7 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         super().__init__(coordinator)
         self.device_id = device_id
         self.entity_description = entity_description
-        self._attr_unique_id = f"{entity_description.key}_{device_id}"
+        self._attr_unique_id = f"{device_id}_{entity_description.key}_ventilation"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
             name=entity_description.key,
@@ -120,7 +120,12 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         await self.coordinator.connector.select_device_option(
             self.device_id, CompitParameter.VENTILATION_ON_OFF, STATE_ON
         )
-        self.async_write_ha_state()
+
+        if percentage is None:
+            self.async_write_ha_state()
+            return
+
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
@@ -168,4 +173,4 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         await self.coordinator.connector.select_device_option(
             self.device_id, CompitParameter.VENTILATION_GEAR_TARGET, mode
         )
-        await self.async_turn_on()
+        self.async_write_ha_state()

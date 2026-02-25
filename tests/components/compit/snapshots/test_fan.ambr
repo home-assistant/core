@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': 'ventilation',
-    'unique_id': 'Nano Color 2_2',
+    'unique_id': '2_Nano Color 2_ventilation',
     'unit_of_measurement': None,
   })
 # ---

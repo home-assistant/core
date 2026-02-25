@@ -63,6 +63,31 @@ async def test_fan_turn_on(
     assert state.state == STATE_ON
 
 
+async def test_fan_turn_on_with_percentage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: MagicMock,
+) -> None:
+    """Test turning on the fan with a percentage."""
+    await setup_integration(hass, mock_config_entry)
+
+    await mock_connector.select_device_option(
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_OFF
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.nano_color_2", ATTR_PERCENTAGE: 100},
+        blocking=True,
+    )
+
+    state = hass.states.get("fan.nano_color_2")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get("percentage") == 100
+
+
 async def test_fan_turn_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -96,7 +121,7 @@ async def test_fan_set_speed(
     await setup_integration(hass, mock_config_entry)
 
     await mock_connector.select_device_option(
-        2, CompitParameter.VENTILATION_ON_OFF, STATE_OFF
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_ON
     )  # Turn off fan first
 
     await hass.services.async_call(
@@ -111,8 +136,35 @@ async def test_fan_set_speed(
 
     state = hass.states.get("fan.nano_color_2")
     assert state is not None
-    assert state.state == STATE_ON  # Fan is turned on by setting the percentage to 80
     assert state.attributes.get("percentage") == 80
+
+
+async def test_fan_set_speed_while_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: MagicMock,
+) -> None:
+    """Test setting the fan speed while the fan is off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await mock_connector.select_device_option(
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_OFF
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: "fan.nano_color_2",
+            ATTR_PERCENTAGE: 80,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("fan.nano_color_2")
+    assert state is not None
+    assert state.state == STATE_OFF  # Fan should remain off until turned on
+    assert state.attributes.get("percentage") == 0
 
 
 async def test_fan_set_speed_to_0(
