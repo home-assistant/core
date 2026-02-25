@@ -261,6 +261,11 @@
           "supporter": "Supporter"
         }
       }
+    },
+    "update": {
+      "update": {
+        "name": "ntfy version"
+      }
     }
   },
   "exceptions": {
@@ -302,6 +307,9 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    },
+    "update_check_failed": {
+      "message": "Failed to check for latest ntfy update"
     }
   },
   "issues": {
