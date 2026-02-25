@@ -62,23 +62,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _get_user_data(entry: RoborockConfigEntry) -> UserData:
-    """Get user data from config entry."""
-    try:
-        return UserData.from_dict(entry.data[CONF_USER_DATA])
-    except TypeError as err:
-        raise ConfigEntryAuthFailed(
-            "Stored user data is invalid",
-            translation_domain=DOMAIN,
-            translation_key="invalid_credentials",
-        ) from err
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     await async_cleanup_map_storage(hass, entry.entry_id)
 
-    user_data = await _get_user_data(entry)
+    user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     user_params = UserParams(
         username=entry.data[CONF_USERNAME],
         user_data=user_data,
@@ -217,10 +205,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
 
     # 1->2: Migrate from unique id as email address to unique id as rruid
     if entry.minor_version == 1:
-        try:
-            user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-        except TypeError:
-            return False
+        user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
         _LOGGER.debug("Updating unique id to %s", user_data.rruid)
         hass.config_entries.async_update_entry(
             entry,
