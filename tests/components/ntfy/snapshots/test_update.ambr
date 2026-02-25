@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/ntfy/icon.png',
+      'entity_picture': '/api/brands/integration/ntfy/icon.png',
       'friendly_name': 'ntfy.example ntfy version',
       'in_progress': False,
       'installed_version': '2.17.0',
