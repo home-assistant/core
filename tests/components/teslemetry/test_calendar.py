@@ -21,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import assert_entities, setup_platform
-from .const import SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
+from .const import SITE_INFO, SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
 
 ENTITY_BUY = "calendar.energy_site_buy_tariff"
 ENTITY_SELL = "calendar.energy_site_sell_tariff"
@@ -234,3 +234,124 @@ async def test_calendar_no_tariff_data(
     assert state is None
     state = hass.states.get(ENTITY_SELL)
     assert state is None
+
+
+@pytest.fixture
+def mock_site_info_invalid_season(mock_site_info) -> Generator[AsyncMock]:
+    """Mock site_info with invalid/empty season data."""
+    site_info = deepcopy(SITE_INFO)
+    # Empty season first (hits _get_current_season empty check),
+    # then season with missing keys (hits KeyError exception handler)
+    site_info["response"]["tariff_content_v2"]["seasons"] = {
+        "Empty": {},
+        "Invalid": {"someKey": "value"},
+    }
+    site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
+        side_effect=lambda: deepcopy(site_info),
+    ) as mock:
+        yield mock
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_invalid_season_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_site_info_invalid_season: AsyncMock,
+) -> None:
+    """Test calendar handles invalid/empty season data gracefully."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 6, 15, 12, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    # No valid season found -> event returns None -> state is "off"
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "off"
+
+    # async_get_events also returns empty when no valid seasons
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_BUY],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2024-06-15T00:00:00Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2024-06-17T00:00:00Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert result[ENTITY_BUY]["events"] == []
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_week_crossing_get_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_site_info_week_crossing: AsyncMock,
+) -> None:
+    """Test async_get_events filters by day of week with week-crossing periods."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 12, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    # Request events for a full week - only Fri-Mon should have events
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_BUY],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-08T00:00:00Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result[ENTITY_BUY]["events"]
+    assert len(events) > 0
+    # Verify events only on Fri(4), Sat(5), Sun(6), Mon(0) - not Tue-Thu
+    for event in events:
+        start = dt_util.parse_datetime(event["start"])
+        assert start is not None
+        assert start.weekday() in (0, 4, 5, 6)
+
+
+@pytest.fixture
+def mock_site_info_invalid_price(mock_site_info) -> Generator[AsyncMock]:
+    """Mock site_info with non-numeric price data."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["tariff_content_v2"]["energy_charges"]["Summer"]["rates"] = {
+        "OFF_PEAK": "not_a_number",
+        "ON_PEAK": "not_a_number",
+    }
+    site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
+        side_effect=lambda: deepcopy(site_info),
+    ) as mock:
+        yield mock
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_invalid_price(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_site_info_invalid_price: AsyncMock,
+) -> None:
+    """Test calendar handles non-numeric price data gracefully."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    # Period matches but price is invalid -> shows "Unknown Price"
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "on"
+    assert "Unknown Price" in state.attributes["message"]
