@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "on_grid": {
+        "name": "Grid connection"
+      }
+    },
     "number": {
       "lower_threshold": {
         "name": "Minimum charge level"
