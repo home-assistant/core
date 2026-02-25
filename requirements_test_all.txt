@@ -1543,7 +1543,7 @@ poolsense==0.0.8
 
 # homeassistant.components.powerfox
 # homeassistant.components.powerfox_local
-powerfox==2.1.0
+powerfox==2.1.1
 
 # homeassistant.components.prana
 prana-api-client==0.10.0
@@ -2818,6 +2818,9 @@ zha==0.0.90
 
 # homeassistant.components.zinvolt
 zinvolt==0.1.0
+
+# homeassistant.components.zoneminder
+zm-py==0.5.4
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.68.0
