@@ -227,6 +227,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         # Prevent reconfiguring to a different physical device
+        # it gets the unique ID from the device info when it validates credentials
         self._abort_if_unique_id_mismatch()
 
         return self.async_update_reload_and_abort(
