@@ -208,14 +208,13 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Combine existing data with the user's new input for validation.
         # This correctly handles adding, changing, and clearing credentials.
-        config_data = existing_entry.data.copy()
-        config_data.update(user_input)
+        validate_data = {**existing_entry.data, **user_input}
 
-        self.host = config_data[CONF_HOST]
-        self.port = config_data[CONF_PORT]
-        self.passkey = config_data.get(CONF_PASSKEY)
-        self.username = config_data.get(CONF_USERNAME)
-        self.password = config_data.get(CONF_PASSWORD)
+        self.host = validate_data[CONF_HOST]
+        self.port = validate_data[CONF_PORT]
+        self.passkey = validate_data.get(CONF_PASSKEY)
+        self.username = validate_data.get(CONF_USERNAME)
+        self.password = validate_data.get(CONF_PASSWORD)
 
         try:
             await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
