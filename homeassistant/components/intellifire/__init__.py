@@ -154,19 +154,20 @@ async def async_update_options(
     new_read_mode = IntelliFireApiMode(entry.options[CONF_READ_MODE])
     new_control_mode = IntelliFireApiMode(entry.options[CONF_CONTROL_MODE])
 
-    current_read_mode = coordinator.get_read_mode()
-    current_control_mode = coordinator.get_control_mode()
+    fireplace = coordinator.fireplace
+    current_read_mode = fireplace.read_mode
+    current_control_mode = fireplace.control_mode
 
     # Only update modes that actually changed
     if new_read_mode != current_read_mode:
         LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
-        await coordinator.set_read_mode(new_read_mode)
+        await fireplace.set_read_mode(new_read_mode)
 
     if new_control_mode != current_control_mode:
         LOGGER.debug(
             "Updating control mode: %s -> %s", current_control_mode, new_control_mode
         )
-        await coordinator.set_control_mode(new_control_mode)
+        await fireplace.set_control_mode(new_control_mode)
 
     # Refresh data with new mode settings
     await coordinator.async_request_refresh()

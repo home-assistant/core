@@ -43,6 +43,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import IntellifireConfigEntry
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -281,6 +282,7 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
     """Options flow for IntelliFire component."""
 
     config_entry: IntellifireConfigEntry
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -299,22 +301,22 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
                 user_input[CONF_READ_MODE] == API_MODE_LOCAL
                 and not fireplace.local_connectivity
             ):
-                errors[CONF_READ_MODE] = "local_disabled"
+                errors[CONF_READ_MODE] = "local_unavailable"
             if (
                 user_input[CONF_READ_MODE] == API_MODE_CLOUD
                 and not fireplace.cloud_connectivity
             ):
-                errors[CONF_READ_MODE] = "cloud_disabled"
+                errors[CONF_READ_MODE] = "cloud_unavailable"
             if (
                 user_input[CONF_CONTROL_MODE] == API_MODE_LOCAL
                 and not fireplace.local_connectivity
             ):
-                errors[CONF_CONTROL_MODE] = "local_disabled"
+                errors[CONF_CONTROL_MODE] = "local_unavailable"
             if (
                 user_input[CONF_CONTROL_MODE] == API_MODE_CLOUD
                 and not fireplace.cloud_connectivity
             ):
-                errors[CONF_CONTROL_MODE] = "cloud_disabled"
+                errors[CONF_CONTROL_MODE] = "cloud_unavailable"
 
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
@@ -325,10 +327,8 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
         )
 
         cloud_local_options = selector.SelectSelectorConfig(
-            options=[
-                selector.SelectOptionDict(value=API_MODE_LOCAL, label="Local"),
-                selector.SelectOptionDict(value=API_MODE_CLOUD, label="Cloud"),
-            ]
+            options=[API_MODE_LOCAL, API_MODE_CLOUD],
+            translation_key="api_mode",
         )
 
         return self.async_show_form(

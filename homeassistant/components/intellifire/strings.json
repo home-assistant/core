@@ -142,8 +142,8 @@
   },
   "options": {
     "error": {
-      "cloud_disabled": "Cloud connectivity is not available",
-      "local_disabled": "Local connectivity is not available"
+      "cloud_unavailable": "Cloud connectivity is not available",
+      "local_unavailable": "Local connectivity is not available"
     },
     "step": {
       "init": {
@@ -155,6 +155,14 @@
           "cloud_control": "Select the endpoint to use for controlling the device",
           "cloud_read": "Select the endpoint to use for reading data"
         }
+      }
+    }
+  },
+  "selector": {
+    "api_mode": {
+      "options": {
+        "cloud": "Cloud",
+        "local": "Local"
       }
     }
   }

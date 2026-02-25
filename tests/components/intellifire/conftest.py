@@ -12,7 +12,6 @@ from intellifire4py.model import (
 import pytest
 
 from homeassistant.components.intellifire.const import (
-    API_MODE_CLOUD,
     API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
@@ -70,7 +69,7 @@ def mock_config_entry_current() -> MockConfigEntry:
             CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
             CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
         },
-        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_LOCAL},
         unique_id="3FB284769E4736F30C8973A7ED358123",
     )
 

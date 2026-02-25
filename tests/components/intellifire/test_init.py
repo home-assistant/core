@@ -109,3 +109,152 @@ async def test_connectivity_bad(
 
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
+
+
+async def test_update_options_change_read_mode_only(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that changing only read mode triggers set_read_mode but not set_control_mode."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the coordinator and mock async_request_refresh
+    coordinator = mock_config_entry_current.runtime_data
+    coordinator.async_request_refresh = AsyncMock()
+
+    # Reset mock call counts
+    mock_fp.set_read_mode.reset_mock()
+    mock_fp.set_control_mode.reset_mock()
+
+    # Change only read mode (local -> cloud), keep control mode same
+    hass.config_entries.async_update_entry(
+        mock_config_entry_current,
+        options={CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_LOCAL},
+    )
+    await hass.async_block_till_done()
+
+    # Only set_read_mode should be called
+    mock_fp.set_read_mode.assert_called_once()
+    mock_fp.set_control_mode.assert_not_called()
+    # async_request_refresh should always be called
+    coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_update_options_change_control_mode_only(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that changing only control mode triggers set_control_mode but not set_read_mode."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the coordinator and mock async_request_refresh
+    coordinator = mock_config_entry_current.runtime_data
+    coordinator.async_request_refresh = AsyncMock()
+
+    # Reset mock call counts
+    mock_fp.set_read_mode.reset_mock()
+    mock_fp.set_control_mode.reset_mock()
+
+    # Change only control mode (local -> cloud), keep read mode same
+    hass.config_entries.async_update_entry(
+        mock_config_entry_current,
+        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+    )
+    await hass.async_block_till_done()
+
+    # Only set_control_mode should be called
+    mock_fp.set_read_mode.assert_not_called()
+    mock_fp.set_control_mode.assert_called_once()
+    # async_request_refresh should always be called
+    coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_update_options_change_both_modes(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that changing both modes triggers both set methods."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the coordinator and mock async_request_refresh
+    coordinator = mock_config_entry_current.runtime_data
+    coordinator.async_request_refresh = AsyncMock()
+
+    # Reset mock call counts
+    mock_fp.set_read_mode.reset_mock()
+    mock_fp.set_control_mode.reset_mock()
+
+    # Change both modes
+    hass.config_entries.async_update_entry(
+        mock_config_entry_current,
+        options={CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_CLOUD},
+    )
+    await hass.async_block_till_done()
+
+    # Both should be called
+    mock_fp.set_read_mode.assert_called_once()
+    mock_fp.set_control_mode.assert_called_once()
+    # async_request_refresh should always be called
+    coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_update_options_no_change(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that no mode change triggers neither set method but refresh is still called."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the coordinator and mock async_request_refresh
+    coordinator = mock_config_entry_current.runtime_data
+    coordinator.async_request_refresh = AsyncMock()
+
+    # Reset mock call counts
+    mock_fp.set_read_mode.reset_mock()
+    mock_fp.set_control_mode.reset_mock()
+
+    # First change options to trigger listener, then change back
+    # This ensures the update listener fires while modes match fireplace state
+    hass.config_entries.async_update_entry(
+        mock_config_entry_current,
+        options={CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_CLOUD},
+    )
+    await hass.async_block_till_done()
+
+    # Reset mocks after the first change
+    mock_fp.set_read_mode.reset_mock()
+    mock_fp.set_control_mode.reset_mock()
+    coordinator.async_request_refresh.reset_mock()
+
+    # Now change back to LOCAL/LOCAL which matches fireplace state
+    hass.config_entries.async_update_entry(
+        mock_config_entry_current,
+        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_LOCAL},
+    )
+    await hass.async_block_till_done()
+
+    # Neither set method should be called since modes match fireplace state
+    mock_fp.set_read_mode.assert_not_called()
+    mock_fp.set_control_mode.assert_not_called()
+    # But async_request_refresh should still be called
+    coordinator.async_request_refresh.assert_called_once()

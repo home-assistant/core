@@ -300,7 +300,7 @@ async def test_options_flow_local_read_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_READ_MODE: "local_disabled"}
+    assert result["errors"] == {CONF_READ_MODE: "local_unavailable"}
     # Verify connectivity was checked
     mock_fp.async_validate_connectivity.assert_called_once()
 
@@ -333,7 +333,7 @@ async def test_options_flow_local_control_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_CONTROL_MODE: "local_disabled"}
+    assert result["errors"] == {CONF_CONTROL_MODE: "local_unavailable"}
 
 
 async def test_options_flow_cloud_read_unavailable(
@@ -364,7 +364,7 @@ async def test_options_flow_cloud_read_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_READ_MODE: "cloud_disabled"}
+    assert result["errors"] == {CONF_READ_MODE: "cloud_unavailable"}
     # Verify connectivity was checked
     mock_fp.async_validate_connectivity.assert_called_once()
 
@@ -397,4 +397,4 @@ async def test_options_flow_cloud_control_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_CONTROL_MODE: "cloud_disabled"}
+    assert result["errors"] == {CONF_CONTROL_MODE: "cloud_unavailable"}
