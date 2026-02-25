@@ -67,8 +67,8 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 ):
                     return self.async_abort(reason="already_configured")
 
-            parsed = urlparse(user_input[CONF_ENDPOINT_URL])
-            if not parsed.hostname or not parsed.hostname.endswith(AWS_DOMAIN):
+            hostname = urlparse(user_input[CONF_ENDPOINT_URL]).hostname
+            if not hostname or not hostname.endswith(AWS_DOMAIN):
                 errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
             else:
                 try:
