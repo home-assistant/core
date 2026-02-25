@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-from datetime import timedelta
 import logging
-import socket
-from typing import Any
 
 import pycfdns
 
@@ -19,21 +15,9 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
-from homeassistant.util.location import async_detect_location_info
-from homeassistant.util.network import is_ipv4_address
 
-from .const import (
-    CONF_DOMAINS,
-    CONF_RECORDS,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-    PLATFORMS,
-    SERVICE_UPDATE_RECORDS,
-)
-from .coordinator import CloudflareRuntimeData
-from .helpers import async_create_a_record
+from .const import CONF_DOMAINS, CONF_RECORDS, DOMAIN, PLATFORMS, SERVICE_UPDATE_RECORDS
+from .coordinator import CloudflareCoordinator, CloudflareRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,81 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except pycfdns.ComunicationException as error:
         raise ConfigEntryNotReady from error
 
-    async def _async_get_external_ipv4() -> str:
-        loc_session = async_get_clientsession(hass, family=socket.AF_INET)
-        location_info = await async_detect_location_info(loc_session)
-        if not location_info or not is_ipv4_address(location_info.ip):
-            raise HomeAssistantError("Could not get external IPv4 address")
-        return location_info.ip
-
-    async def _async_coordinator_update() -> dict[str, Any]:
-        """Fetch and synchronize DNS records for configured domains."""
-        zone_id = dns_zone["id"]
-        external_ip = await _async_get_external_ipv4()
-        configured_domains: list[str] = (
-            entry.data.get(CONF_DOMAINS) or entry.data.get(CONF_RECORDS) or []
-        )
-
-        # Retrieve existing A records for zone
-        records = await client.list_dns_records(zone_id=zone_id, type="A")
-        record_index: dict[str, pycfdns.RecordModel] = {r["name"]: r for r in records}
-        results: dict[str, Any] = {}
-
-        tasks: list[asyncio.Task] = []
-        for domain in configured_domains:
-            record = record_index.get(domain)
-            if record is None:
-                # Create missing record (proxied True by default)
-                tasks.append(
-                    asyncio.create_task(
-                        async_create_a_record(
-                            session=session,
-                            api_token=entry.data[CONF_API_TOKEN],
-                            zone_id=zone_id,
-                            name=domain,
-                            content=external_ip,
-                            proxied=True,
-                        )
-                    )
-                )
-            elif record["content"] != external_ip:
-                # Update IP while keeping proxied state
-                tasks.append(
-                    asyncio.create_task(
-                        client.update_dns_record(
-                            zone_id=zone_id,
-                            record_id=record["id"],
-                            record_content=external_ip,
-                            record_name=record["name"],
-                            record_type=record["type"],
-                            record_proxied=record["proxied"],
-                        )
-                    )
-                )
-            results[domain] = record or None
-
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Refresh records after modifications
-        refreshed = await client.list_dns_records(zone_id=zone_id, type="A")
-        refreshed_index = {r["name"]: r for r in refreshed}
-        for domain in configured_domains:
-            results[domain] = refreshed_index.get(domain)
-
-        return {
-            "external_ip": external_ip,
-            "records": results,
-            "updated_at": dt_util.utcnow(),
-        }
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"cloudflare-{dns_zone['name']}",
-        update_method=_async_coordinator_update,
-        update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
-    )
+    coordinator = CloudflareCoordinator(hass, entry, client, dns_zone)
 
     await coordinator.async_config_entry_first_refresh()
 
