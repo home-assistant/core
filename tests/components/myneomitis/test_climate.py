@@ -289,7 +289,7 @@ async def test_set_temperature_sub_device(
         blocking=True,
     )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited()
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 8)
     mock_pyaxenco_client.set_sub_device_temperature.assert_awaited_with(
         "gw-1", "rfid-1", 21.0
     )

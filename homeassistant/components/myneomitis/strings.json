@@ -26,15 +26,19 @@
   "entity": {
     "climate": {
       "myneomitis": {
-        "state": {
-          "antifrost": "Frost protection",
-          "auto": "[%key:common::state::auto%]",
-          "boost": "Boost",
-          "comfort": "Comfort",
-          "comfort_plus": "Comfort +",
-          "eco": "Eco",
-          "setpoint": "Setpoint",
-          "standby": "[%key:common::state::standby%]"
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "antifrost": "Frost protection",
+              "auto": "[%key:common::state::auto%]",
+              "boost": "Boost",
+              "comfort": "Comfort",
+              "comfort_plus": "Comfort +",
+              "eco": "Eco",
+              "setpoint": "Setpoint",
+              "standby": "[%key:common::state::standby%]"
+            }
+          }
         }
       }
     },
