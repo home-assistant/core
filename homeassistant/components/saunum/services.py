@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from pysaunum import MAX_DURATION, MAX_FAN_DURATION, MAX_TEMPERATURE, MIN_TEMPERATURE
 import voluptuous as vol
 
@@ -27,14 +29,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_START_SESSION,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Optional(ATTR_DURATION, default=120): vol.All(
-                cv.positive_int, vol.Range(min=1, max=MAX_DURATION)
+            vol.Optional(ATTR_DURATION, default=timedelta(minutes=120)): vol.All(
+                cv.time_period,
+                vol.Range(
+                    min=timedelta(minutes=1),
+                    max=timedelta(minutes=MAX_DURATION),
+                ),
             ),
             vol.Optional(ATTR_TARGET_TEMPERATURE, default=80): vol.All(
                 cv.positive_int, vol.Range(min=MIN_TEMPERATURE, max=MAX_TEMPERATURE)
             ),
-            vol.Optional(ATTR_FAN_DURATION, default=10): vol.All(
-                cv.positive_int, vol.Range(min=1, max=MAX_FAN_DURATION)
+            vol.Optional(ATTR_FAN_DURATION, default=timedelta(minutes=10)): vol.All(
+                cv.time_period,
+                vol.Range(
+                    min=timedelta(minutes=1),
+                    max=timedelta(minutes=MAX_FAN_DURATION),
+                ),
             ),
         },
         func="async_start_session",
