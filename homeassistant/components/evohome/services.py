@@ -71,8 +71,6 @@ def setup_service_functions(
     enumerated before registering the appropriate handlers.
     """
 
-    _register_zone_entity_services(hass)
-
     @verify_domain_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
@@ -151,3 +149,5 @@ def setup_service_functions(
             set_system_mode,
             schema=vol.Schema(vol.Any(*system_mode_schemas)),
         )
+
+    _register_zone_entity_services(hass)
