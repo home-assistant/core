@@ -105,7 +105,6 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     hass: HomeAssistant,
 ) -> None:
     """Test shared apps coordinator is not shut down until the last TV entry unloads."""
-    now = dt_util.now()
     config_entry_1 = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
     )
@@ -132,6 +131,7 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     assert await hass.config_entries.async_unload(config_entry_1.entry_id)
     await hass.async_block_till_done()
 
+    now = dt_util.now()
     with patch(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=APP_LIST,
