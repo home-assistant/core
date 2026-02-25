@@ -118,9 +118,12 @@
           "max": "Max",
           "medium": "[%key:common::state::medium%]",
           "mild": "Mild",
+          "min": "Min",
           "moderate": "Moderate",
           "off": "[%key:common::state::off%]",
+          "slight": "Slight",
           "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
+          "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
           "vac_followed_by_mop": "Vacuum followed by mop"
         }
       },
@@ -448,6 +451,7 @@
               "max_plus": "Max plus",
               "medium": "[%key:common::state::medium%]",
               "off": "[%key:common::state::off%]",
+              "off_raise_main_brush": "Off (raised brush)",
               "quiet": "Quiet",
               "silent": "Silent",
               "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
