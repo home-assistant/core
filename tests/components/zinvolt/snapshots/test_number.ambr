@@ -36,7 +36,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'upper_threshold',
-    'unique_id': 'ALG001124100107.upper_threshold',
+    'unique_id': 'ZVG011025120088.upper_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_output',
-    'unique_id': 'ALG001124100107.max_output',
+    'unique_id': 'ZVG011025120088.max_output',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -155,7 +155,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lower_threshold',
-    'unique_id': 'ALG001124100107.lower_threshold',
+    'unique_id': 'ZVG011025120088.lower_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -174,7 +174,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25',
+    'state': '10',
   })
 # ---
 # name: test_all_entities[number.zinvolt_batterij_standby_time-entry]
@@ -214,7 +214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'standby_time',
-    'unique_id': 'ALG001124100107.standby_time',
+    'unique_id': 'ZVG011025120088.standby_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
