@@ -18,7 +18,7 @@ class SpotifyEntity(CoordinatorEntity[SpotifyCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.current_user.user_id)},
             manufacturer="Spotify AB",
-            model=f"Spotify {coordinator.current_user.product}",
+            model="Spotify Premium",
             name=f"Spotify {coordinator.config_entry.title}",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://open.spotify.com",

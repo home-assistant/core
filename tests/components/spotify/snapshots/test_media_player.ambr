@@ -116,8 +116,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
       'friendly_name': 'Spotify spotify_1',
-      'media_album_name': 'Safety Third',
-      'media_artist': 'Safety Third ',
+      'media_artist': 'Safety Third',
       'media_content_id': 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
       'media_content_type': <MediaType.PODCAST: 'podcast'>,
       'media_duration': 3690,

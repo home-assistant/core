@@ -112,7 +112,6 @@ async def test_browse_media_playlists(
         ("current_user_recently_played", "current_user_recently_played"),
         ("current_user_top_artists", "current_user_top_artists"),
         ("current_user_top_tracks", "current_user_top_tracks"),
-        ("new_releases", "new_releases"),
         ("playlist", "spotify:playlist:3cEYpjA9oz9GiPac4AsH4n"),
         ("album", "spotify:album:3IqzqH6ShrRtie9Yd2ODyG"),
         ("artist", "spotify:artist:0TnOYISbd1XYRBk9myaseg"),

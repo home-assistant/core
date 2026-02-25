@@ -8,5 +8,7 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["spotifyaio"],
-  "requirements": ["spotifyaio==1.0.0"]
+  "requirements": [
+    "git+https://github.com/joostlek/python-spotify.git@api-changes#spotifyaio==0.2.0"
+  ]
 }

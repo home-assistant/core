@@ -14,7 +14,6 @@ from spotifyaio import (
     Item,
     ItemType,
     PlaybackState,
-    ProductType,
     RepeatMode as SpotifyRepeatMode,
     Track,
 )
@@ -137,8 +136,6 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
-        if self.coordinator.current_user.product != ProductType.PREMIUM:
-            return MediaPlayerEntityFeature(0)
         if not self.currently_playing or self.currently_playing.device.is_restricted:
             return MediaPlayerEntityFeature.SELECT_SOURCE
         return SUPPORT_SPOTIFY
@@ -222,7 +219,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         if item.type == ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
-            return item.show.publisher
+            return item.show.name
 
         if TYPE_CHECKING:
             assert isinstance(item, Track)
@@ -230,12 +227,10 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
-    def media_album_name(self, item: Item) -> str:  # noqa: PLR0206
+    def media_album_name(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media album."""
         if item.type == ItemType.EPISODE:
-            if TYPE_CHECKING:
-                assert isinstance(item, Episode)
-            return item.show.name
+            return None
 
         if TYPE_CHECKING:
             assert isinstance(item, Track)
