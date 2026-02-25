@@ -2,10 +2,12 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -95,6 +97,7 @@ async def test_set_temperature(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     entity_id = "climate.climate_device"
+
     await hass.services.async_call(
         "climate",
         "set_temperature",
@@ -227,12 +230,13 @@ async def test_set_temperature_api_error(
     await hass.async_block_till_done()
 
     entity_id = "climate.climate_device"
-    await hass.services.async_call(
-        "climate",
-        "set_temperature",
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 23.5},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 23.5},
+            blocking=True,
+        )
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -253,12 +257,13 @@ async def test_set_preset_mode_api_error(
     await hass.async_block_till_done()
 
     entity_id = "climate.climate_device"
-    await hass.services.async_call(
-        "climate",
-        "set_preset_mode",
-        {ATTR_ENTITY_ID: entity_id, "preset_mode": "eco"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "eco"},
+            blocking=True,
+        )
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -327,5 +332,4 @@ async def test_ntd_changeover_sets_cool(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "cool"
-    # hvac_modes attribute should list cool and off
     assert state.attributes.get("hvac_modes") == ["cool", "off"]
