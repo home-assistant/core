@@ -14,6 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
+    CREATE_EVENT_SERVICE,
     DOMAIN,
     SERVICE_GET_EVENTS,
     CalendarEntity,
@@ -23,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
@@ -224,7 +224,6 @@ async def test_unsupported_websocket(
 
 async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
-    await async_setup_component(hass, "homeassistant", {})
     with pytest.raises(
         ServiceNotSupported,
         match="Entity calendar.calendar_1 does not "
@@ -232,7 +231,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "create_event",
+            CREATE_EVENT_SERVICE,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -407,8 +406,8 @@ async def test_create_event_service_invalid_params(
 
     with pytest.raises(expected_error, match=error_match):
         await hass.services.async_call(
-            "calendar",
-            "create_event",
+            DOMAIN,
+            CREATE_EVENT_SERVICE,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
