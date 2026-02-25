@@ -1,4 +1,55 @@
 # serializer version: 1
+# name: test_image_platform[image.blue_dragon-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.blue_dragon',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.TITLE_IMAGE: 'title_image'>,
+    'unique_id': '271958441785640_1297287135_title_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.blue_dragon-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '520',
+      'entity_picture': '/api/image_proxy/image.blue_dragon?token=520',
+      'friendly_name': 'Blue Dragon',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.blue_dragon',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
 # name: test_image_platform[image.erics273_avatar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -39,6 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Blue Dragon Earned achievements',
+      'total_achievements': 43,
       'unit_of_measurement': 'achievements',
     }),
     'context': <ANY>,
@@ -89,6 +90,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Blue Dragon Earned Gamerscore',
+      'total_gamerscore': 1000,
       'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
@@ -200,106 +202,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
-  })
-# ---
-# name: test_sensors[sensor.blue_dragon_total_achievements-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.blue_dragon_total_achievements',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Total achievements',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Total achievements',
-    'platform': 'xbox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <XboxSensor.TOTAL_ACHIEVEMENTS: 'total_achievements'>,
-    'unique_id': '271958441785640_1297287135_total_achievements',
-    'unit_of_measurement': 'achievements',
-  })
-# ---
-# name: test_sensors[sensor.blue_dragon_total_achievements-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Blue Dragon Total achievements',
-      'unit_of_measurement': 'achievements',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.blue_dragon_total_achievements',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '43',
-  })
-# ---
-# name: test_sensors[sensor.blue_dragon_total_gamerscore-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.blue_dragon_total_gamerscore',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Total Gamerscore',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Total Gamerscore',
-    'platform': 'xbox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <XboxSensor.TOTAL_GAMERSCORE: 'total_gamerscore'>,
-    'unique_id': '271958441785640_1297287135_total_gamerscore',
-    'unit_of_measurement': 'points',
-  })
-# ---
-# name: test_sensors[sensor.blue_dragon_total_gamerscore-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Blue Dragon Total Gamerscore',
-      'unit_of_measurement': 'points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.blue_dragon_total_gamerscore',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1000',
   })
 # ---
 # name: test_sensors[sensor.erics273_follower-entry]
