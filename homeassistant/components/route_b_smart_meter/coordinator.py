@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-import time
+from zoneinfo import ZoneInfo
 
 from momonga import Momonga, MomongaError
 
@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+_JST = ZoneInfo("Asia/Tokyo")
 
 
 @dataclass
@@ -107,7 +108,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             instantaneous_power=self.api.get_instantaneous_power(),
             total_consumption=self.api.get_measured_cumulative_energy(),
             fault_status=fault_status,
-            meter_timestamp=fixed_time_data["timestamp"],
+            meter_timestamp=fixed_time_data["timestamp"].replace(tzinfo=_JST),
         )
 
     async def _async_update_data(self) -> BRouteData:

@@ -266,7 +266,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Total consumption',
-      'meter_timestamp': '2025-02-01T00:00:00',
+      'meter_timestamp': '2025-02-01T00:00:00+09:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
