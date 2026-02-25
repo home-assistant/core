@@ -8,7 +8,6 @@ from typing import Any
 from opendisplay import (
     MANUFACTURER_ID,
     BLEConnectionError,
-    BLETimeoutError,
     OpenDisplayDevice,
     OpenDisplayError,
 )
@@ -66,7 +65,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._async_test_connection(self._discovery_info.address)
-            except BLEConnectionError, BLETimeoutError, OpenDisplayError:
+            except OpenDisplayError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error")
@@ -95,7 +94,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_test_connection(address)
-            except BLEConnectionError, BLETimeoutError, OpenDisplayError:
+            except OpenDisplayError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error")
