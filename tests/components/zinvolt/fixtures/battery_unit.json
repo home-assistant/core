@@ -1,0 +1,62 @@
+{
+  "usn": "ZVS25011000009148",
+  "type": "BATTERY",
+  "version": {
+    "currentVersion": "V1.02-V0.00.000",
+    "status": "NO_UPDATE"
+  },
+  "points": [
+    {
+      "point": "COMMUNICATION",
+      "unitType": "BATTERY",
+      "message": "Communication",
+      "pieces": [],
+      "normal": true
+    },
+    {
+      "point": "VOLTAGE",
+      "unitType": "BATTERY",
+      "message": "Voltage",
+      "pieces": [],
+      "normal": true
+    },
+    {
+      "point": "CURRENT",
+      "unitType": "BATTERY",
+      "message": "Current",
+      "pieces": [],
+      "normal": true
+    },
+    {
+      "point": "TEMPERATURE",
+      "unitType": "BATTERY",
+      "message": "Temperature",
+      "pieces": [],
+      "normal": true
+    },
+    {
+      "point": "CHARGE",
+      "unitType": "BATTERY",
+      "message": "Charge",
+      "pieces": [],
+      "normal": true
+    },
+    {
+      "point": "DISCHARGE",
+      "unitType": "BATTERY",
+      "message": "Discharge",
+      "pieces": [],
+      "normal": true
+    },
+    {
+      "point": "OTHER",
+      "unitType": "BATTERY",
+      "message": "Other",
+      "pieces": [],
+      "normal": true
+    }
+  ],
+  "batteryModel": "ZVS4000",
+  "power": -6,
+  "temperature": 0
+}
