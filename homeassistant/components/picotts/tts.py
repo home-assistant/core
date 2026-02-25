@@ -92,23 +92,24 @@ class PicoTTSEntity(TextToSpeechEntity):
         try:
             subprocess.run(cmd, text=True, input=message, check=True)
 
-            with open(fname, "rb") as voice:
-                data = voice.read()
+            try:
+                with open(fname, "rb") as voice:
+                    data = voice.read()
+            finally:
+                os.remove(fname)
         except subprocess.CalledProcessError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="returncode_error",
                 translation_placeholders={"returncode": str(exc.returncode)},
             ) from exc
-        except (OSError, subprocess.TimeoutExpired) as exc:
+        except (FileNotFoundError, OSError, subprocess.TimeoutExpired) as exc:
             _LOGGER.debug("Full exception %s", exc)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="file_read_error",
                 translation_placeholders={"filename": fname},
             ) from exc
-        finally:
-            os.remove(fname)
 
         return "wav", data
 
