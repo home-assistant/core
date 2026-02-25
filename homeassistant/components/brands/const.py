@@ -23,7 +23,7 @@ TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=30)
 
 # Validation
 CATEGORY_RE: Final = re.compile(r"^[a-z0-9_]+$")
-HARDWARE_IMAGE_RE: Final = re.compile(r"^[a-z0-9_]+\.png$")
+HARDWARE_IMAGE_RE: Final = re.compile(r"^[a-z0-9_-]+\.png$")
 
 # Images and fallback chains
 ALLOWED_IMAGES: Final = frozenset(
