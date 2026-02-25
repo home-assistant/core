@@ -60,6 +60,40 @@ def mock_site_info_no_tariff(mock_site_info) -> Generator[AsyncMock]:
         yield mock
 
 
+@pytest.fixture
+def mock_site_info_invalid_season(mock_site_info) -> Generator[AsyncMock]:
+    """Mock site_info with invalid/empty season data."""
+    site_info = deepcopy(SITE_INFO)
+    # Empty season first (hits _get_current_season empty check),
+    # then season with missing keys (hits KeyError exception handler)
+    site_info["response"]["tariff_content_v2"]["seasons"] = {
+        "Empty": {},
+        "Invalid": {"someKey": "value"},
+    }
+    site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
+        side_effect=lambda: deepcopy(site_info),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_site_info_invalid_price(mock_site_info) -> Generator[AsyncMock]:
+    """Mock site_info with non-numeric price data."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["tariff_content_v2"]["energy_charges"]["Summer"]["rates"] = {
+        "OFF_PEAK": "not_a_number",
+        "ON_PEAK": "not_a_number",
+    }
+    site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
+        side_effect=lambda: deepcopy(site_info),
+    ) as mock:
+        yield mock
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_calendar(
     hass: HomeAssistant,
@@ -236,24 +270,6 @@ async def test_calendar_no_tariff_data(
     assert state is None
 
 
-@pytest.fixture
-def mock_site_info_invalid_season(mock_site_info) -> Generator[AsyncMock]:
-    """Mock site_info with invalid/empty season data."""
-    site_info = deepcopy(SITE_INFO)
-    # Empty season first (hits _get_current_season empty check),
-    # then season with missing keys (hits KeyError exception handler)
-    site_info["response"]["tariff_content_v2"]["seasons"] = {
-        "Empty": {},
-        "Invalid": {"someKey": "value"},
-    }
-    site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
-        side_effect=lambda: deepcopy(site_info),
-    ) as mock:
-        yield mock
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_calendar_invalid_season_data(
     hass: HomeAssistant,
@@ -313,28 +329,13 @@ async def test_calendar_week_crossing_get_events(
         return_response=True,
     )
     events = result[ENTITY_BUY]["events"]
-    assert len(events) > 0
-    # Verify events only on Fri(4), Sat(5), Sun(6), Mon(0) - not Tue-Thu
+    # 5 events: Sun Dec 31, Mon Jan 1, Fri Jan 5, Sat Jan 6, Sun Jan 7
+    # (Dec 31 included due to UTC-to-local shift) - no Tue/Wed/Thu
+    assert len(events) == 5
     for event in events:
         start = dt_util.parse_datetime(event["start"])
         assert start is not None
         assert start.weekday() in (0, 4, 5, 6)
-
-
-@pytest.fixture
-def mock_site_info_invalid_price(mock_site_info) -> Generator[AsyncMock]:
-    """Mock site_info with non-numeric price data."""
-    site_info = deepcopy(SITE_INFO)
-    site_info["response"]["tariff_content_v2"]["energy_charges"]["Summer"]["rates"] = {
-        "OFF_PEAK": "not_a_number",
-        "ON_PEAK": "not_a_number",
-    }
-    site_info["response"]["tariff_content_v2"]["sell_tariff"]["seasons"] = {}
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
-        side_effect=lambda: deepcopy(site_info),
-    ) as mock:
-        yield mock
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
