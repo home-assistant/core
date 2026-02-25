@@ -150,7 +150,7 @@ async def test_with_official_server(hass: HomeAssistant) -> None:
     """Test update entity is not created when using official ntfy server."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title="ntfy.example",
+        title="ntfy.sh",
         data={
             CONF_URL: DEFAULT_URL,
             CONF_USERNAME: None,
