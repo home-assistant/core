@@ -53,6 +53,7 @@ class MyNeoClimate(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_should_poll = False
 
     def __init__(self, api: PyAxencoAPI, device: dict[str, Any]) -> None:
         """Initialize the MyNeoClimate entity."""
