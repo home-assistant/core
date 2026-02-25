@@ -35,7 +35,7 @@ async def _root_payload(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="presets",
-                thumbnail="https://brands.home-assistant.io/_/russound_rio/logo.png",
+                thumbnail="/api/brands/integration/russound_rio/logo.png",
                 can_play=False,
                 can_expand=True,
             )

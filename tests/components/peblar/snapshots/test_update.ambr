@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/peblar/icon.png',
+      'entity_picture': '/api/brands/integration/peblar/icon.png',
       'friendly_name': 'Peblar EV Charger Customization',
       'in_progress': False,
       'installed_version': 'Peblar-1.9',
@@ -102,7 +102,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/peblar/icon.png',
+      'entity_picture': '/api/brands/integration/peblar/icon.png',
       'friendly_name': 'Peblar EV Charger Firmware',
       'in_progress': False,
       'installed_version': '1.6.1+1+WL-1',

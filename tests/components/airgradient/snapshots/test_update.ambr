@@ -41,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/airgradient/icon.png',
+      'entity_picture': '/api/brands/integration/airgradient/icon.png',
       'friendly_name': 'Airgradient Firmware',
       'in_progress': False,
       'installed_version': '3.1.1',

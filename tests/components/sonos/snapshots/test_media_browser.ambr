@@ -366,7 +366,7 @@
       'media_class': 'directory',
       'media_content_id': '',
       'media_content_type': 'favorites',
-      'thumbnail': 'https://brands.home-assistant.io/_/sonos/logo.png',
+      'thumbnail': '/api/brands/integration/sonos/logo.png',
       'title': 'Favorites',
     }),
     dict({
@@ -377,7 +377,7 @@
       'media_class': 'directory',
       'media_content_id': '',
       'media_content_type': 'library',
-      'thumbnail': 'https://brands.home-assistant.io/_/sonos/logo.png',
+      'thumbnail': '/api/brands/integration/sonos/logo.png',
       'title': 'Music Library',
     }),
   ])

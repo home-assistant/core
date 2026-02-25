@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
+      'entity_picture': '/api/brands/integration/nextcloud/icon.png',
       'friendly_name': 'my.nc_url.local',
       'in_progress': False,
       'installed_version': '28.0.4.1',
