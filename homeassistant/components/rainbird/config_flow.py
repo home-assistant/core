@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
 from . import RainbirdConfigEntry
-from .api import async_create_controller
+from .api import async_create_controller, normalize_rainbird_host
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -74,7 +74,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
-        self.host = entry_data[CONF_HOST]
+        self.host = normalize_rainbird_host(entry_data[CONF_HOST])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -105,7 +105,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Configure the Rain Bird device."""
         error_code: str | None = None
         if user_input:
-            host = user_input[CONF_HOST]
+            host = normalize_rainbird_host(user_input[CONF_HOST])
             try:
                 serial_number, wifi_params = await self._test_connection(
                     host, user_input[CONF_PASSWORD]

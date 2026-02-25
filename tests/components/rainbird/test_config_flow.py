@@ -61,7 +61,9 @@ async def mock_setup() -> AsyncGenerator[AsyncMock]:
         yield mock_setup
 
 
-async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowResult:
+async def complete_flow(
+    hass: HomeAssistant, host: str = HOST, password: str = PASSWORD
+) -> FlowResult:
     """Start the config flow and enter the host and password."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -73,7 +75,7 @@ async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowRe
 
     return await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
+        {CONF_HOST: host, CONF_PASSWORD: password},
     )
 
 
@@ -115,6 +117,20 @@ async def test_controller_flow(
     assert dict(result["result"].data) == expected_config_entry
     assert result["result"].options == {ATTR_DURATION: 6}
     assert result["result"].unique_id == expected_unique_id
+
+    assert len(mock_setup.mock_calls) == 1
+
+
+async def test_controller_flow_normalizes_host_url(
+    hass: HomeAssistant,
+    mock_setup: Mock,
+) -> None:
+    """Test a controller host URL is normalized to a host for storage."""
+    result = await complete_flow(hass, host=f"https://{HOST}/")
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == HOST
+    assert "result" in result
+    assert dict(result["result"].data) == CONFIG_ENTRY_DATA
 
     assert len(mock_setup.mock_calls) == 1
 

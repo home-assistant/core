@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -16,6 +17,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import (
     CONFIG_ENTRY_DATA,
     CONFIG_ENTRY_DATA_OLD_FORMAT,
+    HOST,
     MAC_ADDRESS,
     MAC_ADDRESS_UNIQUE_ID,
     MODEL_AND_VERSION_RESPONSE,
@@ -42,6 +44,19 @@ async def test_init_success(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_init_success_host_with_scheme(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test successful setup when host is provided as a URL."""
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_HOST: f"https://{HOST}"}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
