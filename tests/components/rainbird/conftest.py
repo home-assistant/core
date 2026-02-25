@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from http import HTTPStatus
 import json
+import re
 from typing import Any
 from unittest.mock import patch
 
@@ -157,20 +158,6 @@ def setup_platforms(
 
 
 @pytest.fixture(autouse=True)
-def force_legacy_controller_factory() -> Generator[None]:
-    """Force tests to use the legacy controller factory path.
-
-    The Rain Bird integration supports pyrainbird 6.0.x and 6.1.x. In test
-    environments where pyrainbird 6.1.x is installed, `create_controller` will
-    probe the device to determine the correct scheme (HTTP/HTTPS), which adds
-    additional network calls. Most tests are written against the legacy flow,
-    so force that path for deterministic request ordering.
-    """
-    with patch("homeassistant.components.rainbird.api._create_controller", None):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
@@ -292,4 +279,4 @@ def handle_responses(
     async def handle(method, url, data) -> AiohttpClientMockResponse:
         return responses.pop(0)
 
-    aioclient_mock.post(URL, side_effect=handle)
+    aioclient_mock.post(re.compile(r"^https?://[^/]+/stick$"), side_effect=handle)
