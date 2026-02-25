@@ -1,9 +1,9 @@
 """Test the System Nexa 2 switch platform."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from sn2 import ConnectionStatus, OnOffSetting, SettingsUpdate, StateChange
+from sn2 import ConnectionStatus, SettingsUpdate, StateChange
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -34,10 +35,17 @@ async def test_switch_entities(
     """Test the switch entities."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Only load the switch platform for snapshot testing
+    with patch(
+        "homeassistant.components.systemnexa2.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 async def test_switch_turn_on_off_toggle(
@@ -52,18 +60,16 @@ async def test_switch_turn_on_off_toggle(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get the coordinator and update it with state
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert entry
-    coordinator = entry.runtime_data
-    await coordinator._async_handle_update(StateChange(state=0.0))
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_system_nexa_2_device)
+    await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
     # Test turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_device_relay_1"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_on.assert_called_once()
@@ -72,7 +78,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_device_relay_1"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_off.assert_called_once()
@@ -81,7 +87,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.test_device_relay_1"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.toggle.assert_called_once()
@@ -98,22 +104,23 @@ async def test_switch_is_on_property(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Get the coordinator and update it with state
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    coordinator = entry.runtime_data
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_system_nexa_2_device)
 
     # Test with state = 1.0 (on)
-    await coordinator._async_handle_update(StateChange(state=1.0))
+    await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
+    assert state is not None
     assert state.state == "on"
 
     # Test with state = 0.0 (off)
-    await coordinator._async_handle_update(StateChange(state=0.0))
+    await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
+    assert state is not None
     assert state.state == "off"
 
 
@@ -125,39 +132,26 @@ async def test_configuration_switches(
     """Test configuration switch entities."""
     device = mock_system_nexa_2_device.return_value
 
-    # Create mock OnOffSettings with keys matching SWITCH_TYPES
-    mock_setting_433mhz = MagicMock(spec=OnOffSetting)
-    mock_setting_433mhz.name = "433Mhz"  # Must match key in SWITCH_TYPES
-    mock_setting_433mhz.enable = AsyncMock()
-    mock_setting_433mhz.disable = AsyncMock()
-    mock_setting_433mhz.is_enabled = MagicMock(return_value=True)
-
-    mock_setting_cloud = MagicMock(spec=OnOffSetting)
-    mock_setting_cloud.name = "Cloud Access"  # Must match key in SWITCH_TYPES
-    mock_setting_cloud.enable = AsyncMock()
-    mock_setting_cloud.disable = AsyncMock()
-    mock_setting_cloud.is_enabled = MagicMock(return_value=False)
-
-    # Set settings before setup
-    device.settings = [mock_setting_433mhz, mock_setting_cloud]
+    # Settings are already configured in the fixture
+    mock_setting_433mhz = device.settings[0]  # 433Mhz
+    mock_setting_cloud = device.settings[1]  # Cloud Access
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Make coordinator data available
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    coordinator = entry.runtime_data
-    await coordinator._async_handle_update(StateChange(state=1.0))
+    # Find the callback that was registered with the device
+    update_callback = find_update_callback(mock_system_nexa_2_device)
+    await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
     # Check 433mhz switch state (should be on)
-    state = hass.states.get("switch.test_device_433_mhz")
+    state = hass.states.get("switch.outdoor_smart_plug_433_mhz")
     assert state is not None
     assert state.state == "on"
 
     # Check cloud_access switch state (should be off)
-    state = hass.states.get("switch.test_device_cloud_access")
+    state = hass.states.get("switch.outdoor_smart_plug_cloud_access")
     assert state is not None
     assert state.state == "off"
 
@@ -165,7 +159,7 @@ async def test_configuration_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_device_433_mhz"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_433_mhz"},
         blocking=True,
     )
     mock_setting_433mhz.disable.assert_called_once_with(device)
@@ -174,7 +168,7 @@ async def test_configuration_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_device_cloud_access"},
+        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_cloud_access"},
         blocking=True,
     )
     mock_setting_cloud.enable.assert_called_once_with(device)
@@ -193,8 +187,8 @@ async def test_coordinator_connection_status(
     # Find the callback that was registered with the device
     update_callback = find_update_callback(mock_system_nexa_2_device)
 
-    # Initially, the relay switch should be off (state=1.0 from fixture)
-    state = hass.states.get("switch.test_device_relay_1")
+    # Initially, the relay switch should be on (state=1.0 from fixture)
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -202,7 +196,8 @@ async def test_coordinator_connection_status(
     await update_callback(ConnectionStatus(connected=False))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate reconnection and state update
@@ -210,7 +205,8 @@ async def test_coordinator_connection_status(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
+    assert state is not None
     assert state.state == STATE_ON
 
 
@@ -231,7 +227,7 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -239,7 +235,8 @@ async def test_coordinator_state_change(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay_1")
+    state = hass.states.get("switch.outdoor_smart_plug_relay")
+    assert state is not None
     assert state.state == STATE_ON
 
 
@@ -257,7 +254,7 @@ async def test_coordinator_settings_update(
     update_callback = find_update_callback(mock_system_nexa_2_device)
 
     # Get initial state of 433Mhz switch (should be on from fixture)
-    state = hass.states.get("switch.test_device_433_mhz")
+    state = hass.states.get("switch.outdoor_smart_plug_433_mhz")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -271,5 +268,6 @@ async def test_coordinator_settings_update(
     await update_callback(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_433_mhz")
+    state = hass.states.get("switch.outdoor_smart_plug_433_mhz")
+    assert state is not None
     assert state.state == STATE_OFF
