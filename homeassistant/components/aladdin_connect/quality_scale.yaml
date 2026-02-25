@@ -66,9 +66,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices:
-    status: todo
-    comment: We can automatically remove removed devices
+  stale-devices: done
 
   # Platinum
   async-dependency: todo
