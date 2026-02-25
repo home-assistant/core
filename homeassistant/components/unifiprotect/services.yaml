@@ -58,3 +58,17 @@ get_user_keyring_info:
       selector:
         device:
           integration: unifiprotect
+
+ptz_goto_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            domain: camera
+    preset:
+      required: true
+      selector:
+        text:
