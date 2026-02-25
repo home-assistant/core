@@ -1,10 +1,9 @@
-"""Diagnostic tests for airOS."""
+"""Test for Powerfox Local diagnostics."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airos.coordinator import AirOS8Data
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -14,20 +13,18 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(
+async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_airos_client: MagicMock,
+    mock_powerfox_local_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    ap_fixture: AirOS8Data,
     snapshot: SnapshotAssertion,
-    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
-    """Test diagnostics."""
-
+    """Test the Powerfox Local entry diagnostics."""
     await setup_integration(hass, mock_config_entry)
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-        == snapshot
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
     )
+
+    assert result == snapshot
