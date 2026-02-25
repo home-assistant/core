@@ -1319,6 +1319,46 @@ async def test_power_strip_missing_member_entities(
     assert "switch.nonexistent" not in acc.outlet_chars
 
 
+async def test_power_strip_state_sync_missing_member_entity(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test PowerStrip state update when a known member entity disappears."""
+    switch_entity_ids = ["switch.outlet_1", "switch.outlet_2"]
+
+    for entity_id in switch_entity_ids:
+        hass.states.async_set(entity_id, STATE_OFF)
+
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_remove("switch.outlet_2")
+    hass.states.async_set("switch.outlet_1", STATE_ON)
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(power_strip_entity_id)
+    assert state is not None
+    acc.async_update_state(state)
+
+    assert acc.outlet_chars["switch.outlet_1"].value is True
+    assert acc.outlet_states["switch.outlet_1"] is True
+    assert acc.outlet_chars["switch.outlet_2"].value is False
+    assert acc.outlet_states["switch.outlet_2"] is False
+
+
 async def test_power_strip_primary_service(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
