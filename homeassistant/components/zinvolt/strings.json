@@ -21,6 +21,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "on_grid": {
+        "name": "Connected to grid"
+      }
+    }
+  },
   "exceptions": {
     "update_failed": {
       "message": "An error occurred while updating the Zinvolt integration."
