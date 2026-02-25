@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_valves[mock_valve][valve.mock_valve-entry]
+# name: test_valves[mock_valve][mock_valve][valve.mock_valve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valves[mock_valve][valve.mock_valve-state]
+# name: test_valves[mock_valve][mock_valve][valve.mock_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
