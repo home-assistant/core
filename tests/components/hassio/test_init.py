@@ -260,6 +260,7 @@ async def test_setup_api_panel(
         },
         "url_path": "hassio",
         "require_admin": True,
+        "show_in_sidebar": True,
         "config_panel_domain": None,
     }
 
@@ -281,6 +282,7 @@ async def test_setup_app_panel(hass: HomeAssistant) -> None:
         "config": None,
         "url_path": "app",
         "require_admin": False,
+        "show_in_sidebar": True,
         "config_panel_domain": None,
     }
 
