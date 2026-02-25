@@ -167,6 +167,30 @@ async def test_fan_set_speed_while_off(
     assert state.attributes.get("percentage") == 0
 
 
+async def test_fan_set_speed_to_not_in_step_percentage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: MagicMock,
+) -> None:
+    """Test setting the fan speed to a percentage that is not in the step of the fan."""
+    await setup_integration(hass, mock_config_entry)
+
+    await mock_connector.select_device_option(
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_ON
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.nano_color_2", ATTR_PERCENTAGE: 65},
+    )
+
+    state = hass.states.get("fan.nano_color_2")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get("percentage") == 80
+
+
 async def test_fan_set_speed_to_0(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

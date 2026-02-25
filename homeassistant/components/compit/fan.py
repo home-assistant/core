@@ -16,8 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
-    percentage_to_ranged_value,
-    ranged_value_to_percentage,
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
 )
 
 from .const import DOMAIN, MANUFACTURER_NAME
@@ -88,10 +88,6 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
             manufacturer=MANUFACTURER_NAME,
             model=entity_description.key,
         )
-        self._gear_range = (
-            min(COMPIT_GEAR_TO_HA.values()),
-            max(COMPIT_GEAR_TO_HA.values()),
-        )
 
     @property
     def available(self) -> bool:
@@ -148,8 +144,8 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         return (
             None
             if gear is None
-            else ranged_value_to_percentage(
-                self._gear_range,
+            else ordered_list_item_to_percentage(
+                list(COMPIT_GEAR_TO_HA.values()),
                 gear,
             )
         )
@@ -161,8 +157,8 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
             return
 
         gear = int(
-            percentage_to_ranged_value(
-                self._gear_range,
+            percentage_to_ordered_list_item(
+                list(COMPIT_GEAR_TO_HA.values()),
                 percentage,
             )
         )
