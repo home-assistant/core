@@ -18,6 +18,7 @@ from homeassistant.components.evohome.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -126,9 +127,8 @@ async def test_zone_clear_zone_override(
         await hass.services.async_call(
             DOMAIN,
             EvoService.CLEAR_ZONE_OVERRIDE,
-            {
-                ATTR_ENTITY_ID: zone_id,
-            },
+            {},
+            target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
         )
 
@@ -151,9 +151,9 @@ async def test_zone_set_zone_override(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
                 ATTR_SETPOINT: 19.5,
             },
+            target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
         )
 
@@ -165,13 +165,32 @@ async def test_zone_set_zone_override(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
                 ATTR_SETPOINT: 19.5,
                 ATTR_DURATION: {"minutes": 135},
             },
+            target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with(
             19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
         )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_zone_clear_zone_override_with_ctl_id(  # ServiceValidationError
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test calling a zone service with a non-zone entity_id fails."""
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_ZONE_OVERRIDE,
+            {},
+            target={ATTR_ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "zone_only_service"
