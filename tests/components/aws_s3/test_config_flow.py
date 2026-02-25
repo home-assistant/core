@@ -52,8 +52,29 @@ async def _async_start_flow(
             "test - my-prefix",
             USER_INPUT | {CONF_PREFIX: "my-prefix"},
         ),
+        (
+            USER_INPUT | {CONF_PREFIX: "/backups/"},
+            "test - backups",
+            CONFIG_ENTRY_DATA | {CONF_PREFIX: "backups"},
+        ),
+        (
+            USER_INPUT | {CONF_PREFIX: "/"},
+            "test",
+            CONFIG_ENTRY_DATA,
+        ),
+        (
+            USER_INPUT | {CONF_PREFIX: "my-prefix/"},
+            "test - my-prefix",
+            CONFIG_ENTRY_DATA | {CONF_PREFIX: "my-prefix"},
+        ),
     ],
-    ids=["no_prefix", "with_prefix"],
+    ids=[
+        "no_prefix",
+        "with_prefix",
+        "with_leading_and_trailing_slash",
+        "only_slash",
+        "with_trailing_slash",
+    ],
 )
 async def test_flow(
     hass: HomeAssistant,
@@ -61,7 +82,7 @@ async def test_flow(
     expected_title: str,
     expected_data: dict,
 ) -> None:
-    """Test config flow with and without prefix."""
+    """Test config flow with and without prefix, including prefix normalization."""
     result = await _async_start_flow(hass, user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
@@ -207,28 +228,3 @@ async def test_no_abort_if_different_prefix(
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "prefix-b"})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PREFIX] == "prefix-b"
-
-
-@pytest.mark.parametrize(
-    ("input_prefix", "expected_entry_data", "expected_title"),
-    [
-        ("/backups/", CONFIG_ENTRY_DATA | {CONF_PREFIX: "backups"}, "test - backups"),
-        ("/", CONFIG_ENTRY_DATA, "test"),
-        (
-            "my-prefix/",
-            CONFIG_ENTRY_DATA | {CONF_PREFIX: "my-prefix"},
-            "test - my-prefix",
-        ),
-    ],
-)
-async def test_flow_prefix_normalization(
-    hass: HomeAssistant,
-    input_prefix: str,
-    expected_entry_data: dict,
-    expected_title: str,
-) -> None:
-    """Test that leading/trailing slashes are stripped from the prefix."""
-    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: input_prefix})
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == expected_title
-    assert result["data"] == expected_entry_data
