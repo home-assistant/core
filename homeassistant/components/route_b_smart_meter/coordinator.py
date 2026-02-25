@@ -131,6 +131,10 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             )
             try:
                 self._reopen()
+                _LOGGER.info(
+                    "Momonga session recovered successfully after %s attempt(s)",
+                    attempt,
+                )
                 return self._get_data()
             except MomongaError as error:
                 last_error = error
