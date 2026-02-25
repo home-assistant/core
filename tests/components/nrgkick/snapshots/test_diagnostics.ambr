@@ -1,0 +1,117 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator_data': dict({
+      'control': dict({
+        'charge_pause': 0,
+        'current_set': 16.0,
+        'energy_limit': 0,
+        'phase_count': 3,
+      }),
+      'info': dict({
+        'cellular': dict({
+          'mode': 3,
+          'operator': 'Test operator',
+          'rssi': -85,
+        }),
+        'connector': dict({
+          'max_current': 32.0,
+          'phase_count': 3,
+          'serial_number': 'CONN123',
+          'type': 3,
+        }),
+        'general': dict({
+          'device_name': 'NRGkick Test',
+          'json_api_version': 'v1',
+          'model_type': 'NRGkick Gen2 SIM',
+          'rated_current': 32.0,
+          'serial_number': 'TEST123456',
+        }),
+        'grid': dict({
+          'frequency': 50.0,
+          'phases': 7,
+          'voltage': 230,
+        }),
+        'hardware': dict({
+          'bluetooth_version': '1.2.3',
+          'smartmodule_version': '4.0.0.0',
+        }),
+        'network': dict({
+          'ip_address': '192.168.1.100',
+          'mac_address': 'AA:BB:CC:DD:EE:FF',
+          'wifi_rssi': -45,
+          'wifi_ssid': 'TestNetwork',
+        }),
+        'software': dict({
+          'firmware_version': '2.1.0',
+        }),
+      }),
+      'values': dict({
+        'energy': dict({
+          'charged_energy': 5000,
+          'total_charged_energy': 100000,
+        }),
+        'general': dict({
+          'charge_count': 5,
+          'charging_rate': 11.0,
+          'error_code': 0,
+          'rcd_trigger': 0,
+          'status': 3,
+          'vehicle_charging_time': 50,
+          'vehicle_connect_time': 100,
+          'warning_code': 0,
+        }),
+        'powerflow': dict({
+          'charging_current': 16.0,
+          'charging_voltage': 230.0,
+          'grid_frequency': 50.0,
+          'l1': dict({
+            'active_power': 3680,
+            'apparent_power': 3680,
+            'current': 16.0,
+            'power_factor': 100,
+            'reactive_power': 0,
+            'voltage': 230.0,
+          }),
+          'l2': dict({
+            'active_power': 3680,
+            'apparent_power': 3680,
+            'current': 16.0,
+            'power_factor': 100,
+            'reactive_power': 0,
+            'voltage': 230.0,
+          }),
+          'l3': dict({
+            'active_power': 3680,
+            'apparent_power': 3680,
+            'current': 16.0,
+            'power_factor': 100,
+            'reactive_power': 0,
+            'voltage': 230.0,
+          }),
+          'n': dict({
+            'current': 0.0,
+          }),
+          'peak_power': 11000,
+          'total_active_power': 11000,
+          'total_apparent_power': 11040,
+          'total_power_factor': 100,
+          'total_reactive_power': 0,
+        }),
+        'temperatures': dict({
+          'connector_l1': 28.0,
+          'connector_l2': 29.0,
+          'connector_l3': 28.5,
+          'domestic_plug_1': 25.0,
+          'domestic_plug_2': 25.0,
+          'housing': 35.0,
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'host': '192.168.1.100',
+      'password': '**REDACTED**',
+      'username': '**REDACTED**',
+    }),
+  })
+# ---
