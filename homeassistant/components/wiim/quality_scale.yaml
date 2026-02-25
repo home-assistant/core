@@ -42,7 +42,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      - The climate platform is at 94%
+      - Increase test coverage for the media_player platform
 
   # Gold
   devices: done
