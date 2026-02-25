@@ -2,8 +2,10 @@
 
 from dataclasses import dataclass
 import logging
+import time
 
 from momonga import Momonga, MomongaError
+from momonga.momonga_exception import MomongaNeedToReopen
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
@@ -13,6 +15,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+MAX_REOPEN_ATTEMPTS = 3
+REOPEN_BACKOFF_SECONDS = 10
 
 
 @dataclass
@@ -40,9 +45,9 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
         self.device = entry.data[CONF_DEVICE]
         self.bid = entry.data[CONF_ID]
-        password = entry.data[CONF_PASSWORD]
+        self._password = entry.data[CONF_PASSWORD]
 
-        self.api = Momonga(dev=self.device, rbid=self.bid, pwd=password)
+        self.api = Momonga(dev=self.device, rbid=self.bid, pwd=self._password)
 
         super().__init__(
             hass,
@@ -67,9 +72,45 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             total_consumption=self.api.get_measured_cumulative_energy(),
         )
 
+    def _reopen(self) -> None:
+        """Reopen Momonga session after connection loss."""
+        try:
+            self.api.close()
+        except MomongaError:
+            _LOGGER.debug("Error closing Momonga before reopen", exc_info=True)
+        self.api = Momonga(dev=self.device, rbid=self.bid, pwd=self._password)
+        self.api.open()
+
+    def _get_data_with_recovery(self) -> BRouteData:
+        """Get data with automatic session recovery on connection loss."""
+        try:
+            return self._get_data()
+        except MomongaNeedToReopen as error:
+            last_error: MomongaError = error
+
+        for attempt in range(1, MAX_REOPEN_ATTEMPTS + 1):
+            _LOGGER.warning(
+                "Momonga session requires reopen (attempt %s/%s)",
+                attempt,
+                MAX_REOPEN_ATTEMPTS,
+            )
+            try:
+                self._reopen()
+                return self._get_data()
+            except MomongaError as error:
+                last_error = error
+                if attempt < MAX_REOPEN_ATTEMPTS:
+                    time.sleep(REOPEN_BACKOFF_SECONDS)
+
+        raise MomongaError(
+            "Failed to recover Momonga session"
+        ) from last_error
+
     async def _async_update_data(self) -> BRouteData:
         """Update data."""
         try:
-            return await self.hass.async_add_executor_job(self._get_data)
+            return await self.hass.async_add_executor_job(
+                self._get_data_with_recovery
+            )
         except MomongaError as error:
             raise UpdateFailed(error) from error
