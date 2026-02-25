@@ -12,6 +12,8 @@ from .const import SUPPORTED_FEATURES
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .entity import AladdinConnectEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
