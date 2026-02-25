@@ -4,19 +4,35 @@
       "already_configured": "Device is already configured"
     },
     "error": {
-      "cannot_connect": "Failed to connect to the vacuum. Check host, device ID, local key, and protocol version.",
+      "cannot_connect": "Failed to connect to Eufy cloud",
+      "cannot_connect_local": "Failed to connect to the selected vacuum locally",
+      "host_required": "Host is required for local control",
+      "invalid_auth": "Invalid Eufy account credentials",
+      "no_devices": "No RoboVacs found on this account",
       "unknown": "Unexpected error"
     },
     "step": {
       "user": {
-        "title": "Set up Eufy RoboVac",
-        "description": "Configure a Eufy RoboVac using local device details.",
+        "title": "Sign in to Eufy",
+        "description": "Enter your Eufy account credentials to discover RoboVacs.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "select_device": {
+        "title": "Select RoboVac",
+        "description": "Choose which RoboVac to add to Home Assistant.",
+        "data": {
+          "selected_device_id": "RoboVac"
+        }
+      },
+      "device": {
+        "title": "Confirm Local Details",
+        "description": "Confirm local connection details for the selected RoboVac.",
         "data": {
           "name": "Name",
-          "model": "Model",
           "host": "Host",
-          "id": "Device ID",
-          "local_key": "Local key",
           "protocol_version": "Protocol version"
         }
       }
