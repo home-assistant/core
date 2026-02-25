@@ -63,6 +63,8 @@ def mock_connector():
 
     mock_device_2 = MagicMock()
     mock_device_2.state.params = [
+        MagicMock(code="__trybpozadomemznano1", value="on"),  # Out of home mode
+        MagicMock(code="__urlop", value="off"),  # Holiday mode
         MagicMock(code="_jezyk", value="english"),
         MagicMock(code="__aerokonfbypass", value="off"),
         MagicMock(code="__rd_alarmwent", value="no_alarm"),
