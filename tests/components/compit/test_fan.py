@@ -16,6 +16,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -48,7 +51,7 @@ async def test_fan_turn_on(
     await setup_integration(hass, mock_config_entry)
 
     await mock_connector.select_device_option(
-        2, CompitParameter.VENTILATION_ON_OFF, "off"
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_OFF
     )
 
     await hass.services.async_call(
@@ -57,7 +60,7 @@ async def test_fan_turn_on(
 
     state = hass.states.get("fan.nano_color_2")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
 
 async def test_fan_turn_off(
@@ -69,7 +72,7 @@ async def test_fan_turn_off(
     await setup_integration(hass, mock_config_entry)
 
     await mock_connector.select_device_option(
-        2, CompitParameter.VENTILATION_ON_OFF, "on"
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_ON
     )
 
     await hass.services.async_call(
@@ -81,7 +84,7 @@ async def test_fan_turn_off(
 
     state = hass.states.get("fan.nano_color_2")
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_fan_set_speed(
@@ -93,7 +96,7 @@ async def test_fan_set_speed(
     await setup_integration(hass, mock_config_entry)
 
     await mock_connector.select_device_option(
-        2, CompitParameter.VENTILATION_ON_OFF, "off"
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_OFF
     )  # Turn off fan first
 
     await hass.services.async_call(
@@ -101,15 +104,15 @@ async def test_fan_set_speed(
         SERVICE_SET_PERCENTAGE,
         {
             ATTR_ENTITY_ID: "fan.nano_color_2",
-            ATTR_PERCENTAGE: 60,
+            ATTR_PERCENTAGE: 80,
         },
         blocking=True,
     )
 
     state = hass.states.get("fan.nano_color_2")
     assert state is not None
-    assert state.state == "on"
-    assert state.attributes.get("percentage") == 60
+    assert state.state == STATE_ON  # Fan is turned on by setting the percentage to 80
+    assert state.attributes.get("percentage") == 80
 
 
 async def test_fan_set_speed_to_0(
@@ -121,7 +124,7 @@ async def test_fan_set_speed_to_0(
     await setup_integration(hass, mock_config_entry)
 
     await mock_connector.select_device_option(
-        2, CompitParameter.VENTILATION_ON_OFF, "on"
+        2, CompitParameter.VENTILATION_ON_OFF, STATE_ON
     )  # Turn on fan first
 
     await hass.services.async_call(
@@ -136,7 +139,7 @@ async def test_fan_set_speed_to_0(
 
     state = hass.states.get("fan.nano_color_2")
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF  # Fan is turned off by setting the percentage to 0
     assert state.attributes.get("percentage") == 0
 
 
@@ -161,4 +164,32 @@ async def test_fan_invalid_speed(
 
     state = hass.states.get("fan.nano_color_2")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("gear", "expected_percentage"),
+    [
+        ("gear_0", 20),
+        ("gear_1", 40),
+        ("gear_2", 60),
+        ("gear_3", 80),
+        ("airing", 100),
+    ],
+)
+async def test_fan_gear_to_percentage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connector: MagicMock,
+    gear: str,
+    expected_percentage: int,
+) -> None:
+    """Test the gear to percentage conversion."""
+    mock_connector.get_current_option.side_effect = lambda device_id, parameter_code: (
+        gear
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("fan.nano_color_2")
+    assert state is not None
+    assert state.attributes.get("percentage") == expected_percentage

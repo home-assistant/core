@@ -24,8 +24,7 @@
       "ventilation": {
         "default": "mdi:fan",
         "state": {
-          "off": "mdi:fan-off",
-          "on": "mdi:fan"
+          "off": "mdi:fan-off"
         }
       }
     },

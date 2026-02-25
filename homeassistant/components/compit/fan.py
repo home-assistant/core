@@ -32,9 +32,11 @@ HA_STATE_TO_COMPIT = {value: key for key, value in COMPIT_GEAR_TO_HA.items()}
 DEVICE_DEFINITIONS: dict[int, FanEntityDescription] = {
     223: FanEntityDescription(
         key="Nano Color 2",
+        translation_key="ventilation",
     ),
     12: FanEntityDescription(
         key="Nano Color",
+        translation_key="ventilation",
     ),
 }
 
@@ -60,10 +62,9 @@ async def async_setup_entry(
 class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
     """Representation of a Compit fan entity."""
 
-    _attr_speed_count = 5  # Gears 0, 1, 2, 3, 4
+    _attr_speed_count = 5
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_translation_key = None
     _attr_supported_features = (
         FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
@@ -142,7 +143,6 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        await self.async_turn_on()
 
         gear = int(percentage_to_ranged_value((0, 4), percentage))
         mode = HA_STATE_TO_COMPIT.get(gear)
@@ -152,4 +152,4 @@ class CompitFan(CoordinatorEntity[CompitDataUpdateCoordinator], FanEntity):
         await self.coordinator.connector.select_device_option(
             self.device_id, CompitParameter.VENTILATION_GEAR_TARGET, mode
         )
-        self.async_write_ha_state()
+        await self.async_turn_on()
