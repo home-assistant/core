@@ -190,15 +190,13 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Optional(
                             CONF_PASSKEY,
-                            default=existing_entry.data.get(
-                                CONF_PASSKEY, vol.UNDEFINED
-                            ),
+                            default=existing_entry.data.get(CONF_PASSKEY)
+                            or vol.UNDEFINED,
                         ): str,
                         vol.Optional(
                             CONF_USERNAME,
-                            default=existing_entry.data.get(
-                                CONF_USERNAME, vol.UNDEFINED
-                            ),
+                            default=existing_entry.data.get(CONF_USERNAME)
+                            or vol.UNDEFINED,
                         ): str,
                         vol.Optional(
                             CONF_PASSWORD,
@@ -290,15 +288,13 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         ): int,
                         vol.Optional(
                             CONF_PASSKEY,
-                            default=existing_entry.data.get(
-                                CONF_PASSKEY, vol.UNDEFINED
-                            ),
+                            default=existing_entry.data.get(CONF_PASSKEY)
+                            or vol.UNDEFINED,
                         ): str,
                         vol.Optional(
                             CONF_USERNAME,
-                            default=existing_entry.data.get(
-                                CONF_USERNAME, vol.UNDEFINED
-                            ),
+                            default=existing_entry.data.get(CONF_USERNAME)
+                            or vol.UNDEFINED,
                         ): str,
                         vol.Optional(
                             CONF_PASSWORD,
@@ -308,11 +304,15 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        self.host = user_input[CONF_HOST]
-        self.port = user_input.get(CONF_PORT, DEFAULT_PORT)
-        self.passkey = user_input.get(CONF_PASSKEY)
-        self.username = user_input.get(CONF_USERNAME)
-        self.password = user_input.get(CONF_PASSWORD)
+        # Merge existing data with user input so optional fields
+        # not re-entered (like password) are preserved during validation
+        validate_data = {**existing_entry.data, **user_input}
+
+        self.host = validate_data[CONF_HOST]
+        self.port = validate_data.get(CONF_PORT, DEFAULT_PORT)
+        self.passkey = validate_data.get(CONF_PASSKEY)
+        self.username = validate_data.get(CONF_USERNAME)
+        self.password = validate_data.get(CONF_PASSWORD)
 
         try:
             await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
@@ -380,13 +380,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_update_reload_and_abort(
             existing_entry,
-            data_updates={
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-                CONF_PASSKEY: self.passkey,
-                CONF_USERNAME: self.username,
-                CONF_PASSWORD: self.password,
-            },
+            data_updates=validate_data,
             reason="reconfigure_successful",
         )
 
