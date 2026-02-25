@@ -109,6 +109,8 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             DEVICE_TYPE_COLOR_TUNE,
         )
 
+        # Capture the initial brightness so _prev_brightness is correct on startup
+        self._sync_prev_brightness_from_device()
     def _get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
         """Return minimum supported color temperature."""
         white_tune_range = light.get("white_tuning_range")
