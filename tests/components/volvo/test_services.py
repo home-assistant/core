@@ -183,7 +183,7 @@ async def test_async_image_exists(hass: HomeAssistant) -> None:
 async def test_async_image_does_not_exist(hass: HomeAssistant) -> None:
     """Test _async_image_exists returns False when image does not exist."""
     client = AsyncMock(spec=AsyncClient)
-    client.get.side_effect = HTTPStatusError(
+    client.stream.side_effect = HTTPStatusError(
         "Not found",
         request=Request("GET", "http://example.com"),
         response=Response(status_code=404),
@@ -195,7 +195,7 @@ async def test_async_image_does_not_exist(hass: HomeAssistant) -> None:
 async def test_async_image_non_404_status_error(hass: HomeAssistant) -> None:
     """Test _async_image_exists raises HomeAssistantError on non-404 HTTP status errors."""
     client = AsyncMock(spec=AsyncClient)
-    client.get.side_effect = HTTPStatusError(
+    client.stream.side_effect = HTTPStatusError(
         "Internal server error",
         request=Request("GET", "http://example.com"),
         response=Response(status_code=500),
@@ -211,7 +211,7 @@ async def test_async_image_non_404_status_error(hass: HomeAssistant) -> None:
 async def test_async_image_error(hass: HomeAssistant) -> None:
     """Test _async_image_exists raises."""
     client = AsyncMock(spec=AsyncClient)
-    client.get.side_effect = HTTPError("HTTP error")
+    client.stream.side_effect = HTTPError("HTTP error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await _async_image_exists(client, "http://example.com/image.jpg")
