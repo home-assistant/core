@@ -31,7 +31,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
 
     return {
         "can_reach_server": system_health.async_check_can_reach_url(
-            hass, ENDPOINT.path
+            hass, str(ENDPOINT)
         ),
         "remaining_requests": remaining_requests,
     }
