@@ -132,9 +132,6 @@
         "name": "Earned Gamerscore",
         "unit_of_measurement": "points"
       },
-      "developer": {
-        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::developer::name%]"
-      },
       "follower": {
         "name": "Follower",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
@@ -154,9 +151,6 @@
         "name": "Gamerscore",
         "unit_of_measurement": "points"
       },
-      "genres": {
-        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::genres::name%]"
-      },
       "in_party": {
         "name": "In party",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
@@ -173,10 +167,6 @@
       },
       "last_time_played": {
         "name": "Last time played"
-      },
-      "min_age": {
-        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::min_age::name%]",
-        "unit_of_measurement": "years"
       },
       "now_playing": {
         "name": "Now playing",
@@ -197,23 +187,8 @@
       "progress": {
         "name": "Progress"
       },
-      "publisher": {
-        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::publisher::name%]"
-      },
-      "release_date": {
-        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::release_date::name%]"
-      },
       "status": {
         "name": "Status"
-      },
-      "title": {
-        "name": "Title",
-        "state_attributes": {
-          "description": { "name": "Description" },
-          "short_description": {
-            "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::short_description::name%]"
-          }
-        }
       },
       "total_achievements": {
         "name": "Total achievements",

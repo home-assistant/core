@@ -23,9 +23,6 @@
       "current_gamerscore": {
         "default": "mdi:alpha-g-circle"
       },
-      "developer": {
-        "default": "mdi:office-building"
-      },
       "follower": {
         "default": "mdi:account-arrow-left"
       },
@@ -37,9 +34,6 @@
       },
       "gamer_score": {
         "default": "mdi:alpha-g-circle"
-      },
-      "genres": {
-        "default": "mdi:shape"
       },
       "in_party": {
         "default": "mdi:headset",
@@ -60,9 +54,6 @@
       "last_time_played": {
         "default": "mdi:history"
       },
-      "min_age": {
-        "default": "mdi:human-child"
-      },
       "now_playing": {
         "default": "mdi:microsoft-xbox-controller",
         "state": {
@@ -73,17 +64,8 @@
       "progress": {
         "default": "mdi:percent"
       },
-      "publisher": {
-        "default": "mdi:book-open-variant"
-      },
-      "release_date": {
-        "default": "mdi:calendar-star"
-      },
       "status": {
         "default": "mdi:message-text-outline"
-      },
-      "title": {
-        "default": "mdi:disc"
       },
       "total_achievements": {
         "default": "mdi:trophy-variant-outline"

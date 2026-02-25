@@ -275,18 +275,6 @@ STORAGE_SENSOR_DESCRIPTIONS: tuple[XboxStorageDeviceSensorEntityDescription, ...
 
 GAME_SENSOR_DESCRIPTIONS: tuple[XboxGameSensorEntityDescription, ...] = (
     XboxGameSensorEntityDescription(
-        key=XboxSensor.TITLE,
-        translation_key=XboxSensor.TITLE,
-        value_fn=lambda x: x.name,
-        attributes_fn=(
-            lambda x: {
-                "description": x.detail.description if x.detail else None,
-                "short_description": x.detail.short_description if x.detail else None,
-            }
-        ),
-        entity_picture_fn=title_logo,
-    ),
-    XboxGameSensorEntityDescription(
         key=XboxSensor.TOTAL_ACHIEVEMENTS,
         translation_key=XboxSensor.TOTAL_ACHIEVEMENTS,
         value_fn=lambda x: x.achievement.total_achievements if x.achievement else None,
@@ -324,41 +312,6 @@ GAME_SENSOR_DESCRIPTIONS: tuple[XboxGameSensorEntityDescription, ...] = (
             lambda x: x.title_history.last_time_played if x.title_history else None
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
-    ),
-    XboxGameSensorEntityDescription(
-        key=XboxSensor.RELEASE_DATE,
-        translation_key=XboxSensor.RELEASE_DATE,
-        value_fn=lambda x: x.detail.release_date if x.detail else None,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    XboxGameSensorEntityDescription(
-        key=XboxSensor.MIN_AGE,
-        translation_key=XboxSensor.MIN_AGE,
-        value_fn=lambda x: x.detail.min_age if x.detail else None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    XboxGameSensorEntityDescription(
-        key=XboxSensor.DEVELOPER,
-        translation_key=XboxSensor.DEVELOPER,
-        value_fn=(lambda x: (x.detail.developer_name or None) if x.detail else None),
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    XboxGameSensorEntityDescription(
-        key=XboxSensor.PUBLISHER,
-        translation_key=XboxSensor.PUBLISHER,
-        value_fn=lambda x: (x.detail.publisher_name or None) if x.detail else None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    XboxGameSensorEntityDescription(
-        key=XboxSensor.GENRES,
-        translation_key=XboxSensor.GENRES,
-        value_fn=(
-            lambda x: (
-                ", ".join(x.detail.genres) if x.detail and x.detail.genres else None
-            )
-        ),
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
