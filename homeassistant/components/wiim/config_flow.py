@@ -112,7 +112,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                     e,
                 )
                 errors["base"] = "unknown"
-                raise
             else:
                 await self.async_set_unique_id(device_info[CONF_UDN])
                 self._abort_if_unique_id_configured(
