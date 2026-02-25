@@ -135,6 +135,7 @@ def _average_pixels(data):
 class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_effect: str
     _attr_translation_key = "ambilight"
 
     def __init__(
@@ -213,10 +214,10 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the light is turned on."""
         if self._tv.on:
-            effect = AmbilightEffect.from_str(self.effect)
+            effect = AmbilightEffect.from_str(self._attr_effect)
             return effect.is_on(self._tv.powerstate)
 
         return False
