@@ -384,5 +384,10 @@
         "default": "mdi:map-marker-distance"
       }
     }
+  },
+  "services": {
+    "get_image_url": {
+      "service": "mdi:image-multiple-outline"
+    }
   }
 }
