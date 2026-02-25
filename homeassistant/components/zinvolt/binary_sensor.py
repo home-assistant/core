@@ -12,12 +12,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
+from .entity import ZinvoltEntity
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -52,12 +50,9 @@ async def async_setup_entry(
     )
 
 
-class ZinvoltBatteryStateBinarySensor(
-    CoordinatorEntity[ZinvoltDeviceCoordinator], BinarySensorEntity
-):
+class ZinvoltBatteryStateBinarySensor(ZinvoltEntity, BinarySensorEntity):
     """Zinvolt battery state binary sensor."""
 
-    _attr_has_entity_name = True
     entity_description: ZinvoltBatteryStateDescription
 
     def __init__(
@@ -69,12 +64,6 @@ class ZinvoltBatteryStateBinarySensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.serial_number}.{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
-            manufacturer="Zinvolt",
-            name=coordinator.data.name,
-            serial_number=coordinator.data.serial_number,
-        )
 
     @property
     def is_on(self) -> bool:
