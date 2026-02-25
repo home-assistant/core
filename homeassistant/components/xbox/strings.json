@@ -71,7 +71,7 @@
     "game": {
       "abort": {
         "config_entry_not_loaded": "Cannot add game titles when the account is disabled or not loaded.",
-        "no_game_titles": "Your game history is empty right now."
+        "no_game_titles": "There are currently no games available to add."
       },
       "entry_type": "Game",
       "error": {
