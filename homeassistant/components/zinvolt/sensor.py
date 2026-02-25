@@ -37,7 +37,7 @@ SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda state: 0 - state.current_power.power_socket_output,
+        value_fn=lambda state: 0 - state.battery.current_power.power_socket_output,
     ),
 )
 
