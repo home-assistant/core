@@ -108,7 +108,7 @@ class NtfyVersionDataUpdateCoordinator(BaseDataUpdateCoordinator[Version | None]
     update_interval = timedelta(hours=3)
 
     async def async_update_data(self) -> Version | None:
-        """Fetch account data from ntfy."""
+        """Fetch version data from ntfy."""
         try:
             version = await self.ntfy.version()
         except NtfyUnauthorizedAuthenticationError, NtfyNotFoundPageError:
