@@ -1,8 +1,9 @@
 """Test the Powerfox Local config flow."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
-from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import LocalResponse, PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
 
 from homeassistant.components.powerfox_local.const import DOMAIN
@@ -184,3 +185,173 @@ async def test_user_flow_exceptions(
         user_input={CONF_HOST: MOCK_HOST, CONF_API_KEY: MOCK_API_KEY},
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+
+
+async def test_step_reauth(
+    hass: HomeAssistant,
+    mock_powerfox_local_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test re-authentication flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new-api-key"},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (PowerfoxConnectionError, "cannot_connect"),
+        (PowerfoxAuthenticationError, "invalid_auth"),
+    ],
+)
+async def test_step_reauth_exceptions(
+    hass: HomeAssistant,
+    mock_powerfox_local_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test exceptions during re-authentication flow."""
+    mock_powerfox_local_client.value.side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new-api-key"},
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": error}
+
+    # Recover from error
+    mock_powerfox_local_client.value.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_KEY: "new-api-key"},
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_powerfox_local_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.200", CONF_API_KEY: MOCK_API_KEY},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+    assert mock_config_entry.data[CONF_API_KEY] == MOCK_API_KEY
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (PowerfoxConnectionError, "cannot_connect"),
+        (PowerfoxAuthenticationError, "invalid_auth"),
+    ],
+)
+async def test_reconfigure_flow_exceptions(
+    hass: HomeAssistant,
+    mock_powerfox_local_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test exceptions during reconfiguration flow."""
+    mock_powerfox_local_client.value.side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.200", CONF_API_KEY: MOCK_API_KEY},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": error}
+
+    # Recover from error
+    mock_powerfox_local_client.value.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.200", CONF_API_KEY: MOCK_API_KEY},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_powerfox_local_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguration aborts on unique ID mismatch."""
+
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    # Return response with different API key (which serves as device_id)
+    mock_powerfox_local_client.value.return_value = LocalResponse(
+        timestamp=datetime(2026, 2, 25, 10, 48, 51, tzinfo=UTC),
+        power=111,
+        energy_usage=1111111,
+        energy_return=111111,
+        energy_usage_high_tariff=111111,
+        energy_usage_low_tariff=111111,
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.200", CONF_API_KEY: "different_api_key"},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unique_id_mismatch"

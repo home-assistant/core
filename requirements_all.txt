@@ -339,7 +339,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.0
+aiontfy==0.8.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1226,7 +1226,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260128.6
+home-assistant-frontend==20260225.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.2.13
@@ -1301,7 +1301,7 @@ ihcsdk==2.8.5
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.0.1
+imgw_pib==2.0.2
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.12
@@ -1374,7 +1374,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.2.13.222258
+knx-frontend==2026.2.25.165736
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1788,7 +1788,7 @@ poolsense==0.0.8
 
 # homeassistant.components.powerfox
 # homeassistant.components.powerfox_local
-powerfox==2.1.0
+powerfox==2.1.1
 
 # homeassistant.components.prana
 prana-api-client==0.10.0
@@ -2397,7 +2397,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.0.5
+pyrainbird==6.1.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==3.9.0
@@ -2530,7 +2530,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==5.0.1
+python-bsblan==5.1.0
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -3121,6 +3121,9 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
+tuya-device-handlers==0.0.10
+
+# homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
 
 # homeassistant.components.twentemilieu
@@ -3344,7 +3347,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.90
+zha==1.0.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
@@ -3353,7 +3356,7 @@ zhong-hong-hvac==1.0.13
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==0.1.0
+zinvolt==0.3.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4

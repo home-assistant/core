@@ -13,6 +13,7 @@ from pyportainer.models.docker import (
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 from pyportainer.watcher import PortainerImageWatcherResult
+from pyportainer.models.stacks import Stack
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -109,6 +110,17 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
         client.container_recreate = AsyncMock(return_value=None)
+        client.get_stacks.return_value = [
+            Stack.from_dict(stack)
+            for stack in load_json_array_fixture("stacks.json", DOMAIN)
+        ]
+
+        client.restart_container = AsyncMock(return_value=None)
+        client.images_prune = AsyncMock(return_value=None)
+        client.start_container = AsyncMock(return_value=None)
+        client.stop_container = AsyncMock(return_value=None)
+        client.start_stack = AsyncMock(return_value=None)
+        client.stop_stack = AsyncMock(return_value=None)
 
         yield client
 

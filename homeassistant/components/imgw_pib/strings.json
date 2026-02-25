@@ -24,6 +24,7 @@
       "hydrological_alert": {
         "name": "Hydrological alert",
         "state": {
+          "exceeding_the_alarm_level": "Exceeding the alarm level",
           "exceeding_the_warning_level": "Exceeding the warning level",
           "hydrological_drought": "Hydrological drought",
           "no_alert": "No alert",
