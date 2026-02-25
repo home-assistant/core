@@ -1,10 +1,12 @@
 """Test the OpenDisplay image entity and upload_image service."""
 
+import asyncio
 import io
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from opendisplay import BLEConnectionError, RefreshMode
+import aiohttp
+from opendisplay import BLEConnectionError, OpenDisplayError, RefreshMode
 from PIL import Image as PILImage
 import pytest
 
@@ -12,12 +14,13 @@ from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.opendisplay.const import DOMAIN
 from homeassistant.components.opendisplay.entity import OpenDisplayImageExtraStoredData
 from homeassistant.components.opendisplay.image import OpenDisplayImageEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import make_service_info
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 ENTITY_ID = "image.opendisplay_1234"
 
@@ -497,3 +500,270 @@ async def test_no_double_launch_while_uploading(
     entity._async_on_device_seen(make_service_info(), BluetoothChange.ADVERTISEMENT)
 
     assert entity._upload_task is running_task
+
+
+async def test_restore_state_with_stored_image(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that image timestamp is restored and stored image is read back on startup."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(ENTITY_ID, "2026-02-17T12:00:00+00:00"),
+                {
+                    "image_last_updated": "2026-02-17T12:00:00+00:00",
+                    "has_stored_image": True,
+                },
+            )
+        ],
+    )
+
+    await _setup_entry(hass, mock_config_entry)
+
+    entity = _get_entity(hass)
+    assert entity._attr_image_last_updated is not None
+    assert entity._current_image is None
+
+
+async def test_restore_state_invalid_extra_data(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that invalid extra state data is silently ignored on startup."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(ENTITY_ID, "unknown"),
+                {"invalid_key": "bad_data"},
+            )
+        ],
+    )
+
+    await _setup_entry(hass, mock_config_entry)
+
+    entity = _get_entity(hass)
+    assert entity._current_image is None
+    assert entity._attr_image_last_updated is None
+
+
+async def test_upload_write_oserror_keeps_preview(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an OSError when persisting the image is logged but upload continues."""
+    await _setup_entry(hass, mock_config_entry)
+
+    test_image = PILImage.new("RGB", (100, 100), color="red")
+    image_path = tmp_path / "test.png"
+    test_image.save(image_path)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = image_path
+    mock_upload_dev = _mock_upload_device()
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+            return_value=mock_upload_dev,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.write_stored_image",
+            side_effect=OSError("disk full"),
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert await _get_entity(hass).async_image() is not None
+    assert "Failed to persist image to storage" in caplog.text
+
+
+async def test_upload_cancels_in_flight_task(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test that a second upload cancels the in-flight task before starting."""
+    await _setup_entry(hass, mock_config_entry)
+
+    entity = _get_entity(hass)
+
+    # Block on an Event so the asyncio.sleep patch below doesn't complete it early.
+    async def _blocking_task():
+        await asyncio.Event().wait()
+
+    in_flight_task = asyncio.create_task(_blocking_task())
+    await asyncio.sleep(0)  # yield so the task reaches its first await
+    entity._upload_task = in_flight_task
+
+    test_image = PILImage.new("RGB", (100, 100), color="red")
+    image_path = tmp_path / "test.png"
+    test_image.save(image_path)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = image_path
+    mock_upload_dev = _mock_upload_device()
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+            return_value=mock_upload_dev,
+        ),
+        patch("asyncio.sleep", new_callable=AsyncMock),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert in_flight_task.cancelled()
+
+
+async def test_upload_open_display_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an OpenDisplayError keeps the preview and queues a retry."""
+    await _setup_entry(hass, mock_config_entry)
+
+    test_image = PILImage.new("RGB", (100, 100), color="red")
+    image_path = tmp_path / "test.png"
+    test_image.save(image_path)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = image_path
+
+    mock_upload_dev = _mock_upload_device()
+    mock_upload_dev.__aenter__.side_effect = OpenDisplayError("protocol error")
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+            return_value=mock_upload_dev,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    entity = _get_entity(hass)
+    assert await entity.async_image() is not None
+    assert entity._pending_upload is not None
+    assert "Upload error" in caplog.text
+
+
+async def test_device_seen_with_no_pending_upload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that a Bluetooth advertisement is ignored when no upload is pending."""
+    await _setup_entry(hass, mock_config_entry)
+
+    entity = _get_entity(hass)
+    entity._async_on_device_seen(make_service_info(), BluetoothChange.ADVERTISEMENT)
+
+    assert entity._upload_task is None
+
+
+async def test_upload_image_download_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that a ClientError during image download raises ServiceValidationError."""
+    await _setup_entry(hass, mock_config_entry)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = None
+    mock_play_media.url = "/test/image.jpg"
+
+    mock_session = AsyncMock()
+    mock_context = AsyncMock()
+    mock_context.__aenter__.side_effect = aiohttp.ClientError("connection refused")
+    mock_session.get = MagicMock(return_value=mock_context)
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.async_sign_path",
+            return_value="/test/image.jpg?signed=1",
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.get_url",
+            return_value="http://localhost:8123",
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://immich/test",
+                    "media_content_type": "image/jpeg",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )

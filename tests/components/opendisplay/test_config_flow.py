@@ -249,6 +249,53 @@ async def test_user_step_connection_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_bluetooth_confirm_unknown_error(hass: HomeAssistant) -> None:
+    """Test confirm step shows error for unexpected exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=VALID_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    mock_device = _mock_open_display_device()
+    mock_device.__aenter__.side_effect = RuntimeError("unexpected")
+
+    with _patch_ble_device(), _patch_device(mock_device):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_user_step_unknown_error(hass: HomeAssistant) -> None:
+    """Test user step shows error for unexpected exceptions."""
+    with patch(
+        "homeassistant.components.opendisplay.config_flow.async_discovered_service_info",
+        return_value=[VALID_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+
+    mock_device = _mock_open_display_device()
+    mock_device.__aenter__.side_effect = RuntimeError("unexpected")
+
+    with _patch_ble_device(), _patch_device(mock_device):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "AA:BB:CC:DD:EE:FF"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:
     """Test user step aborts when device is already configured."""
     entry = MockConfigEntry(
