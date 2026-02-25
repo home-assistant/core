@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-from google.genai.types import GenerateContentResponse
+from google.genai.types import GenerateContentResponse, ThinkingLevel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,6 +16,7 @@ from homeassistant.components.conversation import (
 )
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
+    _create_thinking_config,
     _escape_decode,
     _format_schema,
 )
@@ -795,3 +796,137 @@ async def test_history_always_user_first_turn(
         == "Garage door left open, do you want to close it?"
     )
     assert actual_history[1].role == "model"
+
+
+# --- Tests for _create_thinking_config ---
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_budget", "thinking_level", "expected"),
+    [
+        # Non-thinking models return None
+        ("models/gemini-1.5-flash", -1, None, None),
+        ("gemini-2.0-flash", -1, None, None),
+        # TTS/image models are excluded even if prefix matches
+        ("models/gemini-2.5-flash-preview-tts", -1, None, None),
+        ("models/gemini-2.5-pro-image", -1, None, None),
+        ("models/gemini-3-flash-tts", -1, None, None),
+    ],
+)
+def test_create_thinking_config_non_thinking_models(
+    model: str,
+    thinking_budget: int,
+    thinking_level: str | None,
+    expected: None,
+) -> None:
+    """Test that non-thinking models return None."""
+    assert _create_thinking_config(model, thinking_budget, thinking_level) is expected
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_level"),
+    [
+        ("models/gemini-3-flash", "low"),
+        ("gemini-3-pro", "medium"),
+        ("models/gemini-3-ultra", "high"),
+    ],
+)
+def test_create_thinking_config_gemini3_levels(
+    model: str,
+    thinking_level: str,
+) -> None:
+    """Test Gemini 3 models with explicit thinking levels."""
+    level_map = {
+        "low": ThinkingLevel.LOW,
+        "medium": ThinkingLevel.MEDIUM,
+        "high": ThinkingLevel.HIGH,
+    }
+
+    result = _create_thinking_config(model, -1, thinking_level)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_level == level_map[thinking_level]
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_level"),
+    [
+        ("models/gemini-3-flash", "auto"),
+        ("models/gemini-3-flash", None),
+    ],
+)
+def test_create_thinking_config_gemini3_auto(
+    model: str,
+    thinking_level: str | None,
+) -> None:
+    """Test Gemini 3 with 'auto' or unset level defers to the API."""
+    result = _create_thinking_config(model, -1, thinking_level)
+    assert result is not None
+    assert result.include_thoughts is True
+    # No explicit level set — the API decides
+    assert result.thinking_level is None
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_budget", "expected_budget"),
+    [
+        # Pro: budget < 128 is clamped to 128
+        ("models/gemini-2.5-pro", 0, 128),
+        ("models/gemini-2.5-pro", 1, 128),
+        ("models/gemini-2.5-pro", 127, 128),
+        ("models/gemini-2.5-pro-preview-05-06", 50, 128),
+        # Pro: budget >= 128 is passed through
+        ("models/gemini-2.5-pro", 128, 128),
+        ("models/gemini-2.5-pro", 1000, 1000),
+        ("models/gemini-2.5-pro", 8192, 8192),
+    ],
+)
+def test_create_thinking_config_gemini25_pro_clamping(
+    model: str,
+    thinking_budget: int,
+    expected_budget: int,
+) -> None:
+    """Test Gemini 2.5 Pro clamps budgets below 128."""
+    result = _create_thinking_config(model, thinking_budget)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget == expected_budget
+
+
+def test_create_thinking_config_gemini25_pro_automatic() -> None:
+    """Test Gemini 2.5 Pro with automatic budget (-1)."""
+    result = _create_thinking_config("models/gemini-2.5-pro", -1)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget is None
+
+
+@pytest.mark.parametrize(
+    ("model",),
+    [
+        ("models/gemini-2.5-flash",),
+        ("gemini-2.5-flash-preview-04-17",),
+    ],
+)
+def test_create_thinking_config_gemini25_flash_disable(model: str) -> None:
+    """Test Gemini 2.5 Flash with budget 0 disables thinking."""
+    result = _create_thinking_config(model, 0)
+    assert result is not None
+    assert result.include_thoughts is False
+    assert result.thinking_budget == 0
+
+
+def test_create_thinking_config_gemini25_flash_automatic() -> None:
+    """Test Gemini 2.5 Flash with automatic budget (-1)."""
+    result = _create_thinking_config("models/gemini-2.5-flash", -1)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget is None
+
+
+def test_create_thinking_config_gemini25_flash_custom() -> None:
+    """Test Gemini 2.5 Flash with a custom budget passes through."""
+    result = _create_thinking_config("models/gemini-2.5-flash", 2048)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget == 2048
