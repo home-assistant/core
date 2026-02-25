@@ -29,7 +29,6 @@ class BRouteData:
 type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
 
 
-
 @dataclass
 class BRouteDeviceInfo:
     """Static device information fetched once at setup."""
@@ -87,9 +86,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
         time.sleep(self.api.internal_xmit_interval)
         try:
-            self.device_info_data.echonet_version = (
-                self.api.get_standard_version()
-            )
+            self.device_info_data.echonet_version = self.api.get_standard_version()
         except MomongaError:
             _LOGGER.debug("Failed to fetch ECHONET Lite version", exc_info=True)
 
