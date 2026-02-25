@@ -1,6 +1,6 @@
 """Tests for the Smart Meter B Route integration init."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError
@@ -75,9 +75,10 @@ async def test_recovery_from_transient_error(
         {"r phase current": 7, "t phase current": 8},
     ]
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch("homeassistant.components.route_b_smart_meter.coordinator.time.sleep"):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(
         "sensor.route_b_smart_meter_01234567890123456789012345f789"
@@ -105,9 +106,10 @@ async def test_recovery_exhausted(
         "permanent failure"
     )
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch("homeassistant.components.route_b_smart_meter.coordinator.time.sleep"):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(
         "sensor.route_b_smart_meter_01234567890123456789012345f789"
