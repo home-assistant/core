@@ -256,13 +256,12 @@ class UptimeKumaSensorEntity(
         )
 
         url = URL(coordinator.config_entry.data[CONF_URL]) / "dashboard"
-        configuration_url = (
-            None
-            if url.host in LOCAL_INSTANCE
-            else url / str(monitor)
-            if isinstance(monitor, int)
-            else url
-        )
+        if url.host in LOCAL_INSTANCE:
+            configuration_url = None
+        elif isinstance(monitor, int):
+            configuration_url = url / str(monitor)
+        else:
+            configuration_url = url
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
