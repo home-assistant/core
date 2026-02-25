@@ -576,13 +576,12 @@ async def test_list_backups_with_pagination(
 
 
 @pytest.mark.parametrize(
-    "mock_config_entry",
+    "config_entry_extra_data",
     [
         {"prefix": "backups/home"},
         {},
     ],
     ids=["with_prefix", "no_prefix"],
-    indirect=["mock_config_entry"],
 )
 async def test_agent_list_backups_parametrized(
     hass: HomeAssistant,
@@ -613,13 +612,12 @@ async def test_agent_list_backups_parametrized(
 
 
 @pytest.mark.parametrize(
-    "mock_config_entry",
+    "config_entry_extra_data",
     [
         {"prefix": "backups/home"},
         {},
     ],
     ids=["with_prefix", "no_prefix"],
-    indirect=["mock_config_entry"],
 )
 async def test_agent_delete_backup_parametrized(
     hass: HomeAssistant,
@@ -658,13 +656,12 @@ async def test_agent_delete_backup_parametrized(
 
 
 @pytest.mark.parametrize(
-    "mock_config_entry",
+    "config_entry_extra_data",
     [
         {"prefix": "backups/home"},
         {},
     ],
     ids=["with_prefix", "no_prefix"],
-    indirect=["mock_config_entry"],
 )
 async def test_agent_upload_backup_parametrized(
     hass: HomeAssistant,
@@ -743,13 +740,12 @@ async def test_agent_upload_backup_parametrized(
 
 
 @pytest.mark.parametrize(
-    "mock_config_entry",
+    "config_entry_extra_data",
     [
         {"prefix": "backups/home"},
         {},
     ],
     ids=["with_prefix", "no_prefix"],
-    indirect=["mock_config_entry"],
 )
 async def test_agent_download_backup_parametrized(
     hass: HomeAssistant,

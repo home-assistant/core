@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aws_s3.const import CONF_PREFIX
+from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_PREFIX
 from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
 from homeassistant.components.backup import AgentBackup
 from homeassistant.const import STATE_UNAVAILABLE
@@ -126,5 +126,11 @@ async def test_calculate_backups_size(
     # Verify prefix was used in API call if expected
     prefix = mock_config_entry.data.get(CONF_PREFIX)
     if prefix is not None:
-        call_args = mock_client.get_paginator.return_value.paginate.call_args
-        assert call_args[1]["Prefix"] == f"{prefix}/"
+        mock_client.get_paginator.return_value.paginate.assert_called_with(
+            Bucket=mock_config_entry.data[CONF_BUCKET],
+            Prefix=f"{prefix}/",
+        )
+    else:
+        mock_client.get_paginator.return_value.paginate.assert_called_with(
+            Bucket=mock_config_entry.data[CONF_BUCKET]
+        )
