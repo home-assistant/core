@@ -8,6 +8,7 @@ from aiopyarr import (
     Command,
     Diskspace,
     SonarrCalendar,
+    SonarrEpisode,
     SonarrQueue,
     SonarrSeries,
     SonarrWantedMissing,
@@ -59,6 +60,19 @@ def sonarr_queue() -> SonarrQueue:
     return SonarrQueue(results)
 
 
+def sonarr_queue_season_pack() -> SonarrQueue:
+    """Generate a response for the queue method with a season pack."""
+    results = json.loads(load_fixture("sonarr/queue_season_pack.json"))
+    return SonarrQueue(results)
+
+
+@pytest.fixture
+def mock_sonarr_season_pack(mock_sonarr: MagicMock) -> MagicMock:
+    """Return a mocked Sonarr client with season pack queue data."""
+    mock_sonarr.async_get_queue.return_value = sonarr_queue_season_pack()
+    return mock_sonarr
+
+
 def sonarr_series() -> list[SonarrSeries]:
     """Generate a response for the series method."""
     results = json.loads(load_fixture("sonarr/series.json"))
@@ -75,6 +89,12 @@ def sonarr_wanted() -> SonarrWantedMissing:
     """Generate a response for the wanted method."""
     results = json.loads(load_fixture("sonarr/wanted-missing.json"))
     return SonarrWantedMissing(results)
+
+
+def sonarr_episodes() -> list[SonarrEpisode]:
+    """Generate a response for the episodes method."""
+    results = json.loads(load_fixture("sonarr/episodes.json"))
+    return [SonarrEpisode(result) for result in results]
 
 
 @pytest.fixture
@@ -118,6 +138,7 @@ def mock_sonarr_config_flow() -> Generator[MagicMock]:
         client.async_get_calendar.return_value = sonarr_calendar()
         client.async_get_commands.return_value = sonarr_commands()
         client.async_get_diskspace.return_value = sonarr_diskspace()
+        client.async_get_episodes.return_value = sonarr_episodes()
         client.async_get_queue.return_value = sonarr_queue()
         client.async_get_series.return_value = sonarr_series()
         client.async_get_system_status.return_value = sonarr_system_status()
@@ -136,6 +157,7 @@ def mock_sonarr() -> Generator[MagicMock]:
         client.async_get_calendar.return_value = sonarr_calendar()
         client.async_get_commands.return_value = sonarr_commands()
         client.async_get_diskspace.return_value = sonarr_diskspace()
+        client.async_get_episodes.return_value = sonarr_episodes()
         client.async_get_queue.return_value = sonarr_queue()
         client.async_get_series.return_value = sonarr_series()
         client.async_get_system_status.return_value = sonarr_system_status()
