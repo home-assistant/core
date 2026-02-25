@@ -207,7 +207,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the icon of the entity."""
-        return "/api/brands/integration/homeassistant/icon.png"
+        return "/api/brands/integration/homeassistant/icon.png?placeholder=no"
 
     @property
     def release_url(self) -> str | None:
