@@ -1,5 +1,6 @@
 """Common stuff for Fritz!Tools tests."""
 
+from collections.abc import Generator
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -8,6 +9,8 @@ from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
+
+from homeassistant.components.fritz.coordinator import FritzConnectionCached
 
 from .const import (
     MOCK_FB_SERVICES,
@@ -32,26 +35,6 @@ class FritzServiceMock(Service):
         self.serviceId = serviceId
 
 
-class FritzResponseMock:
-    """Response mocking."""
-
-    def json(self):
-        """Mock json method."""
-        return {"CPUTEMP": "69,68,67"}
-
-
-class FritzHttpMock:
-    """FritzHttp mocking."""
-
-    def __init__(self) -> None:
-        """Init Mocking class."""
-        self.router_url = "http://fritz.box"
-
-    def call_url(self, *args, **kwargs):
-        """Mock call_url method."""
-        return FritzResponseMock()
-
-
 class FritzConnectionMock:
     """FritzConnection mocking."""
 
@@ -64,7 +47,6 @@ class FritzConnectionMock:
             srv: FritzServiceMock(serviceId=srv, actions=actions)
             for srv, actions in services.items()
         }
-        self.http_interface = FritzHttpMock()
         LOGGER.debug("-" * 80)
         LOGGER.debug("FritzConnectionMock - services: %s", self.services)
 
@@ -78,6 +60,10 @@ class FritzConnectionMock:
     def override_services(self, services) -> None:
         """Overrire services data."""
         self._services = services
+
+    def clear_cache(self) -> None:
+        """Mock clear_cache method."""
+        return FritzConnectionCached.clear_cache(self)
 
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
@@ -101,50 +87,71 @@ class FritzConnectionMock:
 
 
 @pytest.fixture(name="fc_data")
-def fc_data_mock():
+def fc_data_mock() -> dict[str, dict]:
     """Fixture for default fc_data."""
     return MOCK_FB_SERVICES
 
 
 @pytest.fixture
-def fc_class_mock(fc_data):
+def fc_class_mock(fc_data: dict[str, dict]) -> Generator[FritzConnectionMock]:
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection", autospec=True
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
+        autospec=True,
     ) as result:
         result.return_value = FritzConnectionMock(fc_data)
         yield result
 
 
 @pytest.fixture
-def fh_class_mock():
+def fh_class_mock() -> Generator[type[FritzHosts]]:
     """Fixture that sets up a mocked FritzHosts class."""
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzHosts",
-        new=FritzHosts,
-    ) as result:
-        result.get_mesh_topology = MagicMock(return_value=MOCK_MESH_DATA)
-        result.get_hosts_attributes = MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA)
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzHosts",
+            new=FritzHosts,
+        ) as result,
+        patch.object(
+            FritzHosts,
+            "get_mesh_topology",
+            MagicMock(return_value=MOCK_MESH_DATA),
+        ),
+        patch.object(
+            FritzHosts,
+            "get_hosts_attributes",
+            MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA),
+        ),
+    ):
         yield result
 
 
 @pytest.fixture
-def fs_class_mock():
+def fs_class_mock() -> Generator[type[FritzStatus]]:
     """Fixture that sets up a mocked FritzStatus class."""
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzStatus",
-        new=FritzStatus,
-    ) as result:
-        result.get_default_connection_service = MagicMock(
-            return_value=MOCK_STATUS_CONNECTION_DATA
-        )
-        result.get_device_info = MagicMock(
-            return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)
-        )
-        result.get_monitor_data = MagicMock(return_value={})
-        result.get_cpu_temperatures = MagicMock(return_value=[42, 38])
-        result.get_avm_device_log = MagicMock(
-            return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA
-        )
-        result.has_wan_enabled = True
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus",
+            new=FritzStatus,
+        ) as result,
+        patch.object(
+            FritzStatus,
+            "get_default_connection_service",
+            MagicMock(return_value=MOCK_STATUS_CONNECTION_DATA),
+        ),
+        patch.object(
+            FritzStatus,
+            "get_device_info",
+            MagicMock(return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)),
+        ),
+        patch.object(FritzStatus, "get_monitor_data", MagicMock(return_value={})),
+        patch.object(
+            FritzStatus, "get_cpu_temperatures", MagicMock(return_value=[42, 38])
+        ),
+        patch.object(
+            FritzStatus,
+            "get_avm_device_log",
+            MagicMock(return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA),
+        ),
+        patch.object(FritzStatus, "has_wan_enabled", True),
+    ):
         yield result

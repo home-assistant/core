@@ -39,7 +39,11 @@ MOCK_SETTINGS = {
         "num_inputs": 3,
         "num_outputs": 2,
     },
-    "coiot": {"update_period": 15},
+    "coiot": {
+        "update_period": 15,
+        "enabled": True,
+        "peer": "10.10.10.10:5683",
+    },
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
     "inputs": [
         {

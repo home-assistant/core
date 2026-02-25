@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
@@ -29,7 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     coordinator = OpenEVSEDataUpdateCoordinator(hass, entry, charger)
     await coordinator.async_config_entry_first_refresh()
 
+    # Start websocket listener for push updates
+    coordinator.start_websocket()
+
     entry.runtime_data = coordinator
+
+    # Register websocket cleanup on unload
+    entry.async_on_unload(coordinator.async_stop_websocket)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
