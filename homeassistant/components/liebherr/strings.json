@@ -47,6 +47,112 @@
         "name": "Top zone setpoint"
       }
     },
+    "select": {
+      "bio_fresh_plus": {
+        "name": "BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "-2°C | -2°C",
+          "minus_two_zero": "-2°C | 0°C",
+          "zero_minus_two": "0°C | -2°C",
+          "zero_zero": "0°C | 0°C"
+        }
+      },
+      "bio_fresh_plus_bottom_zone": {
+        "name": "Bottom zone BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_minus_two%]",
+          "minus_two_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_zero%]",
+          "zero_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_minus_two%]",
+          "zero_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_zero%]"
+        }
+      },
+      "bio_fresh_plus_middle_zone": {
+        "name": "Middle zone BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_minus_two%]",
+          "minus_two_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_zero%]",
+          "zero_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_minus_two%]",
+          "zero_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_zero%]"
+        }
+      },
+      "bio_fresh_plus_top_zone": {
+        "name": "Top zone BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_minus_two%]",
+          "minus_two_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_zero%]",
+          "zero_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_minus_two%]",
+          "zero_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_zero%]"
+        }
+      },
+      "hydro_breeze": {
+        "name": "HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "hydro_breeze_bottom_zone": {
+        "name": "Bottom zone HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "hydro_breeze_middle_zone": {
+        "name": "Middle zone HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "hydro_breeze_top_zone": {
+        "name": "Top zone HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "ice_maker": {
+        "name": "IceMaker",
+        "state": {
+          "max_ice": "MaxIce",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "ice_maker_bottom_zone": {
+        "name": "Bottom zone IceMaker",
+        "state": {
+          "max_ice": "[%key:component::liebherr::entity::select::ice_maker::state::max_ice%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "ice_maker_middle_zone": {
+        "name": "Middle zone IceMaker",
+        "state": {
+          "max_ice": "[%key:component::liebherr::entity::select::ice_maker::state::max_ice%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "ice_maker_top_zone": {
+        "name": "Top zone IceMaker",
+        "state": {
+          "max_ice": "[%key:component::liebherr::entity::select::ice_maker::state::max_ice%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
     "sensor": {
       "bottom_zone": {
         "name": "Bottom zone"
@@ -57,11 +163,43 @@
       "top_zone": {
         "name": "Top zone"
       }
+    },
+    "switch": {
+      "night_mode": {
+        "name": "NightMode"
+      },
+      "party_mode": {
+        "name": "PartyMode"
+      },
+      "super_cool": {
+        "name": "SuperCool"
+      },
+      "super_cool_bottom_zone": {
+        "name": "Bottom zone SuperCool"
+      },
+      "super_cool_middle_zone": {
+        "name": "Middle zone SuperCool"
+      },
+      "super_cool_top_zone": {
+        "name": "Top zone SuperCool"
+      },
+      "super_frost": {
+        "name": "SuperFrost"
+      },
+      "super_frost_bottom_zone": {
+        "name": "Bottom zone SuperFrost"
+      },
+      "super_frost_middle_zone": {
+        "name": "Middle zone SuperFrost"
+      },
+      "super_frost_top_zone": {
+        "name": "Top zone SuperFrost"
+      }
     }
   },
   "exceptions": {
-    "set_temperature_failed": {
-      "message": "Failed to set temperature"
+    "communication_error": {
+      "message": "An error occurred while communicating with the device"
     }
   }
 }

@@ -46,14 +46,19 @@ class DeviceWrapper[T]:
     def skip_update(
         self,
         device: CustomerDevice,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Determine if the wrapper should skip an update.
 
-        The default is to always skip, unless overridden in subclasses.
+        The default is to always skip if updated properties is given,
+        unless overridden in subclasses.
         """
-        return True
+        # If updated_status_properties is None, we should not skip,
+        # as we don't have information on what was updated
+        # This happens for example on online/offline updates, where
+        # we still want to update the entity state
+        return updated_status_properties is not None
 
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
@@ -80,7 +85,7 @@ class DPCodeWrapper(DeviceWrapper):
     def skip_update(
         self,
         device: CustomerDevice,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Determine if the wrapper should skip an update.
@@ -88,9 +93,13 @@ class DPCodeWrapper(DeviceWrapper):
         By default, skip if updated_status_properties is given and
         does not include this dpcode.
         """
+        # If updated_status_properties is None, we should not skip,
+        # as we don't have information on what was updated
+        # This happens for example on online/offline updates, where
+        # we still want to update the entity state
         return (
-            updated_status_properties is None
-            or self.dpcode not in updated_status_properties
+            updated_status_properties is not None
+            and self.dpcode not in updated_status_properties
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
@@ -243,7 +252,7 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
     def skip_update(
         self,
         device: CustomerDevice,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Override skip_update to process delta updates.

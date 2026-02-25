@@ -10,16 +10,19 @@ from unittest.mock import MagicMock, patch
 
 from gtts import gTTSError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tts
 from homeassistant.components.google_translate.const import CONF_TLD, DOMAIN
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
 
@@ -86,6 +89,26 @@ async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -
     config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+async def test_platform(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setup of the tts platform."""
+    default_config = {tts.CONF_LANG: "en", CONF_TLD: "com"}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=default_config, entry_id="123456789"
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
