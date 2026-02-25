@@ -2817,7 +2817,7 @@ zeversolar==0.3.2
 zha==0.0.90
 
 # homeassistant.components.zinvolt
-zinvolt==0.2.0
+zinvolt==0.3.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
