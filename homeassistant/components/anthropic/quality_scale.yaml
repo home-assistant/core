@@ -92,7 +92,7 @@ rules:
       No entities disabled by default.
   entity-translations: todo
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:

@@ -54,6 +54,18 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
+async def test_translation_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity translation key."""
+    entry = entity_registry.async_get("ai_task.claude_ai_task")
+    assert entry is not None
+    assert entry.translation_key == "ai_task_data"
+
+
 async def test_empty_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
