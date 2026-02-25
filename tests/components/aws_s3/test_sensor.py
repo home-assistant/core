@@ -10,7 +10,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_PREFIX
 from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
 from homeassistant.components.backup import AgentBackup
 from homeassistant.const import STATE_UNAVAILABLE
@@ -77,13 +76,14 @@ async def test_sensor_availability(
 
 
 @pytest.mark.parametrize(
-    "mock_config_entry",
+    ("config_entry_extra_data", "expected_pagination_call"),
     [
-        {},
-        {"prefix": "backups/home"},
+        ({}, {"Bucket": "test"}),
+        (
+            {"prefix": "backups/home"},
+            {"Bucket": "test", "Prefix": "backups/home/"},
+        ),
     ],
-    ids=["no_prefix", "with_prefix"],
-    indirect=["mock_config_entry"],
 )
 async def test_calculate_backups_size(
     hass: HomeAssistant,
@@ -91,6 +91,8 @@ async def test_calculate_backups_size(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     test_backup: AgentBackup,
+    config_entry_extra_data: dict,
+    expected_pagination_call: dict,
 ) -> None:
     """Test the total size of backups calculation with and without prefix."""
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
@@ -124,13 +126,6 @@ async def test_calculate_backups_size(
     assert float(state.state) > 0
 
     # Verify prefix was used in API call if expected
-    prefix = mock_config_entry.data.get(CONF_PREFIX)
-    if prefix is not None:
-        mock_client.get_paginator.return_value.paginate.assert_called_with(
-            Bucket=mock_config_entry.data[CONF_BUCKET],
-            Prefix=f"{prefix}/",
-        )
-    else:
-        mock_client.get_paginator.return_value.paginate.assert_called_with(
-            Bucket=mock_config_entry.data[CONF_BUCKET]
-        )
+    mock_client.get_paginator.return_value.paginate.assert_called_with(
+        **expected_pagination_call,
+    )
