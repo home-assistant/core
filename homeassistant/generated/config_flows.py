@@ -521,7 +521,7 @@ FLOWS = {
         "permobil",
         "pglab",
         "philips_js",
-        "photo_frame",
+        "photo_album",
         "pi_hole",
         "picnic",
         "ping",

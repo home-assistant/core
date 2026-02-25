@@ -102,7 +102,7 @@ class PhotoAlbumImageEntity(ImageEntity):
     async def async_added_to_hass(self) -> None:
         """Initialize the first image after entity has been created."""
 
-        async def get_next_image_on_start(_event) -> None:
+        async def get_next_image_on_start(_event=None) -> None:
             await self.get_next_image()
 
         if self.hass.state != CoreState.running:
@@ -110,7 +110,7 @@ class PhotoAlbumImageEntity(ImageEntity):
                 EVENT_HOMEASSISTANT_STARTED, get_next_image_on_start
             )
         else:
-            await self.get_next_image()
+            await get_next_image_on_start()
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""

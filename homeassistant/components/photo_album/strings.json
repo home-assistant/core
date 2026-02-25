@@ -2,7 +2,7 @@
   "config": {
     "error": {
       "failed_browse": "Failed to browse media: {error}",
-      "invalid_media_selected": "The selected media has no images, please select a media directory with images."
+      "selected_media_no_images": "The selected media has no images, please select a media directory with images."
     },
     "step": {
       "user": {
