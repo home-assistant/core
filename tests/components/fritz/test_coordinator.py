@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from fritzconnection.core.exceptions import (
@@ -55,7 +57,7 @@ def fixture_mock_config_entry() -> ConfigEntry:
 
 
 @pytest.fixture
-def patch_fritzconnectioncached_globally(fc_data):
+def patch_fritzconnectioncached_globally(fc_data) -> Generator[FritzConnectionMock]:
     """Patch FritzConnectionCached globally for coordinator-only tests."""
 
     mock_conn = FritzConnectionMock(fc_data)
@@ -69,8 +71,8 @@ def patch_fritzconnectioncached_globally(fc_data):
 @pytest.fixture(name="fritz_tools")
 async def fixture_fritz_tools(
     hass: HomeAssistant,
-    mock_config_entry: ConfigEntry,
-    patch_fritzconnectioncached_globally,
+    mock_config_entry: MockConfigEntry,
+    patch_fritzconnectioncached_globally: FritzConnectionMock,
 ) -> FritzBoxTools:
     """Return FritzBoxTools instance with mocked connection."""
 
@@ -80,9 +82,6 @@ async def fixture_fritz_tools(
         config_entry=mock_config_entry,
         password=mock_config_entry.data["password"],
         port=mock_config_entry.data["port"],
-    )
-    coordinator.call_action_side_effect = (
-        patch_fritzconnectioncached_globally.call_action_side_effect
     )
 
     await coordinator.async_setup()
@@ -232,7 +231,9 @@ async def test_async_get_wan_access_error_returns_none(
 ) -> None:
     """Test WAN access query error handling returns None."""
 
-    fritz_tools.call_action_side_effect(FritzActionError("boom"))
+    cast(FritzConnectionMock, fritz_tools.connection).call_action_side_effect(
+        FritzActionError("boom")
+    )
     assert await fritz_tools._async_get_wan_access("192.168.1.2") is None
 
 
@@ -522,18 +523,24 @@ async def test_avmwrapper_service_call_branches(
     wrapper.connection.call_action = MagicMock(side_effect=FritzActionError("boom"))
     assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
 
-    wrapper.connection.call_action = MagicMock(
-        side_effect=FritzConnectionException("boom")
-    )
-    assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
-
-    with patch(
-        "homeassistant.components.fritz.coordinator.FRITZ_EXCEPTIONS",
-        (FritzActionError,),
+    with patch.object(
+        hass,
+        "async_add_executor_job",
+        new=AsyncMock(side_effect=FritzConnectionException("boom")),
     ):
-        wrapper.connection.call_action = MagicMock(
-            side_effect=FritzConnectionException("boom")
-        )
+        assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
+
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FRITZ_EXCEPTIONS",
+            (FritzActionError,),
+        ),
+        patch.object(
+            hass,
+            "async_add_executor_job",
+            new=AsyncMock(side_effect=FritzConnectionException("boom")),
+        ),
+    ):
         assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
 
 
