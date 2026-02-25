@@ -68,7 +68,6 @@ class RoborockSensorDescriptionA01(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
-    value_fn: Callable[[StateType], StateType] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -535,10 +534,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        value = self.coordinator.data[self.entity_description.data_protocol]
-        if self.entity_description.value_fn is not None:
-            return self.entity_description.value_fn(value)
-        return value
+        return self.coordinator.data[self.entity_description.data_protocol]
 
 
 class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):
