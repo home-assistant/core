@@ -40,13 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         store: Store[list[dict[str, Any]]] = Store(hass, 1, DOMAIN)
         coordinator = VizioAppsDataUpdateCoordinator(hass, store)
-        try:
-            await coordinator.async_setup()
-        except HomeAssistantError:
-            _LOGGER.warning("Failed to set up apps coordinator", exc_info=True)
-        else:
-            hass.data[DOMAIN][CONF_APPS] = coordinator
-            await coordinator.async_refresh()
+        await coordinator.async_setup()
+        hass.data[DOMAIN][CONF_APPS] = coordinator
+        await coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
