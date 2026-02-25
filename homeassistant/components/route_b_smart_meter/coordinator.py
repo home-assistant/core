@@ -145,8 +145,8 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     async def _async_update_data(self) -> BRouteData:
         """Update data."""
         try:
-            return await self.hass.async_add_executor_job(
-                self._get_data_with_recovery
-            )
+return await self.hass.async_add_executor_job(
+self._get_data_with_recovery
+)
         except MomongaError as error:
             raise UpdateFailed(error) from error
