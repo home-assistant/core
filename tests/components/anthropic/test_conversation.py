@@ -41,7 +41,7 @@ from homeassistant.components.anthropic.entity import CitationDetails, ContentDe
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, intent, llm
+from homeassistant.helpers import chat_session, entity_registry as er, intent, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
@@ -87,6 +87,17 @@ async def test_entity(
         state.attributes["supported_features"]
         == conversation.ConversationEntityFeature.CONTROL
     )
+
+
+async def test_translation_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity translation key."""
+    entry = entity_registry.async_get("conversation.claude_conversation")
+    assert entry.translation_key == "conversation"
 
 
 async def test_error_handling(
