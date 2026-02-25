@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -17,8 +15,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_APPS, DOMAIN
 from .coordinator import VizioAppsDataUpdateCoordinator
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.MEDIA_PLAYER]
