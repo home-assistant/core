@@ -365,6 +365,13 @@ async def test_vacuum_clean_area(
         },
     )
 
+    # Mock a successful SelectAreasResponse
+    matter_client.send_device_command.return_value = (
+        clusters.ServiceArea.Commands.SelectAreasResponse(
+            status=clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess,
+        )
+    )
+
     await hass.services.async_call(
         VACUUM_DOMAIN,
         "clean_area",
@@ -374,19 +381,67 @@ async def test_vacuum_clean_area(
 
     # Verify both commands were sent: SelectAreas followed by ChangeToMode
     assert matter_client.send_device_command.call_count == 2
-
-    # First call: SelectAreas with the area IDs
     assert matter_client.send_device_command.call_args_list[0] == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.ServiceArea.Commands.SelectAreas(newAreas=[7, 1234567]),
     )
-
-    # Second call: ChangeToMode to start cleaning (mode 1 is the CLEANING mode)
     assert matter_client.send_device_command.call_args_list[1] == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_clean_area_select_areas_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum clean_area raises error when SelectAreas fails."""
+    await async_setup_component(hass, "homeassistant", {})
+    entity_id = "vacuum.mock_vacuum"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Set up area_mapping so the service can map area IDs to segment IDs
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_1": ["7", "1234567"]},
+            "last_seen_segments": [
+                {"id": "7", "name": "My Location A", "group": None},
+                {"id": "1234567", "name": "My Location B", "group": None},
+                {"id": "2290649224", "name": "My Location C", "group": None},
+            ],
+        },
+    )
+
+    # Mock a failed SelectAreasResponse
+    matter_client.send_device_command.return_value = (
+        clusters.ServiceArea.Commands.SelectAreasResponse(
+            status=clusters.ServiceArea.Enums.SelectAreasStatus.kUnsupportedArea,
+            statusText="Area 7 not supported",
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="Failed to select areas"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            "clean_area",
+            {"entity_id": entity_id, "cleaning_area_id": ["area_1"]},
+            blocking=True,
+        )
+
+    # Verify only SelectAreas was sent, ChangeToMode should NOT be sent
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ServiceArea.Commands.SelectAreas(newAreas=[7, 1234567]),
     )
 
 
