@@ -16,8 +16,8 @@ from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.NUMBER,
+    Platform.SENSOR,
 ]
 
 
