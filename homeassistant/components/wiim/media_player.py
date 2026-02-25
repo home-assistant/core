@@ -79,6 +79,7 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.SEEK
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -655,14 +656,20 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 WiimHttpCommand.MEDIA_INFO
             )
 
-            if media_info is not None:
-                playMedium = media_info.get("PlayMedium")
-                if not isinstance(playMedium, str):
-                    playMedium = ""
+            if not media_info:
+                LOGGER.debug(
+                    "Device %s: MEDIA_INFO returned None, skipping feature update",
+                    self.entity_id,
+                )
+                return
 
-                trackSource = media_info.get("TrackSource")
-                if not isinstance(trackSource, str):
-                    trackSource = ""
+            playMedium = media_info.get("PlayMedium")
+            if not isinstance(playMedium, str):
+                playMedium = ""
+
+            trackSource = media_info.get("TrackSource")
+            if not isinstance(trackSource, str):
+                trackSource = ""
 
             LOGGER.debug(
                 "_from_device_update_supported_features PlayMedium = %s and trackSource = %s",
@@ -1398,6 +1405,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 media_info = await self._device.async_set_AVT_cmd(
                     WiimHttpCommand.MEDIA_INFO
                 )
+                if not isinstance(media_info, dict):
+                    return BrowseMedia(
+                        media_class=MediaClass.PLAYLIST,
+                        media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="Queue",
+                        can_play=False,
+                        can_expand=True,
+                        children=[],
+                    )
+
                 playMedium = media_info.get("PlayMedium")
                 trackSource = media_info.get("TrackSource")
 
