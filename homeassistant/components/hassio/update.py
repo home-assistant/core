@@ -152,6 +152,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
+        self._attr_in_progress = True
+        self.async_write_ha_state()
         await update_addon(
             self.hass, self._addon_slug, backup, self.title, self.installed_version
         )
@@ -308,6 +310,8 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        self._attr_in_progress = True
+        self.async_write_ha_state()
         await update_core(self.hass, version, backup)
 
     @callback

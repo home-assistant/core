@@ -8,7 +8,6 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
-    ThinkingBlock,
     WebSearchResultBlock,
 )
 from freezegun import freeze_time
@@ -18,6 +17,18 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
+)
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
@@ -517,11 +528,22 @@ async def test_refusal(
 
 async def test_extended_thinking(
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test extended thinking support."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_THINKING_BUDGET: 1500,
+        },
+    )
+
     mock_create_stream.return_value = [
         (
             *create_thinking_block(
@@ -550,12 +572,52 @@ async def test_extended_thinking(
     assert len(chat_log.content) == 3
     assert chat_log.content[1].content == "hello"
     assert chat_log.content[2].content == "Hello, how can I help you today?"
+    call_args = mock_create_stream.call_args.kwargs.copy()
+    call_args.pop("tools", None)
+    assert call_args == snapshot
+
+
+@freeze_time("2024-05-24 12:00:00")
+async def test_disabled_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test conversation with thinking effort disabled."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: "assist",
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "none",
+        },
+    )
+
+    mock_create_stream.return_value = [
+        create_content_block(1, ["Hello, how can I help you today?"])
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    assert len(chat_log.content) == 3
+    assert chat_log.content == snapshot
+    call_args = mock_create_stream.call_args.kwargs.copy()
+    call_args.pop("tools", None)
+    assert call_args == snapshot
 
 
 @freeze_time("2024-05-24 12:00:00")
 async def test_redacted_thinking(
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
@@ -590,12 +652,22 @@ async def test_redacted_thinking(
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that thinking blocks and their order are preserved in with tool calls."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "medium",
+        },
+    )
+
     agent_id = "conversation.claude_conversation"
     context = Context()
 
@@ -616,7 +688,7 @@ async def test_extended_thinking_tool_call(
                 [
                     "The user asked me to",
                     " call a test function.",
-                    "Is it a test? What",
+                    " Is it a test? What",
                     " would the function",
                     " do? Would it violate",
                     " any privacy or security",
@@ -658,12 +730,28 @@ async def test_extended_thinking_tool_call(
 @freeze_time("2025-10-31 12:00:00")
 async def test_web_search(
     hass: HomeAssistant,
-    mock_config_entry_with_web_search: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test web search."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        },
+    )
+
     web_search_results = [
         WebSearchResultBlock(
             type="web_search_result",
@@ -704,12 +792,21 @@ async def test_web_search(
                 ["", '{"que', 'ry"', ": \"today's", ' news"}'],
             ),
             *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
-            *create_content_block(
+            # Test interleaved thinking (a thinking content after a tool call):
+            *create_thinking_block(
                 4,
-                ["Here's what I found on the web about today's news:\n", "1. "],
+                ["Great! All clear, let's reply to the user!"],
             ),
             *create_content_block(
                 5,
+                ["Here's what I found on the web about today's news:\n"],
+            ),
+            *create_content_block(
+                6,
+                ["1. "],
+            ),
+            *create_content_block(
+                7,
                 ["New Home Assistant release"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -721,9 +818,9 @@ async def test_web_search(
                     )
                 ],
             ),
-            *create_content_block(6, ["\n2. "]),
+            *create_content_block(8, ["\n2. "]),
             *create_content_block(
-                7,
+                9,
                 ["Something incredible happened"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -743,7 +840,7 @@ async def test_web_search(
                 ],
             ),
             *create_content_block(
-                8, ["\nThose are the main headlines making news today."]
+                10, ["\nThose are the main headlines making news today."]
             ),
         )
     ]
@@ -761,6 +858,7 @@ async def test_web_search(
     )
     # Don't test the prompt because it's not deterministic
     assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
 @pytest.mark.parametrize(
@@ -849,9 +947,7 @@ async def test_web_search(
                 agent_id="conversation.claude_conversation",
                 content="To get today's news, I'll perform a web search",
                 thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
-                native=ThinkingBlock(
-                    signature="ErU/V+ayA==", thinking="", type="thinking"
-                ),
+                native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                 tool_calls=[
                     llm.ToolInput(
                         id="srvtoolu_12345ABC",
