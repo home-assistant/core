@@ -114,5 +114,13 @@
         "name": "Warm water"
       }
     }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Error while authenticating with the Powerfox service: {error}"
+    },
+    "update_failed": {
+      "message": "Error while updating the Powerfox service: {error}"
+    }
   }
 }
