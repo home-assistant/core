@@ -22,7 +22,7 @@
     'manufacturer': 'Zinvolt',
     'model': None,
     'model_id': None,
-    'name': 'ZVG011025120088',
+    'name': 'Zinvolt Batterij',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'ZVG011025120088',
