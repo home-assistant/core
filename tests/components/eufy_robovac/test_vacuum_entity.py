@@ -54,23 +54,23 @@ def entity(hass) -> EufyRoboVacEntity:
 
 @pytest.mark.asyncio
 async def test_async_start_sends_auto_mode(entity: EufyRoboVacEntity) -> None:
-    """Starting should send the T2253 auto mode DPS payload."""
+    """Starting should send DPS 2 True for T2253."""
     await entity.async_start()
-    assert entity._api.sent[-1] == {"5": "Auto"}
+    assert entity._api.sent[-1] == {"2": True}
 
 
 @pytest.mark.asyncio
 async def test_async_pause_sends_pause_command(entity: EufyRoboVacEntity) -> None:
-    """Pausing should send DPS 2 pause for T2253."""
+    """Pausing should send DPS 2 False for T2253."""
     await entity.async_pause()
-    assert entity._api.sent[-1] == {"2": "pause"}
+    assert entity._api.sent[-1] == {"2": False}
 
 
 @pytest.mark.asyncio
 async def test_async_return_to_base_sends_return(entity: EufyRoboVacEntity) -> None:
-    """Return to base should send DPS 101 return for T2253."""
+    """Return to base should send DPS 101 True for T2253."""
     await entity.async_return_to_base()
-    assert entity._api.sent[-1] == {"101": "return"}
+    assert entity._api.sent[-1] == {"101": True}
 
 
 @pytest.mark.asyncio

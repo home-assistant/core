@@ -201,10 +201,10 @@ class EufyRoboVacEntity(StateVacuumEntity):
                 self._attr_fan_speed = canonical_fan
 
     async def async_start(self) -> None:
-        """Start cleaning in auto mode."""
+        """Start cleaning."""
         await self._async_send_and_refresh(
             {
-                self._dps_code(RoboVacCommand.MODE): self._mapping.mode_values["auto"],
+                self._dps_code(RoboVacCommand.START_PAUSE): True,
             }
         )
 
@@ -212,7 +212,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
         """Pause cleaning."""
         await self._async_send_and_refresh(
             {
-                self._dps_code(RoboVacCommand.START_PAUSE): "pause",
+                self._dps_code(RoboVacCommand.START_PAUSE): False,
             }
         )
 
@@ -224,7 +224,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
         """Return vacuum to dock."""
         await self._async_send_and_refresh(
             {
-                self._dps_code(RoboVacCommand.RETURN_HOME): "return",
+                self._dps_code(RoboVacCommand.RETURN_HOME): True,
             }
         )
 
