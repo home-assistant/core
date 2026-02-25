@@ -1,4 +1,4 @@
-"""The orvibo component."""
+"""Switch platform for the Orvibo integration."""
 
 from __future__ import annotations
 
@@ -175,9 +175,7 @@ class S20Switch(SwitchEntity):
         """Update device state."""
         try:
             self._attr_is_on = self._s20.on
-        except S20Exception as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={"name": self._name},
-            ) from err
+        except S20Exception:
+            self._attr_available = False
+            return
+        self._attr_available = True

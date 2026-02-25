@@ -22,7 +22,7 @@
         "data": {
           "switches": "Choose discovered switch to configure"
         },
-        "title": "Discovered Switches"
+        "title": "Discovered switches"
       },
       "discovery_failed": {
         "description": "No S20 switches were discovered on the network.",
@@ -34,14 +34,14 @@
       "edit": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "mac": "MAC Address"
+          "mac": "MAC address"
         },
         "title": "Configure Orvibo S20 switch"
       },
       "user": {
         "menu_options": {
           "edit": "Enter configuration manually",
-          "start_discovery": "Discover new S20 Switches"
+          "start_discovery": "Discover new S20 switches"
         },
         "title": "Orvibo S20 Configuration"
       }
@@ -56,18 +56,15 @@
     },
     "turn_on_error": {
       "message": "Error while turning on S20 {name}."
-    },
-    "update_error": {
-      "message": "Error while fetching state for S20 {name}."
     }
   },
   "issues": {
     "yaml_deprecation": {
-      "description": "The device (MAC: {mac}, Host: {host}) is configured in configuration.yaml. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from configuration.yaml to avoid future issues.",
+      "description": "The device (MAC: {mac}, Host: {host}) is configured in `configuration.yaml`. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from configuration.yaml to avoid future issues.",
       "title": "Legacy YAML configuration detected {host}"
     },
     "yaml_deprecation_import_issue": {
-      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has failed for reason {reason}. 1) Remove the YAML block from configuration.yaml, 2) Restart Home Assistant, 3) Add the device using the UI configuration flow.",
+      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has failed for reason {reason}. 1) Remove the YAML block from `configuration.yaml`, 2) Restart Home Assistant, 3) Add the device using the UI configuration flow.",
       "title": "Legacy YAML configuration import issue for {host}"
     }
   }

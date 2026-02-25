@@ -28,7 +28,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: S20ConfigEntry) -> 
         )
         _LOGGER.debug("Initialized S20 at %s", entry.data[CONF_HOST])
     except S20Exception as err:
-        _LOGGER.error("S20 at %s couldn't be initialized", entry.data[CONF_HOST])
+        _LOGGER.debug("S20 at %s couldn't be initialized", entry.data[CONF_HOST])
 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
