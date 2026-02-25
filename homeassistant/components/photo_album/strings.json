@@ -12,7 +12,7 @@
         },
         "data_description": {
           "media": "The media directory where images will be retrieved from.",
-          "name": "Name for the image entity."
+          "name": "Name of the image entity."
         },
         "description": "The Photo Album integration creates a single image entity, by selecting an image from the selected media folder.",
         "submit": "Create"
