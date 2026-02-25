@@ -62,6 +62,7 @@ async def test_translation_key(
 ) -> None:
     """Test entity translation key."""
     entry = entity_registry.async_get("ai_task.claude_ai_task")
+    assert entry is not None
     assert entry.translation_key == "ai_task_data"
 
 
