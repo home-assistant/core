@@ -133,7 +133,9 @@ async def test_upload_image_non_local_media(
     mock_response.raise_for_status = lambda: None
 
     mock_session = AsyncMock()
-    mock_session.get = AsyncMock(return_value=mock_response)
+    mock_context = AsyncMock()
+    mock_context.__aenter__.return_value = mock_response
+    mock_session.get = MagicMock(return_value=mock_context)
 
     mock_upload_dev = _mock_upload_device()
 
