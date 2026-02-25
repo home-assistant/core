@@ -92,17 +92,6 @@ SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     }
 )
 
-SERVICE_AC_CANCEL = "ac_cancel"
-SERVICE_AC_START = "ac_start"
-SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
-SERVICE_AC_SET_SCHEDULES = "ac_set_schedules"
-SERVICES = [
-    SERVICE_AC_CANCEL,
-    SERVICE_AC_START,
-    SERVICE_CHARGE_SET_SCHEDULES,
-    SERVICE_AC_SET_SCHEDULES,
-]
-
 
 async def ac_cancel(service_call: ServiceCall) -> None:
     """Cancel A/C."""
@@ -197,25 +186,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_AC_CANCEL,
+        "ac_cancel",
         ac_cancel,
         schema=SERVICE_VEHICLE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_AC_START,
+        "ac_start",
         ac_start,
         schema=SERVICE_AC_START_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_CHARGE_SET_SCHEDULES,
+        "charge_set_schedules",
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_AC_SET_SCHEDULES,
+        "ac_set_schedules",
         ac_set_schedules,
         schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
     )
