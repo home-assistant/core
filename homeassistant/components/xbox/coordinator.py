@@ -26,7 +26,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, SUBENTRY_TYPE_FRIEND
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,7 +279,7 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
         return {
             friend.unique_id
             for friend in self.config_entry.subentries.values()
-            if friend.unique_id
+            if friend.unique_id and friend.subentry_type == SUBENTRY_TYPE_FRIEND
         }
 
 

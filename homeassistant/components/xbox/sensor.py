@@ -65,18 +65,12 @@ class XboxSensor(StrEnum):
     JOIN_RESTRICTIONS = "join_restrictions"
     TOTAL_STORAGE = "total_storage"
     FREE_STORAGE = "free_storage"
-    TITLE = "title"
     TOTAL_ACHIEVEMENTS = "total_achievements"
     TOTAL_GAMERSCORE = "total_gamerscore"
     CURRENT_ACHIEVEMENTS = "current_achievements"
     CURRENT_GAMERSCORE = "current_gamerscore"
     PROGRESS = "progress"
     LAST_TIME_PLAYED = "last_time_played"
-    RELEASE_DATE = "release_date"
-    MIN_AGE = "min_age"
-    PUBLISHER = "publisher"
-    DEVELOPER = "developer"
-    GENRES = "genres"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -464,7 +458,7 @@ class XboxStorageDeviceSensorEntity(
 class XboxGameSensorEntity(
     CoordinatorEntity[XboxTitleHistoryCoordinator], SensorEntity
 ):
-    """Representation of a Xbox presence state."""
+    """Representation of a Xbox game title sensor."""
 
     _attr_has_entity_name = True
     entity_description: XboxGameSensorEntityDescription

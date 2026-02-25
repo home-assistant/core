@@ -211,8 +211,14 @@ class GameSubentryFlowHandler(ConfigSubentryFlow):
             if game_title.achievement
             and game_title.achievement.source_version != 0
             and game_title.title_id
-            not in {t.unique_id for t in config_entry.subentries.values()}
+            not in {
+                t.unique_id
+                for t in config_entry.subentries.values()
+                if t.subentry_type == SUBENTRY_TYPE_GAME
+            }
         ]
+        if not options:
+            return self.async_abort(reason="no_game_titles")
 
         return self.async_show_form(
             step_id="user",

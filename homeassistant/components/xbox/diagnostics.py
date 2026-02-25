@@ -21,6 +21,7 @@ TO_REDACT = {
     "real_name",
     "unique_modern_gamertag",
     "xuid",
+    "friends_who_played",
 }
 
 
@@ -51,7 +52,7 @@ async def async_get_config_entry_diagnostics(
         for title in config_entry.runtime_data.presence.data.title_info.values()
     ]
     title_history = {
-        title_id: title.model_dump()
+        title_id: async_redact_data(title.model_dump(), TO_REDACT)
         for title_id, title in config_entry.runtime_data.title_history.data.items()
     }
 
