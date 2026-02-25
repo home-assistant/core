@@ -110,12 +110,12 @@ class NtfyVersionDataUpdateCoordinator(BaseDataUpdateCoordinator[Version | None]
     async def async_update_data(self) -> Version | None:
         """Fetch account data from ntfy."""
         try:
-            return await self.ntfy.version()  # pyright: ignore[reportReturnType]
+            version = await self.ntfy.version()
         except NtfyUnauthorizedAuthenticationError, NtfyNotFoundPageError:
             # /v1/version endpoint is only accessible to admins and
             # available in ntfy since version 2.17.0
-            await self.async_shutdown()
             return None
+        return version
 
 
 class NtfyLatestReleaseUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
