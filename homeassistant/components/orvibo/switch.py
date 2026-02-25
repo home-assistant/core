@@ -188,7 +188,7 @@ class S20Switch(SwitchEntity):
         except S20Exception as err:
             # Only log the error if this is the FIRST time it failed
             if self._attr_available:
-                _LOGGER.error(
+                _LOGGER.info(
                     "Error communicating with Orvibo switch %s: %s", self._name, err
                 )
                 self._attr_available = False
