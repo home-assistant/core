@@ -458,7 +458,7 @@
           "name": "Apple iTunes"
         },
         "weatherkit": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Apple WeatherKit"
