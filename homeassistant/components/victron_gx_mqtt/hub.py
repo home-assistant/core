@@ -13,6 +13,7 @@ from victron_mqtt import (
     OperationMode,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -24,7 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from . import VictronGxConfigEntry
 from .const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -36,6 +36,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type VictronGxConfigEntry = ConfigEntry[Hub]
 
 NewMetricCallback = Callable[[VictronVenusDevice, VictronVenusMetric, DeviceInfo], None]
 

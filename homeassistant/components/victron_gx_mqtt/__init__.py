@@ -8,15 +8,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 
-from .hub import Hub
+from .hub import Hub, VictronGxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
-
-type VictronGxConfigEntry = ConfigEntry[Hub]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:

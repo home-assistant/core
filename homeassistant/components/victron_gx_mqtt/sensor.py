@@ -20,9 +20,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VictronGxConfigEntry
 from .entity import VictronBaseEntity
-from .hub import Hub
+from .hub import Hub, VictronGxConfigEntry
 
 PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
 
