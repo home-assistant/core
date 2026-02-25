@@ -115,3 +115,5 @@ async def test_async_update_recovery_exhausted(
     )
     assert entity is not None
     assert entity.state == STATE_UNAVAILABLE
+    # open() at setup + 3 exhausted reopen attempts
+    assert client.open.call_count == 4
