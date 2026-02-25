@@ -24,8 +24,8 @@ from pyportainer.models.docker import (
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
-from pyportainer.watcher import PortainerImageWatcher
 from pyportainer.models.stacks import Stack
+from pyportainer.watcher import PortainerImageWatcher
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -63,10 +63,10 @@ class PortainerContainerData:
     container: DockerContainer
     container_inspect: DockerInspect
     local_image: LocalImageInformation
+    stack: Stack | None
     stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
     image_status: PortainerImageUpdateStatus | None = None
-    stack: Stack | None
 
 
 @dataclass(slots=True)

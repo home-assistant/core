@@ -103,8 +103,6 @@ async def test_update_install_errors(
         )
 
 
-# Note to reviewer: might be that this test should be in the coordinaotor tests instead,
-# but it felt more natural to test the caching behavior since it's meant for the update
 async def test_update_using_cache(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,

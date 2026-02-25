@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'entity_picture': '/api/brands/integration/portainer/icon.png',
       'friendly_name': 'focused_einstein Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
@@ -101,7 +101,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'entity_picture': '/api/brands/integration/portainer/icon.png',
       'friendly_name': 'funny_chatelet Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
@@ -162,7 +162,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'entity_picture': '/api/brands/integration/portainer/icon.png',
       'friendly_name': 'practical_morse Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
@@ -223,7 +223,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'entity_picture': '/api/brands/integration/portainer/icon.png',
       'friendly_name': 'serene_banach Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
@@ -284,7 +284,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'entity_picture': '/api/brands/integration/portainer/icon.png',
       'friendly_name': 'stoic_turing Image update available',
       'in_progress': False,
       'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
