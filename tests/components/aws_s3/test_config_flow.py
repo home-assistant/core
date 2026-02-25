@@ -44,34 +44,28 @@ async def _async_start_flow(
 
 
 @pytest.mark.parametrize(
-    ("prefix_value", "expected_title", "expected_has_prefix"),
+    ("user_input", "expected_title", "expected_data"),
     [
-        (None, "test", False),
-        ("my-prefix", "test - my-prefix", True),
+        (USER_INPUT, "test", CONFIG_ENTRY_DATA),
+        (
+            USER_INPUT | {CONF_PREFIX: "my-prefix"},
+            "test - my-prefix",
+            USER_INPUT | {CONF_PREFIX: "my-prefix"},
+        ),
     ],
     ids=["no_prefix", "with_prefix"],
 )
 async def test_flow(
     hass: HomeAssistant,
-    prefix_value: str | None,
+    user_input: dict,
     expected_title: str,
-    expected_has_prefix: bool,
+    expected_data: dict,
 ) -> None:
     """Test config flow with and without prefix."""
-    user_input = USER_INPUT.copy()
-    if prefix_value is not None:
-        user_input = user_input | {CONF_PREFIX: prefix_value}
-
     result = await _async_start_flow(hass, user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-
-    if expected_has_prefix:
-        assert result["data"][CONF_PREFIX] == prefix_value
-        assert result["data"] == user_input
-    else:
-        assert CONF_PREFIX not in result["data"]
-        assert result["data"] == CONFIG_ENTRY_DATA
+    assert result["data"] == expected_data
 
 
 @pytest.mark.parametrize(
@@ -216,24 +210,25 @@ async def test_no_abort_if_different_prefix(
 
 
 @pytest.mark.parametrize(
-    ("input_prefix", "expected_prefix", "expected_title"),
+    ("input_prefix", "expected_entry_data", "expected_title"),
     [
-        ("/backups/", "backups", "test - backups"),
-        ("/", None, "test"),
-        ("my-prefix/", "my-prefix", "test - my-prefix"),
+        ("/backups/", CONFIG_ENTRY_DATA | {CONF_PREFIX: "backups"}, "test - backups"),
+        ("/", CONFIG_ENTRY_DATA, "test"),
+        (
+            "my-prefix/",
+            CONFIG_ENTRY_DATA | {CONF_PREFIX: "my-prefix"},
+            "test - my-prefix",
+        ),
     ],
 )
 async def test_flow_prefix_normalization(
     hass: HomeAssistant,
     input_prefix: str,
-    expected_prefix: str,
+    expected_entry_data: dict,
     expected_title: str,
 ) -> None:
     """Test that leading/trailing slashes are stripped from the prefix."""
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: input_prefix})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    if expected_prefix is not None:
-        assert result["data"][CONF_PREFIX] == expected_prefix
-    else:
-        assert CONF_PREFIX not in result["data"]
+    assert result["data"] == expected_entry_data
