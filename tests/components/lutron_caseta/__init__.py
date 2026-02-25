@@ -2,9 +2,12 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.light import ColorMode
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
@@ -15,6 +18,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTRY_MOCK_DATA = {
     CONF_HOST: "1.1.1.1",
@@ -168,6 +173,23 @@ class MockBridge:
             "1205": {"id": "1205", "name": "Hallway", "parent_id": "3"},
         }
 
+    async def set_value(
+        self,
+        device_id: str,
+        value: int | None = None,
+        fade_time: timedelta | None = None,
+        color_value: ColorMode | None = None,
+    ) -> None:
+        """Mock changing device state and invoke callbacks."""
+        # Update internal device state so HA will later report it as on/off
+        if device_id in self.devices and value is not None:
+            self.devices[device_id]["current_state"] = value
+
+        # Notify all subscribers for that device_id
+        if hasattr(self, "_subscribers") and device_id in self._subscribers:
+            for callback in self._subscribers[device_id]:
+                callback()
+
     def load_devices(self):
         """Load mock devices into self.devices."""
         return {
@@ -240,6 +262,19 @@ class MockBridge:
                 "type": "WallDimmer",
                 "model": None,
                 "serial": 5442321,
+                "tilt": None,
+                "area": "1025",
+            },
+            "902": {
+                "device_id": "902",
+                "current_state": 0,
+                "fan_speed": None,
+                "zone": "901",
+                "name": "Kitchen_Other Lights",
+                "button_groups": None,
+                "type": "WallDimmer",
+                "model": None,
+                "serial": 5442322,
                 "tilt": None,
                 "area": "1025",
             },
@@ -345,11 +380,6 @@ class MockBridge:
 
     def tap_button(self, button_id: str):
         """Mock a button press and release message for the given button ID."""
-
-    async def set_value(self, device_id: str, value: int) -> None:
-        """Mock setting a device value."""
-        if device_id in self.devices:
-            self.devices[device_id]["current_state"] = value
 
     async def raise_cover(self, device_id: str) -> None:
         """Mock raising a cover."""

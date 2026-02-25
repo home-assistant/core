@@ -1,6 +1,12 @@
 """Tests for the Lutron Caseta integration."""
 
-from homeassistant.const import STATE_ON
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,3 +30,55 @@ async def test_light_unique_id(
 
     state = hass.states.get(ra3_entity_id)
     assert state.state == STATE_ON
+
+
+async def test_previous_brightness(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test brightness tracked and restored."""
+    await async_setup_integration(hass, MockBridge)
+
+    caseta_entity_id = "light.kitchen_other_lights"
+
+    # 1. Turn on with explicit brightness 25
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_BRIGHTNESS: 25},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(caseta_entity_id)
+
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 25
+
+    # 2. Turn off
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        target={ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(caseta_entity_id)
+
+    # 3. Turn on again without brightness → expect 25
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(caseta_entity_id)
+
+    assert state is not None
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 25
