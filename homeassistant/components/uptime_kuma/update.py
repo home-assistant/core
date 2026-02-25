@@ -68,12 +68,8 @@ class UptimeKumaUpdateEntity(
         super().__init__(coordinator)
         self.update_checker = update_coordinator
 
-        configuration_url = (
-            None
-            if (url := URL(coordinator.config_entry.data[CONF_URL]) / "dashboard")
-            and url.host in LOCAL_INSTANCE
-            else url
-        )
+        url = URL(coordinator.config_entry.data[CONF_URL]) / "dashboard"
+        configuration_url = None if url.host in LOCAL_INSTANCE else url
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.config_entry.title,
