@@ -353,13 +353,10 @@ def _register_panel(
     kwargs = {
         "frontend_url_path": url_path,
         "require_admin": config[CONF_REQUIRE_ADMIN],
+        "show_in_sidebar": config[CONF_SHOW_IN_SIDEBAR],
         "config": {"mode": mode},
         "update": update,
     }
-
-    if config[CONF_SHOW_IN_SIDEBAR]:
-        kwargs["sidebar_title"] = config[CONF_TITLE]
-        kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
 
