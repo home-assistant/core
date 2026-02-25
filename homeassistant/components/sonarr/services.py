@@ -134,7 +134,7 @@ async def _async_get_series(service: ServiceCall) -> dict[str, Any]:
     """Get all Sonarr series."""
     entry = _get_config_entry_from_service_data(service)
 
-    api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
+    api_client = entry.runtime_data.status.api_client
     series_list = await _handle_api_errors(api_client.async_get_series)
 
     base_url = entry.data[CONF_URL]
@@ -149,7 +149,7 @@ async def _async_get_episodes(service: ServiceCall) -> dict[str, Any]:
     series_id: int = service.data[CONF_SERIES_ID]
     season_number: int | None = service.data.get(CONF_SEASON_NUMBER)
 
-    api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
+    api_client = entry.runtime_data.status.api_client
     episodes = await _handle_api_errors(
         lambda: api_client.async_get_episodes(series_id, series=True)
     )
@@ -164,7 +164,7 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     entry = _get_config_entry_from_service_data(service)
     max_items: int = service.data[CONF_MAX_ITEMS]
 
-    api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
+    api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
     page_size = max_items if max_items > 0 else 10000
     queue = await _handle_api_errors(
@@ -184,7 +184,7 @@ async def _async_get_diskspace(service: ServiceCall) -> dict[str, Any]:
     entry = _get_config_entry_from_service_data(service)
     space_unit: str = service.data[CONF_SPACE_UNIT]
 
-    api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
+    api_client = entry.runtime_data.status.api_client
     disks = await _handle_api_errors(api_client.async_get_diskspace)
 
     return {ATTR_DISKS: format_diskspace(disks, space_unit)}
@@ -195,7 +195,7 @@ async def _async_get_upcoming(service: ServiceCall) -> dict[str, Any]:
     entry = _get_config_entry_from_service_data(service)
     days: int = service.data[CONF_DAYS]
 
-    api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
+    api_client = entry.runtime_data.status.api_client
 
     local = dt_util.start_of_local_day().replace(microsecond=0)
     start = dt_util.as_utc(local)
@@ -218,7 +218,7 @@ async def _async_get_wanted(service: ServiceCall) -> dict[str, Any]:
     entry = _get_config_entry_from_service_data(service)
     max_items: int = service.data[CONF_MAX_ITEMS]
 
-    api_client = service.hass.data[DOMAIN][entry.entry_id]["status"].api_client
+    api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
     page_size = max_items if max_items > 0 else 10000
     wanted = await _handle_api_errors(
