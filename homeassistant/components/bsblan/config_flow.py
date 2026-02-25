@@ -231,7 +231,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_update_reload_and_abort(
             existing_entry,
-            data_updates=validate_data,
+            data_updates=user_input,
             reason="reconfigure_successful",
         )
 
@@ -295,7 +295,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 ): str,
                 vol.Optional(
                     CONF_PASSWORD,
-                    default=defaults.get(CONF_PASSWORD) or vol.UNDEFINED,
+                    default=vol.UNDEFINED,
                 ): str,
             }
         )
