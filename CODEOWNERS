@@ -403,8 +403,8 @@ build.json @home-assistant/supervisor
 /tests/components/duke_energy/ @hunterjm
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
-/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
-/tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
+/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192
+/tests/components/dwd_weather_warnings/ @runningman84 @stephan192
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
@@ -555,8 +555,6 @@ build.json @home-assistant/supervisor
 /tests/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
-/homeassistant/components/fritzbox_callmonitor/ @cdce8p
-/tests/components/fritzbox_callmonitor/ @cdce8p
 /homeassistant/components/fronius/ @farmio
 /tests/components/fronius/ @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
@@ -794,8 +792,8 @@ build.json @home-assistant/supervisor
 /tests/components/indevolt/ @xirtnl
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
-/homeassistant/components/influxdb/ @mdegat01
-/tests/components/influxdb/ @mdegat01
+/homeassistant/components/influxdb/ @mdegat01 @Robbie1221
+/tests/components/influxdb/ @mdegat01 @Robbie1221
 /homeassistant/components/inkbird/ @bdraco
 /tests/components/inkbird/ @bdraco
 /homeassistant/components/input_boolean/ @home-assistant/core
@@ -1084,6 +1082,8 @@ build.json @home-assistant/supervisor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
+/homeassistant/components/myneomitis/ @l-pr
+/tests/components/myneomitis/ @l-pr
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
@@ -1650,6 +1650,8 @@ build.json @home-assistant/supervisor
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
+/homeassistant/components/systemnexa2/ @konsulten @slangstrom
+/tests/components/systemnexa2/ @konsulten @slangstrom
 /homeassistant/components/tado/ @erwindouna
 /tests/components/tado/ @erwindouna
 /homeassistant/components/tag/ @home-assistant/core
@@ -1743,6 +1745,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_train/ @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @gjohansson-ST
+/homeassistant/components/trane/ @bdraco
+/tests/components/trane/ @bdraco
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede
@@ -1878,8 +1882,8 @@ build.json @home-assistant/supervisor
 /tests/components/webostv/ @thecode
 /homeassistant/components/websocket_api/ @home-assistant/core
 /tests/components/websocket_api/ @home-assistant/core
-/homeassistant/components/weheat/ @jesperraemaekers
-/tests/components/weheat/ @jesperraemaekers
+/homeassistant/components/weheat/ @barryvdh
+/tests/components/weheat/ @barryvdh
 /homeassistant/components/wemo/ @esev
 /tests/components/wemo/ @esev
 /homeassistant/components/whirlpool/ @abmantis @mkmer
@@ -1957,11 +1961,14 @@ build.json @home-assistant/supervisor
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zimi/ @markhannon
 /tests/components/zimi/ @markhannon
+/homeassistant/components/zinvolt/ @joostlek
+/tests/components/zinvolt/ @joostlek
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
 /tests/components/zone/ @home-assistant/core
 /homeassistant/components/zoneminder/ @rohankapoorcom @nabbi
+/tests/components/zoneminder/ @rohankapoorcom @nabbi
 /homeassistant/components/zwave_js/ @home-assistant/z-wave
 /tests/components/zwave_js/ @home-assistant/z-wave
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS
