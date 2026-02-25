@@ -269,6 +269,127 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             existing_entry, data_updates=user_input, reason="reauth_successful"
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration flow."""
+        existing_entry = self._get_reconfigure_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_HOST,
+                            default=existing_entry.data.get(CONF_HOST, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PORT,
+                            default=existing_entry.data.get(CONF_PORT, DEFAULT_PORT),
+                        ): int,
+                        vol.Optional(
+                            CONF_PASSKEY,
+                            default=existing_entry.data.get(
+                                CONF_PASSKEY, vol.UNDEFINED
+                            ),
+                        ): str,
+                        vol.Optional(
+                            CONF_USERNAME,
+                            default=existing_entry.data.get(
+                                CONF_USERNAME, vol.UNDEFINED
+                            ),
+                        ): str,
+                        vol.Optional(
+                            CONF_PASSWORD,
+                            default=vol.UNDEFINED,
+                        ): str,
+                    }
+                ),
+            )
+
+        self.host = user_input[CONF_HOST]
+        self.port = user_input.get(CONF_PORT, DEFAULT_PORT)
+        self.passkey = user_input.get(CONF_PASSKEY)
+        self.username = user_input.get(CONF_USERNAME)
+        self.password = user_input.get(CONF_PASSWORD)
+
+        try:
+            await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
+        except BSBLANAuthError:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_HOST,
+                            default=user_input.get(CONF_HOST, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PORT,
+                            default=user_input.get(CONF_PORT, DEFAULT_PORT),
+                        ): int,
+                        vol.Optional(
+                            CONF_PASSKEY,
+                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_USERNAME,
+                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PASSWORD,
+                            default=vol.UNDEFINED,
+                        ): str,
+                    }
+                ),
+                errors={"base": "invalid_auth"},
+            )
+        except BSBLANError:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_HOST,
+                            default=user_input.get(CONF_HOST, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PORT,
+                            default=user_input.get(CONF_PORT, DEFAULT_PORT),
+                        ): int,
+                        vol.Optional(
+                            CONF_PASSKEY,
+                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_USERNAME,
+                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PASSWORD,
+                            default=vol.UNDEFINED,
+                        ): str,
+                    }
+                ),
+                errors={"base": "cannot_connect"},
+            )
+
+        # Prevent reconfiguring to a different physical device
+        self._abort_if_unique_id_mismatch()
+
+        return self.async_update_reload_and_abort(
+            existing_entry,
+            data_updates={
+                CONF_HOST: self.host,
+                CONF_PORT: self.port,
+                CONF_PASSKEY: self.passkey,
+                CONF_USERNAME: self.username,
+                CONF_PASSWORD: self.password,
+            },
+            reason="reconfigure_successful",
+        )
+
     @callback
     def _show_setup_form(
         self, errors: dict | None = None, user_input: dict[str, Any] | None = None
