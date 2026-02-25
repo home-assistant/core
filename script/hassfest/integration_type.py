@@ -71,33 +71,10 @@ MISSING_INTEGRATION_TYPE = {
     "upb",
     "version",
     "volvooncall",
-    "watergate",
-    "watts",
-    "waze_travel_time",
-    "weatherflow_cloud",
-    "weatherkit",
-    "weheat",
     "wemo",
     "wiffi",
-    "wilight",
-    "withings",
-    "wolflink",
-    "worldclock",
-    "ws66i",
-    "xiaomi_aqara",
-    "yale",
-    "yale_smart_alarm",
-    "yalexs_ble",
-    "yamaha_musiccast",
-    "yardian",
-    "yeelight",
-    "yolink",
-    "youless",
-    "zamg",
     "zerproc",
-    "zimi",
     "zodiac",
-    "zwave_me",
 }
 
 
@@ -108,6 +85,11 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             continue
 
         if "integration_type" in integration.manifest:
+            if integration.domain in MISSING_INTEGRATION_TYPE:
+                integration.add_error(
+                    "integration_type",
+                    "Integration has an `integration_type` in the manifest but is not listed in MISSING_INTEGRATION_TYPE",
+                )
             continue
 
         if integration.domain in MISSING_INTEGRATION_TYPE:
