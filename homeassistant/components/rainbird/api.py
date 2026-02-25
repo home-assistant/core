@@ -22,13 +22,12 @@ def normalize_rainbird_host(host: str) -> str:
 
     if host.startswith(("http://", "https://")):
         url = URL(host)
-        if url.host:
-            normalized_host = url.host
-            if ":" in normalized_host and not normalized_host.startswith("["):
-                normalized_host = f"[{normalized_host}]"
-            if url.explicit_port is not None:
-                return f"{normalized_host}:{url.explicit_port}"
-            return normalized_host
+        normalized_host = url.host
+        if ":" in normalized_host and not normalized_host.startswith("["):
+            normalized_host = f"[{normalized_host}]"
+        if url.explicit_port is not None:
+            return f"{normalized_host}:{url.explicit_port}"
+        return normalized_host
 
     host = host.split("?", 1)[0].split("#", 1)[0]
     host = host.rstrip("/")
