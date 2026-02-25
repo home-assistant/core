@@ -119,14 +119,21 @@ async def test_update_in_progress(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
 
-async def test_update_error(
+async def test_update_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
 ) -> None:
-    """Test smarla update error behavior."""
-    mock_federwiege.check_firmware_update.return_value = None
+    """Test smarla update unknown behavior."""
     assert await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(UPDATE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
+
+    mock_federwiege.check_firmware_update.return_value = None
+    await async_update_entity(hass, UPDATE_ENTITY_ID)
+    await hass.async_block_till_done()
 
     state = hass.states.get(UPDATE_ENTITY_ID)
     assert state is not None

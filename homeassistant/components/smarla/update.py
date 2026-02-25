@@ -75,6 +75,8 @@ class SmarlaUpdate(SmarlaBaseEntity, UpdateEntity):
         """Check for firmware update and update attributes."""
         value = await self._federwiege.check_firmware_update()
         if value is None:
+            self._attr_latest_version = None
+            self._attr_release_summary = None
             return
 
         target, notes = value
