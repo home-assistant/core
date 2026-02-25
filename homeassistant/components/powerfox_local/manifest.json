@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["powerfox==2.1.0"],
+  "requirements": ["powerfox==2.1.1"],
   "zeroconf": [
     {
       "name": "powerfox*",
