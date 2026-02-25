@@ -25,7 +25,7 @@
         "title": "Discovered switches"
       },
       "discovery_failed": {
-        "description": "No S20 switches were discovered on the network.  Discovery may fail if the switch is asleep.",
+        "description": "No S20 switches were discovered on the network.  Discovery may have failed if the switch is asleep. Please power toggle your switch before re-running discovery.",
         "menu_options": {
           "edit": "Enter configuration manually",
           "start_discovery": "Try discovering again"
