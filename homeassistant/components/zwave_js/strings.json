@@ -140,16 +140,16 @@
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
       },
       "reconfigure": {
-        "description": "Are you migrating to a new adapter or re-configuring the current adapter?",
+        "description": "Are you migrating to a new adapter or reconfiguring the current adapter?",
         "menu_option_descriptions": {
           "intent_migrate": "This will move your Z-Wave network to a new adapter.",
           "intent_reconfigure": "This will let you change the adapter configuration."
         },
         "menu_options": {
           "intent_migrate": "Migrate to a new adapter",
-          "intent_reconfigure": "Re-configure the current adapter"
+          "intent_reconfigure": "Reconfigure the current adapter"
         },
-        "title": "Migrate or re-configure"
+        "title": "Migrate or reconfigure"
       },
       "restore_failed": {
         "description": "Your Z-Wave network could not be restored to the new adapter. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”\n\n'<'a href=\"{file_url}\" download=\"{file_name}\"'>'Download backup file'<'/a'>'",
@@ -291,6 +291,17 @@
       }
     }
   },
+  "exceptions": {
+    "clear_lock_usercode_failed": {
+      "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    },
+    "get_lock_usercode_not_found": {
+      "message": "Code slot {code_slot} not found on lock {entity_id}"
+    },
+    "set_lock_usercode_failed": {
+      "message": "Unable to set lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    }
+  },
   "issues": {
     "device_config_file_changed": {
       "fix_flow": {
@@ -371,10 +382,20 @@
       "fields": {
         "code_slot": {
           "description": "Code slot to clear code from.",
-          "name": "Code slot"
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
         }
       },
       "name": "Clear lock user code"
+    },
+    "get_lock_usercode": {
+      "description": "Gets user codes from a lock.",
+      "fields": {
+        "code_slot": {
+          "description": "Code slot to get code from. If not specified, all code slots are returned.",
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
+        }
+      },
+      "name": "Get lock user code"
     },
     "invoke_cc_api": {
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
@@ -617,7 +638,7 @@
       "fields": {
         "code_slot": {
           "description": "Code slot to set the code.",
-          "name": "[%key:component::zwave_js::services::clear_lock_usercode::fields::code_slot::name%]"
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
         },
         "usercode": {
           "description": "Lock code to set.",
