@@ -89,11 +89,10 @@ async def async_setup_entry(
     """Set up the AirOS binary sensors from a config entry."""
     coordinator = config_entry.runtime_data
 
-    entities: list[BinarySensorEntity] = []
-    entities.extend(
+    entities = [
         AirOSBinarySensor(coordinator, description)
         for description in COMMON_BINARY_SENSORS
-    )
+    ]
 
     if coordinator.device_data["fw_major"] == 8:
         entities.extend(
