@@ -1587,7 +1587,7 @@ async def test_mount_reload_unnamed_device(
     assert str(exc.value) == f"Device is unnamed: {device.id}"
 
 
-async def test_mount_reload_selector_not_translated(
+async def test_mount_reload_selector_matches_device_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
