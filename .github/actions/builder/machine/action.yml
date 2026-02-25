@@ -70,3 +70,4 @@ runs:
         dockerfile: machine/${{ inputs.machine }}
         cosign-base-identity: "https://github.com/home-assistant/core/.*"
         additional-labels: ${{ steps.vars.outputs.labels }}
+        push: false
