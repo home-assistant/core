@@ -147,6 +147,18 @@
       "operating_system_version": {
         "name": "Operating system version"
       },
+      "stack_containers_count": {
+        "name": "Containers",
+        "unit_of_measurement": "containers"
+      },
+      "stack_type": {
+        "name": "Type",
+        "state": {
+          "compose": "Compose",
+          "kubernetes": "Kubernetes",
+          "swarm": "Swarm"
+        }
+      },
       "volume_disk_usage_total_size": {
         "name": "Volume disk usage total size"
       }
@@ -154,6 +166,9 @@
     "switch": {
       "container": {
         "name": "Container"
+      },
+      "stack": {
+        "name": "Stack"
       }
     }
   },
