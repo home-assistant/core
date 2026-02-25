@@ -20,7 +20,7 @@ import pytest
 from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import frontend
+from homeassistant.components import frontend, hassio
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
@@ -44,6 +44,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -1586,11 +1587,17 @@ async def test_mount_reload_unnamed_device(
     assert str(exc.value) == f"Device is unnamed: {device.id}"
 
 
-async def test_mount_model_not_translated(
+async def test_mount_reload_selector_not_translated(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test that mount's model is not translated since it's used by services.yaml."""
+    """Test that the model name in the selector of mount reload is valid."""
     device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
-    assert str(device.model) == "Home Assistant Mount"
+    services = load_yaml_dict(f"{hassio.__path__[0]}/services.yaml")
+    assert (
+        services["mount_reload"]["fields"]["device_id"]["selector"]["device"]["filter"][
+            "model"
+        ]
+        == device.model
+    )
