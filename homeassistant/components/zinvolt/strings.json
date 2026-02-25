@@ -26,6 +26,20 @@
       "on_grid": {
         "name": "Grid connection"
       }
+    },
+    "number": {
+      "lower_threshold": {
+        "name": "Minimum charge level"
+      },
+      "max_output": {
+        "name": "Maximum output"
+      },
+      "standby_time": {
+        "name": "Standby time"
+      },
+      "upper_threshold": {
+        "name": "Maximum charge level"
+      }
     }
   },
   "exceptions": {

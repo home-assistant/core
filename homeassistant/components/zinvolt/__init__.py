@@ -14,7 +14,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.NUMBER,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> bool:
