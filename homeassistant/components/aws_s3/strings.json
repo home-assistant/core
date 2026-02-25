@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:component::aws_s3::exceptions::cannot_connect::message%]",
@@ -10,6 +11,17 @@
       "invalid_endpoint_url": "Invalid endpoint URL. Please make sure it's a valid AWS S3 endpoint URL."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_key_id": "Access key ID",
+          "secret_access_key": "Secret access key"
+        },
+        "data_description": {
+          "access_key_id": "Access key ID to connect to AWS S3 API",
+          "secret_access_key": "Secret access key to connect to AWS S3 API"
+        },
+        "description": "Update your AWS S3 credentials for bucket `{bucket}`."
+      },
       "user": {
         "data": {
           "access_key_id": "Access key ID",

@@ -10,7 +10,13 @@ from botocore.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
+from homeassistant.components.aws_s3.const import (
+    CONF_ACCESS_KEY_ID,
+    CONF_BUCKET,
+    CONF_ENDPOINT_URL,
+    CONF_SECRET_ACCESS_KEY,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -148,3 +154,72 @@ async def test_flow_create_not_aws_endpoint(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"] == USER_INPUT
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+) -> None:
+    """Test successful reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: "new-access-key-id",
+            CONF_SECRET_ACCESS_KEY: "new-secret-access-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_ACCESS_KEY_ID] == "new-access-key-id"
+    assert mock_config_entry.data[CONF_SECRET_ACCESS_KEY] == "new-secret-access-key"
+    # Bucket and endpoint remain unchanged
+    assert mock_config_entry.data[CONF_BUCKET] == USER_INPUT[CONF_BUCKET]
+    assert mock_config_entry.data[CONF_ENDPOINT_URL] == USER_INPUT[CONF_ENDPOINT_URL]
+
+
+async def test_reauth_invalid_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+) -> None:
+    """Test reauthentication with invalid credentials, then success."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+        operation_name="head_bucket",
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: "bad-key",
+            CONF_SECRET_ACCESS_KEY: "bad-secret",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_credentials"}
+
+    # Fix credentials and retry
+    mock_client.head_bucket.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: "new-access-key-id",
+            CONF_SECRET_ACCESS_KEY: "new-secret-access-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
