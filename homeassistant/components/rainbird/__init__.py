@@ -84,23 +84,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
             entry.data[CONF_HOST],
             entry.data[CONF_PASSWORD],
         )
+    except RainbirdAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except RainbirdApiException as err:
+        raise ConfigEntryNotReady from err
 
-        if not (await _async_fix_unique_id(hass, controller, entry)):
-            return False
-        if mac_address := entry.data.get(CONF_MAC):
-            _async_fix_entity_unique_id(
-                er.async_get(hass),
-                entry.entry_id,
-                format_mac(mac_address),
-                str(entry.data[CONF_SERIAL_NUMBER]),
-            )
-            _async_fix_device_id(
-                dr.async_get(hass),
-                entry.entry_id,
-                format_mac(mac_address),
-                str(entry.data[CONF_SERIAL_NUMBER]),
-            )
+    if not (await _async_fix_unique_id(hass, controller, entry)):
+        return False
+    if mac_address := entry.data.get(CONF_MAC):
+        _async_fix_entity_unique_id(
+            er.async_get(hass),
+            entry.entry_id,
+            format_mac(mac_address),
+            str(entry.data[CONF_SERIAL_NUMBER]),
+        )
+        _async_fix_device_id(
+            dr.async_get(hass),
+            entry.entry_id,
+            format_mac(mac_address),
+            str(entry.data[CONF_SERIAL_NUMBER]),
+        )
 
+    try:
         model_info = await controller.get_model_and_version()
     except RainbirdAuthException as err:
         raise ConfigEntryAuthFailed from err
@@ -129,6 +134,8 @@ async def _async_fix_unique_id(
     if not (mac_address := entry.data.get(CONF_MAC)):
         try:
             wifi_params = await controller.get_wifi_params()
+        except RainbirdAuthException as err:
+            raise ConfigEntryAuthFailed from err
         except RainbirdApiException as err:
             _LOGGER.warning("Unable to fix missing unique id: %s", err)
             return True
