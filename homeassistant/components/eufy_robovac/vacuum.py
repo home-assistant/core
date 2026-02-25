@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,6 +29,7 @@ from .const import (
     DEFAULT_PROTOCOL_VERSION,
     DOMAIN,
     RoboVacCommand,
+    dps_update_signal,
 )
 from .local_api import EufyRoboVacLocalApi, EufyRoboVacLocalApiError
 from .model_mappings import MODEL_MAPPINGS, RoboVacModelMapping
@@ -144,6 +146,16 @@ class EufyRoboVacEntity(StateVacuumEntity):
                 return key
         return None
 
+    def _async_publish_dps(self, dps: dict[str, Any]) -> None:
+        """Publish fresh DPS payload for sibling entities."""
+        if self.hass is None:
+            return
+
+        if runtime_data := self.hass.data.get(DOMAIN, {}).get(self._entry.entry_id):
+            runtime_data["dps"] = dps
+
+        async_dispatcher_send(self.hass, dps_update_signal(self._entry.entry_id), dps)
+
     async def _async_send_and_refresh(self, dps: dict[str, Any]) -> None:
         """Send DPS commands and refresh entity state."""
         try:
@@ -167,9 +179,9 @@ class EufyRoboVacEntity(StateVacuumEntity):
             return
 
         self._dps = dps
+        self._async_publish_dps(dps)
         status_raw = dps.get(self._dps_code(RoboVacCommand.STATUS))
         error_raw = dps.get(self._dps_code(RoboVacCommand.ERROR))
-        battery_raw = dps.get(self._dps_code(RoboVacCommand.BATTERY))
         fan_raw = dps.get(self._dps_code(RoboVacCommand.FAN_SPEED))
 
         if status_raw is not None:
@@ -183,16 +195,6 @@ class EufyRoboVacEntity(StateVacuumEntity):
             self._last_error_raw = str(error_raw)
             if str(error_raw) not in ("0", "no_error", "No error"):
                 self._attr_activity = VacuumActivity.ERROR
-
-        if battery_raw is not None:
-            try:
-                self._attr_battery_level = int(float(str(battery_raw)))
-            except (TypeError, ValueError):
-                _LOGGER.debug(
-                    "Could not parse battery for %s: %s",
-                    self._attr_unique_id,
-                    battery_raw,
-                )
 
         if fan_raw is not None:
             if canonical_fan := self._reverse_lookup(

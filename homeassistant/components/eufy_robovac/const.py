@@ -1,15 +1,24 @@
 """Constants for the Eufy RoboVac integration."""
 
 from enum import StrEnum
+from typing import Any
 
 from homeassistant.const import Platform
 
 DOMAIN = "eufy_robovac"
-PLATFORMS: list[Platform] = [Platform.VACUUM]
+PLATFORMS: list[Platform] = [Platform.VACUUM, Platform.SENSOR]
 
 CONF_LOCAL_KEY = "local_key"
 CONF_PROTOCOL_VERSION = "protocol_version"
 DEFAULT_PROTOCOL_VERSION = "3.3"
+
+
+def dps_update_signal(entry_id: str) -> str:
+    """Build dispatcher signal name for DPS updates."""
+    return f"{DOMAIN}_{entry_id}_dps_updated"
+
+
+type EufyRoboVacRuntimeData = dict[str, dict[str, Any]]
 
 
 class RoboVacCommand(StrEnum):
