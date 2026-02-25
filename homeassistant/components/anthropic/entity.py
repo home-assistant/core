@@ -19,6 +19,8 @@ from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockParamContentParam,
     Container,
     ContentBlockParam,
     DocumentBlockParam,
@@ -65,11 +67,11 @@ from anthropic.types import (
     WebSearchToolResultBlockParamContentParam,
 )
 from anthropic.types.bash_code_execution_tool_result_block_param import (
-    Content as BashCodeExecutionToolResultContentParam,
+    Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
-    Content as TextEditorCodeExecutionToolResultContentParam,
+    Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -224,12 +226,22 @@ def _convert_content(
                         },
                     ),
                 }
+            elif content.tool_name == "code_execution":
+                tool_result_block = {
+                    "type": "code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        CodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
             elif content.tool_name == "bash_code_execution":
                 tool_result_block = {
                     "type": "bash_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        BashCodeExecutionToolResultContentParam, content.tool_result
+                        BashCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
                     ),
                 }
             elif content.tool_name == "text_editor_code_execution":
@@ -237,7 +249,7 @@ def _convert_content(
                     "type": "text_editor_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        TextEditorCodeExecutionToolResultContentParam,
+                        TextEditorCodeExecutionToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -368,6 +380,7 @@ def _convert_content(
                             name=cast(
                                 Literal[
                                     "web_search",
+                                    "code_execution",
                                     "bash_code_execution",
                                     "text_editor_code_execution",
                                 ],
@@ -379,6 +392,7 @@ def _convert_content(
                         and tool_call.tool_name
                         in [
                             "web_search",
+                            "code_execution",
                             "bash_code_execution",
                             "text_editor_code_execution",
                         ]
@@ -535,6 +549,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 response.content_block,
                 (
                     WebSearchToolResultBlock,
+                    CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
                     TextEditorCodeExecutionToolResultBlock,
                 ),

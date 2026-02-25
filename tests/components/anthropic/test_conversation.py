@@ -8,6 +8,8 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    EncryptedCodeExecutionResultBlock,
+    ServerToolCaller20260120,
     TextEditorCodeExecutionCreateResultBlock,
     TextEditorCodeExecutionStrReplaceResultBlock,
     TextEditorCodeExecutionToolResultError,
@@ -47,15 +49,14 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
 from . import (
-    create_bash_code_execution_block,
     create_bash_code_execution_result_block,
+    create_code_execution_result_block,
     create_content_block,
     create_redacted_thinking_block,
-    create_text_editor_code_execution_block,
+    create_server_tool_use_block,
     create_text_editor_code_execution_result_block,
     create_thinking_block,
     create_tool_use_block,
-    create_web_search_block,
     create_web_search_result_block,
 )
 
@@ -799,9 +800,10 @@ async def test_web_search(
             *create_content_block(
                 1, ["To get today's news, I'll perform a web search"]
             ),
-            *create_web_search_block(
+            *create_server_tool_use_block(
                 2,
                 "srvtoolu_12345ABC",
+                "web_search",
                 ["", '{"que', 'ry"', ": \"today's", ' news"}'],
             ),
             *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
@@ -921,9 +923,10 @@ async def test_web_search_error(
             *create_content_block(
                 1, ["To get today's news, I'll perform a web search"]
             ),
-            *create_web_search_block(
+            *create_server_tool_use_block(
                 2,
                 "srvtoolu_12345ABC",
+                "web_search",
                 ["", '{"que', 'ry"', ": \"today's", ' news"}'],
             ),
             *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
@@ -937,6 +940,149 @@ async def test_web_search_error(
     result = await conversation.async_converse(
         hass,
         "What's on the news today?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_web_search_dynamic_filtering(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web search with dynamic filtering of the results."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        },
+    )
+
+    web_search_results = [
+        WebSearchResultBlock(
+            type="web_search_result",
+            title="Press release: Nobel Prize in Chemistry 2025 - Example.com",
+            url="https://www.example.com/prizes/chemistry/2025/press-release/",
+            page_age=None,
+            encrypted_content="ABCDEFG",
+        ),
+        WebSearchResultBlock(
+            type="web_search_result",
+            title="Nobel Prize in Chemistry 2025 - NewsSite.com",
+            url="https://www.newssite.com/prizes/chemistry/2025/summary/",
+            page_age=None,
+            encrypted_content="ABCDEFG",
+        ),
+    ]
+
+    content = EncryptedCodeExecutionResultBlock(
+        type="encrypted_code_execution_result",
+        content=[],
+        encrypted_stdout="EuQJCioIDRgCIiRj",
+        return_code=0,
+        stderr="",
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0, ["Let", " me search", " for this", " information.", ""]
+            ),
+            *create_server_tool_use_block(
+                1,
+                "srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT",
+                "code_execution",
+                [
+                    "",
+                    '{"code": "\\nimport',
+                    " json",
+                    "\\nresult",
+                    " = await",
+                    " web",
+                    '_search({\\"',
+                    'query\\": \\"Nobel Prize chemistry',
+                    " 2025 ",
+                    'winner\\"})\\nparsed',
+                    " = json.loads(result)",
+                    "\\nfor",
+                    " r",
+                    " in parsed[:",
+                    "3",
+                    "]:\\n    print(r.",
+                    'get(\\"title',
+                    '\\", \\"\\"))',
+                    '\\n    print(r.get(\\"',
+                    "content",
+                    '\\", \\"\\")',
+                    "[:300",
+                    '])\\n    print(\\"---\\")',
+                    "\\n",
+                    '"}',
+                ],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_016vjte6G4Lj6yzLc2ak1vY4",
+                "web_search",
+                {"query": "Nobel Prize chemistry 2025 winner"},
+                caller=ServerToolCaller20260120(
+                    type="code_execution_20260120",
+                    tool_id="srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT",
+                ),
+            ),
+            *create_web_search_result_block(
+                3,
+                "srvtoolu_016vjte6G4Lj6yzLc2ak1vY4",
+                web_search_results,
+                caller=ServerToolCaller20260120(
+                    type="code_execution_20260120",
+                    tool_id="srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT",
+                ),
+            ),
+            *create_code_execution_result_block(
+                4, "srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT", content
+            ),
+            *create_content_block(
+                5,
+                [
+                    "The ",
+                    "2025 Nobel Prize in Chemistry was",
+                    " awarded jointly to **",
+                    "Susumu Kitagawa**,",
+                    " **",
+                    "Richard Robson**, and **Omar",
+                    ' M. Yaghi** "',
+                    "for the development of metal–organic frameworks",
+                    '."',
+                ],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Who won the Nobel for Chemistry in 2025?",
         None,
         Context(),
         agent_id="conversation.claude_conversation",
@@ -980,9 +1126,10 @@ async def test_bash_code_execution(
                     "tmp/number.txt'.",
                 ],
             ),
-            *create_bash_code_execution_block(
+            *create_server_tool_use_block(
                 1,
                 "srvtoolu_12345ABC",
+                "bash_code_execution",
                 [
                     "",
                     '{"c',
@@ -1059,9 +1206,10 @@ async def test_bash_code_execution_error(
                     "tmp/number.txt'.",
                 ],
             ),
-            *create_bash_code_execution_block(
+            *create_server_tool_use_block(
                 1,
                 "srvtoolu_12345ABC",
+                "bash_code_execution",
                 [
                     "",
                     '{"c',
@@ -1218,8 +1366,8 @@ async def test_text_editor_code_execution(
     mock_create_stream.return_value = [
         (
             *create_content_block(0, ["I'll do it", "."]),
-            *create_text_editor_code_execution_block(
-                1, "srvtoolu_12345ABC", args_parts
+            *create_server_tool_use_block(
+                1, "srvtoolu_12345ABC", "text_editor_code_execution", args_parts
             ),
             *create_text_editor_code_execution_result_block(
                 2, "srvtoolu_12345ABC", content=content
@@ -1253,9 +1401,10 @@ async def test_container_reused(
     """Test that container is reused."""
     mock_create_stream.return_value = [
         (
-            *create_bash_code_execution_block(
+            *create_server_tool_use_block(
                 0,
                 "srvtoolu_12345ABC",
+                "bash_code_execution",
                 ['{"command": "echo $RANDOM"}'],
             ),
             *create_bash_code_execution_result_block(
