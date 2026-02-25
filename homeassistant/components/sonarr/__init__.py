@@ -101,9 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Note: Sensor extra_state_attributes are deprecated and will be removed in 2026.2.
-    # Users should migrate to using sonarr.get_* service actions instead.
-
     return True
 
 

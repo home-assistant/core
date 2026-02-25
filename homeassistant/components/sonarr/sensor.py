@@ -162,6 +162,7 @@ class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
     coordinator: SonarrDataUpdateCoordinator[SonarrDataT]
     entity_description: SonarrSensorEntityDescription[SonarrDataT]
 
+    # Note: Sensor extra_state_attributes are deprecated and will be removed in 2026.9
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the entity."""

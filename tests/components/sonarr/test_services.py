@@ -2,7 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from aiopyarr import Diskspace, SonarrQueue
+from aiopyarr import (
+    ArrAuthenticationException,
+    ArrConnectionException,
+    Diskspace,
+    SonarrQueue,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -568,9 +573,9 @@ async def test_services_api_connection_error(
 ) -> None:
     """Test services with API connection error."""
     # Configure the mock to raise an exception
-    getattr(mock_sonarr, method).side_effect = __import__(
-        "aiopyarr"
-    ).exceptions.ArrConnectionException("Connection failed")
+    getattr(mock_sonarr, method).side_effect = ArrConnectionException(
+        "Connection failed"
+    )
 
     with pytest.raises(HomeAssistantError, match="Failed to connect to Sonarr"):
         await hass.services.async_call(
@@ -601,9 +606,9 @@ async def test_services_api_auth_error(
 ) -> None:
     """Test services with API authentication error."""
     # Configure the mock to raise an exception
-    getattr(mock_sonarr, method).side_effect = __import__(
-        "aiopyarr"
-    ).exceptions.ArrAuthenticationException("Authentication failed")
+    getattr(mock_sonarr, method).side_effect = ArrAuthenticationException(
+        "Authentication failed"
+    )
 
     with pytest.raises(HomeAssistantError, match="Authentication failed for Sonarr"):
         await hass.services.async_call(
