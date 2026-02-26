@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 import io
 import logging
 import os
@@ -435,7 +435,7 @@ class TelegramNotificationService:
 
     async def _send_msg_formatted(
         self,
-        func_send: Callable[..., Awaitable[Message]],
+        func_send: Callable[..., Awaitable[Message | tuple[Message, ...]]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
@@ -448,7 +448,7 @@ class TelegramNotificationService:
         chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-        response: Message = await self._send_msg(
+        response: Message | tuple[Message] = await self._send_msg(
             func_send,
             message_tag,
             chat_id,
@@ -456,6 +456,9 @@ class TelegramNotificationService:
             context=context,
             **kwargs_msg,
         )
+
+        if isinstance(response, Iterable):
+            return {str(chat_id): [message.id for message in response]}
 
         return {str(chat_id): response.id}
 
@@ -542,8 +545,8 @@ class TelegramNotificationService:
         for entry in input_media:
             file_content = await load_data(
                 self.hass,
-                url=entry[ATTR_URL],
-                filepath=None,
+                url=entry.get(ATTR_URL),
+                filepath=entry.get(ATTR_FILE),
                 username=entry.get(ATTR_USERNAME, ""),
                 password=entry.get(ATTR_PASSWORD, ""),
                 authentication=entry.get(ATTR_AUTHENTICATION),
@@ -565,17 +568,18 @@ class TelegramNotificationService:
             else:
                 media.append(InputMediaVideo(file_content, caption=caption))
 
-        response = await self.bot.send_media_group(
-            chat_id,
-            media,
-            params[ATTR_DISABLE_NOTIF],
-            kwargs.get(ATTR_PROTECT_CONTENT, False),
-            params[ATTR_MESSAGE_THREAD_ID],
+        return await self._send_msg_formatted(
+            self.bot.send_media_group,
+            params[ATTR_MESSAGE_TAG],
+            chat_id=chat_id,
+            media=media,
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             parse_mode=params[ATTR_PARSER],
+            context=context,
         )
-
-        return {str(chat_id): [message.id for message in response]}
 
     async def delete_message(
         self,

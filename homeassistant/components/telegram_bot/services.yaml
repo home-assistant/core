@@ -267,6 +267,10 @@ send_media_group:
               selector:
                 text:
                   type: password
+            file:
+              label: File
+              selector:
+                text:
     parse_mode:
       selector:
         select:
