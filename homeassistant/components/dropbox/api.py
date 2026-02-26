@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
+import logging
 from typing import Any
 
 from python_dropbox_api import (
@@ -11,10 +12,6 @@ from python_dropbox_api import (
     DropboxAuthException,
     DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
-    PropertyField,
-    PropertyFieldValue,
-    PropertyGroup,
-    PropertyTemplate,
 )
 
 from homeassistant.components.backup import (
@@ -24,20 +21,24 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 FOLDER_PATH = "/Home Assistant"
 
-PROPERTY_TEMPLATE_NAME = "Home Assistant Backups"
-PROPERTY_TEMPLATE_DESCRIPTION = "Metadata about a Home Assistant backup."
-PROPERTY_FIELD_NAME = "Metadata"
-PROPERTY_FIELD_DESCRIPTION = (
-    "Metadata about the Home Assistant backup formatted as a JSON string."
-)
+
+def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
+    """Return the suggested filenames for the backup and metadata."""
+    base_name = suggested_filename(backup).rsplit(".", 1)[0]
+    return f"{base_name}.tar", f"{base_name}.metadata.json"
+
+
+async def _async_string_iterator(content: str) -> AsyncIterator[bytes]:
+    """Yield a string as a single bytes chunk."""
+    yield content.encode()
 
 
 class DropboxClient:
     """Dropbox client."""
-
-    _property_template_id: str | None = None
 
     def __init__(self, auth: Auth) -> None:
         """Initialize Dropbox client."""
@@ -46,36 +47,6 @@ class DropboxClient:
     async def async_get_account_info(self) -> AccountInfo:
         """Get information about the current account."""
         return await self._api.get_account_info()
-
-    async def async_get_property_template_id(self) -> str:
-        """Get the ID of the property template for Home Assistant backups."""
-
-        if self._property_template_id is not None:
-            return self._property_template_id
-
-        template_ids = await self._api.list_property_templates()
-
-        for template_id in template_ids:
-            template = await self._api.get_property_template(template_id)
-            if template.name == PROPERTY_TEMPLATE_NAME:
-                return template_id
-
-        # Couldn't find a matching property template, so create a new one
-        property_template = PropertyTemplate(
-            name=PROPERTY_TEMPLATE_NAME,
-            description=PROPERTY_TEMPLATE_DESCRIPTION,
-            fields=[
-                PropertyField(
-                    name=PROPERTY_FIELD_NAME,
-                    description=PROPERTY_FIELD_DESCRIPTION,
-                    type="string",
-                )
-            ],
-        )
-
-        new_template_id = await self._api.add_property_template(property_template)
-        self._property_template_id = new_template_id
-        return new_template_id
 
     async def _async_ensure_folder_exists(self) -> None:
         """Ensure the folder exists."""
@@ -101,26 +72,27 @@ class DropboxClient:
 
     async def _async_get_backups(self) -> list[tuple[AgentBackup, str]]:
         """Get backups and their corresponding file names."""
-        property_template_id = await self.async_get_property_template_id()
+        files = await self._api.list_folder(FOLDER_PATH)
 
-        files = await self._api.list_folder(
-            FOLDER_PATH, include_property_groups=[property_template_id]
-        )
+        tar_files = {f.name for f in files if f.name.endswith(".tar")}
+        metadata_files = [f for f in files if f.name.endswith(".metadata.json")]
 
         backups: list[tuple[AgentBackup, str]] = []
-        for file in files:
-            if file.property_groups is not None:
-                for property_group in file.property_groups:
-                    if property_group.template_id == property_template_id:
-                        backups.append(
-                            (
-                                AgentBackup.from_dict(
-                                    json.loads(property_group.fields[0].value)
-                                ),
-                                file.name,
-                            )
-                        )
-                        break  # Found matching template, no need to check other groups
+        for metadata_file in metadata_files:
+            tar_name = metadata_file.name.removesuffix(".metadata.json") + ".tar"
+            if tar_name not in tar_files:
+                _LOGGER.warning(
+                    "Found metadata file '%s' without matching backup file",
+                    metadata_file.name,
+                )
+                continue
+
+            metadata_stream = self._api.download_file(
+                f"{FOLDER_PATH}/{metadata_file.name}"
+            )
+            raw = b"".join([chunk async for chunk in metadata_stream])
+            backup = AgentBackup.from_dict(json.loads(raw))
+            backups.append((backup, tar_name))
 
         return backups
 
@@ -138,24 +110,22 @@ class DropboxClient:
         """Upload a backup."""
         await self._async_ensure_folder_exists()
 
-        property_template_id = await self.async_get_property_template_id()
-
-        property_group = PropertyGroup(
-            template_id=property_template_id,
-            fields=[
-                PropertyFieldValue(
-                    name=PROPERTY_FIELD_NAME, value=json.dumps(backup.as_dict())
-                ),
-            ],
-        )
-
-        filename = suggested_filename(backup)
+        backup_filename, metadata_filename = suggested_filenames(backup)
+        backup_path = f"{FOLDER_PATH}/{backup_filename}"
+        metadata_path = f"{FOLDER_PATH}/{metadata_filename}"
 
         file_stream = await open_stream()
+        await self._api.upload_file(backup_path, file_stream)
 
-        await self._api.upload_file(
-            f"{FOLDER_PATH}/{filename}", file_stream, [property_group]
-        )
+        try:
+            metadata_stream = _async_string_iterator(json.dumps(backup.as_dict()))
+            await self._api.upload_file(metadata_path, metadata_stream)
+        except (
+            DropboxAuthException,
+            DropboxUnknownException,
+        ):
+            await self._api.delete_file(backup_path)
+            raise
 
     async def async_download_backup(self, backup_id: str) -> AsyncIterator[bytes]:
         """Download a backup."""
@@ -173,9 +143,11 @@ class DropboxClient:
         await self._async_ensure_folder_exists()
 
         backups = await self._async_get_backups()
-        for backup, filename in backups:
+        for backup, tar_filename in backups:
             if backup.backup_id == backup_id:
-                await self._api.delete_file(f"{FOLDER_PATH}/{filename}")
+                metadata_filename = tar_filename.removesuffix(".tar") + ".metadata.json"
+                await self._api.delete_file(f"{FOLDER_PATH}/{tar_filename}")
+                await self._api.delete_file(f"{FOLDER_PATH}/{metadata_filename}")
                 return
 
         raise BackupNotFound(f"Backup {backup_id} not found")

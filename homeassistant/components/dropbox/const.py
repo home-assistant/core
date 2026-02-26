@@ -12,8 +12,6 @@ OAUTH2_SCOPES = [
     "account_info.read",
     "files.content.read",
     "files.content.write",
-    "files.metadata.read",
-    "files.metadata.write",
 ]
 
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
