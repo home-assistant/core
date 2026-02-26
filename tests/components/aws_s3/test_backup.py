@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 import json
 from time import time
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from botocore.exceptions import ConnectTimeoutError
 import pytest
@@ -288,73 +288,6 @@ async def test_agents_delete_not_throwing_on_not_found(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     assert mock_client.delete_object.call_count == 0
-
-
-@pytest.mark.parametrize(
-    (
-        "backup_size",
-        "expected_multipart_upload_count",
-        "expected_upload_part_count",
-        "expected_complete_multipart_upload_count",
-        "expected_put_object_count",
-    ),
-    [
-        (2**20, 0, 0, 0, 2),  # small
-        (MULTIPART_MIN_PART_SIZE_BYTES, 1, 2, 1, 1),  # large
-    ],
-    ids=["small", "large"],
-)
-async def test_agents_upload(
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
-    expected_multipart_upload_count: int,
-    expected_upload_part_count: int,
-    expected_complete_multipart_upload_count: int,
-    expected_put_object_count: int,
-) -> None:
-    """Test agent upload backup."""
-    client = await hass_client()
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=test_backup,
-        ),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
-        ),
-        patch("pathlib.Path.open") as mocked_open,
-    ):
-        # we must emit at least two chunks
-        # the "appendix" chunk triggers the upload of the final buffer part
-        mocked_open.return_value.read = Mock(
-            side_effect=[
-                b"a" * test_backup.size,
-                b"appendix",
-                b"",
-            ]
-        )
-        resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
-            data={"file": StringIO("test")},
-        )
-
-    assert resp.status == 201
-    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
-
-    assert (
-        mock_client.create_multipart_upload.await_count
-        == expected_multipart_upload_count
-    )
-    assert mock_client.upload_part.await_count == expected_upload_part_count
-    assert (
-        mock_client.complete_multipart_upload.await_count
-        == expected_complete_multipart_upload_count
-    )
-    assert mock_client.put_object.await_count == expected_put_object_count
 
 
 @pytest.mark.parametrize(
@@ -670,23 +603,12 @@ async def test_agent_delete_backup_parametrized(
     mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_metadata_key)
 
 
-@pytest.mark.parametrize(
-    ("config_entry_extra_data", "expected_key_prefix"),
-    [
-        ({"prefix": "backups/home"}, "backups/home/"),
-        ({}, ""),
-    ],
-    ids=["with_prefix", "no_prefix"],
-)
-async def test_agent_upload_backup_parametrized(
-    hass: HomeAssistant,
+async def _upload_backup(
     hass_client: ClientSessionGenerator,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    agent_id: str,
     test_backup: AgentBackup,
-    expected_key_prefix: str,
 ) -> None:
-    """Test agent upload backup with and without prefix."""
+    """Perform a backup upload with the necessary mocks set up."""
     client = await hass_client()
     with (
         patch(
@@ -709,44 +631,109 @@ async def test_agent_upload_backup_parametrized(
             ]
         )
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            f"/api/backup/upload?agent_id={agent_id}",
             data={"file": StringIO("test")},
         )
+    assert resp.status == 201
 
-        assert resp.status == 201
 
-        tar_filename, metadata_filename = suggested_filenames(test_backup)
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_key_prefix"),
+    [
+        ({"prefix": "backups/home"}, "backups/home/"),
+        ({}, ""),
+    ],
+    ids=["with_prefix", "no_prefix"],
+)
+async def test_agent_upload_small_backup_parametrized(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+    expected_key_prefix: str,
+) -> None:
+    """Test agent upload small backup with and without prefix."""
+    await _upload_backup(
+        hass_client, f"{DOMAIN}.{mock_config_entry.entry_id}", test_backup
+    )
 
-        expected_tar_key = f"{expected_key_prefix}{tar_filename}"
-        expected_metadata_key = f"{expected_key_prefix}{metadata_filename}"
-
-        if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
-            mock_client.put_object.assert_any_call(
-                Bucket="test", Key=expected_tar_key, Body=ANY
-            )
-            mock_client.put_object.assert_any_call(
-                Bucket="test", Key=expected_metadata_key, Body=ANY
-            )
-        else:
-            mock_client.create_multipart_upload.assert_called_with(
-                Bucket="test", Key=expected_tar_key
-            )
-            mock_client.upload_part.assert_any_call(
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    assert mock_client.create_multipart_upload.await_count == 0
+    assert mock_client.upload_part.await_count == 0
+    assert mock_client.complete_multipart_upload.await_count == 0
+    assert mock_client.put_object.await_count == 2
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    mock_client.put_object.assert_has_calls(
+        [
+            call(Bucket="test", Key=f"{expected_key_prefix}{tar_filename}", Body=ANY),
+            call(
                 Bucket="test",
-                Key=expected_tar_key,
+                Key=f"{expected_key_prefix}{metadata_filename}",
+                Body=ANY,
+            ),
+        ]
+    )
+
+
+@pytest.mark.parametrize("backup_size", [MULTIPART_MIN_PART_SIZE_BYTES], ids=["large"])
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_key_prefix"),
+    [
+        ({"prefix": "backups/home"}, "backups/home/"),
+        ({}, ""),
+    ],
+    ids=["with_prefix", "no_prefix"],
+)
+async def test_agent_upload_large_backup_parametrized(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+    expected_key_prefix: str,
+) -> None:
+    """Test agent upload large (multipart) backup with and without prefix."""
+    await _upload_backup(
+        hass_client, f"{DOMAIN}.{mock_config_entry.entry_id}", test_backup
+    )
+
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+
+    tar_key = f"{expected_key_prefix}{tar_filename}"
+    metadata_key = f"{expected_key_prefix}{metadata_filename}"
+
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    assert mock_client.create_multipart_upload.await_count == 1
+    assert mock_client.upload_part.await_count == 2
+    assert mock_client.complete_multipart_upload.await_count == 1
+    assert mock_client.put_object.await_count == 1
+    mock_client.create_multipart_upload.assert_called_with(Bucket="test", Key=tar_key)
+    mock_client.upload_part.assert_has_calls(
+        [
+            call(
+                Bucket="test",
+                Key=tar_key,
                 PartNumber=1,
                 UploadId="upload_id",
                 Body=ANY,
-            )
-            mock_client.complete_multipart_upload.assert_called_with(
+            ),
+            call(
                 Bucket="test",
-                Key=expected_tar_key,
+                Key=tar_key,
+                PartNumber=2,
                 UploadId="upload_id",
-                MultipartUpload=ANY,
-            )
-            mock_client.put_object.assert_called_with(
-                Bucket="test", Key=expected_metadata_key, Body=ANY
-            )
+                Body=ANY,
+            ),
+        ]
+    )
+    mock_client.complete_multipart_upload.assert_called_with(
+        Bucket="test",
+        Key=tar_key,
+        UploadId="upload_id",
+        MultipartUpload=ANY,
+    )
+    mock_client.put_object.assert_called_with(Bucket="test", Key=metadata_key, Body=ANY)
 
 
 @pytest.mark.parametrize(
