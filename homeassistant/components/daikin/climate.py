@@ -115,7 +115,7 @@ def _zone_temperature_lists(device: Appliance) -> tuple[list[str], list[str]]:
     try:
         heating = device.represent(DAIKIN_ZONE_TEMP_HEAT)[1]
         cooling = device.represent(DAIKIN_ZONE_TEMP_COOL)[1]
-    except AttributeError:
+    except AttributeError, KeyError:
         return ([], [])
     return (list(heating or []), list(cooling or []))
 
