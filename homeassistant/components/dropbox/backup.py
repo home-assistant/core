@@ -1,8 +1,9 @@
 """Backup platform for the Dropbox integration."""
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from functools import wraps
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 from python_dropbox_api import (
     DropboxAuthException,
@@ -22,6 +23,29 @@ from . import DropboxConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def handle_backup_errors[_R, **P](
+    func: Callable[Concatenate[DropboxBackupAgent, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[DropboxBackupAgent, P], Coroutine[Any, Any, _R]]:
+    """Handle backup errors."""
+
+    @wraps(func)
+    async def wrapper(
+        self: DropboxBackupAgent, *args: P.args, **kwargs: P.kwargs
+    ) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except (
+            DropboxAuthException,
+            DropboxFileOrFolderNotFoundException,
+            DropboxUnknownException,
+        ) as err:
+            raise BackupAgentError(
+                f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
+            ) from err
+
+    return wrapper
 
 
 async def async_get_backup_agents(
@@ -69,6 +93,7 @@ class DropboxBackupAgent(BackupAgent):
         self.unique_id = entry.unique_id
         self._client = entry.runtime_data
 
+    @handle_backup_errors
     async def async_upload_backup(
         self,
         *,
@@ -77,55 +102,30 @@ class DropboxBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        try:
-            await self._client.async_upload_backup(open_stream, backup)
-        except (
-            DropboxAuthException,
-            DropboxFileOrFolderNotFoundException,
-            DropboxUnknownException,
-        ) as err:
-            raise BackupAgentError("Failed to upload backup") from err
+        await self._client.async_upload_backup(open_stream, backup)
 
+    @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        try:
-            return await self._client.async_list_backups()
-        except (
-            DropboxAuthException,
-            DropboxFileOrFolderNotFoundException,
-            DropboxUnknownException,
-        ) as err:
-            raise BackupAgentError("Failed to list backups") from err
+        return await self._client.async_list_backups()
 
+    @handle_backup_errors
     async def async_download_backup(
         self,
         backup_id: str,
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        try:
-            return await self._client.async_download_backup(backup_id)
-        except (
-            DropboxAuthException,
-            DropboxFileOrFolderNotFoundException,
-            DropboxUnknownException,
-        ) as err:
-            raise BackupAgentError("Failed to download backup") from err
+        return await self._client.async_download_backup(backup_id)
 
+    @handle_backup_errors
     async def async_get_backup(
         self,
         backup_id: str,
         **kwargs: Any,
     ) -> AgentBackup:
         """Return a backup."""
-        try:
-            backups = await self.async_list_backups()
-        except (
-            DropboxAuthException,
-            DropboxFileOrFolderNotFoundException,
-            DropboxUnknownException,
-        ) as err:
-            raise BackupAgentError("Failed to get backup") from err
+        backups = await self._client.async_list_backups()
 
         for backup in backups:
             if backup.backup_id == backup_id:
@@ -133,22 +133,11 @@ class DropboxBackupAgent(BackupAgent):
 
         raise BackupNotFound(f"Backup {backup_id} not found")
 
+    @handle_backup_errors
     async def async_delete_backup(
         self,
         backup_id: str,
         **kwargs: Any,
     ) -> None:
-        """Delete a backup file.
-
-        Raises BackupNotFound if the backup does not exist.
-
-        :param backup_id: The ID of the backup that was returned in async_list_backups.
-        """
-        try:
-            await self._client.async_delete_backup(backup_id)
-        except (
-            DropboxAuthException,
-            DropboxFileOrFolderNotFoundException,
-            DropboxUnknownException,
-        ) as err:
-            raise BackupAgentError("Failed to delete backup") from err
+        """Delete a backup file."""
+        await self._client.async_delete_backup(backup_id)
