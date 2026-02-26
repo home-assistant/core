@@ -121,7 +121,7 @@ async def test_media_player_update_ha_state_from_sdk_cache(
 
     with (
         patch.object(entity, "schedule_update_ha_state", new=MagicMock()),
-        patch.object(entity, "async_write_ha_state", new=AsyncMock()),
+        patch.object(entity, "async_write_ha_state", new=MagicMock()),
         patch.object(
             entity.hass.data[DOMAIN].controller,
             "get_device_group_info",
