@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
-from . import VevorHeaterConfigEntry
+from . import DieselHeaterConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: VevorHeaterConfigEntry,
+    entry: DieselHeaterConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Vevor Heater climate from config entry."""

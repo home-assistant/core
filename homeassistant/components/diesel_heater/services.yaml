@@ -1,9 +1,9 @@
 send_command:
-  name: Send Command
+  name: Send command
   description: "Send a raw BLE command to the heater for debugging purposes."
   fields:
     device_id:
-      name: Device ID
+      name: Device
       description: "MAC address or last 4-5 characters of heater MAC (e.g., 'B864' or 'A4:C1:37:24:B8:64'). Leave empty to send to all heaters."
       required: false
       example: "B864"
