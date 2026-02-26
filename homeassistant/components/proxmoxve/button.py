@@ -262,18 +262,6 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxNodeButtonNodeEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeButtonNodeEntityDescription,
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox Node button entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
-
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
         await self.hass.async_add_executor_job(
@@ -287,19 +275,6 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
     """Represents a Proxmox VM button entity."""
 
     entity_description: ProxmoxVMButtonEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxVMButtonEntityDescription,
-        vm_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox VM button entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, vm_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
@@ -315,19 +290,6 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
     """Represents a Proxmox Container button entity."""
 
     entity_description: ProxmoxContainerButtonEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxContainerButtonEntityDescription,
-        container_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox Container button entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, container_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
