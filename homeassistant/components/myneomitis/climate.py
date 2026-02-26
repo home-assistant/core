@@ -302,19 +302,26 @@ class MyNeoClimate(ClimateEntity):
             preset_to_restore = None
             if (
                 self._last_preset_mode
+                and self._attr_preset_modes is not None
                 and self._last_preset_mode in self._attr_preset_modes
             ):
                 preset_to_restore = self._last_preset_mode
 
             if not preset_to_restore:
                 for candidate in ("comfort", "setpoint", "eco", "auto"):
-                    if candidate in self._attr_preset_modes and candidate != "standby":
+                    if (
+                        self._attr_preset_modes is not None
+                        and candidate in self._attr_preset_modes
+                        and candidate != "standby"
+                    ):
                         preset_to_restore = candidate
                         break
 
             if not preset_to_restore:
-                preset_to_restore = next(
-                    (p for p in self._attr_preset_modes if p != "standby"), "auto"
+                preset_to_restore = (
+                    next((p for p in self._attr_preset_modes if p != "standby"), "auto")
+                    if self._attr_preset_modes is not None
+                    else "auto"
                 )
 
             ok = await self._set_device_mode(preset_to_restore)
