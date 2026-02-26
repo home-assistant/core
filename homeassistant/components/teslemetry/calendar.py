@@ -48,6 +48,41 @@ def _is_day_in_range(day_of_week: int, from_day: int, to_day: int) -> bool:
     return day_of_week >= from_day or day_of_week <= to_day
 
 
+def _parse_period_times(
+    period_def: dict[str, Any],
+    base_day: datetime,
+) -> tuple[datetime, datetime] | None:
+    """Parse a TOU period definition into start and end times.
+
+    Returns None if the base_day's weekday doesn't match the period's day range.
+    For periods crossing midnight, end_time will be on the following day.
+    """
+    # DaysOfWeek are from 0-6 (Monday-Sunday)
+    from_day = period_def.get("fromDayOfWeek", 0)
+    to_day = period_def.get("toDayOfWeek", 6)
+
+    if not _is_day_in_range(base_day.weekday(), from_day, to_day):
+        return None
+
+    # Hours are from 0-23, so 24 hours is 0-0
+    from_hour = period_def.get("fromHour", 0)
+    to_hour = period_def.get("toHour", 0)
+
+    # Minutes are from 0-59, so 60 minutes is 0-0
+    from_minute = period_def.get("fromMinute", 0)
+    to_minute = period_def.get("toMinute", 0)
+
+    start_time = base_day.replace(
+        hour=from_hour, minute=from_minute, second=0, microsecond=0
+    )
+    end_time = base_day.replace(hour=to_hour, minute=to_minute, second=0, microsecond=0)
+
+    if end_time <= start_time:
+        end_time += timedelta(days=1)
+
+    return start_time, end_time
+
+
 def _build_event(
     key_base: str,
     season_name: str,
@@ -99,42 +134,19 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
         for period_name, period_group in tou_periods.items():
             for period_def in period_group.get("periods", []):
-                day_of_week = now.weekday()
-                # Schema defaults fromDayOfWeek to Monday if not specified
-                from_day = period_def.get("fromDayOfWeek", 0)
-                # Schema defaults toDayOfWeek to Sunday if not specified
-                to_day = period_def.get("toDayOfWeek", 6)
-                if not _is_day_in_range(day_of_week, from_day, to_day):
+                result = _parse_period_times(period_def, now)
+                if result is None:
                     continue
 
-                # Hours are from 0-23
-                from_hour = period_def.get("fromHour", 0)
-                to_hour = period_def.get("toHour", 0)
+                start_time, end_time = result
 
-                # Minutes are from 0-59
-                from_minute = period_def.get("fromMinute", 0)
-                to_minute = period_def.get("toMinute", 0)
-
-                start_time = now.replace(
-                    hour=from_hour, minute=from_minute, second=0, microsecond=0
-                )
-                end_time = now.replace(
-                    hour=to_hour, minute=to_minute, second=0, microsecond=0
-                )
-
-                if end_time <= start_time:
-                    # Period crosses midnight
-                    potential_end_time = end_time + timedelta(days=1)
-                    if start_time <= now < potential_end_time:
-                        # Period matches and ends tomorrow
-                        end_time = potential_end_time
-                    elif (start_time - timedelta(days=1)) <= now < end_time:
-                        # Period matches and started yesterday
-                        start_time -= timedelta(days=1)
-                    else:
+                # Check if now falls within this period
+                if not (start_time <= now < end_time):
+                    # For cross-midnight periods, check yesterday's instance
+                    start_time -= timedelta(days=1)
+                    end_time -= timedelta(days=1)
+                    if not (start_time <= now < end_time):
                         continue
-                elif not (start_time <= now < end_time):
-                    continue
 
                 price = self._get_price_for_period(current_season_name, period_name)
                 return _build_event(
@@ -170,38 +182,14 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 continue
 
             tou_periods = self.seasons[season_name].get("tou_periods", {})
-            day_of_week = current_day.weekday()
 
             for period_name, period_group in tou_periods.items():
                 for period_def in period_group.get("periods", []):
-                    # Schema defaults fromDayOfWeek to Monday if not specified
-                    from_day = period_def.get("fromDayOfWeek", 0)
-                    # Schema defaults toDayOfWeek to Sunday if not specified
-                    to_day = period_def.get("toDayOfWeek", 6)
-                    if not _is_day_in_range(day_of_week, from_day, to_day):
+                    result = _parse_period_times(period_def, current_day)
+                    if result is None:
                         continue
 
-                    # Hours are from 0-23
-                    from_hour = period_def.get("fromHour", 0)
-                    to_hour = period_def.get("toHour", 0)
-
-                    # Minutes are from 0-59
-                    from_minute = period_def.get("fromMinute", 0)
-                    to_minute = period_def.get("toMinute", 0)
-
-                    start_time = current_day.replace(
-                        hour=from_hour,
-                        minute=from_minute,
-                        second=0,
-                        microsecond=0,
-                    )
-                    end_time = current_day.replace(
-                        hour=to_hour, minute=to_minute, second=0, microsecond=0
-                    )
-
-                    # Adjust for periods crossing midnight
-                    if end_time <= start_time:
-                        end_time += timedelta(days=1)
+                    start_time, end_time = result
 
                     if start_time < end_date and end_time > start_date:
                         price = self._get_price_for_period(season_name, period_name)
