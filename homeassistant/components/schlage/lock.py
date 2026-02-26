@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from pyschlage.code import AccessCode
+from pyschlage.exceptions import Error as SchlageError
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -103,7 +104,13 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
 
     async def _async_fetch_access_codes(self) -> dict[str, AccessCode] | None:
         """Fetch access codes from the lock on demand."""
-        await self.hass.async_add_executor_job(self._lock.refresh_access_codes)
+        try:
+            await self.hass.async_add_executor_job(self._lock.refresh_access_codes)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_refresh_failed",
+            ) from ex
         return self._lock.access_codes
 
     async def add_code(self, name: str, code: str) -> None:
@@ -114,7 +121,15 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         self._validate_code_value(codes, code)
 
         access_code = AccessCode(name=name, code=code)
-        await self.hass.async_add_executor_job(self._lock.add_access_code, access_code)
+        try:
+            await self.hass.async_add_executor_job(
+                self._lock.add_access_code, access_code
+            )
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_refresh_failed",
+            ) from ex
         await self.coordinator.async_request_refresh()
 
     async def delete_code(self, name: str) -> None:
@@ -137,7 +152,13 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             # Code not found in defined codes, operation successful
             return
 
-        await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
+        try:
+            await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_refresh_failed",
+            ) from ex
         await self.coordinator.async_request_refresh()
 
     async def get_codes(self) -> ServiceResponse:
