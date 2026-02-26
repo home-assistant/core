@@ -1109,7 +1109,7 @@ async def test_rpc_sleeping_device_late_setup(
     mock_rpc_device.mock_initialized()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("update.test_name_firmware")
+    assert hass.states.get("sensor.test_name_temperature")
 
 
 async def test_rpc_already_connected(
