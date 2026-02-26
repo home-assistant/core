@@ -9,10 +9,11 @@ from bsblan import BSBLANError, SetHotWaterParam
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_OFF,
+    STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_ON
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
@@ -24,14 +25,16 @@ from .entity import BSBLanDualCoordinatorEntity
 
 PARALLEL_UPDATES = 1
 
-# Mapping between BSBLan and HA operation modes
-OPERATION_MODES = {
-    "Eco": STATE_ECO,  # Energy saving mode
-    "Off": STATE_OFF,  # Protection mode
-    "On": STATE_ON,  # Continuous comfort mode
+# Mapping between BSBLan operating mode values and HA operation modes
+BSBLAN_TO_HA_OPERATION_MODE: dict[int, str] = {
+    0: STATE_OFF,  # Protection mode
+    1: STATE_PERFORMANCE,  # Continuous comfort mode
+    2: STATE_ECO,  # Eco/automatic mode
 }
 
-OPERATION_MODES_REVERSE = {v: k for k, v in OPERATION_MODES.items()}
+HA_TO_BSBLAN_OPERATION_MODE: dict[str, int] = {
+    v: k for k, v in BSBLAN_TO_HA_OPERATION_MODE.items()
+}
 
 
 async def async_setup_entry(
@@ -60,16 +63,17 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
+    _attr_operation_list = list(HA_TO_BSBLAN_OPERATION_MODE.keys())
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
+        | WaterHeaterEntityFeature.ON_OFF
     )
 
     def __init__(self, data: BSBLanData) -> None:
         """Initialize BSBLAN water heater."""
         super().__init__(data.fast_coordinator, data.slow_coordinator, data)
         self._attr_unique_id = format_mac(data.device.MAC)
-        self._attr_operation_list = list(OPERATION_MODES_REVERSE.keys())
 
         # Set temperature unit
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
@@ -77,55 +81,56 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         self._attr_available = True
 
         # Set temperature limits based on device capabilities from slow coordinator
+        dhw_config = (
+            data.slow_coordinator.data.dhw_config
+            if data.slow_coordinator.data
+            else None
+        )
+
         # For min_temp: Use reduced_setpoint from config data (slow polling)
         if (
-            data.slow_coordinator.data
-            and data.slow_coordinator.data.dhw_config is not None
-            and data.slow_coordinator.data.dhw_config.reduced_setpoint is not None
-            and hasattr(data.slow_coordinator.data.dhw_config.reduced_setpoint, "value")
+            dhw_config is not None
+            and dhw_config.reduced_setpoint is not None
+            and dhw_config.reduced_setpoint.value is not None
         ):
-            self._attr_min_temp = float(
-                data.slow_coordinator.data.dhw_config.reduced_setpoint.value
-            )
+            self._attr_min_temp = dhw_config.reduced_setpoint.value
         else:
             self._attr_min_temp = 10.0  # Default minimum
 
         # For max_temp: Use nominal_setpoint_max from config data (slow polling)
         if (
-            data.slow_coordinator.data
-            and data.slow_coordinator.data.dhw_config is not None
-            and data.slow_coordinator.data.dhw_config.nominal_setpoint_max is not None
-            and hasattr(
-                data.slow_coordinator.data.dhw_config.nominal_setpoint_max, "value"
-            )
+            dhw_config is not None
+            and dhw_config.nominal_setpoint_max is not None
+            and dhw_config.nominal_setpoint_max.value is not None
         ):
-            self._attr_max_temp = float(
-                data.slow_coordinator.data.dhw_config.nominal_setpoint_max.value
-            )
+            self._attr_max_temp = dhw_config.nominal_setpoint_max.value
         else:
             self._attr_max_temp = 65.0  # Default maximum
 
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
-        if self.coordinator.data.dhw.operating_mode is None:
+        if (
+            operating_mode := self.coordinator.data.dhw.operating_mode
+        ) is None or operating_mode.value is None:
             return None
-        current_mode = self.coordinator.data.dhw.operating_mode.desc
-        return OPERATION_MODES.get(current_mode)
+        return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.coordinator.data.dhw.dhw_actual_value_top_temperature is None:
+        if (
+            current_temp := self.coordinator.data.dhw.dhw_actual_value_top_temperature
+        ) is None:
             return None
-        return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
+        return current_temp.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.coordinator.data.dhw.nominal_setpoint is None:
+        if (target_temp := self.coordinator.data.dhw.nominal_setpoint) is None:
             return None
-        return self.coordinator.data.dhw.nominal_setpoint.value
+        return target_temp.value
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -144,10 +149,12 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        bsblan_mode = OPERATION_MODES_REVERSE.get(operation_mode)
+        # Base class validates operation_mode is in operation_list before calling
+        bsblan_mode = HA_TO_BSBLAN_OPERATION_MODE[operation_mode]
         try:
+            # Send numeric value as string - BSB-LAN API expects numeric mode values
             await self.coordinator.client.set_hot_water(
-                SetHotWaterParam(operating_mode=bsblan_mode)
+                SetHotWaterParam(operating_mode=str(bsblan_mode))
             )
         except BSBLANError as err:
             raise HomeAssistantError(
@@ -156,3 +163,11 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
             ) from err
 
         await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        await self.async_set_operation_mode(STATE_PERFORMANCE)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        await self.async_set_operation_mode(STATE_OFF)

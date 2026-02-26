@@ -9,12 +9,7 @@ from typing import Any
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -102,6 +97,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
+    _dhw_active: bool | None = None
 
     def __init__(
         self,
@@ -117,7 +113,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
-        try:
+        with self.vicare_api_handler():
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_current_temperature = (
                     self._api.getDomesticHotWaterStorageTemperature()
@@ -131,14 +127,8 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._current_mode = self._circuit.getActiveMode()
 
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._dhw_active = self._api.getDomesticHotWaterActive()
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -149,6 +139,8 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
+        if self._dhw_active is not None:
+            return OPERATION_MODE_ON if self._dhw_active else OPERATION_MODE_OFF
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode, None)
+        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)

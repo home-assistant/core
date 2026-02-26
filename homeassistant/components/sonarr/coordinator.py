@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import TypeVar, cast
 
@@ -40,15 +41,31 @@ SonarrDataT = TypeVar(
 )
 
 
+@dataclass
+class SonarrData:
+    """Sonarr data type."""
+
+    upcoming: CalendarDataUpdateCoordinator
+    commands: CommandsDataUpdateCoordinator
+    diskspace: DiskSpaceDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    series: SeriesDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+    wanted: WantedDataUpdateCoordinator
+
+
+type SonarrConfigEntry = ConfigEntry[SonarrData]
+
+
 class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     """Data update coordinator for the Sonarr integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SonarrConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SonarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: SonarrClient,
     ) -> None:
