@@ -182,7 +182,7 @@ async def test_clear_zone_override_with_ctl_id(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
-    """Test calling a zone service with a non-zone entity_id fails."""
+    """Test calling clear_zone_override service with a non-zone entity_id fails."""
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
@@ -201,7 +201,7 @@ async def test_set_zone_override_with_ctl_id(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
-    """Test calling a zone service with a non-zone entity_id fails."""
+    """Test calling set_zone_override service with a non-zone entity_id fails."""
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
