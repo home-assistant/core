@@ -48,7 +48,7 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         EvoService.CLEAR_ZONE_OVERRIDE,
         entity_domain=CLIMATE_DOMAIN,
         schema=CLEAR_ZONE_OVERRIDE_SCHEMA,
-        func=f"async_{EvoService.CLEAR_ZONE_OVERRIDE}",
+        func="async_clear_zone_override",
     )
     service.async_register_platform_entity_service(
         hass,
