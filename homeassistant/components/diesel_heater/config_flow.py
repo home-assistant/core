@@ -37,6 +37,16 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _normalize_mac_address(address: str) -> str:
+    """Normalize MAC address to uppercase with colons.
+
+    Home Assistant expects MAC addresses in format XX:XX:XX:XX:XX:XX.
+    """
+    # Replace hyphens with colons and convert to uppercase
+    normalized = address.upper().replace("-", ":")
+    return normalized
+
+
 class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vevor Diesel Heater."""
 
@@ -53,7 +63,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered Vevor Heater: %s", discovery_info.address)
 
-        await self.async_set_unique_id(discovery_info.address)
+        await self.async_set_unique_id(_normalize_mac_address(discovery_info.address))
         self._abort_if_unique_id_configured()
 
         self._discovery_info = discovery_info
@@ -67,16 +77,18 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovery_info is not None
 
         if user_input is not None:
+            address = _normalize_mac_address(self._discovery_info.address)
             return self.async_create_entry(
-                title=f"Vevor Heater {self._discovery_info.address[-5:].replace(':', '')}",
+                title=f"Diesel Heater ({address[-5:].replace(':', '')})",
                 data={
-                    CONF_ADDRESS: self._discovery_info.address,
+                    CONF_ADDRESS: address,
                     CONF_PIN: user_input.get(CONF_PIN, DEFAULT_PIN),
                 },
             )
 
         self._set_confirm_only()
 
+        address = _normalize_mac_address(self._discovery_info.address)
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema({
@@ -89,7 +101,8 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }),
             description_placeholders={
-                "name": f"Vevor Heater {self._discovery_info.address[-5:].replace(':', '')}"
+                "name": f"Diesel Heater ({address[-5:].replace(':', '')})",
+                "address": address,
             },
         )
 
@@ -98,12 +111,12 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
-            address = user_input[CONF_ADDRESS]
+            address = _normalize_mac_address(user_input[CONF_ADDRESS])
             await self.async_set_unique_id(address)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=f"Vevor Heater {address[-5:].replace(':', '')}",
+                title=f"Diesel Heater ({address[-5:].replace(':', '')})",
                 data={
                     CONF_ADDRESS: address,
                     CONF_PIN: user_input.get(CONF_PIN, DEFAULT_PIN),
@@ -187,17 +200,17 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            address = user_input[CONF_ADDRESS].upper()
+            address = _normalize_mac_address(user_input[CONF_ADDRESS])
 
             # Validate MAC address format
-            if not re.match(r"^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$", address):
+            if not re.match(r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$", address):
                 errors[CONF_ADDRESS] = "invalid_mac"
             else:
                 await self.async_set_unique_id(address)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"Vevor Heater {address[-5:].replace(':', '')}",
+                    title=f"Diesel Heater ({address[-5:].replace(':', '')})",
                     data={
                         CONF_ADDRESS: address,
                         CONF_PIN: user_input.get(CONF_PIN, DEFAULT_PIN),
@@ -207,7 +220,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual",
             data_schema=vol.Schema({
-                vol.Required(CONF_ADDRESS, description="Bluetooth MAC Address (e.g., A4:C1:37:24:B8:64)"): str,
+                vol.Required(CONF_ADDRESS): str,
                 vol.Optional(
                     CONF_PIN,
                     default=DEFAULT_PIN
@@ -218,8 +231,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }),
             errors=errors,
             description_placeholders={
-                "info": "Enter the Bluetooth MAC address of your Vevor heater. "
-                        "You can find this in your Home Assistant Bluetooth logs or using a BLE scanner app."
+                "address_format": "XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX",
             }
         )
 

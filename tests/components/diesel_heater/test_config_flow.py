@@ -120,8 +120,8 @@ class TestConfirmStep:
 
         result = await flow.async_step_confirm(user_input={})
 
-        # address[-5:] = "EE:FF" → replace ":" → "EEFF"
-        assert "EEFF" in result["title"]
+        # Title format: "Diesel Heater (EEFF)" where EEFF = address[-5:] without ":"
+        assert "Diesel Heater (EEFF)" in result["title"]
 
 
 # ---------------------------------------------------------------------------
@@ -402,7 +402,8 @@ class TestManualStep:
             user_input={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"}
         )
 
-        assert "EEFF" in result["title"]
+        # Title format: "Diesel Heater (EEFF)"
+        assert "Diesel Heater (EEFF)" in result["title"]
 
     async def test_default_pin_when_not_provided(self):
         flow = VevorHeaterConfigFlow()
