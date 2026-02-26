@@ -69,14 +69,13 @@ async def async_setup_entry(
     """Set up a IntelliClima Sensors."""
     coordinator = entry.runtime_data
 
-    entities: list[IntelliClimaSensor] = []
-    for ecocomfort2 in coordinator.data.ecocomfort2_devices.values():
-        entities.extend(
-            IntelliClimaSensor(
-                coordinator=coordinator, device=ecocomfort2, description=description
-            )
-            for description in INTELLICLIMA_SENSORS
+    entities: list[IntelliClimaSensor] = [
+        IntelliClimaSensor(
+            coordinator=coordinator, device=ecocomfort2, description=description
         )
+        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+        for description in INTELLICLIMA_SENSORS
+    ]
 
     async_add_entities(entities)
 
