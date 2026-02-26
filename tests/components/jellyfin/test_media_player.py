@@ -149,7 +149,7 @@ async def test_services(
     assert state
 
     await hass.services.async_call(
-        MP_DOMAIN,
+        DOMAIN,
         "play_media",
         {
             ATTR_ENTITY_ID: state.entity_id,
@@ -162,6 +162,7 @@ async def test_services(
     assert mock_api.remote_play_media.mock_calls[0].args == (
         "SESSION-UUID",
         ["ITEM-UUID"],
+        "PlayNow",
     )
 
     await hass.services.async_call(
