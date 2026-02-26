@@ -100,18 +100,20 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         for period_name, period_group in tou_periods.items():
             for period_def in period_group.get("periods", []):
                 day_of_week = now.weekday()
-                # Schema defaults from_day to Monday if not specified
+                # Schema defaults fromDayOfWeek to Monday if not specified
                 from_day = period_def.get("fromDayOfWeek", 0)
-                # Schema defaults to_day to Sunday if not specified
+                # Schema defaults toDayOfWeek to Sunday if not specified
                 to_day = period_def.get("toDayOfWeek", 6)
                 if not _is_day_in_range(day_of_week, from_day, to_day):
                     continue
 
-                # Hours and minutes relate to the periods within a day, not within the week
-                from_hour = period_def.get("fromHour", 0) % 24
-                from_minute = period_def.get("fromMinute", 0) % 60
-                to_hour = period_def.get("toHour", 0) % 24
-                to_minute = period_def.get("toMinute", 0) % 60
+                # Hours are from 0-23
+                from_hour = period_def.get("fromHour", 0)
+                to_hour = period_def.get("toHour", 0)
+
+                # Minutes are from 0-59
+                from_minute = period_def.get("fromMinute", 0)
+                to_minute = period_def.get("toMinute", 0)
 
                 start_time = now.replace(
                     hour=from_hour, minute=from_minute, second=0, microsecond=0
@@ -172,15 +174,20 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
             for period_name, period_group in tou_periods.items():
                 for period_def in period_group.get("periods", []):
+                    # Schema defaults fromDayOfWeek to Monday if not specified
                     from_day = period_def.get("fromDayOfWeek", 0)
+                    # Schema defaults toDayOfWeek to Sunday if not specified
                     to_day = period_def.get("toDayOfWeek", 6)
                     if not _is_day_in_range(day_of_week, from_day, to_day):
                         continue
 
-                    from_hour = period_def.get("fromHour", 0) % 24
-                    from_minute = period_def.get("fromMinute", 0) % 60
-                    to_hour = period_def.get("toHour", 0) % 24
-                    to_minute = period_def.get("toMinute", 0) % 60
+                    # Hours are from 0-23
+                    from_hour = period_def.get("fromHour", 0)
+                    to_hour = period_def.get("toHour", 0)
+
+                    # Minutes are from 0-59
+                    from_minute = period_def.get("fromMinute", 0)
+                    to_minute = period_def.get("toMinute", 0)
 
                     start_time = current_day.replace(
                         hour=from_hour,
