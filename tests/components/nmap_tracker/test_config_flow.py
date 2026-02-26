@@ -13,6 +13,7 @@ from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
     CONF_HOSTS_EXCLUDE,
     CONF_HOSTS_LIST,
+    CONF_HOURS_TO_PRUNE,
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
@@ -51,6 +52,7 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
                 CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+                CONF_HOURS_TO_PRUNE: 0,
             },
         )
         await hass.async_block_till_done()
@@ -64,6 +66,7 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+        CONF_HOURS_TO_PRUNE: 0,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -89,6 +92,7 @@ async def test_form_range(hass: HomeAssistant) -> None:
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
                 CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+                CONF_HOURS_TO_PRUNE: 0,
             },
         )
         await hass.async_block_till_done()
@@ -102,6 +106,7 @@ async def test_form_range(hass: HomeAssistant) -> None:
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+        CONF_HOURS_TO_PRUNE: 0,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -123,6 +128,7 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_HOSTS_EXCLUDE: [],
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+            CONF_HOURS_TO_PRUNE: 0,
         },
     )
     await hass.async_block_till_done()
@@ -143,6 +149,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+            CONF_HOURS_TO_PRUNE: 0,
         },
     )
     config_entry.add_to_hass(hass)
@@ -160,6 +167,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_HOSTS_EXCLUDE: [],
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+            CONF_HOURS_TO_PRUNE: 0,
         },
     )
     await hass.async_block_till_done()
@@ -185,6 +193,7 @@ async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_HOSTS_EXCLUDE: ["not an exclude"],
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+            CONF_HOURS_TO_PRUNE: 0,
         },
     )
     await hass.async_block_till_done()
@@ -216,6 +225,7 @@ async def test_form_invalid_mac_excludes(
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
             CONF_MAC_EXCLUDE: mac_excludes,
+            CONF_HOURS_TO_PRUNE: 0,
         },
     )
     await hass.async_block_till_done()
@@ -236,6 +246,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
+            CONF_HOURS_TO_PRUNE: 0,
         },
         version=1,
         minor_version=2,
@@ -251,6 +262,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
+    assert list(result["data_schema"].schema)[-1].schema == CONF_HOURS_TO_PRUNE
+
     assert result["data_schema"]({}) == {
         CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
         CONF_HOME_INTERVAL: 3,
@@ -259,6 +272,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 120,
         CONF_OPTIONS: "-n -sn -PR -T4 --min-rate 10 --host-timeout 5s",
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
+        CONF_HOURS_TO_PRUNE: 0,
     }
 
     with patch(
@@ -275,6 +289,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_HOSTS_EXCLUDE: ["4.4.4.4", "5.5.5.5"],
                 CONF_SCAN_INTERVAL: 10,
                 CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
+                CONF_HOURS_TO_PRUNE: 24,
             },
         )
         await hass.async_block_till_done()
@@ -288,5 +303,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_HOSTS_EXCLUDE: ["4.4.4.4", "5.5.5.5"],
         CONF_SCAN_INTERVAL: 10,
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
+        CONF_HOURS_TO_PRUNE: 24,
     }
     assert len(mock_setup_entry.mock_calls) == 1

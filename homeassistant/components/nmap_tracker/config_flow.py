@@ -30,8 +30,10 @@ from .const import (
     CONF_HOME_INTERVAL,
     CONF_HOSTS_EXCLUDE,
     CONF_HOSTS_LIST,
+    CONF_HOURS_TO_PRUNE,
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
+    DEFAULT_HOURS_TO_PRUNE,
     DEFAULT_OPTIONS,
     DOMAIN,
     TRACKER_SCAN_INTERVAL,
@@ -178,6 +180,14 @@ async def _async_build_schema_with_user_input(
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_CONSIDER_HOME)),
             }
         )
+
+    schema[
+        vol.Optional(
+            CONF_HOURS_TO_PRUNE,
+            default=user_input.get(CONF_HOURS_TO_PRUNE, DEFAULT_HOURS_TO_PRUNE),
+        )
+    ] = vol.All(vol.Coerce(int), vol.Range(min=0))
+
     return vol.Schema(schema)
 
 
@@ -216,7 +226,7 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nmap Tracker."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize config flow."""
