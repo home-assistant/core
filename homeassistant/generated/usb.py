@@ -5,6 +5,13 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "description": "*usb 300*",
+        "domain": "enocean",
+        "manufacturer": "*enocean*",
+        "pid": "6001",
+        "vid": "0403",
+    },
+    {
         "description": "*zbt-2*",
         "domain": "homeassistant_connect_zbt2",
         "pid": "4001",
@@ -178,5 +185,12 @@ USB = [
         "manufacturer": "nabu casa",
         "pid": "4001",
         "vid": "303A",
+    },
+    {
+        "description": "*sonoff*zwave*",
+        "domain": "zwave_js",
+        "manufacturer": "sonoff",
+        "pid": "EA60",
+        "vid": "10C4",
     },
 ]

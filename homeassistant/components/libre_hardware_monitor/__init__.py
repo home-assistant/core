@@ -6,7 +6,11 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .const import DOMAIN
 from .coordinator import (
@@ -32,15 +36,15 @@ async def async_migrate_entry(
             entity_registry, config_entry.entry_id
         )
         for reg_entry in registry_entries:
-            new_entity_id = f"{config_entry.entry_id}_{reg_entry.unique_id[4:]}"
+            new_unique_id = f"{config_entry.entry_id}_{reg_entry.unique_id[4:]}"
             _LOGGER.debug(
                 "Migrating entity %s unique id from %s to %s",
                 reg_entry.entity_id,
                 reg_entry.unique_id,
-                new_entity_id,
+                new_unique_id,
             )
             entity_registry.async_update_entity(
-                reg_entry.entity_id, new_unique_id=new_entity_id
+                reg_entry.entity_id, new_unique_id=new_unique_id
             )
 
         # Migrate device identifiers
@@ -79,6 +83,21 @@ async def async_setup_entry(
 
     lhm_coordinator = LibreHardwareMonitorCoordinator(hass, config_entry)
     await lhm_coordinator.async_config_entry_first_refresh()
+
+    if lhm_coordinator.data.is_deprecated_version:
+        issue_id = f"deprecated_api_{config_entry.entry_id}"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_api",
+            translation_placeholders={
+                "lhm_releases_url": "https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases"
+            },
+        )
 
     config_entry.runtime_data = lhm_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

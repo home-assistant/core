@@ -44,6 +44,7 @@ from aioesphomeapi import (
     UpdateInfo,
     UserService,
     ValveInfo,
+    WaterHeaterInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -96,6 +97,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TimeInfo: Platform.TIME,
     UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
+    WaterHeaterInfo: Platform.WATER_HEATER,
 }
 
 
@@ -298,16 +300,23 @@ class RuntimeEntryData:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
 
-        needed_platforms.update(INFO_TYPE_TO_PLATFORM[type(info)] for info in infos)
-        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
-
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type
+        info_types_to_platform = INFO_TYPE_TO_PLATFORM
         infos_by_type: defaultdict[type[EntityInfo], list[EntityInfo]] = defaultdict(
             list
         )
         for info in infos:
-            infos_by_type[type(info)].append(info)
+            info_type = type(info)
+            if platform := info_types_to_platform.get(info_type):
+                needed_platforms.add(platform)
+                infos_by_type[info_type].append(info)
+            else:
+                _LOGGER.warning(
+                    "Entity type %s is not supported in this version of Home Assistant",
+                    info_type,
+                )
+        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         for type_, callbacks in self.entity_info_callbacks.items():
             # If all entities for a type are removed, we
@@ -441,14 +450,6 @@ class RuntimeEntryData:
             # Ensure we save the data if we are unloading before the
             # save delay has passed.
             await self.store.async_save(self._pending_storage())
-
-    async def async_update_listener(
-        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
-    ) -> None:
-        """Handle options update."""
-        if self.original_options == entry.options:
-            return
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
     @callback
     def async_on_disconnect(self) -> None:

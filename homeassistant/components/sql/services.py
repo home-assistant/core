@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
-import decimal
 import logging
 
 from sqlalchemy.engine import Result
@@ -21,11 +19,14 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.trigger_template_entity import ValueTemplate
 from homeassistant.util.json import JsonValueType
 
 from .const import CONF_QUERY, DOMAIN
 from .util import (
     async_create_sessionmaker,
+    check_and_render_sql_query,
+    convert_value,
     generate_lambda_stmt,
     redact_credentials,
     resolve_db_url,
@@ -38,7 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_QUERY = "query"
 SERVICE_QUERY_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(
+            cv.template, ValueTemplate.from_template, validate_sql_select
+        ),
         vol.Optional(CONF_DB_URL): cv.string,
     }
 )
@@ -73,8 +76,9 @@ async def _async_query_service(
     def _execute_and_convert_query() -> list[JsonValueType]:
         """Execute the query and return the results with converted types."""
         sess: Session = sessmaker()
+        rendered_query = check_and_render_sql_query(call.hass, query_str)
         try:
-            result: Result = sess.execute(generate_lambda_stmt(query_str))
+            result: Result = sess.execute(generate_lambda_stmt(rendered_query))
         except SQLAlchemyError as err:
             _LOGGER.debug(
                 "Error executing query %s: %s",
@@ -88,14 +92,7 @@ async def _async_query_service(
             for row in result.mappings():
                 processed_row: dict[str, JsonValueType] = {}
                 for key, value in row.items():
-                    if isinstance(value, decimal.Decimal):
-                        processed_row[key] = float(value)
-                    elif isinstance(value, datetime.date):
-                        processed_row[key] = value.isoformat()
-                    elif isinstance(value, (bytes, bytearray)):
-                        processed_row[key] = f"0x{value.hex()}"
-                    else:
-                        processed_row[key] = value
+                    processed_row[key] = convert_value(value)
                 rows.append(processed_row)
             return rows
         finally:

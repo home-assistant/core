@@ -219,9 +219,9 @@ async def library_payload(hass):
     )
 
     for child in library_info.children:
-        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+        child.thumbnail = "/api/brands/integration/kodi/logo.png"
 
-    with contextlib.suppress(media_source.BrowseError):
+    with contextlib.suppress(BrowseError):
         item = await media_source.async_browse_media(
             hass, None, content_filter=media_source_content_filter
         )

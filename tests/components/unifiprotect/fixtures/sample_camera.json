@@ -173,7 +173,9 @@
   "speakerSettings": {
     "isEnabled": true,
     "areSystemSoundsEnabled": false,
-    "volume": 100
+    "volume": 100,
+    "speakerVolume": 100,
+    "ringVolume": 100
   },
   "recordingSettings": {
     "prePaddingSecs": 10,

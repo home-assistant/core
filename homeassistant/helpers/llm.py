@@ -782,8 +782,18 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             return {"type": "string", "enum": schema.config["languages"]}
         return {"type": "string", "format": "RFC 5646"}
 
-    if isinstance(schema, (selector.LocationSelector, selector.MediaSelector)):
+    if isinstance(schema, selector.LocationSelector):
         return convert(schema.DATA_SCHEMA)
+
+    if isinstance(schema, selector.MediaSelector):
+        item_schema = convert(schema.DATA_SCHEMA)
+        # Media selector allows multiple when configured
+        if schema.config.get("multiple"):
+            return {
+                "type": "array",
+                "items": item_schema,
+            }
+        return item_schema
 
     if isinstance(schema, selector.NumberSelector):
         result = {"type": "number"}

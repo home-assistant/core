@@ -26,7 +26,7 @@ CACHE_SIZE = 8192
 
 _LOGGER = logging.getLogger(__name__)
 
-QUERY_STATISTIC_META = (
+QUERY_STATISTICS_META = (
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
     StatisticsMeta.source,
@@ -55,7 +55,7 @@ def _generate_get_metadata_stmt(
 
     Depending on the schema version, either mean_type (added in version 49) or has_mean column is used.
     """
-    columns: list[InstrumentedAttribute[Any]] = list(QUERY_STATISTIC_META)
+    columns: list[InstrumentedAttribute[Any]] = list(QUERY_STATISTICS_META)
     if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
         columns.append(StatisticsMeta.mean_type)
     else:

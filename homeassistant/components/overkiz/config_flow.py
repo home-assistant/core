@@ -164,7 +164,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
@@ -229,7 +229,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the local authentication step via config flow."""
         errors = {}
         description_placeholders = {
-            "somfy-developer-mode-docs": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started"
+            "somfy_developer_mode_docs": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started"
         }
 
         if user_input:

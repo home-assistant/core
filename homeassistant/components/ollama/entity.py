@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 
 from . import OllamaConfigEntry
 from .const import (
@@ -75,7 +76,11 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
     small local tool use models. This will repair invalid json arguments and
     omit unnecessary arguments with empty values that will fail intent parsing.
     """
-    return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
+    return {
+        k: _fix_invalid_arguments(v)
+        for k, v in arguments.items()
+        if v is not None and v != ""
+    }
 
 
 def _convert_content(
@@ -89,7 +94,7 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json.dumps(chat_content.tool_result),
+            content=json_dumps(chat_content.tool_result),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(

@@ -6,19 +6,24 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
+    ADD_CREATED_COLUMN,
+    DATA,
     DATA_CONFIG_ENTRY,
     ROWS,
+    SERVICE_APPEND_SHEET,
     SERVICE_GET_SHEET,
     WORKSHEET,
 )
@@ -72,7 +77,7 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -194,12 +199,24 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
+@pytest.mark.parametrize(
+    ("add_created_column_param", "expected_row"),
+    [
+        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
+        ({}, ["bar", "2024-01-15 12:30:45.123456"]),
+    ],
+    ids=["created_column_true", "created_column_false", "created_column_default"],
+)
+@freeze_time("2024-01-15 12:30:45.123456")
 async def test_append_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
+    add_created_column_param: dict[str, bool],
+    expected_row: list[str],
 ) -> None:
-    """Test service call appending to a sheet."""
+    """Test created column behavior based on add_created_column parameter."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -207,17 +224,26 @@ async def test_append_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo", "created"]]
+
         await hass.services.async_call(
             DOMAIN,
-            "append_sheet",
+            SERVICE_APPEND_SHEET,
             {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                DATA: {"foo": "bar"},
+                **add_created_column_param,
             },
             blocking=True,
         )
-    assert len(mock_client.mock_calls) == 8
+
+        mock_worksheet.append_rows.assert_called_once()
+        rows_data = mock_worksheet.append_rows.call_args[0][0]
+        assert rows_data[0] == expected_row
 
 
 async def test_get_sheet(
@@ -343,7 +369,7 @@ async def test_append_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -354,13 +380,14 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -371,6 +398,7 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_get_sheet_invalid_config_entry(
@@ -402,7 +430,7 @@ async def test_get_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ServiceValidationError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_SHEET,
@@ -414,6 +442,7 @@ async def test_get_sheet_invalid_config_entry(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)

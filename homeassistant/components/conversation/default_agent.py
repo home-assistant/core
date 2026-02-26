@@ -66,6 +66,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    llm,
     start as ha_start,
     template,
     translation,
@@ -75,13 +76,18 @@ from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .agent_manager import get_agent_manager
-from .chat_log import AssistantContent, ChatLog
-from .const import DOMAIN, ConversationEntityFeature
+from .agent_manager import IntentSourceConfig, get_agent_manager
+from .chat_log import AssistantContent, ChatLog, ToolResultContent
+from .const import (
+    DOMAIN,
+    METADATA_CUSTOM_FILE,
+    METADATA_CUSTOM_SENTENCE,
+    ConversationEntityFeature,
+    IntentSource,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
-from .trigger import TriggerDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,8 +97,6 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
-METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
-METADATA_CUSTOM_FILE = "hass_custom_file"
 METADATA_FUZZY_MATCH = "hass_fuzzy_match"
 
 ERROR_SENTINEL = object()
@@ -122,7 +126,7 @@ class SentenceTriggerResult:
 
     sentence: str
     sentence_template: str | None
-    matched_triggers: dict[int, RecognizeResult]
+    matched_triggers: dict[str, RecognizeResult]
 
 
 class IntentMatchingStage(Enum):
@@ -202,10 +206,9 @@ class IntentCache:
 async def async_setup_default_agent(
     hass: HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
-    config_intents: dict[str, Any],
 ) -> None:
     """Set up entity registry listener for the default agent."""
-    agent = DefaultAgent(hass, config_intents)
+    agent = DefaultAgent(hass)
     await entity_component.async_add_entities([agent])
     await get_agent_manager(hass).async_setup_default_agent(agent)
 
@@ -230,18 +233,22 @@ class DefaultAgent(ConversationEntity):
     _attr_name = "Home Assistant"
     _attr_supported_features = ConversationEntityFeature.CONTROL
 
-    def __init__(self, hass: HomeAssistant, config_intents: dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
+
         self._lang_intents: dict[str, LanguageIntents | object] = {}
         self._load_intents_lock = asyncio.Lock()
 
-        # intent -> [sentences]
-        self._config_intents: dict[str, Any] = config_intents
+        # Intents from common conversation config
+        self._config_intents_config: IntentSourceConfig = {}
 
-        # Sentences that will trigger a callback (skipping intent recognition)
-        self._triggers_details: list[TriggerDetails] = []
+        # Intents from conversation triggers
         self._trigger_intents: Intents | None = None
+        self._trigger_intents_config: IntentSourceConfig = {}
+
+        # Subscription to intents updates
+        self._unsub_intents: Callable[[], None] | None = None
 
         # Slot lists for entities, areas, etc.
         self._slot_lists: dict[str, SlotList] | None = None
@@ -257,6 +264,33 @@ class DefaultAgent(ConversationEntity):
         # Shared configuration for fuzzy matching
         self.fuzzy_matching = True
         self._fuzzy_config: FuzzyConfig | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to intents updates when added to hass."""
+        self._unsub_intents = get_agent_manager(self.hass).subscribe_intents(
+            self._update_intents
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from intents updates when removed from hass."""
+        if self._unsub_intents is not None:
+            self._unsub_intents()
+            self._unsub_intents = None
+
+    @callback
+    def _update_intents(
+        self, intents_update: dict[IntentSource, IntentSourceConfig]
+    ) -> None:
+        """Handle intents update from agent_manager subscription."""
+        if IntentSource.CONFIG in intents_update:
+            self._config_intents_config = intents_update[IntentSource.CONFIG]
+            # Intents have changed, so we must clear the cache
+            self._intent_cache.clear()
+
+        if IntentSource.TRIGGER in intents_update:
+            self._trigger_intents_config = intents_update[IntentSource.TRIGGER]
+            # Force rebuild on next use
+            self._trigger_intents = None
 
     @property
     def supported_languages(self) -> list[str]:
@@ -433,7 +467,7 @@ class DefaultAgent(ConversationEntity):
         if trigger_result := await self.async_recognize_sentence_trigger(user_input):
             # Process callbacks and get response
             response_text = await self._handle_trigger_result(
-                trigger_result, user_input
+                trigger_result, user_input, chat_log
             )
 
             # Convert to conversation result
@@ -445,8 +479,9 @@ class DefaultAgent(ConversationEntity):
         if response is None:
             # Match intents
             intent_result = await self.async_recognize_intent(user_input)
+
             response = await self._async_process_intent_result(
-                intent_result, user_input
+                intent_result, user_input, chat_log
             )
 
         speech: str = response.speech.get("plain", {}).get("speech", "")
@@ -465,6 +500,7 @@ class DefaultAgent(ConversationEntity):
         self,
         result: RecognizeResult | None,
         user_input: ConversationInput,
+        chat_log: ChatLog,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -527,11 +563,20 @@ class DefaultAgent(ConversationEntity):
             ConversationTraceEventType.TOOL_CALL,
             {
                 "intent_name": result.intent.name,
-                "slots": {
-                    entity.name: entity.value or entity.text
-                    for entity in result.entities_list
-                },
+                "slots": {entity.name: entity.value for entity in result.entities_list},
             },
+        )
+        tool_input = llm.ToolInput(
+            tool_name=result.intent.name,
+            tool_args={entity.name: entity.value for entity in result.entities_list},
+            external=True,
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
         )
 
         try:
@@ -553,7 +598,7 @@ class DefaultAgent(ConversationEntity):
             error_response_type, error_response_args = _get_match_error_response(
                 self.hass, match_error
             )
-            return _make_error_result(
+            intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
                 self._get_error_text(
@@ -564,7 +609,7 @@ class DefaultAgent(ConversationEntity):
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
             _LOGGER.exception("Intent handling error")
-            return _make_error_result(
+            intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
                 self._get_error_text(
@@ -573,7 +618,7 @@ class DefaultAgent(ConversationEntity):
             )
         except intent.IntentUnexpectedError:
             _LOGGER.exception("Unexpected intent error")
-            return _make_error_result(
+            intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.UNKNOWN,
                 self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
@@ -594,6 +639,16 @@ class DefaultAgent(ConversationEntity):
                     language, response_template, intent_response, result
                 )
                 intent_response.async_set_speech(speech)
+
+        tool_result = llm.IntentResponseDict(intent_response)
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id=user_input.agent_id,
+                tool_call_id=tool_input.id,
+                tool_name=tool_input.tool_name,
+                tool_result=tool_result,
+            )
+        )
 
         return intent_response
 
@@ -1159,33 +1214,10 @@ class DefaultAgent(ConversationEntity):
                     custom_sentences_path,
                 )
 
-        # Load sentences from HA config for default language only
-        if self._config_intents and (
-            self.hass.config.language in (language, language_variant)
-        ):
-            hass_config_path = self.hass.config.path()
-            merge_dict(
-                intents_dict,
-                {
-                    "intents": {
-                        intent_name: {
-                            "data": [
-                                {
-                                    "sentences": sentences,
-                                    "metadata": {
-                                        METADATA_CUSTOM_SENTENCE: True,
-                                        METADATA_CUSTOM_FILE: hass_config_path,
-                                    },
-                                }
-                            ]
-                        }
-                        for intent_name, sentences in self._config_intents.items()
-                    }
-                },
-            )
-            _LOGGER.debug(
-                "Loaded intents from configuration.yaml",
-            )
+        merge_dict(
+            intents_dict,
+            self._config_intents_config,
+        )
 
         if not intents_dict:
             return None
@@ -1452,27 +1484,12 @@ class DefaultAgent(ConversationEntity):
 
         return response_template.async_render(response_args)
 
-    @callback
-    def update_triggers(self, triggers_details: list[TriggerDetails]) -> None:
-        """Update triggers."""
-        self._triggers_details = triggers_details
-
-        # Force rebuild on next use
-        self._trigger_intents = None
-
     def _rebuild_trigger_intents(self) -> None:
-        """Rebuild the HassIL intents object from the current trigger sentences."""
+        """Rebuild the HassIL intents object from the trigger intents dict."""
         intents_dict = {
             "language": self.hass.config.language,
-            "intents": {
-                # Use trigger data index as a virtual intent name for HassIL.
-                # This works because the intents are rebuilt on every
-                # register/unregister.
-                str(trigger_id): {"data": [{"sentences": trigger_details.sentences}]}
-                for trigger_id, trigger_details in enumerate(self._triggers_details)
-            },
+            **self._trigger_intents_config,
         }
-
         trigger_intents = Intents.from_dict(intents_dict)
 
         # Assume slot list references are wildcards
@@ -1487,7 +1504,7 @@ class DefaultAgent(ConversationEntity):
 
         self._trigger_intents = trigger_intents
 
-        _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
+        _LOGGER.debug("Rebuilt trigger intents: %s", self._trigger_intents_config)
 
     async def async_recognize_sentence_trigger(
         self, user_input: ConversationInput
@@ -1497,7 +1514,7 @@ class DefaultAgent(ConversationEntity):
         Calls the registered callbacks if there's a match and returns a sentence
         trigger result.
         """
-        if not self._triggers_details:
+        if not self._trigger_intents_config.get("intents"):
             # No triggers registered
             return None
 
@@ -1507,18 +1524,18 @@ class DefaultAgent(ConversationEntity):
 
         assert self._trigger_intents is not None
 
-        matched_triggers: dict[int, RecognizeResult] = {}
+        matched_triggers: dict[str, RecognizeResult] = {}
         matched_template: str | None = None
         for result in recognize_all(user_input.text, self._trigger_intents):
             if result.intent_sentence is not None:
                 matched_template = result.intent_sentence.text
 
-            trigger_id = int(result.intent.name)
-            if trigger_id in matched_triggers:
+            trigger_intent_name = result.intent.name
+            if trigger_intent_name in matched_triggers:
                 # Already matched a sentence from this trigger
                 break
 
-            matched_triggers[trigger_id] = result
+            matched_triggers[trigger_intent_name] = result
 
         if not matched_triggers:
             # Sentence did not match any trigger sentences
@@ -1536,15 +1553,34 @@ class DefaultAgent(ConversationEntity):
         )
 
     async def _handle_trigger_result(
-        self, result: SentenceTriggerResult, user_input: ConversationInput
+        self,
+        result: SentenceTriggerResult,
+        user_input: ConversationInput,
+        chat_log: ChatLog,
     ) -> str:
         """Run sentence trigger callbacks and return response text."""
+        manager = get_agent_manager(self.hass)
 
         # Gather callback responses in parallel
         trigger_callbacks = [
-            self._triggers_details[trigger_id].callback(user_input, trigger_result)
-            for trigger_id, trigger_result in result.matched_triggers.items()
+            trigger_callback(user_input, trigger_result)
+            for trigger_intent_name, trigger_result in result.matched_triggers.items()
+            if (trigger_callback := manager.get_trigger_callback(trigger_intent_name))
+            is not None
         ]
+
+        tool_input = llm.ToolInput(
+            tool_name="trigger_sentence",
+            tool_args={},
+            external=True,
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
+        )
 
         # Use first non-empty result as response.
         #
@@ -1574,23 +1610,38 @@ class DefaultAgent(ConversationEntity):
                 f"component.{DOMAIN}.conversation.agent.done", "Done"
             )
 
+        tool_result: dict[str, Any] = {"response": response_text}
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id=user_input.agent_id,
+                tool_call_id=tool_input.id,
+                tool_name=tool_input.tool_name,
+                tool_result=tool_result,
+            )
+        )
+
         return response_text
 
     async def async_handle_sentence_triggers(
-        self, user_input: ConversationInput
+        self,
+        user_input: ConversationInput,
+        chat_log: ChatLog,
     ) -> str | None:
         """Try to input sentence against sentence triggers and return response text.
 
         Returns None if no match occurred.
         """
         if trigger_result := await self.async_recognize_sentence_trigger(user_input):
-            return await self._handle_trigger_result(trigger_result, user_input)
+            return await self._handle_trigger_result(
+                trigger_result, user_input, chat_log
+            )
 
         return None
 
     async def async_handle_intents(
         self,
         user_input: ConversationInput,
+        chat_log: ChatLog,
         *,
         intent_filter: Callable[[RecognizeResult], bool] | None = None,
     ) -> intent.IntentResponse | None:
@@ -1606,7 +1657,7 @@ class DefaultAgent(ConversationEntity):
             # No error message on failed match
             return None
 
-        response = await self._async_process_intent_result(result, user_input)
+        response = await self._async_process_intent_result(result, user_input, chat_log)
         if (
             response.response_type == intent.IntentResponseType.ERROR
             and response.error_code

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
-from pyfritzhome.devicetypes import FritzhomeTemplate
+from pyfritzhome.devicetypes import FritzhomeTemplate, FritzhomeTrigger
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,6 +27,7 @@ class FritzboxCoordinatorData:
 
     devices: dict[str, FritzhomeDevice]
     templates: dict[str, FritzhomeTemplate]
+    triggers: dict[str, FritzhomeTrigger]
     supported_color_properties: dict[str, tuple[dict, list]]
 
 
@@ -37,6 +38,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
     configuration_url: str
     fritz: Fritzhome
     has_templates: bool
+    has_triggers: bool
 
     def __init__(self, hass: HomeAssistant, config_entry: FritzboxConfigEntry) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
@@ -50,8 +52,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         self.new_devices: set[str] = set()
         self.new_templates: set[str] = set()
+        self.new_triggers: set[str] = set()
 
-        self.data = FritzboxCoordinatorData({}, {}, {})
+        self.data = FritzboxCoordinatorData({}, {}, {}, {})
 
     async def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -60,6 +63,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             host=self.config_entry.data[CONF_HOST],
             user=self.config_entry.data[CONF_USERNAME],
             password=self.config_entry.data[CONF_PASSWORD],
+            timeout=20,
         )
 
         try:
@@ -74,7 +78,17 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         )
         LOGGER.debug("enable smarthome templates: %s", self.has_templates)
 
-        self.configuration_url = self.fritz.get_prefixed_host()
+        try:
+            self.has_triggers = await self.hass.async_add_executor_job(
+                self.fritz.has_triggers
+            )
+        except HTTPError:
+            # Fritz!OS < 7.39 just don't have this api endpoint
+            # so we need to fetch the HTTPError here and assume no triggers
+            self.has_triggers = False
+        LOGGER.debug("enable smarthome triggers: %s", self.has_triggers)
+
+        self.configuration_url = self.fritz.base_url
 
         await self.async_config_entry_first_refresh()
         self.cleanup_removed_devices(self.data)
@@ -92,7 +106,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         available_main_ains = [
             ain
-            for ain, dev in data.devices.items() | data.templates.items()
+            for ain, dev in (data.devices | data.templates | data.triggers).items()
             if dev.device_and_unit_id[1] is None
         ]
         device_reg = dr.async_get(self.hass)
@@ -108,21 +122,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
-        try:
-            self.fritz.update_devices(ignore_removed=False)
-            if self.has_templates:
-                self.fritz.update_templates(ignore_removed=False)
-        except RequestConnectionError as ex:
-            raise UpdateFailed from ex
-        except HTTPError:
-            # If the device rebooted, login again
-            try:
-                self.fritz.login()
-            except LoginError as ex:
-                raise ConfigEntryAuthFailed from ex
-            self.fritz.update_devices(ignore_removed=False)
-            if self.has_templates:
-                self.fritz.update_templates(ignore_removed=False)
+        self.fritz.update_devices(ignore_removed=False)
+        if self.has_templates:
+            self.fritz.update_templates(ignore_removed=False)
+        if self.has_triggers:
+            self.fritz.update_triggers(ignore_removed=False)
 
         devices = self.fritz.get_devices()
         device_data = {}
@@ -156,18 +160,37 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             for template in templates:
                 template_data[template.ain] = template
 
+        trigger_data = {}
+        if self.has_triggers:
+            triggers = self.fritz.get_triggers()
+            for trigger in triggers:
+                trigger_data[trigger.ain] = trigger
+
         self.new_devices = device_data.keys() - self.data.devices.keys()
         self.new_templates = template_data.keys() - self.data.templates.keys()
+        self.new_triggers = trigger_data.keys() - self.data.triggers.keys()
 
         return FritzboxCoordinatorData(
             devices=device_data,
             templates=template_data,
+            triggers=trigger_data,
             supported_color_properties=supported_color_properties,
         )
 
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
-        new_data = await self.hass.async_add_executor_job(self._update_fritz_devices)
+        try:
+            new_data = await self.hass.async_add_executor_job(
+                self._update_fritz_devices
+            )
+        except (RequestConnectionError, HTTPError) as ex:
+            LOGGER.debug(
+                "Reload %s due to error '%s' to ensure proper re-login",
+                self.config_entry.title,
+                ex,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed from ex
 
         for device in new_data.devices.values():
             # create device registry entry for new main devices
@@ -193,6 +216,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         if (
             self.data.devices.keys() - new_data.devices.keys()
             or self.data.templates.keys() - new_data.templates.keys()
+            or self.data.triggers.keys() - new_data.triggers.keys()
         ):
             self.cleanup_removed_devices(new_data)
 

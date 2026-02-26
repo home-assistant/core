@@ -49,7 +49,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
             return
         if payload["service"] in (
             EvoService.SET_ZONE_OVERRIDE,
-            EvoService.RESET_ZONE_OVERRIDE,
+            EvoService.CLEAR_ZONE_OVERRIDE,
         ):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
@@ -181,7 +181,7 @@ class EvoChild(EvoEntity):
 
         self._device_state_attrs = {
             "activeFaults": self._evo_device.active_faults,
-            "setpoints": self._setpoints,
+            "setpoints": self.setpoints,
         }
 
         super()._handle_coordinator_update()

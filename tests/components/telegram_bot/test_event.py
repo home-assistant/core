@@ -4,8 +4,8 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.telegram_bot.const import (
+    ATTR_CHAT_ID,
     ATTR_MESSAGE,
-    ATTR_TARGET,
     DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -29,7 +29,7 @@ async def test_send_message(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_TARGET: 123456, ATTR_MESSAGE: "test message"},
+        {ATTR_CHAT_ID: 123456, ATTR_MESSAGE: "test message"},
         blocking=True,
         return_response=True,
     )
@@ -37,4 +37,5 @@ async def test_send_message(
     await hass.async_block_till_done()
 
     state = hass.states.get("event.mock_title_update_event")
+    assert state is not None
     assert state.attributes == snapshot(exclude=props("config_entry_id"))

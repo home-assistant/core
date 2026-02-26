@@ -14,9 +14,9 @@ from .const import (
     EVENT_TELEGRAM_COMMAND,
     EVENT_TELEGRAM_SENT,
     EVENT_TELEGRAM_TEXT,
-    SIGNAL_UPDATE_EVENT,
 )
 from .entity import TelegramBotEntity
+from .helpers import signal
 
 
 async def async_setup_entry(
@@ -55,7 +55,7 @@ class TelegramBotEventEntity(TelegramBotEntity, EventEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_EVENT,
+                signal(self.config_entry.runtime_data.bot),
                 self._async_handle_event,
             )
         )

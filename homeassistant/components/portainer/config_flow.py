@@ -55,7 +55,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
-    VERSION = 2
+    VERSION = 4
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -159,6 +159,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(user_input[CONF_API_TOKEN])
+                self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
