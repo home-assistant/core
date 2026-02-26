@@ -22,7 +22,7 @@ from homeassistant.exceptions import ServiceValidationError
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_service_refresh_system(
+async def test_refresh_system(
     hass: HomeAssistant,
     evohome: EvohomeClient,
 ) -> None:
@@ -41,7 +41,7 @@ async def test_service_refresh_system(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_service_reset_system(
+async def test_reset_system(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
@@ -60,7 +60,7 @@ async def test_service_reset_system(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_system_mode(
+async def test_set_system_mode(
     hass: HomeAssistant,
     ctl_id: str,
     freezer: FrozenDateTimeFactory,
@@ -116,7 +116,7 @@ async def test_ctl_set_system_mode(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_zone_clear_zone_override(
+async def test_clear_zone_override(
     hass: HomeAssistant,
     zone_id: str,
 ) -> None:
@@ -136,7 +136,7 @@ async def test_zone_clear_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_zone_set_zone_override(
+async def test_set_zone_override(
     hass: HomeAssistant,
     zone_id: str,
     freezer: FrozenDateTimeFactory,
@@ -178,7 +178,7 @@ async def test_zone_set_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_zone_clear_zone_override_with_ctl_id(  # ServiceValidationError
+async def test_clear_zone_override_with_ctl_id(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
