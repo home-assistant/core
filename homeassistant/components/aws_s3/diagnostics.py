@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     backup_manager: BackupManager = hass.data[BACKUP_DATA_MANAGER]
     bucket = entry.data[CONF_BUCKET]
-    backups = await async_list_backups_from_s3(coordinator.client, bucket)
+    backups = await async_list_backups_from_s3(coordinator.client, entry.data[CONF_BUCKET])
 
     data = {
         "coordinator_data": dataclasses.asdict(coordinator.data),
