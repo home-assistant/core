@@ -185,10 +185,10 @@ class MyNeoSelect(SelectEntity):
         if available is not None:
             self._attr_available = available
             if not available:
-                if not getattr(self, "_unavailable_logged", False):
+                if not self._unavailable_logged:
                     _LOGGER.info("The entity %s is unavailable", self.entity_id)
                     self._unavailable_logged = True
-            elif getattr(self, "_unavailable_logged", False):
+            elif self._unavailable_logged:
                 _LOGGER.info("The entity %s is back online", self.entity_id)
                 self._unavailable_logged = False
 

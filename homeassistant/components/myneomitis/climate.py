@@ -19,7 +19,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MyNeomitisConfigEntry, process_connection_update
-from .const import DOMAIN, PRESET_MODE_MAP, PRESET_MODE_MODELS, REVERSE_PRESET_MODE_MAP
+from .const import (
+    DOMAIN,
+    PRESET_MODE_MAP,
+    PRESET_MODE_MODELS,
+    REVERSE_PRESET_MODE_MAP,
+    Preset,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +101,7 @@ class MyNeoClimate(ClimateEntity):
         if model in PRESET_MODE_MODELS:
             self._attr_preset_modes = PRESET_MODE_MODELS[model]
         else:
-            default_presets = sorted(set(REVERSE_PRESET_MODE_MAP.values()))
+            default_presets = [p.key for p in Preset]
             _LOGGER.warning(
                 "Model %s not found in PRESET_MODE_MODELS, using default presets %s",
                 model,
@@ -144,9 +150,10 @@ class MyNeoClimate(ClimateEntity):
         await super().async_added_to_hass()
         device_id = self._device.get("_id")
         register_listener = getattr(self._api, "register_listener", None)
-        if register_listener is None:
+        if not callable(register_listener):
             _LOGGER.debug(
-                "API has no register_listener, skipping ws listener for %s", device_id
+                "API has no callable register_listener, skipping ws listener for %s",
+                device_id,
             )
             return
 
