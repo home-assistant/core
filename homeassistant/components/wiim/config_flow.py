@@ -199,8 +199,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 e,
                 exc_info=True,
             )
-            raise
-            # return self.async_abort(reason="unknown")
+            return self.async_abort(reason="unknown")
 
         # If UDN wasn't in TXT, it's now in device_info from HTTP validation
         await self.async_set_unique_id(device_info[CONF_UDN])
