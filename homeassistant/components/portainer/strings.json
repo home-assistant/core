@@ -57,7 +57,13 @@
   },
   "entity": {
     "binary_sensor": {
-      "status": {
+      "container_status": {
+        "name": "Status"
+      },
+      "endpoint_status": {
+        "name": "Status"
+      },
+      "stack_status": {
         "name": "Status"
       }
     },
