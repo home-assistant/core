@@ -22,7 +22,7 @@ class EnOceanRuntimeData:
     """Store gateway and dispatcher in runtime_data."""
 
     gateway: EnOceanGateway
-    disconnect_handle: Callable | None
+    disconnect_handle: Callable[[], None] | None
 
 
 type EnOceanConfigEntry = ConfigEntry[EnOceanRuntimeData]
