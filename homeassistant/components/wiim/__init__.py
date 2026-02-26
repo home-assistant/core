@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 
     if not upnp_location:
         LOGGER.error(
-            "UPnP location is missing in config entry for %s (UDN: %s, Host: %s)"
+            "UPnP location is missing in config entry for %s (UDN: %s, Host: %s). "
             "UPnP location is required for setup",
             entry.title,
             udn,
