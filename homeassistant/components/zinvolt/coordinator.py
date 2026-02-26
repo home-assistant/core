@@ -5,7 +5,7 @@ import logging
 
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltError
-from zinvolt.models import BatteryState
+from zinvolt.models import Battery, BatteryState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,23 +26,23 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[BatteryState]):
         hass: HomeAssistant,
         config_entry: ZinvoltConfigEntry,
         client: ZinvoltClient,
-        battery_id: str,
+        battery: Battery,
     ) -> None:
         """Initialize the Zinvolt device."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"Zinvolt {battery_id}",
+            name=f"Zinvolt {battery.identifier}",
             update_interval=timedelta(minutes=5),
         )
-        self.battery_id = battery_id
+        self.battery = battery
         self.client = client
 
     async def _async_update_data(self) -> BatteryState:
         """Update data from Zinvolt."""
         try:
-            return await self.client.get_battery_status(self.battery_id)
+            return await self.client.get_battery_status(self.battery.identifier)
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed",

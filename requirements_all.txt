@@ -130,7 +130,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==5.0.0
+accuweather==5.1.0
 
 # homeassistant.components.actron_air
 actron-neo-api==0.4.1
@@ -1192,7 +1192,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.hdfury
-hdfury==1.5.0
+hdfury==1.6.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.4
@@ -1226,7 +1226,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260128.6
+home-assistant-frontend==20260225.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.2.13
@@ -1374,7 +1374,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.2.13.222258
+knx-frontend==2026.2.25.165736
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -3189,7 +3189,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2026.1.4
+velbus-aio==2026.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
