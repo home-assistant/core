@@ -16,6 +16,14 @@ from homeassistant.helpers.entity import Entity
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 
+def combine_hex(dev_id: list[int]) -> int:
+    """Combine list of integer values to one big integer.
+
+    This function replaces the previously used function from the enocean library and is considered tech debt that will have to be replaced.
+    """
+    return EnOceanAddress.from_bytelist(dev_id).to_number()
+
+
 class EnOceanEntity(Entity):
     """Parent class for all entities associated with the EnOcean component."""
 

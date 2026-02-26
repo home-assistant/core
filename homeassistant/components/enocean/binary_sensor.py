@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enocean.utils import combine_hex
 from enocean_async import ERP1Telegram
 import voluptuous as vol
 
@@ -18,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]

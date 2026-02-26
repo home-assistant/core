@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean.utils import combine_hex
 from enocean_async import (
     EEPID,
     ENOCEAN_EEP_DATABASE,
@@ -26,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, LOGGER
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"
