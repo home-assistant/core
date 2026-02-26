@@ -143,28 +143,31 @@ class MyNeoClimate(ClimateEntity):
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
         device_id = self._device.get("_id")
-
-        try:
-            unsubscribe = self._api.register_listener(device_id, self.handle_ws_update)
-        except AttributeError:
+        if not device_id:
+            return
+        register_listener = getattr(self._api, "register_listener", None)
+        if register_listener is None:
             _LOGGER.debug(
                 "API has no register_listener, skipping ws listener for %s", device_id
             )
+            return
+
+        unsubscribe = register_listener(device_id, self.handle_ws_update)
+
+        if callable(unsubscribe):
+            self.async_on_remove(unsubscribe)
+        elif hasattr(unsubscribe, "unsubscribe"):
+            self.async_on_remove(unsubscribe.unsubscribe)
+        elif hasattr(unsubscribe, "close"):
+            self.async_on_remove(unsubscribe.close)
+        elif unsubscribe is None:
+            pass
         else:
-            if callable(unsubscribe):
-                self.async_on_remove(unsubscribe)
-            elif hasattr(unsubscribe, "unsubscribe"):
-                self.async_on_remove(unsubscribe.unsubscribe)
-            elif hasattr(unsubscribe, "close"):
-                self.async_on_remove(unsubscribe.close)
-            elif unsubscribe is None:
-                pass
-            else:
-                _LOGGER.debug(
-                    "register_listener returned unsupported type %s for %s",
-                    type(unsubscribe),
-                    device_id,
-                )
+            _LOGGER.debug(
+                "register_listener returned unsupported type %s for %s",
+                type(unsubscribe),
+                device_id,
+            )
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
