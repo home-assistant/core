@@ -120,6 +120,29 @@ async def test_battery_sensor(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+async def test_actuator_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test actuator enabled sensor."""
+    entity_id = "binary_sensor.mock_door_lock_actuator"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 1, 257, 2, False)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/257/2", False)
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_optional_sensor_from_featuremap(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -596,3 +619,117 @@ async def test_thermostat_remote_sensing(
     state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
     assert state
     assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
+async def test_smoke_detector(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test smoke detector sensor."""
+    smoke_state_attribute = clusters.SmokeCoAlarm.Attributes.SmokeState
+
+    # Test initial state (SmokeState = 0, kNormal)
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "off"
+
+    # Set SmokeState to kWarning (value 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        smoke_state_attribute.cluster_id,
+        smoke_state_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "on"
+
+    # Set SmokeState to kCritical (value 2)
+    set_node_attribute(
+        matter_node,
+        1,
+        smoke_state_attribute.cluster_id,
+        smoke_state_attribute.attribute_id,
+        2,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "on"
+
+    # Set SmokeState back to kNormal (value 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        smoke_state_attribute.cluster_id,
+        smoke_state_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_co_sensor"])
+async def test_co_detector(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CO detector sensor."""
+    co_state_attribute = clusters.SmokeCoAlarm.Attributes.COState
+
+    # Test initial state (COState = 0, kNormal)
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "off"
+
+    # Set COState to kWarning (value 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "on"
+
+    # Set COState to kCritical (value 2)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        2,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "on"
+
+    # Set COState back to kNormal (value 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "off"

@@ -14,6 +14,7 @@ import pytest
 from homeassistant.components import sensor
 from homeassistant.components.number import (
     AMBIGUOUS_UNITS as NUMBER_AMBIGUOUS_UNITS,
+    UNIT_CONVERTERS as NUMBER_UNIT_CONVERTERS,
     NumberDeviceClass,
 )
 from homeassistant.components.sensor import (
@@ -2116,6 +2117,16 @@ def test_device_classes_aligned() -> None:
     for device_class in NumberDeviceClass:
         assert hasattr(SensorDeviceClass, device_class.name)
         assert getattr(SensorDeviceClass, device_class.name).value == device_class.value
+
+
+def test_unit_converters_aligned() -> None:
+    """Make sure all number unit converters are also available in sensor converters."""
+
+    assert len(NUMBER_UNIT_CONVERTERS) == len(UNIT_CONVERTERS)
+
+    for device_class, converter in NUMBER_UNIT_CONVERTERS.items():
+        assert device_class.value in UNIT_CONVERTERS
+        assert UNIT_CONVERTERS[device_class.value] == converter
 
 
 async def test_value_unknown_in_enumeration(

@@ -62,17 +62,11 @@
     "filename_is_not_image": {
       "message": "`{filename}` is not an image"
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
     "missing_upload_permission": {
       "message": "Home Assistant was not granted permission to upload to Google Photos"
     },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
     },
     "upload_error": {
       "message": "Failed to upload content: {message}"
