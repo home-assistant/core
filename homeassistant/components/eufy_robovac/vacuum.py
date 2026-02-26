@@ -10,7 +10,6 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -24,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    EufyRoboVacConfigEntry,
     CONF_LOCAL_KEY,
     CONF_PROTOCOL_VERSION,
     DEFAULT_PROTOCOL_VERSION,
@@ -59,7 +59,7 @@ _STATUS_TO_ACTIVITY: dict[str, VacuumActivity] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EufyRoboVacConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Eufy RoboVac entities from a config entry."""
@@ -74,7 +74,9 @@ class EufyRoboVacEntity(StateVacuumEntity):
 
     _attr_should_poll = True
 
-    def __init__(self, *, entry: ConfigEntry, mapping: RoboVacModelMapping) -> None:
+    def __init__(
+        self, *, entry: EufyRoboVacConfigEntry, mapping: RoboVacModelMapping
+    ) -> None:
         """Initialize the entity."""
         self._entry = entry
         self._mapping = mapping
@@ -131,7 +133,6 @@ class EufyRoboVacEntity(StateVacuumEntity):
             "local_key_present": bool(self._entry.data.get(CONF_LOCAL_KEY)),
             "status_raw": self._last_status_raw,
             "error_raw": self._last_error_raw,
-            "dps": self._dps,
         }
 
     @staticmethod
@@ -152,8 +153,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
         if self.hass is None:
             return
 
-        if runtime_data := self.hass.data.get(DOMAIN, {}).get(self._entry.entry_id):
-            runtime_data["dps"] = dps
+        self._entry.runtime_data["dps"] = dps
 
         async_dispatcher_send(self.hass, dps_update_signal(self._entry.entry_id), dps)
 
@@ -178,6 +178,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
             return
 
         if not dps:
+            self._attr_available = False
             return
 
         self._attr_available = True

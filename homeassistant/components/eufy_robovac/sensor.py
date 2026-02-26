@@ -10,14 +10,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_MODEL, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, RoboVacCommand, dps_update_signal
+from .const import (
+    DOMAIN,
+    EufyRoboVacConfigEntry,
+    RoboVacCommand,
+    dps_update_signal,
+)
 from .model_mappings import MODEL_MAPPINGS, RoboVacModelMapping
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EufyRoboVacConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Eufy RoboVac sensors from a config entry."""
@@ -45,7 +49,9 @@ class EufyRoboVacBatterySensor(SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_should_poll = False
 
-    def __init__(self, *, entry: ConfigEntry, mapping: RoboVacModelMapping) -> None:
+    def __init__(
+        self, *, entry: EufyRoboVacConfigEntry, mapping: RoboVacModelMapping
+    ) -> None:
         """Initialize battery sensor."""
         self._entry = entry
         self._battery_dps_code = str(mapping.commands[RoboVacCommand.BATTERY])
@@ -92,7 +98,6 @@ class EufyRoboVacBatterySensor(SensorEntity):
             )
         )
 
-        if runtime_data := self.hass.data.get(DOMAIN, {}).get(self._entry.entry_id):
-            dps = runtime_data.get("dps")
-            if isinstance(dps, dict):
-                self._async_update_from_dps(dps, write_state=False)
+        dps = self._entry.runtime_data.get("dps")
+        if isinstance(dps, dict):
+            self._async_update_from_dps(dps, write_state=False)
