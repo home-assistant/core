@@ -8,6 +8,7 @@ from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
 from homeassistant.components.victron_remote_monitoring.const import (
     CONF_API_TOKEN,
+    CONF_MQTT_UPDATE_FREQUENCY_SECONDS,
     CONF_SITE_ID,
     DOMAIN,
 )
@@ -283,6 +284,55 @@ async def test_reauth_flow_success(
     assert result2["reason"] == "reauth_successful"
     # Data updated
     assert existing.data[CONF_API_TOKEN] == "new_token"
+
+
+async def test_options_flow_update_frequency(
+    hass: HomeAssistant,
+) -> None:
+    """Test options flow updates MQTT update frequency."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "token", CONF_SITE_ID: 123},
+        unique_id="123",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_MQTT_UPDATE_FREQUENCY_SECONDS: 10},
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {CONF_MQTT_UPDATE_FREQUENCY_SECONDS: 10}
+
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry
+    assert entry.options == {CONF_MQTT_UPDATE_FREQUENCY_SECONDS: 10}
+
+    result3 = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "init"
+
+    result4 = await hass.config_entries.options.async_configure(
+        result3["flow_id"],
+        {CONF_MQTT_UPDATE_FREQUENCY_SECONDS: 0},
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["data"] == {CONF_MQTT_UPDATE_FREQUENCY_SECONDS: 0}
+
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry
+    assert entry.options == {CONF_MQTT_UPDATE_FREQUENCY_SECONDS: 0}
+
+    result5 = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result5["type"] is FlowResultType.FORM
+
+    hass.config_entries.async_update_entry(entry, options={})
+    result6 = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result6["type"] is FlowResultType.FORM
 
 
 @pytest.mark.parametrize(

@@ -35,6 +35,101 @@ CONST_FORECAST_RECORDS = [
 ]
 
 
+class FakeDevice:
+    """Simple representation of a Victron device."""
+
+    def __init__(
+        self,
+        *,
+        unique_id: str,
+        device_id: str,
+        name: str,
+        manufacturer: str | None = None,
+        model: str | None = None,
+        serial_number: str | None = None,
+    ) -> None:
+        """Initialize a fake device."""
+        self.unique_id = unique_id
+        self.device_id = device_id
+        self.name = name
+        self.manufacturer = manufacturer
+        self.model = model
+        self.serial_number = serial_number
+
+
+class FakeMetric:
+    """Simple representation of a Victron metric."""
+
+    def __init__(
+        self,
+        *,
+        metric_kind,
+        metric_type,
+        metric_nature,
+        unit_of_measurement: str | None,
+        precision: int | None,
+        short_id: str,
+        unique_id: str,
+        name: str | None,
+        value,
+    ) -> None:
+        """Initialize a fake metric."""
+        self.metric_kind = metric_kind
+        self.metric_type = metric_type
+        self.metric_nature = metric_nature
+        self.unit_of_measurement = unit_of_measurement
+        self.precision = precision
+        self.short_id = short_id
+        self.unique_id = unique_id
+        self.name = name
+        self.value = value
+        self.on_update = None
+
+
+class FakeWritableMetric(FakeMetric):
+    """Writable metric used by number/select/switch/button/time entities."""
+
+    def __init__(
+        self,
+        *,
+        enum_values: list[str] | None = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
+        step: float | None = None,
+        **kwargs,
+    ) -> None:
+        """Initialize a writable metric with optional constraints."""
+        super().__init__(**kwargs)
+        self.enum_values = enum_values
+        self.min_value = min_value
+        self.max_value = max_value
+        self.step = step
+
+    def set(self, value) -> None:
+        """Store a new value locally for tests."""
+        self.value = value
+
+
+class FakeMQTTClient:
+    """Fake MQTT client used for tests."""
+
+    def __init__(self, metrics) -> None:
+        """Initialize the fake MQTT client."""
+        self.on_new_metric = None
+        self._metrics = metrics
+
+    async def connect(self) -> None:
+        """Simulate connecting the MQTT client by emitting metrics."""
+        if self.on_new_metric is None:
+            return
+        for device, metric in self._metrics:
+            self.on_new_metric(self, device, metric)
+
+    async def disconnect(self) -> None:
+        """Simulate disconnecting the MQTT client."""
+        return
+
+
 @pytest.fixture
 def mock_setup_entry(mock_vrm_client) -> Generator[AsyncMock]:
     """Override async_setup_entry while client is patched."""
@@ -61,8 +156,22 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mqtt_metrics() -> list[tuple[FakeDevice, FakeMetric]]:
+    """Return MQTT metrics to emit during connect."""
+    return []
+
+
+@pytest.fixture
+def mock_mqtt_client(
+    mqtt_metrics: list[tuple[FakeDevice, FakeMetric]],
+) -> FakeMQTTClient:
+    """Return a fake MQTT client."""
+    return FakeMQTTClient(mqtt_metrics)
+
+
 @pytest.fixture(autouse=True)
-def mock_vrm_client() -> Generator[AsyncMock]:
+def mock_vrm_client(mock_mqtt_client: FakeMQTTClient) -> Generator[AsyncMock]:
     """Patch the VictronVRMClient to supply forecast and site data."""
 
     def fake_dt_now():
@@ -104,6 +213,9 @@ def mock_vrm_client() -> Generator[AsyncMock]:
         # installations.stats returns dict used by get_forecast
         client.installations.stats = AsyncMock(
             return_value={"solar_yield": solar_agg, "consumption": consumption_agg}
+        )
+        client.get_mqtt_client_for_installation = AsyncMock(
+            return_value=mock_mqtt_client
         )
         # users.* used by config flow
         client.users.list_sites = AsyncMock(return_value=[site_obj])

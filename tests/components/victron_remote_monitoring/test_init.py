@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
@@ -49,3 +51,48 @@ async def test_setup_auth_or_connection_error_starts_retry_or_reauth(
     assert mock_config_entry.state is expected_state
     flows_list = list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
     assert bool(flows_list) is expects_reauth
+
+
+async def test_setup_entry_mqtt_failure_unloads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure MQTT startup errors trigger unload handling."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.victron_remote_monitoring."
+            "VictronRemoteMonitoringDataUpdateCoordinator.start_mqtt",
+            side_effect=RuntimeError("Something went wrong starting MQTT"),
+        ),
+        patch(
+            "homeassistant.components.victron_remote_monitoring.async_unload_entry",
+            new=AsyncMock(return_value=True),
+        ) as mock_unload,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_unload.called
+
+
+async def test_options_update_triggers_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Verify options update reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={"mqtt_update_frequency": 10}
+        )
+        await hass.async_block_till_done()
+
+        assert mock_reload.called
