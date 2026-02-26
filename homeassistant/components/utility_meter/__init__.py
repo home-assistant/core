@@ -9,18 +9,14 @@ import voluptuous as vol
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
     entity_registry as er,
 )
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
@@ -44,16 +40,16 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
-    SERVICE_RESET,
-    SIGNAL_RESET_METER,
+    MeterInformation,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OFFSET = timedelta(hours=0)
 
 
-def validate_cron_pattern(pattern):
+def validate_cron_pattern(pattern: str) -> str:
     """Check that the pattern is well-formed."""
     try:
         CronSim(pattern, datetime(2020, 1, 1))  # any date will do
@@ -63,7 +59,7 @@ def validate_cron_pattern(pattern):
     return pattern
 
 
-def period_or_cron(config):
+def period_or_cron(config: ConfigType) -> ConfigType:
     """Check that if cron pattern is used, then meter type and offsite must be removed."""
     if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
         raise vol.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
@@ -78,7 +74,7 @@ def period_or_cron(config):
     return config
 
 
-def max_28_days(config):
+def max_28_days(config: timedelta) -> timedelta:
     """Check that time period does not include more than 28 days."""
     if config.days >= 28:
         raise vol.Invalid(
@@ -120,36 +116,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Utility Meter."""
     hass.data[DATA_UTILITY] = {}
 
-    async def async_reset_meters(service_call):
-        """Reset all sensors of a meter."""
-        meters = service_call.data["entity_id"]
-
-        for meter in meters:
-            _LOGGER.debug("resetting meter %s", meter)
-            domain, entity = split_entity_id(meter)
-            # backward compatibility up to 2022.07:
-            if domain == DOMAIN:
-                async_dispatcher_send(
-                    hass, SIGNAL_RESET_METER, f"{SELECT_DOMAIN}.{entity}"
-                )
-            else:
-                async_dispatcher_send(hass, SIGNAL_RESET_METER, meter)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET,
-        async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: vol.All(cv.ensure_list, [cv.entity_id])}),
-    )
+    async_setup_services(hass)
 
     if DOMAIN not in config:
         return True
 
-    for meter, conf in config[DOMAIN].items():
+    domain_config: ConfigType = config[DOMAIN]
+    for meter, conf in domain_config.items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
-        hass.data[DATA_UTILITY][meter] = conf
-        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS] = []
+        meter_info: MeterInformation = {**conf, DATA_TARIFF_SENSORS: []}
+        hass.data[DATA_UTILITY][meter] = meter_info
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
@@ -176,9 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 eager_start=True,
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
-                f"{SELECT_DOMAIN}.{meter}"
-            )
+            meter_info[CONF_TARIFF_ENTITY] = f"{SELECT_DOMAIN}.{meter}"
 
             # add one meter for each tariff
             tariff_confs = {}
@@ -202,16 +177,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
 
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
-    )
-
     entity_registry = er.async_get(hass)
-    hass.data[DATA_UTILITY][entry.entry_id] = {
+
+    entry_meter_info: MeterInformation = {
         "source": entry.options[CONF_SOURCE_SENSOR],
+        DATA_TARIFF_SENSORS: [],
     }
-    hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
+    hass.data[DATA_UTILITY][entry.entry_id] = entry_meter_info
 
     try:
         er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
@@ -245,16 +217,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not entry.options.get(CONF_TARIFFS):
         # Only a single meter sensor is required
-        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = None
+        entry_meter_info[CONF_TARIFF_ENTITY] = None
         await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
-            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+            Platform.SELECT, DOMAIN, entry.entry_id, object_id_base=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
-            entity_entry.entity_id
-        )
+        entry_meter_info[CONF_TARIFF_ENTITY] = entity_entry.entity_id
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )

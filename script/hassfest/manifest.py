@@ -62,6 +62,7 @@ NO_IOT_CLASS = [
     "auth",
     "automation",
     "blueprint",
+    "brands",
     "color_extractor",
     "config",
     "configurator",
@@ -427,7 +428,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.action == "generate" and manifests_resorted:
         subprocess.run(
             [
-                "pre-commit",
+                "prek",
                 "run",
                 "--hook-stage",
                 "manual",
