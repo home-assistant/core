@@ -13,8 +13,6 @@ import zoneinfo
 from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
 
-from homeassistant.helpers.deprecation import deprecated_function
-
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.UTC
 DEFAULT_TIME_ZONE: dt.tzinfo = dt.UTC
@@ -170,20 +168,6 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 # of UTC and the function call overhead.
 utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
 """Return a UTC time from a timestamp."""
-
-
-@deprecated_function("datetime.timestamp", breaks_in_ha_version="2026.1")
-def utc_to_timestamp(utc_dt: dt.datetime) -> float:
-    """Fast conversion of a datetime in UTC to a timestamp."""
-    # Taken from
-    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
-    return (
-        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
-        + utc_dt.hour * 3600
-        + utc_dt.minute * 60
-        + utc_dt.second
-        + (utc_dt.microsecond / 1000000)
-    )
 
 
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:

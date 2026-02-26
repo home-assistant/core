@@ -26,6 +26,7 @@ class MeshRoles(StrEnum):
 
 
 DOMAIN = "fritz"
+SCAN_INTERVAL = 30
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -69,6 +70,27 @@ SENSOR_DESCRIPTIONS = (
     ),
 )
 
+_DEVICE_INFO_MAPPING: dict[
+    Literal["manufacturer", "serial_number", "sw_version"],
+    Callable[[BRouteUpdateCoordinator], str | None],
+] = {
+    "manufacturer": lambda coordinator: coordinator.device_info_data.manufacturer_code,
+    "serial_number": lambda coordinator: coordinator.device_info_data.serial_number,
+    "sw_version": lambda coordinator: coordinator.device_info_data.echonet_version,
+}
+
+
+def _build_device_info(coordinator: BRouteUpdateCoordinator) -> DeviceInfo:
+    """Build device information from coordinator data."""
+    device = DeviceInfo(
+        identifiers={(DOMAIN, coordinator.bid)},
+        name=f"Route B Smart Meter {coordinator.bid}",
+    )
+    for key, fn in _DEVICE_INFO_MAPPING.items():
+        if (value := fn(coordinator)) is not None:
+            device[key] = value
+    return device
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -98,10 +120,7 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
         super().__init__(coordinator)
         self.entity_description: SensorEntityDescriptionWithValueAccessor = description
         self._attr_unique_id = f"{coordinator.bid}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.bid)},
-            name=f"Route B Smart Meter {coordinator.bid}",
-        )
+        self._attr_device_info = _build_device_info(coordinator)
 
     @property
     def native_value(self) -> StateType:

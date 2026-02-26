@@ -6,6 +6,13 @@ import collections
 from dataclasses import dataclass
 from typing import Any, Self
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -33,13 +40,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import EnumTypeInformation
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -48,6 +48,7 @@ TUYA_HVAC_TO_HA = {
     "heat": HVACMode.HEAT,
     "hot": HVACMode.HEAT,
     "manual": HVACMode.HEAT_COOL,
+    "off": HVACMode.OFF,
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
@@ -176,8 +177,10 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
             return None
         return TUYA_HVAC_TO_HA[raw]
 
-    def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: HVACMode
+    def _convert_value_to_raw_value(  # type: ignore[override]
+        self,
+        device: CustomerDevice,
+        value: HVACMode,
     ) -> Any:
         """Convert value to raw value."""
         return next(
@@ -442,7 +445,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             for mode in hvac_mode_wrapper.options:
-                self._attr_hvac_modes.append(HVACMode(mode))
+                if mode != HVACMode.OFF:
+                    # OFF is always added first
+                    self._attr_hvac_modes.append(HVACMode(mode))
 
         elif switch_wrapper:
             self._attr_hvac_modes = [

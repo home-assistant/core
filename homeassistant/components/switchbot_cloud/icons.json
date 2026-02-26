@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "art_frame_next_picture": {
+        "default": "mdi:chevron-right-box"
+      },
+      "art_frame_previous_picture": {
+        "default": "mdi:chevron-left-box"
+      }
+    },
     "fan": {
       "air_purifier": {
         "default": "mdi:air-purifier",

@@ -6,6 +6,13 @@ from base64 import b64decode
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+    DPCodeStringWrapper,
+    DPCodeTypeInformationWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.event import (
@@ -20,19 +27,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeEnumWrapper,
-    DPCodeRawWrapper,
-    DPCodeStringWrapper,
-    DPCodeTypeInformationWrapper,
-)
 
 
 class _EventEnumWrapper(DPCodeEnumWrapper):
     """Wrapper for event enum DP codes."""
 
-    def read_device_status(self, device: CustomerDevice) -> tuple[str, None] | None:
+    def read_device_status(  # type: ignore[override]
+        self, device: CustomerDevice
+    ) -> tuple[str, None] | None:
         """Return the event details."""
         if (raw_value := super().read_device_status(device)) is None:
             return None
@@ -67,7 +69,7 @@ class _DoorbellPicWrapper(DPCodeRawWrapper):
         super().__init__(dpcode, type_information)
         self.options = ["triggered"]
 
-    def read_device_status(
+    def read_device_status(  # type: ignore[override]
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the doorbell picture."""
@@ -215,16 +217,21 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self._dpcode_wrapper = dpcode_wrapper
         self._attr_event_types = dpcode_wrapper.options
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
-    ) -> None:
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
         if self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties, dp_timestamps
         ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
-            return
+            return False
 
         event_type, event_attributes = event_data
         self._trigger_event(event_type, event_attributes)
-        self.async_write_ha_state()
+        return True
