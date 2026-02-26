@@ -70,7 +70,7 @@
   },
   "services": {
     "upload_image": {
-      "description": "Upload an image to an OpenDisplay device.",
+      "description": "Uploads an image to an OpenDisplay device.",
       "fields": {
         "dither_mode": {
           "description": "The dithering algorithm to use for converting the image to the display's color palette.",
