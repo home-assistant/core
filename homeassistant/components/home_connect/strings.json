@@ -1812,7 +1812,7 @@
       "name": "Change setting"
     },
     "set_program_and_options": {
-      "description": "Starts or selects a program with options or sets the options for the active or the selected program.",
+      "description": "Starts or selects a program with options, sets the options for the active or the selected program, or starts a program that it is already selected.",
       "fields": {
         "affects_to": {
           "description": "Selects whether the action modifies the active program, the selected program, or if it should start the selected program. When \"Start selected\" is chosen, the currently selected program is started and any options defined in this service call override the already selected options.",
