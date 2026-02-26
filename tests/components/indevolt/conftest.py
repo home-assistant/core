@@ -67,7 +67,7 @@ def mock_config_entry(generation: int) -> MockConfigEntry:
 
 @pytest.fixture
 def alt_mock_config_entry(alt_generation: int) -> MockConfigEntry:
-    """Return a second mocked config entry (generation 1) for multi-device tests."""
+    """Return a second mocked config entry for multi-device tests."""
     device_info = DEVICE_MAPPING[alt_generation]
     return MockConfigEntry(
         domain=DOMAIN,
