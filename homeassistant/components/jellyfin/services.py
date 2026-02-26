@@ -24,16 +24,15 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 
 # custom media player input schema adding 'shuffle'
-JELYFIN_PLAY_MEDIA_SCHEMA = vol.All(
+JELLYFIN_PLAY_MEDIA_SCHEMA = vol.All(
     _promote_media_fields,
     cv.make_entity_service_schema({
         vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
         vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-        vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): vol.Any(
+        vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_shuffle"): vol.Any(
             cv.boolean, vol.Coerce(MediaPlayerEnqueue)
         ),
-        vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
-        vol.Exclusive(ATTR_MEDIA_SHUFFLE, "enqueue_announce"): cv.boolean,
+        vol.Exclusive(ATTR_MEDIA_SHUFFLE, "enqueue_shuffle"): cv.boolean,
         vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
     }),
     _rename_keys(
@@ -66,6 +65,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             ATTR_MEDIA_EXTRA: call.data.get(ATTR_MEDIA_EXTRA, {}),
         }
 
+        # play media on all passed entity ids which are jellyfin media players
         for entity_id in entity_ids:
             entity = component.get_entity(entity_id)
             if not isinstance(entity, JellyfinMediaPlayer):
