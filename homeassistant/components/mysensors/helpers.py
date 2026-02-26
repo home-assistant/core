@@ -70,7 +70,7 @@ def discover_mysensors_node(
         discovered_nodes.add(node_id)
         async_dispatcher_send(
             hass,
-            MYSENSORS_NODE_DISCOVERY,
+            MYSENSORS_NODE_DISCOVERY.format(gateway_id),
             {
                 ATTR_GATEWAY_ID: gateway_id,
                 ATTR_NODE_ID: node_id,

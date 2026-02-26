@@ -237,9 +237,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        user_input[CONF_API_ENDPOINT] = (
-            user_input[SECTION_ADVANCED_SETTINGS][CONF_API_ENDPOINT],
-        )
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
+            CONF_API_ENDPOINT
+        ]
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
@@ -587,6 +587,12 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
+
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(
+                reason="entry_not_loaded",
+                description_placeholders={"telegram_bot": self._get_entry().title},
+            )
 
         errors: dict[str, str] = {}
 

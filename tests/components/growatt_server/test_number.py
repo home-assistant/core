@@ -72,12 +72,21 @@ async def test_all_number_entities_service_calls(
     mock_growatt_v1_api,
 ) -> None:
     """Test service calls work for all number entities."""
-    # Test all four number entities
+    # Test all five number entities
     test_cases = [
         ("number.min123456_battery_charge_power_limit", "charge_power", 75),
         ("number.min123456_battery_charge_soc_limit", "charge_stop_soc", 85),
         ("number.min123456_battery_discharge_power_limit", "discharge_power", 90),
-        ("number.min123456_battery_discharge_soc_limit", "discharge_stop_soc", 25),
+        (
+            "number.min123456_battery_discharge_soc_limit_off_grid",
+            "discharge_stop_soc",
+            25,
+        ),
+        (
+            "number.min123456_battery_discharge_soc_limit_on_grid",
+            "on_grid_discharge_stop_soc",
+            30,
+        ),
     ]
 
     for entity_id, expected_write_key, test_value in test_cases:
@@ -110,6 +119,7 @@ async def test_number_missing_data(
         "wchargeSOCLowLimit": 10,
         "disChargePowerCommand": 80,
         "wdisChargeSOCLowLimit": 20,
+        "onGridDischargeStopSOC": 15,
     }
 
     mock_config_entry.add_to_hass(hass)
@@ -228,6 +238,7 @@ async def test_number_coordinator_data_update(
         "wchargeSOCLowLimit": 10,
         "disChargePowerCommand": 80,
         "wdisChargeSOCLowLimit": 20,
+        "onGridDischargeStopSOC": 15,
     }
 
     # Advance time to trigger coordinator refresh

@@ -3361,6 +3361,55 @@
     'state': 'drying',
   })
 # ---
+# name: test_sensors[sensor.zeo_one_times_after_clean-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zeo_one_times_after_clean',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Times after clean',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Times after clean',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'times_after_clean',
+    'unique_id': 'times_after_clean_zeo_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.zeo_one_times_after_clean-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Zeo One Times after clean',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zeo_one_times_after_clean',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_sensors[sensor.zeo_one_washing_left-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
