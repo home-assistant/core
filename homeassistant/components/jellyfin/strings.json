@@ -51,21 +51,21 @@
           "description": "If the content should be played now or be added to the queue.",
           "name": "Enqueue"
         },
-        "shuffle": {
-          "description": "Whether the media should be played in a randomized order or not. Replaces the current play queue if selected.",
-          "name": "Shuffle"
-        },
         "media": {
           "description": "The media selected to play.",
           "name": "Media"
         },
-        "media_content_type": {
-          "name": "Media type",
-          "description": "The type of media content."
-        },
         "media_content_id": {
-          "name": "Media ID", 
-          "description": "The Jellyfin item ID."
+          "description": "The Jellyfin item ID.",
+          "name": "Media ID"
+        },
+        "media_content_type": {
+          "description": "The type of media content.",
+          "name": "Media type"
+        },
+        "shuffle": {
+          "description": "Whether the media should be played in a randomized order or not. Replaces the current play queue if selected.",
+          "name": "Shuffle"
         }
       },
       "name": "Play media"

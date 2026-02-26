@@ -26,15 +26,17 @@ from .const import DOMAIN
 # custom media player input schema adding 'shuffle'
 JELLYFIN_PLAY_MEDIA_SCHEMA = vol.All(
     _promote_media_fields,
-    cv.make_entity_service_schema({
-        vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-        vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-        vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_shuffle"): vol.Any(
-            cv.boolean, vol.Coerce(MediaPlayerEnqueue)
-        ),
-        vol.Exclusive(ATTR_MEDIA_SHUFFLE, "enqueue_shuffle"): cv.boolean,
-        vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
-    }),
+    cv.make_entity_service_schema(
+        {
+            vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+            vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+            vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_shuffle"): vol.Any(
+                cv.boolean, vol.Coerce(MediaPlayerEnqueue)
+            ),
+            vol.Exclusive(ATTR_MEDIA_SHUFFLE, "enqueue_shuffle"): cv.boolean,
+            vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
+        }
+    ),
     _rename_keys(
         media_type=ATTR_MEDIA_CONTENT_TYPE,
         media_id=ATTR_MEDIA_CONTENT_ID,
@@ -42,6 +44,7 @@ JELLYFIN_PLAY_MEDIA_SCHEMA = vol.All(
         shuffle=ATTR_MEDIA_SHUFFLE,
     ),
 )
+
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Jellyfin component."""
@@ -56,14 +59,13 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             return
 
         # solve a circular ImportError
-        from .media_player import JellyfinMediaPlayer
+        from .media_player import JellyfinMediaPlayer  # noqa: PLC0415
 
         # pull entity_id from data: if available, or target: if not
-        entity_ids: list[str] | str = (
-            call.data.get("entity_id", [])
-            or (call.target or {}).get("entity_id", [])
-        )
-        # make sure thats a list for looping
+        entity_ids: list[str] | str = call.data.get("entity_id", []) or (
+            call.target or {}
+        ).get("entity_id", [])
+        # make sure that's a list for looping
         if isinstance(entity_ids, str):
             entity_ids = [entity_ids]
 
@@ -78,6 +80,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             entity = component.get_entity(entity_id)
             if not isinstance(entity, JellyfinMediaPlayer):
                 continue
+
             # synchronous play_media kwarg injector
             def _play(e=entity):
                 e.play_media(
@@ -85,6 +88,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     media_id=call.data["media_id"],
                     **kwargs,
                 )
+
             await hass.async_add_executor_job(_play)
 
     # register play_media to use the custom service schema
