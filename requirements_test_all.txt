@@ -1087,7 +1087,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260225.0
+home-assistant-frontend==20260226.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.2.13
@@ -1498,6 +1498,9 @@ opower==0.17.0
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
+
+# homeassistant.components.orvibo
+orvibo==1.1.2
 
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
