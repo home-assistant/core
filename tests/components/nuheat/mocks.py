@@ -14,6 +14,14 @@ MOCK_CONFIG_ENTRY = {
 }
 
 
+def _create_mock_energy_usage(heating_minutes=210, energy_kwh=2.6):
+    """Create a mock EnergyUsage object."""
+    energy = Mock()
+    energy.heating_minutes = heating_minutes
+    energy.energy_kwh = energy_kwh
+    return energy
+
+
 def _get_mock_thermostat_run():
     serial_number = "12345"
     thermostat = Mock(
@@ -35,6 +43,7 @@ def _get_mock_thermostat_run():
     )
 
     thermostat.get_data = Mock()
+    thermostat.get_energy_usage = Mock(return_value=_create_mock_energy_usage())
     thermostat.resume_schedule = Mock()
     thermostat.schedule_mode = Mock()
     return thermostat
@@ -61,6 +70,7 @@ def _get_mock_thermostat_schedule_hold_unavailable():
     )
 
     thermostat.get_data = Mock()
+    thermostat.get_energy_usage = Mock(return_value=_create_mock_energy_usage())
     thermostat.resume_schedule = Mock()
     thermostat.schedule_mode = Mock()
     return thermostat
@@ -87,6 +97,7 @@ def _get_mock_thermostat_schedule_hold_available():
     )
 
     thermostat.get_data = Mock()
+    thermostat.get_energy_usage = Mock(return_value=_create_mock_energy_usage())
     thermostat.resume_schedule = Mock()
     thermostat.schedule_mode = Mock()
     return thermostat
@@ -115,6 +126,7 @@ def _get_mock_thermostat_schedule_temporary_hold():
     )
 
     thermostat.get_data = Mock()
+    thermostat.get_energy_usage = Mock(return_value=_create_mock_energy_usage())
     thermostat.resume_schedule = Mock()
     thermostat.schedule_mode = Mock()
     return thermostat

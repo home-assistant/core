@@ -6,12 +6,19 @@ from unittest.mock import MagicMock, patch
 import requests
 
 from homeassistant import config_entries
-from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.nuheat.const import (
+    CONF_FLOOR_AREA,
+    CONF_SERIAL_NUMBER,
+    CONF_WATT_DENSITY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .mocks import _get_mock_thermostat_run
+from .mocks import MOCK_CONFIG_ENTRY, _get_mock_nuheat, _get_mock_thermostat_run
+
+from tests.common import MockConfigEntry
 
 
 async def test_form_user(hass: HomeAssistant) -> None:
@@ -152,3 +159,31 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow."""
+    mock_thermostat = _get_mock_thermostat_run()
+    mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
+
+    with patch(
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Start options flow
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Submit options
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_FLOOR_AREA: 50.0, CONF_WATT_DENSITY: 12.0},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_FLOOR_AREA: 50.0, CONF_WATT_DENSITY: 12.0}
