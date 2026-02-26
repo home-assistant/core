@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra import AlarmState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback

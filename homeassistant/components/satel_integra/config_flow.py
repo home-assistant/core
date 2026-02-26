@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
