@@ -209,7 +209,8 @@ async def _execute_realtime_action(
             raise exception
 
         raise HomeAssistantError(
-            "Indevolt service failed for one or more devices"
+            translation_domain=DOMAIN,
+            translation_key="service_call_failed",
         ) from exception
 
 
