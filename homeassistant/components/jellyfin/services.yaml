@@ -1,9 +1,8 @@
 play_media:
   target:
     entity:
+      integration: jellyfin
       domain: media_player
-      supported_features:
-        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
     media:
       required: true
@@ -22,6 +21,6 @@ play_media:
           translation_key: enqueue
     shuffle:
       required: false
-      example: "true"
+      default: false
       selector:
         boolean:

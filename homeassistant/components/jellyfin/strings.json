@@ -58,6 +58,14 @@
         "media": {
           "description": "The media selected to play.",
           "name": "Media"
+        },
+        "media_content_type": {
+          "name": "Media type",
+          "description": "The type of media content."
+        },
+        "media_content_id": {
+          "name": "Media ID", 
+          "description": "The Jellyfin item ID."
         }
       },
       "name": "Play media"
