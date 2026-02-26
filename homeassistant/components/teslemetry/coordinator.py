@@ -104,6 +104,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from e
+
         return flatten(data)
 
 
@@ -200,7 +201,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from e
-        return flatten(data)
+
+        return flatten(
+            data,
+            skip_keys=["daily_charges", "demand_charges", "energy_charges", "seasons"],
+        )
 
 
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):

@@ -66,66 +66,29 @@
           "nameplate_max_charge_power": 5000,
           "nameplate_max_discharge_power": 5000,
           "nameplate_energy": 13500
-        },
-        {
-          "device_id": "battery-2-id",
-          "din": "battery-2-din",
-          "serial_number": "TG000000002DA5",
-          "part_number": "3012170-05-C",
-          "part_type": 2,
-          "part_name": "Powerwall 2",
-          "nameplate_max_charge_power": 5000,
-          "nameplate_max_discharge_power": 5000,
-          "nameplate_energy": 13500
         }
       ],
-      "wall_connectors": [
-        {
-          "device_id": "123abc",
-          "din": "abd-123",
-          "part_name": "Gen 3 Wall Connector",
-          "is_active": true
-        },
-        {
-          "device_id": "234bcd",
-          "din": "bcd-234",
-          "part_name": "Gen 3 Wall Connector",
-          "is_active": true
-        }
-      ],
+      "wall_connectors": [],
       "disallow_charge_from_grid_with_solar_installed": true,
       "customer_preferred_export_rule": "pv_only",
       "net_meter_mode": "battery_ok",
       "system_alerts_enabled": true
     },
     "version": "23.44.0 eb113390",
-    "battery_count": 2,
+    "battery_count": 1,
     "tou_settings": {
       "optimization_strategy": "economics",
-      "schedule": [
-        {
-          "target": "off_peak",
-          "week_days": [1, 0],
-          "start_seconds": 0,
-          "end_seconds": 3600
-        },
-        {
-          "target": "peak",
-          "week_days": [1, 0],
-          "start_seconds": 3600,
-          "end_seconds": 0
-        }
-      ]
+      "schedule": []
     },
-    "nameplate_power": 15000,
-    "nameplate_energy": 40500,
+    "nameplate_power": 5000,
+    "nameplate_energy": 13500,
     "installation_time_zone": "",
     "max_site_meter_power_ac": 1000000000,
     "min_site_meter_power_ac": -1000000000,
     "tariff_content_v2": {
       "code": "Test",
-      "name": "Battery Maximiser",
-      "utility": "Origin",
+      "name": "Multi Season Tariff",
+      "utility": "Test Utility",
       "daily_charges": [
         {
           "name": "Charge"
@@ -136,9 +99,7 @@
           "rates": {
             "ALL": 0
           }
-        },
-        "Summer": {},
-        "Winter": {}
+        }
       },
       "energy_charges": {
         "ALL": {
@@ -148,19 +109,34 @@
         },
         "Summer": {
           "rates": {
-            "OFF_PEAK": 0.198,
-            "ON_PEAK": 0.22
+            "PEAK": 0.35,
+            "OFF_PEAK": 0.2
           }
         },
-        "Winter": {}
+        "Winter": {
+          "rates": {
+            "PEAK": 0.25,
+            "OFF_PEAK": 0.12
+          }
+        }
       },
       "seasons": {
         "Summer": {
           "fromDay": 1,
-          "toDay": 31,
-          "fromMonth": 1,
-          "toMonth": 12,
+          "toDay": 30,
+          "fromMonth": 4,
+          "toMonth": 9,
           "tou_periods": {
+            "PEAK": {
+              "periods": [
+                {
+                  "fromDayOfWeek": 0,
+                  "toDayOfWeek": 6,
+                  "fromHour": 16,
+                  "toHour": 21
+                }
+              ]
+            },
             "OFF_PEAK": {
               "periods": [
                 {
@@ -170,37 +146,48 @@
                   "toHour": 16
                 }
               ]
-            },
-            "ON_PEAK": {
+            }
+          }
+        },
+        "Winter": {
+          "fromDay": 1,
+          "toDay": 31,
+          "fromMonth": 10,
+          "toMonth": 3,
+          "tou_periods": {
+            "PEAK": {
               "periods": [
                 {
                   "fromDayOfWeek": 0,
                   "toDayOfWeek": 6,
-                  "fromHour": 16,
-                  "toHour": 21
+                  "fromHour": 17,
+                  "toHour": 20
+                }
+              ]
+            },
+            "OFF_PEAK": {
+              "periods": [
+                {
+                  "fromDayOfWeek": 0,
+                  "toDayOfWeek": 6,
+                  "fromHour": 20,
+                  "toHour": 17
                 }
               ]
             }
           }
-        },
-        "Winter": {}
+        }
       },
       "sell_tariff": {
-        "name": "Battery Maximiser",
-        "utility": "Origin",
-        "daily_charges": [
-          {
-            "name": "Charge"
-          }
-        ],
+        "name": "Multi Season Tariff Sell",
+        "utility": "Test Utility",
+        "daily_charges": [],
         "demand_charges": {
           "ALL": {
             "rates": {
               "ALL": 0
             }
-          },
-          "Summer": {},
-          "Winter": {}
+          }
         },
         "energy_charges": {
           "ALL": {
@@ -210,40 +197,74 @@
           },
           "Summer": {
             "rates": {
-              "OFF_PEAK": 0.08,
-              "ON_PEAK": 0.16
+              "PEAK": 0.18,
+              "OFF_PEAK": 0.08
             }
           },
-          "Winter": {}
+          "Winter": {
+            "rates": {
+              "PEAK": 0.12,
+              "OFF_PEAK": 0.05
+            }
+          }
         },
         "seasons": {
           "Summer": {
             "fromDay": 1,
-            "toDay": 31,
-            "fromMonth": 1,
-            "toMonth": 12,
+            "toDay": 30,
+            "fromMonth": 4,
+            "toMonth": 9,
             "tou_periods": {
-              "OFF_PEAK": {
+              "PEAK": {
                 "periods": [
                   {
-                    "toDayOfWeek": 6,
-                    "fromHour": 21,
-                    "toHour": 16
-                  }
-                ]
-              },
-              "ON_PEAK": {
-                "periods": [
-                  {
+                    "fromDayOfWeek": 0,
                     "toDayOfWeek": 6,
                     "fromHour": 16,
                     "toHour": 21
                   }
                 ]
+              },
+              "OFF_PEAK": {
+                "periods": [
+                  {
+                    "fromDayOfWeek": 0,
+                    "toDayOfWeek": 6,
+                    "fromHour": 21,
+                    "toHour": 16
+                  }
+                ]
               }
             }
           },
-          "Winter": {}
+          "Winter": {
+            "fromDay": 1,
+            "toDay": 31,
+            "fromMonth": 10,
+            "toMonth": 3,
+            "tou_periods": {
+              "PEAK": {
+                "periods": [
+                  {
+                    "fromDayOfWeek": 0,
+                    "toDayOfWeek": 6,
+                    "fromHour": 17,
+                    "toHour": 20
+                  }
+                ]
+              },
+              "OFF_PEAK": {
+                "periods": [
+                  {
+                    "fromDayOfWeek": 0,
+                    "toDayOfWeek": 6,
+                    "fromHour": 20,
+                    "toHour": 17
+                  }
+                ]
+              }
+            }
+          }
         }
       },
       "version": 1
