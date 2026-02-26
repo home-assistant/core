@@ -72,8 +72,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: LevelHomeConfigEntry) ->
         if coordinator is not None:
             await coordinator.async_handle_devices_update(devices)
 
+    async def _on_auth_failure() -> None:
+        _LOGGER.warning(
+            "WebSocket auth failed after server-initiated close — starting reauth flow"
+        )
+        if coordinator is not None:
+            coordinator.async_set_update_error(
+                ConnectionError(
+                    "WebSocket connection lost — re-authentication required"
+                )
+            )
+        entry.async_start_reauth(hass)
+
+    async def _on_connection_lost() -> None:
+        _LOGGER.warning("WebSocket connection lost — marking devices unavailable")
+        if coordinator is not None:
+            coordinator.async_set_update_error(
+                ConnectionError("WebSocket connection lost")
+            )
+
+    async def _on_integration_removed(reason: str) -> None:
+        _LOGGER.warning(
+            "Integration removed by server (reason=%s) — removing config entry %s",
+            reason,
+            entry.entry_id,
+        )
+        await hass.config_entries.async_remove(entry.entry_id)
+
     ws_manager = LevelWebsocketManager(
-        client_session, base_url, _get_token, _on_state, _on_devices
+        client_session,
+        base_url,
+        _get_token,
+        _on_state,
+        _on_devices,
+        on_auth_failure=_on_auth_failure,
+        on_connection_lost=_on_connection_lost,
+        on_integration_removed=_on_integration_removed,
     )
     coordinator = LevelLocksCoordinator(hass, ws_manager, config_entry=entry)
 

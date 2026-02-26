@@ -95,13 +95,14 @@ def mock_levelhome_api() -> None:
 @pytest.fixture(name="mock_websocket_manager")
 def mock_websocket_manager() -> Generator[AsyncMock]:
     """Mock the Level Lock WebSocket manager."""
-    with patch("level_ws_client.LevelWebsocketManager", autospec=True) as mock_ws:
-        ws = mock_ws.return_value
+    with patch("homeassistant.components.levelhome.LevelWebsocketManager") as mock_ws:
+        ws = AsyncMock()
         ws.async_start = AsyncMock(return_value=None)
         ws.async_stop = AsyncMock(return_value=None)
         ws.async_get_devices = AsyncMock(return_value=[])
         ws.async_get_device_state = AsyncMock(return_value=None)
         ws.register_device_uuid = lambda lock_id, uuid: None
+        mock_ws.return_value = ws
         yield mock_ws
 
 

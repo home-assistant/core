@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import time
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -152,3 +153,31 @@ async def test_valid_token_no_refresh(
     assert len(entries) == 1
     assert entries[0].data["token"]["access_token"] == "test-access-token"
     assert entries[0].data["token"]["refresh_token"] == "test-refresh-token"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    mock_websocket_manager: AsyncMock,
+) -> None:
+    """Test that auth failure callback triggers reauth flow."""
+    assert await integration_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Extract the on_auth_failure callback from the constructor call
+    on_auth_failure = mock_websocket_manager.call_args.kwargs.get("on_auth_failure")
+    assert on_auth_failure is not None
+
+    # Invoke the callback as if the WebSocket manager detected auth failure
+    await on_auth_failure()
+    await hass.async_block_till_done()
+
+    # Verify reauth flow was started
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
+        for flow in flows
+    )
