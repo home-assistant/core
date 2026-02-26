@@ -167,19 +167,6 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
 
     entity_description: PortainerSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerSwitchEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container switch."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return the state of the device."""

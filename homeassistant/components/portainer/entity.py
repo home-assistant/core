@@ -58,12 +58,14 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
 
     def __init__(
         self,
-        device_info: PortainerContainerData,
         coordinator: PortainerCoordinator,
+        entity_description: EntityDescription,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize a Portainer container."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._device_info = device_info
         self.device_id = self._device_info.container.id
         self.endpoint_id = via_device.endpoint.id
@@ -99,6 +101,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def available(self) -> bool:

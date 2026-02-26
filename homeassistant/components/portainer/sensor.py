@@ -398,19 +398,6 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
 
     entity_description: PortainerContainerSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerContainerSensorEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
