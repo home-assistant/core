@@ -146,7 +146,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         result = await controller.connect()
 
         # Make sure we close the connection again
-        controller.close()
+        await controller.close()
 
         return result
 
