@@ -207,7 +207,9 @@ async def test_set_zone_override_with_ctl_id(
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
-            {ATTR_SETPOINT: 19.5},
+            {
+                ATTR_SETPOINT: 19.5,
+            },
             target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
