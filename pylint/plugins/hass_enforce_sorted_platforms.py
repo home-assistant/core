@@ -36,7 +36,7 @@ class HassEnforceSortedPlatformsChecker(BaseChecker):
         """Check for sorted PLATFORMS const."""
         if (
             isinstance(target, nodes.AssignName)
-            and target.name == "PLATFORMS"
+            and target.name in {"PLATFORMS", "_PLATFORMS"}
             and isinstance(node.value, nodes.List)
         ):
             platforms = [v.as_string() for v in node.value.elts]

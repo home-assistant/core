@@ -1,6 +1,6 @@
 {
   "domain": "anthropic",
-  "name": "Anthropic Conversation",
+  "name": "Anthropic",
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@Shulyaka"],
   "config_flow": true,
