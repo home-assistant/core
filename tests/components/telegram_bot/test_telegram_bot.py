@@ -2378,7 +2378,7 @@ async def test_send_media_group(
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
-    """Test download file when bot failed to get file."""
+    """Test the send_media_group service with multiple media types."""
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -472,9 +472,14 @@ class TelegramNotificationService:
     ) -> Any:
         """Send one message."""
         out = await func_send(*args_msg, **kwargs_msg)
-        if isinstance(out, Message):
-            chat_id = out.chat_id
-            message_id = out.message_id
+
+        message = out
+        if isinstance(message, Iterable):
+            message = out[-1]
+
+        if isinstance(message, Message):
+            chat_id = message.chat_id
+            message_id = message.message_id
             self._last_message_id[chat_id] = message_id
             _LOGGER.debug(
                 "Last message ID: %s (from chat_id %s)",
@@ -534,7 +539,7 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send media group to a chat ID.
 
-        :returns: a tuple containing the chat_id and list of message_ids for the sent media group.
+        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
         """
         params = self._get_msg_kwargs(kwargs)
 

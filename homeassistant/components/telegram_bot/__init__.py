@@ -227,7 +227,7 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(ATTR_MEDIA): vol.All(
+        vol.Required(ATTR_MEDIA): vol.All(
             cv.ensure_list,
             [
                 vol.Schema(
@@ -252,7 +252,7 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
             ],
             vol.Length(min=1, max=10),
         ),
-        vol.Optional(ATTR_PARSER): cv.string,
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_PROTECT_CONTENT): cv.boolean,
         vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
