@@ -14,6 +14,7 @@ from homeassistant.components.backup import (
     BackupNotFound,
 )
 from homeassistant.components.dropbox.backup import (
+    DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
     async_register_backup_agents_listener,
 )
@@ -239,6 +240,26 @@ async def test_agents_download_not_found(
 
     assert resp.status == 404
     assert await resp.content.read() == b""
+
+
+async def test_agents_download_file_not_found(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_dropbox_client: AsyncMock,
+) -> None:
+    """Test download when Dropbox file is not found returns 404."""
+
+    mock_dropbox_client.async_list_backups = AsyncMock(return_value=[TEST_AGENT_BACKUP])
+    mock_dropbox_client.async_download_backup = AsyncMock(
+        side_effect=DropboxFileOrFolderNotFoundException("not found")
+    )
+
+    client = await hass_client()
+    resp = await client.get(
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={TEST_AGENT_ID}"
+    )
+
+    assert resp.status == 404
 
 
 async def test_agents_download_metadata_not_found(

@@ -36,9 +36,12 @@ def handle_backup_errors[_R, **P](
     ) -> _R:
         try:
             return await func(self, *args, **kwargs)
+        except DropboxFileOrFolderNotFoundException as err:
+            raise BackupNotFound(
+                f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
+            ) from err
         except (
             DropboxAuthException,
-            DropboxFileOrFolderNotFoundException,
             DropboxUnknownException,
         ) as err:
             _LOGGER.error(
