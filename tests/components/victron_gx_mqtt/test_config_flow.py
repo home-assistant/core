@@ -567,24 +567,9 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_reload:
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "192.168.1.200",
-                CONF_PORT: 1883,
-                CONF_USERNAME: "new-user",
-                CONF_PASSWORD: "new-pass",
-                CONF_SSL: True,
-                CONF_ROOT_TOPIC_PREFIX: "N/updated",
-                CONF_UPDATE_FREQUENCY_SECONDS: 45,
-            },
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert mock_config_entry.data == {
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "192.168.1.200",
             CONF_PORT: 1883,
             CONF_USERNAME: "new-user",
@@ -592,8 +577,28 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
             CONF_SSL: True,
             CONF_ROOT_TOPIC_PREFIX: "N/updated",
             CONF_UPDATE_FREQUENCY_SECONDS: 45,
-        }
-        assert len(mock_reload.mock_calls) == 1
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.data == {
+        CONF_HOST: MOCK_HOST,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+        CONF_SERIAL: MOCK_SERIAL,
+        CONF_MODEL: MOCK_MODEL,
+        CONF_SSL: False,
+        CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+    }
+    assert mock_config_entry.options == {
+        CONF_HOST: "192.168.1.200",
+        CONF_PORT: 1883,
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-pass",
+        CONF_SSL: True,
+        CONF_ROOT_TOPIC_PREFIX: "N/updated",
+        CONF_UPDATE_FREQUENCY_SECONDS: 45,
+    }
 
 
 async def test_options_flow_cannot_connect(

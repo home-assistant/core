@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
@@ -38,6 +39,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -61,7 +64,7 @@ async def validate_input(data: dict[str, Any]) -> str:
 
     Returns the installation id upon success.
     """
-    _LOGGER.debug("Validating input: %s", data)
+    _LOGGER.debug("Validating input: %s", async_redact_data(data, TO_REDACT))
     hub: VictronVenusHub | None = None
     try:
         hub = VictronVenusHub(
@@ -105,7 +108,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            _LOGGER.debug("User input received: %s", user_input)
+            _LOGGER.debug(
+                "User input received: %s",
+                async_redact_data(user_input, TO_REDACT),
+            )
             data = {**user_input, CONF_SERIAL: self.serial, CONF_MODEL: self.model_name}
             data = {
                 k: v for k, v in data.items() if v is not None
@@ -159,7 +165,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            _LOGGER.debug("Reauth user input received: %s", user_input)
+            _LOGGER.debug(
+                "Reauth user input received: %s",
+                async_redact_data(user_input, TO_REDACT),
+            )
             data = {
                 **reauth_entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
@@ -311,17 +320,32 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 class VictronMQTTOptionsFlow(OptionsFlow):
     """Handle options flow for Victron MQTT."""
 
+    def _get_effective_config(self) -> dict[str, Any]:
+        """Get the effective config with options overriding data."""
+        return {
+            **self.config_entry.data,
+            **self.config_entry.options,
+        }
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
-        _LOGGER.info(
-            "Initializing options flow. current config: %s", self.config_entry.data
+        current_config = self._get_effective_config()
+        _LOGGER.debug(
+            "Initializing options flow. current config: %s",
+            async_redact_data(current_config, TO_REDACT),
         )
         if user_input is not None:
-            _LOGGER.info("User input received: %s", user_input)
+            _LOGGER.debug(
+                "User input received: %s", async_redact_data(user_input, TO_REDACT)
+            )
+            validate_data = {
+                **current_config,
+                **user_input,
+            }
             try:
-                await validate_input(user_input)
+                await validate_input(validate_data)
             except AuthenticationError:
                 return self.async_show_form(
                     step_id="init",
@@ -335,15 +359,10 @@ class VictronMQTTOptionsFlow(OptionsFlow):
                     errors={"base": "cannot_connect"},
                 )
             _LOGGER.info(
-                "Options flow completed successfully. new config: %s", user_input
+                "Options flow completed successfully. new config: %s",
+                async_redact_data(user_input, TO_REDACT),
             )
-            # Update the config entry with new data.
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=user_input
-            )
-            # Reload the entry to apply the new options
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="init",
             data_schema=self._get_options_schema(),
@@ -352,5 +371,5 @@ class VictronMQTTOptionsFlow(OptionsFlow):
     def _get_options_schema(self) -> vol.Schema:
         """Get the options schema with current values as defaults."""
         return self.add_suggested_values_to_schema(
-            STEP_USER_DATA_SCHEMA, self.config_entry.data
+            STEP_USER_DATA_SCHEMA, self._get_effective_config()
         )

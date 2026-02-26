@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.redact import async_redact_data
 
 from .const import (
     CONF_INSTALLATION_ID,
@@ -36,6 +37,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
 
@@ -54,8 +57,12 @@ class Hub:
 
         """
 
-        _LOGGER.debug("Initializing hub. ConfigEntry: %s, data: %s", entry, entry.data)
-        config = entry.data
+        _LOGGER.debug(
+            "Initializing hub. ConfigEntry: %s, data: %s",
+            entry,
+            async_redact_data({**entry.data, **entry.options}, TO_REDACT),
+        )
+        config = {**entry.data, **entry.options}
         self.hass = hass
         self.host = config[CONF_HOST]
         self.id = entry.unique_id
