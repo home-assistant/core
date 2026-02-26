@@ -1,0 +1,27 @@
+play_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    media:
+      required: true
+      selector:
+        media:
+      example: '{"media_content_id": "https://home-assistant.io/images/cast/splash.png", "media_content_type": "music"}'
+    enqueue:
+      required: false
+      selector:
+        select:
+          options:
+            - "play"
+            - "next"
+            - "add"
+            - "replace"
+          translation_key: enqueue
+    shuffle:
+      required: false
+      example: "true"
+      selector:
+        boolean:

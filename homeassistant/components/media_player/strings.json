@@ -324,10 +324,6 @@
           "description": "If the content should be played now or be added to the queue.",
           "name": "Enqueue"
         },
-        "shuffle": {
-          "description": "Whether the media should be played in a randomized order or not. Replaces the current play queue if selected.",
-          "name": "Shuffle"
-        },
         "media": {
           "description": "The media selected to play.",
           "name": "Media"
