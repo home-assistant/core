@@ -858,6 +858,11 @@ class AnthropicBaseLLMEntity(Entity):
                     ]
                 )
                 messages.extend(new_messages)
+            except anthropic.AuthenticationError as err:
+                self.entry.async_start_reauth(self.hass)
+                raise HomeAssistantError(
+                    "Authentication error with Anthropic API, reauthentication required"
+                ) from err
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
