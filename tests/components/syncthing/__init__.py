@@ -3,15 +3,13 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
-NAME = "Syncthing"
 URL = "http://127.0.0.1:8384"
 TOKEN = "token"
 VERIFY_SSL = True
 
 MOCK_ENTRY = {
-    CONF_NAME: NAME,
     CONF_URL: URL,
     CONF_TOKEN: TOKEN,
     CONF_VERIFY_SSL: VERIFY_SSL,
@@ -230,7 +228,10 @@ def create_mock_syncthing_client() -> MagicMock:
         """Mock events.listen that doesn't block."""
         while True:
             await asyncio.sleep(0)
-            yield
+            yield {
+                "id": mock_events.last_seen_id,
+                "type": "MockEvent",
+            }
 
     mock_events.listen = mock_listen
     mock_events.last_seen_id = 0
