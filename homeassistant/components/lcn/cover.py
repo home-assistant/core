@@ -1,6 +1,5 @@
 """Support for LCN covers."""
 
-import asyncio
 from collections.abc import Coroutine, Iterable
 from datetime import timedelta
 from functools import partial
@@ -10,7 +9,7 @@ import pypck
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as DOMAIN_COVER,
+    DOMAIN as COVER_DOMAIN,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -28,7 +27,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
@@ -61,14 +60,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_COVER: add_entities}
+        {COVER_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_COVER
+            if entity_config[CONF_DOMAIN] == COVER_DOMAIN
         ),
     )
 
@@ -133,13 +132,15 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
     async def async_update(self) -> None:
         """Update the state of the entity."""
         if not self.device_connection.is_group:
-            await asyncio.gather(
-                self.device_connection.request_status_output(
-                    pypck.lcn_defs.OutputPort["OUTPUTUP"], SCAN_INTERVAL.seconds
-                ),
-                self.device_connection.request_status_output(
-                    pypck.lcn_defs.OutputPort["OUTPUTDOWN"], SCAN_INTERVAL.seconds
-                ),
+            self._attr_available = any(
+                [
+                    await self.device_connection.request_status_output(
+                        pypck.lcn_defs.OutputPort["OUTPUTUP"], SCAN_INTERVAL.seconds
+                    ),
+                    await self.device_connection.request_status_output(
+                        pypck.lcn_defs.OutputPort["OUTPUTDOWN"], SCAN_INTERVAL.seconds
+                    ),
+                ]
             )
 
     def input_received(self, input_obj: InputType) -> None:
@@ -149,7 +150,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
             or input_obj.get_output_id() not in self.output_ids
         ):
             return
-
+        self._attr_available = True
         if input_obj.get_percent() > 0:  # motor is on
             if input_obj.get_output_id() == self.output_ids[0]:
                 self._attr_is_opening = True
@@ -272,11 +273,12 @@ class LcnRelayCover(LcnEntity, CoverEntity):
                     self.motor, self.positioning_mode, SCAN_INTERVAL.seconds
                 )
             )
-        await asyncio.gather(*coros)
+        self._attr_available = any([await coro for coro in coros])
 
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
         if isinstance(input_obj, pypck.inputs.ModStatusRelays):
+            self._attr_available = True
             self._attr_is_opening = input_obj.is_opening(self.motor.value)
             self._attr_is_closing = input_obj.is_closing(self.motor.value)
 
@@ -293,6 +295,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             )
             and input_obj.motor == self.motor.value
         ):
+            self._attr_available = True
             self._attr_current_cover_position = int(input_obj.position)
             if self._attr_current_cover_position in [0, 100]:
                 self._attr_is_opening = False

@@ -18,8 +18,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, UPLOAD_SCOPE
 from .coordinator import GooglePhotosConfigEntry
@@ -80,15 +80,10 @@ def _read_file_contents(
 
 async def _async_handle_upload(call: ServiceCall) -> ServiceResponse:
     """Generate content from text and optionally images."""
-    config_entry: GooglePhotosConfigEntry | None = (
-        call.hass.config_entries.async_get_entry(call.data[CONF_CONFIG_ENTRY_ID])
+    config_entry: GooglePhotosConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
     )
-    if not config_entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
-        )
+
     scopes = config_entry.data["token"]["scope"].split(" ")
     if UPLOAD_SCOPE not in scopes:
         raise HomeAssistantError(
@@ -159,4 +154,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_handle_upload,
         schema=UPLOAD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+        description_placeholders={"example_image_path": "/config/www/image.jpg"},
     )

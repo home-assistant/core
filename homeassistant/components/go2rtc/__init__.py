@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from secrets import token_hex
 import shutil
+from tempfile import mkdtemp
 
-from aiohttp import ClientSession, UnixConnector
+from aiohttp import BasicAuth, ClientSession, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -36,7 +38,12 @@ from homeassistant.components.camera import (
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
@@ -44,7 +51,10 @@ from homeassistant.helpers import (
     discovery_flow,
     issue_registry as ir,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
@@ -53,23 +63,52 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
-    HA_MANAGED_UNIX_SOCKET,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
 from .server import Server
+from .util import get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
 
 _FFMPEG = "ffmpeg"
+_AUTH = "auth"
+
+
+def _validate_auth(config: dict) -> dict:
+    """Validate that username and password are only set when a URL is configured or when debug UI is enabled."""
+    auth_exists = CONF_USERNAME in config
+    debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
+
+    if debug_ui_enabled and not auth_exists:
+        raise vol.Invalid("Username and password must be set when debug_ui is true")
+
+    if auth_exists and CONF_URL not in config and not debug_ui_enabled:
+        raise vol.Invalid(
+            "Username and password can only be set when a URL is configured or debug_ui is true"
+        )
+
+    return config
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
-                vol.Exclusive(CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            vol.Schema(
+                {
+                    vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
+                    vol.Exclusive(
+                        CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
+                    ): cv.boolean,
+                    vol.Inclusive(CONF_USERNAME, _AUTH): vol.All(
+                        cv.string, vol.Length(min=1)
+                    ),
+                    vol.Inclusive(CONF_PASSWORD, _AUTH): vol.All(
+                        cv.string, vol.Length(min=1)
+                    ),
+                }
+            ),
+            _validate_auth,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -83,12 +122,19 @@ type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
+    username: str | None = None
+    password: str | None = None
+
     if DOMAIN not in config and DEFAULT_CONFIG_DOMAIN not in config:
         await _remove_go2rtc_entries(hass)
         return True
 
+    domain_config = config.get(DOMAIN, {})
+    username = domain_config.get(CONF_USERNAME)
+    password = domain_config.get(CONF_PASSWORD)
+
     if not (configured_by_user := DOMAIN in config) or not (
-        url := config[DOMAIN].get(CONF_URL)
+        url := domain_config.get(CONF_URL)
     ):
         if not is_docker_env():
             if not configured_by_user:
@@ -101,13 +147,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Could not find go2rtc docker binary")
             return False
 
+        # Generate random credentials when not provided to secure the server
+        if not username or not password:
+            username = token_hex()
+            password = token_hex()
+            _LOGGER.debug("Generated random credentials for go2rtc server")
+
+        auth = BasicAuth(username, password)
         # HA will manage the binary
-        session = ClientSession(connector=UnixConnector(path=HA_MANAGED_UNIX_SOCKET))
+        temp_dir = mkdtemp(prefix="go2rtc-")
+        # Manually created session (not using the helper) needs to be closed manually
+        # See on_stop listener below
+        session = ClientSession(
+            connector=UnixConnector(path=get_go2rtc_unix_socket_path(temp_dir)),
+            auth=auth,
+        )
         server = Server(
             hass,
             binary,
             session,
-            enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False),
+            enable_ui=domain_config.get(CONF_DEBUG_UI, False),
+            username=username,
+            password=password,
+            working_dir=temp_dir,
         )
         try:
             await server.start()
@@ -122,6 +184,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+    elif username and password:
+        # Create session with BasicAuth if credentials are provided
+        auth = BasicAuth(username, password)
+        session = async_create_clientsession(hass, auth=auth)
     else:
         session = async_get_clientsession(hass)
 

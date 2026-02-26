@@ -236,8 +236,8 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {},
         ),
         (
@@ -268,6 +268,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
+            {},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            "sunny",
+            {"one": "sunny", "two": "cloudy"},
+            {},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             {},
         ),
     ],
@@ -448,8 +458,8 @@ async def test_config_flow(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "update",
@@ -462,6 +472,12 @@ async def test_config_flow(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )
@@ -718,8 +734,8 @@ async def test_config_flow_device(
             {"state": "{{ states('select.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
         ),
         (
@@ -751,6 +767,16 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"condition": "{{ states('weather.two') }}"},
+            ["sunny", "cloudy"],
+            {"one": "sunny", "two": "cloudy"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            "condition",
         ),
     ],
 )
@@ -1280,7 +1306,7 @@ async def test_config_flow_preview_template_error(
     [
         (
             "sensor",
-            "{{ states('sensor.one') }}",
+            "{{ 1.0 / states('sensor.one') | float(0.0) }}",
             {"unit_of_measurement": "°C"},
         ),
     ],
@@ -1324,14 +1350,7 @@ async def test_config_flow_preview_bad_state(
     assert msg["result"] is None
 
     msg = await client.receive_json()
-    assert msg["event"] == {
-        "error": (
-            "Sensor None has device class 'None', state class 'None' unit '°C' "
-            "and suggested precision 'None' thus indicating it has a numeric "
-            "value; however, it has the non-numeric value: 'unknown' (<class "
-            "'str'>)"
-        ),
-    }
+    assert msg["event"] == {"error": "ZeroDivisionError: division by zero"}
 
 
 @pytest.mark.parametrize(
@@ -1580,8 +1599,8 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "switch",
@@ -1600,6 +1619,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )

@@ -8,7 +8,7 @@ from itertools import chain
 import pypck
 
 from homeassistant.components.sensor import (
-    DOMAIN as DOMAIN_SENSOR,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -40,7 +40,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
@@ -102,14 +102,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_SENSOR: add_entities}
+        {SENSOR_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_SENSOR
+            if entity_config[CONF_DOMAIN] == SENSOR_DOMAIN
         ),
     )
 
@@ -133,8 +133,11 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_variable(
-            self.variable, SCAN_INTERVAL.seconds
+        self._attr_available = (
+            await self.device_connection.request_status_variable(
+                self.variable, SCAN_INTERVAL.seconds
+            )
+            is not None
         )
 
     def input_received(self, input_obj: InputType) -> None:
@@ -144,7 +147,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             or input_obj.get_var() != self.variable
         ):
             return
-
+        self._attr_available = True
         is_regulator = self.variable.name in SETPOINTS
         self._attr_native_value = input_obj.get_value().to_var_unit(
             self.unit, is_regulator
@@ -171,15 +174,18 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_led_and_logic_ops(
-            SCAN_INTERVAL.seconds
+        self._attr_available = (
+            await self.device_connection.request_status_led_and_logic_ops(
+                SCAN_INTERVAL.seconds
+            )
+            is not None
         )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusLedsAndLogicOps):
             return
-
+        self._attr_available = True
         if self.source in pypck.lcn_defs.LedPort:
             self._attr_native_value = input_obj.get_led_state(
                 self.source.value

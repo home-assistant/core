@@ -102,7 +102,7 @@
           "name": "Count"
         },
         "transitions": {
-          "description": "Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html.",
+          "description": "Array of transitions, for desired effect. Examples {examples_url}.",
           "name": "Transitions"
         }
       },
@@ -171,7 +171,7 @@
       "name": "Set music mode"
     },
     "start_flow": {
-      "description": "Starts a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects.",
+      "description": "Starts a custom flow, using transitions from {flow_objects_urls}.",
       "fields": {
         "action": {
           "description": "[%key:component::yeelight::services::set_color_flow_scene::fields::action::description%]",

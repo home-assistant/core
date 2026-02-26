@@ -84,7 +84,7 @@
     "firmware": "2020-11-04T01:00:00+01:00",
     "hardware": "1",
     "location": "d58fec52899f4f1c92e4f8fad6d8c48c",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Tom Logeerkamer",
     "sensors": {
@@ -108,7 +108,7 @@
     "firmware": "2020-11-04T01:00:00+01:00",
     "hardware": "1",
     "location": "06aecb3d00354375924f50c47af36bd2",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Tom Slaapkamer",
     "sensors": {
@@ -175,7 +175,7 @@
     "firmware": "2020-11-04T01:00:00+01:00",
     "hardware": "1",
     "location": "13228dab8ce04617af318a2888b3c548",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Tom Woonkamer",
     "sensors": {
@@ -275,7 +275,7 @@
     "firmware": "2020-11-04T01:00:00+01:00",
     "hardware": "1",
     "location": "d27aede973b54be484f6842d1b2802ad",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Tom Kinderkamer",
     "sensors": {

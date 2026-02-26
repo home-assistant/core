@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper import DEVICE_WARNINGS
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.diagnostics import REDACTED
@@ -97,6 +98,8 @@ def _async_device_as_dict(
         "home_assistant": {},
         "set_up": device.set_up,
         "support_local": device.support_local,
+        "local_strategy": device.local_strategy,
+        "warnings": DEVICE_WARNINGS.get(device.id),
     }
 
     # Gather Tuya states
@@ -120,6 +123,7 @@ def _async_device_as_dict(
         data["status_range"][status_range.code] = {
             "type": status_range.type,
             "value": status_range.values,
+            "report_type": status_range.report_type,
         }
 
     # Gather information how this Tuya device is represented in Home Assistant

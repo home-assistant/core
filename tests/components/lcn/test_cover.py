@@ -1,7 +1,8 @@
 """Test for the LCN cover platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import (
     ModStatusMotorPositionBS4,
     ModStatusMotorPositionModule,
@@ -16,9 +17,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DOMAIN as DOMAIN_COVER,
+    DOMAIN as COVER_DOMAIN,
     CoverState,
 )
+from homeassistant.components.lcn.cover import SCAN_INTERVAL
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +36,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 COVER_OUTPUTS = "cover.testmodule_cover_outputs"
 COVER_RELAYS = "cover.testmodule_cover_relays"
@@ -70,7 +72,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
         control_motor_outputs.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -89,7 +91,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
         control_motor_outputs.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -112,7 +114,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         MockDeviceConnection, "control_motor_outputs"
     ) as control_motor_outputs:
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -122,7 +124,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         control_motor_outputs.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -141,7 +143,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         control_motor_outputs.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -164,7 +166,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
         MockDeviceConnection, "control_motor_outputs"
     ) as control_motor_outputs:
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -174,7 +176,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
         control_motor_outputs.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -191,7 +193,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
         control_motor_outputs.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: COVER_OUTPUTS},
             blocking=True,
@@ -219,7 +221,7 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         control_motor_relays.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -238,7 +240,7 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         control_motor_relays.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -261,7 +263,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
         MockDeviceConnection, "control_motor_relays"
     ) as control_motor_relays:
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -271,7 +273,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
         control_motor_relays.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -290,7 +292,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
         control_motor_relays.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -313,7 +315,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         MockDeviceConnection, "control_motor_relays"
     ) as control_motor_relays:
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -323,7 +325,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         control_motor_relays.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -342,7 +344,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         control_motor_relays.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: COVER_RELAYS},
             blocking=True,
@@ -385,7 +387,7 @@ async def test_relays_set_position(
         control_motor_relays_position.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
             blocking=True,
@@ -403,7 +405,7 @@ async def test_relays_set_position(
         control_motor_relays_position.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
             blocking=True,
@@ -520,6 +522,78 @@ async def test_pushed_relays_status_change(
     assert state is not None
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 75
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_methods", "return_values"),
+    [
+        (
+            COVER_OUTPUTS,
+            ("request_status_output",),
+            (ModStatusOutput(LcnAddr(0, 7, False), 0, 100),),
+        ),
+        (
+            COVER_RELAYS,
+            ("request_status_relays",),
+            (ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),),
+        ),
+        (
+            COVER_RELAYS_BS4,
+            ("request_status_relays", "request_status_motor_position"),
+            (
+                ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),
+                ModStatusMotorPositionBS4(LcnAddr(0, 7, False), 1, 50),
+            ),
+        ),
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entry: MockConfigEntry,
+    entity_id: str,
+    request_methods: list[str],
+    return_values: list[ModStatusOutput | ModStatusRelays],
+) -> None:
+    """Test the availability of cover entity."""
+    await init_integration(hass, entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # no response from device -> unavailable
+    with patch.multiple(
+        MockDeviceConnection,
+        **{
+            request_method: AsyncMock(return_value=None)
+            for request_method in request_methods
+        },
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    with patch.multiple(
+        MockDeviceConnection,
+        **{
+            request_method: AsyncMock(return_value=return_value)
+            for request_method, return_value in zip(
+                request_methods, return_values, strict=True
+            )
+        },
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

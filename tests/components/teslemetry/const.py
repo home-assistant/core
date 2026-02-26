@@ -5,7 +5,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from tests.common import load_json_object_fixture
 
-CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
+UNIQUE_ID = "abc-123"
+CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
@@ -19,6 +20,10 @@ VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
+    "site_info_week_crossing.json", DOMAIN
+)
+SITE_INFO_MULTI_SEASON = load_json_object_fixture("site_info_multi_season.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
 ENERGY_HISTORY_EMPTY = load_json_object_fixture("energy_history_empty.json", DOMAIN)
 
@@ -37,7 +42,7 @@ COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERR
 RESPONSE_OK = {"response": {}, "error": None}
 
 METADATA = {
-    "uid": "abc-123",
+    "uid": UNIQUE_ID,
     "region": "NA",
     "scopes": [
         "openid",
@@ -63,7 +68,7 @@ METADATA = {
     },
 }
 METADATA_LEGACY = {
-    "uid": "abc-123",
+    "uid": UNIQUE_ID,
     "region": "NA",
     "scopes": [
         "openid",
@@ -89,7 +94,7 @@ METADATA_LEGACY = {
     },
 }
 METADATA_NOSCOPE = {
-    "uid": "abc-123",
+    "uid": UNIQUE_ID,
     "region": "NA",
     "scopes": ["openid", "offline_access", "vehicle_device_data"],
     "vehicles": {

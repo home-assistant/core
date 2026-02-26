@@ -105,8 +105,9 @@ DISCOVERY_SCHEMAS = [
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: x
-            != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
+            device_to_ha=lambda x: (
+                x != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
@@ -174,6 +175,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="LockActuatorEnabledSensor",
+            translation_key="actuator",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.ActuatorEnabled,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -249,6 +260,18 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmCOStateSensor",
+            device_class=BinarySensorDeviceClass.CO,
+            device_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.COState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -483,6 +506,73 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.RefrigeratorAlarm.Attributes.State,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WindowCoveringConfigStatusOperational",
+            translation_key="config_status_operational",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # unset Operational bit from ConfigStatus bitmap means problem
+            device_to_ha=lambda x: (
+                not bool(x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational)
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.WindowCovering.Attributes.ConfigStatus,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ThermostatRemoteSensing_LocalTemperature",
+            translation_key="thermostat_remote_sensing_local_temperature",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # LocalTemperature bit from RemoteSensing attribute
+            device_to_ha=lambda x: bool(
+                x
+                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature  # Calculated Local Temperature is derived from a remote node
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.Thermostat.Attributes.RemoteSensing,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ThermostatRemoteSensing_OutdoorTemperature",
+            translation_key="thermostat_remote_sensing_outdoor_temperature",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # OutdoorTemperature bit from RemoteSensing attribute
+            device_to_ha=lambda x: bool(
+                x
+                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature  # OutdoorTemperature is derived from a remote node
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.RemoteSensing,
+            clusters.Thermostat.Attributes.OutdoorTemperature,
+        ),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ThermostatRemoteSensing_Occupancy",
+            translation_key="thermostat_remote_sensing_occupancy",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # Occupancy bit from RemoteSensing attribute
+            device_to_ha=lambda x: bool(
+                x
+                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy  # Occupancy is derived from a remote node
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.Thermostat.Attributes.RemoteSensing,),
+        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kOccupancy,
         allow_multi=True,
     ),
 ]

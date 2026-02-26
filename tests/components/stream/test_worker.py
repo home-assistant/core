@@ -219,7 +219,7 @@ class FakePyAvBuffer:
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
 
-    def add_stream(self, template=None):
+    def add_stream_from_template(self, template):
         """Create an output buffer that captures packets for test to examine."""
 
         class FakeAvOutputStream:
@@ -801,10 +801,7 @@ async def test_worker_log(
         with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, stream_url)
         await hass.async_block_till_done()
-    assert (
-        str(err.value)
-        == f"Error opening stream (ERRORTYPE_-2, Invalid data, {redacted_url})"
-    )
+    assert str(err.value) == f"Error opening stream (Invalid data, {redacted_url})"
     assert stream_url not in caplog.text
 
 
@@ -984,7 +981,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     segment = complete_segments[0]
     part = segment.parts[0]
     av_part = av.open(io.BytesIO(segment.init + part.data))
-    assert av_part.streams.video[0].codec_tag == "hvc1"
+    assert av_part.streams.video[0].codec_tag == "hev1"
     av_part.close()
 
     await stream.stop()

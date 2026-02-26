@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="pressure",
         name="Pressure",
         native_unit_of_measurement=UnitOfPressure.HPA,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         data_path="current_forecast:sea_level",
@@ -333,10 +333,14 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            **readable_phenomenons_dict(self.coordinator.data.phenomenons_max_colors),
+            k: v
+            for k, v in readable_phenomenons_dict(
+                self.coordinator.data.phenomenons_max_colors
+            ).items()
+            if k is not None
         }
 
 
