@@ -38,84 +38,6 @@
     'via_device_id': None,
   })
 # ---
-# name: test_all_sensor_entities.7
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'bluetooth',
-        '00:11:22:33:44:55',
-      ),
-      tuple(
-        'mac',
-        '00:11:22:33:44:55',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'intelliclima',
-        '56789',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Fantini Cosmi',
-    'model': 'ECOCOMFORT 2.0',
-    'model_id': None,
-    'name': 'Test VMC',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': '11223344',
-    'sw_version': '0.6.8',
-    'via_device_id': None,
-  })
-# ---
-# name: test_all_sensor_entities.8
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'bluetooth',
-        '00:11:22:33:44:55',
-      ),
-      tuple(
-        'mac',
-        '00:11:22:33:44:55',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'intelliclima',
-        '56789',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Fantini Cosmi',
-    'model': 'ECOCOMFORT 2.0',
-    'model_id': None,
-    'name': 'Test VMC',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': '11223344',
-    'sw_version': '0.6.8',
-    'via_device_id': None,
-  })
-# ---
 # name: test_all_sensor_entities[sensor.test_vmc_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -149,7 +71,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
+    'translation_key': None,
     'unique_id': '56789_humidity',
     'unit_of_measurement': '%',
   })
@@ -206,7 +128,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '56789_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -227,7 +149,7 @@
     'state': '16.2',
   })
 # ---
-# name: test_all_sensor_entities[sensor.test_vmc_voc-entry]
+# name: test_all_sensor_entities[sensor.test_vmc_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -242,7 +164,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_vmc_voc',
+    'entity_id': 'sensor.test_vmc_volatile_organic_compounds_parts',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -250,31 +172,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'VOC',
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
-    'original_name': 'VOC',
+    'original_name': 'Volatile organic compounds parts',
     'platform': 'intelliclima',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voc',
+    'translation_key': None,
     'unique_id': '56789_voc',
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_all_sensor_entities[sensor.test_vmc_voc-state]
+# name: test_all_sensor_entities[sensor.test_vmc_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Test VMC VOC',
+      'friendly_name': 'Test VMC Volatile organic compounds parts',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_vmc_voc',
+    'entity_id': 'sensor.test_vmc_volatile_organic_compounds_parts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
