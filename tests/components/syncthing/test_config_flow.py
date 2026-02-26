@@ -6,11 +6,11 @@ from aiosyncthing.exceptions import UnauthorizedError
 
 from homeassistant import config_entries
 from homeassistant.components.syncthing.const import DOMAIN
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_ENTRY, NAME, SERVER_ID, TOKEN, URL, VERIFY_SSL
+from . import MOCK_ENTRY, SERVER_ID, TOKEN, URL, VERIFY_SSL
 
 from tests.common import MockConfigEntry
 
@@ -42,7 +42,6 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == URL
-        assert result["data"][CONF_NAME] == NAME
         assert result["data"][CONF_URL] == URL
         assert result["data"][CONF_TOKEN] == TOKEN
         assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
