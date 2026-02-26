@@ -26,13 +26,15 @@ def exception_wrap[_WiimEntityT: WiimBaseEntity, **_P, _R](
             return await func(self, *args, **kwargs)
         except WiimRequestException as err:
             LOGGER.warning("HTTP API error for %s: %s", self.entity_id, err)
-            raise WiimException(
-                f"HTTP API not available for action {self.entity_description.key}"
+            raise HomeAssistantError(
+                f"HTTP API not available for action {func.__name__} on entity "
+                f"{self.entity_id}"
             ) from err
         except WiimDeviceException as err:
             LOGGER.warning("Device communication error for %s: %s", self.entity_id, err)
-            raise WiimException(
-                f"HTTP API not available for action {self.entity_description.key}"
+            raise HomeAssistantError(
+                f"Device communication error for action {func.__name__} on entity "
+                f"{self.entity_id}"
             ) from err
         except WiimException as err:
             LOGGER.warning("An SDK error occurred for %s: %s", self.entity_id, err)
