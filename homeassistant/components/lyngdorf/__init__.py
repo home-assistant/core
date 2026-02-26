@@ -18,7 +18,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
-    assert lyngdorf_model
 
     try:
         receiver = await async_create_receiver(
