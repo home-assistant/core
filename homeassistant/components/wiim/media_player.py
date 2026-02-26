@@ -871,7 +871,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     "Device %s was a follower. Attempting to unjoin from its group",
                     self.entity_id,
                 )
-                # await controller.async_ungroup_device(self._device.udn)
 
         await controller.async_update_all_multiroom_status()
 
