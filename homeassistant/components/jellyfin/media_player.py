@@ -254,7 +254,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         command = "PlayNow"
         shuffle = kwargs.get(ATTR_MEDIA_SHUFFLE, False)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, None)
-        if bool(shuffle):
+        if shuffle:
             # shuffle takes priority over enqueue
             command = "PlayShuffle"
         elif isinstance(enqueue, str):
