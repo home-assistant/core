@@ -39,7 +39,9 @@ UNKNOWN = "unknown"
 
 async def _handle_exception(event: str, exc: BaseException):
     """Log errors when PlugApi throws an exception."""
-    _LOGGER.error("On event %s Plug connection reported exception: %s", event, exc)
+    _LOGGER.exception(
+        "On event %s Plug connection reported exception: %s", event, exc
+    )
 
 
 def _filter_unknown(role: str):
