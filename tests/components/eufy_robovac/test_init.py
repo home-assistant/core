@@ -99,7 +99,7 @@ async def test_unload_entry_removes_vacuum_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Unloading config entry should remove state and integration data."""
+    """Unloading config entry should unload integration runtime data."""
     with patch(
         "homeassistant.components.eufy_robovac.local_api.EufyRoboVacLocalApi.async_get_dps",
         AsyncMock(return_value={"15": "standby"}),
