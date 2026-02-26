@@ -136,7 +136,7 @@ class PowersensorDiscoveryService:
     """A zeroconf service that handles the discovery of plugs."""
 
     def __init__(
-        self, hass: HomeAssistant, service_type: str = "_powersensor._tcp.local."
+        self, hass: HomeAssistant, service_type: str = "_powersensor._udp.local."
     ) -> None:
         """Constructor for zeroconf service that handles the discovery of plugs."""
         self._hass = hass
