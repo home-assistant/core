@@ -91,7 +91,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             # else it's the endpoint
             via_device=(
                 DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.name}"
+                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
                 if device_info.stack
                 else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
