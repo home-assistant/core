@@ -12,7 +12,13 @@ from homeassistant.components.backup import (
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_ACCESS_KEY_ID, CONF_BUCKET, CONF_SECRET_ACCESS_KEY, DOMAIN
+from .const import (
+    CONF_ACCESS_KEY_ID,
+    CONF_BUCKET,
+    CONF_PREFIX,
+    CONF_SECRET_ACCESS_KEY,
+    DOMAIN,
+)
 from .coordinator import S3ConfigEntry
 from .helpers import async_list_backups_from_s3
 
@@ -29,7 +35,7 @@ async def async_get_config_entry_diagnostics(
     backups = await async_list_backups_from_s3(
         coordinator.client,
         bucket=entry.data[CONF_BUCKET],
-        prefix=entry.data[CONF_BUCKET],
+        prefix=entry.data.get(CONF_PREFIX, ""),
     )
 
     data = {
