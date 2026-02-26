@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["auth", "application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/yolink",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "requirements": ["yolink-api==0.6.1"]
 }

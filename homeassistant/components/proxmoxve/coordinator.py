@@ -101,10 +101,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ResourceException as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except requests.exceptions.ConnectionError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
@@ -133,10 +139,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ResourceException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except requests.exceptions.ConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
