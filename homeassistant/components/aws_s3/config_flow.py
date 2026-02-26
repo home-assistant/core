@@ -22,6 +22,7 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
+    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_AWS_S3_DOCS_URL,
@@ -39,6 +40,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
+        vol.Optional(CONF_PREFIX, default=""): cv.string,
     }
 )
 
@@ -53,12 +55,17 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_BUCKET: user_input[CONF_BUCKET],
-                    CONF_ENDPOINT_URL: user_input[CONF_ENDPOINT_URL],
-                }
-            )
+            normalized_prefix = user_input.get(CONF_PREFIX, "").strip("/")
+            # Check for existing entries, treating missing prefix as empty
+            for entry in self._async_current_entries(include_ignore=False):
+                entry_prefix = (entry.data.get(CONF_PREFIX) or "").strip("/")
+                if (
+                    entry.data.get(CONF_BUCKET) == user_input[CONF_BUCKET]
+                    and entry.data.get(CONF_ENDPOINT_URL)
+                    == user_input[CONF_ENDPOINT_URL]
+                    and entry_prefix == normalized_prefix
+                ):
+                    return self.async_abort(reason="already_configured")
 
             hostname = urlparse(user_input[CONF_ENDPOINT_URL]).hostname
             if not hostname or not hostname.endswith(AWS_DOMAIN):
@@ -83,9 +90,18 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 except ConnectionError:
                     errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_BUCKET], data=user_input
-                    )
+                    data = dict(user_input)
+                    if not normalized_prefix:
+                        # Do not persist empty optional values
+                        data.pop(CONF_PREFIX, None)
+                    else:
+                        data[CONF_PREFIX] = normalized_prefix
+
+                    title = user_input[CONF_BUCKET]
+                    if normalized_prefix:
+                        title = f"{title} - {normalized_prefix}"
+
+                    return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
             step_id="user",
