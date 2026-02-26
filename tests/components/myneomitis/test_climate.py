@@ -485,3 +485,75 @@ async def test_register_listener_unsubscribe_variants(
 
     mock_pyaxenco_client.register_listener = reg_listener
     assert mock_pyaxenco_client.register_listener is not None
+
+
+async def test_register_listener_with_close(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """register_listener returning object with `close` should be accepted."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_pyaxenco_client.register_listener.return_value = SimpleNamespace(
+        close=lambda: None
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_pyaxenco_client.register_listener.assert_called_once()
+
+
+async def test_async_set_preset_mode_when_hvac_off_ntd_sets_cool() -> None:
+    """When hvac mode is OFF for an NTD with changeOverUser==1, setting preset selects COOL."""
+    api = AsyncMock()
+    device = dict(CLIMATE_NTD_COOL)
+    ent = MyNeoClimate(api, device)
+    ent.async_write_ha_state = lambda: None
+
+    ent._attr_hvac_mode = HVACMode.OFF
+    ent._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
+
+    await ent.async_set_preset_mode("eco")
+    api.set_sub_device_mode.assert_awaited_with("gw-ntd", "rfid-ntd", 2)
+    assert ent._attr_hvac_mode == HVACMode.COOL
+
+
+async def test_async_set_hvac_mode_restore_fallback_raises() -> None:
+    """When no known preset can be restored, a HomeAssistantError is raised."""
+    api = AsyncMock()
+    ent = MyNeoClimate(api, CLIMATE_DEVICE)
+    ent.async_write_ha_state = lambda: None
+
+    ent._last_preset_mode = None
+    ent._attr_preset_modes = ["standby", "invalid_preset"]
+
+    with pytest.raises(HomeAssistantError):
+        await ent.async_set_hvac_mode(HVACMode.HEAT)
+
+
+async def test_set_hvac_mode_off_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Setting HVAC mode to off that fails at API should raise HomeAssistantError."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_pyaxenco_client.set_device_mode.side_effect = TimeoutError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "climate.climate_device"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {ATTR_ENTITY_ID: entity_id, "hvac_mode": "off"},
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["preset_mode"] == "comfort"
