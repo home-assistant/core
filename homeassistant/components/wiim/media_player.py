@@ -1122,7 +1122,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     @exception_wrap
     async def async_media_previous_track(self) -> None:
-        """Send previous track track command."""
+        """Send previous track command."""
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if wiim_data and wiim_data.controller:
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
