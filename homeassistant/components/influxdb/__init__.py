@@ -481,26 +481,13 @@ def get_influx_connection(  # noqa: C901
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-DEPRECATED_CONNECTION_KEYS = {
-    CONF_HOST,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_SSL_CA_CERT,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_ORG,
-}
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
     conf = config.get(DOMAIN)
 
     if conf is not None:
         # Always check and run as import flow only runs once due to "single_config_entry": true
-        if conf.keys() & DEPRECATED_CONNECTION_KEYS:
+        if conf.keys() & set(COMPONENT_CONFIG_SCHEMA_CONNECTION):
             deprecate_yaml_issue(hass)
 
         if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
