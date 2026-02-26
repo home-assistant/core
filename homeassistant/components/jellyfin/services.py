@@ -8,11 +8,11 @@ from homeassistant.components.media_player import (
     _rename_keys,
 )
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_EXTRA,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_SHUFFLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -50,7 +50,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     # Re-register play_media to use the custom service schema
     hass.services.async_register(
-        "media_player",
+        DOMAIN,
         "play_media",
         play_media_service_handler,
         schema=MEDIA_PLAYER_PLAY_MEDIA_JELLYFIN_SCHEMA,
