@@ -456,7 +456,9 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
 
         home_id = data.get("home_id")
 
-        # Check module related events only for NACamDoorTag as we want to avoid any risk of interference with other opening sensors (even if currently we only have this type of device with opening sensors, we want to be safe in case we add more in the future)
+        # Check module related events only for NACamDoorTag as we want to avoid any risk of interference
+        # with other opening sensors (even if currently we only have this type of device with opening sensors,
+        # we want to be safe in case we add more in the future)
         if self.device.device_type == "NACamDoorTag":
             # Module related events (where we need home_id and module_id check)
             if home_id == self.home.entity_id and module_id == self.device.entity_id:
@@ -465,7 +467,8 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
                     EVENT_TYPE_TAG_SMALL_MOVE,
                     EVENT_TYPE_TAG_BIG_MOVE,
                 ]:
-                    # Interpret move as open event only if actually closed (to avoid false open events when the tag is moved while already open)
+                    # Interpret move as open event only if actually closed
+                    # (to avoid false open events when the tag is moved while already open)
                     if (
                         self.available
                         and self._attr_is_on is not None
@@ -473,6 +476,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
                     ):
                         self._attr_is_on = True
                         self._attr_available = True
+                        # Push new state to API
                         setattr(
                             self.device,
                             NETATMO_OPENING_STATUS,
