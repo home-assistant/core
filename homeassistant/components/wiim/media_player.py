@@ -1240,13 +1240,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     f"Invalid media_id: {media_id}. Expected a valid track index."
                 ) from None
         elif media_source.is_media_source_id(media_id):
+            source_media_id = media_id
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
             url = async_process_play_media_url(self.hass, media_id)
-            LOGGER.warning("HTTP media_type for play_media: %s", url)
+            LOGGER.debug(
+                "Resolved media_source for play_media (id=%s)", source_media_id
+            )
 
             try:
                 if not self._device.supports_http_api:
