@@ -1,0 +1,208 @@
+# serializer version: 1
+# name: test_device_registry
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/dashboard',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Endpoint',
+      'model_id': None,
+      'name': 'my-environment',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_funny_chatelet',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'funny_chatelet',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_focused_einstein',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'focused_einstein',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_practical_morse',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'practical_morse',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/stacks/webstack',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_stack_1',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Stack',
+      'model_id': None,
+      'name': 'webstack',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_serene_banach',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'serene_banach',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'portainer',
+          'portainer_test_entry_123_1_stoic_turing',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Portainer',
+      'model': 'Container',
+      'model_id': None,
+      'name': 'stoic_turing',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+  ])
+# ---
