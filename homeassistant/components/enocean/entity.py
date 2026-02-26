@@ -1,12 +1,13 @@
 """Representation of an EnOcean device."""
 
-from enocean.protocol.packet import Packet
 from enocean_async import (
     EnOceanAddress,
     EnOceanBaseAddress,
     EnOceanSenderAddress,
     EnOceanUniqueRadioID,
     ERP1Telegram,
+    ESP3Packet,
+    ESP3PacketType,
 )
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -50,8 +51,7 @@ class EnOceanEntity(Entity):
     def value_changed(self, telegram: ERP1Telegram):
         """Update the internal state of the device when a packet arrives."""
 
-    def send_command(self, data, optional, packet_type):
+    def send_command(self, data, optional, packet_type: ESP3PacketType):
         """Send a command via the EnOcean dongle."""
-
-        packet = Packet(packet_type, data=data, optional=optional)
+        packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)

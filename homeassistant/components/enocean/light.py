@@ -6,7 +6,7 @@ import math
 from typing import Any
 
 from enocean.utils import combine_hex
-from enocean_async import ERP1Telegram
+from enocean_async import ERP1Telegram, ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -76,7 +76,8 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, bval, 0x01, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
-        self.send_command(command, [], 0x01)
+        packet_type = ESP3PacketType(0x01)
+        self.send_command(command, [], packet_type)
         self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -84,7 +85,8 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
-        self.send_command(command, [], 0x01)
+        packet_type = ESP3PacketType(0x01)
+        self.send_command(command, [], packet_type)
         self._attr_is_on = False
 
     def value_changed(self, telegram: ERP1Telegram):

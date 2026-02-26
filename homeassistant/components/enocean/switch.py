@@ -11,6 +11,7 @@ from enocean_async import (
     EEPHandler,
     EEPMessage,
     ERP1Telegram,
+    ESP3PacketType,
 )
 import voluptuous as vol
 
@@ -108,7 +109,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
             optional=optional,
-            packet_type=0x01,
+            packet_type=ESP3PacketType(0x01),
         )
         self._attr_is_on = True
 
@@ -122,7 +123,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
             optional=optional,
-            packet_type=0x01,
+            packet_type=ESP3PacketType(0x01),
         )
         self._attr_is_on = False
 
