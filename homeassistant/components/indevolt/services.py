@@ -185,7 +185,7 @@ async def _execute_realtime_action(
     action_code: int,
     power: int,
     target_soc: int,
-):
+) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
     results = await asyncio.gather(
         *(
