@@ -32,6 +32,39 @@ DISCOVERED_DEVICE = CloudDiscoveredRoboVac(
 )
 
 
+async def test_cloud_flow_unsupported_models_filtered(hass) -> None:
+    """Flow should reject discovery payloads that have no supported models."""
+    unsupported = CloudDiscoveredRoboVac(
+        device_id="unsupported1",
+        model="T9999",
+        name="Unsupported Vacuum",
+        local_key="abcdefghijklmnop",
+        host="192.168.1.88",
+        mac="AA:BB:CC:DD:EE:11",
+        description="Unsupported",
+        protocol_version="3.3",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.eufy_robovac.config_flow.EufyRoboVacCloudApi.async_list_robovacs",
+        AsyncMock(return_value=[unsupported]),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ACCOUNT_INPUT,
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "no_devices"}
+
+
 async def test_cloud_flow_success(hass) -> None:
     """Cloud onboarding flow should discover, select and create entry."""
     result = await hass.config_entries.flow.async_init(
