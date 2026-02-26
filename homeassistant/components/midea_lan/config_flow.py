@@ -796,8 +796,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_NAME,
                         default=(
                             self.found_device.get(CONF_NAME)
-                            if self.found_device.get(CONF_NAME)
-                            else self.supports.get(self.found_device.get(CONF_TYPE))
+                            or self.supports.get(self.found_device.get(CONF_TYPE))
                         ),
                     ): str,
                     vol.Required(
@@ -806,11 +805,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): int,
                     vol.Required(
                         CONF_TYPE,
-                        default=(
-                            self.found_device.get(CONF_TYPE)
-                            if self.found_device.get(CONF_TYPE)
-                            else 0xAC
-                        ),
+                        default=(self.found_device.get(CONF_TYPE) or 0xAC),
                     ): vol.In(self.supports),
                     vol.Required(
                         CONF_IP_ADDRESS,
@@ -818,49 +813,29 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(
                         CONF_PORT,
-                        default=(
-                            self.found_device.get(CONF_PORT)
-                            if self.found_device.get(CONF_PORT)
-                            else 6444
-                        ),
+                        default=(self.found_device.get(CONF_PORT) or 6444),
                     ): int,
                     vol.Required(
                         CONF_PROTOCOL,
-                        default=protocol or ProtocolVersion.V3,
+                        default=(protocol or ProtocolVersion.V3),
                     ): vol.In(
                         [protocol] if protocol else ProtocolVersion,
                     ),
                     vol.Required(
                         CONF_MODEL,
-                        default=(
-                            self.found_device.get(CONF_MODEL)
-                            if self.found_device.get(CONF_MODEL)
-                            else "Unknown"
-                        ),
+                        default=(self.found_device.get(CONF_MODEL) or "Unknown"),
                     ): str,
                     vol.Required(
                         CONF_SUBTYPE,
-                        default=(
-                            self.found_device.get(CONF_SUBTYPE)
-                            if self.found_device.get(CONF_SUBTYPE)
-                            else 0
-                        ),
+                        default=(self.found_device.get(CONF_SUBTYPE) or 0),
                     ): int,
                     vol.Optional(
                         CONF_TOKEN,
-                        default=(
-                            self.found_device.get(CONF_TOKEN)
-                            if self.found_device.get(CONF_TOKEN)
-                            else ""
-                        ),
+                        default=(self.found_device.get(CONF_TOKEN) or ""),
                     ): str,
                     vol.Optional(
                         CONF_KEY,
-                        default=(
-                            self.found_device.get(CONF_KEY)
-                            if self.found_device.get(CONF_KEY)
-                            else ""
-                        ),
+                        default=(self.found_device.get(CONF_KEY) or ""),
                     ): str,
                 },
             ),

@@ -21,11 +21,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     CONF_KEY,
     CONF_MODEL,
     CONF_REFRESH_INTERVAL,
@@ -82,23 +82,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Midea LAN from a config entry."""
 
-    data = entry.runtime_data
+    data = entry.data
+    options = entry.options
 
     device_type: int = data.get(CONF_TYPE, 0xAC)
     device_id: int = data[CONF_DEVICE_ID]
     name: str = data.get(CONF_NAME, f"{device_id}")
     token: str = data.get(CONF_TOKEN) or ""
     key: str = data.get(CONF_KEY) or ""
-    ip_address: str = data.options.get(CONF_IP_ADDRESS, data.get(CONF_IP_ADDRESS))
-    refresh_interval: int | None = data.options.get(CONF_REFRESH_INTERVAL)
+    ip_address: str = options.get(CONF_IP_ADDRESS, data.get(CONF_IP_ADDRESS))
+    refresh_interval: int | None = options.get(CONF_REFRESH_INTERVAL)
     port: int = data[CONF_PORT]
     model: str = data[CONF_MODEL]
     subtype: int = data.get(CONF_SUBTYPE, 0)
     protocol: ProtocolVersion = ProtocolVersion(data[CONF_PROTOCOL])
-    customize: str = data.options.get(CONF_CUSTOMIZE, "")
+    customize: str = options.get(CONF_CUSTOMIZE, "")
     if protocol == ProtocolVersion.V3 and (key == "" or token == ""):
-        _LOGGER.error("For V3 devices, the key and the token is required")
-        return False
+        raise ConfigEntryError("For V3 devices, the key and token are required")
     device = await hass.async_add_import_executor_job(
         device_selector,
         name,
@@ -122,6 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if DEVICES not in hass.data[DOMAIN]:
             hass.data[DOMAIN][DEVICES] = {}
         hass.data[DOMAIN][DEVICES][device_id] = device
+        entry.runtime_data = device
         # Forward the setup of an entry to all platforms
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
         # Listener `update_listener` is
@@ -130,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(entry.add_update_listener(update_listener))
         return True
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    return True
+    raise ConfigEntryNotReady("Unable to initialize device")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
