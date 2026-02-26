@@ -512,6 +512,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     options.pop(CONF_WEB_SEARCH_REGION, None)
                     options.pop(CONF_WEB_SEARCH_COUNTRY, None)
                     options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+            if (
+                user_input.get(CONF_CODE_INTERPRETER)
+                and user_input.get(CONF_REASONING_EFFORT) == "minimal"
+            ):
+                errors[CONF_CODE_INTERPRETER] = "code_interpreter_minimal_reasoning"
 
             options.update(user_input)
             if not errors:
