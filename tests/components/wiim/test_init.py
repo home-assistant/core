@@ -1,4 +1,4 @@
-"""pytest __init__.py."""
+"""Tests for the WiiM integration initialization."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
