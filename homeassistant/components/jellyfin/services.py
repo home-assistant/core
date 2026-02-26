@@ -78,11 +78,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             entity = component.get_entity(entity_id)
             if not isinstance(entity, JellyfinMediaPlayer):
                 continue
-            entity.play_media(
-                media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
-                media_id=call.data[ATTR_MEDIA_CONTENT_ID],
-                **kwargs,
-            )
+            # synchronous play_media kwarg injector
+            def _play(e=entity):
+                e.play_media(
+                    media_type=call.data["media_type"],
+                    media_id=call.data["media_id"],
+                    **kwargs,
+                )
+            await hass.async_add_executor_job(_play)
 
     # register play_media to use the custom service schema
     hass.services.async_register(
