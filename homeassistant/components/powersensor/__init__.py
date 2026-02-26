@@ -108,7 +108,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         devices = {**entry.data}
         new_data = {CFG_DEVICES: devices, CFG_ROLES: {}}
         hass.config_entries.async_update_entry(
-            entry, data=new_data, version=2, minor_version=2
+            entry,
+            data=new_data,
+            version=PowersensorConfigFlow.VERSION,
+            minor_version=PowersensorConfigFlow.MINOR_VERSION,
         )
 
     _LOGGER.debug("Upgrading config to %s.%s", entry.version, entry.minor_version)
