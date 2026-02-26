@@ -53,8 +53,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         """Handle the service call to start charging."""
         coordinators = await _async_get_coordinators_from_call(hass, call)
 
-        target_soc = call.data["target_soc"]
-        power = call.data["power"]
+        target_soc: int = call.data["target_soc"]
+        power: int = call.data["power"]
 
         errors: list[str] = []
 
@@ -62,7 +62,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for coordinator in coordinators:
             try:
                 # Validate charge power based on device generation
-                max_power = POWER_LIMITS[coordinator.generation]["max_charge_power"]
+                max_power: int = POWER_LIMITS[coordinator.generation][
+                    "max_charge_power"
+                ]
                 if power > max_power:
                     _raise_power_exceeds_max(power, max_power, coordinator.generation)
 
@@ -87,8 +89,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         """Handle the service call to start discharging."""
         coordinators = await _async_get_coordinators_from_call(hass, call)
 
-        power = call.data["power"]
-        target_soc = call.data["target_soc"]
+        power: int = call.data["power"]
+        target_soc: int = call.data["target_soc"]
 
         errors: list[str] = []
 
@@ -96,7 +98,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for coordinator in coordinators:
             try:
                 # Validate discharge power based on device generation
-                max_power = POWER_LIMITS[coordinator.generation]["max_discharge_power"]
+                max_power: int = POWER_LIMITS[coordinator.generation][
+                    "max_discharge_power"
+                ]
                 if power > max_power:
                     _raise_power_exceeds_max(power, max_power, coordinator.generation)
 
@@ -187,7 +191,7 @@ async def _execute_realtime_action(
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
-    results = await asyncio.gather(
+    results: list[None | BaseException] = await asyncio.gather(
         *(
             coordinator.async_execute_realtime_action([action_code, power, target_soc])
             for coordinator in coordinators
@@ -195,9 +199,9 @@ async def _execute_realtime_action(
         return_exceptions=True,
     )
 
-    exception: Exception | None = None
+    exception: BaseException | None = None
     for coordinator, result in zip(coordinators, results, strict=True):
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             _LOGGER.error(
                 "Coordinator %s failed: %s", coordinator.friendly_name, result
             )
