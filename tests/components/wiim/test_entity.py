@@ -1,4 +1,4 @@
-"""pytest entity.py."""
+"""Tests for the WiiM base entity."""
 
 import pytest
 from wiim.wiim_device import WiimDevice
