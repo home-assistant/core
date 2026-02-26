@@ -126,7 +126,10 @@ def create_mock_syncthing_client() -> MagicMock:
         """Mock events.listen that doesn't block."""
         while True:
             await asyncio.sleep(0)
-            yield
+            yield {
+                "id": mock_events.last_seen_id,
+                "type": "MockEvent",
+            }
 
     mock_events.listen = mock_listen
     mock_events.last_seen_id = 0

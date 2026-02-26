@@ -42,7 +42,7 @@ async def test_sensor_platform_setup(
     snapshot: SnapshotAssertion,
     mock_syncthing: MagicMock,
 ) -> None:
-    """Test sensor platform sets up folder and device sensors."""
+    """Test sensor platform sets up folder sensors."""
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 

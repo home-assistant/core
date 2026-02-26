@@ -8,12 +8,14 @@ from aiosyncthing.exceptions import SyncthingError
 
 from homeassistant.components.syncthing.const import (
     FOLDER_SUMMARY_RECEIVED,
+    RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher
+from homeassistant.util import dt as dt_util
 
 from . import (
     FOLDER_ID,
@@ -23,7 +25,7 @@ from . import (
     create_mock_syncthing_client,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_syncthing_client_event_listener(
@@ -65,7 +67,7 @@ async def test_syncthing_client_event_listener(
             yield event
         while True:
             await asyncio.sleep(0)
-            yield None
+            yield {"type": "unknown"}
 
     mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.listen = mock_listen
@@ -101,7 +103,9 @@ async def test_syncthing_client_reconnect_on_error(
         call_count += 1
         if call_count == 1:
             raise SyncthingError("Connection lost")
-        yield MOCK_STATE_CHANGED_EVENT
+        while True:
+            await asyncio.sleep(0.1)
+            yield MOCK_STATE_CHANGED_EVENT
 
     mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.last_seen_id = 10
@@ -139,3 +143,10 @@ async def test_syncthing_client_reconnect_on_error(
         await hass.async_block_till_done()
 
     assert len(server_unavailable_calls) >= 1
+    assert len(server_available_calls) == 0
+
+    future = dt_util.utcnow() + RECONNECT_INTERVAL
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    assert len(server_available_calls) >= 1
