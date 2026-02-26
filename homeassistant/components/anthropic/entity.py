@@ -62,6 +62,7 @@ from anthropic.types import (
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
+    WebSearchTool20250305Param,
     WebSearchTool20260209Param,
     WebSearchToolResultBlock,
     WebSearchToolResultBlockParamContentParam,
@@ -107,6 +108,7 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
 
@@ -742,19 +744,34 @@ class AnthropicBaseLLMEntity(Entity):
             ]
 
         if options.get(CONF_CODE_EXECUTION):
-            tools.append(
-                CodeExecutionTool20250825Param(
-                    name="code_execution",
-                    type="code_execution_20250825",
-                ),
-            )
+            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_WEB_SEARCH):
+                tools.append(
+                    CodeExecutionTool20250825Param(
+                        name="code_execution",
+                        type="code_execution_20250825",
+                    ),
+                )
 
         if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20260209Param(
-                name="web_search",
-                type="web_search_20260209",
-                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
-            )
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_CODE_EXECUTION):
+                web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
+                    WebSearchTool20250305Param(
+                        name="web_search",
+                        type="web_search_20250305",
+                        max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                    )
+                )
+            else:
+                web_search = WebSearchTool20260209Param(
+                    name="web_search",
+                    type="web_search_20260209",
+                    max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                )
             if options.get(CONF_WEB_SEARCH_USER_LOCATION):
                 web_search["user_location"] = {
                     "type": "approximate",

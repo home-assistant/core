@@ -755,7 +755,7 @@ async def test_web_search(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_CHAT_MODEL: "claude-sonnet-4-0",
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_MAX_USES: 5,
             CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -890,7 +890,7 @@ async def test_web_search_error(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_CHAT_MODEL: "claude-sonnet-4-0",
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_MAX_USES: 5,
             CONF_WEB_SEARCH_USER_LOCATION: True,

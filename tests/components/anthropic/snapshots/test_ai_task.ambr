@@ -296,7 +296,7 @@
       dict({
         'max_uses': None,
         'name': 'web_search',
-        'type': 'web_search_20260209',
+        'type': 'web_search_20250305',
       }),
       dict({
         'description': 'Use this tool to reply to the user',
