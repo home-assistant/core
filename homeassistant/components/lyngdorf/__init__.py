@@ -6,7 +6,7 @@ from lyngdorf.device import async_create_receiver, lookup_receiver_model
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
@@ -18,6 +18,12 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
+    if not lyngdorf_model:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"model": config_entry.data[CONF_MODEL]},
+        )
 
     try:
         receiver = await async_create_receiver(
