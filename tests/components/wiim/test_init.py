@@ -41,7 +41,10 @@ async def test_async_setup_entry_success(
     with (
         patch("homeassistant.components.wiim.WiimController") as mock_controller_cls,
         patch("homeassistant.components.wiim.UpnpFactory") as mock_factory_cls,
-        patch("wiim.endpoint.WiimApiEndpoint", return_value=mock_http_api),
+        patch(
+            "homeassistant.components.wiim.WiimApiEndpoint",
+            return_value=mock_http_api,
+        ),
         patch("homeassistant.components.wiim.WiimDevice") as mock_wiim_device_cls,
         patch(
             "homeassistant.components.wiim.async_get_clientsession",
