@@ -42,6 +42,7 @@ from homeassistant.components.squeezebox.const import (
 )
 from homeassistant.components.squeezebox.services import (
     ATTR_PARAMETERS,
+    ATTR_TIMEOUT,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
 )
@@ -789,12 +790,12 @@ async def test_squeezebox_call_query_with_timeout(
     # The service call to squeezebox.call_query triggers async_call_query
     await hass.services.async_call(
         DOMAIN,
-        "call_query",
+        SERVICE_CALL_QUERY,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            "command": "test_command",
-            "parameters": ["param1", "param2"],
-            "timeout": timeout,
+            ATTR_COMMAND: "test_command",
+            ATTR_PARAMETERS: ["param1", "param2"],
+            ATTR_TIMEOUT: timeout,
         },
         blocking=True,
     )
