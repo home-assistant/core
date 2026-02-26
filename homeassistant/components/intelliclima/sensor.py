@@ -26,18 +26,11 @@ from .entity import IntelliClimaECOEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class IntelliClimaSensorRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class IntelliClimaSensorEntityDescription(SensorEntityDescription):
+    """Describes a sensor entity."""
 
     value_fn: Callable[[IntelliClimaECO], int | float | str | None]
-
-
-@dataclass(frozen=True)
-class IntelliClimaSensorEntityDescription(
-    SensorEntityDescription, IntelliClimaSensorRequiredKeysMixin
-):
-    """Describes a sensor entity."""
 
 
 INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
