@@ -153,30 +153,29 @@ class MyNeoSelect(SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
-        try:
-            unsubscribe = self._api.register_listener(
-                self._device_id, self.handle_ws_update
-            )
-        except AttributeError:
+        register_listener = getattr(self._api, "register_listener", None)
+        if not callable(register_listener):
             _LOGGER.debug(
                 "API has no register_listener, skipping ws listener for %s",
                 self._device_id,
             )
+            return
+
+        unsubscribe = register_listener(self._device_id, self.handle_ws_update)
+        if callable(unsubscribe):
+            self.async_on_remove(unsubscribe)
+        elif hasattr(unsubscribe, "unsubscribe"):
+            self.async_on_remove(unsubscribe.unsubscribe)
+        elif hasattr(unsubscribe, "close"):
+            self.async_on_remove(unsubscribe.close)
+        elif unsubscribe is None:
+            pass
         else:
-            if callable(unsubscribe):
-                self.async_on_remove(unsubscribe)
-            elif hasattr(unsubscribe, "unsubscribe"):
-                self.async_on_remove(unsubscribe.unsubscribe)
-            elif hasattr(unsubscribe, "close"):
-                self.async_on_remove(unsubscribe.close)
-            elif unsubscribe is None:
-                pass
-            else:
-                _LOGGER.debug(
-                    "register_listener returned unsupported type %s for %s",
-                    type(unsubscribe),
-                    self._device_id,
-                )
+            _LOGGER.debug(
+                "register_listener returned unsupported type %s for %s",
+                type(unsubscribe),
+                self._device_id,
+            )
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
