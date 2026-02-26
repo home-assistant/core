@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import time
 
 from pyportainer import (
     Portainer,
@@ -18,10 +19,13 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    LocalImageInformation,
+    PortainerImageUpdateStatus,
 )
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
+from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
+from pyportainer.watcher import PortainerImageWatcher
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -57,9 +61,12 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
+    container_inspect: DockerInspect
+    local_image: LocalImageInformation
+    stack: Stack | None
     stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
-    stack: Stack | None
+    image_status: PortainerImageUpdateStatus | None = None
 
 
 @dataclass(slots=True)
@@ -80,6 +87,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         hass: HomeAssistant,
         config_entry: PortainerConfigEntry,
         portainer: Portainer,
+        watcher: PortainerImageWatcher,
     ) -> None:
         """Initialize the Portainer Data Update Coordinator."""
         super().__init__(
@@ -90,6 +98,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.portainer = portainer
+        self.watcher = watcher
 
         self.known_endpoints: set[int] = set()
         self.known_containers: set[tuple[int, str]] = set()
@@ -106,6 +115,10 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         self.new_stacks_callbacks: list[
             Callable[[list[tuple[PortainerCoordinatorData, PortainerStackData]]], None]
         ] = []
+
+        self._image_cache: dict[
+            tuple[int, str], tuple[float, DockerInspect, LocalImageInformation]
+        ] = {}
 
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
@@ -193,6 +206,21 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         else None
                     )
 
+                    (
+                        container_inspect,
+                        local_image,
+                    ) = await self._get_inspect_local_image(endpoint.id, container.id)
+
+                    # Periodically check if Portainer Watcher has results for this container's image
+                    image_status = (
+                        result.status
+                        if (
+                            result := self.watcher.results.get(
+                                (endpoint.id, container.id)
+                            )
+                        )
+                        else None
+                    )
                     # Check if container belongs to a stack via docker compose label
                     stack_name: str | None = (
                         container.labels.get("com.docker.compose.project")
@@ -204,8 +232,11 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
                     container_map[container_name] = PortainerContainerData(
                         container=container,
+                        container_inspect=container_inspect,
+                        local_image=local_image,
                         stats=None,
                         stats_pre=prev_container.stats if prev_container else None,
+                        image_status=image_status,
                         stack=stack_map[stack_name].stack
                         if stack_name and stack_name in stack_map
                         else None,
@@ -305,3 +336,30 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     def _get_container_name(self, container_name: str) -> str:
         """Sanitize to get a proper container name."""
         return container_name.replace("/", " ").strip()
+
+    async def _get_inspect_local_image(
+        self, endpoint_id: int, container_id: str
+    ) -> tuple[DockerInspect, LocalImageInformation]:
+        """Fetch or retrieve cached container inspect and local image data."""
+        if cached := self._image_cache.get((endpoint_id, container_id)):
+            cached_at, container_inspect, local_image = cached
+            if self.watcher.last_check is None or cached_at >= self.watcher.last_check:
+                _LOGGER.debug(
+                    "Using cached inspect and local image for endpoint %d, container %s",
+                    endpoint_id,
+                    container_id,
+                )
+                return container_inspect, local_image
+
+        container_inspect = await self.portainer.inspect_container(
+            endpoint_id, container_id
+        )
+        local_image = await self.portainer.get_image(
+            endpoint_id, str(container_inspect.image)
+        )
+        self._image_cache[(endpoint_id, container_id)] = (
+            time.monotonic(),
+            container_inspect,
+            local_image,
+        )
+        return container_inspect, local_image

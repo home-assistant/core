@@ -170,6 +170,11 @@
       "stack": {
         "name": "Stack"
       }
+    },
+    "update": {
+      "container_image_update": {
+        "name": "Image update available"
+      }
     }
   },
   "exceptions": {
