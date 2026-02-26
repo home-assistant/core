@@ -28,7 +28,7 @@ HueBLE==2.1.0
 Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
-PSNAWP==3.0.1
+PSNAWP==3.0.2
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -2400,7 +2400,7 @@ pyrail==0.4.1
 pyrainbird==6.1.0
 
 # homeassistant.components.playstation_network
-pyrate-limiter==3.9.0
+pyrate-limiter==4.0.2
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
