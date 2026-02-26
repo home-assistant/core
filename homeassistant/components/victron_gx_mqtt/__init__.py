@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 
@@ -29,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     await hub.start()
 
     # Register the update listener
-    async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def _update_listener(
+        hass: HomeAssistant, entry: VictronGxConfigEntry
+    ) -> None:
         _LOGGER.info("Options have been updated - applying changes")
         # Reload the integration to apply changes
         await hass.config_entries.async_reload(entry.entry_id)

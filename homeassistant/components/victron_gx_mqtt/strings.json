@@ -37,7 +37,6 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "operation_mode": "Operation mode",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "Optional root topic prefix",
@@ -47,7 +46,6 @@
         },
         "data_description": {
           "host": "Hostname or IP address of Victron device, usually mDNS name like 'venus.local'",
-          "operation_mode": "Operation mode controls which Home Assistant entity types are created.",
           "password": "Password for the Victron device, default is empty. This is not your VRM password.",
           "port": "The MQTT port on the host. Normally it is 1883.",
           "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
@@ -1440,7 +1438,6 @@
       "init": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "operation_mode": "[%key:component::victron_gx_mqtt::config::step::user::data::operation_mode%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data::root_topic_prefix%]",
@@ -1450,7 +1447,6 @@
         },
         "data_description": {
           "host": "[%key:component::victron_gx_mqtt::config::step::user::data_description::host%]",
-          "operation_mode": "[%key:component::victron_gx_mqtt::config::step::user::data_description::operation_mode%]",
           "password": "[%key:component::victron_gx_mqtt::config::step::user::data_description::password%]",
           "port": "[%key:component::victron_gx_mqtt::config::step::user::data_description::port%]",
           "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data_description::root_topic_prefix%]",
@@ -1459,34 +1455,6 @@
           "username": "[%key:component::victron_gx_mqtt::config::step::user::data_description::username%]"
         }
       }
-    }
-  },
-  "selector": {
-    "operation_mode": {
-      "options": {
-        "full": "Full (sensors + controllable entities)",
-        "read_only": "Read-only (sensors & binary sensors only)"
-      }
-    }
-  },
-  "services": {
-    "publish": {
-      "description": "Publishes a value to a specific metric on a Victron device.",
-      "fields": {
-        "device_id": {
-          "description": "The device identifier to publish to.",
-          "name": "Device ID"
-        },
-        "metric_id": {
-          "description": "The metric identifier to publish to.",
-          "name": "Metric ID"
-        },
-        "value": {
-          "description": "The value to publish to the metric.",
-          "name": "Value"
-        }
-      },
-      "name": "Publish metric"
     }
   }
 }
