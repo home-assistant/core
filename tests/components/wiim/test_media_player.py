@@ -1,4 +1,4 @@
-"""pytest media_player.py."""
+"""Tests for the WiiM media player entity."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
