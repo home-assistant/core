@@ -723,12 +723,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
             if self.hass and self.entity_id:
                 self.async_write_ha_state()
-        except Exception as e:
+        except (AttributeError, RuntimeError) as err:
             LOGGER.error(
                 "Device %s: Unexpected error in _from_device_update_supported_features: %s",
                 self.entity_id,
-                e,
-                exc_info=True,
+                err,
             )
             if self.hass and self.entity_id:
                 self.async_write_ha_state()
@@ -1347,7 +1346,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
             media_sources_item = await media_source.async_browse_media(
                 self.hass,
-                media_content_id,
+                None,
                 # This allows filtering content. In this case it will only show audio sources.
                 content_filter=lambda item: item.media_content_type.startswith(
                     "audio/"

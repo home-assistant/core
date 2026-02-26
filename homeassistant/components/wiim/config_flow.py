@@ -27,6 +27,9 @@ from .const import (
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
+VERSION = 1
+MINOR_VERSION = 1
+
 
 async def _validate_device_and_get_info(
     hass: HomeAssistant, host_or_udn: str, location: str | None = None
@@ -37,12 +40,10 @@ async def _validate_device_and_get_info(
     Otherwise, assumes host_or_udn is an IP and tries to discover UPnP info.
     Returns device info (UDN, name, model, host, location).
     """
-    requester = AiohttpRequester(timeout=10)
-
     try:
         if location:
             LOGGER.debug("Validating UPnP device at location: %s", location)
-            factory = UpnpFactory(requester)
+            factory = UpnpFactory(AiohttpRequester(timeout=10))
             upnp_device = await factory.async_create_device(location)
             return {
                 CONF_UDN: upnp_device.udn,
@@ -77,7 +78,7 @@ async def _validate_device_and_get_info(
         raise CannotConnect(f"UPnP library error: {err}") from err
     except TimeoutError as err:
         LOGGER.warning(
-            "Timeout while validating Wiiim device at %s: %s",
+            "Timeout while validating WiiM device at %s: %s",
             host_or_udn or location,
             err,
         )
@@ -105,11 +106,11 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception as e:
+            except (OSError, ValueError) as err:
                 LOGGER.exception(
                     "Unexpected exception during user step validation for host %s: %s",
                     host,
-                    e,
+                    err,
                 )
                 errors["base"] = "unknown"
             else:
@@ -192,12 +193,11 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
-        except Exception as e:
+        except (OSError, ValueError) as err:
             LOGGER.error(
                 "Unexpected error during Zeroconf validation for %s: %s",
                 host,
-                e,
-                exc_info=True,
+                err,
             )
             return self.async_abort(reason="unknown")
 
@@ -228,7 +228,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_info[CONF_NAME], data=entry_data
             )
 
-        # self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={

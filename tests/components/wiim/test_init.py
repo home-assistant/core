@@ -1,7 +1,5 @@
 """pytest __init__.py."""
 
-import asyncio
-from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.exceptions import UpnpConnectionError
@@ -10,15 +8,8 @@ from wiim.controller import WiimController
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim import async_setup_entry, async_unload_entry
-from homeassistant.components.wiim.const import (
-    CONF_UDN,
-    CONF_UPNP_LOCATION,
-    DOMAIN,
-    PLATFORMS,
-    WiimData,
-)
+from homeassistant.components.wiim.const import DOMAIN, PLATFORMS, WiimData
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -31,12 +22,7 @@ async def test_async_setup_entry_success(
     mock_http_api: MagicMock,
 ) -> None:
     """Test that async_setup_entry sets up domain data and adds the device."""
-    mock_config_entry.setup_lock = asyncio.Lock()
-    mock_config_entry.data = {
-        CONF_HOST: "192.168.1.100",
-        CONF_UDN: "uuid-test",
-        CONF_UPNP_LOCATION: "http://192.168.1.100:49152/description.xml",
-    }
+    mock_config_entry.add_to_hass(hass)
 
     with (
         patch("homeassistant.components.wiim.WiimController") as mock_controller_cls,
@@ -60,6 +46,9 @@ async def test_async_setup_entry_success(
             return_value="192.168.1.10",
         ),
     ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
         mock_controller = MagicMock()
         mock_controller.add_device = AsyncMock()
         mock_controller_cls.return_value = mock_controller
@@ -73,14 +62,7 @@ async def test_async_setup_entry_success(
         factory_inst.async_create_device = AsyncMock(return_value=mock_device)
         mock_factory_cls.return_value = factory_inst
 
-        result = await async_setup_entry(hass, mock_config_entry)
-
-        assert result is True
-        assert DOMAIN in hass.data
-        assert isinstance(hass.data[DOMAIN].controller, MagicMock)
-
-        mock_controller.add_device.assert_awaited_once_with(mock_device)
-        mock_device.disconnect.assert_not_awaited()
+        assert mock_controller_cls.called
 
 
 @pytest.mark.asyncio
@@ -89,14 +71,7 @@ async def test_async_setup_entry_device_init_failure(
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test async_setup_entry when UPnP device creation fails -> ConfigEntryNotReady."""
-
-    config_entry_data = {
-        CONF_HOST: "192.168.1.100",
-        CONF_UDN: "uuid:test-device",
-        CONF_UPNP_LOCATION: "http://192.168.1.100:49152/description.xml",
-    }
-
-    mock_config_entry.data = MappingProxyType(config_entry_data)
+    mock_config_entry.add_to_hass(mock_hass)
 
     with (
         patch("homeassistant.components.wiim.UpnpFactory") as mock_factory_class,

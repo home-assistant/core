@@ -14,10 +14,12 @@ from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.components.wiim.media_player import WiimMediaPlayerEntity
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -33,64 +35,25 @@ def mock_sdk_logger():
 
 
 @pytest.fixture
-def mock_hass() -> HomeAssistant:
-    """Mock HomeAssistant instance."""
-    hass = MagicMock(spec=HomeAssistant)
-    hass.config_entries = MagicMock()
-    hass.config_entries.async_setup_platforms = AsyncMock()
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
-    hass.data = {}
-
-    hass.bus = MagicMock()
-    hass.bus.async_listen_once = AsyncMock()
-
-    hass.config_entries.flow = MagicMock()
-    hass.config_entries.flow.async_init = AsyncMock(
-        return_value=MagicMock(flow_id="mock_flow_id", type="form")
-    )
-    hass.config_entries.flow.async_configure = AsyncMock(
-        return_value=MagicMock(flow_id="mock_flow_id", type="form")
-    )
-    hass.config_entries.flow.async_step = AsyncMock(
-        return_value=MagicMock(flow_id="mock_flow_id", type="form")
-    )
-
-    hass.helpers = MagicMock()
-    hass.helpers.entity_platform = MagicMock()
-    hass.helpers.entity_platform.async_get_current_platform = AsyncMock(
-        return_value=MagicMock(platform_name=DOMAIN)
-    )
-
-    hass.helpers.device_registry = MagicMock()
-    hass.config = MagicMock()
-    hass.config.is_safe_mode = False
-    hass.bus.async_fire = AsyncMock()
-
+async def mock_hass(hass: HomeAssistant) -> HomeAssistant:
+    """Return a real HomeAssistant instance for integration tests."""
     return hass
 
 
 @pytest.fixture
 def mock_config_entry() -> ConfigEntry:
     """Mock Home Assistant ConfigEntry."""
-    entry = MagicMock(spec=ConfigEntry)
-    entry.entry_id = "test_entry_id"
-    entry.domain = "wiim"
-    entry.platforms = set()
-    entry.title = "Test WiiM Device"
-    entry.data = {
-        "host": "192.168.1.100",
-        "udn": "uuid:test-udn-1234",
-        "name": "Test WiiM Device",
-        "upnp_location": "http://192.168.1.100:49152/description.xml",
-    }
-    entry.options = {}
-    entry.add_update_listener = MagicMock()
-    entry.async_on_unload = MagicMock()
-    entry.runtime_data = None
-    entry.source = SOURCE_USER
-    entry.state = ConfigEntryState.LOADED
-    return entry
+    return MockConfigEntry(
+        domain="wiim",
+        data={
+            "host": "192.168.1.100",
+            "udn": "uuid:test-udn-1234",
+            "name": "Test WiiM Device",
+            "upnp_location": "http://192.168.1.100:49152/description.xml",
+        },
+        title="Test WiiM Device",
+        source="user",
+    )
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 """pytest config_flow.py."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
@@ -41,7 +41,7 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
             flow, "async_set_unique_id", new_callable=AsyncMock
         ) as mock_set_unique_id,
         patch.object(
-            flow, "_abort_if_unique_id_configured", new_callable=AsyncMock
+            flow, "_abort_if_unique_id_configured", new_callable=MagicMock
         ) as mock_abort,
     ):
         mock_abort.return_value = None
@@ -68,10 +68,7 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
 @pytest.mark.asyncio
 async def test_async_step_user_already_configured(flow, mock_config_entry) -> None:
     """Test the user step when device is already configured."""
-    _flow, hass = flow
-    mock_config_entry.data[CONF_UDN] = "uuid:test-udn-1234"  # Ensure UDN matches
-    hass.config_entries.async_entries.return_value = [mock_config_entry]
-
+    _flow, _ = flow
     mock_device_info = {
         CONF_HOST: "192.168.1.100",
         CONF_UDN: "uuid:test-1234",
