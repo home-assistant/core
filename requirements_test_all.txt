@@ -1208,7 +1208,7 @@ justnimbus==0.7.4
 kegtron-ble==1.0.2
 
 # homeassistant.components.kiosker
-kiosker-python-api==1.2.7
+kiosker-python-api==1.2.9
 
 # homeassistant.components.knocki
 knocki==0.4.2

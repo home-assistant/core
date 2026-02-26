@@ -5,9 +5,10 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect to Kiosker device.",
-      "invalid_auth": "Authentication failed.",
-      "invalid_host": "Invalid host or network configuration.",
+      "bad_request": "Invalid request. Check your configuration.",
+      "cannot_connect": "Failed to connect to the Kiosker device.",
+      "invalid_auth": "Authentication failed. Check your API token.",
+      "tls_error": "TLS verification failed. Check your SSL settings.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

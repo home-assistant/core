@@ -5,7 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from kiosker import KioskerAPI
+from kiosker import (
+    AuthenticationError,
+    BadRequestError,
+    ConnectionError,
+    IPAuthenticationError,
+    KioskerAPI,
+    PingError,
+    TLSVerificationError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as HAConfigFlow, ConfigFlowResult
@@ -61,6 +69,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         # Test connection by getting status
         status = await hass.async_add_executor_job(api.status)
+    except ConnectionError as exc:
+        _LOGGER.error("Failed to connect to Kiosker: %s", exc)
+        raise CannotConnect from exc
+    except (AuthenticationError, IPAuthenticationError) as exc:
+        _LOGGER.error("Authentication failed: %s", exc)
+        raise InvalidAuth from exc
+    except TLSVerificationError as exc:
+        _LOGGER.error("TLS verification failed: %s", exc)
+        raise TLSError from exc
+    except BadRequestError as exc:
+        _LOGGER.error("Bad request: %s", exc)
+        raise BadRequest from exc
+    except PingError as exc:
+        _LOGGER.error("Ping failed: %s", exc)
+        raise CannotConnect from exc
     except (OSError, TimeoutError) as exc:
         _LOGGER.error("Failed to connect to Kiosker: %s", exc)
         raise CannotConnect from exc
@@ -100,6 +123,12 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except TLSError:
+                errors["base"] = "tls_error"
+            except BadRequest:
+                errors["base"] = "bad_request"
             except Exception:
                 _LOGGER.exception("Unexpected exception during validation")
                 errors["base"] = "unknown"
@@ -189,6 +218,12 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, config_data)
             except CannotConnect:
                 errors[CONF_API_TOKEN] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_API_TOKEN] = "invalid_auth"
+            except TLSError:
+                errors["base"] = "tls_error"
+            except BadRequest:
+                errors["base"] = "bad_request"
             else:
                 return self.async_create_entry(title=info["title"], data=config_data)
 
@@ -203,3 +238,15 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""
+
+
+class TLSError(HomeAssistantError):
+    """Error to indicate TLS verification failed."""
+
+
+class BadRequest(HomeAssistantError):
+    """Error to indicate bad request."""
