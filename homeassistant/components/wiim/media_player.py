@@ -673,48 +673,48 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 )
                 return
 
-            playMedium = media_info.get("PlayMedium")
-            if not isinstance(playMedium, str):
-                playMedium = ""
+            play_medium = media_info.get("PlayMedium")
+            if not isinstance(play_medium, str):
+                play_medium = ""
 
-            trackSource = media_info.get("TrackSource")
-            if not isinstance(trackSource, str):
-                trackSource = ""
+            track_source = media_info.get("TrackSource")
+            if not isinstance(track_source, str):
+                track_source = ""
 
             LOGGER.debug(
                 "_from_device_update_supported_features PlayMedium = %s and trackSource = %s",
-                playMedium,
-                trackSource,
+                play_medium,
+                track_source,
             )
 
             current_features = SUPPORT_WIIM_BASE
 
-            FLAGS = (
+            nav_flags = (
                 MediaPlayerEntityFeature.NEXT_TRACK
                 | MediaPlayerEntityFeature.PREVIOUS_TRACK
             )
 
-            if isinstance(playMedium, str) and playMedium in PLAY_MEDIUMS_CTRL:
-                current_features &= ~FLAGS  # Remove next/prev
-            elif isinstance(trackSource, str) and trackSource in TRACK_SOURCES_CTRL:
+            if isinstance(play_medium, str) and play_medium in PLAY_MEDIUMS_CTRL:
+                current_features &= ~nav_flags  # Remove next/prev
+            elif isinstance(track_source, str) and track_source in TRACK_SOURCES_CTRL:
                 current_features |= MediaPlayerEntityFeature.NEXT_TRACK
                 current_features &= ~MediaPlayerEntityFeature.PREVIOUS_TRACK
             else:
-                current_features |= FLAGS  # Add next/prev back if not controlled
+                current_features |= nav_flags  # Add next/prev back if not controlled
 
-            FLAGS_LOOP_MODE = (
+            loop_mode_flags = (
                 MediaPlayerEntityFeature.REPEAT_SET
                 | MediaPlayerEntityFeature.SHUFFLE_SET
             )
 
             # Check if PlayMedium is valid for loop mode (where repeat/shuffle ARE available)
             if (
-                not (isinstance(playMedium, str) and playMedium in VALID_PLAY_MEDIUMS)
-                or trackSource == ""
+                not (isinstance(play_medium, str) and play_medium in VALID_PLAY_MEDIUMS)
+                or track_source == ""
             ):
-                current_features &= ~FLAGS_LOOP_MODE  # Remove repeat/shuffle
+                current_features &= ~loop_mode_flags  # Remove repeat/shuffle
             else:
-                current_features |= FLAGS_LOOP_MODE  # Add repeat/shuffle
+                current_features |= loop_mode_flags  # Add repeat/shuffle
 
             if self._attr_supported_features != current_features:
                 self._attr_supported_features = current_features
