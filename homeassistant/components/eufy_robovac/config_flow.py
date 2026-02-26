@@ -32,6 +32,7 @@ from .const import (
     DOMAIN,
 )
 from .local_api import EufyRoboVacLocalApi, EufyRoboVacLocalApiError
+from .model_mappings import MODEL_MAPPINGS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,12 +140,14 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         try:
+            discovered = await EufyRoboVacCloudApi(
+                username=username,
+                password=password,
+            ).async_list_robovacs(self.hass)
             self._cloud_devices = {
                 device.device_id: device
-                for device in await EufyRoboVacCloudApi(
-                    username=username,
-                    password=password,
-                ).async_list_robovacs(self.hass)
+                for device in discovered
+                if device.model in MODEL_MAPPINGS
             }
             if not self._cloud_devices:
                 raise NoDevicesFound
