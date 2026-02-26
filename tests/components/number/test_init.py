@@ -1085,7 +1085,7 @@ async def test_name(hass: HomeAssistant) -> None:
 
 def test_device_class_units(hass: HomeAssistant) -> None:
     """Test all numeric device classes have unit."""
-    # DEVICE_CLASS_UNITS should include all device classes except:
+    # DEVICE_CLASS_UNITS should include all device classes except Exception:
     # - NumberDeviceClass.MONETARY
     # - Device classes enumerated in NON_NUMERIC_DEVICE_CLASSES
     assert set(NUMBER_DEVICE_CLASS_UNITS) == set(
