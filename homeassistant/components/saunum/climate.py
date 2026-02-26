@@ -269,7 +269,6 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="start_session_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         await self.coordinator.async_request_refresh()

@@ -16,8 +16,8 @@ from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.NUMBER,
+    Platform.SENSOR,
 ]
 
 
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> b
     coordinators: dict[str, ZinvoltDeviceCoordinator] = {}
     tasks = []
     for battery in batteries:
-        coordinator = ZinvoltDeviceCoordinator(hass, entry, client, battery.identifier)
+        coordinator = ZinvoltDeviceCoordinator(hass, entry, client, battery)
         tasks.append(coordinator.async_config_entry_first_refresh())
         coordinators[battery.identifier] = coordinator
     await asyncio.gather(*tasks)
