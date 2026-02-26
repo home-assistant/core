@@ -206,7 +206,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.SEEK
                 | MediaPlayerEntityFeature.SEARCH_MEDIA
                 | MediaPlayerEntityFeature.MEDIA_ENQUEUE
-                | MediaPlayerEntityFeature.MEDIA_SHUFFLE
             )
 
             if "Mute" in commands and "Unmute" in commands:
