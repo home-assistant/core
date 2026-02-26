@@ -13,12 +13,12 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "access_key_id": "Access key ID",
-          "secret_access_key": "Secret access key"
+          "access_key_id": "[%key:component::aws_s3::config::step::user::data_description::access_key_id%]",
+          "secret_access_key": "[%key:component::aws_s3::config::step::user::data_description::secret_access_key%]"
         },
         "data_description": {
-          "access_key_id": "Access key ID to connect to AWS S3 API",
-          "secret_access_key": "Secret access key to connect to AWS S3 API"
+          "access_key_id": "[%key:component::aws_s3::config::step::user::data_description::access_key_id%]",
+          "secret_access_key": "[%key:component::aws_s3::config::step::user::data_description::secret_access_key%]"
         },
         "description": "Update your AWS S3 credentials for bucket `{bucket}`."
       },
