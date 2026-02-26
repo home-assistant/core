@@ -13,7 +13,11 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupNotFound,
 )
-from homeassistant.components.dropbox.backup import DropboxUnknownException
+from homeassistant.components.dropbox.backup import (
+    DropboxUnknownException,
+    async_register_backup_agents_listener,
+)
+from homeassistant.components.dropbox.const import DATA_BACKUP_AGENT_LISTENERS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -401,3 +405,21 @@ async def test_agents_delete_not_found(
     mock_dropbox_client.async_delete_backup.assert_awaited_once_with(
         TEST_AGENT_BACKUP.backup_id
     )
+
+
+async def test_remove_backup_agents_listener(
+    hass: HomeAssistant,
+) -> None:
+    """Test removing a backup agent listener."""
+    listener = Mock()
+    remove = async_register_backup_agents_listener(hass, listener=listener)
+
+    assert DATA_BACKUP_AGENT_LISTENERS in hass.data
+    assert listener in hass.data[DATA_BACKUP_AGENT_LISTENERS]
+
+    # Remove all other listeners to test the cleanup path
+    hass.data[DATA_BACKUP_AGENT_LISTENERS] = [listener]
+
+    remove()
+
+    assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
