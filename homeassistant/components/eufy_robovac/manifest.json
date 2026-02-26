@@ -3,7 +3,7 @@
   "name": "Eufy RoboVac",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://github.com/home-assistant/core/issues/164027",
+  "documentation": "https://www.home-assistant.io/integrations/eufy_robovac",
   "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["tinytuya==1.17.6"]

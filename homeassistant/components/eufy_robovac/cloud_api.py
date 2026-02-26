@@ -19,7 +19,6 @@ import time
 from typing import Any
 import uuid
 
-from cryptography.hazmat.backends.openssl import backend as openssl_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -86,7 +85,6 @@ _TUYA_PASSWORD_CIPHER = Cipher(
             [119, 36, 86, 242, 167, 102, 76, 243, 57, 44, 53, 151, 233, 62, 87, 71]
         )
     ),
-    backend=openssl_backend,
 )
 
 _PHONE_BY_REGION = {"AZ": "1", "AY": "86", "IN": "91", "EU": "44"}
@@ -270,6 +268,10 @@ class _TuyaApiSession:
         """Fetch a Tuya device payload by device ID."""
         return self._request(action="tuya.m.device.get", data={"devId": dev_id})
 
+    def close(self) -> None:
+        """Close underlying HTTP session resources."""
+        self._session.close()
+
 
 class EufyRoboVacCloudApi:
     """Cloud API client for onboarding RoboVac devices."""
@@ -447,32 +449,35 @@ class EufyRoboVacCloudApi:
         )
 
         vacuums: list[CloudDiscoveredRoboVac] = []
-        for item in device_payload.get("devices", []):
-            product = item.get("product", {})
-            if product.get("appliance") != "Cleaning":
-                continue
+        try:
+            for item in device_payload.get("devices", []):
+                product = item.get("product", {})
+                if product.get("appliance") != "Cleaning":
+                    continue
 
-            dev_id = str(item.get("id") or "")
-            if not dev_id:
-                continue
+                dev_id = str(item.get("id") or "")
+                if not dev_id:
+                    continue
 
-            tuya_device = tuya_session.get_device(dev_id)
-            local_key = str(tuya_device.get("localKey") or "")
-            if not local_key:
-                continue
+                tuya_device = tuya_session.get_device(dev_id)
+                local_key = str(tuya_device.get("localKey") or "")
+                if not local_key:
+                    continue
 
-            wifi = item.get("wifi") or {}
-            vacuums.append(
-                CloudDiscoveredRoboVac(
-                    device_id=dev_id,
-                    model=str(product.get("product_code") or ""),
-                    name=str(item.get("alias_name") or item.get("name") or dev_id),
-                    local_key=local_key,
-                    host=str(wifi.get("ip") or ""),
-                    mac=str(wifi.get("mac") or ""),
-                    description=str(item.get("name") or ""),
-                    protocol_version="3.3",
+                wifi = item.get("wifi") or {}
+                vacuums.append(
+                    CloudDiscoveredRoboVac(
+                        device_id=dev_id,
+                        model=str(product.get("product_code") or ""),
+                        name=str(item.get("alias_name") or item.get("name") or dev_id),
+                        local_key=local_key,
+                        host=str(wifi.get("ip") or ""),
+                        mac=str(wifi.get("mac") or ""),
+                        description=str(item.get("name") or ""),
+                        protocol_version="3.3",
+                    )
                 )
-            )
+        finally:
+            tuya_session.close()
 
         return self._apply_local_host_fallback(vacuums)

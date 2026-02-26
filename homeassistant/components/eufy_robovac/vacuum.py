@@ -81,6 +81,7 @@ class EufyRoboVacEntity(StateVacuumEntity):
 
         self._attr_unique_id = entry.data[CONF_ID]
         self._attr_name = entry.data[CONF_NAME]
+        self._attr_available = True
         self._attr_activity = VacuumActivity.IDLE
         self._attr_fan_speed = "standard"
         self._attr_fan_speed_list = list(mapping.fan_speed_values)
@@ -173,11 +174,13 @@ class EufyRoboVacEntity(StateVacuumEntity):
             dps = await self._api.async_get_dps(self.hass)
         except EufyRoboVacLocalApiError as err:
             _LOGGER.warning("Failed updating %s: %s", self._attr_unique_id, err)
+            self._attr_available = False
             return
 
         if not dps:
             return
 
+        self._attr_available = True
         self._dps = dps
         self._async_publish_dps(dps)
         status_raw = dps.get(self._dps_code(RoboVacCommand.STATUS))
@@ -193,7 +196,11 @@ class EufyRoboVacEntity(StateVacuumEntity):
 
         if error_raw is not None:
             self._last_error_raw = str(error_raw)
-            if str(error_raw) not in ("0", "no_error", "No error"):
+            if self._normalize_lookup_key(error_raw) not in (
+                "0",
+                "no_error",
+                "no error",
+            ):
                 self._attr_activity = VacuumActivity.ERROR
 
         if fan_raw is not None:

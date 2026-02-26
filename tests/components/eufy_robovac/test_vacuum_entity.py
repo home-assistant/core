@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.vacuum import VacuumActivity
 
+from homeassistant.components.eufy_robovac.local_api import EufyRoboVacLocalApiError
 from homeassistant.components.eufy_robovac.model_mappings import MODEL_MAPPINGS
 from homeassistant.components.eufy_robovac.vacuum import EufyRoboVacEntity
 
@@ -81,3 +82,35 @@ async def test_async_update_maps_activity_and_battery(entity: EufyRoboVacEntity)
     assert entity.activity == VacuumActivity.IDLE
     assert entity.extra_state_attributes["dps"]["104"] == 65
     assert entity.fan_speed == "standard"
+
+
+@pytest.mark.asyncio
+async def test_async_update_marks_entity_unavailable_on_error(
+    entity: EufyRoboVacEntity,
+) -> None:
+    """Polling errors should mark the entity unavailable."""
+
+    async def _raise_error(_hass):
+        raise EufyRoboVacLocalApiError("boom")
+
+    entity._api.async_get_dps = _raise_error
+    await entity.async_update()
+
+    assert entity.available is False
+
+
+@pytest.mark.asyncio
+async def test_async_update_normalizes_no_error_variants(
+    entity: EufyRoboVacEntity,
+) -> None:
+    """Error value 'no error' should not force ERROR activity."""
+    entity._api.dps = {
+        "15": "standby",
+        "102": "Standard",
+        "104": 65,
+        "106": "no error",
+    }
+
+    await entity.async_update()
+
+    assert entity.activity == VacuumActivity.IDLE

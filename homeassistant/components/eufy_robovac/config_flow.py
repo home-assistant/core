@@ -59,10 +59,6 @@ def _device_step_data_schema(
     return vol.Schema(
         {
             vol.Required(
-                CONF_NAME,
-                default=user_input.get(CONF_NAME, device.name),
-            ): str,
-            vol.Required(
                 CONF_HOST,
                 default=user_input.get(CONF_HOST, device.host),
             ): str,
@@ -115,6 +111,7 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Eufy RoboVac."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -174,6 +171,13 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle RoboVac selection from cloud-discovered devices."""
+        if not self._cloud_devices:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_STEP_DATA_SCHEMA,
+                errors={"base": "no_devices"},
+            )
+
         if user_input is None:
             options = {
                 device_id: f"{device.name} ({device.model})"
@@ -198,7 +202,10 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._selected_device_id is None:
             return await self.async_step_select_device()
 
-        selected = self._cloud_devices[self._selected_device_id]
+        selected = self._cloud_devices.get(self._selected_device_id)
+        if selected is None:
+            self._selected_device_id = None
+            return await self.async_step_select_device()
 
         if user_input is None:
             return self.async_show_form(
@@ -209,7 +216,6 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         user_input = {
             **user_input,
-            CONF_NAME: user_input[CONF_NAME].strip(),
             CONF_HOST: user_input[CONF_HOST].strip(),
         }
 
@@ -241,8 +247,9 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
+        entry_title = selected.name or selected.device_id
         entry_data = {
-            CONF_NAME: user_input[CONF_NAME],
+            CONF_NAME: entry_title,
             CONF_MODEL: selected.model,
             CONF_HOST: user_input[CONF_HOST],
             CONF_ID: selected.device_id,
@@ -257,6 +264,6 @@ class EufyRoboVacConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=entry_data[CONF_NAME],
+            title=entry_title,
             data=entry_data,
         )

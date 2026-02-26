@@ -42,16 +42,19 @@ class EufyRoboVacLocalApi:
 
     def _send_dps_sync(self, dps: dict[str, Any]) -> dict[str, Any]:
         """Send DPS command payload synchronously."""
+        device = None
         try:
             device = self._create_device()
             response = device.set_multiple_values(dps)
-            _close = getattr(device, "close", None)
-            if callable(_close):
-                _close()
-        except Exception as err:  # pragma: no cover - passthrough wrapper
+        except Exception as err:  # noqa: BLE001 # pragma: no cover - passthrough wrapper
             raise EufyRoboVacLocalApiError(
                 f"Failed sending DPS to {self.host}: {err}"
             ) from err
+        finally:
+            if device is not None:
+                _close = getattr(device, "close", None)
+                if callable(_close):
+                    _close()
 
         if not isinstance(response, dict):
             return {}
@@ -65,16 +68,19 @@ class EufyRoboVacLocalApi:
 
     def _get_dps_sync(self) -> dict[str, Any]:
         """Fetch current DPS values synchronously."""
+        device = None
         try:
             device = self._create_device()
             response = device.status()
-            _close = getattr(device, "close", None)
-            if callable(_close):
-                _close()
-        except Exception as err:  # pragma: no cover - passthrough wrapper
+        except Exception as err:  # noqa: BLE001 # pragma: no cover - passthrough wrapper
             raise EufyRoboVacLocalApiError(
                 f"Failed reading DPS from {self.host}: {err}"
             ) from err
+        finally:
+            if device is not None:
+                _close = getattr(device, "close", None)
+                if callable(_close):
+                    _close()
 
         if not isinstance(response, dict):
             return {}

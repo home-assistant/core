@@ -31,7 +31,6 @@
         "title": "Confirm Local Details",
         "description": "Confirm local connection details for the selected RoboVac.",
         "data": {
-          "name": "Name",
           "host": "Host",
           "protocol_version": "Protocol version"
         }

@@ -8,7 +8,10 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.eufy_robovac.local_api import EufyRoboVacLocalApi
+from homeassistant.components.eufy_robovac.local_api import (
+    EufyRoboVacLocalApi,
+    EufyRoboVacLocalApiError,
+)
 
 
 @dataclass
@@ -109,3 +112,79 @@ async def test_async_get_dps_returns_dps_payload(
 
     assert dps == {"15": "standby", "104": 88}
     assert fake_tinytuya[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_async_send_dps_closes_device_on_error(hass, monkeypatch) -> None:
+    """Send failures should still close the tinytuya device."""
+    created: list[_FakeDevice] = []
+
+    class _RaisingSendDevice(_FakeDevice):
+        def set_multiple_values(self, dps: dict[str, Any]) -> dict[str, Any]:
+            raise RuntimeError("send failed")
+
+    def _factory(
+        *, dev_id: str, address: str, local_key: str, persist: bool
+    ) -> _RaisingSendDevice:
+        device = _RaisingSendDevice(
+            dev_id=dev_id,
+            address=address,
+            local_key=local_key,
+            persist=persist,
+        )
+        created.append(device)
+        return device
+
+    monkeypatch.setitem(
+        __import__("sys").modules, "tinytuya", SimpleNamespace(Device=_factory)
+    )
+
+    api = EufyRoboVacLocalApi(
+        host="192.168.1.99",
+        device_id="abc123",
+        local_key="abcdefghijklmnop",
+        protocol_version="3.3",
+    )
+
+    with pytest.raises(EufyRoboVacLocalApiError):
+        await api.async_send_dps(hass, {"5": "Auto"})
+
+    assert created[0].closed is True
+
+
+@pytest.mark.asyncio
+async def test_async_get_dps_closes_device_on_error(hass, monkeypatch) -> None:
+    """Status failures should still close the tinytuya device."""
+    created: list[_FakeDevice] = []
+
+    class _RaisingStatusDevice(_FakeDevice):
+        def status(self) -> dict[str, Any]:
+            raise RuntimeError("status failed")
+
+    def _factory(
+        *, dev_id: str, address: str, local_key: str, persist: bool
+    ) -> _RaisingStatusDevice:
+        device = _RaisingStatusDevice(
+            dev_id=dev_id,
+            address=address,
+            local_key=local_key,
+            persist=persist,
+        )
+        created.append(device)
+        return device
+
+    monkeypatch.setitem(
+        __import__("sys").modules, "tinytuya", SimpleNamespace(Device=_factory)
+    )
+
+    api = EufyRoboVacLocalApi(
+        host="192.168.1.99",
+        device_id="abc123",
+        local_key="abcdefghijklmnop",
+        protocol_version="3.3",
+    )
+
+    with pytest.raises(EufyRoboVacLocalApiError):
+        await api.async_get_dps(hass)
+
+    assert created[0].closed is True
