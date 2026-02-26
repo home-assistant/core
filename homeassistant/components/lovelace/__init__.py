@@ -21,7 +21,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     issue_registry as ir,
 )
-from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
@@ -34,6 +33,7 @@ from .const import (  # noqa: F401
     CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
+    CONF_RESOURCE_MODE,
     CONF_SHOW_IN_SIDEBAR,
     CONF_TITLE,
     CONF_URL_PATH,
@@ -62,7 +62,7 @@ def _validate_url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
         raise vol.Invalid("Slug should not be None")
-    if "-" not in value:
+    if value != "lovelace" and "-" not in value:
         raise vol.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
@@ -85,7 +85,11 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default={}): vol.Schema(
             {
+                # Deprecated - Remove in 2026.8
                 vol.Optional(CONF_MODE, default=MODE_STORAGE): vol.All(
+                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
+                ),
+                vol.Optional(CONF_RESOURCE_MODE): vol.All(
                     vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
@@ -104,38 +108,10 @@ CONFIG_SCHEMA = vol.Schema(
 class LovelaceData:
     """Dataclass to store information in hass.data."""
 
-    mode: str
+    resource_mode: str  # The mode used for resources (yaml or storage)
     dashboards: dict[str | None, dashboard.LovelaceConfig]
     resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
-
-    def __getitem__(self, name: str) -> Any:
-        """Enable method for compatibility reason.
-
-        Following migration from an untyped dict to a dataclass in
-        https://github.com/home-assistant/core/pull/136313
-        """
-        report_usage(
-            f"accessed lovelace_data['{name}'] instead of lovelace_data.{name}",
-            breaks_in_ha_version="2026.2",
-            exclude_integrations={DOMAIN},
-        )
-        return getattr(self, name)
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """Enable method for compatibility reason.
-
-        Following migration from an untyped dict to a dataclass in
-        https://github.com/home-assistant/core/pull/136313
-        """
-        report_usage(
-            f"accessed lovelace_data.get('{name}') instead of lovelace_data.{name}",
-            breaks_in_ha_version="2026.2",
-            exclude_integrations={DOMAIN},
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return default
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -143,18 +119,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
-    # Deprecated - Remove in 2026.8
-    # For YAML mode, register the default panel in yaml mode (temporary until user migrates)
-    if mode == MODE_YAML:
-        frontend.async_register_built_in_panel(
-            hass,
-            DOMAIN,
-            config={"mode": mode},
-            sidebar_title="overview",
-            sidebar_icon="mdi:view-dashboard",
-            sidebar_default_visible=False,
-        )
-        _async_create_yaml_mode_repair(hass)
+    # resource_mode controls how resources are loaded (yaml vs storage)
+    # Deprecated - Remove mode fallback in 2026.8
+    resource_mode = config[DOMAIN].get(CONF_RESOURCE_MODE, mode)
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
@@ -178,12 +145,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         hass.data[LOVELACE_DATA].resources = resource_collection
 
-    default_config: dashboard.LovelaceConfig
     resource_collection: (
         resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     )
-    if mode == MODE_YAML:
-        default_config = dashboard.LovelaceYAML(hass, None, None)
+    default_config = dashboard.LovelaceStorage(hass, None)
+
+    # Load resources based on resource_mode
+    if resource_mode == MODE_YAML:
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
 
         async_register_admin_service(
@@ -206,8 +174,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     else:
-        default_config = dashboard.LovelaceStorage(hass, None)
-
         if yaml_resources is not None:
             _LOGGER.warning(
                 "Lovelace is running in storage mode. Define resources via user"
@@ -224,18 +190,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             RESOURCE_UPDATE_FIELDS,
         ).async_setup(hass)
 
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_info)
     websocket_api.async_register_command(hass, websocket.websocket_lovelace_config)
     websocket_api.async_register_command(hass, websocket.websocket_lovelace_save_config)
     websocket_api.async_register_command(
         hass, websocket.websocket_lovelace_delete_config
     )
 
+    yaml_dashboards = config[DOMAIN].get(CONF_DASHBOARDS, {})
+
+    # Deprecated - Remove in 2026.8
+    # For YAML mode, add the default "lovelace" dashboard if not already defined
+    # This migrates the legacy yaml mode to a proper yaml dashboard entry
+    if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
+        translations = await async_get_translations(
+            hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
+        )
+        title = translations.get(
+            "component.onboarding.dashboard.overview.title", "Overview"
+        )
+        yaml_dashboards = {
+            DOMAIN: {
+                CONF_TITLE: title,
+                CONF_ICON: DEFAULT_ICON,
+                CONF_SHOW_IN_SIDEBAR: True,
+                CONF_REQUIRE_ADMIN: False,
+                CONF_MODE: MODE_YAML,
+                CONF_FILENAME: LOVELACE_CONFIG_FILE,
+            },
+            **yaml_dashboards,
+        }
+        _async_create_yaml_mode_repair(hass)
+
     hass.data[LOVELACE_DATA] = LovelaceData(
-        mode=mode,
+        resource_mode=resource_mode,
         # We store a dictionary mapping url_path: config. None is the default.
         dashboards={None: default_config},
         resources=resource_collection,
-        yaml_dashboards=config[DOMAIN].get(CONF_DASHBOARDS, {}),
+        yaml_dashboards=yaml_dashboards,
     )
 
     if hass.config.recovery_mode:
@@ -361,13 +353,12 @@ def _register_panel(
     kwargs = {
         "frontend_url_path": url_path,
         "require_admin": config[CONF_REQUIRE_ADMIN],
+        "show_in_sidebar": config[CONF_SHOW_IN_SIDEBAR],
+        "sidebar_title": config[CONF_TITLE],
+        "sidebar_icon": config.get(CONF_ICON, DEFAULT_ICON),
         "config": {"mode": mode},
         "update": update,
     }
-
-    if config[CONF_SHOW_IN_SIDEBAR]:
-        kwargs["sidebar_title"] = config[CONF_TITLE]
-        kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
 
@@ -440,7 +431,7 @@ async def _async_migrate_default_config(
                 CONF_URL_PATH: DOMAIN,
             }
         )
-    except (HomeAssistantError, vol.Invalid):
+    except HomeAssistantError, vol.Invalid:
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 
@@ -479,7 +470,7 @@ async def _async_migrate_default_config(
 # Deprecated - Remove in 2026.8
 @callback
 def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
-    """Create repair issue for YAML mode migration."""
+    """Create repair issue for YAML mode deprecation."""
     ir.async_create_issue(
         hass,
         DOMAIN,

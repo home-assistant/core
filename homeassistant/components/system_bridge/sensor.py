@@ -390,9 +390,9 @@ async def async_setup_entry(
                     suggested_display_precision=2,
                     icon="mdi:harddisk",
                     value=(
-                        lambda data,
-                        dk=index_device,
-                        pk=index_partition: partition_usage(data, dk, pk)
+                        lambda data, dk=index_device, pk=index_partition: (
+                            partition_usage(data, dk, pk)
+                        )
                     ),
                 ),
                 entry.data[CONF_PORT],

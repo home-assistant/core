@@ -4,12 +4,18 @@ import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from anthropic import RateLimitError
+from anthropic import AuthenticationError, RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
-    ThinkingBlock,
+    TextEditorCodeExecutionCreateResultBlock,
+    TextEditorCodeExecutionStrReplaceResultBlock,
+    TextEditorCodeExecutionToolResultError,
+    TextEditorCodeExecutionViewResultBlock,
     WebSearchResultBlock,
+)
+from anthropic.types.text_editor_code_execution_tool_result_block import (
+    Content as TextEditorCodeExecutionToolResultBlockContent,
 )
 from freezegun import freeze_time
 from httpx import URL, Request, Response
@@ -18,17 +24,36 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
+    DOMAIN,
+)
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, intent, llm
+from homeassistant.helpers import chat_session, entity_registry as er, intent, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
 from . import (
+    create_bash_code_execution_block,
+    create_bash_code_execution_result_block,
     create_content_block,
     create_redacted_thinking_block,
+    create_text_editor_code_execution_block,
+    create_text_editor_code_execution_result_block,
     create_thinking_block,
     create_tool_use_block,
     create_web_search_block,
@@ -66,13 +91,25 @@ async def test_entity(
     )
 
 
+async def test_translation_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity translation key."""
+    entry = entity_registry.async_get("conversation.claude_conversation")
+    assert entry is not None
+    assert entry.translation_key == "conversation"
+
+
 async def test_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test that the default prompt works."""
+    """Test error handling."""
     mock_create_stream.side_effect = RateLimitError(
         message=None,
         response=Response(status_code=429, request=Request(method="POST", url=URL())),
@@ -85,6 +122,38 @@ async def test_error_handling(
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
+
+
+async def test_auth_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test reauth after authentication error during conversation."""
+    mock_create_stream.side_effect = AuthenticationError(
+        message="Invalid API key",
+        response=Response(status_code=403, request=Request(method="POST", url=URL())),
+        body=None,
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown", result
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_template_error(
@@ -153,10 +222,13 @@ async def test_template_variables(
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
     )
-    assert (
-        "The user name is Test User." in mock_create_stream.call_args.kwargs["system"]
-    )
-    assert "The user id is 12345." in mock_create_stream.call_args.kwargs["system"]
+
+    system = mock_create_stream.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    system_text = " ".join(block["text"] for block in system if "text" in block)
+
+    assert "The user name is Test User." in system_text
+    assert "The user id is 12345." in system_text
 
 
 async def test_conversation_agent(
@@ -167,6 +239,38 @@ async def test_conversation_agent(
         hass, "conversation.claude_conversation"
     )
     assert agent.supported_languages == "*"
+
+
+async def test_system_prompt_uses_text_block_with_cache_control(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ensure system prompt is sent as TextBlockParam with cache_control."""
+    context = Context()
+
+    mock_create_stream.return_value = [
+        create_content_block(0, ["ok"]),
+    ]
+
+    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            context,
+            agent_id="conversation.claude_conversation",
+        )
+
+    system = mock_create_stream.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    assert len(system) == 1
+    block = system[0]
+    assert block["type"] == "text"
+    assert "Home Assistant" in block["text"]
+    assert block["cache_control"] == {"type": "ephemeral"}
 
 
 @patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
@@ -184,6 +288,7 @@ async def test_conversation_agent(
         ([""], {}),
     ],
 )
+@freeze_time("2024-06-03 23:00:00")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -220,19 +325,18 @@ async def test_function_call(
         create_content_block(0, ["I have ", "successfully called ", "the function"]),
     ]
 
-    with freeze_time("2024-06-03 23:00:00"):
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
-
-    assert (
-        "You are a voice assistant for Home Assistant."
-        in mock_create_stream.mock_calls[1][2]["system"]
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
+        None,
+        context,
+        agent_id=agent_id,
     )
+
+    system = mock_create_stream.mock_calls[1][2]["system"]
+    assert isinstance(system, list)
+    system_text = " ".join(block["text"] for block in system if "text" in block)
+    assert "You are a voice assistant for Home Assistant." in system_text
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
@@ -482,11 +586,22 @@ async def test_refusal(
 
 async def test_extended_thinking(
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test extended thinking support."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_THINKING_BUDGET: 1500,
+        },
+    )
+
     mock_create_stream.return_value = [
         (
             *create_thinking_block(
@@ -515,12 +630,52 @@ async def test_extended_thinking(
     assert len(chat_log.content) == 3
     assert chat_log.content[1].content == "hello"
     assert chat_log.content[2].content == "Hello, how can I help you today?"
+    call_args = mock_create_stream.call_args.kwargs.copy()
+    call_args.pop("tools", None)
+    assert call_args == snapshot
+
+
+@freeze_time("2024-05-24 12:00:00")
+async def test_disabled_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test conversation with thinking effort disabled."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: "assist",
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "none",
+        },
+    )
+
+    mock_create_stream.return_value = [
+        create_content_block(1, ["Hello, how can I help you today?"])
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    assert len(chat_log.content) == 3
+    assert chat_log.content == snapshot
+    call_args = mock_create_stream.call_args.kwargs.copy()
+    call_args.pop("tools", None)
+    assert call_args == snapshot
 
 
 @freeze_time("2024-05-24 12:00:00")
 async def test_redacted_thinking(
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
@@ -555,12 +710,22 @@ async def test_redacted_thinking(
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that thinking blocks and their order are preserved in with tool calls."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "medium",
+        },
+    )
+
     agent_id = "conversation.claude_conversation"
     context = Context()
 
@@ -581,7 +746,7 @@ async def test_extended_thinking_tool_call(
                 [
                     "The user asked me to",
                     " call a test function.",
-                    "Is it a test? What",
+                    " Is it a test? What",
                     " would the function",
                     " do? Would it violate",
                     " any privacy or security",
@@ -623,12 +788,28 @@ async def test_extended_thinking_tool_call(
 @freeze_time("2025-10-31 12:00:00")
 async def test_web_search(
     hass: HomeAssistant,
-    mock_config_entry_with_web_search: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test web search."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        },
+    )
+
     web_search_results = [
         WebSearchResultBlock(
             type="web_search_result",
@@ -669,12 +850,21 @@ async def test_web_search(
                 ["", '{"que', 'ry"', ": \"today's", ' news"}'],
             ),
             *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
-            *create_content_block(
+            # Test interleaved thinking (a thinking content after a tool call):
+            *create_thinking_block(
                 4,
-                ["Here's what I found on the web about today's news:\n", "1. "],
+                ["Great! All clear, let's reply to the user!"],
             ),
             *create_content_block(
                 5,
+                ["Here's what I found on the web about today's news:\n"],
+            ),
+            *create_content_block(
+                6,
+                ["1. "],
+            ),
+            *create_content_block(
+                7,
                 ["New Home Assistant release"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -686,9 +876,9 @@ async def test_web_search(
                     )
                 ],
             ),
-            *create_content_block(6, ["\n2. "]),
+            *create_content_block(8, ["\n2. "]),
             *create_content_block(
-                7,
+                9,
                 ["Something incredible happened"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -708,7 +898,7 @@ async def test_web_search(
                 ],
             ),
             *create_content_block(
-                8, ["\nThose are the main headlines making news today."]
+                10, ["\nThose are the main headlines making news today."]
             ),
         )
     ]
@@ -726,6 +916,353 @@ async def test_web_search(
     )
     # Don't test the prompt because it's not deterministic
     assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_bash_code_execution(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test bash code execution."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+        },
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(
+                0,
+                [
+                    "I'll create",
+                    " a file with a random number and save",
+                    " it to '/",
+                    "tmp/number.txt'.",
+                ],
+            ),
+            *create_bash_code_execution_block(
+                1,
+                "srvtoolu_12345ABC",
+                [
+                    "",
+                    '{"c',
+                    'ommand": "ec',
+                    "ho $RA",
+                    "NDOM > /",
+                    "tmp/",
+                    "number.txt &",
+                    "& ",
+                    "cat /t",
+                    "mp/number.",
+                    'txt"}',
+                ],
+            ),
+            *create_bash_code_execution_result_block(
+                2, "srvtoolu_12345ABC", stdout="3268\n"
+            ),
+            *create_content_block(
+                3,
+                [
+                    "Done",
+                    "! I've created the",
+                    " file '/",
+                    "tmp/number.txt' with the",
+                    " random number 3268.",
+                ],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Write a file with a random number and save it to '/tmp/number.txt'",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_bash_code_execution_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test bash code execution with error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+        },
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(
+                0,
+                [
+                    "I'll create",
+                    " a file with a random number and save",
+                    " it to '/",
+                    "tmp/number.txt'.",
+                ],
+            ),
+            *create_bash_code_execution_block(
+                1,
+                "srvtoolu_12345ABC",
+                [
+                    "",
+                    '{"c',
+                    'ommand": "ec',
+                    "ho $RA",
+                    "NDOM > /",
+                    "tmp/",
+                    "number.txt &",
+                    "& ",
+                    "cat /t",
+                    "mp/number.",
+                    'txt"}',
+                ],
+            ),
+            *create_bash_code_execution_result_block(
+                2, "srvtoolu_12345ABC", error_code="unavailable"
+            ),
+            *create_content_block(
+                3,
+                ["The container", " is currently unavailable."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Write a file with a random number and save it to '/tmp/number.txt'",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@pytest.mark.parametrize(
+    ("args_parts", "content"),
+    [
+        (
+            [
+                "",
+                '{"',
+                'command":',
+                ' "create"',
+                ', "path',
+                '": "/tmp/num',
+                "ber",
+                '.txt"',
+                ', "file_text',
+                '": "3268"}',
+            ],
+            TextEditorCodeExecutionCreateResultBlock(
+                type="text_editor_code_execution_create_result", is_file_update=False
+            ),
+        ),
+        (
+            [
+                "",
+                '{"comman',
+                'd": "str',
+                "_replace",
+                '"',
+                ', "path":',
+                ' "/',
+                "tmp/",
+                "num",
+                "be",
+                'r.txt"',
+                ', "old_str"',
+                ': "3268',
+                '"',
+                ', "new_str":',
+                ' "8623"}',
+            ],
+            TextEditorCodeExecutionStrReplaceResultBlock(
+                type="text_editor_code_execution_str_replace_result",
+                lines=[
+                    "-3268",
+                    "\\ No newline at end of file",
+                    "+8623",
+                    "\\ No newline at end of file",
+                ],
+                new_lines=1,
+                new_start=1,
+                old_lines=1,
+                old_start=1,
+            ),
+        ),
+        (
+            [
+                "",
+                '{"command',
+                '": "view',
+                '"',
+                ', "path"',
+                ': "/tmp/nu',
+                'mber.txt"}',
+            ],
+            TextEditorCodeExecutionViewResultBlock(
+                type="text_editor_code_execution_view_result",
+                content="8623",
+                file_type="text",
+                num_lines=1,
+                start_line=1,
+                total_lines=1,
+            ),
+        ),
+        (
+            [
+                "",
+                '{"com',
+                'mand"',
+                ': "view',
+                '"',
+                ', "',
+                'path"',
+                ': "/tmp/nu',
+                'mber2.txt"}',
+            ],
+            TextEditorCodeExecutionToolResultError(
+                type="text_editor_code_execution_tool_result_error",
+                error_code="unavailable",
+                error_message="Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)",
+            ),
+        ),
+    ],
+)
+@freeze_time("2025-10-31 12:00:00")
+async def test_text_editor_code_execution(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+    args_parts: list[str],
+    content: TextEditorCodeExecutionToolResultBlockContent,
+) -> None:
+    """Test text editor code execution."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CODE_EXECUTION: True,
+        },
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(0, ["I'll do it", "."]),
+            *create_text_editor_code_execution_block(
+                1, "srvtoolu_12345ABC", args_parts
+            ),
+            *create_text_editor_code_execution_result_block(
+                2, "srvtoolu_12345ABC", content=content
+            ),
+            *create_content_block(3, ["Done"]),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Do the needful",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+async def test_container_reused(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test that container is reused."""
+    mock_create_stream.return_value = [
+        (
+            *create_bash_code_execution_block(
+                0,
+                "srvtoolu_12345ABC",
+                ['{"command": "echo $RANDOM"}'],
+            ),
+            *create_bash_code_execution_result_block(
+                1, "srvtoolu_12345ABC", stdout="3268\n"
+            ),
+            *create_content_block(
+                2,
+                ["3268."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Tell me a random number",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+
+    container_id = chat_log.content[-1].native.container.id
+    assert container_id
+
+    mock_create_stream.return_value = [create_content_block(0, ["You are welcome!"])]
+
+    await conversation.async_converse(
+        hass,
+        "Thank you",
+        result.conversation_id,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert mock_create_stream.call_args.kwargs["container"] == container_id
 
 
 @pytest.mark.parametrize(
@@ -814,9 +1351,7 @@ async def test_web_search(
                 agent_id="conversation.claude_conversation",
                 content="To get today's news, I'll perform a web search",
                 thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
-                native=ThinkingBlock(
-                    signature="ErU/V+ayA==", thinking="", type="thinking"
-                ),
+                native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                 tool_calls=[
                     llm.ToolInput(
                         id="srvtoolu_12345ABC",

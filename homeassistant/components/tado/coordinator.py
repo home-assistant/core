@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-if TYPE_CHECKING:
-    from . import TadoConfigEntry
 
 from .const import (
     CONF_FALLBACK,
@@ -31,7 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
-SCAN_MOBILE_DEVICE_INTERVAL = timedelta(minutes=5)
+
+type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
@@ -363,57 +362,3 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             )
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
-
-
-class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
-    """Class to manage the mobile devices from Tado via PyTado."""
-
-    config_entry: TadoConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: TadoConfigEntry,
-        tado: Tado,
-    ) -> None:
-        """Initialize the Tado data update coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=SCAN_MOBILE_DEVICE_INTERVAL,
-        )
-        self._tado = tado
-        self.data: dict[str, dict] = {}
-
-    async def _async_update_data(self) -> dict[str, dict]:
-        """Fetch the latest data from Tado."""
-
-        try:
-            mobile_devices = await self.hass.async_add_executor_job(
-                self._tado.get_mobile_devices
-            )
-        except RequestException as err:
-            _LOGGER.error("Error updating Tado mobile devices: %s", err)
-            raise UpdateFailed(f"Error updating Tado mobile devices: {err}") from err
-
-        mapped_mobile_devices: dict[str, dict] = {}
-        for mobile_device in mobile_devices:
-            mobile_device_id = mobile_device["id"]
-            _LOGGER.debug("Updating mobile device %s", mobile_device_id)
-            try:
-                mapped_mobile_devices[mobile_device_id] = mobile_device
-                _LOGGER.debug(
-                    "Mobile device %s updated, with data: %s",
-                    mobile_device_id,
-                    mobile_device,
-                )
-            except RequestException:
-                _LOGGER.error(
-                    "Unable to connect to Tado while updating mobile device %s",
-                    mobile_device_id,
-                )
-
-        self.data["mobile_device"] = mapped_mobile_devices
-        return self.data
