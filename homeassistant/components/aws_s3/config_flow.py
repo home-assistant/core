@@ -135,7 +135,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientError:
                 errors["base"] = "invalid_credentials"
             except ConnectionError:
-                errors[CONF_ENDPOINT_URL] = "cannot_connect"
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,

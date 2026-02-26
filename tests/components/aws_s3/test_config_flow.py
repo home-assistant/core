@@ -24,6 +24,11 @@ from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
 
+REAUTH_INPUT = {
+    CONF_ACCESS_KEY_ID: "New-TestTestTestTestTest",
+    CONF_SECRET_ACCESS_KEY: "New-TestTestTestTestTestTestTestTestTestTest",
+}
+
 
 async def _async_start_flow(
     hass: HomeAssistant,
@@ -44,6 +49,24 @@ async def _async_start_flow(
     )
 
 
+async def _async_start_flow_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict[str, str] | None = None,
+) -> FlowResultType:
+    """Initialize the reauth flow."""
+    if user_input is None:
+        user_input = REAUTH_INPUT
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+
 async def test_flow(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await _async_start_flow(hass)
@@ -53,60 +76,53 @@ async def test_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception", "errors"),
+    ("mock_target", "exception_instance", "errors"),
     [
         (
+            "aiobotocore.session.AioSession.create_client",
             ParamValidationError(report="Invalid bucket name"),
             {CONF_BUCKET: "invalid_bucket_name"},
         ),
-        (ValueError(), {CONF_ENDPOINT_URL: "invalid_endpoint_url"}),
         (
+            "aiobotocore.session.AioSession.create_client",
+            ValueError(),
+            {CONF_ENDPOINT_URL: "invalid_endpoint_url"},
+        ),
+        (
+            "aiobotocore.session.AioSession.create_client",
             EndpointConnectionError(endpoint_url="http://example.com"),
             {CONF_ENDPOINT_URL: "cannot_connect"},
         ),
+        (
+            "aiobotocore.session.AioSession.create_client.return_value.head_bucket",
+            ClientError(
+                error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+                operation_name="head_bucket",
+            ),
+            {"base": "invalid_credentials"},
+        ),
+    ],
+    ids=[
+        "invalid_bucket_name",
+        "invalid_endpoint_url",
+        "cannot_connect",
+        "invalid_credentials",
     ],
 )
 async def test_flow_create_client_errors(
     hass: HomeAssistant,
-    exception: Exception,
+    mock_target: str,
+    exception_instance: Exception,
     errors: dict[str, str],
 ) -> None:
     """Test config flow errors."""
-    with patch(
-        "aiobotocore.session.AioSession.create_client",
-        side_effect=exception,
-    ):
+    with patch(mock_target, side_effect=exception_instance):
         result = await _async_start_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
 
     # Fix and finish the test
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
-
-
-async def test_flow_head_bucket_error(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-) -> None:
-    """Test setup_entry error when calling head_bucket."""
-    mock_client.head_bucket.side_effect = ClientError(
-        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
-        operation_name="head_bucket",
-    )
-    result = await _async_start_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_credentials"}
-
-    # Fix and finish the test
-    mock_client.head_bucket.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -185,40 +201,49 @@ async def test_reauth_success(
     assert mock_config_entry.data[CONF_ENDPOINT_URL] == USER_INPUT[CONF_ENDPOINT_URL]
 
 
+@pytest.mark.parametrize(
+    ("mock_target", "exception_instance", "errors"),
+    [
+        (
+            "aiobotocore.session.AioSession.create_client",
+            EndpointConnectionError(endpoint_url="http://example.com"),
+            {"base": "cannot_connect"},
+        ),
+        (
+            "aiobotocore.session.AioSession.create_client.return_value.head_bucket",
+            ClientError(
+                error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+                operation_name="head_bucket",
+            ),
+            {"base": "invalid_credentials"},
+        ),
+    ],
+    ids=[
+        "cannot_connect",
+        "invalid_credentials",
+    ],
+)
 async def test_reauth_invalid_credentials(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
+    mock_target: str,
+    exception_instance: Exception,
+    errors: dict[str, str],
 ) -> None:
-    """Test reauthentication with invalid credentials, then success."""
+    """Test reauthentication with errors, then success."""
     mock_config_entry.add_to_hass(hass)
-    mock_client.head_bucket.side_effect = ClientError(
-        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
-        operation_name="head_bucket",
-    )
 
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ACCESS_KEY_ID: "bad-key",
-            CONF_SECRET_ACCESS_KEY: "bad-secret",
-        },
-    )
+    with patch(mock_target, side_effect=exception_instance):
+        result = await _async_start_flow_reauth(hass, mock_config_entry)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_credentials"}
+    assert result["errors"] == errors
 
     # Fix credentials and retry
-    mock_client.head_bucket.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ACCESS_KEY_ID: "new-access-key-id",
-            CONF_SECRET_ACCESS_KEY: "new-secret-access-key",
-        },
+        REAUTH_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
