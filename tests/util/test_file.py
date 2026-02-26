@@ -84,17 +84,16 @@ def test_write_utf8_file_fails_at_rename_and_remove(
 
 
 @pytest.mark.parametrize("func", [write_utf8_file, write_utf8_file_atomic])
-def test_write_utf8_file_with_non_ascii_content(tmpdir: py.path.local, func) -> None:
+def test_write_utf8_file_with_non_ascii_content(tmp_path: Path, func) -> None:
     """Test files with non-ASCII content can be written even when locale is ASCII."""
-    test_dir = tmpdir.mkdir("files")
-    test_file = Path(test_dir / "test.json")
+    test_file = tmp_path / "test.json"
     non_ascii_data = '{"name":"自动化","emoji":"🏠"}'
 
     with patch("locale.getpreferredencoding", return_value="ascii"):
         func(test_file, non_ascii_data, False)
 
-    with open(test_file, encoding="utf-8") as fh:
-        assert fh.read() == non_ascii_data
+    file_text = test_file.read_text(encoding="utf-8")
+    assert file_text == non_ascii_data
 
 
 def test_write_utf8_file_atomic_fails(tmpdir: py.path.local) -> None:
