@@ -167,16 +167,16 @@
         "name": "Backfeed CT current {phase_name}"
       },
       "backfeed_ct_energy_delivered": {
-        "name": "Backfeed ct energy delivered"
+        "name": "Backfeed CT energy delivered"
       },
       "backfeed_ct_energy_delivered_phase": {
-        "name": "Backfeed ct energy delivered {phase_name}"
+        "name": "Backfeed CT energy delivered {phase_name}"
       },
       "backfeed_ct_energy_received": {
-        "name": "Backfeed ct energy received"
+        "name": "Backfeed CT energy received"
       },
       "backfeed_ct_energy_received_phase": {
-        "name": "Backfeed ct energy received {phase_name}"
+        "name": "Backfeed CT energy received {phase_name}"
       },
       "backfeed_ct_frequency": {
         "name": "Frequency backfeed CT"
@@ -191,10 +191,10 @@
         "name": "Metering status backfeed CT {phase_name}"
       },
       "backfeed_ct_power": {
-        "name": "Backfeed ct power"
+        "name": "Backfeed CT power"
       },
       "backfeed_ct_power_phase": {
-        "name": "Backfeed ct power {phase_name}"
+        "name": "Backfeed CT power {phase_name}"
       },
       "backfeed_ct_powerfactor": {
         "name": "Power factor backfeed CT"
@@ -272,52 +272,52 @@
         "name": "EVSE CT current {phase_name}"
       },
       "evse_ct_energy_delivered": {
-        "name": "EVSE ct energy delivered"
+        "name": "EVSE CT energy delivered"
       },
       "evse_ct_energy_delivered_phase": {
-        "name": "EVSE ct energy delivered {phase_name}"
+        "name": "EVSE CT energy delivered {phase_name}"
       },
       "evse_ct_energy_received": {
-        "name": "EVSE ct energy received"
+        "name": "EVSE CT energy received"
       },
       "evse_ct_energy_received_phase": {
-        "name": "EVSE ct energy received {phase_name}"
+        "name": "EVSE CT energy received {phase_name}"
       },
       "evse_ct_frequency": {
-        "name": "Frequency evse CT"
+        "name": "Frequency EVSE CT"
       },
       "evse_ct_frequency_phase": {
-        "name": "Frequency evse CT {phase_name}"
+        "name": "Frequency EVSE CT {phase_name}"
       },
       "evse_ct_metering_status": {
-        "name": "Metering status evse CT"
+        "name": "Metering status EVSE CT"
       },
       "evse_ct_metering_status_phase": {
-        "name": "Metering status evse CT {phase_name}"
+        "name": "Metering status EVSE CT {phase_name}"
       },
       "evse_ct_power": {
-        "name": "EVSE ct power"
+        "name": "EVSE CT power"
       },
       "evse_ct_power_phase": {
-        "name": "EVSE ct power {phase_name}"
+        "name": "EVSE CT power {phase_name}"
       },
       "evse_ct_powerfactor": {
-        "name": "Power factor evse CT"
+        "name": "Power factor EVSE CT"
       },
       "evse_ct_powerfactor_phase": {
-        "name": "Power factor evse CT {phase_name}"
+        "name": "Power factor EVSE CT {phase_name}"
       },
       "evse_ct_status_flags": {
-        "name": "Meter status flags active evse CT"
+        "name": "Meter status flags active EVSE CT"
       },
       "evse_ct_status_flags_phase": {
-        "name": "Meter status flags active evse CT {phase_name}"
+        "name": "Meter status flags active EVSE CT {phase_name}"
       },
       "evse_ct_voltage": {
-        "name": "Voltage evse CT"
+        "name": "Voltage EVSE CT"
       },
       "evse_ct_voltage_phase": {
-        "name": "Voltage evse CT {phase_name}"
+        "name": "Voltage EVSE CT {phase_name}"
       },
       "grid_status": {
         "name": "[%key:component::enphase_envoy::entity::binary_sensor::grid_status::name%]",
@@ -385,16 +385,16 @@
         "name": "Load CT current {phase_name}"
       },
       "load_ct_energy_delivered": {
-        "name": "Load ct energy delivered"
+        "name": "Load CT energy delivered"
       },
       "load_ct_energy_delivered_phase": {
-        "name": "Load ct energy delivered {phase_name}"
+        "name": "Load CT energy delivered {phase_name}"
       },
       "load_ct_energy_received": {
-        "name": "Load ct energy received"
+        "name": "Load CT energy received"
       },
       "load_ct_energy_received_phase": {
-        "name": "Load ct energy received {phase_name}"
+        "name": "Load CT energy received {phase_name}"
       },
       "load_ct_frequency": {
         "name": "Frequency load CT"
@@ -409,10 +409,10 @@
         "name": "Metering status load CT {phase_name}"
       },
       "load_ct_power": {
-        "name": "Load ct power"
+        "name": "Load CT power"
       },
       "load_ct_power_phase": {
-        "name": "Load ct power {phase_name}"
+        "name": "Load CT power {phase_name}"
       },
       "load_ct_powerfactor": {
         "name": "Power factor load CT"
@@ -494,16 +494,16 @@
         "name": "Production CT current {phase_name}"
       },
       "production_ct_energy_delivered": {
-        "name": "Production ct energy delivered"
+        "name": "Production CT energy delivered"
       },
       "production_ct_energy_delivered_phase": {
-        "name": "Production ct energy delivered {phase_name}"
+        "name": "Production CT energy delivered {phase_name}"
       },
       "production_ct_energy_received": {
-        "name": "Production ct energy received"
+        "name": "Production CT energy received"
       },
       "production_ct_energy_received_phase": {
-        "name": "Production ct energy received {phase_name}"
+        "name": "Production CT energy received {phase_name}"
       },
       "production_ct_frequency": {
         "name": "Frequency production CT"
@@ -548,52 +548,52 @@
         "name": "PV3P CT current {phase_name}"
       },
       "pv3p_ct_energy_delivered": {
-        "name": "PV3P ct energy delivered"
+        "name": "PV3P CT energy delivered"
       },
       "pv3p_ct_energy_delivered_phase": {
-        "name": "PV3P ct energy delivered {phase_name}"
+        "name": "PV3P CT energy delivered {phase_name}"
       },
       "pv3p_ct_energy_received": {
-        "name": "PV3P ct energy received"
+        "name": "PV3P CT energy received"
       },
       "pv3p_ct_energy_received_phase": {
-        "name": "PV3P ct energy received {phase_name}"
+        "name": "PV3P CT energy received {phase_name}"
       },
       "pv3p_ct_frequency": {
-        "name": "Frequency pv3p CT"
+        "name": "Frequency PV3P CT"
       },
       "pv3p_ct_frequency_phase": {
-        "name": "Frequency pv3p CT {phase_name}"
+        "name": "Frequency PV3P CT {phase_name}"
       },
       "pv3p_ct_metering_status": {
-        "name": "Metering status pv3p CT"
+        "name": "Metering status PV3P CT"
       },
       "pv3p_ct_metering_status_phase": {
-        "name": "Metering status pv3p CT {phase_name}"
+        "name": "Metering status PV3P CT {phase_name}"
       },
       "pv3p_ct_power": {
-        "name": "PV3P ct power"
+        "name": "PV3P CT power"
       },
       "pv3p_ct_power_phase": {
-        "name": "PV3P ct power {phase_name}"
+        "name": "PV3P CT power {phase_name}"
       },
       "pv3p_ct_powerfactor": {
-        "name": "Power factor pv3p CT"
+        "name": "Power factor PV3P CT"
       },
       "pv3p_ct_powerfactor_phase": {
-        "name": "Power factor pv3p CT {phase_name}"
+        "name": "Power factor PV3P CT {phase_name}"
       },
       "pv3p_ct_status_flags": {
-        "name": "Meter status flags active pv3p CT"
+        "name": "Meter status flags active PV3P CT"
       },
       "pv3p_ct_status_flags_phase": {
-        "name": "Meter status flags active pv3p CT {phase_name}"
+        "name": "Meter status flags active PV3P CT {phase_name}"
       },
       "pv3p_ct_voltage": {
-        "name": "Voltage pv3p CT"
+        "name": "Voltage PV3P CT"
       },
       "pv3p_ct_voltage_phase": {
-        "name": "Voltage pv3p CT {phase_name}"
+        "name": "Voltage PV3P CT {phase_name}"
       },
       "reserve_energy": {
         "name": "Reserve battery energy"
@@ -656,16 +656,16 @@
         "name": "Total consumption CT current {phase_name}"
       },
       "total_consumption_ct_energy_delivered": {
-        "name": "Total consumption ct energy delivered"
+        "name": "Total consumption CT energy delivered"
       },
       "total_consumption_ct_energy_delivered_phase": {
-        "name": "Total consumption ct energy delivered {phase_name}"
+        "name": "Total consumption CT energy delivered {phase_name}"
       },
       "total_consumption_ct_energy_received": {
-        "name": "Total consumption ct energy received"
+        "name": "Total consumption CT energy received"
       },
       "total_consumption_ct_energy_received_phase": {
-        "name": "Total consumption ct energy received {phase_name}"
+        "name": "Total consumption CT energy received {phase_name}"
       },
       "total_consumption_ct_frequency": {
         "name": "Frequency total consumption CT"

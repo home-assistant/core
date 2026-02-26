@@ -169,7 +169,7 @@ async def test_entry_diagnostics_ct_presence(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
-    ctpresent: CtType,
+    ctpresent: tuple[CtType, ...],
 ) -> None:
     """Test config entry diagnostics including interface data."""
     await setup_integration(hass, config_entry)

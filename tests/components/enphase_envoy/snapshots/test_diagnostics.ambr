@@ -3091,7 +3091,7 @@
         }),
         'L2': dict({
           '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
-          'repr': "EnvoyMeterData(eid='100000052', timestamp=170800612022, energy_delivered=512342, energy_received=523452, active_power=125, power_factor=0.25, voltage=115, current=5.2, frequency=50.6, state='enabled', measurement_type='load', metering_status='normal', status_flags=[])",
+          'repr': "EnvoyMeterData(eid='100000052', timestamp=1708006122, energy_delivered=512342, energy_received=523452, active_power=125, power_factor=0.25, voltage=115, current=5.2, frequency=50.6, state='enabled', measurement_type='load', metering_status='normal', status_flags=[])",
         }),
         'L3': dict({
           '__type': "<class 'pyenphase.models.meters.EnvoyMeterData'>",
