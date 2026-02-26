@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import (
@@ -174,10 +175,13 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             self._location = discovery_info.ssdp_location
             assert isinstance(self._location, str)
 
-        self._host = str(
+        if hostname := (
             discovery_info.ssdp_headers.get("_host")
             or urlparse(self._location).hostname
-        )
+        ):
+            self._host = str(hostname)
+        else:
+            raise AbortFlow("cannot_connect")
 
         self._device_model = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
         self._device_serial_number = (

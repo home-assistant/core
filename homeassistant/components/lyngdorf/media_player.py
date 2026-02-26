@@ -62,8 +62,9 @@ async def async_setup_entry(
 
 
 def _to_ha_volume(volume_db: float) -> float:
-    """Convert Lyngdorf dB volume to HA 0..1 scale."""
-    return (volume_db - MIN_VOLUME_DB) / VOLUME_RANGE
+    """Convert Lyngdorf dB volume to HA 0..1 scale, clamped to 0..1."""
+    volume = (volume_db - MIN_VOLUME_DB) / VOLUME_RANGE
+    return max(0.0, min(volume, 1.0))
 
 
 def _to_lyngdorf_volume(volume: float) -> float:
