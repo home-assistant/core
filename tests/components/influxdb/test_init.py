@@ -13,7 +13,12 @@ from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    split_entity_id,
+)
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -139,6 +144,7 @@ async def test_setup_config_full(
     config_ext,
     config_update,
     get_write_api,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the setup with full configuration."""
     config = {
@@ -166,6 +172,10 @@ async def test_setup_config_full(
 
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data == full_config
+    assert issue_registry.async_get_issue(
+        domain=HOMEASSISTANT_DOMAIN,
+        issue_id=f"deprecated_yaml_{DOMAIN}",
+    )
 
 
 @pytest.mark.parametrize(
