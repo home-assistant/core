@@ -4,7 +4,7 @@
       "addon_get_discovery_info_failed": "Failed to get Z-Wave app discovery info.",
       "addon_info_failed": "Failed to get Z-Wave app info.",
       "addon_install_failed": "Failed to install the Z-Wave app.",
-      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor app. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave JS app. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
       "addon_set_config_failed": "Failed to set Z-Wave configuration.",
       "addon_start_failed": "Failed to start the Z-Wave app.",
       "addon_stop_failed": "Failed to stop the Z-Wave app.",
@@ -127,9 +127,9 @@
       },
       "on_supervisor": {
         "data": {
-          "use_addon": "Use the Z-Wave Supervisor app"
+          "use_addon": "Use the Z-Wave JS app"
         },
-        "description": "Do you want to use the Z-Wave Supervisor app?",
+        "description": "Do you want to use the Z-Wave JS app?",
         "title": "Select connection method"
       },
       "on_supervisor_reconfigure": {
