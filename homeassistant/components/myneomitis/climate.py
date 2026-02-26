@@ -92,7 +92,16 @@ class MyNeoClimate(ClimateEntity):
         state = device.get("state", {})
         self._is_sub_device = model in SUPPORTED_SUB_MODELS
         self._parents = device.get("parents") or {}
-        self._attr_preset_modes: list[str] = PRESET_MODE_MODELS.get(model, [])
+        if model in PRESET_MODE_MODELS:
+            self._attr_preset_modes = PRESET_MODE_MODELS[model]
+        else:
+            default_presets = sorted(set(REVERSE_PRESET_MODE_MAP.values()))
+            _LOGGER.warning(
+                "Model %s not found in PRESET_MODE_MODELS, using default presets %s",
+                model,
+                default_presets,
+            )
+            self._attr_preset_modes = default_presets
         self._attr_min_temp = state.get("comfLimitMin", 7)
         self._attr_max_temp = state.get("comfLimitMax", 30)
         self._attr_current_temperature = state.get("currentTemp")
