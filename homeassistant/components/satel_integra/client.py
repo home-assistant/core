@@ -61,9 +61,7 @@ class SatelClient:
 
         monitored_outputs = outputs + switchable_outputs
 
-        self.controller = AsyncSatel(
-            host, port, hass.loop, zones, monitored_outputs, partitions
-        )
+        self.controller = AsyncSatel(host, port, zones, monitored_outputs, partitions)
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close)
