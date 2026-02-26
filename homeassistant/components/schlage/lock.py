@@ -128,7 +128,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         except SchlageError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="schlage_refresh_failed",
+                translation_key="schlage_add_code_failed",
             ) from ex
         await self.coordinator.async_request_refresh()
 
@@ -157,7 +157,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         except SchlageError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="schlage_refresh_failed",
+                translation_key="schlage_delete_code_failed",
             ) from ex
         await self.coordinator.async_request_refresh()
 

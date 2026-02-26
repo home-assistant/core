@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyschlage.code import AccessCode
+from pyschlage.exceptions import Error as SchlageError
 import pytest
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.components.schlage.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import MockSchlageConfigEntry
 
@@ -119,6 +120,7 @@ async def test_add_code_service(
     await hass.async_block_till_done()
 
     # Verify add_access_code was called with correct AccessCode
+    mock_lock.refresh_access_codes.assert_called_once()
     mock_lock.add_access_code.assert_called_once()
     call_args = mock_lock.add_access_code.call_args[0][0]
     assert isinstance(call_args, AccessCode)
@@ -173,7 +175,7 @@ async def test_add_code_service_duplicate_name(
 
     with pytest.raises(
         ServiceValidationError,
-        match="A PIN code with the name 'test_user' already exists on the lock.",
+        match='A PIN code with the name "test_user" already exists on the lock.',
     ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
@@ -243,6 +245,7 @@ async def test_delete_code_service(
     await hass.async_block_till_done()
 
     existing_code.delete.assert_called_once()
+    mock_lock.refresh_access_codes.assert_called_once()
 
 
 async def test_delete_code_service_case_insensitive(
@@ -417,3 +420,93 @@ async def test_delete_code_service_nonexistent_code_with_existing_codes(
 
     # Verify that delete was not called on the existing code
     existing_code.delete.assert_not_called()
+
+
+async def test_add_code_service_refresh_error(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service raises HomeAssistantError on refresh failure."""
+    mock_lock.refresh_access_codes.side_effect = SchlageError("API error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_refresh_failed"
+
+
+async def test_add_code_service_api_error(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service raises HomeAssistantError on add failure."""
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code.side_effect = SchlageError("API error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": "1234",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_add_code_failed"
+
+
+async def test_delete_code_service_api_error(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test delete_code service raises HomeAssistantError on delete failure."""
+    existing_code = Mock()
+    existing_code.name = "test_user"
+    existing_code.delete.side_effect = SchlageError("API error")
+    mock_lock.access_codes = {"1": existing_code}
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_delete_code_failed"
+
+
+async def test_get_codes_service_refresh_error(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test get_codes service raises HomeAssistantError on refresh failure."""
+    mock_lock.refresh_access_codes.side_effect = SchlageError("API error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_CODES,
+            service_data={
+                "entity_id": "lock.vault_door",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "schlage_refresh_failed"
