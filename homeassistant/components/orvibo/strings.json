@@ -24,7 +24,7 @@
         "title": "Discovered switches"
       },
       "discovery_failed": {
-        "description": "No S20 switches were discovered on the network.  Discovery may have failed if the switch is asleep. Please power toggle your switch before re-running discovery.",
+        "description": "No S20 switches were discovered on the network. Discovery may have failed if the switch is asleep. Please power toggle your switch before re-running discovery.",
         "menu_options": {
           "edit": "Enter configuration manually",
           "start_discovery": "Try discovering again"
@@ -60,7 +60,7 @@
   },
   "issues": {
     "yaml_deprecation": {
-      "description": "The device (MAC: {mac}, Host: {host}) is configured in `configuration.yaml`. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from configuration.yaml to avoid future issues.",
+      "description": "The device (MAC: {mac}, Host: {host}) is configured in `configuration.yaml`. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from `configuration.yaml` to avoid future issues.",
       "title": "Legacy YAML configuration detected {host}"
     },
     "yaml_deprecation_import_issue": {

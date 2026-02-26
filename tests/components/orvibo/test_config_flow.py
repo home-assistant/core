@@ -91,7 +91,7 @@ async def test_edit_flow_errors(
     hass: HomeAssistant,
     mock_s20,
     mock_discover,
-    mock_setup_entry,  # <-- Added this so the final CREATE_ENTRY doesn't crash!
+    mock_setup_entry,
     user_input: dict[str, Any],
     expected_error: str,
     mock_exception: Exception | None,
