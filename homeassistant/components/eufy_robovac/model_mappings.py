@@ -91,7 +91,7 @@ def _build_mapping(
 
 
 MODEL_MAPPINGS: dict[str, RoboVacModelMapping] = {
-    # Imported from test-covered damacus/robovac model mappings.
+    # High-confidence mappings validated with this integration's test suite.
     "T2118": _build_mapping(model_code="T2118", display_name="RoboVac 30C"),
     "T2128": _build_mapping(
         model_code="T2128",

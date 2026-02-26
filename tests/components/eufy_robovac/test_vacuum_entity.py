@@ -45,7 +45,9 @@ def entity(hass) -> EufyRoboVacEntity:
             "id": "abc123",
             "local_key": "abcdefghijklmnop",
             "protocol_version": "3.3",
-        }
+        },
+        runtime_data={"dps": {}},
+        entry_id="test_entry_id",
     )
     vacuum = EufyRoboVacEntity(entry=entry, mapping=MODEL_MAPPINGS["T2253"])
     vacuum._api = _FakeApi()
