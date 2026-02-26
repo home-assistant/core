@@ -17,7 +17,7 @@ from .models import AgentBackup, BackupAgentError
 class OnProgressCallback(Protocol):
     """Protocol for on_progress callback."""
 
-    def __call__(self, bytes_uploaded: int, **kwargs: Any) -> None:
+    def __call__(self, *, bytes_uploaded: int, **kwargs: Any) -> None:
         """Report upload progress."""
 
 
