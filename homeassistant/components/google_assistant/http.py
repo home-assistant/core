@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -28,6 +29,7 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_FILTER,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
@@ -90,6 +92,14 @@ class GoogleConfig(AbstractConfig):
         self._config = config
         self._access_token = None
         self._access_token_renew = None
+
+        # Initialize entity filter if configured
+        if CONF_FILTER in config and config[CONF_FILTER]:
+            self._entity_filter = EntityFilter(config[CONF_FILTER])
+            self._use_filter = True
+        else:
+            self._entity_filter = None
+            self._use_filter = False
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -182,22 +192,25 @@ class GoogleConfig(AbstractConfig):
         else:
             auxiliary_entity = False
 
+        # Entity config explicit expose setting takes highest priority
         explicit_expose = self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
+        if explicit_expose is not None:
+            return explicit_expose
 
+        # Use filter if configured
+        if self._use_filter:
+            # Filter automatically handles auxiliary entities exclusion
+            # EntityFilter.explicitly_included() returns True only if the entity
+            # matches include rules (domains, entities, or globs)
+            return self._entity_filter.explicitly_included(state.entity_id)
+
+        # Legacy: exposed_domains (backward compatibility)
         domain_exposed_by_default = (
             expose_by_default and state.domain in exposed_domains
         )
-
-        # Expose an entity by default if the entity's domain is exposed by default
-        # and the entity is not a config or diagnostic entity
         entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
 
-        # Expose an entity if the entity's is exposed by default and
-        # the configuration doesn't explicitly exclude it from being
-        # exposed, or if the entity is explicitly exposed
-        is_default_exposed = entity_exposed_by_default and explicit_expose is not False
-
-        return is_default_exposed or explicit_expose
+        return entity_exposed_by_default
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
