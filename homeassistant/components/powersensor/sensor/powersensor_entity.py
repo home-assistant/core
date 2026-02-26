@@ -47,7 +47,7 @@ class PowersensorEntity(SensorEntity, Generic[MeasurementType]):
         """Initialize the sensor."""
         self._role = role
         self._has_recently_received_update_message = False
-        self._attr_native_value = 0.0
+        self._attr_native_value = None
         self._attr_should_poll = False
         self._hass = hass
         self._mac = mac
@@ -114,7 +114,7 @@ class PowersensorEntity(SensorEntity, Generic[MeasurementType]):
         return False
 
     @callback
-    def _handle_role_update(self, mac: str, role: str):
+    def _handle_role_update(self, mac: str, role: str | None) -> None:
         if self._mac != mac or self._role == role:
             return
 

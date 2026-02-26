@@ -32,7 +32,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 2
-    MINOR_VERSION = 0
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""

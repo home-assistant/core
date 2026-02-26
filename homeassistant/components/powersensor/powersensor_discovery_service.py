@@ -29,7 +29,7 @@ class PowersensorServiceListener(ServiceListener):
         self._hass = hass
         self._plugs: dict[str, dict] = {}
         self._discoveries: dict[str, AsyncServiceInfo] = {}
-        self._pending_removals: dict[str, asyncio.Task] = {}
+        self._pending_removals: dict[str, concurrent.futures.Future] = {}
         self._debounce_seconds = debounce_timeout
 
     def add_service(self, zc, type_, name):
@@ -101,17 +101,6 @@ class PowersensorServiceListener(ServiceListener):
         # remove from pending tasks if update received
         self.dispatch(ZEROCONF_UPDATE_PLUG_SIGNAL, *args)
 
-    async def _async_get_service_info(self, zc, type_, name):
-        try:
-            info = await zc.async_get_service_info(type_, name, timeout=3000)
-            self._discoveries[name] = info
-        except (
-            TimeoutError,
-            OSError,
-            BadTypeInNameException,
-            NotImplementedError,
-        ) as err:  # expected possible exceptions
-            _LOGGER.error("Error retrieving info for %s: %s", name, err)
 
     def __add_plug(self, zc, type_, name):
         info = zc.get_service_info(type_, name)

@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manifest = integration.manifest
 
     try:
-        # Establish create the zeroconf discovery service
+        # Create the zeroconf discovery service
         zeroconf_domain: str = str(manifest["zeroconf"][0])
         zeroconf_service = PowersensorDiscoveryService(hass, zeroconf_domain)
         await zeroconf_service.start()

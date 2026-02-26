@@ -506,3 +506,28 @@ async def test_abort_due_to_missing_dispatcher(
         },
     )
     assert result["type"] == FlowResultType.ABORT
+
+
+async def test_user_already_configured(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test behavior when trying to discover and configure a PowerSensor device that has already been discovered.
+
+    This test checks that:
+    - The first discovery attempt completes the config flow.
+    - A second discovery attempt from the same IP address is aborted with the 'already_in_progress' reason.
+    """
+    def always_true(*args, **kwargs):
+        return True
+    monkeypatch.setattr(
+        PowersensorConfigFlow, "_async_in_progress", always_true
+    )
+
+
+    monkeypatch.setattr(
+        PowersensorConfigFlow, "async_set_unique_id", AsyncMock()
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result['reason'] == "already_configured"
