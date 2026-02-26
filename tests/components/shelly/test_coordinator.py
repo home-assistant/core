@@ -616,7 +616,7 @@ async def test_rpc_update_entry_sleep_period(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
     )
 
@@ -650,7 +650,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
     )
 
@@ -1109,7 +1109,7 @@ async def test_rpc_sleeping_device_late_setup(
     mock_rpc_device.mock_initialized()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.test_name_temperature")
+    assert hass.states.get("update.test_name_firmware")
 
 
 async def test_rpc_already_connected(
