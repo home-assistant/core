@@ -10,6 +10,7 @@ coverage:
         target: auto
         threshold: 1
         paths:
+          - homeassistant/components/*/backup.py
           - homeassistant/components/*/config_flow.py
           - homeassistant/components/*/device_action.py
           - homeassistant/components/*/device_condition.py
@@ -28,6 +29,7 @@ coverage:
         target: 100
         threshold: 0
         paths:
+          - homeassistant/components/*/backup.py
           - homeassistant/components/*/config_flow.py
           - homeassistant/components/*/device_action.py
           - homeassistant/components/*/device_condition.py
