@@ -42,5 +42,15 @@
         }
       }
     }
+  },
+  "services": {
+    "play_media": {
+      "fields": {
+        "shuffle": {
+          "description": "Whether the media should be played in a randomized order or not. Replaces the current play queue if selected.",
+          "name": "Shuffle"
+        }
+      }
+    }
   }
 }

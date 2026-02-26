@@ -158,14 +158,6 @@ play_media:
       example: "true"
       selector:
         boolean:
-    shuffle:
-      filter:
-        supported_features:
-          - media_player.MediaPlayerEntityFeature.MEDIA_SHUFFLE
-      required: false
-      example: "true"
-      selector:
-        boolean:
 
 browse_media:
   target:
