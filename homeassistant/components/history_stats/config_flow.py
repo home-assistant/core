@@ -12,6 +12,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -37,6 +38,7 @@ from homeassistant.helpers.template import Template
 from .const import (
     CONF_DURATION,
     CONF_END,
+    CONF_MIN_STATE_DURATION,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_KEYS,
@@ -44,6 +46,7 @@ from .const import (
     CONF_TYPE_TIME,
     DEFAULT_NAME,
     DOMAIN,
+    SECTION_ADVANCED_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -139,7 +142,7 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             vol.Optional(CONF_START): TemplateSelector(),
             vol.Optional(CONF_END): TemplateSelector(),
             vol.Optional(CONF_DURATION): DurationSelector(
-                DurationSelectorConfig(enable_day=True, allow_negative=False)
+                DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
             vol.Optional(CONF_STATE_CLASS): SelectSelector(
                 SelectSelectorConfig(
@@ -147,6 +150,18 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
                     translation_key=CONF_STATE_CLASS,
                     mode=SelectSelectorMode.DROPDOWN,
                 ),
+            ),
+            vol.Optional(SECTION_ADVANCED_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
+                            DurationSelectorConfig(
+                                enable_day=True, allow_negative=False
+                            )
+                        ),
+                    }
+                ),
+                {"collapsed": True},
             ),
         }
     )
@@ -275,6 +290,8 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
+    advanced_settings = validated_data.get(SECTION_ADVANCED_SETTINGS, {})
+    min_state_duration = advanced_settings.get(CONF_MIN_STATE_DURATION)
     state_class = validated_data.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(
@@ -284,6 +301,7 @@ async def ws_start_preview(
         Template(start, hass) if start else None,
         Template(end, hass) if end else None,
         timedelta(**duration) if duration else None,
+        timedelta(**min_state_duration) if min_state_duration else timedelta(0),
         True,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name, True)
