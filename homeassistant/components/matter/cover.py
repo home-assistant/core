@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import IntEnum
 from math import floor
 from typing import Any
@@ -21,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
@@ -70,6 +73,7 @@ class MatterCoverEntityDescription(CoverEntityDescription, MatterEntityDescripti
 class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
+    _cancel_write_state: Callable[[], None] | None = None
     entity_description: MatterCoverEntityDescription
 
     @property
@@ -113,6 +117,30 @@ class MatterCover(MatterEntity, CoverEntity):
             # value needs to be inverted and is sent in 100ths
             clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
         )
+
+    @callback
+    def _on_matter_event(self, event: Any, data: Any = None) -> None:
+        """Handle updates from the device."""
+        self._attr_available = self._endpoint.node.available
+        self._update_from_device()
+        if self._cancel_write_state is not None:
+            self._cancel_write_state()
+        self._cancel_write_state = async_call_later(
+            self.hass, 0.1, self._async_write_state_later
+        )
+
+    @callback
+    def _async_write_state_later(self, now: datetime) -> None:
+        """Write the Home Assistant state after debouncing attribute updates."""
+        self._cancel_write_state = None
+        self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._cancel_write_state is not None:
+            self._cancel_write_state()
+            self._cancel_write_state = None
 
     @callback
     def _update_from_device(self) -> None:

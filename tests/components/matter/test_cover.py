@@ -1,5 +1,6 @@
 """Test Matter covers."""
 
+import asyncio
 from math import floor
 from unittest.mock import MagicMock, call
 
@@ -226,6 +227,49 @@ async def test_cover_position_aware_lift(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["current_position"] == 0
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_position_aware_lift_debounce(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test cover state update is debounced for split attribute updates."""
+
+    set_node_attribute(matter_node, 1, 258, 14, 9900)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    await trigger_subscription_callback(hass, matter_client)
+
+    await asyncio.sleep(0.11)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    await asyncio.sleep(0.11)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
     assert state.state == CoverState.CLOSED
 
 
