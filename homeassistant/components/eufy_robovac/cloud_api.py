@@ -7,10 +7,11 @@ Tuya local keys needed for local control.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import md5, sha256
 import hmac
 import json
+import logging
 import math
 import random
 import string
@@ -91,6 +92,9 @@ _TUYA_PASSWORD_CIPHER = Cipher(
 _PHONE_BY_REGION = {"AZ": "1", "AY": "86", "IN": "91", "EU": "44"}
 _REGION_BY_COUNTRY = {"US": "AZ", "CA": "AZ", "MX": "AZ", "CN": "AY", "IN": "IN"}
 _REGION_BY_PHONE = {"1": "AZ", "86": "AY", "91": "IN"}
+_LOCAL_HOST_SCAN_MAX_RETRIES = 3
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EufyRoboVacCloudApiError(HomeAssistantError):
@@ -327,6 +331,66 @@ class EufyRoboVacCloudApi:
             raise EufyRoboVacCloudApiError("Eufy response payload is invalid")
         return payload
 
+    @staticmethod
+    def _resolve_hosts_from_tinytuya_scan(
+        missing_device_ids: set[str],
+    ) -> dict[str, str]:
+        """Resolve local hosts by scanning the LAN for Tuya broadcast packets."""
+        if not missing_device_ids:
+            return {}
+
+        try:
+            import tinytuya
+        except ImportError:
+            _LOGGER.debug("tinytuya unavailable for RoboVac host fallback")
+            return {}
+
+        try:
+            scan_results = tinytuya.deviceScan(
+                verbose=False,
+                maxretry=_LOCAL_HOST_SCAN_MAX_RETRIES,
+                color=False,
+                poll=False,
+            )
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("RoboVac host fallback scan failed", exc_info=True)
+            return {}
+
+        if not isinstance(scan_results, dict):
+            return {}
+
+        resolved_hosts: dict[str, str] = {}
+        for ip_address, payload in scan_results.items():
+            if not isinstance(ip_address, str) or not isinstance(payload, dict):
+                continue
+            device_id = str(payload.get("gwId") or payload.get("id") or "")
+            if device_id in missing_device_ids:
+                resolved_hosts[device_id] = ip_address
+
+        return resolved_hosts
+
+    def _apply_local_host_fallback(
+        self, discovered_vacuums: list[CloudDiscoveredRoboVac]
+    ) -> list[CloudDiscoveredRoboVac]:
+        """Fill missing hosts from local Tuya discovery when cloud omits the IP."""
+        missing_device_ids = {
+            vacuum.device_id for vacuum in discovered_vacuums if not vacuum.host
+        }
+        if not missing_device_ids:
+            return discovered_vacuums
+
+        resolved_hosts = self._resolve_hosts_from_tinytuya_scan(missing_device_ids)
+        if not resolved_hosts:
+            return discovered_vacuums
+
+        return [
+            replace(
+                vacuum,
+                host=resolved_hosts.get(vacuum.device_id, vacuum.host),
+            )
+            for vacuum in discovered_vacuums
+        ]
+
     def _list_robovacs_sync(self) -> list[CloudDiscoveredRoboVac]:
         login_payload = {
             **_EUFY_LOGIN_AUTH,
@@ -411,4 +475,4 @@ class EufyRoboVacCloudApi:
                 )
             )
 
-        return vacuums
+        return self._apply_local_host_fallback(vacuums)
