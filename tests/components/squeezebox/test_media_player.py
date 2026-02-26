@@ -781,6 +781,31 @@ async def test_squeezebox_call_query(
     configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
+@pytest.mark.parametrize("timeout", [30, "30"])
+async def test_squeezebox_call_query_with_timeout(
+    hass: HomeAssistant, configured_player: MagicMock, timeout: int | str
+) -> None:
+    """Test call_query service with an optional timeout."""
+    # The service call to squeezebox.call_query triggers async_call_query
+    await hass.services.async_call(
+        DOMAIN,
+        "call_query",
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            "command": "test_command",
+            "parameters": ["param1", "param2"],
+            "timeout": timeout,
+        },
+        blocking=True,
+    )
+
+    # Verify that the underlying library's async_query was called
+    # with the correct positional arguments and the timeout in kwargs
+    configured_player.async_query.assert_called_with(
+        "test_command", "param1", "param2", timeout=float(timeout)
+    )
+
+
 async def test_squeezebox_call_method(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:

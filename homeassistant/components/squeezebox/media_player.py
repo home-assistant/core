@@ -734,7 +734,10 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
 
     async def async_call_query(
-        self, command: str, parameters: list[str] | None = None
+        self,
+        command: str,
+        parameters: list[str] | None = None,
+        timeout: float | None = None,
     ) -> None:
         """Call Squeezebox JSON/RPC method where we care about the result.
 
@@ -745,11 +748,16 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if parameters:
             all_params.extend(parameters)
 
+        kwargs = {}
+        if timeout:
+            kwargs["timeout"] = timeout
+
         self._query_result = await safe_library_call(
             self._player.async_query,
             *all_params,
             translation_key="call_query_failed",
             translation_placeholders={"command": command},
+            **kwargs,
         )
         _LOGGER.debug("call_query got result %s", self._query_result)
         self.async_write_ha_state()

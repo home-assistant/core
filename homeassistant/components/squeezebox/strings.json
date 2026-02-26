@@ -280,6 +280,10 @@
         "parameters": {
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]",
           "name": "Parameters"
+        },
+        "timeout": {
+          "description": "The number of seconds to wait for a response to the query before timing out",
+          "name": "Timeout"
         }
       },
       "name": "Call query"
