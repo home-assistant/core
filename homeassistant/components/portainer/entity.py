@@ -135,7 +135,7 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
             identifiers={
                 (
                     DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{self.device_name}",
+                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{self.stack_id}",
                 )
             },
             manufacturer=DEFAULT_NAME,
