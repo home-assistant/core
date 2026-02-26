@@ -121,7 +121,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==5.0.0
+accuweather==5.1.0
 
 # homeassistant.components.actron_air
 actron-neo-api==0.4.1
@@ -1163,6 +1163,9 @@ influxdb-client==1.50.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
+
+# homeassistant.components.infrared
+infrared-protocols==1.0.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
