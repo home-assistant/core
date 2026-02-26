@@ -169,7 +169,10 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         "Confirm user wants to add the powersensor integration with the plugs stored in hass.data['powersensor']."
         if user_input is not None:
-            _LOGGER.debug(self.hass.data[DOMAIN]["discovered_plugs"])
+            _LOGGER.debug(
+                "Creating entry with discovered plugs: %s",
+                self.hass.data[DOMAIN]["discovered_plugs"],
+            )
             return self.async_create_entry(
                 title="Powersensor",
                 data={
