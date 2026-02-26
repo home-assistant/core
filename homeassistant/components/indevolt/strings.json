@@ -309,6 +309,9 @@
     "power_exceeds_max": {
       "message": "Power ({power}W) exceeds maximum ({max_power}W) for generation ({generation}) devices"
     },
+    "service_call_failed": {
+      "message": "Indevolt service failed for one or more devices"
+    },
     "soc_below_emergency": {
       "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
     }

@@ -1,7 +1,6 @@
 """Setup the Indevolt test environment."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -43,26 +42,43 @@ def generation(request: pytest.FixtureRequest) -> int:
 
 
 @pytest.fixture
-def entry_data(generation: int) -> dict[str, Any]:
-    """Return the config entry data based on generation."""
-    device_info = DEVICE_MAPPING[generation]
-    return {
-        CONF_HOST: TEST_HOST,
-        CONF_SERIAL_NUMBER: device_info["sn"],
-        CONF_MODEL: device_info["device"],
-        CONF_GENERATION: device_info["generation"],
-    }
+def alt_generation(request: pytest.FixtureRequest) -> int:
+    """Return the alternative device generation."""
+    return getattr(request, "param", 1)
 
 
 @pytest.fixture
-def mock_config_entry(generation: int, entry_data: dict[str, Any]) -> MockConfigEntry:
+def mock_config_entry(generation: int) -> MockConfigEntry:
     """Return the default mocked config entry."""
     device_info = DEVICE_MAPPING[generation]
     return MockConfigEntry(
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
-        data=entry_data,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_SERIAL_NUMBER: device_info["sn"],
+            CONF_MODEL: device_info["device"],
+            CONF_GENERATION: device_info["generation"],
+        },
+        unique_id=device_info["sn"],
+    )
+
+
+@pytest.fixture
+def alt_mock_config_entry(alt_generation: int) -> MockConfigEntry:
+    """Return a second mocked config entry (generation 1) for multi-device tests."""
+    device_info = DEVICE_MAPPING[alt_generation]
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=device_info["device"],
+        version=1,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_SERIAL_NUMBER: device_info["sn"],
+            CONF_MODEL: device_info["device"],
+            CONF_GENERATION: device_info["generation"],
+        },
         unique_id=device_info["sn"],
     )
 
