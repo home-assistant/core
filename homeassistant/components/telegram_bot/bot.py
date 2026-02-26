@@ -448,7 +448,7 @@ class TelegramNotificationService:
         chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-        response: Message | tuple[Message] = await self._send_msg(
+        response: Message | tuple[Message, ...] = await self._send_msg(
             func_send,
             message_tag,
             chat_id,

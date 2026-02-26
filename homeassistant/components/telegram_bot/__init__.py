@@ -240,7 +240,7 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
                                 str(InputMediaType.PHOTO),
                             )
                         ),
-                        vol.Required(ATTR_URL): cv.string,
+                        vol.Optional(ATTR_URL): cv.string,
                         vol.Optional(ATTR_FILE): cv.string,
                         vol.Optional(ATTR_CAPTION): cv.string,
                         vol.Optional(ATTR_USERNAME): cv.string,
