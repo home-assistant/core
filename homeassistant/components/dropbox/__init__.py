@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from python_dropbox_api import DropboxAuthException
+from python_dropbox_api import DropboxAuthException, DropboxUnknownException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -35,6 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
         await client.async_get_account_info()
     except DropboxAuthException as err:
         raise ConfigEntryAuthFailed from err
+    except (DropboxUnknownException, TimeoutError) as err:
+        raise ConfigEntryNotReady from err
 
     entry.runtime_data = client
 
