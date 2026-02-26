@@ -232,7 +232,6 @@ class PowersensorMessageDispatcher:
             "radio_signal_quality",
             "summation_energy",
             "summation_volume",
-            #'uncalibrated_instant_reading',
         ]
 
         for ev in known_evs:
