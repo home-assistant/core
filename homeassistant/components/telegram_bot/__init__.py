@@ -224,6 +224,7 @@ SERVICE_SCHEMA_SEND_FILE = vol.All(
 
 SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_MEDIA): vol.All(

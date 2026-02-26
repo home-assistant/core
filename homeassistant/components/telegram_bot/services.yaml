@@ -210,15 +210,14 @@ send_photo:
 
 send_media_group:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
-    chat_id:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
           multiple: true
+          reorder: true
     media:
       required: true
       selector:
@@ -228,6 +227,7 @@ send_media_group:
           description_field: caption
           fields:
             media_type:
+              label: Media type
               selector:
                 select:
                   options:
@@ -290,6 +290,18 @@ send_media_group:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_sticker:
   fields:

@@ -843,6 +843,10 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]"
         },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
         "media": {
           "description": "A list of media to be sent.",
           "name": "Media"
@@ -864,7 +868,12 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
         }
       },
-      "name": "Send media group"
+      "name": "Send media group",
+      "sections": {
+        "advanced": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        }
+      }
     },
     "send_message": {
       "description": "Sends a notification.",
