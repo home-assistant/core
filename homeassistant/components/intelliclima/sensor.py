@@ -100,7 +100,9 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
         description: IntelliClimaSensorEntityDescription,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator, device, description)
+        super().__init__(coordinator, device)
+
+        self.entity_description = description
 
         self._attr_unique_id = f"{device.id}_{description.key}"
 

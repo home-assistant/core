@@ -8,7 +8,6 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
 )
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -24,13 +23,9 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO | IntelliClimaC800,
-        description: EntityDescription | None = None,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
-
-        if description is not None:
-            self.entity_description = description
 
         # Make this HA "device" use the IntelliClima device name.
         self._attr_device_info = DeviceInfo(
@@ -51,10 +46,9 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO,
-        description: EntityDescription | None = None,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator, device, description)
+        super().__init__(coordinator, device)
 
         self._attr_device_info: DeviceInfo = self.device_info or DeviceInfo()
 
