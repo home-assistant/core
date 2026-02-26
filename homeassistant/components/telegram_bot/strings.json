@@ -829,7 +829,7 @@
       }
     },
     "send_media_group": {
-      "description": "Sends media group.",
+      "description": "Send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type.",
       "fields": {
         "chat_id": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::chat_id::description%]",
