@@ -81,13 +81,13 @@ async def test_binary_sensor_initial_state(
     """Test binary sensors have a correct initial state after initialization."""
 
     # Instantly call callback to ensure we have initial data set
-    async def mock_monitor_callback(
-        alarm_status_callback, zones_callback, outputs_callback
-    ):
-        outputs_callback({"outputs": violated_entries})
-        zones_callback({"zones": violated_entries})
+    async def mock_start(**_: object) -> None:
+        _, zones_callback, outputs_callback = get_monitor_callbacks(mock_satel)
 
-    mock_satel.monitor_status = AsyncMock(side_effect=mock_monitor_callback)
+        outputs_callback(violated_entries)
+        zones_callback(violated_entries)
+
+    mock_satel.start = AsyncMock(side_effect=mock_start)
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
