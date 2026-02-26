@@ -115,7 +115,7 @@ def _zone_temperature_lists(device: Appliance) -> tuple[list[str], list[str]]:
     try:
         heating = device.represent(DAIKIN_ZONE_TEMP_HEAT)[1]
         cooling = device.represent(DAIKIN_ZONE_TEMP_COOL)[1]
-    except (AttributeError, KeyError):
+    except AttributeError, KeyError:
         return ([], [])
     return (list(heating or []), list(cooling or []))
 
@@ -141,7 +141,7 @@ def _system_target_temperature(device: Appliance) -> float | None:
         return None
     try:
         return float(target)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
