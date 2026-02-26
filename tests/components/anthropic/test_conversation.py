@@ -130,7 +130,7 @@ async def test_auth_error_handling(
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test reauth after service call."""
+    """Test reauth after authentication error during conversation."""
     mock_create_stream.side_effect = AuthenticationError(
         message="Invalid API key",
         response=Response(status_code=403, request=Request(method="POST", url=URL())),
@@ -144,6 +144,7 @@ async def test_auth_error_handling(
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
+    await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
