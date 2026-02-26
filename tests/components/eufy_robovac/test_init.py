@@ -83,7 +83,6 @@ async def test_setup_entry_creates_vacuum_and_polls_dps(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == VacuumActivity.IDLE
-        assert state.attributes["dps"]["104"] == "72"
         assert state.attributes["fan_speed"] == "max"
         assert state.attributes["status_raw"] == "standby"
         assert state.attributes["model_name"] == "G30 Hybrid"
@@ -116,4 +115,3 @@ async def test_unload_entry_removes_vacuum_entity(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert hass.states.get(entity_id) is not None
-    assert config_entry.entry_id not in hass.data[DOMAIN]

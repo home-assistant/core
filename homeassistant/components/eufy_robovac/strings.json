@@ -18,6 +18,10 @@
         "data": {
           "username": "Email",
           "password": "Password"
+        },
+        "data_description": {
+          "username": "The email address used for your Eufy account.",
+          "password": "The password for your Eufy account."
         }
       },
       "select_device": {
@@ -25,14 +29,21 @@
         "description": "Choose which RoboVac to add to Home Assistant.",
         "data": {
           "selected_device_id": "RoboVac"
+        },
+        "data_description": {
+          "selected_device_id": "The RoboVac discovered from your Eufy account."
         }
       },
       "device": {
-        "title": "Confirm Local Details",
+        "title": "Confirm local details",
         "description": "Confirm local connection details for the selected RoboVac.",
         "data": {
           "host": "Host",
           "protocol_version": "Protocol version"
+        },
+        "data_description": {
+          "host": "The local IP address of the selected RoboVac.",
+          "protocol_version": "The Tuya protocol version to use for local communication."
         }
       }
     }

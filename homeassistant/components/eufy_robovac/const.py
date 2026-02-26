@@ -1,8 +1,9 @@
 """Constants for the Eufy RoboVac integration."""
 
 from enum import StrEnum
-from typing import Any
+from typing import Any, TypedDict
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 
 DOMAIN = "eufy_robovac"
@@ -18,7 +19,13 @@ def dps_update_signal(entry_id: str) -> str:
     return f"{DOMAIN}_{entry_id}_dps_updated"
 
 
-type EufyRoboVacRuntimeData = dict[str, dict[str, Any]]
+class EufyRoboVacRuntimeData(TypedDict):
+    """Runtime data for a Eufy RoboVac config entry."""
+
+    dps: dict[str, Any]
+
+
+type EufyRoboVacConfigEntry = ConfigEntry[EufyRoboVacRuntimeData]
 
 
 class RoboVacCommand(StrEnum):

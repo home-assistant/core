@@ -80,8 +80,9 @@ async def test_async_update_maps_activity_and_battery(entity: EufyRoboVacEntity)
     await entity.async_update()
 
     assert entity.activity == VacuumActivity.IDLE
-    assert entity.extra_state_attributes["dps"]["104"] == 65
+    assert "dps" not in entity.extra_state_attributes
     assert entity.fan_speed == "standard"
+    assert entity.extra_state_attributes["status_raw"] == "standby"
 
 
 @pytest.mark.asyncio
@@ -94,6 +95,18 @@ async def test_async_update_marks_entity_unavailable_on_error(
         raise EufyRoboVacLocalApiError("boom")
 
     entity._api.async_get_dps = _raise_error
+    await entity.async_update()
+
+    assert entity.available is False
+
+
+@pytest.mark.asyncio
+async def test_async_update_marks_entity_unavailable_on_empty_dps(
+    entity: EufyRoboVacEntity,
+) -> None:
+    """Empty DPS payloads should mark the entity unavailable."""
+    entity._api.dps = {}
+
     await entity.async_update()
 
     assert entity.available is False

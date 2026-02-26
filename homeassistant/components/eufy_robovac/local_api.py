@@ -46,7 +46,7 @@ class EufyRoboVacLocalApi:
         try:
             device = self._create_device()
             response = device.set_multiple_values(dps)
-        except Exception as err:  # noqa: BLE001 # pragma: no cover - passthrough wrapper
+        except Exception as err:  # noqa: BLE001
             raise EufyRoboVacLocalApiError(
                 f"Failed sending DPS to {self.host}: {err}"
             ) from err
@@ -72,7 +72,7 @@ class EufyRoboVacLocalApi:
         try:
             device = self._create_device()
             response = device.status()
-        except Exception as err:  # noqa: BLE001 # pragma: no cover - passthrough wrapper
+        except Exception as err:  # noqa: BLE001
             raise EufyRoboVacLocalApiError(
                 f"Failed reading DPS from {self.host}: {err}"
             ) from err
