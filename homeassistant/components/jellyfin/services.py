@@ -58,7 +58,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         # solve a circular ImportError
         from .media_player import JellyfinMediaPlayer
 
-        entity_ids: list[str] = call.data.get("entity_id", [])
+        # pull entity_id from data: if available, or target: if not
+        entity_ids: list[str] | str = (
+            call.data.get("entity_id", [])
+            or (call.target or {}).get("entity_id", [])
+        )
+        # make sure thats a list for looping
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+
         kwargs: dict[str, Any] = {
             ATTR_MEDIA_SHUFFLE: call.data.get(ATTR_MEDIA_SHUFFLE, False),
             ATTR_MEDIA_ENQUEUE: call.data.get(ATTR_MEDIA_ENQUEUE, None),
