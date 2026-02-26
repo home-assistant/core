@@ -613,7 +613,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
 
         # Received a datetime
-        if device_class is SensorDeviceClass.TIMESTAMP:
+        if device_class in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -630,7 +630,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return value.isoformat(timespec="seconds")
             except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"Invalid datetime: {self.entity_id} has {device_class} device class "
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 

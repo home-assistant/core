@@ -103,6 +103,7 @@ async def test_get_triggers(
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     }
     expected_triggers = [
         {

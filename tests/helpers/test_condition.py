@@ -1122,6 +1122,11 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
+        "sensor.uptime_am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+    )
+    hass.states.async_set(
         "sensor.no_device_class",
         "2020-06-01 01:00:00.000000+00:00",
     )
@@ -1143,6 +1148,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.uptime_am", before="sensor.pm")
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(

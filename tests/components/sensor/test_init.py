@@ -2200,6 +2200,7 @@ async def test_invalid_enumeration_entity_without_device_class(
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     ],
 )
 async def test_non_numeric_device_class_with_unit_of_measurement(
@@ -2554,6 +2555,7 @@ async def test_device_classes_with_invalid_state_class(
         (SensorDeviceClass.ENUM, None, None, None, False),
         (SensorDeviceClass.DATE, None, None, None, False),
         (SensorDeviceClass.TIMESTAMP, None, None, None, False),
+        (SensorDeviceClass.UPTIME, None, None, None, False),
         ("custom", None, None, None, False),
         (SensorDeviceClass.POWER, None, "V", None, True),
         (None, SensorStateClass.MEASUREMENT, None, None, True),
@@ -3097,6 +3099,7 @@ def test_device_class_units_are_complete() -> None:
         SensorDeviceClass.ENUM,
         SensorDeviceClass.MONETARY,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     }
     unit_device_classes = {
         device_class.value for device_class in SensorDeviceClass
@@ -3127,6 +3130,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
         SensorDeviceClass.WIND_DIRECTION,
     }
     converter_device_classes = {
