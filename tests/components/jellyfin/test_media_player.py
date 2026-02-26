@@ -279,7 +279,7 @@ async def test_browse_media(
         "media_class": MediaClass.DIRECTORY.value,
         "media_content_type": "collection",
         "media_content_id": "COLLECTION-FOLDER-UUID",
-        "can_play": False,
+        "can_play": True,
         "can_expand": True,
         "can_search": False,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
@@ -372,7 +372,7 @@ async def test_search_media(
     mock_jellyfin: MagicMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test Jellyfin browse media."""
+    """Test Jellyfin search media."""
     client = await hass_ws_client()
 
     # browse root folder
@@ -396,7 +396,7 @@ async def test_search_media(
             "media_content_type": "string",
             "media_content_id": "FOLDER-UUID",
             "children_media_class": None,
-            "can_play": False,
+            "can_play": True,
             "can_expand": True,
             "can_search": False,
             "not_shown": 0,
@@ -455,6 +455,7 @@ async def test_supports_media_control_fallback(
     assert features & MediaPlayerEntityFeature.SEEK
     assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
     assert features & MediaPlayerEntityFeature.PLAY_MEDIA
+    assert features & MediaPlayerEntityFeature.ENQUEUE
 
     # Should also have volume controls since it has VolumeSet, Mute, and Unmute
     assert features & MediaPlayerEntityFeature.VOLUME_SET
