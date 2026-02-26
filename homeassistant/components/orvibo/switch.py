@@ -82,7 +82,7 @@ async def async_setup_platform(
                 f"yaml_deprecation_import_issue_{switch.get('host')}_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
                 breaks_in_ha_version="2026.9.0",
                 is_fixable=False,
-                is_persistent=True,
+                is_persistent=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="yaml_deprecation_import_issue",
@@ -100,7 +100,7 @@ async def async_setup_platform(
             f"yaml_deprecation_{switch.get('host')}_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
             breaks_in_ha_version="2026.9.0",
             is_fixable=False,
-            is_persistent=True,
+            is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="yaml_deprecation",
             translation_placeholders={
