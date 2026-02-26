@@ -135,7 +135,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_sound_mode: str | None = None
         self._attr_sound_mode_list: list[str] | None = self._generate_output_list()
         self._attr_supported_features = SUPPORT_WIIM_BASE
-        self._attr_group_members: list[str] | None = [self._attr_unique_id]
+        self._attr_group_members: list[str] | None = None
         self._supported_features_update_in_flight = False
 
     def _extract_prefix(self, uuid_str: str) -> str:
