@@ -474,7 +474,7 @@ async def test_register_listener_unsubscribe_variants(
 ) -> None:
     """register_listener returning object with unsubscribe/close should be handled."""
 
-    def reg_listener(device_id, cb):
+    def reg_listener(_device_id, _cb):
         return SimpleNamespace(unsubscribe=lambda: None)
 
     mock_pyaxenco_client.register_listener = reg_listener
