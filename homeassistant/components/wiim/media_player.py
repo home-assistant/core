@@ -710,7 +710,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if self._attr_supported_features != current_features:
                 self._attr_supported_features = current_features
                 LOGGER.debug(
-                    f"Device {self.entity_id}: Updated supported features to {current_features}"
+                    "Device %s: Updated supported features to %s",
+                    self.entity_id,
+                    current_features,
                 )
                 if self.hass and self.entity_id:
                     self.async_write_ha_state()
