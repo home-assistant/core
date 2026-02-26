@@ -121,7 +121,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==5.0.0
+accuweather==5.1.0
 
 # homeassistant.components.actron_air
 actron-neo-api==0.4.1
@@ -1062,7 +1062,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.hdfury
-hdfury==1.5.0
+hdfury==1.6.0
 
 # homeassistant.components.hegel
 hegel-ip-client==0.1.4
@@ -1087,7 +1087,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260128.6
+home-assistant-frontend==20260225.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.2.13
@@ -1164,6 +1164,9 @@ influxdb-client==1.50.0
 # homeassistant.components.influxdb
 influxdb==5.3.1
 
+# homeassistant.components.infrared
+infrared-protocols==1.0.0
+
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
 
@@ -1211,7 +1214,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.2.13.222258
+knx-frontend==2026.2.25.165736
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2153,7 +2156,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.5
 
 # homeassistant.components.bsblan
-python-bsblan==5.0.1
+python-bsblan==5.1.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2683,7 +2686,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2026.1.4
+velbus-aio==2026.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
