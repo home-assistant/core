@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
 
-    _LOGGER.debug("sync_setup_entry completed for entry: %s", entry.entry_id)
+    _LOGGER.debug("async_setup_entry completed for entry: %s", entry.entry_id)
     return True
 
 

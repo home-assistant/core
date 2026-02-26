@@ -2,7 +2,6 @@
 
 # Integration specific values (custom / builtin Home Assistant)
 DOMAIN = "victron_gx_mqtt"
-ENTITY_PREFIX = "victron"
 
 # generic config values
 CONF_INSTALLATION_ID = "installation_id"
@@ -10,9 +9,6 @@ CONF_MODEL = "model"
 CONF_SERIAL = "serial"
 CONF_ROOT_TOPIC_PREFIX = "root_topic_prefix"
 CONF_UPDATE_FREQUENCY_SECONDS = "update_frequency"
-
-DEVICE_MESSAGE = "device"
-SENSOR_MESSAGE = "sensor"
 
 DEFAULT_HOST = "venus.local."
 DEFAULT_PORT = 1883

@@ -93,7 +93,7 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
             try:
                 self._baseline = float(last_state.state)
                 self._attr_native_value += self._baseline
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Restored baseline of %.3f for %s", self._baseline, self.entity_id
                 )
             except ValueError:

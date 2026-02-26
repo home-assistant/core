@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse
 
-from victron_mqtt import (
-    AuthenticationError,
-    CannotConnectError,
-    DeviceType,
-    Hub as VictronVenusHub,
-)
+from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -28,7 +23,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.helpers.selector import SelectOptionDict
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
@@ -44,12 +38,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEVICE_CODES: Sequence[SelectOptionDict] = [
-    {"value": device_type.code, "label": device_type.string}
-    for device_type in DeviceType
-    if device_type.string != "<Not used>"
-]
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -117,7 +105,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            _LOGGER.info("User input received: %s", user_input)
+            _LOGGER.debug("User input received: %s", user_input)
             data = {**user_input, CONF_SERIAL: self.serial, CONF_MODEL: self.model_name}
             data = {
                 k: v for k, v in data.items() if v is not None
@@ -125,7 +113,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 installation_id = await validate_input(data)
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Successfully connected to Victron device: %s", installation_id
                 )
             except AuthenticationError:
@@ -171,7 +159,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            _LOGGER.info("Reauth user input received: %s", user_input)
+            _LOGGER.debug("Reauth user input received: %s", user_input)
             data = {
                 **reauth_entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
@@ -232,7 +220,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            _LOGGER.info("SSDP auth user input received: %s", user_input)
+            _LOGGER.debug("SSDP auth user input received: %s", user_input)
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
                 CONF_SERIAL: self.serial,
@@ -245,7 +233,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(data)
-                _LOGGER.info("SSDP authentication successful")
+                _LOGGER.debug("SSDP authentication successful")
             except AuthenticationError:
                 _LOGGER.exception("Authentication failed during SSDP setup")
                 errors["base"] = "invalid_auth"

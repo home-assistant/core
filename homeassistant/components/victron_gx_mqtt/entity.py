@@ -69,7 +69,7 @@ class VictronBaseEntity(Entity):
         """Handle the metric update. Must be implemented by subclasses."""
 
     @callback
-    def _on_update(self, metric: VictronVenusMetric, value: Any) -> None:
+    def _on_update(self, _: VictronVenusMetric, value: Any) -> None:
         self._on_update_task(value)
 
     async def async_added_to_hass(self) -> None:
