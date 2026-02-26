@@ -212,19 +212,6 @@ class PortainerStackSensor(PortainerStackEntity, BinarySensorEntity):
 
     entity_description: PortainerStackBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerStackBinarySensorEntityDescription,
-        device_info: PortainerStackData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer stack sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.stack.id}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
