@@ -732,7 +732,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
             if self.hass and self.entity_id:
                 self.async_write_ha_state()
-            raise
 
     def _update_supported_features(self) -> None:
         """Update supported features based on current state."""
