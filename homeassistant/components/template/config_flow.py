@@ -57,7 +57,11 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
 from .const import (
     CONF_ADVANCED_OPTIONS,
     CONF_AVAILABILITY,
@@ -420,14 +424,23 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
         }
 
+    advanced_schema: dict[vol.Marker, Any] = {
+        vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+    }
+    if domain == Platform.BINARY_SENSOR:
+        advanced_schema |= {
+            vol.Optional(CONF_DELAY_ON): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
+            ),
+            vol.Optional(CONF_DELAY_OFF): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
+            ),
+        }
+
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         vol.Optional(CONF_ADVANCED_OPTIONS): section(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
-                }
-            ),
+            vol.Schema(advanced_schema),
             {"collapsed": True},
         ),
     }
