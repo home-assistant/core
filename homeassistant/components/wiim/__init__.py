@@ -67,6 +67,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     udn = entry.data[CONF_UDN]
     upnp_location = entry.data.get(CONF_UPNP_LOCATION)
 
+    if not upnp_location:
+        LOGGER.error(
+            "UPnP location is missing in config entry for %s (UDN: %s, Host: %s)"
+            "UPnP location is required for setup",
+            entry.title,
+            udn,
+            host,
+        )
+        raise ConfigEntryNotReady(
+            f"Missing UPnP location in config entry for {entry.title} (UDN: {udn})"
+        )
+
     if upnp_location and host:
         upnp_location = upnp_location.replace(urlparse(upnp_location).hostname, host)
 
@@ -96,51 +108,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
                 raise ConfigEntryNotReady(
                     f"Failed to connect to UPnP device at {upnp_location}: {err}"
                 ) from err
-        else:
-            LOGGER.error(
-                "UPnP location not found in config entry for %s (UDN: %s, Host: %s)",
-                entry.title,
-                udn,
-                host,
-            )
-
-            return False
 
         client_session = ClientSession(connector=TCPConnector(ssl=False))
         http_api_endpoint = WiimApiEndpoint(
             protocol="https", port=443, endpoint=host, session=client_session
         )
-        ha_host_ip: str | None = None
+        ha_host: str | None = None
 
         try:
             base_url = get_url(hass, prefer_external=False)
             parsed_url = urlparse(base_url)
-            ha_host_ip = parsed_url.hostname
+            ha_host = parsed_url.hostname
 
-            LOGGER.debug("Resolved HA host IP via get_url: %s", ha_host_ip)
+            LOGGER.debug("Resolved HA host IP via get_url: %s", ha_host)
         except (ValueError, TypeError) as err:
             LOGGER.warning(
                 "Could not determine HA URL via get_url, falling back: %s", err
             )
-            ha_host_ip = await async_get_source_ip(hass)
-
-        if not ha_host_ip:
-            ha_host_ip = await async_get_source_ip(hass)
-            if ha_host_ip:
-                LOGGER.debug(
-                    "Resolved HA source IP for device: %s",
-                    ha_host_ip,
-                )
-            else:
-                LOGGER.error(
-                    "Failed to determine Home Assistant host IP using socket fallback"
-                )
+            ha_host = await async_get_source_ip(hass)
 
         wiim_device = WiimDevice(
             upnp_device=upnp_device_instance,
             session=async_get_clientsession(hass),
             http_api_endpoint=http_api_endpoint,
-            ha_host_ip=ha_host_ip,
+            ha_host_ip=ha_host,
             polling_interval=DEFAULT_AVAILABILITY_POLLING_INTERVAL,
         )
 

@@ -136,6 +136,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_sound_mode_list: list[str] | None = self._generate_output_list()
         self._attr_supported_features = SUPPORT_WIIM_BASE
         self._attr_group_members: list[str] | None = [self._attr_unique_id]
+        self._supported_features_update_in_flight = False
 
     def _extract_prefix(self, uuid_str: str) -> str:
         if not uuid_str.startswith("uuid:") or len(uuid_str) < 13:
@@ -735,7 +736,22 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     def _update_supported_features(self) -> None:
         """Update supported features based on current state."""
-        self.hass.async_create_task(self._from_device_update_supported_features())
+        if not self.hass:
+            return
+
+        # Avoid parallel MEDIA_INFO request.
+        if self._supported_features_update_in_flight:
+            return
+
+        self._supported_features_update_in_flight = True
+
+        async def _refresh_supported_features() -> None:
+            try:
+                await self._from_device_update_supported_features()
+            finally:
+                self._supported_features_update_in_flight = False
+
+        self.hass.async_create_task(_refresh_supported_features())
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
