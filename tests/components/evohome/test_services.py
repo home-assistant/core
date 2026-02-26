@@ -194,3 +194,22 @@ async def test_zone_clear_zone_override_with_ctl_id(  # ServiceValidationError
         )
 
     assert excinfo.value.translation_key == "zone_only_service"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_with_ctl_id(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test calling a zone service with a non-zone entity_id fails."""
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {ATTR_SETPOINT: 19.5},
+            target={ATTR_ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "zone_only_service"
