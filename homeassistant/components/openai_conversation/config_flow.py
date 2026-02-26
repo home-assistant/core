@@ -544,15 +544,15 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
             return []
 
-        MODELS_REASONING_MAP = {
+        models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
             "gpt-5.2-pro": ["medium", "high", "xhigh"],
-            "gpt-5.2": ["none", "low", "medium", "high", "xhigh"],
+            ("gpt-5.2", "gpt-5.3"): ["none", "low", "medium", "high", "xhigh"],
             "gpt-5.1": ["none", "low", "medium", "high"],
             "gpt-5": ["minimal", "low", "medium", "high"],
             "": ["low", "medium", "high"],  # The default case
         }
 
-        for prefix, options in MODELS_REASONING_MAP.items():
+        for prefix, options in models_reasoning_map.items():
             if model.startswith(prefix):
                 return options
         return []  # pragma: no cover
