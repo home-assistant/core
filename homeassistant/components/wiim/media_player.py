@@ -884,7 +884,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._device.async_set_volume(int(volume * 100))
             self._update_ha_state_from_sdk_cache()
         except WiimException as e:
-            LOGGER.warning(f"Failed to set volume on {self.entity_id}: {e}")
+            LOGGER.warning("Failed to set volume on %s: %s", self.entity_id, e)
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(
                 f"Failed to set volume on {self.entity_id}: {e}"
