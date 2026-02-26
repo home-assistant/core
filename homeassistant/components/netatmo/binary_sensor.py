@@ -435,6 +435,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
 
         self.async_write_ha_state()
 
+    @callback
     def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
@@ -459,7 +460,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
         # Check module related events only for NACamDoorTag as we want to avoid any risk of interference
         # with other opening sensors (even if currently we only have this type of device with opening sensors,
         # we want to be safe in case we add more in the future)
-        if self.device.device_type == "NACamDoorTag":
+        if self.device.device_type.name == "NACamDoorTag":
             # Module related events (where we need home_id and module_id check)
             if home_id == self.home.entity_id and module_id == self.device.entity_id:
                 # Event for this module
@@ -487,7 +488,6 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
 
         if is_update_needed:
             self.schedule_update_ha_state(True)
-        return
 
 
 class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
