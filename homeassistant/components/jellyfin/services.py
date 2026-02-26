@@ -11,7 +11,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import schema as cv
+from homeassistant.helpers import config_validation as cv
 
 from .media_player import JellyfinMediaPlayer
 
