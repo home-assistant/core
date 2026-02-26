@@ -901,7 +901,9 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         )
 
 
-class PowerViewShadeDualOverlappedCombinedTilt(PowerViewShadeDualOverlappedCombined):
+class PowerViewShadeDualOverlappedCombinedTilt(
+    PowerViewShadeDualOverlappedCombined, PowerViewShadeWithTiltBase
+):
     """Represent a shade that has a front sheer and rear opaque panel.
 
     This equates to two shades being controlled by one motor.
