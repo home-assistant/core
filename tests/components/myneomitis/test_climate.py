@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -332,4 +333,4 @@ async def test_ntd_changeover_sets_cool(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "cool"
-    assert state.attributes.get("hvac_modes") == ["cool", "off"]
+    assert state.attributes.get("hvac_modes") == [HVACMode.COOL, HVACMode.OFF]

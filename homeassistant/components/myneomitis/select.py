@@ -94,13 +94,23 @@ async def async_setup_entry(
 
         return MyNeoSelect(api, device, description)
 
-    select_entities = [
-        _create_entity(device)
-        for device in devices
-        if device["model"] in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
-    ]
+    select_entities: list[MyNeoSelect] = []
+    for device in devices:
+        model = device.get("model")
+        if model not in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS:
+            continue
 
-    async_add_entities(select_entities)
+        device_id = device.get("_id")
+        if not device_id:
+            _LOGGER.warning(
+                "Skipping MyNeomitis select device without _id: %s", device.get("name")
+            )
+            continue
+
+        select_entities.append(_create_entity(device))
+
+    if select_entities:
+        async_add_entities(select_entities)
 
 
 class MyNeoSelect(SelectEntity):
@@ -121,7 +131,9 @@ class MyNeoSelect(SelectEntity):
         self.entity_description = description
         self._api = api
         self._device = device
-        device_id: str = device.get("_id") or ""
+        device_id = device.get("_id")
+        if not device_id:
+            raise ValueError("Device is missing required _id")
         self._attr_unique_id = device_id
         self._device_id = device_id
         self._attr_available = bool(device.get("connected", False))

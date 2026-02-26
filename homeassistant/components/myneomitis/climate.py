@@ -39,12 +39,23 @@ async def async_setup_entry(
     def _create_entity(device: dict) -> MyNeoClimate:
         return MyNeoClimate(api, device)
 
-    climate_entities = [
-        _create_entity(device)
-        for device in devices
-        if device.get("model") in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
-    ]
-    async_add_entities(climate_entities)
+    climate_entities: list[MyNeoClimate] = []
+    for device in devices:
+        model = device.get("model")
+        if model not in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS:
+            continue
+
+        device_id = device.get("_id")
+        if not device_id:
+            _LOGGER.warning(
+                "Skipping MyNeomitis device without _id: %s", device.get("name")
+            )
+            continue
+
+        climate_entities.append(_create_entity(device))
+
+    if climate_entities:
+        async_add_entities(climate_entities)
 
 
 class MyNeoClimate(ClimateEntity):
@@ -52,6 +63,7 @@ class MyNeoClimate(ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "myneomitis"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
 
@@ -59,7 +71,9 @@ class MyNeoClimate(ClimateEntity):
         """Initialize the MyNeoClimate entity."""
         self._api = api
         self._device = device
-        device_id: str = device.get("_id") or ""
+        device_id = device.get("_id")
+        if not device_id:
+            raise ValueError("Device is missing required _id")
         model = device.get("model", "")
         name = device.get("name") or device_id or "MyNeomitis device"
         connected = bool(device.get("connected", False))
@@ -188,10 +202,20 @@ class MyNeoClimate(ClimateEntity):
         if "changeOverUser" in new_state and self._device.get("model") == "NTD":
             if new_state["changeOverUser"] == 1:
                 self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
-                self._attr_hvac_mode = HVACMode.COOL
+
+                if (
+                    self._attr_hvac_mode != HVACMode.OFF
+                    and self._attr_preset_mode != "standby"
+                ):
+                    self._attr_hvac_mode = HVACMode.COOL
             else:
                 self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-                self._attr_hvac_mode = HVACMode.HEAT
+
+                if (
+                    self._attr_hvac_mode != HVACMode.OFF
+                    and self._attr_preset_mode != "standby"
+                ):
+                    self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

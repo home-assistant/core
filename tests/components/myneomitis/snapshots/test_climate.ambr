@@ -46,7 +46,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 17>,
-    'translation_key': None,
+    'translation_key': 'myneomitis',
     'unique_id': 'climate1',
     'unit_of_measurement': None,
   })
