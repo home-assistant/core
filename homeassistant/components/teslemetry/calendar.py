@@ -105,6 +105,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 if not _is_day_in_range(day_of_week, from_day, to_day):
                     continue
 
+                # Hours and minutes relate to the periods within a day, not within the week
                 from_hour = period_def.get("fromHour", 0) % 24
                 from_minute = period_def.get("fromMinute", 0) % 60
                 to_hour = period_def.get("toHour", 0) % 24
