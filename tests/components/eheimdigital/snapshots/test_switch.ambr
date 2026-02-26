@@ -129,7 +129,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00:00:00:00:00:05_',
+    'unique_id': '00:00:00:00:00:05_active',
     'unit_of_measurement': None,
   })
 # ---

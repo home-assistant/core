@@ -91,32 +91,6 @@ async def test_setup(
                 ),
             ],
         ),
-        (
-            "reeflex_mock",
-            [
-                (
-                    "sensor.mock_reeflex_remaining_booster_time",
-                    "reeflex_data",
-                    "remainingBoosterTime",
-                    50,
-                    50,
-                ),
-                (
-                    "sensor.mock_reeflex_remaining_pause_time",
-                    "reeflex_data",
-                    "remainingPauseTime",
-                    50,
-                    50,
-                ),
-                (
-                    "sensor.mock_reeflex_time_until_next_service",
-                    "reeflex_data",
-                    "timeUntilNextService",
-                    100,
-                    str(round(100 / 24, 2)),
-                ),
-            ],
-        ),
     ],
 )
 async def test_state_update(

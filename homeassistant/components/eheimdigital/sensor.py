@@ -7,7 +7,6 @@ from typing import Any, override
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
-from eheimdigital.reeflex import EheimDigitalReeflexUV
 from eheimdigital.types import FilterErrorCode
 
 from homeassistant.components.sensor import (
@@ -33,37 +32,6 @@ class EheimDigitalSensorDescription[_DeviceT: EheimDigitalDevice](
     """Class describing EHEIM Digital sensor entities."""
 
     value_fn: Callable[[_DeviceT], float | str | None]
-
-
-REEFLEX_DESCRIPTIONS: tuple[
-    EheimDigitalSensorDescription[EheimDigitalReeflexUV], ...
-] = (
-    EheimDigitalSensorDescription[EheimDigitalReeflexUV](
-        key="remaining_booster_time",
-        translation_key="remaining_booster_time",
-        value_fn=lambda device: device.remaining_booster_time,
-        device_class=SensorDeviceClass.DURATION,
-        suggested_display_precision=0,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-    ),
-    EheimDigitalSensorDescription[EheimDigitalReeflexUV](
-        key="remaining_pause_time",
-        translation_key="remaining_pause_time",
-        value_fn=lambda device: device.remaining_pause_time,
-        device_class=SensorDeviceClass.DURATION,
-        suggested_display_precision=0,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-    ),
-    EheimDigitalSensorDescription[EheimDigitalReeflexUV](
-        key="time_until_next_service",
-        translation_key="time_until_next_service",
-        value_fn=lambda device: device.time_until_next_service,
-        device_class=SensorDeviceClass.DURATION,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        suggested_unit_of_measurement=UnitOfTime.DAYS,
-    ),
-)
 
 
 FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ...] = (
@@ -144,13 +112,6 @@ async def async_setup_entry(
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
                 ]
-            if isinstance(device, EheimDigitalReeflexUV):
-                entities.extend(
-                    EheimDigitalSensor[EheimDigitalReeflexUV](
-                        coordinator, device, description
-                    )
-                    for description in REEFLEX_DESCRIPTIONS
-                )
 
         async_add_entities(entities)
 
