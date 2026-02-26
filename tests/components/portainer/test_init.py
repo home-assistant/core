@@ -8,6 +8,7 @@ from pyportainer.exceptions import (
     PortainerTimeoutError,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -166,3 +167,19 @@ async def test_migration_v3_to_v4(
         (DOMAIN, f"{entry.entry_id}_1_adguard"),
     }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test devices are correctly registered."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert device_entries == snapshot

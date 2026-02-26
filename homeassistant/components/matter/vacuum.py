@@ -206,10 +206,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         if (
             response
-            and response.status != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
+            and response["status"]
+            != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
         ):
             raise HomeAssistantError(
-                f"Failed to select areas: {response.statusText or response.status.name}"
+                f"Failed to select areas: {response['statusText'] or response['status']}"
             )
 
         await self.send_device_command(
