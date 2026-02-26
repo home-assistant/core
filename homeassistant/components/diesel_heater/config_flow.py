@@ -31,6 +31,7 @@ from .const import (
     MIN_AUTO_OFFSET_MAX,
     MIN_PIN,
     SERVICE_UUID,
+    SERVICE_UUID_ALT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,10 +126,12 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
 
-            # Method 1: Check if device advertises our service UUID
-            has_service_uuid = SERVICE_UUID.lower() in [
-                service.lower() for service in discovery_info.service_uuids
-            ]
+            # Method 1: Check if device advertises our service UUIDs
+            service_uuids_lower = [s.lower() for s in discovery_info.service_uuids]
+            has_service_uuid = (
+                SERVICE_UUID.lower() in service_uuids_lower
+                or SERVICE_UUID_ALT.lower() in service_uuids_lower
+            )
 
             # Method 2: Check for known Vevor device names
             device_name = discovery_info.name or ""

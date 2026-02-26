@@ -56,6 +56,7 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "climate"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = (
@@ -77,9 +78,9 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         self._user_cleared_preset: bool = False  # Track if user explicitly selected "None"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.address)},
-            "name": "Vevor Heater",
-            "manufacturer": "Vevor",
-            "model": "Diesel Heater",
+            "name": "Diesel heater",
+            "manufacturer": "Diesel heater",
+            "model": "Multi-brand",
         }
         self._attr_unique_id = f"{coordinator.address}_climate"
 
