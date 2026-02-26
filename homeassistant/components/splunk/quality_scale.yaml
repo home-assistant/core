@@ -13,26 +13,14 @@ rules:
   config-entry-unloading: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: todo
-    comment: |
-      The hass-splunk library needs a public CI/CD pipeline. Add GitHub Actions workflow to https://github.com/Bre77/hass_splunk to automate lint, test, build, and publish to PyPI.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
       Integration does not provide custom actions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      Verify integration docs at https://www.home-assistant.io/integrations/splunk/ include a high-level description of Splunk with a link to https://www.splunk.com/ and explain the integration's purpose for users unfamiliar with Splunk.
-  docs-installation-instructions:
-    status: todo
-    comment: |
-      Verify integration docs include clear prerequisites and step-by-step setup instructions including how to configure Splunk HTTP Event Collector and obtain the required token.
-  docs-removal-instructions:
-    status: todo
-    comment: |
-      Verify integration docs include instructions on how to remove the integration and clarify what happens to data already in Splunk.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -48,9 +36,11 @@ rules:
   integration-owner: done
   reauthentication-flow: done
   runtime-data:
-    status: todo
+    status: exempt
     comment: |
-      Replace hass.data[DATA_FILTER] storage with entry.runtime_data. Create typed ConfigEntry in const.py as 'type SplunkConfigEntry = ConfigEntry[EntityFilter]', update async_setup_entry signature to use SplunkConfigEntry, replace hass.data[DATA_FILTER] assignments with entry.runtime_data, and update all references including line 236 in __init__.py.
+      Integration has no per-entry runtime state to store. The only data in
+      hass.data is a YAML entity filter bridged from async_setup to
+      async_setup_entry; no platforms or other code accesses it afterward.
   test-before-configure: done
   test-before-setup: done
   test-coverage: done
@@ -83,10 +73,7 @@ rules:
       Integration does not create entities.
 
   # Gold
-  diagnostics:
-    status: todo
-    comment: |
-      Consider adding diagnostics support including config entry data with redacted token, connection status, event submission statistics, entity filter configuration, and recent error messages to help troubleshooting.
+  diagnostics: done
   discovery:
     status: exempt
     comment: |
@@ -111,19 +98,12 @@ rules:
     status: exempt
     comment: |
       Integration does not create entities.
-  exception-translations:
-    status: todo
-    comment: |
-      Consider adding exception translations for user-facing errors beyond the current strings.json error section to provide more detailed translated error messages.
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |
       Integration does not create entities.
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      Consider adding reconfiguration flow to allow users to update host, port, entity filter, and SSL settings without deleting and re-adding the config entry.
-
+  reconfiguration-flow: done
   # Platinum
   async-dependency:
     status: todo

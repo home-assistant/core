@@ -12,7 +12,10 @@ from homematicip.auth import Auth
 from homematicip.base.enums import EventType
 from homematicip.connection.connection_context import ConnectionContextBuilder
 from homematicip.connection.rest_connection import RestConnection
-from homematicip.exceptions.connection_exceptions import HmipConnectionError
+from homematicip.exceptions.connection_exceptions import (
+    HmipAuthenticationError,
+    HmipConnectionError,
+)
 
 import homeassistant
 from homeassistant.config_entries import ConfigEntry
@@ -191,6 +194,12 @@ class HomematicipHAP:
         while True:
             try:
                 await self.get_state()
+                break
+            except HmipAuthenticationError:
+                _LOGGER.error(
+                    "Authentication error from HomematicIP Cloud, triggering reauth"
+                )
+                self.config_entry.async_start_reauth(self.hass)
                 break
             except HmipConnectionError as err:
                 _LOGGER.warning(
