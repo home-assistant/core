@@ -149,6 +149,8 @@ class WyomingConversationEntity(
                             intent_slots,
                             text_input=user_input.text,
                             language=user_input.language,
+                            satellite_id=user_input.satellite_id,
+                            device_id=user_input.device_id,
                         )
 
                         if (not intent_response.speech) and recognized_intent.text:

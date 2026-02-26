@@ -24,6 +24,7 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
     agent_id = "conversation.test_intent"
     conversation_id = "conversation-1234"
     satellite_id = "satellite-1234"
+    device_id = "device-1234"
 
     test_intent = Intent(
         name="TestIntent",
@@ -39,6 +40,8 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
         async def async_handle(self, intent_obj: intent.Intent):
             """Handle the intent."""
             assert intent_obj.slots.get("entity", {}).get("value") == "value"
+            assert intent_obj.satellite_id == satellite_id
+            assert intent_obj.device_id == device_id
             return intent_obj.create_response()
 
     intent.async_register(hass, TestIntentHandler())
@@ -56,6 +59,7 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
             language=hass.config.language,
             agent_id=agent_id,
             satellite_id=satellite_id,
+            device_id=device_id,
         )
 
     # Ensure language and context are sent
