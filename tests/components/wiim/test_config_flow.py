@@ -1,4 +1,4 @@
-"""pytest config_flow.py."""
+"""Tests for the WiiM config flow."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
