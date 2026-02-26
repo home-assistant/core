@@ -1815,7 +1815,7 @@
       "description": "Starts or selects a program with options or sets the options for the active or the selected program.",
       "fields": {
         "affects_to": {
-          "description": "Selects whether the action applies to the active program, the selected program, or should start the selected program. When \"Start selected\" is chosen, the currently selected program is started and any options defined in this service call override the already selected options.",
+          "description": "Selects whether the action modifies the active program, the selected program, or if it should start the selected program. When \"Start selected\" is chosen, the currently selected program is started and any options defined in this service call override the already selected options.",
           "name": "Affects to"
         },
         "b_s_h_common_option_duration": {
