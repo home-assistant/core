@@ -46,9 +46,8 @@ async def async_setup_entry(
     min_state_duration: timedelta
     if duration_dict := entry.options.get(CONF_DURATION):
         duration = timedelta(**duration_dict)
-    if min_state_duration_dict := entry.options[SECTION_ADVANCED_SETTINGS].get(
-        CONF_MIN_STATE_DURATION
-    ):
+    advanced_settings = entry.options.get(SECTION_ADVANCED_SETTINGS, {})
+    if min_state_duration_dict := advanced_settings.get(CONF_MIN_STATE_DURATION):
         min_state_duration = timedelta(**min_state_duration_dict)
     else:
         min_state_duration = timedelta(0)

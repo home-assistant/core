@@ -290,9 +290,8 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
-    min_state_duration = validated_data[SECTION_ADVANCED_SETTINGS].get(
-        CONF_MIN_STATE_DURATION
-    )
+    advanced_settings = validated_data.get(SECTION_ADVANCED_SETTINGS, {})
+    min_state_duration = advanced_settings.get(CONF_MIN_STATE_DURATION)
     state_class = validated_data.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(
