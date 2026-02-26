@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
-from .models import S20ConfigEntry, S20Data
+from .models import S20ConfigEntry
 
 PLATFORMS = [Platform.SWITCH]
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: S20ConfigEntry) -> 
             },
         ) from err
 
-    entry.runtime_data = S20Data(s20=s20)
+    entry.runtime_data = s20
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

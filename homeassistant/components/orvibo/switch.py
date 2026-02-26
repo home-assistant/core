@@ -121,7 +121,7 @@ async def async_setup_entry(
                 entry.title,
                 entry.data[CONF_HOST],
                 entry.data[CONF_MAC],
-                entry.runtime_data.s20,
+                entry.runtime_data,
             )
         ]
     )

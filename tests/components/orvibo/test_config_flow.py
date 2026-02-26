@@ -66,6 +66,7 @@ async def test_edit_flow_success(
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.2)"
     assert result["data"][CONF_HOST] == "192.168.1.2"
     assert result["data"][CONF_MAC] == expected_mac
+    assert result["result"].unique_id == expected_mac
 
 
 @pytest.mark.parametrize(
@@ -90,12 +91,13 @@ async def test_edit_flow_errors(
     hass: HomeAssistant,
     mock_s20,
     mock_discover,
+    mock_setup_entry,  # <-- Added this so the final CREATE_ENTRY doesn't crash!
     user_input: dict[str, Any],
     expected_error: str,
     mock_exception: Exception | None,
     mock_mac_bytes: bytes | None,
 ) -> None:
-    """Test various errors in the manual (edit) step."""
+    """Test various errors in the manual (edit) step and recover."""
     mock_discover.return_value = {}
     mock_s20.side_effect = mock_exception
     mock_s20.return_value._mac = mock_mac_bytes
@@ -113,6 +115,19 @@ async def test_edit_flow_errors(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
+
+    mock_s20.side_effect = None
+    mock_s20.return_value._mac = b"\xac\xcf\x23\x12\x34\x56"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.2", CONF_MAC: "ac:cf:23:12:34:56"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{DEFAULT_NAME} (192.168.1.2)"
+    assert result["data"][CONF_HOST] == "192.168.1.2"
+    assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
 
 
 async def test_discovery_success(
@@ -146,10 +161,13 @@ async def test_discovery_success(
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.100)"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
+    assert result["result"].unique_id == "ac:cf:23:12:34:56"
 
 
-async def test_discovery_no_devices(hass: HomeAssistant, mock_discover) -> None:
-    """Discovery with no found devices should go to discovery_failed."""
+async def test_discovery_no_devices(
+    hass: HomeAssistant, mock_discover, mock_s20, mock_setup_entry
+) -> None:
+    """Discovery with no found devices should go to discovery_failed and recover via edit."""
     mock_discover.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
@@ -159,13 +177,31 @@ async def test_discovery_no_devices(hass: HomeAssistant, mock_discover) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "start_discovery"}
     )
-
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.MENU
     assert result["step_id"] == "discovery_failed"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "edit"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "edit"
+
+    mock_s20.return_value._mac = b"\xaa\xbb\xcc\xdd\xee\xff"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.10", CONF_MAC: "aa:bb:cc:dd:ee:ff"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{DEFAULT_NAME} (192.168.1.10)"
+    assert result["data"][CONF_HOST] == "192.168.1.10"
+    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(
