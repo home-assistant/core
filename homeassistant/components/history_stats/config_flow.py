@@ -12,6 +12,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -45,6 +46,7 @@ from .const import (
     CONF_TYPE_TIME,
     DEFAULT_NAME,
     DOMAIN,
+    SECTION_ADVANCED_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -142,15 +144,24 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             vol.Optional(CONF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
-            vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
-                DurationSelectorConfig(enable_day=True, allow_negative=False)
-            ),
             vol.Optional(CONF_STATE_CLASS): SelectSelector(
                 SelectSelectorConfig(
                     options=state_class_options,
                     translation_key=CONF_STATE_CLASS,
                     mode=SelectSelectorMode.DROPDOWN,
                 ),
+            ),
+            vol.Optional(SECTION_ADVANCED_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
+                            DurationSelectorConfig(
+                                enable_day=True, allow_negative=False
+                            )
+                        ),
+                    }
+                ),
+                {"collapsed": True},
             ),
         }
     )
