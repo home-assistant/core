@@ -233,8 +233,7 @@ async def test_update_options_no_change(
     mock_fp.set_read_mode.reset_mock()
     mock_fp.set_control_mode.reset_mock()
 
-    # First change options to trigger listener, then change back
-    # This ensures the update listener fires while modes match fireplace state
+    # First change options to CLOUD/CLOUD to trigger listener
     hass.config_entries.async_update_entry(
         mock_config_entry_current,
         options={CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_CLOUD},
@@ -246,14 +245,16 @@ async def test_update_options_no_change(
     mock_fp.set_control_mode.reset_mock()
     coordinator.async_request_refresh.reset_mock()
 
-    # Now change back to LOCAL/LOCAL which matches fireplace state
+    # Now change back to LOCAL/LOCAL. The mock fireplace still has read_mode=LOCAL
+    # and control_mode=LOCAL (mocks don't update internal state), so the listener
+    # sees no difference between new options and fireplace state.
     hass.config_entries.async_update_entry(
         mock_config_entry_current,
         options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_LOCAL},
     )
     await hass.async_block_till_done()
 
-    # Neither set method should be called since modes match fireplace state
+    # Neither set method should be called since new options match fireplace state
     mock_fp.set_read_mode.assert_not_called()
     mock_fp.set_control_mode.assert_not_called()
     # But async_request_refresh should still be called

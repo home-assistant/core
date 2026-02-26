@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
+    API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
     CONF_READ_MODE,
@@ -56,8 +57,10 @@ def _construct_common_data(
         serial=entry.data[CONF_SERIAL],
         api_key=entry.data[CONF_API_KEY],
         ip_address=entry.data[CONF_IP_ADDRESS],
-        read_mode=IntelliFireApiMode(entry.options[CONF_READ_MODE]),
-        control_mode=IntelliFireApiMode(entry.options[CONF_CONTROL_MODE]),
+        read_mode=IntelliFireApiMode(entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)),
+        control_mode=IntelliFireApiMode(
+            entry.options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+        ),
     )
 
 
@@ -151,8 +154,12 @@ async def async_update_options(
     """Handle options update."""
     coordinator: IntellifireDataUpdateCoordinator = entry.runtime_data
 
-    new_read_mode = IntelliFireApiMode(entry.options[CONF_READ_MODE])
-    new_control_mode = IntelliFireApiMode(entry.options[CONF_CONTROL_MODE])
+    new_read_mode = IntelliFireApiMode(
+        entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)
+    )
+    new_control_mode = IntelliFireApiMode(
+        entry.options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+    )
 
     fireplace = coordinator.fireplace
     current_read_mode = fireplace.read_mode
