@@ -312,8 +312,15 @@ async def test_subentry_reasoning_effort_list(
     )
 
 
-async def test_subentry_websearch_unsupported_reasoning_effort(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+@pytest.mark.parametrize(
+    ("parameter", "error"),
+    [
+        (CONF_WEB_SEARCH, "web_search_minimal_reasoning"),
+        (CONF_CODE_INTERPRETER, "code_interpreter_minimal_reasoning"),
+    ],
+)
+async def test_subentry_unsupported_reasoning_effort(
+    hass: HomeAssistant, mock_config_entry, mock_init_component, parameter, error
 ) -> None:
     """Test the subentry form giving error about unsupported minimal reasoning effort."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -350,18 +357,18 @@ async def test_subentry_websearch_unsupported_reasoning_effort(
         subentry_flow["flow_id"],
         {
             CONF_REASONING_EFFORT: "minimal",
-            CONF_WEB_SEARCH: True,
+            parameter: True,
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["errors"] == {"web_search": "web_search_minimal_reasoning"}
+    assert subentry_flow["errors"] == {parameter: error}
 
     # Reconfigure model step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
             CONF_REASONING_EFFORT: "low",
-            CONF_WEB_SEARCH: True,
+            parameter: True,
         },
     )
     assert subentry_flow["type"] is FlowResultType.ABORT
