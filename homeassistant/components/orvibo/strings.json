@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "Unable to connect to the S20 switch",
-      "cannot_discover": "Unable to discover MAC address of S20 switch. Please input the MAC address",
+      "cannot_discover": "Unable to discover MAC address of S20 switch. Please enter the MAC address.",
       "invalid_mac": "Invalid MAC address format"
     },
     "error": {
