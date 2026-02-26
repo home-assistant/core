@@ -19,7 +19,7 @@ from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 @dataclass
 class EnOceanRuntimeData:
-    """Store gateway and dispatcher in hass.data (TEMPORARY until legacy code is removed)."""
+    """Store gateway and dispatcher in runtime_data."""
 
     gateway: EnOceanGateway
     disconnect_handle: Callable | None
