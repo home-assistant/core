@@ -36,7 +36,6 @@ class IntelliClimaSensorEntityDescription(SensorEntityDescription):
 INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
     IntelliClimaSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -44,7 +43,6 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
     ),
     IntelliClimaSensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
@@ -52,7 +50,6 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
     ),
     IntelliClimaSensorEntityDescription(
         key="voc",
-        translation_key="voc",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
