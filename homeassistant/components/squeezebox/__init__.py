@@ -277,7 +277,6 @@ async def async_remove_config_entry_device(
     """Allow removal of a Squeezebox player only if its coordinator is unavailable."""
     data = config_entry.runtime_data
 
-    # 1. Identify the player_id and check for Service type
     player_id = next(
         (id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN), None
     )
@@ -291,24 +290,15 @@ async def async_remove_config_entry_device(
     if not player_id:
         return False  # Not a Squeezebox device
 
-    # 2. Retrieve the coordinator from our runtime dictionary
     coordinator = data.player_coordinators.get(player_id)
 
-    # If no coordinator exists in memory, we can't check its state,
-    # so we assume it is safe to delete (it's a "ghost" device).
     if coordinator is None:
         return True
 
-    # 3. Check availability via the coordinator
-    # This replaces the need to find the MediaPlayerEntity via hass.data
     if coordinator.available:
         raise HomeAssistantError(
             f"Cannot remove Squeezebox player '{coordinator.player_uuid}' "
             "because it is currently online."
         )
-
-    # 4. Successful removal: Clean up our internal tracking
-    data.player_coordinators.pop(player_id, None)
-    data.known_player_ids.discard(player_id)
 
     return True

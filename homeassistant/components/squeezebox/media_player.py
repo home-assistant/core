@@ -295,6 +295,9 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         self.coordinator.config_entry.runtime_data.known_player_ids.remove(
             self.coordinator.player.player_id
         )
+        self.coordinator.config_entry.runtime_data.player_coordinators.pop(
+            self.coordinator.player.player_id, None
+        )
 
     @property
     def volume_level(self) -> float | None:
