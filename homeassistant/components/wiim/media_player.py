@@ -1510,9 +1510,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                             thumbnail=item.get("image_url"),
                         )
                     )
-            except Exception as e:
-                LOGGER.error("Error fetching playlist tracks for browse_media: %s", e)
-                raise
+            except Exception as err:
+                LOGGER.error(
+                    "Error fetching playlist tracks for browse_media: %s", err
+                )
+                raise BrowseError("Error fetching playlist tracks") from err
 
             return BrowseMedia(
                 media_class=MediaClass.PLAYLIST,
