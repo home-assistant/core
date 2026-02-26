@@ -14,8 +14,8 @@ import voluptuous as vol
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
