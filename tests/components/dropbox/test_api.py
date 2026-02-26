@@ -8,19 +8,10 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from python_dropbox_api import (
-    DropboxAuthException,
-    DropboxFileOrFolderNotFoundException,
-    DropboxUnknownException,
-)
+from python_dropbox_api import DropboxAuthException, DropboxUnknownException
 
-from homeassistant.components.backup import (
-    AgentBackup,
-    BackupAgentError,
-    BackupNotFound,
-)
+from homeassistant.components.backup import AgentBackup, BackupNotFound
 from homeassistant.components.dropbox.api import (
-    FOLDER_PATH,
     DropboxClient,
     _async_string_iterator,
     suggested_filenames,
@@ -84,65 +75,6 @@ async def test_get_account_info(client: DropboxClient, mock_api: MagicMock) -> N
     mock_api.get_account_info.assert_awaited_once()
 
 
-async def test_ensure_folder_exists_creates_folder(
-    client: DropboxClient, mock_api: MagicMock
-) -> None:
-    """Test that the folder is created when it does not exist."""
-    mock_api.get_metadata = AsyncMock(
-        side_effect=DropboxFileOrFolderNotFoundException("not found")
-    )
-    mock_api.create_folder = AsyncMock()
-    mock_api.list_folder = AsyncMock(return_value=[])
-
-    await client.async_list_backups()
-
-    mock_api.create_folder.assert_awaited_once_with(FOLDER_PATH)
-
-
-async def test_ensure_folder_exists_folder_already_exists(
-    client: DropboxClient, mock_api: MagicMock
-) -> None:
-    """Test that no folder is created when it already exists."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
-    mock_api.list_folder = AsyncMock(return_value=[])
-
-    await client.async_list_backups()
-
-    mock_api.create_folder.assert_not_called()
-
-
-async def test_ensure_folder_exists_path_is_file(
-    client: DropboxClient, mock_api: MagicMock
-) -> None:
-    """Test error when the path exists as a file instead of a folder."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=False))
-
-    with pytest.raises(BackupAgentError, match="exists as a file"):
-        await client.async_list_backups()
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        DropboxAuthException("auth error"),
-        DropboxFileOrFolderNotFoundException("not found"),
-        DropboxUnknownException("unknown"),
-    ],
-    ids=["auth", "not_found", "unknown"],
-)
-async def test_ensure_folder_create_fails(
-    client: DropboxClient, mock_api: MagicMock, exception: Exception
-) -> None:
-    """Test error when creating the folder fails."""
-    mock_api.get_metadata = AsyncMock(
-        side_effect=DropboxFileOrFolderNotFoundException("not found")
-    )
-    mock_api.create_folder = AsyncMock(side_effect=exception)
-
-    with pytest.raises(BackupAgentError, match="Failed to create folder"):
-        await client.async_list_backups()
-
-
 async def _mock_download_stream(content: bytes) -> AsyncIterator[bytes]:
     """Create a mock download stream."""
     yield content
@@ -152,7 +84,6 @@ async def test_list_backups(client: DropboxClient, mock_api: MagicMock) -> None:
     """Test listing backups with matching tar and metadata files."""
     tar_name, metadata_name = suggested_filenames(TEST_BACKUP)
 
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.list_folder = AsyncMock(
         return_value=[
             SimpleNamespace(name=tar_name),
@@ -167,13 +98,13 @@ async def test_list_backups(client: DropboxClient, mock_api: MagicMock) -> None:
 
     assert len(backups) == 1
     assert backups[0].backup_id == TEST_BACKUP.backup_id
+    mock_api.list_folder.assert_awaited_once_with("")
 
 
 async def test_list_backups_metadata_without_tar(
     client: DropboxClient, mock_api: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that orphaned metadata files are skipped with a warning."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.list_folder = AsyncMock(
         return_value=[
             SimpleNamespace(name="orphan.metadata.json"),
@@ -188,7 +119,6 @@ async def test_list_backups_metadata_without_tar(
 
 async def test_upload_backup(client: DropboxClient, mock_api: MagicMock) -> None:
     """Test uploading a backup and its metadata."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.upload_file = AsyncMock()
 
     async def _stream() -> AsyncIterator[bytes]:
@@ -206,8 +136,6 @@ async def test_upload_backup_metadata_fails_cleans_up(
     client: DropboxClient, mock_api: MagicMock
 ) -> None:
     """Test that backup file is deleted when metadata upload fails."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
-
     call_count = 0
 
     async def upload_side_effect(path: str, stream: AsyncIterator[bytes]) -> None:
@@ -235,8 +163,6 @@ async def test_upload_backup_metadata_auth_fails_cleans_up(
     client: DropboxClient, mock_api: MagicMock
 ) -> None:
     """Test that backup file is deleted when metadata upload fails with auth error."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
-
     call_count = 0
 
     async def upload_side_effect(path: str, stream: AsyncIterator[bytes]) -> None:
@@ -264,7 +190,6 @@ async def test_download_backup(client: DropboxClient, mock_api: MagicMock) -> No
     """Test downloading a backup by ID."""
     tar_name, metadata_name = suggested_filenames(TEST_BACKUP)
 
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.list_folder = AsyncMock(
         return_value=[
             SimpleNamespace(name=tar_name),
@@ -284,7 +209,6 @@ async def test_download_backup_not_found(
     client: DropboxClient, mock_api: MagicMock
 ) -> None:
     """Test downloading a backup that does not exist."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.list_folder = AsyncMock(return_value=[])
 
     with pytest.raises(BackupNotFound, match="not found"):
@@ -295,7 +219,6 @@ async def test_delete_backup(client: DropboxClient, mock_api: MagicMock) -> None
     """Test deleting a backup and its metadata."""
     tar_name, metadata_name = suggested_filenames(TEST_BACKUP)
 
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.list_folder = AsyncMock(
         return_value=[
             SimpleNamespace(name=tar_name),
@@ -316,7 +239,6 @@ async def test_delete_backup_not_found(
     client: DropboxClient, mock_api: MagicMock
 ) -> None:
     """Test deleting a backup that does not exist."""
-    mock_api.get_metadata = AsyncMock(return_value=SimpleNamespace(is_folder=True))
     mock_api.list_folder = AsyncMock(return_value=[])
 
     with pytest.raises(BackupNotFound, match="not found"):

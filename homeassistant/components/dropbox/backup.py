@@ -41,6 +41,12 @@ def handle_backup_errors[_R, **P](
             DropboxFileOrFolderNotFoundException,
             DropboxUnknownException,
         ) as err:
+            _LOGGER.error(
+                "Error during dropbox %s: %s",
+                func.__name__,
+                err,
+            )
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError(
                 f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
             ) from err

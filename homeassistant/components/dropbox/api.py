@@ -10,20 +10,16 @@ from python_dropbox_api import (
     Auth,
     DropboxAPIClient,
     DropboxAuthException,
-    DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
 )
 
 from homeassistant.components.backup import (
     AgentBackup,
-    BackupAgentError,
     BackupNotFound,
     suggested_filename,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-FOLDER_PATH = "/Home Assistant"
 
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -48,31 +44,9 @@ class DropboxClient:
         """Get information about the current account."""
         return await self._api.get_account_info()
 
-    async def _async_ensure_folder_exists(self) -> None:
-        """Ensure the folder exists."""
-        try:
-            metadata = await self._api.get_metadata(FOLDER_PATH)
-        except DropboxFileOrFolderNotFoundException:
-            try:
-                await self._api.create_folder(FOLDER_PATH)
-            except (
-                DropboxAuthException,
-                DropboxFileOrFolderNotFoundException,
-                DropboxUnknownException,
-            ) as ex:
-                raise BackupAgentError(
-                    f"Failed to create folder 'Home Assistant' in Dropbox: {ex}"
-                ) from ex
-            return
-
-        if not metadata.is_folder:
-            raise BackupAgentError(
-                "The path 'Home Assistant' exists as a file in Dropbox, but a folder is required."
-            )
-
     async def _async_get_backups(self) -> list[tuple[AgentBackup, str]]:
         """Get backups and their corresponding file names."""
-        files = await self._api.list_folder(FOLDER_PATH)
+        files = await self._api.list_folder("")
 
         tar_files = {f.name for f in files if f.name.endswith(".tar")}
         metadata_files = [f for f in files if f.name.endswith(".metadata.json")]
@@ -87,9 +61,7 @@ class DropboxClient:
                 )
                 continue
 
-            metadata_stream = self._api.download_file(
-                f"{FOLDER_PATH}/{metadata_file.name}"
-            )
+            metadata_stream = self._api.download_file(f"/{metadata_file.name}")
             raw = b"".join([chunk async for chunk in metadata_stream])
             backup = AgentBackup.from_dict(json.loads(raw))
             backups.append((backup, tar_name))
@@ -98,8 +70,6 @@ class DropboxClient:
 
     async def async_list_backups(self) -> list[AgentBackup]:
         """List backups."""
-        await self._async_ensure_folder_exists()
-
         return [backup for backup, _ in await self._async_get_backups()]
 
     async def async_upload_backup(
@@ -108,11 +78,9 @@ class DropboxClient:
         backup: AgentBackup,
     ) -> None:
         """Upload a backup."""
-        await self._async_ensure_folder_exists()
-
         backup_filename, metadata_filename = suggested_filenames(backup)
-        backup_path = f"{FOLDER_PATH}/{backup_filename}"
-        metadata_path = f"{FOLDER_PATH}/{metadata_filename}"
+        backup_path = f"/{backup_filename}"
+        metadata_path = f"/{metadata_filename}"
 
         file_stream = await open_stream()
         await self._api.upload_file(backup_path, file_stream)
@@ -129,25 +97,21 @@ class DropboxClient:
 
     async def async_download_backup(self, backup_id: str) -> AsyncIterator[bytes]:
         """Download a backup."""
-        await self._async_ensure_folder_exists()
-
         backups = await self._async_get_backups()
         for backup, filename in backups:
             if backup.backup_id == backup_id:
-                return self._api.download_file(f"{FOLDER_PATH}/{filename}")
+                return self._api.download_file(f"/{filename}")
 
         raise BackupNotFound(f"Backup {backup_id} not found")
 
     async def async_delete_backup(self, backup_id: str) -> None:
         """Delete a backup."""
-        await self._async_ensure_folder_exists()
-
         backups = await self._async_get_backups()
         for backup, tar_filename in backups:
             if backup.backup_id == backup_id:
                 metadata_filename = tar_filename.removesuffix(".tar") + ".metadata.json"
-                await self._api.delete_file(f"{FOLDER_PATH}/{tar_filename}")
-                await self._api.delete_file(f"{FOLDER_PATH}/{metadata_filename}")
+                await self._api.delete_file(f"/{tar_filename}")
+                await self._api.delete_file(f"/{metadata_filename}")
                 return
 
         raise BackupNotFound(f"Backup {backup_id} not found")
