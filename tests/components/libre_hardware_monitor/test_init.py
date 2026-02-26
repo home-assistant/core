@@ -11,6 +11,9 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.libre_hardware_monitor.recorder import (
+    async_custom_equivalent_units,
+)
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import UnitOfDataRate
@@ -137,8 +140,10 @@ async def test_migration_to_sensor_device_classes(
     await init_integration(hass, legacy_config_entry_v2_1)
 
     entity_entry = entity_registry.async_get(f"sensor.{object_id}")
-
     assert entity_entry.unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND
+
+    custom_equivalent_units = async_custom_equivalent_units(hass)
+    assert {f"sensor.{object_id}": {"KB/s": "kB/s"}} == custom_equivalent_units
 
     updated_config_entry = hass.config_entries.async_get_entry(
         legacy_config_entry_v2_1.entry_id
