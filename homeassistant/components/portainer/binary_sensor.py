@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .const import CONTAINER_STATE_RUNNING, STACK_STATUS_ACTIVE
-from .coordinator import PortainerContainerData, PortainerCoordinator
+from .coordinator import PortainerContainerData
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
@@ -164,18 +164,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
     """Representation of a Portainer endpoint binary sensor entity."""
 
     entity_description: PortainerEndpointBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerEndpointBinarySensorEntityDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize Portainer endpoint binary sensor entity."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:

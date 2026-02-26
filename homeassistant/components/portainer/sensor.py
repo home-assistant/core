@@ -21,7 +21,6 @@ from .const import STACK_TYPE_COMPOSE, STACK_TYPE_KUBERNETES, STACK_TYPE_SWARM
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
-    PortainerCoordinator,
     PortainerStackData,
 )
 from .entity import (
@@ -408,18 +407,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
     """Representation of a Portainer endpoint sensor."""
 
     entity_description: PortainerEndpointSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerEndpointSensorEntityDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer endpoint sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:
