@@ -61,7 +61,7 @@ async def validate_input(data: dict[str, Any]) -> str:
 
     Returns the installation id upon success.
     """
-    _LOGGER.info("Validating input: %s", data)
+    _LOGGER.debug("Validating input: %s", data)
     hub: VictronVenusHub | None = None
     try:
         hub = VictronVenusHub(

@@ -54,7 +54,7 @@ class Hub:
 
         """
 
-        _LOGGER.info("Initializing hub. ConfigEntry: %s, data: %s", entry, entry.data)
+        _LOGGER.debug("Initializing hub. ConfigEntry: %s, data: %s", entry, entry.data)
         config = entry.data
         self.hass = hass
         self.host = config[CONF_HOST]
