@@ -108,6 +108,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            config_entry=config_entry,
         )
 
         self.address = ble_device.address
