@@ -6,12 +6,47 @@ set -e
 
 cd "$(realpath "$(dirname "$0")/..")"
 
+INSTALL_ALL=false
+INSTALL_BASE=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --all)
+      INSTALL_ALL=true
+      shift
+      ;;
+    --base)
+      INSTALL_BASE=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: ./script/[setup | bootstrap] [--all | --base]"
+      echo "  Defaults to --all"
+      exit 1
+      ;;
+  esac
+done
+
 echo "Installing development dependencies..."
-uv pip install \
-  -e . \
-  -r requirements_test_all.txt \
-  colorlog \
-  --upgrade \
-  --config-settings editable_mode=compat
+if [ "$INSTALL_BASE" = true ]; then
+  echo "BASE BASE BASE"; exit 0
+  uv pip install \
+    -e . \
+    -r requirements_test.txt \
+    colorlog \
+    --constraint homeassistant/package_constraints.txt \
+    --upgrade \
+    --config-settings editable_mode=compat
+else
+  echo "ALL ALL ALL"; exit 0
+  uv pip install \
+    -e . \
+    -r requirements_test_all.txt \
+    colorlog \
+    --upgrade \
+    --config-settings editable_mode=compat
+fi
 
 python3 -m script.translations develop --all
