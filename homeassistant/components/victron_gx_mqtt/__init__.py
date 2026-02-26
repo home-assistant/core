@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     async def _update_listener(
         hass: HomeAssistant, entry: VictronGxConfigEntry
     ) -> None:
-        _LOGGER.info("Options have been updated - applying changes")
+        _LOGGER.info("Config entry updated - applying changes")
         # Reload the integration to apply changes
         await hass.config_entries.async_reload(entry.entry_id)
 

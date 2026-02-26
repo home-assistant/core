@@ -110,7 +110,7 @@ class Hub:
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
     ) -> None:
-        _LOGGER.info("New metric received. Device: %s, Metric: %s", device, metric)
+        _LOGGER.debug("New metric received. Device: %s, Metric: %s", device, metric)
         assert hub.installation_id is not None
         device_info = Hub._map_device_info(device, hub.installation_id)
         callback = self.new_metric_callbacks.get(metric.metric_kind)

@@ -190,10 +190,11 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("General error during reauthentication")
                 errors["base"] = "unknown"
             else:
-                return self.async_update_reload_and_abort(
+                self.hass.config_entries.async_update_entry(
                     reauth_entry,
-                    data_updates=user_input,
+                    data=data,
                 )
+                return self.async_abort(reason="reauth_successful")
 
         reauth_schema = vol.Schema(
             {
