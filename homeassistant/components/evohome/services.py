@@ -19,20 +19,13 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_DURATION_UNTIL,
-    ATTR_PERIOD,
-    ATTR_SETPOINT,
-    DOMAIN,
-    EvoService,
-)
+from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
 # system mode schemas are built dynamically when the services are registered
 # because supported modes can vary for edge-case systems
 
-RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+CLEAR_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
 )
 SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
@@ -41,7 +34,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
         vol.Required(ATTR_SETPOINT): vol.All(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
-        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+        vol.Optional(ATTR_DURATION): vol.All(
             cv.time_period,
             vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
         ),
@@ -166,9 +159,9 @@ def setup_service_functions(
     # The zone modes are consistent across all systems and use the same schema
     hass.services.async_register(
         DOMAIN,
-        EvoService.RESET_ZONE_OVERRIDE,
+        EvoService.CLEAR_ZONE_OVERRIDE,
         set_zone_override,
-        schema=RESET_ZONE_OVERRIDE_SCHEMA,
+        schema=CLEAR_ZONE_OVERRIDE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,

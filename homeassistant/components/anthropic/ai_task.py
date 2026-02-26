@@ -46,6 +46,7 @@ class AnthropicTaskEntity(
         ai_task.AITaskEntityFeature.GENERATE_DATA
         | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
+    _attr_translation_key = "ai_task_data"
 
     async def _async_generate_data(
         self,
