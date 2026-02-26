@@ -145,12 +145,15 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                     self._attr_is_on = True
                     self.schedule_update_ha_state()
 
-        # elif telegram.rorg == 0xD2:
-        #     # actuator status telegram
-        #     packet.parse_eep(0x01, 0x01)
-        #     if packet.parsed["CMD"]["raw_value"] == 4:
-        #         channel = packet.parsed["IO"]["raw_value"]
-        #         output = packet.parsed["OV"]["raw_value"]
-        #         if channel == self.channel:
-        #             self._attr_is_on = output > 0
-        #             self.schedule_update_ha_state()
+        elif telegram.rorg == 0xD2:
+            # actuator status telegram
+            if eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xD2, 0x01, 0x01)) is None:
+                return
+
+            msg = EEPHandler(eep).decode(telegram)
+            if msg.values["CMD"].raw == 4:
+                channel = msg.values["IO"].raw
+                output = msg.values["OV"].raw
+                if channel == self.channel:
+                    self._attr_is_on = output > 0
+                    self.schedule_update_ha_state()
