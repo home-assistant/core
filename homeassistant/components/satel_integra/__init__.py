@@ -5,6 +5,9 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .client import SatelClient
@@ -55,7 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
     )
+
+    async def async_close_connection(event: Event) -> None:
+        """Close Satel Integra connection on HA Stop."""
+        await client.async_close()
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

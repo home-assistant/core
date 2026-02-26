@@ -5,7 +5,7 @@ from collections.abc import Callable
 from satel_integra import AsyncSatel
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -63,10 +63,6 @@ class SatelClient:
 
         self.controller = AsyncSatel(host, port, zones, monitored_outputs, partitions)
 
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_close)
-        )
-
     async def async_connect(
         self,
         zones_update_callback: Callable[[dict[int, int]], None],
@@ -86,7 +82,7 @@ class SatelClient:
 
         await self.controller.start(enable_monitoring=True)
 
-    async def async_close(self, *args, **kwargs) -> None:
+    async def async_close(self) -> None:
         """Close the connection."""
 
         await self.controller.close()
