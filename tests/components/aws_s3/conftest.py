@@ -10,7 +10,7 @@ from homeassistant.components.aws_s3.backup import suggested_filenames
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
-from .const import USER_INPUT
+from .const import CONFIG_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -76,11 +76,17 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def config_entry_extra_data() -> dict:
+    """Extra config entry data, override in tests to change defaults."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(config_entry_extra_data: dict) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=USER_INPUT,
+        data=CONFIG_ENTRY_DATA | config_entry_extra_data,
     )
