@@ -283,7 +283,7 @@ async def test_start_selected_program_and_options(
     assert client.start_program.call_args == snapshot
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("mock_attr", "error_regex"),
     [
