@@ -38,6 +38,6 @@ def deprecated_yaml_import_issue_error(hass: HomeAssistant) -> None:
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml_import_issue_error",
         translation_placeholders={
-            "url": "/config/integrations/dashboard/add?domain=influxdb",
+            "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
         },
     )
