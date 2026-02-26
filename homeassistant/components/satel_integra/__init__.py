@@ -74,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         runtime_data = entry.runtime_data
-        runtime_data.client.close()
+        await runtime_data.client.async_close()
 
     return unload_ok
 
