@@ -32,7 +32,8 @@ call_query:
         object:
     timeout:
       required: false
-      example: 10
+      example: 5
       selector:
         number:
+          min: 0
           unit_of_measurement: seconds
