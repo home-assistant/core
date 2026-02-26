@@ -17,13 +17,11 @@ from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
-    PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
-    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -235,11 +233,9 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     _attr_preset_modes = [
         PRESET_NONE,
         PRESET_ECO,
-        PRESET_AWAY,
         PRESET_BOOST,
         PRESET_COMFORT,
         PRESET_HOME,
-        PRESET_SLEEP,
         CLIMATE_PRESET_SCHEDULE,
     ]
 
@@ -309,7 +305,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
             SmartRadiatorThermostatMode(mode)
         ]
 
-        if self.preset_mode in [PRESET_NONE, PRESET_AWAY]:
+        if self.preset_mode == PRESET_NONE:
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = HVACMode.HEAT
