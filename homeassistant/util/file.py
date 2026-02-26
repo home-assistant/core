@@ -34,7 +34,7 @@ def write_utf8_file_atomic(
     """
     encoding = "utf-8" if "b" not in mode else None
     try:
-        with AtomicWriter(
+        with AtomicWriter(  # type: ignore[call-arg]  # atomicwrites-stubs is outdated, encoding is a valid kwarg
             filename, mode=mode, overwrite=True, encoding=encoding
         ).open() as fdesc:
             if not private:
