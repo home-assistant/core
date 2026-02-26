@@ -594,13 +594,13 @@ class BackupManager:
             agent = self.backup_agents[agent_id]
 
             @callback
-            def on_upload_progress(uploaded_bytes: int) -> None:
+            def on_upload_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
                 """Handle upload progress."""
                 self.async_on_backup_event(
                     UploadBackupEvent(
                         manager_state=self.state,
                         agent_id=agent_id,
-                        uploaded_bytes=uploaded_bytes,
+                        uploaded_bytes=bytes_uploaded,
                         total_bytes=_backup.size,
                     )
                 )
