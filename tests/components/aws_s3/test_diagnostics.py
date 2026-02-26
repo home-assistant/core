@@ -1,6 +1,5 @@
 """Tests for AWS S3 diagnostics."""
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
@@ -10,10 +9,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
-
-pytestmark = [
-    pytest.mark.freeze_time("2024-11-22 11:48:48+01:00"),
-]
 
 
 async def test_entry_diagnostics(
