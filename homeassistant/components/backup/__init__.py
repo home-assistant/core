@@ -17,6 +17,7 @@ from .agent import (
     BackupAgentError,
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
+    OnProgressCallback,
 )
 from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
@@ -73,6 +74,7 @@ __all__ = [
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
+    "OnProgressCallback",
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
