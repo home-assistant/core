@@ -9,7 +9,7 @@ cd "$(realpath "$(dirname "$0")/..")"
 INSTALL_PARMS="-r requirements_test_all.txt"
 
 # Parse arguments
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
   case $1 in
     --all)
       shift
