@@ -34,17 +34,6 @@
           "sensor": "Sensor"
         }
       }
-    },
-    "sensor": {
-      "humidity": {
-        "name": "Humidity"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "voc": {
-        "name": "VOC"
-      }
     }
   }
 }
