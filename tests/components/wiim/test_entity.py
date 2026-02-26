@@ -1,7 +1,5 @@
 """pytest entity.py."""
 
-from unittest.mock import MagicMock
-
 import pytest
 from wiim.wiim_device import WiimDevice
 
@@ -17,7 +15,6 @@ class MockWiimBaseEntity(WiimBaseEntity):
         super().__init__(wiim_device)
         self._attr_unique_id = f"{wiim_device.udn}-{entity_id_suffix}"
         self.entity_id = f"mock.wiim_device_{entity_id_suffix}"
-        self._update_from_device = MagicMock()
 
 
 @pytest.mark.asyncio
@@ -42,20 +39,3 @@ async def test_wiim_base_entity_device_info(mock_wiim_device: WiimDevice) -> Non
     assert device_info["manufacturer"] == mock_wiim_device._manufacturer
     assert device_info["model"] == mock_wiim_device.model_name
     assert device_info["sw_version"] == mock_wiim_device.firmware_version
-
-
-@pytest.mark.asyncio
-async def test_wiim_base_entity_update_from_device(
-    mock_wiim_device: WiimDevice,
-) -> None:
-    """Test _update_from_device updates availability."""
-    entity = MockWiimBaseEntity(mock_wiim_device)
-    assert entity.available is True
-
-    mock_wiim_device.available = False  # type: ignore[misc]
-    entity._update_from_device()
-    assert entity.available is False
-
-    mock_wiim_device.available = True
-    entity._update_from_device()
-    assert entity.available is True

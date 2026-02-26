@@ -85,29 +85,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     success = False
     wiim_device = None
     try:
-        if upnp_location:
+        LOGGER.debug(
+            "Attempting to create UpnpDevice for %s from location: %s",
+            entry.title,
+            upnp_location,
+        )
+        try:
+            factory = UpnpFactory(AiohttpRequester(timeout=10))
+            upnp_device_instance = await factory.async_create_device(upnp_location)
             LOGGER.debug(
-                "Attempting to create UpnpDevice for %s from location: %s",
-                entry.title,
-                upnp_location,
+                "Successfully created UpnpDevice: %s",
+                upnp_device_instance.friendly_name,
             )
-            try:
-                factory = UpnpFactory(AiohttpRequester(timeout=10))
-                upnp_device_instance = await factory.async_create_device(upnp_location)
-                LOGGER.debug(
-                    "Successfully created UpnpDevice: %s",
-                    upnp_device_instance.friendly_name,
-                )
-            except (TimeoutError, UpnpConnectionError, UpnpError) as err:
-                LOGGER.warning(
-                    "Failed to create UpnpDevice from location %s for %s: %s",
-                    upnp_location,
-                    entry.title,
-                    err,
-                )
-                raise ConfigEntryNotReady(
-                    f"Failed to connect to UPnP device at {upnp_location}: {err}"
-                ) from err
+        except (TimeoutError, UpnpConnectionError, UpnpError) as err:
+            LOGGER.warning(
+                "Failed to create UpnpDevice from location %s for %s: %s",
+                upnp_location,
+                entry.title,
+                err,
+            )
+            raise ConfigEntryNotReady(
+                f"Failed to connect to UPnP device at {upnp_location}: {err}"
+            ) from err
 
         client_session = ClientSession(connector=TCPConnector(ssl=False))
         http_api_endpoint = WiimApiEndpoint(
