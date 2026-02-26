@@ -3,7 +3,6 @@
 DOMAIN = "powersensor"
 DEFAULT_NAME = "Powersensor"
 DEFAULT_PORT = 49476
-DEFAULT_SCAN_INTERVAL = 30
 
 # Internal signals
 CREATE_PLUG_SIGNAL = f"{DOMAIN}_create_plug"
