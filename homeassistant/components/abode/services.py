@@ -12,10 +12,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN, DOMAIN_DATA, LOGGER
 
-SERVICE_SETTINGS = "change_setting"
-SERVICE_CAPTURE_IMAGE = "capture_image"
-SERVICE_TRIGGER_AUTOMATION = "trigger_automation"
-
 ATTR_SETTING = "setting"
 ATTR_VALUE = "value"
 
@@ -75,16 +71,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SETTINGS, _change_setting, schema=CHANGE_SETTING_SCHEMA
+        DOMAIN, "change_setting", _change_setting, schema=CHANGE_SETTING_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CAPTURE_IMAGE, _capture_image, schema=CAPTURE_IMAGE_SCHEMA
+        DOMAIN, "capture_image", _capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN,
-        SERVICE_TRIGGER_AUTOMATION,
-        _trigger_automation,
-        schema=AUTOMATION_SCHEMA,
+        DOMAIN, "trigger_automation", _trigger_automation, schema=AUTOMATION_SCHEMA
     )
