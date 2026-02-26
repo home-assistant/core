@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientResponseError
 from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import oauth2
@@ -18,6 +20,10 @@ PLATFORMS: list[Platform] = [Platform.EVENT]
 async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
     """Set up homelink from a config entry."""
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
+    try:
+        await auth_implementation.async_refresh_token(entry.data["token"])
+    except ClientResponseError as err:
+        raise ConfigEntryAuthFailed(err) from err
 
     config_entry_oauth2_flow.async_register_implementation(
         hass, DOMAIN, auth_implementation

@@ -48,6 +48,7 @@ from .services import async_setup_services
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
@@ -208,9 +209,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     manual=True,
                 )
 
-            remove_listener = stream.async_add_listener(
-                create_handle_vehicle_stream(vin, coordinator),
-                {"vin": vin},
+            entry.async_on_unload(
+                stream.async_add_listener(
+                    create_handle_vehicle_stream(vin, coordinator),
+                    {"vin": vin},
+                )
             )
             stream_vehicle = stream.get_vehicle(vin)
             poll = vehicle_metadata[vin].get("polling", False)
@@ -226,7 +229,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware,
                     device=device,
-                    remove_listener=remove_listener,
                 )
             )
 
@@ -351,6 +353,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if stream:
+        entry.async_on_unload(stream.close)
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
