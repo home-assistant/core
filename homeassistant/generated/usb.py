@@ -5,6 +5,25 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "description": "*usb 300*",
+        "domain": "enocean",
+        "manufacturer": "*enocean*",
+        "pid": "6001",
+        "vid": "0403",
+    },
+    {
+        "description": "*zbt-2*",
+        "domain": "homeassistant_connect_zbt2",
+        "pid": "4001",
+        "vid": "303A",
+    },
+    {
+        "description": "*zbt-2*",
+        "domain": "homeassistant_connect_zbt2",
+        "pid": "831A",
+        "vid": "303A",
+    },
+    {
         "description": "*skyconnect v1.0*",
         "domain": "homeassistant_sky_connect",
         "pid": "EA60",
@@ -144,6 +163,12 @@ USB = [
         "vid": "10C4",
     },
     {
+        "description": "*sonoff*lite*mg21*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
         "domain": "zwave_js",
         "pid": "0200",
         "vid": "0658",
@@ -160,5 +185,12 @@ USB = [
         "manufacturer": "nabu casa",
         "pid": "4001",
         "vid": "303A",
+    },
+    {
+        "description": "*sonoff*zwave*",
+        "domain": "zwave_js",
+        "manufacturer": "sonoff",
+        "pid": "EA60",
+        "vid": "10C4",
     },
 ]

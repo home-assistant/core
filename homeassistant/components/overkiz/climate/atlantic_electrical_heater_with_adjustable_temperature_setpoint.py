@@ -47,14 +47,19 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
 
 # Map Overkiz HVAC modes to Home Assistant HVAC modes
+#
+# HVAC_MODE_TO_OVERKIZ reverses this mapping, thus order matters.
+# Multiple Overkiz states may map to the same Home Assistant HVAC mode,
+# reversing the mapping picks the last one.
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.ON: HVACMode.HEAT,
+    OverkizCommandParam.MANUAL: HVACMode.HEAT,
+    OverkizCommandParam.BASIC: HVACMode.HEAT,  # main command
     OverkizCommandParam.OFF: HVACMode.OFF,
+    OverkizCommandParam.STANDBY: HVACMode.OFF,  # main command
     OverkizCommandParam.AUTO: HVACMode.AUTO,
-    OverkizCommandParam.BASIC: HVACMode.HEAT,
-    OverkizCommandParam.STANDBY: HVACMode.OFF,
     OverkizCommandParam.EXTERNAL: HVACMode.AUTO,
-    OverkizCommandParam.INTERNAL: HVACMode.AUTO,
+    OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # main command
 }
 
 OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
@@ -124,14 +129,14 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         states = self.device.states
 
         if (
-            operating_mode := states[OverkizState.CORE_OPERATING_MODE]
-        ) and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL:
-            return PRESET_EXTERNAL
-
-        if (
             state := states[OverkizState.IO_TARGET_HEATING_LEVEL]
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
+
+        if (
+            operating_mode := states[OverkizState.CORE_OPERATING_MODE]
+        ) and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL:
+            return PRESET_EXTERNAL
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONFIG_DEFAULT_MAX_TEMP, CONFIG_DEFAULT_MIN_TEMP
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
 
@@ -55,12 +56,12 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
     @property
     def min_temp(self) -> int:
         """Return configured minimal temperature."""
-        return self.coordinator.data.sauna_config.min_temp
+        return self.coordinator.data.sauna_config.min_temp or CONFIG_DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> int:
         """Return configured maximum temperature."""
-        return self.coordinator.data.sauna_config.max_temp
+        return self.coordinator.data.sauna_config.max_temp or CONFIG_DEFAULT_MAX_TEMP
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -89,7 +90,10 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            await self._turn_on(self.target_temperature)
+            # Make sure to send integers
+            # The temperature is not always an integer if the user uses Fahrenheit
+            temperature = int(self.target_temperature)
+            await self._turn_on(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.huum.turn_off()
         await self.coordinator.async_refresh()
@@ -99,6 +103,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None or self.hvac_mode != HVACMode.HEAT:
             return
+        temperature = int(temperature)
 
         await self._turn_on(temperature)
         await self.coordinator.async_refresh()

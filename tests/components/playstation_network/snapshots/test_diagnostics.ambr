@@ -21,7 +21,6 @@
           'title_name': "Assassin's Creed® III Liberation",
         }),
       }),
-      'availability': 'availableToPlay',
       'presence': dict({
         'basicPresence': dict({
           'availability': 'availableToPlay',
@@ -71,9 +70,7 @@
         'PS5',
         'PSVITA',
       ]),
-      'shareable_profile_link': dict({
-        'shareImageUrl': 'https://xxxxx.cloudfront.net/profile-testuser?Expires=1753304493',
-      }),
+      'shareable_profile_link': '**REDACTED**',
       'trophy_summary': dict({
         'account_id': '**REDACTED**',
         'earned_trophies': dict({
@@ -87,6 +84,14 @@
         'trophy_level': 1079,
       }),
       'username': '**REDACTED**',
+    }),
+    'groups': dict({
+      'test-groupid': dict({
+        'groupName': dict({
+          'value': '',
+        }),
+        'members': '**REDACTED**',
+      }),
     }),
   })
 # ---

@@ -4,7 +4,8 @@
   "codeowners": ["@gleeuwen", "@NickKoepr", "@jtodorova23"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/blue_current",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["bluecurrent_api"],
-  "requirements": ["bluecurrent-api==1.2.4"]
+  "requirements": ["bluecurrent-api==1.3.2"]
 }

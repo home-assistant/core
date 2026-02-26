@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.energy import data, is_configured
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -106,47 +107,44 @@ async def test_save_preferences(
 
     new_prefs = {
         "energy_sources": [
+            # Grid 1: heat_pump_meter paired with return_to_grid_peak + power
             {
                 "type": "grid",
-                "flow_from": [
-                    {
-                        "stat_energy_from": "sensor.heat_pump_meter",
-                        "stat_cost": "heat_pump_kwh_cost",
-                        "entity_energy_price": None,
-                        "number_energy_price": None,
-                    },
-                    {
-                        "stat_energy_from": "sensor.heat_pump_meter_2",
-                        "stat_cost": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": 0.20,
-                    },
-                ],
-                "flow_to": [
-                    {
-                        "stat_energy_to": "sensor.return_to_grid_peak",
-                        "stat_compensation": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": None,
-                    },
-                    {
-                        "stat_energy_to": "sensor.return_to_grid_offpeak",
-                        "stat_compensation": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": 0.20,
-                    },
-                ],
+                "stat_energy_from": "sensor.heat_pump_meter",
+                "stat_energy_to": "sensor.return_to_grid_peak",
+                "stat_cost": "heat_pump_kwh_cost",
+                "stat_compensation": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": None,
+                "stat_rate": "sensor.grid_power",
+                "cost_adjustment_day": 1.2,
+            },
+            # Grid 2: heat_pump_meter_2 paired with return_to_grid_offpeak
+            {
+                "type": "grid",
+                "stat_energy_from": "sensor.heat_pump_meter_2",
+                "stat_energy_to": "sensor.return_to_grid_offpeak",
+                "stat_cost": None,
+                "stat_compensation": None,
+                "entity_energy_price": None,
+                "number_energy_price": 0.20,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": 0.20,
                 "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
                 "stat_energy_from": "my_solar_production",
+                "stat_rate": "my_solar_power",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
             },
             {
                 "type": "battery",
                 "stat_energy_from": "my_battery_draining",
                 "stat_energy_to": "my_battery_charging",
+                "stat_rate": "my_battery_power",
             },
         ],
         "device_consumption": [
@@ -154,6 +152,13 @@ async def test_save_preferences(
                 "stat_consumption": "some_device_usage",
                 "name": "My Device",
                 "included_in_stat": "sensor.some_other_device",
+                "stat_rate": "sensor.some_device_power",
+            }
+        ],
+        "device_consumption_water": [
+            {
+                "stat_consumption": "sensor.water_meter",
+                "name": "Water Meter",
             }
         ],
     }
@@ -191,20 +196,19 @@ async def test_save_preferences(
         "solar_forecast_domains": ["some_domain"],
     }
 
-    # Prefs with limited options
+    # Prefs with limited options (defaults will be applied by schema)
     new_prefs_2 = {
         "energy_sources": [
             {
                 "type": "grid",
-                "flow_from": [
-                    {
-                        "stat_energy_from": "sensor.heat_pump_meter",
-                        "stat_cost": None,
-                        "entity_energy_price": None,
-                        "number_energy_price": None,
-                    }
-                ],
-                "flow_to": [],
+                "stat_energy_from": "sensor.heat_pump_meter",
+                "stat_energy_to": None,
+                "stat_cost": None,
+                "stat_compensation": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": None,
                 "cost_adjustment_day": 1.2,
             },
             {
@@ -227,9 +231,10 @@ async def test_save_preferences(
 async def test_handle_duplicate_from_stat(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test we handle duplicate from stats."""
+    """Test we handle duplicate from stats across multiple grid sources."""
     client = await hass_ws_client(hass)
 
+    # Try to create two grids with the same import meter
     await client.send_json(
         {
             "id": 5,
@@ -237,21 +242,12 @@ async def test_handle_duplicate_from_stat(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.heat_pump_meter",
-                            "stat_cost": None,
-                            "entity_energy_price": None,
-                            "number_energy_price": None,
-                        },
-                        {
-                            "stat_energy_from": "sensor.heat_pump_meter",
-                            "stat_cost": None,
-                            "entity_energy_price": None,
-                            "number_energy_price": None,
-                        },
-                    ],
-                    "flow_to": [],
+                    "stat_energy_from": "sensor.heat_pump_meter",
+                    "cost_adjustment_day": 0,
+                },
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.heat_pump_meter",
                     "cost_adjustment_day": 0,
                 },
             ],
@@ -280,6 +276,7 @@ async def test_validate(
     assert msg["result"] == {
         "energy_sources": [],
         "device_consumption": [],
+        "device_consumption_water": [],
     }
 
 
@@ -365,11 +362,12 @@ async def test_fossil_energy_consumption_no_co2(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -399,11 +397,12 @@ async def test_fossil_energy_consumption_no_co2(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -530,11 +529,12 @@ async def test_fossil_energy_consumption_hole(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -564,11 +564,12 @@ async def test_fossil_energy_consumption_hole(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -693,11 +694,12 @@ async def test_fossil_energy_consumption_no_data(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -727,11 +729,12 @@ async def test_fossil_energy_consumption_no_data(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -845,11 +848,12 @@ async def test_fossil_energy_consumption(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_2 = (
@@ -879,11 +883,12 @@ async def test_fossil_energy_consumption(
         },
     )
     external_energy_metadata_2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_class": "energy",
         "unit_of_measurement": "Wh",
     }
     external_co2_statistics = (
@@ -909,11 +914,12 @@ async def test_fossil_energy_consumption(
         },
     )
     external_co2_metadata = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Fossil percentage",
         "source": "test",
         "statistic_id": "test:fossil_percentage",
+        "unit_class": None,
         "unit_of_measurement": "%",
     }
 
@@ -1096,11 +1102,12 @@ async def test_fossil_energy_consumption_check_missing_hour(
         },
     )
     energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1130,11 +1137,12 @@ async def test_fossil_energy_consumption_check_missing_hour(
         },
     )
     co2_metadata = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Fossil percentage",
         "source": "test",
         "statistic_id": "test:fossil_percentage",
+        "unit_class": None,
         "unit_of_measurement": "%",
     }
 
@@ -1191,11 +1199,12 @@ async def test_fossil_energy_consumption_missing_sum(
         {"start": period4, "last_reset": None, "state": 3, "mean": 5},
     )
     external_energy_metadata_1 = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Mean imported energy",
         "source": "test",
         "statistic_id": "test:mean_energy_import_tariff",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 

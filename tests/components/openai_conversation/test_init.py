@@ -1,5 +1,6 @@
 """Tests for the OpenAI integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 import httpx
@@ -19,12 +20,27 @@ from syrupy.filters import props
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_NAME,
+    DEFAULT_TTS_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_STT_OPTIONS,
+    RECOMMENDED_TTS_OPTIONS,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -87,6 +103,7 @@ async def test_generate_image_service(
 
     with patch(
         "openai.resources.images.AsyncImages.generate",
+        new_callable=AsyncMock,
         return_value=ImagesResponse(
             created=1700000000,
             data=[
@@ -123,6 +140,7 @@ async def test_generate_image_service_error(
     with (
         patch(
             "openai.resources.images.AsyncImages.generate",
+            new_callable=AsyncMock,
             side_effect=RateLimitError(
                 response=httpx.Response(
                     status_code=500, request=httpx.Request(method="GET", url="")
@@ -147,6 +165,7 @@ async def test_generate_image_service_error(
     with (
         patch(
             "openai.resources.images.AsyncImages.generate",
+            new_callable=AsyncMock,
             return_value=ImagesResponse(
                 created=1700000000,
                 data=[
@@ -240,16 +259,6 @@ async def test_invalid_config_entry(
             "Connection error",
         ),
         (
-            AuthenticationError(
-                response=httpx.Response(
-                    status_code=500, request=httpx.Request(method="GET", url="test")
-                ),
-                body=None,
-                message="",
-            ),
-            "Invalid API key",
-        ),
-        (
             BadRequestError(
                 response=httpx.Response(
                     status_code=500, request=httpx.Request(method="GET", url="test")
@@ -276,6 +285,27 @@ async def test_init_error(
         assert await async_setup_component(hass, "openai_conversation", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth error during init errors."""
+    with patch(
+        "openai.resources.models.AsyncModels.list",
+        side_effect=AuthenticationError(
+            response=httpx.Response(
+                status_code=500, request=httpx.Request(method="GET", url="test")
+            ),
+            body=None,
+            message="",
+        ),
+    ):
+        assert await async_setup_component(hass, "openai_conversation", {})
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -537,6 +567,56 @@ async def test_generate_content_service_error(
         )
 
 
+@pytest.mark.parametrize(
+    ("service_name", "patch_path"),
+    [
+        ("generate_image", "openai.resources.images.AsyncImages.generate"),
+        ("generate_content", "openai.resources.responses.AsyncResponses.create"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_service_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service_name: str,
+    patch_path: str,
+) -> None:
+    """Test generate content service handles errors."""
+    with (
+        patch(
+            patch_path,
+            side_effect=AuthenticationError(
+                response=httpx.Response(
+                    status_code=401, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Reason",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Authentication error"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            service_name,
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
+
+
 async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -585,20 +665,26 @@ async def test_migration_from_v1(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == 6
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
-    assert len(mock_config_entry.subentries) == 2
+    assert len(mock_config_entry.subentries) == 4
 
-    # Find the conversation subentry
+    # Find the subentries
     conversation_subentry = None
     ai_task_subentry = None
+    stt_subentry = None
+    tts_subentry = None
     for subentry in mock_config_entry.subentries.values():
         if subentry.subentry_type == "conversation":
             conversation_subentry = subentry
         elif subentry.subentry_type == "ai_task_data":
             ai_task_subentry = subentry
+        elif subentry.subentry_type == "stt":
+            stt_subentry = subentry
+        elif subentry.subentry_type == "tts":
+            tts_subentry = subentry
     assert conversation_subentry is not None
     assert conversation_subentry.unique_id is None
     assert conversation_subentry.title == "ChatGPT"
@@ -609,6 +695,16 @@ async def test_migration_from_v1(
     assert ai_task_subentry.unique_id is None
     assert ai_task_subentry.title == DEFAULT_AI_TASK_NAME
     assert ai_task_subentry.subentry_type == "ai_task_data"
+
+    assert stt_subentry is not None
+    assert stt_subentry.unique_id is None
+    assert stt_subentry.title == DEFAULT_STT_NAME
+    assert stt_subentry.subentry_type == "stt"
+
+    assert tts_subentry is not None
+    assert tts_subentry.unique_id is None
+    assert tts_subentry.title == DEFAULT_TTS_NAME
+    assert tts_subentry.subentry_type == "tts"
 
     # Use conversation subentry for the rest of the assertions
     subentry = conversation_subentry
@@ -714,9 +810,9 @@ async def test_migration_from_v1_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 3
+        assert entry.minor_version == 6
         assert not entry.options
-        assert len(entry.subentries) == 2
+        assert len(entry.subentries) == 4
 
         conversation_subentry = None
         for subentry in entry.subentries.values():
@@ -819,11 +915,11 @@ async def test_migration_from_v1_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 6
     assert not entry.options
     assert (
-        len(entry.subentries) == 3
-    )  # Two conversation subentries + one AI task subentry
+        len(entry.subentries) == 5
+    )  # Two conversation subentries + one AI task subentry + one STT subentry + one TTS subentry
 
     # Check both conversation subentries exist with correct data
     conversation_subentries = [
@@ -832,9 +928,17 @@ async def test_migration_from_v1_with_same_keys(
     ai_task_subentries = [
         sub for sub in entry.subentries.values() if sub.subentry_type == "ai_task_data"
     ]
+    stt_subentries = [
+        sub for sub in entry.subentries.values() if sub.subentry_type == "stt"
+    ]
+    tts_subentries = [
+        sub for sub in entry.subentries.values() if sub.subentry_type == "tts"
+    ]
 
     assert len(conversation_subentries) == 2
     assert len(ai_task_subentries) == 1
+    assert len(stt_subentries) == 1
+    assert len(tts_subentries) == 1
 
     titles = [sub.title for sub in conversation_subentries]
     assert "ChatGPT" in titles
@@ -853,6 +957,249 @@ async def test_migration_from_v1_with_same_keys(
         assert dev.config_entries_subentries == {
             mock_config_entry.entry_id: {subentry.subentry_id}
         }
+
+
+@pytest.mark.parametrize(
+    (
+        "config_entry_disabled_by",
+        "device_disabled_by",
+        "entity_disabled_by",
+        "merged_config_entry_disabled_by",
+        "conversation_subentry_data",
+        "main_config_entry",
+    ),
+    [
+        (
+            [ConfigEntryDisabler.USER, None],
+            [DeviceEntryDisabler.CONFIG_ENTRY, None],
+            [RegistryEntryDisabler.CONFIG_ENTRY, None],
+            None,
+            [
+                {
+                    "conversation_entity_id": "conversation.chatgpt_2",
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
+                    "device": 1,
+                },
+                {
+                    "conversation_entity_id": "conversation.chatgpt",
+                    "device_disabled_by": DeviceEntryDisabler.USER,
+                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
+                    "device": 0,
+                },
+            ],
+            1,
+        ),
+        (
+            [None, ConfigEntryDisabler.USER],
+            [None, DeviceEntryDisabler.CONFIG_ENTRY],
+            [None, RegistryEntryDisabler.CONFIG_ENTRY],
+            None,
+            [
+                {
+                    "conversation_entity_id": "conversation.chatgpt",
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
+                    "device": 0,
+                },
+                {
+                    "conversation_entity_id": "conversation.chatgpt_2",
+                    "device_disabled_by": DeviceEntryDisabler.USER,
+                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
+                    "device": 1,
+                },
+            ],
+            0,
+        ),
+        (
+            [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
+            [DeviceEntryDisabler.CONFIG_ENTRY, DeviceEntryDisabler.CONFIG_ENTRY],
+            [RegistryEntryDisabler.CONFIG_ENTRY, RegistryEntryDisabler.CONFIG_ENTRY],
+            ConfigEntryDisabler.USER,
+            [
+                {
+                    "conversation_entity_id": "conversation.chatgpt",
+                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
+                    "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
+                    "device": 0,
+                },
+                {
+                    "conversation_entity_id": "conversation.chatgpt_2",
+                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
+                    "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
+                    "device": 1,
+                },
+            ],
+            0,
+        ),
+    ],
+)
+async def test_migration_from_v1_disabled(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_disabled_by: list[ConfigEntryDisabler | None],
+    device_disabled_by: list[DeviceEntryDisabler | None],
+    entity_disabled_by: list[RegistryEntryDisabler | None],
+    merged_config_entry_disabled_by: ConfigEntryDisabler | None,
+    conversation_subentry_data: list[dict[str, Any]],
+    main_config_entry: int,
+) -> None:
+    """Test migration where the config entries are disabled."""
+    # Create a v1 config entry with conversation options and an entity
+    options = {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "gpt-4o-mini",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234"},
+        options=options,
+        version=1,
+        title="ChatGPT",
+        disabled_by=config_entry_disabled_by[0],
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234"},
+        options=options,
+        version=1,
+        title="ChatGPT 2",
+        disabled_by=config_entry_disabled_by[1],
+    )
+    mock_config_entry_2.add_to_hass(hass)
+    mock_config_entries = [mock_config_entry, mock_config_entry_2]
+
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="OpenAI",
+        model="ChatGPT",
+        entry_type=dr.DeviceEntryType.SERVICE,
+        disabled_by=device_disabled_by[0],
+    )
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        device_id=device_1.id,
+        suggested_object_id="chatgpt",
+        disabled_by=entity_disabled_by[0],
+    )
+
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry_2.entry_id,
+        identifiers={(DOMAIN, mock_config_entry_2.entry_id)},
+        name=mock_config_entry_2.title,
+        manufacturer="OpenAI",
+        model="ChatGPT",
+        entry_type=dr.DeviceEntryType.SERVICE,
+        disabled_by=device_disabled_by[1],
+    )
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry_2.entry_id,
+        config_entry=mock_config_entry_2,
+        device_id=device_2.id,
+        suggested_object_id="chatgpt_2",
+        disabled_by=entity_disabled_by[1],
+    )
+
+    devices = [device_1, device_2]
+
+    # Run migration
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.disabled_by is merged_config_entry_disabled_by
+    assert entry.version == 2
+    assert entry.minor_version == (
+        4 if merged_config_entry_disabled_by is not None else 6
+    )
+    assert not entry.options
+    assert entry.title == "OpenAI Conversation"
+    assert len(entry.subentries) == (3 if entry.minor_version == 4 else 5)
+    conversation_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 2
+    for subentry in conversation_subentries:
+        assert subentry.subentry_type == "conversation"
+        assert subentry.data == options
+        assert "ChatGPT" in subentry.title
+    ai_task_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "ai_task_data"
+    ]
+    assert len(ai_task_subentries) == 1
+    assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
+    assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    tts_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "tts"
+    ]
+    if entry.minor_version == 4:
+        assert len(stt_subentries) == 0
+        assert len(tts_subentries) == 0
+    else:
+        assert len(stt_subentries) == 1
+        assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+        assert stt_subentries[0].title == DEFAULT_STT_NAME
+        assert len(tts_subentries) == 1
+        assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
+        assert tts_subentries[0].title == DEFAULT_TTS_NAME
+
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
+    )
+
+    for idx, subentry in enumerate(conversation_subentries):
+        subentry_data = conversation_subentry_data[idx]
+        entity = entity_registry.async_get(subentry_data["conversation_entity_id"])
+        assert entity.unique_id == subentry.subentry_id
+        assert entity.config_subentry_id == subentry.subentry_id
+        assert entity.config_entry_id == entry.entry_id
+        assert entity.disabled_by is subentry_data["entity_disabled_by"]
+
+        assert (
+            device := device_registry.async_get_device(
+                identifiers={(DOMAIN, subentry.subentry_id)}
+            )
+        )
+        assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
+        assert device.id == devices[subentry_data["device"]].id
+        assert device.config_entries == {
+            mock_config_entries[main_config_entry].entry_id
+        }
+        assert device.config_entries_subentries == {
+            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
+        }
+        assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
 async def test_migration_from_v2_1(
@@ -953,10 +1300,10 @@ async def test_migration_from_v2_1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 6
     assert not entry.options
     assert entry.title == "ChatGPT"
-    assert len(entry.subentries) == 3  # 2 conversation + 1 AI task
+    assert len(entry.subentries) == 5  # 2 conversation + 1 AI task + 1 STT + 1 TTS
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -967,8 +1314,20 @@ async def test_migration_from_v2_1(
         for subentry in entry.subentries.values()
         if subentry.subentry_type == "ai_task_data"
     ]
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    tts_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "tts"
+    ]
     assert len(conversation_subentries) == 2
     assert len(ai_task_subentries) == 1
+    assert len(stt_subentries) == 1
+    assert len(tts_subentries) == 1
     for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
@@ -1032,7 +1391,7 @@ async def test_devices(
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert len(devices) == 2  # One for conversation, one for AI task
+    assert len(devices) == 4  # One for conversation, AI task, STT, and TTS
 
     # Use the first device for snapshot comparison
     device = devices[0]
@@ -1089,10 +1448,10 @@ async def test_migration_from_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 3
+    assert entry.minor_version == 6
     assert not entry.options
     assert entry.title == "ChatGPT"
-    assert len(entry.subentries) == 2
+    assert len(entry.subentries) == 4
 
     # Check conversation subentry is still there
     conversation_subentries = [
@@ -1114,3 +1473,393 @@ async def test_migration_from_v2_2(
     ai_task_subentry = ai_task_subentries[0]
     assert ai_task_subentry.data == {"recommended": True}
     assert ai_task_subentry.title == "OpenAI AI Task"
+
+
+@pytest.mark.parametrize(
+    (
+        "config_entry_disabled_by",
+        "device_disabled_by",
+        "entity_disabled_by",
+        "setup_result",
+        "minor_version_after_migration",
+        "config_entry_disabled_by_after_migration",
+        "device_disabled_by_after_migration",
+        "entity_disabled_by_after_migration",
+    ),
+    [
+        # Config entry not disabled, update device and entity disabled by config entry
+        (
+            None,
+            DeviceEntryDisabler.CONFIG_ENTRY,
+            RegistryEntryDisabler.CONFIG_ENTRY,
+            True,
+            6,
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+            True,
+            6,
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+            True,
+            6,
+            None,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+        ),
+        (
+            None,
+            None,
+            None,
+            True,
+            6,
+            None,
+            None,
+            None,
+        ),
+        # Config entry disabled, migration does not run
+        (
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.CONFIG_ENTRY,
+            RegistryEntryDisabler.CONFIG_ENTRY,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.CONFIG_ENTRY,
+            RegistryEntryDisabler.CONFIG_ENTRY,
+        ),
+        (
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            DeviceEntryDisabler.USER,
+            RegistryEntryDisabler.USER,
+        ),
+        (
+            ConfigEntryDisabler.USER,
+            None,
+            None,
+            False,
+            3,
+            ConfigEntryDisabler.USER,
+            None,
+            None,
+        ),
+    ],
+)
+async def test_migrate_entry_from_v2_3(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_disabled_by: ConfigEntryDisabler | None,
+    device_disabled_by: DeviceEntryDisabler | None,
+    entity_disabled_by: RegistryEntryDisabler | None,
+    setup_result: bool,
+    minor_version_after_migration: int,
+    config_entry_disabled_by_after_migration: ConfigEntryDisabler | None,
+    device_disabled_by_after_migration: ConfigEntryDisabler | None,
+    entity_disabled_by_after_migration: RegistryEntryDisabler | None,
+) -> None:
+    """Test migration from version 2.3."""
+    # Create a v2.3 config entry with conversation subentries
+    conversation_subentry_id = "blabla"
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        disabled_by=config_entry_disabled_by,
+        version=2,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                "subentry_id": conversation_subentry_id,
+                "subentry_type": "conversation",
+                "title": DEFAULT_CONVERSATION_NAME,
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    conversation_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id=conversation_subentry_id,
+        disabled_by=device_disabled_by,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="OpenAI",
+        model="ChatGPT",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    conversation_entity = entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        config_subentry_id=conversation_subentry_id,
+        disabled_by=entity_disabled_by,
+        device_id=conversation_device.id,
+        suggested_object_id="chatgpt",
+    )
+
+    # Verify initial state
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 3
+    assert len(mock_config_entry.subentries) == 1
+    assert mock_config_entry.disabled_by == config_entry_disabled_by
+    assert conversation_device.disabled_by == device_disabled_by
+    assert conversation_entity.disabled_by == entity_disabled_by
+
+    # Run setup to trigger migration
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is setup_result
+        await hass.async_block_till_done()
+
+    # Verify migration completed
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Check version and subversion were updated
+    assert entry.version == 2
+    assert entry.minor_version == minor_version_after_migration
+
+    # Check the disabled_by flag on config entry, device and entity are as expected
+    conversation_device = device_registry.async_get(conversation_device.id)
+    conversation_entity = entity_registry.async_get(conversation_entity.entity_id)
+    assert mock_config_entry.disabled_by == config_entry_disabled_by_after_migration
+    assert conversation_device.disabled_by == device_disabled_by_after_migration
+    assert conversation_entity.disabled_by == entity_disabled_by_after_migration
+
+
+async def test_migration_from_v2_4(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from version 2.4."""
+    # Create a v2.4 config entry with a conversation and AI Task subentries
+    conversation_options = {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "gpt-4o-mini",
+    }
+    ai_task_options = {
+        "recommended": True,
+        "chat_model": "gpt-5-mini",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "1234"},
+        entry_id="mock_entry_id",
+        version=2,
+        minor_version=4,
+        subentries_data=[
+            ConfigSubentryData(
+                data=conversation_options,
+                subentry_id="mock_id_1",
+                subentry_type="conversation",
+                title="ChatGPT",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=ai_task_options,
+                subentry_id="mock_id_2",
+                subentry_type="ai_task_data",
+                title="OpenAI AI Task",
+                unique_id=None,
+            ),
+        ],
+        title="ChatGPT",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Run migration
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 6
+    assert not entry.options
+    assert entry.title == "ChatGPT"
+    assert len(entry.subentries) == 4
+
+    # Check conversation subentry is still there
+    conversation_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 1
+    conversation_subentry = conversation_subentries[0]
+    assert conversation_subentry.data == conversation_options
+
+    # Check AI Task subentry is still there
+    ai_task_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "ai_task_data"
+    ]
+    assert len(ai_task_subentries) == 1
+    ai_task_subentry = ai_task_subentries[0]
+    assert ai_task_subentry.data == ai_task_options
+
+    # Check TTS subentry was added
+    tts_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "tts"
+    ]
+    assert len(tts_subentries) == 1
+    tts_subentry = tts_subentries[0]
+    assert tts_subentry.data == {"chat_model": "gpt-4o-mini-tts", "prompt": ""}
+    assert tts_subentry.title == "OpenAI TTS"
+
+
+async def test_migration_from_v2_5(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from version 2.5."""
+    # Create a v2.5 config entry with a conversation, AI Task, and TTS subentries
+    conversation_options = {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "gpt-4o-mini",
+    }
+    ai_task_options = {
+        "recommended": True,
+        "chat_model": "gpt-5-mini",
+    }
+    tts_options = {
+        "prompt": "Be friendly",
+        "chat_model": "gpt-4o-mini-tts",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "1234"},
+        entry_id="mock_entry_id",
+        version=2,
+        minor_version=5,
+        subentries_data=[
+            ConfigSubentryData(
+                data=conversation_options,
+                subentry_id="mock_id_1",
+                subentry_type="conversation",
+                title="ChatGPT",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=ai_task_options,
+                subentry_id="mock_id_2",
+                subentry_type="ai_task_data",
+                title="OpenAI AI Task",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=tts_options,
+                subentry_id="mock_id_3",
+                subentry_type="tts",
+                title="OpenAI TTS",
+                unique_id=None,
+            ),
+        ],
+        title="ChatGPT",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Run migration
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 6
+    assert not entry.options
+    assert entry.title == "ChatGPT"
+    assert len(entry.subentries) == 4
+
+    # Check conversation subentry is still there
+    conversation_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    ]
+    assert len(conversation_subentries) == 1
+    conversation_subentry = conversation_subentries[0]
+    assert conversation_subentry.data == conversation_options
+
+    # Check AI Task subentry is still there
+    ai_task_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "ai_task_data"
+    ]
+    assert len(ai_task_subentries) == 1
+    ai_task_subentry = ai_task_subentries[0]
+    assert ai_task_subentry.data == ai_task_options
+
+    # Check TTS subentry is still there
+    tts_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "tts"
+    ]
+    assert len(tts_subentries) == 1
+    tts_subentry = tts_subentries[0]
+    assert tts_subentry.data == tts_options
+
+    # Check STT subentry was added
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    stt_subentry = stt_subentries[0]
+    assert stt_subentry.data == {}
+    assert stt_subentry.title == "OpenAI STT"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
@@ -16,12 +18,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
-
 ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
@@ -35,11 +36,16 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VALVE, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterValveEntityDescription(ValveEntityDescription, MatterEntityDescription):
+    """Describe Matter Valve entities."""
+
+
 class MatterValve(MatterEntity, ValveEntity):
     """Representation of a Matter Valve."""
 
     _feature_map: int | None = None
-    entity_description: ValveEntityDescription
+    entity_description: MatterValveEntityDescription
     _platform_translation_key = "valve"
 
     async def async_open_valve(self) -> None:
@@ -52,42 +58,48 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.send_device_command(
-            ValveConfigurationAndControl.Commands.Open(targetLevel=position)
-        )
+        if position > 0:
+            await self.send_device_command(
+                ValveConfigurationAndControl.Commands.Open(targetLevel=position)
+            )
+            return
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Close())
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        current_state: int
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+
+        current_state: int | None
         current_state = self.get_matter_attribute_value(
             ValveConfigurationAndControl.Attributes.CurrentState
         )
-        target_state: int
+        target_state: int | None
         target_state = self.get_matter_attribute_value(
             ValveConfigurationAndControl.Attributes.TargetState
         )
-        if (
-            current_state == ValveStateEnum.kTransitioning
-            and target_state == ValveStateEnum.kOpen
+
+        if current_state is None:
+            self._attr_is_closed = None
+        elif current_state == ValveStateEnum.kTransitioning and (
+            target_state == ValveStateEnum.kOpen
         ):
             self._attr_is_opening = True
-            self._attr_is_closing = False
-        elif (
-            current_state == ValveStateEnum.kTransitioning
-            and target_state == ValveStateEnum.kClosed
+            self._attr_is_closed = None
+        elif current_state == ValveStateEnum.kTransitioning and (
+            target_state == ValveStateEnum.kClosed
         ):
-            self._attr_is_opening = False
             self._attr_is_closing = True
+            self._attr_is_closed = None
         elif current_state == ValveStateEnum.kClosed:
-            self._attr_is_opening = False
-            self._attr_is_closing = False
             self._attr_is_closed = True
-        else:
-            self._attr_is_opening = False
-            self._attr_is_closing = False
+        elif current_state == ValveStateEnum.kOpen:
             self._attr_is_closed = False
+        else:
+            self._attr_is_closed = None
+
         # handle optional position
         if self.supported_features & ValveEntityFeature.SET_POSITION:
             self._attr_current_valve_position = self.get_matter_attribute_value(
@@ -126,7 +138,7 @@ class MatterValve(MatterEntity, ValveEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VALVE,
-        entity_description=ValveEntityDescription(
+        entity_description=MatterValveEntityDescription(
             key="MatterValve",
             device_class=ValveDeviceClass.WATER,
             name=None,
@@ -136,6 +148,7 @@ DISCOVERY_SCHEMAS = [
             ValveConfigurationAndControl.Attributes.CurrentState,
             ValveConfigurationAndControl.Attributes.TargetState,
         ),
+        allow_none_value=True,
         optional_attributes=(ValveConfigurationAndControl.Attributes.CurrentLevel,),
         device_type=(device_types.WaterValve,),
     ),

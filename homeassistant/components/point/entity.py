@@ -1,6 +1,7 @@
 """Support for Minut Point."""
 
 import logging
+from typing import Any
 
 from pypoint import Device, PointSession
 
@@ -28,8 +29,9 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, device["device_mac"])},
             identifiers={(DOMAIN, device["device_id"])},
             manufacturer="Minut",
-            model=f"Point v{device['hardware_version']}",
+            model="Point",
             name=device["description"],
+            hw_version=device["hardware_version"],
             sw_version=device["firmware"]["installed"],
             via_device=(DOMAIN, device["home"]),
         )
@@ -55,7 +57,7 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
         return self.client.device(self.device_id)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return status of device."""
         attrs = self.device.device_status
         attrs["last_heard_from"] = as_local(

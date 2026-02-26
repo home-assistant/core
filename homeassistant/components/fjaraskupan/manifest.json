@@ -4,15 +4,16 @@
   "bluetooth": [
     {
       "connectable": false,
-      "manufacturer_id": 20296,
-      "manufacturer_data_start": [79, 68, 70, 74, 65, 82]
+      "manufacturer_data_start": [79, 68, 70, 74, 65, 82],
+      "manufacturer_id": 20296
     }
   ],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/fjaraskupan",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["bleak", "fjaraskupan"],
-  "requirements": ["fjaraskupan==2.3.2"]
+  "requirements": ["fjaraskupan==2.3.3"]
 }

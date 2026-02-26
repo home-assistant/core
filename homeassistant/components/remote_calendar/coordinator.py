@@ -7,7 +7,7 @@ from httpx import HTTPError, InvalidURL, TimeoutException
 from ical.calendar import Calendar
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -39,9 +39,12 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             _LOGGER,
             name=f"{DOMAIN}_{config_entry.title}",
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
             always_update=True,
         )
-        self._client = get_async_client(hass)
+        self._client = get_async_client(
+            hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
+        )
         self._url = config_entry.data[CONF_URL]
 
     async def _async_update_data(self) -> Calendar:

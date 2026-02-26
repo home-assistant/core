@@ -21,7 +21,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
@@ -57,6 +55,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -92,6 +91,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-off at',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -143,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -194,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging contacts remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -232,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging contacts used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -272,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -331,6 +335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -366,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -424,6 +430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -480,6 +487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -534,6 +542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -584,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -647,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -685,6 +696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -725,6 +737,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -776,6 +789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -811,6 +825,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaned area',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -851,6 +866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaned time',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -889,6 +905,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last water leak alert',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -938,6 +955,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -976,6 +994,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1014,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On since',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1049,6 +1069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Report interval',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1084,6 +1105,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1122,6 +1144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1160,6 +1183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1198,6 +1222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1238,6 +1263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1289,6 +1315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1324,6 +1351,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1361,6 +1389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -1398,6 +1427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "This month's consumption",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1454,6 +1484,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "Today's consumption",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1510,6 +1541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -1550,6 +1582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1587,6 +1620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -1627,6 +1661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1683,6 +1718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

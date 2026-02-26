@@ -276,6 +276,7 @@ async def test_get_condition_capabilities(
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -301,6 +302,7 @@ async def test_get_condition_capabilities(
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -336,6 +338,7 @@ async def test_get_condition_capabilities_legacy(
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -361,6 +364,7 @@ async def test_get_condition_capabilities_legacy(
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]

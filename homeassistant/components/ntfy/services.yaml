@@ -1,0 +1,177 @@
+publish:
+  target: &target
+    entity:
+      domain: notify
+      integration: ntfy
+  fields:
+    title:
+      required: false
+      selector:
+        text:
+      example: Hello
+    message:
+      required: false
+      selector:
+        text:
+          multiline: true
+      example: World
+    markdown:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
+      example: true
+    tags:
+      required: false
+      selector:
+        text:
+          multiple: true
+      example: '["partying_face", "grin"]'
+    priority:
+      required: false
+      selector:
+        select:
+          options:
+            - value: "5"
+              label: "max"
+            - value: "4"
+              label: "high"
+            - value: "3"
+              label: "default"
+            - value: "2"
+              label: "low"
+            - value: "1"
+              label: "min"
+          mode: dropdown
+          translation_key: "priority"
+          sort: false
+      example: "5"
+    click:
+      required: false
+      selector:
+        text:
+          type: url
+          autocomplete: url
+      example: https://example.org
+    delay:
+      required: false
+      selector:
+        duration:
+          enable_day: true
+      example: '{"seconds": 30}'
+    attach:
+      required: false
+      selector:
+        text:
+          type: url
+          autocomplete: url
+      example: https://example.org/download.zip
+    attach_file:
+      required: false
+      selector:
+        media:
+          accept:
+            - "*"
+    filename:
+      required: false
+      selector:
+        text:
+      example: attachment.jpg
+    email:
+      required: false
+      selector:
+        text:
+          type: email
+          autocomplete: email
+      example: mail@example.org
+    call:
+      required: false
+      selector:
+        text:
+          type: tel
+          autocomplete: tel
+      example: "1234567890"
+    icon:
+      required: false
+      selector:
+        text:
+          type: url
+          autocomplete: url
+      example: https://example.org/logo.png
+    actions:
+      selector:
+        object:
+          label_field: "label"
+          description_field: "url"
+          multiple: true
+          translation_key: actions
+          fields:
+            action:
+              required: true
+              selector:
+                select:
+                  options:
+                    - value: view
+                      label: Open website/app
+                    - value: http
+                      label: Send HTTP request
+                    - value: broadcast
+                      label: Send Android broadcast
+                    - value: copy
+                      label: Copy to clipboard
+                  translation_key: action_type
+                  mode: dropdown
+            label:
+              selector:
+                text:
+              required: true
+            clear:
+              selector:
+                boolean:
+            url:
+              selector:
+                text:
+                  type: url
+            method:
+              selector:
+                select:
+                  options:
+                    - GET
+                    - POST
+                    - PUT
+                    - DELETE
+                  custom_value: true
+            headers:
+              selector:
+                object:
+            body:
+              selector:
+                text:
+                  multiline: true
+            intent:
+              selector:
+                text:
+            extras:
+              selector:
+                object:
+            value:
+              selector:
+                text:
+    sequence_id:
+      required: false
+      selector:
+        text:
+      example: "Mc3otamDNcpJ"
+clear:
+  target: *target
+  fields:
+    sequence_id: &sequence_id
+      required: true
+      selector:
+        text:
+      example: "Mc3otamDNcpJ"
+delete:
+  target: *target
+  fields:
+    sequence_id: *sequence_id

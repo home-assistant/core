@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .controller import SmartTubConfigEntry
-from .entity import SmartTubSensorBase
+from .entity import SmartTubOnboardSensorBase
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
@@ -32,6 +32,8 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
         },
     ),
 )
+
+PARALLEL_UPDATES = 0
 
 SET_SECONDARY_FILTRATION_SCHEMA: VolDictType = {
     vol.Required(ATTR_MODE): vol.In(
@@ -56,16 +58,16 @@ async def async_setup_entry(
     for spa in controller.spas:
         entities.extend(
             [
-                SmartTubSensor(controller.coordinator, spa, "State", "state"),
-                SmartTubSensor(
+                SmartTubBuiltinSensor(controller.coordinator, spa, "State", "state"),
+                SmartTubBuiltinSensor(
                     controller.coordinator, spa, "Flow Switch", "flow_switch"
                 ),
-                SmartTubSensor(controller.coordinator, spa, "Ozone", "ozone"),
-                SmartTubSensor(controller.coordinator, spa, "UV", "uv"),
-                SmartTubSensor(
+                SmartTubBuiltinSensor(controller.coordinator, spa, "Ozone", "ozone"),
+                SmartTubBuiltinSensor(controller.coordinator, spa, "UV", "uv"),
+                SmartTubBuiltinSensor(
                     controller.coordinator, spa, "Blowout Cycle", "blowout_cycle"
                 ),
-                SmartTubSensor(
+                SmartTubBuiltinSensor(
                     controller.coordinator, spa, "Cleanup Cycle", "cleanup_cycle"
                 ),
                 SmartTubPrimaryFiltrationCycle(controller.coordinator, spa),
@@ -90,8 +92,19 @@ async def async_setup_entry(
     )
 
 
-class SmartTubSensor(SmartTubSensorBase, SensorEntity):
+class SmartTubBuiltinSensor(SmartTubOnboardSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: smarttub.Spa,
+        sensor_name: str,
+        state_key: str,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, spa, sensor_name, state_key)
+        self._attr_translation_key = state_key
 
     @property
     def native_value(self) -> str | None:
@@ -105,7 +118,7 @@ class SmartTubSensor(SmartTubSensorBase, SensorEntity):
         return self._state.lower()
 
 
-class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
+class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
     """The primary filtration cycle."""
 
     def __init__(
@@ -115,6 +128,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         super().__init__(
             coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
+        self._attr_translation_key = "primary_filtration_cycle"
 
     @property
     def cycle(self) -> smarttub.SpaPrimaryFiltrationCycle:
@@ -145,7 +159,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         await self.coordinator.async_request_refresh()
 
 
-class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
+class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
     """The secondary filtration cycle."""
 
     def __init__(
@@ -155,6 +169,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         super().__init__(
             coordinator, spa, "Secondary Filtration Cycle", "secondary_filtration"
         )
+        self._attr_translation_key = "secondary_filtration_cycle"
 
     @property
     def cycle(self) -> smarttub.SpaSecondaryFiltrationCycle:

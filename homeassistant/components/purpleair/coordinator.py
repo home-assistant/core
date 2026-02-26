@@ -43,7 +43,7 @@ SENSOR_FIELDS_TO_RETRIEVE = [
     "voc",
 ]
 
-UPDATE_INTERVAL = timedelta(minutes=2)
+UPDATE_INTERVAL = timedelta(minutes=5)
 
 
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]

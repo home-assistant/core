@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 from pyenphase import (
     EnvoyACBPower,
     EnvoyBatteryAggregate,
+    EnvoyC6CC,
+    EnvoyCollar,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
     EnvoyEnchargePower,
@@ -204,7 +206,7 @@ class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy production sensor entity."""
 
     value_fn: Callable[[EnvoySystemProduction], int]
-    on_phase: str | None
+    on_phase: str | None = None
 
 
 PRODUCTION_SENSORS = (
@@ -217,7 +219,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=attrgetter("watts_now"),
-        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="daily_production",
@@ -228,7 +229,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
-        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -238,7 +238,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=attrgetter("watt_hours_last_7_days"),
-        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="lifetime_production",
@@ -249,7 +248,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=attrgetter("watt_hours_lifetime"),
-        on_phase=None,
     ),
 )
 
@@ -275,7 +273,7 @@ class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy consumption sensor entity."""
 
     value_fn: Callable[[EnvoySystemConsumption], int]
-    on_phase: str | None
+    on_phase: str | None = None
 
 
 CONSUMPTION_SENSORS = (
@@ -288,7 +286,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=attrgetter("watts_now"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="daily_consumption",
@@ -299,7 +296,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -309,7 +305,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=attrgetter("watt_hours_last_7_days"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_consumption",
@@ -320,7 +315,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=attrgetter("watt_hours_lifetime"),
-        on_phase=None,
     ),
 )
 
@@ -352,7 +346,6 @@ NET_CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=attrgetter("watts_now"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_balanced_net_consumption",
@@ -364,7 +357,6 @@ NET_CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=attrgetter("watt_hours_lifetime"),
-        on_phase=None,
     ),
 )
 
@@ -393,309 +385,184 @@ class EnvoyCTSensorEntityDescription(SensorEntityDescription):
         [EnvoyMeterData],
         int | float | str | CtType | CtMeterStatus | CtStatusFlags | CtState | None,
     ]
-    on_phase: str | None
+    on_phase: str | None = None
+    cttype: str | None = None
 
 
-CT_NET_CONSUMPTION_SENSORS = (
-    EnvoyCTSensorEntityDescription(
-        key="lifetime_net_consumption",
-        translation_key="lifetime_net_consumption",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
-        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
-        suggested_display_precision=3,
-        value_fn=attrgetter("energy_delivered"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="lifetime_net_production",
-        translation_key="lifetime_net_production",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
-        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
-        suggested_display_precision=3,
-        value_fn=attrgetter("energy_received"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="net_consumption",
-        translation_key="net_consumption",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER,
-        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
-        suggested_display_precision=3,
-        value_fn=attrgetter("active_power"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="frequency",
-        translation_key="net_ct_frequency",
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.FREQUENCY,
-        suggested_display_precision=1,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("frequency"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="voltage",
-        translation_key="net_ct_voltage",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        suggested_display_precision=1,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("voltage"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="net_ct_current",
-        translation_key="net_ct_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.CURRENT,
-        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=3,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("current"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="net_ct_powerfactor",
-        translation_key="net_ct_powerfactor",
-        device_class=SensorDeviceClass.POWER_FACTOR,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("power_factor"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="net_consumption_ct_metering_status",
-        translation_key="net_ct_metering_status",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=list(CtMeterStatus),
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("metering_status"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="net_consumption_ct_status_flags",
-        translation_key="net_ct_status_flags",
-        state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
-        on_phase=None,
-    ),
-)
-
-
-CT_NET_CONSUMPTION_PHASE_SENSORS = {
-    (on_phase := PHASENAMES[phase]): [
-        replace(
-            sensor,
-            key=f"{sensor.key}_l{phase + 1}",
-            translation_key=f"{sensor.translation_key}_phase",
-            entity_registry_enabled_default=False,
-            on_phase=on_phase,
-            translation_placeholders={"phase_name": f"l{phase + 1}"},
+# All ct types unified in common setup
+CT_SENSORS = (
+    [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
+            suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+            suggested_display_precision=3,
+            value_fn=attrgetter("energy_delivered"),
+            cttype=cttype,
         )
-        for sensor in list(CT_NET_CONSUMPTION_SENSORS)
+        for cttype, key in (
+            (CtType.NET_CONSUMPTION, "lifetime_net_consumption"),
+            # Production CT energy_delivered is not used
+            (CtType.STORAGE, "lifetime_battery_discharged"),
+        )
     ]
-    for phase in range(3)
-}
-
-CT_PRODUCTION_SENSORS = (
-    EnvoyCTSensorEntityDescription(
-        key="production_ct_frequency",
-        translation_key="production_ct_frequency",
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.FREQUENCY,
-        suggested_display_precision=1,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("frequency"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="production_ct_voltage",
-        translation_key="production_ct_voltage",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        suggested_display_precision=1,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("voltage"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="production_ct_current",
-        translation_key="production_ct_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.CURRENT,
-        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=3,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("current"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="production_ct_powerfactor",
-        translation_key="production_ct_powerfactor",
-        device_class=SensorDeviceClass.POWER_FACTOR,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("power_factor"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="production_ct_metering_status",
-        translation_key="production_ct_metering_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=list(CtMeterStatus),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("metering_status"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="production_ct_status_flags",
-        translation_key="production_ct_status_flags",
-        state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
-        on_phase=None,
-    ),
-)
-
-CT_PRODUCTION_PHASE_SENSORS = {
-    (on_phase := PHASENAMES[phase]): [
-        replace(
-            sensor,
-            key=f"{sensor.key}_l{phase + 1}",
-            translation_key=f"{sensor.translation_key}_phase",
-            entity_registry_enabled_default=False,
-            on_phase=on_phase,
-            translation_placeholders={"phase_name": f"l{phase + 1}"},
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
+            suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+            suggested_display_precision=3,
+            value_fn=attrgetter("energy_received"),
+            cttype=cttype,
         )
-        for sensor in list(CT_PRODUCTION_SENSORS)
+        for cttype, key in (
+            (CtType.NET_CONSUMPTION, "lifetime_net_production"),
+            # Production CT energy_received is not used
+            (CtType.STORAGE, "lifetime_battery_charged"),
+        )
     ]
-    for phase in range(3)
-}
-
-CT_STORAGE_SENSORS = (
-    EnvoyCTSensorEntityDescription(
-        key="lifetime_battery_discharged",
-        translation_key="lifetime_battery_discharged",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
-        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
-        suggested_display_precision=3,
-        value_fn=attrgetter("energy_delivered"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="lifetime_battery_charged",
-        translation_key="lifetime_battery_charged",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.ENERGY,
-        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
-        suggested_display_precision=3,
-        value_fn=attrgetter("energy_received"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="battery_discharge",
-        translation_key="battery_discharge",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER,
-        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
-        suggested_display_precision=3,
-        value_fn=attrgetter("active_power"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="storage_ct_frequency",
-        translation_key="storage_ct_frequency",
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.FREQUENCY,
-        suggested_display_precision=1,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("frequency"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="storage_voltage",
-        translation_key="storage_ct_voltage",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        suggested_display_precision=1,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("voltage"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="storage_ct_current",
-        translation_key="storage_ct_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.CURRENT,
-        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=3,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("current"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="storage_ct_powerfactor",
-        translation_key="storage_ct_powerfactor",
-        device_class=SensorDeviceClass.POWER_FACTOR,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("power_factor"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="storage_ct_metering_status",
-        translation_key="storage_ct_metering_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=list(CtMeterStatus),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=attrgetter("metering_status"),
-        on_phase=None,
-    ),
-    EnvoyCTSensorEntityDescription(
-        key="storage_ct_status_flags",
-        translation_key="storage_ct_status_flags",
-        state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
-        on_phase=None,
-    ),
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+            suggested_display_precision=3,
+            value_fn=attrgetter("active_power"),
+            cttype=cttype,
+        )
+        for cttype, key in (
+            (CtType.NET_CONSUMPTION, "net_consumption"),
+            # Production CT active_power is not used
+            (CtType.STORAGE, "battery_discharge"),
+        )
+    ]
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=(translation_key if translation_key != "" else key),
+            native_unit_of_measurement=UnitOfFrequency.HERTZ,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.FREQUENCY,
+            suggested_display_precision=1,
+            entity_registry_enabled_default=False,
+            value_fn=attrgetter("frequency"),
+            cttype=cttype,
+        )
+        for cttype, key, translation_key in (
+            (CtType.NET_CONSUMPTION, "frequency", "net_ct_frequency"),
+            (CtType.PRODUCTION, "production_ct_frequency", ""),
+            (CtType.STORAGE, "storage_ct_frequency", ""),
+        )
+    ]
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=(translation_key if translation_key != "" else key),
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            suggested_display_precision=1,
+            entity_registry_enabled_default=False,
+            value_fn=attrgetter("voltage"),
+            cttype=cttype,
+        )
+        for cttype, key, translation_key in (
+            (CtType.NET_CONSUMPTION, "voltage", "net_ct_voltage"),
+            (CtType.PRODUCTION, "production_ct_voltage", ""),
+            (CtType.STORAGE, "storage_voltage", "storage_ct_voltage"),
+        )
+    ]
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=3,
+            entity_registry_enabled_default=False,
+            value_fn=attrgetter("current"),
+            cttype=cttype,
+        )
+        for cttype, key in (
+            (CtType.NET_CONSUMPTION, "net_ct_current"),
+            (CtType.PRODUCTION, "production_ct_current"),
+            (CtType.STORAGE, "storage_ct_current"),
+        )
+    ]
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            entity_registry_enabled_default=False,
+            value_fn=attrgetter("power_factor"),
+            cttype=cttype,
+        )
+        for cttype, key in (
+            (CtType.NET_CONSUMPTION, "net_ct_powerfactor"),
+            (CtType.PRODUCTION, "production_ct_powerfactor"),
+            (CtType.STORAGE, "storage_ct_powerfactor"),
+        )
+    ]
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=(translation_key if translation_key != "" else key),
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(CtMeterStatus),
+            entity_registry_enabled_default=False,
+            value_fn=attrgetter("metering_status"),
+            cttype=cttype,
+        )
+        for cttype, key, translation_key in (
+            (
+                CtType.NET_CONSUMPTION,
+                "net_consumption_ct_metering_status",
+                "net_ct_metering_status",
+            ),
+            (CtType.PRODUCTION, "production_ct_metering_status", ""),
+            (CtType.STORAGE, "storage_ct_metering_status", ""),
+        )
+    ]
+    + [
+        EnvoyCTSensorEntityDescription(
+            key=key,
+            translation_key=(translation_key if translation_key != "" else key),
+            state_class=None,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
+            cttype=cttype,
+        )
+        for cttype, key, translation_key in (
+            (
+                CtType.NET_CONSUMPTION,
+                "net_consumption_ct_status_flags",
+                "net_ct_status_flags",
+            ),
+            (CtType.PRODUCTION, "production_ct_status_flags", ""),
+            (CtType.STORAGE, "storage_ct_status_flags", ""),
+        )
+    ]
 )
 
 
-CT_STORAGE_PHASE_SENSORS = {
+CT_PHASE_SENSORS = {
     (on_phase := PHASENAMES[phase]): [
         replace(
             sensor,
@@ -705,7 +572,7 @@ CT_STORAGE_PHASE_SENSORS = {
             on_phase=on_phase,
             translation_placeholders={"phase_name": f"l{phase + 1}"},
         )
-        for sensor in list(CT_STORAGE_SENSORS)
+        for sensor in list(CT_SENSORS)
     ]
     for phase in range(3)
 }
@@ -734,6 +601,7 @@ ENCHARGE_INVENTORY_SENSORS = (
     EnvoyEnchargeSensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=attrgetter("temperature"),
     ),
@@ -748,6 +616,7 @@ ENCHARGE_INVENTORY_SENSORS = (
 ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="soc",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("soc"),
@@ -755,12 +624,14 @@ ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="apparent_power_mva",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.APPARENT_POWER,
         value_fn=lambda encharge: encharge.apparent_power_mva * 0.001,
     ),
     EnvoyEnchargePowerSensorEntityDescription(
         key="real_power_mw",
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda encharge: encharge.real_power_mw * 0.001,
     ),
@@ -778,6 +649,7 @@ ENPOWER_SENSORS = (
     EnvoyEnpowerSensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=attrgetter("temperature"),
     ),
@@ -786,6 +658,75 @@ ENPOWER_SENSORS = (
         translation_key=LAST_REPORTED_KEY,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda enpower: dt_util.utc_from_timestamp(enpower.last_report_date),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyCollarSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy Collar sensor entity."""
+
+    value_fn: Callable[[EnvoyCollar], datetime.datetime | int | float | str]
+
+
+# translations don't accept uppercase
+ADMIN_STATE_MAP = {
+    "ENCMN_MDE_ON_GRID": "on_grid",
+    "ENCMN_MDE_OFF_GRID": "off_grid",
+}
+
+COLLAR_SENSORS = (
+    EnvoyCollarSensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_fn=attrgetter("temperature"),
+    ),
+    EnvoyCollarSensorEntityDescription(
+        key=LAST_REPORTED_KEY,
+        translation_key=LAST_REPORTED_KEY,
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda collar: dt_util.utc_from_timestamp(collar.last_report_date),
+    ),
+    # grid_state does not seem to change when off-grid, but rather admin_state_str
+    EnvoyCollarSensorEntityDescription(
+        key="grid_state",
+        translation_key="grid_status",
+        value_fn=lambda collar: collar.grid_state,
+    ),
+    # grid_status off-grid shows in admin_state rather than in grid_state
+    # map values as translations don't accept uppercase which these are
+    EnvoyCollarSensorEntityDescription(
+        key="admin_state_str",
+        translation_key="admin_state",
+        value_fn=lambda collar: ADMIN_STATE_MAP.get(
+            collar.admin_state_str, collar.admin_state_str
+        ),
+    ),
+    EnvoyCollarSensorEntityDescription(
+        key="mid_state",
+        translation_key="mid_state",
+        value_fn=lambda collar: collar.mid_state,
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyC6CCSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy C6 Combiner controller sensor entity."""
+
+    value_fn: Callable[[EnvoyC6CC], datetime.datetime]
+
+
+C6CC_SENSORS = (
+    EnvoyC6CCSensorEntityDescription(
+        key=LAST_REPORTED_KEY,
+        translation_key=LAST_REPORTED_KEY,
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda c6cc: dt_util.utc_from_timestamp(c6cc.last_report_date),
     ),
 )
 
@@ -806,6 +747,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
     EnvoyEnchargeAggregateSensorEntityDescription(
         key="battery_level",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("state_of_charge"),
     ),
@@ -813,6 +755,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
         key="reserve_soc",
         translation_key="reserve_soc",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("reserve_state_of_charge"),
     ),
@@ -820,21 +763,23 @@ ENCHARGE_AGGREGATE_SENSORS = (
         key="available_energy",
         translation_key="available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("available_energy"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(
         key="reserve_energy",
         translation_key="reserve_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("backup_reserve"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(
         key="max_capacity",
         translation_key="max_capacity",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("max_available_capacity"),
     ),
 )
@@ -851,12 +796,14 @@ ACB_BATTERY_POWER_SENSORS = (
     EnvoyAcbBatterySensorEntityDescription(
         key="acb_power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=attrgetter("power"),
     ),
     EnvoyAcbBatterySensorEntityDescription(
         key="acb_soc",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("state_of_charge"),
     ),
@@ -874,6 +821,7 @@ ACB_BATTERY_ENERGY_SENSORS = (
         key="acb_available_energy",
         translation_key="acb_available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("charge_wh"),
     ),
@@ -891,6 +839,7 @@ AGGREGATE_BATTERY_SENSORS = (
     EnvoyAggregateBatterySensorEntityDescription(
         key="aggregated_soc",
         translation_key="aggregated_soc",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("state_of_charge"),
@@ -899,6 +848,7 @@ AGGREGATE_BATTERY_SENSORS = (
         key="aggregated_available_energy",
         translation_key="aggregated_available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("available_energy"),
     ),
@@ -961,50 +911,21 @@ async def async_setup_entry(
             for description in NET_CONSUMPTION_PHASE_SENSORS[use_phase]
             if phase is not None
         )
-    # Add net consumption CT entities
-    if ctmeter := envoy_data.ctmeter_consumption:
+    # Add Current Transformer entities
+    if envoy_data.ctmeters:
         entities.extend(
-            EnvoyConsumptionCTEntity(coordinator, description)
-            for description in CT_NET_CONSUMPTION_SENSORS
-            if ctmeter.measurement_type == CtType.NET_CONSUMPTION
+            EnvoyCTEntity(coordinator, description)
+            for description in CT_SENSORS
+            if description.cttype in envoy_data.ctmeters
         )
-    # For each net consumption ct phase reported add net consumption entities
-    if phase_data := envoy_data.ctmeter_consumption_phases:
+    # Add Current Transformer phase entities
+    if ctmeters_phases := envoy_data.ctmeters_phases:
         entities.extend(
-            EnvoyConsumptionCTPhaseEntity(coordinator, description)
-            for use_phase, phase in phase_data.items()
-            for description in CT_NET_CONSUMPTION_PHASE_SENSORS[use_phase]
-            if phase.measurement_type == CtType.NET_CONSUMPTION
-        )
-    # Add production CT entities
-    if ctmeter := envoy_data.ctmeter_production:
-        entities.extend(
-            EnvoyProductionCTEntity(coordinator, description)
-            for description in CT_PRODUCTION_SENSORS
-            if ctmeter.measurement_type == CtType.PRODUCTION
-        )
-    # For each production ct phase reported add production ct entities
-    if phase_data := envoy_data.ctmeter_production_phases:
-        entities.extend(
-            EnvoyProductionCTPhaseEntity(coordinator, description)
-            for use_phase, phase in phase_data.items()
-            for description in CT_PRODUCTION_PHASE_SENSORS[use_phase]
-            if phase.measurement_type == CtType.PRODUCTION
-        )
-    # Add storage CT entities
-    if ctmeter := envoy_data.ctmeter_storage:
-        entities.extend(
-            EnvoyStorageCTEntity(coordinator, description)
-            for description in CT_STORAGE_SENSORS
-            if ctmeter.measurement_type == CtType.STORAGE
-        )
-    # For each storage ct phase reported add storage ct entities
-    if phase_data := envoy_data.ctmeter_storage_phases:
-        entities.extend(
-            EnvoyStorageCTPhaseEntity(coordinator, description)
-            for use_phase, phase in phase_data.items()
-            for description in CT_STORAGE_PHASE_SENSORS[use_phase]
-            if phase.measurement_type == CtType.STORAGE
+            EnvoyCTPhaseEntity(coordinator, description)
+            for phase, descriptions in CT_PHASE_SENSORS.items()
+            for description in descriptions
+            if (cttype := description.cttype) in ctmeters_phases
+            and phase in ctmeters_phases[cttype]
         )
 
     if envoy_data.inverters:
@@ -1049,6 +970,15 @@ async def async_setup_entry(
         entities.extend(
             AggregateBatteryEntity(coordinator, description)
             for description in AGGREGATE_BATTERY_SENSORS
+        )
+    if envoy_data.collar:
+        entities.extend(
+            EnvoyCollarEntity(coordinator, description)
+            for description in COLLAR_SENSORS
+        )
+    if envoy_data.c6cc:
+        entities.extend(
+            EnvoyC6CCEntity(coordinator, description) for description in C6CC_SENSORS
         )
 
     async_add_entities(entities)
@@ -1182,8 +1112,8 @@ class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):
         return self.entity_description.value_fn(system_net_consumption)
 
 
-class EnvoyConsumptionCTEntity(EnvoySystemSensorEntity):
-    """Envoy net consumption CT entity."""
+class EnvoyCTEntity(EnvoySystemSensorEntity):
+    """Envoy CT entity."""
 
     entity_description: EnvoyCTSensorEntityDescription
 
@@ -1192,13 +1122,13 @@ class EnvoyConsumptionCTEntity(EnvoySystemSensorEntity):
         self,
     ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
         """Return the state of the CT sensor."""
-        if (ctmeter := self.data.ctmeter_consumption) is None:
+        if (cttype := self.entity_description.cttype) not in self.data.ctmeters:
             return None
-        return self.entity_description.value_fn(ctmeter)
+        return self.entity_description.value_fn(self.data.ctmeters[cttype])
 
 
-class EnvoyConsumptionCTPhaseEntity(EnvoySystemSensorEntity):
-    """Envoy net consumption CT phase entity."""
+class EnvoyCTPhaseEntity(EnvoySystemSensorEntity):
+    """Envoy CT phase entity."""
 
     entity_description: EnvoyCTSensorEntityDescription
 
@@ -1209,78 +1139,14 @@ class EnvoyConsumptionCTPhaseEntity(EnvoySystemSensorEntity):
         """Return the state of the CT phase sensor."""
         if TYPE_CHECKING:
             assert self.entity_description.on_phase
-        if (ctmeter := self.data.ctmeter_consumption_phases) is None:
+        if (cttype := self.entity_description.cttype) not in self.data.ctmeters_phases:
+            return None
+        if (phase := self.entity_description.on_phase) not in self.data.ctmeters_phases[
+            cttype
+        ]:
             return None
         return self.entity_description.value_fn(
-            ctmeter[self.entity_description.on_phase]
-        )
-
-
-class EnvoyProductionCTEntity(EnvoySystemSensorEntity):
-    """Envoy net consumption CT entity."""
-
-    entity_description: EnvoyCTSensorEntityDescription
-
-    @property
-    def native_value(
-        self,
-    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
-        """Return the state of the CT sensor."""
-        if (ctmeter := self.data.ctmeter_production) is None:
-            return None
-        return self.entity_description.value_fn(ctmeter)
-
-
-class EnvoyProductionCTPhaseEntity(EnvoySystemSensorEntity):
-    """Envoy net consumption CT phase entity."""
-
-    entity_description: EnvoyCTSensorEntityDescription
-
-    @property
-    def native_value(
-        self,
-    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
-        """Return the state of the CT phase sensor."""
-        if TYPE_CHECKING:
-            assert self.entity_description.on_phase
-        if (ctmeter := self.data.ctmeter_production_phases) is None:
-            return None
-        return self.entity_description.value_fn(
-            ctmeter[self.entity_description.on_phase]
-        )
-
-
-class EnvoyStorageCTEntity(EnvoySystemSensorEntity):
-    """Envoy net storage CT entity."""
-
-    entity_description: EnvoyCTSensorEntityDescription
-
-    @property
-    def native_value(
-        self,
-    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
-        """Return the state of the CT sensor."""
-        if (ctmeter := self.data.ctmeter_storage) is None:
-            return None
-        return self.entity_description.value_fn(ctmeter)
-
-
-class EnvoyStorageCTPhaseEntity(EnvoySystemSensorEntity):
-    """Envoy net storage CT phase entity."""
-
-    entity_description: EnvoyCTSensorEntityDescription
-
-    @property
-    def native_value(
-        self,
-    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
-        """Return the state of the CT phase sensor."""
-        if TYPE_CHECKING:
-            assert self.entity_description.on_phase
-        if (ctmeter := self.data.ctmeter_storage_phases) is None:
-            return None
-        return self.entity_description.value_fn(
-            ctmeter[self.entity_description.on_phase]
+            self.data.ctmeters_phases[cttype][phase]
         )
 
 
@@ -1488,3 +1354,70 @@ class AggregateBatteryEntity(EnvoySystemSensorEntity):
         battery_aggregate = self.data.battery_aggregate
         assert battery_aggregate is not None
         return self.entity_description.value_fn(battery_aggregate)
+
+
+class EnvoyCollarEntity(EnvoySensorBaseEntity):
+    """Envoy Collar sensor entity."""
+
+    entity_description: EnvoyCollarSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyCollarSensorEntityDescription,
+    ) -> None:
+        """Initialize Collar entity."""
+        super().__init__(coordinator, description)
+        collar_data = self.data.collar
+        assert collar_data is not None
+        self._serial_number = collar_data.serial_number
+        self._attr_unique_id = f"{collar_data.serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, collar_data.serial_number)},
+            manufacturer="Enphase",
+            model="IQ Meter Collar",
+            name=f"Collar {collar_data.serial_number}",
+            sw_version=str(collar_data.firmware_version),
+            via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=collar_data.serial_number,
+        )
+
+    @property
+    def native_value(self) -> datetime.datetime | int | float | str:
+        """Return the state of the collar sensors."""
+        collar_data = self.data.collar
+        assert collar_data is not None
+        return self.entity_description.value_fn(collar_data)
+
+
+class EnvoyC6CCEntity(EnvoySensorBaseEntity):
+    """Envoy C6CC sensor entity."""
+
+    entity_description: EnvoyC6CCSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyC6CCSensorEntityDescription,
+    ) -> None:
+        """Initialize Encharge entity."""
+        super().__init__(coordinator, description)
+        c6cc_data = self.data.c6cc
+        assert c6cc_data is not None
+        self._attr_unique_id = f"{c6cc_data.serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, c6cc_data.serial_number)},
+            manufacturer="Enphase",
+            model="C6 COMBINER CONTROLLER",
+            name=f"C6 Combiner {c6cc_data.serial_number}",
+            sw_version=str(c6cc_data.firmware_version),
+            via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=c6cc_data.serial_number,
+        )
+
+    @property
+    def native_value(self) -> datetime.datetime:
+        """Return the state of the c6cc inventory sensors."""
+        c6cc_data = self.data.c6cc
+        assert c6cc_data is not None
+        return self.entity_description.value_fn(c6cc_data)

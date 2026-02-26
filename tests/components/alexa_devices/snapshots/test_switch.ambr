@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Do not disturb',
     'options': dict({
     }),
     'original_device_class': None,
@@ -30,7 +31,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'do_not_disturb',
-    'unique_id': 'echo_test_serial_number-do_not_disturb',
+    'unique_id': 'echo_test_serial_number-dnd',
     'unit_of_measurement': None,
   })
 # ---

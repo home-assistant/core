@@ -1,39 +1,32 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "location": "[%key:common::config_flow::data::location%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "api_key": "App password or API key"
-        }
-      },
-
-      "reauth_confirm": {
-        "title": "Reauthenticate Pi-hole",
-        "description": "Please enter a new API key for Pi-hole at {host}/{location}",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "issues": {
-    "v5_to_v6_migration": {
-      "title": "Recent migration from Pi-hole API v5 to v6",
-      "description": "You've likely updated your Pi-hole to API v6 from v5. Some sensors changed in the new API, the daily sensors were removed, and your old API token is invalid. Provide your new app password by re-authenticating in repairs or in **Settings -> Devices & services -> Pi-hole**."
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Please enter a new API key for Pi-hole at {host}/{location}",
+        "title": "Reauthenticate Pi-hole"
+      },
+      "user": {
+        "data": {
+          "api_key": "App password or API key",
+          "host": "[%key:common::config_flow::data::host%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
     }
   },
   "entity": {
@@ -43,36 +36,36 @@
       }
     },
     "sensor": {
-      "ads_blocked_today": {
-        "name": "Ads blocked today",
-        "unit_of_measurement": "ads"
-      },
       "ads_blocked": {
         "name": "Ads blocked",
         "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::ads_blocked_today::unit_of_measurement%]"
+      },
+      "ads_blocked_today": {
+        "name": "Ads blocked today",
+        "unit_of_measurement": "ads"
       },
       "ads_percentage_today": {
         "name": "Ads percentage blocked today"
       },
 
-      "percent_ads_blocked": {
-        "name": "Ads percentage blocked"
-      },
       "clients_ever_seen": {
         "name": "Seen clients",
         "unit_of_measurement": "clients"
-      },
-      "dns_queries_today": {
-        "name": "DNS queries today",
-        "unit_of_measurement": "queries"
       },
       "dns_queries": {
         "name": "DNS queries",
         "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::dns_queries_today::unit_of_measurement%]"
       },
+      "dns_queries_today": {
+        "name": "DNS queries today",
+        "unit_of_measurement": "queries"
+      },
       "domains_being_blocked": {
         "name": "Domains blocked",
         "unit_of_measurement": "domains"
+      },
+      "percent_ads_blocked": {
+        "name": "Ads percentage blocked"
       },
       "queries_cached": {
         "name": "DNS queries cached",
@@ -103,16 +96,22 @@
       }
     }
   },
+  "issues": {
+    "v5_to_v6_migration": {
+      "description": "You've likely updated your Pi-hole to API v6 from v5. Some sensors changed in the new API, the daily sensors were removed, and your old API token is invalid. Provide your new app password by re-authenticating in repairs or in **Settings -> Devices & services -> Pi-hole**.",
+      "title": "Recent migration from Pi-hole API v5 to v6"
+    }
+  },
   "services": {
     "disable": {
-      "name": "[%key:common::action::disable%]",
       "description": "Disables configured Pi-hole(s) for an amount of time.",
       "fields": {
         "duration": {
-          "name": "Duration",
-          "description": "Time that the Pi-hole should be disabled for."
+          "description": "Time that the Pi-hole should be disabled for.",
+          "name": "Duration"
         }
-      }
+      },
+      "name": "[%key:common::action::disable%]"
     }
   }
 }

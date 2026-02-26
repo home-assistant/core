@@ -7,6 +7,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 import random
+from typing import Any
 
 import aiohue
 
@@ -163,6 +164,7 @@ async def async_setup_entry(
         name="light",
         update_method=partial(async_safe_fetch, bridge, bridge.api.lights.update),
         update_interval=SCAN_INTERVAL,
+        config_entry=config_entry,
         request_refresh_debouncer=Debouncer(
             bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
@@ -197,6 +199,7 @@ async def async_setup_entry(
         name="group",
         update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
         update_interval=SCAN_INTERVAL,
+        config_entry=config_entry,
         request_refresh_debouncer=Debouncer(
             bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
@@ -408,7 +411,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return hue_brightness_to_hass(bri)
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode
@@ -480,7 +483,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(max_mireds)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         if self.is_group:
             return self.light.state["any_on"]
@@ -620,7 +623,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         if not self.is_group:
             return {}

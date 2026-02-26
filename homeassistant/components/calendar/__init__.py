@@ -32,7 +32,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
@@ -315,9 +315,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    frontend.async_register_built_in_panel(
-        hass, "calendar", "calendar", "hass:calendar"
-    )
+    frontend.async_register_built_in_panel(hass, "calendar", "calendar", "mdi:calendar")
 
     websocket_api.async_register_command(hass, handle_calendar_event_create)
     websocket_api.async_register_command(hass, handle_calendar_event_delete)
@@ -508,6 +506,8 @@ def is_offset_reached(
 class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes calendar entities."""
 
+    initial_color: str | None = None
+
 
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
@@ -517,6 +517,30 @@ class CalendarEntity(Entity):
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
+
+    _attr_initial_color: str | None
+
+    @property
+    def initial_color(self) -> str | None:
+        """Return the initial color for the calendar entity."""
+        if hasattr(self, "_attr_initial_color"):
+            return self._attr_initial_color
+        if hasattr(self, "entity_description"):
+            return self.entity_description.initial_color
+        return None
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options."""
+        if self.initial_color is None:
+            return None
+
+        # Validate that it's a valid hex color string with # prefix
+        try:
+            validated_color = cv.color_hex(self.initial_color)
+        except vol.Invalid:
+            return None
+
+        return {DOMAIN: {"color": validated_color}}
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -535,8 +559,8 @@ class CalendarEntity(Entity):
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
+            "location": event.location or "",
+            "description": event.description or "",
         }
 
     @final
@@ -667,7 +691,7 @@ class CalendarEventView(http.HomeAssistantView):
         try:
             start_date = dt_util.parse_datetime(start)
             end_date = dt_util.parse_datetime(end)
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)

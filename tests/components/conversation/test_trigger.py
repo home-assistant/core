@@ -5,8 +5,7 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, async_get_agent
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import trigger
@@ -16,10 +15,8 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass: HomeAssistant) -> None:
+async def setup_comp(hass: HomeAssistant, init_components) -> None:
     """Initialize components."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
 
 
 async def test_if_fires_on_event(
@@ -50,6 +47,7 @@ async def test_if_fires_on_event(
                             "slots": "{{ trigger.slots }}",
                             "details": "{{ trigger.details }}",
                             "device_id": "{{ trigger.device_id }}",
+                            "satellite_id": "{{ trigger.satellite_id }}",
                             "user_input": "{{ trigger.user_input }}",
                         }
                     },
@@ -81,11 +79,13 @@ async def test_if_fires_on_event(
         "slots": {},
         "details": {},
         "device_id": None,
+        "satellite_id": None,
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
+            "satellite_id": None,
             "language": "en",
             "text": "Ha ha ha",
             "extra_system_prompt": None,
@@ -185,6 +185,7 @@ async def test_response_same_sentence(
                                     "slots": "{{ trigger.slots }}",
                                     "details": "{{ trigger.details }}",
                                     "device_id": "{{ trigger.device_id }}",
+                                    "satellite_id": "{{ trigger.satellite_id }}",
                                     "user_input": "{{ trigger.user_input }}",
                                 }
                             },
@@ -230,11 +231,13 @@ async def test_response_same_sentence(
         "slots": {},
         "details": {},
         "device_id": None,
+        "satellite_id": None,
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
+            "satellite_id": None,
             "language": "en",
             "text": "test sentence",
             "extra_system_prompt": None,
@@ -376,6 +379,7 @@ async def test_same_trigger_multiple_sentences(
                             "slots": "{{ trigger.slots }}",
                             "details": "{{ trigger.details }}",
                             "device_id": "{{ trigger.device_id }}",
+                            "satellite_id": "{{ trigger.satellite_id }}",
                             "user_input": "{{ trigger.user_input }}",
                         }
                     },
@@ -408,11 +412,13 @@ async def test_same_trigger_multiple_sentences(
         "slots": {},
         "details": {},
         "device_id": None,
+        "satellite_id": None,
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
+            "satellite_id": None,
             "language": "en",
             "text": "hello",
             "extra_system_prompt": None,
@@ -449,6 +455,7 @@ async def test_same_sentence_multiple_triggers(
                                 "slots": "{{ trigger.slots }}",
                                 "details": "{{ trigger.details }}",
                                 "device_id": "{{ trigger.device_id }}",
+                                "satellite_id": "{{ trigger.satellite_id }}",
                                 "user_input": "{{ trigger.user_input }}",
                             }
                         },
@@ -474,6 +481,7 @@ async def test_same_sentence_multiple_triggers(
                                 "slots": "{{ trigger.slots }}",
                                 "details": "{{ trigger.details }}",
                                 "device_id": "{{ trigger.device_id }}",
+                                "satellite_id": "{{ trigger.satellite_id }}",
                                 "user_input": "{{ trigger.user_input }}",
                             }
                         },
@@ -590,6 +598,7 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
                             "slots": "{{ trigger.slots }}",
                             "details": "{{ trigger.details }}",
                             "device_id": "{{ trigger.device_id }}",
+                            "satellite_id": "{{ trigger.satellite_id }}",
                             "user_input": "{{ trigger.user_input }}",
                         }
                     },
@@ -636,11 +645,13 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
             },
         },
         "device_id": None,
+        "satellite_id": None,
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
+            "satellite_id": None,
             "language": "en",
             "text": "play the white album by the beatles",
             "extra_system_prompt": None,
@@ -660,14 +671,13 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
                     "command": ["test sentence"],
                 },
                 "action": {
-                    "set_conversation_response": "{{ trigger.device_id }}",
+                    "set_conversation_response": "{{ trigger.device_id }} - {{ trigger.satellite_id }}",
                 },
             }
         },
     )
 
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
+    agent = async_get_agent(hass)
 
     result = await agent.async_process(
         ConversationInput(
@@ -675,8 +685,12 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
             context=Context(),
             conversation_id=None,
             device_id="my_device",
+            satellite_id="assist_satellite.my_satellite",
             language=hass.config.language,
             agent_id=None,
         )
     )
-    assert result.response.speech["plain"]["speech"] == "my_device"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "my_device - assist_satellite.my_satellite"
+    )

@@ -2,15 +2,21 @@
 
 import asyncio
 from collections.abc import Iterator
+import fcntl
+import json
+import os
+from pathlib import Path
 import subprocess
 import threading
-from unittest.mock import patch
+import time
+from unittest.mock import MagicMock, patch
 
 import packaging.tags
 import py
 import pytest
 
 from homeassistant import core, runner
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.util import executor, thread
 
@@ -187,3 +193,244 @@ def test_enable_posix_spawn() -> None:
     ):
         runner._enable_posix_spawn()
         assert subprocess._USE_POSIX_SPAWN is False
+
+
+def test_ensure_single_execution_success(tmp_path: Path) -> None:
+    """Test successful single instance execution."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+
+        with open(lock_file_path, encoding="utf-8") as f:
+            data = json.load(f)
+            assert data["pid"] == os.getpid()
+            assert data["version"] == runner.LOCK_FILE_VERSION
+            assert data["ha_version"] == __version__
+            assert "start_ts" in data
+            assert isinstance(data["start_ts"], float)
+
+    # Lock file should still exist after context exit (we don't unlink to avoid races)
+    assert lock_file_path.exists()
+
+
+def test_ensure_single_execution_blocked(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test that second instance is blocked when lock exists."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    # Create and lock the file to simulate another instance
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        instance_info = {
+            "pid": 12345,
+            "version": 1,
+            "ha_version": "2025.1.0",
+            "start_ts": time.time() - 3600,  # Started 1 hour ago
+        }
+        json.dump(instance_info, lock_file)
+        lock_file.flush()
+
+        with runner.ensure_single_execution(config_dir) as lock:
+            assert lock.exit_code == 1
+
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "PID: 12345" in captured.err
+        assert "Version: 2025.1.0" in captured.err
+        assert "Started: " in captured.err
+        # Should show local time since naive datetime
+        assert "(local time)" in captured.err
+        assert f"Config directory: {config_dir}" in captured.err
+
+
+def test_ensure_single_execution_corrupt_lock_file(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test handling of corrupted lock file."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        lock_file.write("not valid json{]")
+        lock_file.flush()
+
+        # Try to acquire lock (should set exit_code but handle corrupt file gracefully)
+        with runner.ensure_single_execution(config_dir) as lock:
+            assert lock.exit_code == 1
+
+        # Check error output
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "Unable to read lock file details:" in captured.err
+        assert f"Config directory: {config_dir}" in captured.err
+
+
+def test_ensure_single_execution_empty_lock_file(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test handling of empty lock file."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        # Don't write anything - leave it empty
+        lock_file.flush()
+
+        # Try to acquire lock (should set exit_code but handle empty file gracefully)
+        with runner.ensure_single_execution(config_dir) as lock:
+            assert lock.exit_code == 1
+
+        # Check error output
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "Unable to read lock file details." in captured.err
+
+
+def test_ensure_single_execution_with_timezone(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test handling of lock file with timezone info (edge case)."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    # Note: This tests an edge case - our code doesn't create timezone-aware timestamps,
+    # but we handle them if they exist
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        # Started 2 hours ago
+        instance_info = {
+            "pid": 54321,
+            "version": 1,
+            "ha_version": "2025.2.0",
+            "start_ts": time.time() - 7200,
+        }
+        json.dump(instance_info, lock_file)
+        lock_file.flush()
+
+        with runner.ensure_single_execution(config_dir) as lock:
+            assert lock.exit_code == 1
+
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "PID: 54321" in captured.err
+        assert "Version: 2025.2.0" in captured.err
+        assert "Started: " in captured.err
+        # Should show local time indicator since fromtimestamp creates naive datetime
+        assert "(local time)" in captured.err
+
+
+def test_ensure_single_execution_with_tz_abbreviation(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test handling of lock file when timezone abbreviation is available."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        instance_info = {
+            "pid": 98765,
+            "version": 1,
+            "ha_version": "2025.3.0",
+            "start_ts": time.time() - 1800,  # Started 30 minutes ago
+        }
+        json.dump(instance_info, lock_file)
+        lock_file.flush()
+
+        # Mock datetime to return a timezone abbreviation
+        # We use mocking because strftime("%Z") behavior is OS-specific:
+        # On some systems it returns empty string for naive datetimes
+        mock_dt = MagicMock()
+
+        def _mock_strftime(fmt: str) -> str:
+            if fmt == "%Z":
+                return "PST"
+            if fmt == "%Y-%m-%d %H:%M:%S":
+                return "2025-09-03 10:30:45"
+            return "2025-09-03 10:30:45 PST"
+
+        mock_dt.strftime.side_effect = _mock_strftime
+
+        with patch("homeassistant.runner.datetime") as mock_datetime:
+            mock_datetime.fromtimestamp.return_value = mock_dt
+            with runner.ensure_single_execution(config_dir) as lock:
+                assert lock.exit_code == 1
+
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "PID: 98765" in captured.err
+        assert "Version: 2025.3.0" in captured.err
+        assert "Started: 2025-09-03 10:30:45 PST" in captured.err
+        # Should NOT have "(local time)" when timezone abbreviation is present
+        assert "(local time)" not in captured.err
+
+
+def test_ensure_single_execution_file_not_unlinked(tmp_path: Path) -> None:
+    """Test that lock file is never unlinked to avoid race conditions."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    # First run creates the lock file
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+        # Get inode to verify it's the same file
+        stat1 = lock_file_path.stat()
+
+    # After context exit, file should still exist
+    assert lock_file_path.exists()
+    stat2 = lock_file_path.stat()
+    # Verify it's the exact same file (same inode)
+    assert stat1.st_ino == stat2.st_ino
+
+    # Second run should reuse the same file
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+        stat3 = lock_file_path.stat()
+        # Still the same file (not recreated)
+        assert stat1.st_ino == stat3.st_ino
+
+    # After second run, still the same file
+    assert lock_file_path.exists()
+    stat4 = lock_file_path.stat()
+    assert stat1.st_ino == stat4.st_ino
+
+
+def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
+    """Test that sequential runs work correctly after lock is released."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+        with open(lock_file_path, encoding="utf-8") as f:
+            first_data = json.load(f)
+
+    # Lock file should still exist after first run (not unlinked)
+    assert lock_file_path.exists()
+
+    # Small delay to ensure different timestamp
+    time.sleep(0.00001)
+
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+        with open(lock_file_path, encoding="utf-8") as f:
+            second_data = json.load(f)
+            assert second_data["pid"] == os.getpid()
+            assert second_data["start_ts"] > first_data["start_ts"]
+
+    # Lock file should still exist after second run (not unlinked)
+    assert lock_file_path.exists()

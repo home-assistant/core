@@ -55,6 +55,7 @@ WIRED_CLIENT = {
     "wired-rx_bytes-r": 1234000000,
     "wired-tx_bytes-r": 5678000000,
     "uptime": 1600094505,
+    "wired_rate_mbps": 1000,
 }
 WIRELESS_CLIENT = {
     "is_wired": False,
@@ -542,6 +543,42 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wired_client_tx")
 
 
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wired_client_speed_sensor(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that wired client speed sensor is working as expected."""
+    # Verify sensor is created and has correct state
+    assert hass.states.get("sensor.wired_client_link_speed").state == "1000"
+
+    # Verify state update
+    wired_client = deepcopy(client_payload[0])
+    wired_client["wired_rate_mbps"] = 2500
+
+    mock_websocket_message(message=MessageKey.CLIENT, data=wired_client)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wired_client_link_speed").state == "2500"
+
+    # Verify sensor is unavailable when client disconnects
+    new_time = dt_util.utcnow()
+    wired_client["last_seen"] = dt_util.as_timestamp(new_time)
+
+    mock_websocket_message(message=MessageKey.CLIENT, data=wired_client)
+    await hass.async_block_till_done()
+
+    new_time += timedelta(seconds=(DEFAULT_DETECTION_TIME + 1))
+    with freeze_time(new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize(
     "config_entry_options",
     [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
@@ -555,9 +592,10 @@ async def test_remove_sensors(
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify removing of clients work as expected."""
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 7
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
+    assert hass.states.get("sensor.wired_client_link_speed")
     assert hass.states.get("sensor.wired_client_uptime")
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
@@ -570,6 +608,7 @@ async def test_remove_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert hass.states.get("sensor.wired_client_rx") is None
     assert hass.states.get("sensor.wired_client_tx") is None
+    assert hass.states.get("sensor.wired_client_link_speed") is None
     assert hass.states.get("sensor.wired_client_uptime") is None
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
@@ -1073,6 +1112,127 @@ async def test_bandwidth_port_sensors(
     assert hass.states.get("sensor.mock_name_port_1_tx") is None
     assert hass.states.get("sensor.mock_name_port_2_rx") is None
     assert hass.states.get("sensor.mock_name_port_2_tx") is None
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: False,
+            CONF_ALLOW_UPTIME_SENSORS: False,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "port_table": [
+                    {
+                        "media": "GE",
+                        "name": "Port 1",
+                        "port_idx": 1,
+                        "poe_class": "Class 4",
+                        "poe_enable": False,
+                        "poe_mode": "auto",
+                        "poe_power": "2.56",
+                        "poe_voltage": "53.40",
+                        "portconf_id": "1a1",
+                        "port_poe": False,
+                        "up": True,
+                        "speed": 1000,
+                    },
+                    {
+                        "media": "GE",
+                        "name": "Port 2",
+                        "port_idx": 2,
+                        "poe_class": "Class 4",
+                        "poe_enable": False,
+                        "poe_mode": "auto",
+                        "poe_power": "2.56",
+                        "poe_voltage": "53.40",
+                        "portconf_id": "1a2",
+                        "port_poe": False,
+                        "up": True,
+                        "speed": 100,
+                    },
+                    {
+                        "media": "GE",
+                        "name": "Port 3",
+                        "port_idx": 3,
+                        "poe_class": "Unknown",
+                        "poe_enable": False,
+                        "poe_mode": "off",
+                        "poe_power": "0.00",
+                        "poe_voltage": "0.00",
+                        "portconf_id": "1a3",
+                        "port_poe": False,
+                        "up": False,
+                        "speed": 0,
+                    },
+                ],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_port_link_speed_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that port link speed sensors are working as expected."""
+    p1_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_link_speed")
+    assert p1_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    p2_reg_entry = entity_registry.async_get("sensor.mock_name_port_2_link_speed")
+    assert p2_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    # Port with speed 0 should not create an entity
+    assert not entity_registry.async_get("sensor.mock_name_port_3_link_speed")
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id="sensor.mock_name_port_1_link_speed", disabled_by=None
+    )
+    entity_registry.async_update_entity(
+        entity_id="sensor.mock_name_port_2_link_speed", disabled_by=None
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Verify sensor state
+    assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "1000"
+    assert hass.states.get("sensor.mock_name_port_2_link_speed").state == "100"
+
+    # Verify state update
+    device_1 = device_payload[0]
+    device_1["port_table"][0]["speed"] = 100
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "100"
 
 
 @pytest.mark.parametrize(

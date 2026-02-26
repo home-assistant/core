@@ -7,11 +7,15 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
@@ -147,6 +151,28 @@ async def test_abort_if_no_implementation(
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
+
+
+async def test_abort_if_oauth_implementation_unavailable(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+) -> None:
+    """Check flow abort when implementation is unavailable."""
+
+    async def mock_provider(
+        hass: HomeAssistant, domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        raise config_entry_oauth2_flow.ImplementationUnavailableError("Test error")
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "test_provider", mock_provider
+    )
+
+    flow = flow_handler()
+    flow.hass = hass
+    result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "oauth_implementation_unavailable"
 
 
 async def test_missing_credentials_for_domain(
@@ -445,35 +471,32 @@ async def test_abort_discovered_multiple(
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_body", "error_reason", "error_log"),
+    ("status_code", "error_body", "error_reason", "expected_detail"),
     [
+        (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed", "unknown error"),
         (
             HTTPStatus.UNAUTHORIZED,
-            {},
+            {"error_description": "The token has expired."},
             "oauth_unauthorized",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
-        (
-            HTTPStatus.NOT_FOUND,
-            {},
-            "oauth_failed",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
-        (
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            {},
-            "oauth_failed",
-            "Token request for oauth2_test failed (unknown): unknown",
+            "unknown error: The token has expired.",
         ),
         (
             HTTPStatus.BAD_REQUEST,
             {
                 "error": "invalid_request",
                 "error_description": "Request was missing the 'redirect_uri' parameter.",
-                "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
+                "error_uri": "Sensible URI: https://authorization-server.com/docs/access_token",
             },
-            "oauth_failed",
-            "Token request for oauth2_test failed (invalid_request): Request was missing the",
+            "oauth_unauthorized",
+            "invalid_request: Request was missing the 'redirect_uri' parameter.",
+        ),
+        (
+            HTTPStatus.BAD_REQUEST,
+            "some error which is not formatted",
+            "oauth_unauthorized",
+            '"some error which is not formatted"',
         ),
     ],
 )
@@ -487,7 +510,7 @@ async def test_abort_if_oauth_token_error(
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
-    error_log: str,
+    expected_detail: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -534,11 +557,15 @@ async def test_abort_if_oauth_token_error(
         json=error_body,
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with caplog.at_level(logging.DEBUG):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert (
+        f"Token request for {TEST_DOMAIN} failed ({status_code}): {expected_detail}"
+        in caplog.text
+    )
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == error_reason
-    assert error_log in caplog.text
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -596,7 +623,7 @@ async def test_abort_if_oauth_token_closing_error(
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert "Token request for oauth2_test failed (unknown): unknown" in caplog.text
+    assert "Token request for oauth2_test failed (401): unknown" in caplog.text
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_unauthorized"
@@ -957,16 +984,42 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
     }
 
 
-async def test_oauth_session_refresh_failure(
+@pytest.mark.parametrize(
+    ("status_code", "expected_exception"),
+    [
+        (
+            HTTPStatus.BAD_REQUEST,
+            OAuth2TokenRequestReauthError,
+        ),
+        (
+            HTTPStatus.TOO_MANY_REQUESTS,  # 429, odd one, but treated as transient
+            OAuth2TokenRequestTransientError,
+        ),
+        (
+            HTTPStatus.INTERNAL_SERVER_ERROR,  # 500 range, so treated as transient
+            OAuth2TokenRequestTransientError,
+        ),
+        (
+            600,  # Nonsense code, just to hit the generic error branch
+            OAuth2TokenRequestError,
+        ),
+    ],
+)
+async def test_oauth_session_refresh_failure_exceptions(
     hass: HomeAssistant,
     flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
     aioclient_mock: AiohttpClientMocker,
+    status_code: int,
+    expected_exception: type[Exception],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the OAuth2 session helper when no refresh is needed."""
+    """Test OAuth2 session refresh failures raise mapped exceptions."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+
     flow_handler.async_register_implementation(hass, local_impl)
 
-    aioclient_mock.post(TOKEN_URL, status=400)
+    aioclient_mock.post(TOKEN_URL, status=status_code, json={})
 
     config_entry = MockConfigEntry(
         domain=TEST_DOMAIN,
@@ -983,10 +1036,17 @@ async def test_oauth_session_refresh_failure(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
-    with pytest.raises(aiohttp.client_exceptions.ClientResponseError):
+    with (
+        caplog.at_level(logging.DEBUG),
+        pytest.raises(expected_exception) as err,
+    ):
         await session.async_request("post", "https://example.com")
+
+    assert err.value.status == status_code
+    assert f"Token request for {TEST_DOMAIN} failed" in caplog.text
 
 
 async def test_oauth2_without_secret_init(
@@ -1136,4 +1196,117 @@ def test_compute_code_challenge_invalid_code_verifier(code_verifier: str) -> Non
     with pytest.raises(ValueError):
         config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce.compute_code_challenge(
             code_verifier
+        )
+
+
+async def test_async_get_config_entry_implementation_with_failing_provider_and_succeeding_provider(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+) -> None:
+    """Test async_get_config_entry_implementation when one provider fails but another succeeds."""
+
+    async def failing_cloud_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that raises an exception."""
+        raise config_entry_oauth2_flow.ImplementationUnavailableError
+
+    async def successful_local_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that returns implementations."""
+        return [local_impl]
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", failing_cloud_provider
+    )
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "application_credentials", successful_local_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": local_impl.domain,
+        },
+    )
+
+    # This should succeed and return the local implementation
+    # even though the failing cloud provider raised an exception.
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
+    )
+    assert implementation is local_impl
+
+
+async def test_async_get_config_entry_implementation_with_failing_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_config_entry_implementation when one provider fails and the other is empty."""
+
+    async def failing_cloud_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that raises an exception."""
+        raise config_entry_oauth2_flow.ImplementationUnavailableError
+
+    async def empty_local_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that returns implementations."""
+        return []
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", failing_cloud_provider
+    )
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "application_credentials", empty_local_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+        },
+    )
+
+    # This should fail since the local provider returned an empty list
+    # and the cloud provider raised an exception.
+    with pytest.raises(config_entry_oauth2_flow.ImplementationUnavailableError):
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
+
+
+async def test_async_get_config_entry_implementation_missing_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_config_entry_implementation when both providers are empty."""
+
+    async def empty_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that returns implementations."""
+        return []
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", empty_provider
+    )
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "application_credentials", empty_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+        },
+    )
+
+    # This should fail since both providers are empty.
+    with pytest.raises(ValueError, match="Implementation not available"):
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
         )

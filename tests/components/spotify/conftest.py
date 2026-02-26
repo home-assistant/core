@@ -8,8 +8,8 @@ import pytest
 from spotifyaio.models import (
     Album,
     Artist,
-    ArtistResponse,
     Devices,
+    FollowedArtistResponse,
     NewReleasesResponse,
     NewReleasesResponseInner,
     PlaybackState,
@@ -27,6 +27,7 @@ from spotifyaio.models import (
 )
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -70,7 +71,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -138,7 +139,7 @@ def mock_spotify() -> Generator[AsyncMock]:
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)
             )
-        client.get_followed_artists.return_value = ArtistResponse.from_json(
+        client.get_followed_artists.return_value = FollowedArtistResponse.from_json(
             load_fixture("followed_artists.json", DOMAIN)
         ).artists.items
         client.get_new_releases.return_value = NewReleasesResponse.from_json(

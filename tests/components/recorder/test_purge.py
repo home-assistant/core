@@ -2054,8 +2054,6 @@ async def test_purge_old_states_purges_the_state_metadata_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
     """Test deleting old states purges state metadata_ids."""
-    assert recorder_mock.states_meta_manager.active is True
-
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)

@@ -1,4 +1,244 @@
 # serializer version: 1
+# name: test_deprecated_sensor_issue[apc-apc_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'apc_deprecated_sensor.myups_status_data',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'apc_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_status_data',
+      'entity_name': 'Status data',
+      'items': '''
+        - [APC UPS automation (apc)](/config/automation/edit/apcupsd_auto_apc)
+        - [APC UPS script (apc)](/config/script/edit/apcupsd_script_apc)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[apcmodel-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_model',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'model',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_model',
+      'entity_name': 'Model',
+      'items': '''
+        - [APC UPS automation (apcmodel)](/config/automation/edit/apcupsd_auto_apcmodel)
+        - [APC UPS script (apcmodel)](/config/script/edit/apcupsd_script_apcmodel)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[date-date_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'date_deprecated_sensor.myups_status_date',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'date_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_status_date',
+      'entity_name': 'Status date',
+      'items': '''
+        - [APC UPS automation (date)](/config/automation/edit/apcupsd_auto_date)
+        - [APC UPS script (date)](/config/script/edit/apcupsd_script_date)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[end apc-date_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'date_deprecated_sensor.myups_date_and_time',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'date_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_date_and_time',
+      'entity_name': 'Date and time',
+      'items': '''
+        - [APC UPS automation (end apc)](/config/automation/edit/apcupsd_auto_end_apc)
+        - [APC UPS script (end apc)](/config/script/edit/apcupsd_script_end_apc)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[firmware-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_firmware_version',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'hw_version',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_firmware_version',
+      'entity_name': 'Firmware version',
+      'items': '''
+        - [APC UPS automation (firmware)](/config/automation/edit/apcupsd_auto_firmware)
+        - [APC UPS script (firmware)](/config/script/edit/apcupsd_script_firmware)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[model-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_model_2',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'model',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_model_2',
+      'entity_name': 'Model',
+      'items': '''
+        - [APC UPS automation (model)](/config/automation/edit/apcupsd_auto_model)
+        - [APC UPS script (model)](/config/script/edit/apcupsd_script_model)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[serialno-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_serial_number',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'serial_number',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_serial_number',
+      'entity_name': 'Serial number',
+      'items': '''
+        - [APC UPS automation (serialno)](/config/automation/edit/apcupsd_auto_serialno)
+        - [APC UPS script (serialno)](/config/script/edit/apcupsd_script_serialno)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[upsname-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_name',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'name',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_name',
+      'entity_name': 'Name',
+      'items': '''
+        - [APC UPS automation (upsname)](/config/automation/edit/apcupsd_auto_upsname)
+        - [APC UPS script (upsname)](/config/script/edit/apcupsd_script_upsname)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[version-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_daemon_version',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'sw_version',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_daemon_version',
+      'entity_name': 'Daemon version',
+      'items': '''
+        - [APC UPS automation (version)](/config/automation/edit/apcupsd_auto_version)
+        - [APC UPS script (version)](/config/script/edit/apcupsd_script_version)
+      ''',
+    }),
+  })
+# ---
 # name: test_sensor[sensor.myups_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -20,6 +260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -71,6 +312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -122,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery nominal voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -175,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery replaced',
     'options': dict({
     }),
     'original_device_class': None,
@@ -223,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery shutdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -272,6 +517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery timeout',
     'options': dict({
     }),
     'original_device_class': None,
@@ -323,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -377,6 +624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cable type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -425,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daemon version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -473,6 +722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Date and time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -497,7 +747,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01 00:00:00 +0000',
   })
 # ---
 # name: test_sensor[sensor.myups_driver-entry]
@@ -521,6 +771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Driver',
     'options': dict({
     }),
     'original_device_class': None,
@@ -569,6 +820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -619,6 +871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -675,6 +928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internal temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -729,9 +983,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last self-test',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last self-test',
     'platform': 'apcupsd',
@@ -746,6 +1001,7 @@
 # name: test_sensor[sensor.myups_last_self_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Last self-test',
     }),
     'context': <ANY>,
@@ -753,7 +1009,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_last_transfer-entry]
@@ -777,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transfer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -827,6 +1084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
     'original_device_class': None,
@@ -856,6 +1114,56 @@
     'state': '14.0',
   })
 # ---
+# name: test_sensor[sensor.myups_master_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_master_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Master update',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Master update',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'master_update',
+    'unique_id': 'XXXXXXXXXXXX_masterupd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_master_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'MyUPS Master update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_master_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1970-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_sensor[sensor.myups_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -868,7 +1176,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -877,6 +1185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -925,6 +1234,56 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Model',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Model',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apc_model',
+    'unique_id': 'XXXXXXXXXXXX_apcmodel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_model-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MyUPS Model',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_model',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Back-UPS ES 600',
+  })
+# ---
+# name: test_sensor[sensor.myups_model_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_model_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Model',
     'options': dict({
     }),
     'original_device_class': None,
@@ -939,13 +1298,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.myups_model-state]
+# name: test_sensor[sensor.myups_model_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MyUPS Model',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.myups_model',
+    'entity_id': 'sensor.myups_model_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -973,6 +1332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1021,6 +1381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1074,6 +1435,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1127,6 +1489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal output power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1182,6 +1545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1236,6 +1600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test interval',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1285,6 +1650,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test result',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1333,6 +1699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1381,6 +1748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Serial number',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1429,6 +1797,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shutdown time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1457,6 +1826,56 @@
     'state': '3',
   })
 # ---
+# name: test_sensor[sensor.myups_startup_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_startup_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Startup time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Startup time',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_time',
+    'unique_id': 'XXXXXXXXXXXX_starttime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_startup_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'MyUPS Startup time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_startup_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2005-12-31T19:00:00+00:00',
+  })
+# ---
 # name: test_sensor[sensor.myups_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1478,6 +1897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1526,6 +1946,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status data',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1574,6 +1995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status date',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1598,7 +2020,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01 00:00:00 +0000',
   })
 # ---
 # name: test_sensor[sensor.myups_status_flag-entry]
@@ -1622,6 +2044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status flag',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1672,6 +2095,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1728,6 +2152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time on battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1784,6 +2209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total time on battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1840,6 +2266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1889,9 +2316,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer from battery',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer from battery',
     'platform': 'apcupsd',
@@ -1906,6 +2334,7 @@
 # name: test_sensor[sensor.myups_transfer_from_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Transfer from battery',
     }),
     'context': <ANY>,
@@ -1913,7 +2342,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_transfer_high-entry]
@@ -1937,6 +2366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer high',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1990,6 +2420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer low',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2043,9 +2474,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer to battery',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer to battery',
     'platform': 'apcupsd',
@@ -2060,6 +2492,7 @@
 # name: test_sensor[sensor.myups_transfer_to_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Transfer to battery',
     }),
     'context': <ANY>,
@@ -2067,6 +2500,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---

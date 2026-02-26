@@ -11,6 +11,7 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_OPTIONS,
@@ -18,6 +19,7 @@ from homeassistant.components.waze_travel_time.const import (
     IMPERIAL_UNITS,
     METRIC_UNITS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
@@ -77,6 +79,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: [""],
                 CONF_EXCL_FILTER: [""],
+                CONF_TIME_DELTA: {"minutes": 0},
             },
         )
     ],
@@ -103,6 +106,7 @@ async def test_imperial(hass: HomeAssistant) -> None:
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: ["IncludeThis"],
                 CONF_EXCL_FILTER: [""],
+                CONF_TIME_DELTA: {"minutes": 0},
             },
         )
     ],
@@ -127,6 +131,7 @@ async def test_incl_filter(hass: HomeAssistant) -> None:
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: [""],
                 CONF_EXCL_FILTER: ["ExcludeThis"],
+                CONF_TIME_DELTA: {"minutes": 0},
             },
         )
     ],
@@ -153,5 +158,5 @@ async def test_sensor_failed_wrcerror(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.waze_travel_time").state == "unknown"
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Error on retrieving data: " in caplog.text

@@ -283,19 +283,23 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._device.doorState == DoorState.CLOSED
+        channel = self.get_channel_or_raise()
+        return channel.doorState == DoorState.CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._device.send_door_command_async(DoorCommand.OPEN)
+        channel = self.get_channel_or_raise()
+        await channel.async_send_door_command(DoorCommand.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._device.send_door_command_async(DoorCommand.CLOSE)
+        channel = self.get_channel_or_raise()
+        await channel.async_send_door_command(DoorCommand.CLOSE)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._device.send_door_command_async(DoorCommand.STOP)
+        channel = self.get_channel_or_raise()
+        await channel.async_send_door_command(DoorCommand.STOP)
 
 
 class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):

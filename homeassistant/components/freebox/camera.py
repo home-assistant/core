@@ -6,9 +6,8 @@ import logging
 from typing import Any
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.ffmpeg.camera import (
-    CONF_EXTRA_ARGUMENTS,
-    CONF_INPUT,
+from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, CONF_INPUT
+from homeassistant.components.ffmpeg.camera import (  # pylint: disable=hass-component-root-import
     DEFAULT_ARGUMENTS,
     FFmpegCamera,
 )
@@ -74,7 +73,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     ) -> None:
         """Initialize a camera."""
 
-        super().__init__(hass, router, node)
+        super().__init__(router, node)
         device_info = {
             CONF_NAME: node["label"].strip(),
             CONF_INPUT: node["props"]["Stream"],
@@ -119,7 +118,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
 
         # Parse all endpoints values
         for endpoint in filter(
-            lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
+            lambda x: x["ep_type"] == "signal", node["show_endpoints"]
         ):
             self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
 

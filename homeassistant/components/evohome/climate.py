@@ -29,21 +29,19 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_MODE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import EVOHOME_KEY
-from .const import (
-    ATTR_DURATION,
-    ATTR_DURATION_UNTIL,
-    ATTR_PERIOD,
-    ATTR_SETPOINT,
-    EvoService,
-)
+from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity
 
@@ -80,9 +78,9 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_KEY].coordinator
-    loc_idx = hass.data[EVOHOME_KEY].loc_idx
-    tcs = hass.data[EVOHOME_KEY].tcs
+    coordinator = hass.data[EVOHOME_DATA].coordinator
+    loc_idx = hass.data[EVOHOME_DATA].loc_idx
+    tcs = hass.data[EVOHOME_DATA].tcs
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -174,20 +172,20 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
-        if service == EvoService.RESET_ZONE_OVERRIDE:
+        if service == EvoService.CLEAR_ZONE_OVERRIDE:
             await self.coordinator.call_client_api(self._evo_device.reset())
             return
 
         # otherwise it is EvoService.SET_ZONE_OVERRIDE
         temperature = max(min(data[ATTR_SETPOINT], self.max_temp), self.min_temp)
 
-        if ATTR_DURATION_UNTIL in data:
-            duration: timedelta = data[ATTR_DURATION_UNTIL]
+        if ATTR_DURATION in data:
+            duration: timedelta = data[ATTR_DURATION]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = self.setpoints.get("next_sp_from")
             else:
-                until = dt_util.now() + data[ATTR_DURATION_UNTIL]
+                until = dt_util.now() + data[ATTR_DURATION]
         else:
             until = None  # indefinitely
 
@@ -243,7 +241,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        temperature = kwargs["temperature"]
+        temperature = kwargs[ATTR_TEMPERATURE]
 
         if (until := kwargs.get("until")) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:

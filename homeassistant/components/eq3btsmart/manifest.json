@@ -3,16 +3,16 @@
   "name": "eQ-3 Bluetooth Smart Thermostats",
   "bluetooth": [
     {
-      "local_name": "CC-RT-BLE",
-      "connectable": true
+      "connectable": true,
+      "local_name": "CC-RT-BLE"
     },
     {
-      "local_name": "CC-RT-M-BLE",
-      "connectable": true
+      "connectable": true,
+      "local_name": "CC-RT-M-BLE"
     },
     {
-      "local_name": "CC-RT-BLE-EQ",
-      "connectable": true
+      "connectable": true,
+      "local_name": "CC-RT-BLE-EQ"
     }
   ],
   "codeowners": ["@eulemitkeule", "@dbuezas"],
@@ -22,5 +22,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["eq3btsmart"],
-  "requirements": ["eq3btsmart==2.1.0", "bleak-esphome==3.1.0"]
+  "requirements": ["eq3btsmart==2.3.0"]
 }

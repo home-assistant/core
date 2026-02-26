@@ -11,6 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -18,6 +19,7 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from .const import (
     _LOGGER,
     ATTR_FILENAME,
+    ATTR_HEADERS,
     ATTR_OVERWRITE,
     ATTR_SUBDIR,
     ATTR_URL,
@@ -34,25 +36,35 @@ def download_file(service: ServiceCall) -> None:
 
     entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
+    url: str = service.data[ATTR_URL]
+    subdir: str | None = service.data.get(ATTR_SUBDIR)
+    target_filename: str | None = service.data.get(ATTR_FILENAME)
+    overwrite: bool = service.data[ATTR_OVERWRITE]
+    headers: dict[str, str] = service.data[ATTR_HEADERS]
+
+    if subdir:
+        # Check the path
+        try:
+            raise_if_invalid_path(subdir)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="subdir_invalid",
+                translation_placeholders={"subdir": subdir},
+            ) from err
+        if os.path.isabs(subdir):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="subdir_not_relative",
+                translation_placeholders={"subdir": subdir},
+            )
 
     def do_download() -> None:
         """Download the file."""
+        final_path = None
+        filename = target_filename
         try:
-            url = service.data[ATTR_URL]
-
-            subdir = service.data.get(ATTR_SUBDIR)
-
-            filename = service.data.get(ATTR_FILENAME)
-
-            overwrite = service.data.get(ATTR_OVERWRITE)
-
-            if subdir:
-                # Check the path
-                raise_if_invalid_path(subdir)
-
-            final_path = None
-
-            req = requests.get(url, stream=True, timeout=10)
+            req = requests.get(url, stream=True, headers=headers, timeout=10)
 
             if req.status_code != HTTPStatus.OK:
                 _LOGGER.warning(
@@ -152,6 +164,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+                vol.Optional(ATTR_HEADERS, default=dict): vol.Schema(
+                    {cv.string: cv.string}
+                ),
             }
         ),
     )

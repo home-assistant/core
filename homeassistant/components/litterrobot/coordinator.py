@@ -65,7 +65,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:
-            raise UpdateFailed("Unable to connect to Litter-Robot API") from ex
+            raise UpdateFailed("Unable to connect to Whisker API") from ex
 
     def litter_robots(self) -> Generator[LitterRobot]:
         """Get Litter-Robots from the account."""

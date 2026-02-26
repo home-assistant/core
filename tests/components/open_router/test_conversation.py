@@ -1,22 +1,25 @@
 """Tests for the OpenRouter integration."""
 
-from unittest.mock import AsyncMock
+import datetime
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from openai.types import CompletionUsage
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionMessage,
-    ChatCompletionMessageToolCall,
+    ChatCompletionMessageFunctionToolCall,
 )
 from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_message_tool_call import Function
+from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
+from homeassistant.const import Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
+from homeassistant.helpers.llm import ToolInput
 
 from . import setup_integration
 
@@ -40,7 +43,11 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.open_router.PLATFORMS",
+        [Platform.CONVERSATION],
+    ):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -83,6 +90,43 @@ async def test_function_call(
     """Test function call from the assistant."""
     await setup_integration(hass, mock_config_entry)
 
+    # Add some pre-existing content from conversation.default_agent
+    mock_chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.gpt_3_5_turbo",
+            tool_calls=[
+                ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="mock_tool_call_id",
+                    external=True,
+                )
+            ],
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="conversation.gpt_3_5_turbo",
+            tool_call_id="mock_tool_call_id",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(12, 0)},
+                "data": {"targets": [], "success": [], "failed": []},
+            },
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.gpt_3_5_turbo",
+            content="12:00 PM",
+        )
+    )
+
     mock_chat_log.mock_tool_results(
         {
             "call_call_1": "value1",
@@ -90,34 +134,8 @@ async def test_function_call(
         }
     )
 
-    async def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            role = message["role"] if isinstance(message, dict) else message.role
-            if role == "tool":
-                return ChatCompletion(
-                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
-                    choices=[
-                        Choice(
-                            finish_reason="stop",
-                            index=0,
-                            message=ChatCompletionMessage(
-                                content="I have successfully called the function",
-                                role="assistant",
-                                function_call=None,
-                                tool_calls=None,
-                            ),
-                        )
-                    ],
-                    created=1700000000,
-                    model="gpt-4-1106-preview",
-                    object="chat.completion",
-                    system_fingerprint=None,
-                    usage=CompletionUsage(
-                        completion_tokens=9, prompt_tokens=8, total_tokens=17
-                    ),
-                )
-
-        return ChatCompletion(
+    mock_openai_client.chat.completions.create.side_effect = (
+        ChatCompletion(
             id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
             choices=[
                 Choice(
@@ -128,7 +146,7 @@ async def test_function_call(
                         role="assistant",
                         function_call=None,
                         tool_calls=[
-                            ChatCompletionMessageToolCall(
+                            ChatCompletionMessageFunctionToolCall(
                                 id="call_call_1",
                                 function=Function(
                                     arguments='{"param1":"call1"}',
@@ -147,9 +165,30 @@ async def test_function_call(
             usage=CompletionUsage(
                 completion_tokens=9, prompt_tokens=8, total_tokens=17
             ),
-        )
-
-    mock_openai_client.chat.completions.create = completion_result
+        ),
+        ChatCompletion(
+            id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="I have successfully called the function",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        ),
+    )
 
     result = await conversation.async_converse(
         hass,
@@ -162,3 +201,8 @@ async def test_function_call(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
+    assert mock_openai_client.chat.completions.create.call_count == 2
+    assert (
+        mock_openai_client.chat.completions.create.call_args.kwargs["messages"]
+        == snapshot
+    )

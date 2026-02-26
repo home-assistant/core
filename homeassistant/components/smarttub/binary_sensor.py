@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from smarttub import Spa, SpaError, SpaReminder
@@ -17,9 +18,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS
+from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_SENSORS
 from .controller import SmartTubConfigEntry
-from .entity import SmartTubEntity, SmartTubSensorBase
+from .entity import (
+    SmartTubEntity,
+    SmartTubExternalSensorBase,
+    SmartTubOnboardSensorBase,
+)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -44,6 +49,10 @@ SNOOZE_REMINDER_SCHEMA: VolDictType = {
     )
 }
 
+PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -62,6 +71,12 @@ async def async_setup_entry(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
+        for sensor in controller.coordinator.data[spa.id][ATTR_SENSORS].values():
+            name = sensor.name.strip("{}")
+            if name.startswith("cover-"):
+                entities.append(
+                    SmartTubCoverSensor(controller.coordinator, spa, sensor)
+                )
 
     async_add_entities(entities)
 
@@ -79,12 +94,13 @@ async def async_setup_entry(
     )
 
 
-class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
+class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     # This seems to be very noisy and not generally useful, so disable by default.
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "online"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -102,6 +118,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "reminder"
 
     def __init__(
         self,
@@ -117,6 +134,9 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         )
         self.reminder_id = reminder.id
         self._attr_unique_id = f"{spa.id}-reminder-{reminder.id}"
+        self._attr_translation_placeholders = {
+            "reminder_name": reminder.name.title(),
+        }
 
     @property
     def reminder(self) -> SpaReminder:
@@ -154,6 +174,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     """
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "error"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -192,3 +213,17 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
+
+
+class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
+    """Wireless magnetic cover sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.OPENING
+    _attr_translation_key = "cover_sensor"
+
+    @property
+    def is_on(self) -> bool:
+        """Return False if the cover is closed, True if open."""
+        # magnet is True when the cover is closed, False when open
+        # device class OPENING wants True to mean open, False to mean closed
+        return not self.sensor.magnet

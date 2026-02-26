@@ -3,8 +3,9 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.core import HomeAssistant
@@ -13,7 +14,8 @@ from homeassistant.util import dt as dt_util
 from tests.typing import RecorderInstanceGenerator
 
 
-async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_run_history(hass: HomeAssistant) -> None:
     """Test the run history gives the correct run."""
     instance = recorder.get_instance(hass)
     now = dt_util.utcnow()

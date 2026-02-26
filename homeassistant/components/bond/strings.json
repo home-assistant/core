@@ -1,22 +1,7 @@
 {
   "config": {
-    "flow_title": "{name} ({host})",
-    "step": {
-      "confirm": {
-        "description": "Do you want to set up {name}?",
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        }
-      },
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "data_description": {
-          "host": "The IP address of your Bond hub."
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -24,78 +9,93 @@
       "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "flow_title": "{name} ({host})",
+    "step": {
+      "confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "Do you want to set up {name}?"
+      },
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Bond hub."
+        }
+      }
     }
   },
   "services": {
     "set_fan_speed_tracked_state": {
-      "name": "Set fan speed tracked state",
       "description": "Sets the tracked fan speed for a Bond fan.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
-          "description": "Name(s) of entities to set the tracked fan speed."
+          "description": "Name(s) of entities to set the tracked fan speed.",
+          "name": "Entity"
         },
         "speed": {
-          "name": "Fan Speed",
-          "description": "Fan Speed as %."
+          "description": "Fan Speed as %.",
+          "name": "Fan Speed"
         }
-      }
+      },
+      "name": "Set fan speed tracked state"
     },
-    "set_switch_power_tracked_state": {
-      "name": "Set switch power tracked state",
-      "description": "Sets the tracked power state of a Bond switch.",
+    "set_light_brightness_tracked_state": {
+      "description": "Sets the tracked brightness state of a Bond light.",
       "fields": {
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name(s) of entities to set the tracked power state of."
+        "brightness": {
+          "description": "Brightness.",
+          "name": "Brightness"
         },
-        "power_state": {
-          "name": "Power state",
-          "description": "Power state."
+        "entity_id": {
+          "description": "Name(s) of entities to set the tracked brightness state of.",
+          "name": "Entity"
         }
-      }
+      },
+      "name": "Set light brightness tracked state"
     },
     "set_light_power_tracked_state": {
-      "name": "Set light power tracked state",
       "description": "Sets the tracked power state of a Bond light.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
-          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::entity_id::description%]"
+          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::entity_id::description%]",
+          "name": "Entity"
         },
         "power_state": {
-          "name": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::name%]",
-          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::description%]"
+          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::description%]",
+          "name": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::name%]"
         }
-      }
+      },
+      "name": "Set light power tracked state"
     },
-    "set_light_brightness_tracked_state": {
-      "name": "Set light brightness tracked state",
-      "description": "Sets the tracked brightness state of a Bond light.",
+    "set_switch_power_tracked_state": {
+      "description": "Sets the tracked power state of a Bond switch.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
-          "description": "Name(s) of entities to set the tracked brightness state of."
+          "description": "Name(s) of entities to set the tracked power state of.",
+          "name": "Entity"
         },
-        "brightness": {
-          "name": "Brightness",
-          "description": "Brightness."
+        "power_state": {
+          "description": "Power state.",
+          "name": "Power state"
         }
-      }
-    },
-    "start_increasing_brightness": {
-      "name": "Start increasing brightness",
-      "description": "Starts increasing the brightness of the light (deprecated)."
+      },
+      "name": "Set switch power tracked state"
     },
     "start_decreasing_brightness": {
-      "name": "Start decreasing brightness",
-      "description": "Starts decreasing the brightness of the light (deprecated)."
+      "description": "Starts decreasing the brightness of the light (deprecated).",
+      "name": "Start decreasing brightness"
+    },
+    "start_increasing_brightness": {
+      "description": "Starts increasing the brightness of the light (deprecated).",
+      "name": "Start increasing brightness"
     },
     "stop": {
-      "name": "[%key:common::action::stop%]",
-      "description": "Stops any in-progress action and empty the queue (deprecated)."
+      "description": "Stops any in-progress action and empty the queue (deprecated).",
+      "name": "[%key:common::action::stop%]"
     }
   }
 }

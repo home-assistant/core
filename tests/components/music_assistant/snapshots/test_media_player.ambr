@@ -21,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -89,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -126,7 +128,7 @@
       'media_position': 232,
       'media_position_updated_at': datetime.datetime(2024, 10, 30, 18, 31, 49, 565951, tzinfo=datetime.timezone.utc),
       'media_title': 'November Rain',
-      'repeat': 'all',
+      'repeat': <RepeatMode.ALL: 'all'>,
       'shuffle': True,
       'supported_features': <MediaPlayerEntityFeature: 8320959>,
       'volume_level': 0.06,
@@ -165,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -227,6 +230,8 @@
               'version': '',
             }),
           ]),
+          'explicit': False,
+          'favorite': False,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'November Rain',
@@ -237,6 +242,7 @@
         'queue_item_id': '5d95dc5be77e4f7eb4939f62cfef527b',
         'stream_details': dict({
           'bit_depth': 16,
+          'bit_rate': 0,
           'content_type': 'ogg',
           'item_id': '3YRCqOhFifThpSRFJ1VWFM',
           'provider': 'spotify',
@@ -265,6 +271,8 @@
               'version': '',
             }),
           ]),
+          'explicit': None,
+          'favorite': False,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'Golden Brown',
@@ -275,6 +283,7 @@
         'queue_item_id': '990ae8f29cdf4fb588d679b115621f55',
         'stream_details': dict({
           'bit_depth': 16,
+          'bit_rate': 0,
           'content_type': 'flac',
           'item_id': '1004735',
           'provider': 'qobuz',

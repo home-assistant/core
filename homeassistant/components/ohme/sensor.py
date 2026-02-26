@@ -37,7 +37,7 @@ class OhmeSensorDescription(OhmeEntityDescription, SensorEntityDescription):
     value_fn: Callable[[OhmeApiClient], str | int | float | None]
 
 
-SENSOR_CHARGE_SESSION = [
+SENSORS = [
     OhmeSensorDescription(
         key="status",
         translation_key="status",
@@ -49,6 +49,7 @@ SENSOR_CHARGE_SESSION = [
         key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.amps,
     ),
     OhmeSensorDescription(
@@ -57,6 +58,7 @@ SENSOR_CHARGE_SESSION = [
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.watts,
     ),
     OhmeSensorDescription(
@@ -81,25 +83,15 @@ SENSOR_CHARGE_SESSION = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.battery,
     ),
     OhmeSensorDescription(
         key="slot_list",
         translation_key="slot_list",
-        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
-        or STATE_UNKNOWN,
-    ),
-]
-
-SENSOR_ADVANCED_SETTINGS = [
-    OhmeSensorDescription(
-        key="ct_current",
-        translation_key="ct_current",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda client: client.power.ct_amps,
-        is_supported_fn=lambda client: client.ct_connected,
-        entity_registry_enabled_default=False,
+        value_fn=lambda client: (
+            ", ".join(str(x) for x in client.slots) or STATE_UNKNOWN
+        ),
     ),
 ]
 
@@ -110,16 +102,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinators = config_entry.runtime_data
-    coordinator_map = [
-        (SENSOR_CHARGE_SESSION, coordinators.charge_session_coordinator),
-        (SENSOR_ADVANCED_SETTINGS, coordinators.advanced_settings_coordinator),
-    ]
+    coordinator = config_entry.runtime_data.charge_session_coordinator
 
     async_add_entities(
         OhmeSensor(coordinator, description)
-        for entities, coordinator in coordinator_map
-        for description in entities
+        for description in SENSORS
         if description.is_supported_fn(coordinator.client)
     )
 

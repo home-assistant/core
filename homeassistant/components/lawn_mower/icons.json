@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_docked": {
+      "condition": "mdi:home-import-outline"
+    },
+    "is_encountering_an_error": {
+      "condition": "mdi:alert-circle-outline"
+    },
+    "is_mowing": {
+      "condition": "mdi:play"
+    },
+    "is_paused": {
+      "condition": "mdi:pause"
+    },
+    "is_returning": {
+      "condition": "mdi:home-import-outline"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:robot-mower"
@@ -13,6 +30,20 @@
     },
     "start_mowing": {
       "service": "mdi:play"
+    }
+  },
+  "triggers": {
+    "docked": {
+      "trigger": "mdi:home-import-outline"
+    },
+    "errored": {
+      "trigger": "mdi:alert-circle-outline"
+    },
+    "paused_mowing": {
+      "trigger": "mdi:pause"
+    },
+    "started_mowing": {
+      "trigger": "mdi:play"
     }
   }
 }

@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsOptions
+from aiohasupervisor.models import AddonsOptions, PartialBackupOptions
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.const import SecurityClass
@@ -22,12 +22,11 @@ from zwave_js_server.model.controller import ProvisioningEntry
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.version import VersionInfo
 
-from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -196,19 +195,24 @@ async def test_listen_done_during_setup_before_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
     core_state: CoreState,
     listen_future_result_method: str,
     listen_future_result: Exception | None,
 ) -> None:
     """Test listen task finishing during setup before forward entry."""
+    listen_result = asyncio.Future[None]()
     assert hass.state is CoreState.running
+
+    async def connect():
+        await asyncio.sleep(0)
+        client.connected = True
 
     async def listen(driver_ready: asyncio.Event) -> None:
         await listen_block.wait()
         await listen_result
         async_fire_time_changed(hass, fire_all=True)
 
+    client.connect.side_effect = connect
     client.listen.side_effect = listen
     hass.set_state(core_state)
     listen_block.set()
@@ -229,9 +233,9 @@ async def test_not_connected_during_setup_after_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ) -> None:
     """Test we handle not connected client during setup after forward entry."""
+    listen_result = asyncio.Future[None]()
 
     async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
         """Mock send command."""
@@ -277,12 +281,12 @@ async def test_listen_done_during_setup_after_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
     core_state: CoreState,
     listen_future_result_method: str,
     listen_future_result: Exception | None,
 ) -> None:
     """Test listen task finishing during setup after forward entry."""
+    listen_result = asyncio.Future[None]()
     assert hass.state is CoreState.running
 
     original_send_command_side_effect = client.async_send_command.side_effect
@@ -320,16 +324,14 @@ async def test_listen_done_during_setup_after_forward_entry(
 
 
 @pytest.mark.parametrize(
-    ("core_state", "final_config_entry_state", "disconnect_call_count"),
+    ("core_state", "disconnect_call_count"),
     [
         (
             CoreState.running,
-            ConfigEntryState.SETUP_RETRY,
-            2,
-        ),  # the reload will cause a disconnect call too
+            1,
+        ),  # the reload will cause a disconnect
         (
             CoreState.stopping,
-            ConfigEntryState.LOADED,
             0,
         ),  # the home assistant stop event will handle the disconnect
     ],
@@ -345,19 +347,33 @@ async def test_listen_done_during_setup_after_forward_entry(
 async def test_listen_done_after_setup(
     hass: HomeAssistant,
     client: MagicMock,
-    integration: MockConfigEntry,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
     core_state: CoreState,
     listen_future_result_method: str,
     listen_future_result: Exception | None,
-    final_config_entry_state: ConfigEntryState,
     disconnect_call_count: int,
 ) -> None:
     """Test listen task finishing after setup."""
-    config_entry = integration
-    assert config_entry.state is ConfigEntryState.LOADED
+    listen_result = asyncio.Future[None]()
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        driver_ready.set()
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+
+    config_entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert hass.state is CoreState.running
+    assert config_entry.state is ConfigEntryState.LOADED
     assert client.disconnect.call_count == 0
 
     hass.set_state(core_state)
@@ -365,8 +381,49 @@ async def test_listen_done_after_setup(
     getattr(listen_result, listen_future_result_method)(listen_future_result)
     await hass.async_block_till_done()
 
-    assert config_entry.state is final_config_entry_state
+    assert config_entry.state is ConfigEntryState.LOADED
     assert client.disconnect.call_count == disconnect_call_count
+
+
+async def test_listen_ending_before_cancelling_listen(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test listen ending during unloading before cancelling the listen task."""
+    config_entry = integration
+
+    # We can't easily simulate the race condition where the listen task ends
+    # before getting cancelled by the config entry during unloading.
+    # Use mock_state to provoke the correct condition.
+    config_entry.mock_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
+    listen_block.set()
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS
+    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+
+
+async def test_listen_ending_unrecoverable_config_entry_state(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test listen ending when the config entry has an unrecoverable state."""
+    config_entry = integration
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        await hass.config_entries.async_unload(config_entry.entry_id)
+
+    listen_block.set()
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert "Disconnected from server. Cannot recover entry" in caplog.text
 
 
 @pytest.mark.usefixtures("client")
@@ -439,17 +496,17 @@ async def test_on_node_added_ready(
     )
 
 
-async def test_on_node_added_preprovisioned(
+async def test_check_pre_provisioned_device_update_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    multisensor_6_state,
-    client,
-    integration,
+    multisensor_6_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test node added event with a preprovisioned device."""
+    """Test check pre-provisioned device that should update the device."""
     dsk = "test"
     node = Node(client, deepcopy(multisensor_6_state))
-    device = device_registry.async_get_or_create(
+    pre_provisioned_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
         identifiers={(DOMAIN, f"provision_{dsk}")},
     )
@@ -457,7 +514,7 @@ async def test_on_node_added_preprovisioned(
         {
             "dsk": dsk,
             "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
-            "device_id": device.id,
+            "device_id": pre_provisioned_device.id,
         }
     )
     with patch(
@@ -468,14 +525,60 @@ async def test_on_node_added_preprovisioned(
         client.driver.controller.emit("node added", event)
         await hass.async_block_till_done()
 
-        device = device_registry.async_get(device.id)
+        device = device_registry.async_get(pre_provisioned_device.id)
         assert device
         assert device.identifiers == {
             get_device_id(client.driver, node),
             get_device_id_ext(client.driver, node),
         }
         assert device.sw_version == node.firmware_version
-        # There should only be the controller and the preprovisioned device
+        # There should only be the controller and the pre-provisioned device
+        assert len(device_registry.devices) == 2
+
+
+async def test_check_pre_provisioned_device_remove_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test check pre-provisioned device that should remove the device."""
+    dsk = "test"
+    driver = client.driver
+    node = Node(client, deepcopy(multisensor_6_state))
+    pre_provisioned_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{dsk}")},
+    )
+    extended_identifier = get_device_id_ext(driver, node)
+    assert extended_identifier
+    existing_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={
+            get_device_id(driver, node),
+            extended_identifier,
+        },
+    )
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": dsk,
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": pre_provisioned_device.id,
+        }
+    )
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entry",
+        side_effect=lambda id: provisioning_entry if id == node.node_id else None,
+    ):
+        event = {"node": node}
+        client.driver.controller.emit("node added", event)
+        await hass.async_block_till_done()
+
+        assert not device_registry.async_get(pre_provisioned_device.id)
+        assert device_registry.async_get(existing_device.id)
+
+        # There should only be the controller and the existing device
         assert len(device_registry.devices) == 2
 
 
@@ -1014,7 +1117,7 @@ async def test_addon_options_changed(
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
         ("1.0.0", True, 1, 1, SupervisorError("Boom"), None),
-        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
+        ("1.0.0", True, 0, 1, None, SupervisorError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -1194,9 +1297,7 @@ async def test_remove_entry(
     assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
-        partial=True,
+        PartialBackupOptions(name="addon_core_zwave_js_1.0.0", addons={"core_zwave_js"})
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call("core_zwave_js")
@@ -1219,7 +1320,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Z-Wave JS add-on" in caplog.text
+    assert "Failed to stop the Z-Wave JS app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1228,7 +1329,7 @@ async def test_remove_entry(
     # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_backup.side_effect = HassioAPIError()
+    create_backup.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
@@ -1236,14 +1337,12 @@ async def test_remove_entry(
     assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
-        partial=True,
+        PartialBackupOptions(name="addon_core_zwave_js_1.0.0", addons={"core_zwave_js"})
     )
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    assert "Failed to create a backup of the Z-Wave JS app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1260,15 +1359,13 @@ async def test_remove_entry(
     assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
-        partial=True,
+        PartialBackupOptions(name="addon_core_zwave_js_1.0.0", addons={"core_zwave_js"})
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
+    assert "Failed to uninstall the Z-Wave JS app" in caplog.text
 
 
 @pytest.mark.usefixtures("climate_radio_thermostat_ct100_plus", "lock_schlage_be469")
@@ -1820,11 +1917,12 @@ async def test_disabled_node_status_entity_on_node_replaced(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_entity_on_value_removed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     zp3111: Node,
     client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that when entity primary values are removed the entity is removed."""
+    """Test that when entity primary values are removed the entity becomes unavailable."""
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
@@ -1942,6 +2040,155 @@ async def test_remove_entity_on_value_removed(
         == new_unavailable_entities
     )
 
+    # Entities should still be in the entity registry (not fully removed)
+    assert entity_registry.async_get(battery_level_entity) is not None
+    assert entity_registry.async_get(binary_cover_entity) is not None
+    assert entity_registry.async_get(idle_cover_status_button_entity) is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_value_removed_and_readded(
+    hass: HomeAssistant,
+    zp3111: Node,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test entity recovers when primary value is removed and re-added."""
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == "0.0"
+
+    # Remove the battery level value
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "prevValue": 100,
+                "propertyName": "level",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Re-add the battery level value with a new reading
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Battery level",
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                },
+                "value": 80,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "80.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_value_never_populated_then_added(
+    hass: HomeAssistant,
+    zp3111_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test entity updates when value metadata exists but value is None, then added."""
+    # Modify the battery level value to have value=None (metadata exists but no data)
+    node_state = deepcopy(zp3111_state)
+    for value in node_state["values"]:
+        if value["commandClass"] == 128 and value["property"] == "level":
+            value["value"] = None
+            break
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    # The entity should exist but have unknown state (value is None)
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    node = client.driver.controller.nodes[node_state["nodeId"]]
+
+    # Now send "value added" event with actual value
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Battery level",
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                },
+                "value": 75,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == "75.0"
+
 
 async def test_identify_event(
     hass: HomeAssistant,
@@ -1980,18 +2227,18 @@ async def test_identify_event(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     client.driver.controller.receive_event(event)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_server_logging(
@@ -2070,12 +2317,8 @@ async def test_server_logging(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert len(client.async_send_command.call_args_list) == 2
-        assert client.async_send_command.call_args_list[0][0][0] == {
-            "command": "controller.get_provisioning_entries",
-        }
-        assert client.async_send_command.call_args_list[1][0][0] == {
-            "command": "controller.get_provisioning_entry",
-            "dskOrNodeId": 1,
+        assert "driver.update_log_config" not in {
+            call[0][0]["command"] for call in client.async_send_command.call_args_list
         }
         assert not client.enable_server_logging.called
         assert not client.disable_server_logging.called
@@ -2148,13 +2391,13 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     add_event = Event(
         type="node added",
         data={
@@ -2171,7 +2414,7 @@ async def test_factory_reset_node(
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_entity_available_when_node_dead(
@@ -2208,3 +2451,38 @@ async def test_entity_available_when_node_dead(
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_driver_ready_event(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test receiving a driver ready event."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    config_entry_state_changes: list[ConfigEntryState] = []
+
+    def on_config_entry_state_change() -> None:
+        """Collect config entry state changes."""
+        config_entry_state_changes.append(config_entry.state)
+
+    config_entry.async_on_state_change(on_config_entry_state_change)
+
+    driver_ready = Event(
+        type="driver ready",
+        data={
+            "source": "driver",
+            "event": "driver ready",
+        },
+    )
+
+    client.driver.receive_event(driver_ready)
+    await hass.async_block_till_done()
+
+    assert len(config_entry_state_changes) == 4
+    assert config_entry_state_changes[0] is ConfigEntryState.UNLOAD_IN_PROGRESS
+    assert config_entry_state_changes[1] is ConfigEntryState.NOT_LOADED
+    assert config_entry_state_changes[2] is ConfigEntryState.SETUP_IN_PROGRESS
+    assert config_entry_state_changes[3] is ConfigEntryState.LOADED

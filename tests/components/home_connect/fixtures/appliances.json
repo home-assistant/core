@@ -109,6 +109,24 @@
       "haId": "123456789012345678"
     },
     {
+      "name": "AirConditioner",
+      "brand": "BOSCH",
+      "vib": "HCS000006",
+      "connected": true,
+      "type": "AirConditioner",
+      "enumber": "HCS000000/07",
+      "haId": "8765432109876543210"
+    },
+    {
+      "name": "Microwave",
+      "brand": "BOSCH",
+      "vib": "HCS000006",
+      "connected": true,
+      "type": "Microwave",
+      "enumber": "HCS000000/08",
+      "haId": "541513213246313789"
+    },
+    {
       "name": "DNE",
       "brand": "BOSCH",
       "vib": "HCS000000",

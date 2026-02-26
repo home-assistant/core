@@ -17,7 +17,6 @@
         '1234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WOLF GmbH',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -53,6 +51,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -109,6 +108,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -165,6 +165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -221,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -274,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List Item Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -325,6 +328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Percentage Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -377,6 +381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -433,6 +438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -491,6 +497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RPM Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -544,6 +551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Simple Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -595,6 +603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

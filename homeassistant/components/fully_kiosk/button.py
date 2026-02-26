@@ -62,6 +62,12 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.loadStartUrl(),
     ),
+    FullyButtonEntityDescription(
+        key="clearCache",
+        translation_key="clear_cache",
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda fully: fully.clearCache(),
+    ),
 )
 
 

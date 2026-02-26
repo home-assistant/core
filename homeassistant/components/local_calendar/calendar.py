@@ -221,7 +221,7 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
             end = start + timedelta(days=1)
 
     return CalendarEvent(
-        summary=event.summary,
+        summary=event.summary or "",
         start=start,
         end=end,
         description=event.description,

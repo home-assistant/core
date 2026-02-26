@@ -2,191 +2,222 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+import pathlib
+from typing import Any
+from unittest.mock import MagicMock, patch
 
-from tuya_sharing import CustomerDevice
+from freezegun.api import FrozenDateTimeFactory
+from tuya_sharing import (
+    CustomerApi,
+    CustomerDevice,
+    DeviceFunction,
+    DeviceStatusRange,
+    Manager,
+)
 
-from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.components.tuya import DOMAIN, DeviceListener
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
-DEVICE_MOCKS = {
-    "cl_am43_corded_motor_zigbee_cover": [
-        # https://github.com/home-assistant/core/issues/71242
-        Platform.COVER,
-        Platform.SELECT,
-    ],
-    "clkg_curtain_switch": [
-        # https://github.com/home-assistant/core/issues/136055
-        Platform.COVER,
-        Platform.LIGHT,
-    ],
-    "co2bj_air_detector": [
-        # https://github.com/home-assistant/core/issues/133173
-        Platform.BINARY_SENSOR,
-        Platform.NUMBER,
-        Platform.SELECT,
-        Platform.SENSOR,
-        Platform.SIREN,
-    ],
-    "cs_arete_two_12l_dehumidifier_air_purifier": [
-        Platform.BINARY_SENSOR,
-        Platform.FAN,
-        Platform.HUMIDIFIER,
-        Platform.SELECT,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "cs_emma_dehumidifier": [
-        # https://github.com/home-assistant/core/issues/119865
-        Platform.BINARY_SENSOR,
-        Platform.FAN,
-        Platform.HUMIDIFIER,
-        Platform.SELECT,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "cs_smart_dry_plus": [
-        # https://github.com/home-assistant/core/issues/119865
-        Platform.FAN,
-        Platform.HUMIDIFIER,
-    ],
-    "cwjwq_smart_odor_eliminator": [
-        # https://github.com/orgs/home-assistant/discussions/79
-        Platform.SELECT,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "cwwsq_cleverio_pf100": [
-        # https://github.com/home-assistant/core/issues/144745
-        Platform.NUMBER,
-        Platform.SENSOR,
-    ],
-    "cwysj_pixi_smart_drinking_fountain": [
-        # https://github.com/home-assistant/core/pull/146599
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "cz_dual_channel_metering": [
-        # https://github.com/home-assistant/core/issues/147149
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "dj_smart_light_bulb": [
-        # https://github.com/home-assistant/core/pull/126242
-        Platform.LIGHT
-    ],
-    "dlq_earu_electric_eawcpt": [
-        # https://github.com/home-assistant/core/issues/102769
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "dlq_metering_3pn_wifi": [
-        # https://github.com/home-assistant/core/issues/143499
-        Platform.SENSOR,
-    ],
-    "gyd_night_light": [
-        # https://github.com/home-assistant/core/issues/133173
-        Platform.LIGHT,
-    ],
-    "kg_smart_valve": [
-        # https://github.com/home-assistant/core/issues/148347
-        Platform.SWITCH,
-    ],
-    "kj_bladeless_tower_fan": [
-        # https://github.com/orgs/home-assistant/discussions/61
-        Platform.FAN,
-        Platform.SELECT,
-        Platform.SWITCH,
-    ],
-    "ks_tower_fan": [
-        # https://github.com/orgs/home-assistant/discussions/329
-        Platform.FAN,
-        Platform.LIGHT,
-        Platform.SWITCH,
-    ],
-    "kt_serenelife_slpac905wuk_air_conditioner": [
-        # https://github.com/home-assistant/core/pull/148646
-        Platform.CLIMATE,
-    ],
-    "mal_alarm_host": [
-        # Alarm Host support
-        Platform.ALARM_CONTROL_PANEL,
-        Platform.NUMBER,
-        Platform.SWITCH,
-    ],
-    "mcs_door_sensor": [
-        # https://github.com/home-assistant/core/issues/108301
-        Platform.BINARY_SENSOR,
-        Platform.SENSOR,
-    ],
-    "qccdz_ac_charging_control": [
-        # https://github.com/home-assistant/core/issues/136207
-        Platform.SWITCH,
-    ],
-    "qxj_temp_humidity_external_probe": [
-        # https://github.com/home-assistant/core/issues/136472
-        Platform.SENSOR,
-    ],
-    "qxj_weather_station": [
-        # https://github.com/orgs/home-assistant/discussions/318
-        Platform.SENSOR,
-    ],
-    "rqbj_gas_sensor": [
-        # https://github.com/orgs/home-assistant/discussions/100
-        Platform.BINARY_SENSOR,
-        Platform.SENSOR,
-    ],
-    "sfkzq_valve_controller": [
-        # https://github.com/home-assistant/core/issues/148116
-        Platform.SWITCH,
-    ],
-    "tdq_4_443": [
-        # https://github.com/home-assistant/core/issues/146845
-        Platform.SELECT,
-        Platform.SWITCH,
-    ],
-    "wk_wifi_smart_gas_boiler_thermostat": [
-        # https://github.com/orgs/home-assistant/discussions/243
-        Platform.CLIMATE,
-        Platform.NUMBER,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "wsdcg_temperature_humidity": [
-        # https://github.com/home-assistant/core/issues/102769
-        Platform.SENSOR,
-    ],
-    "wxkg_wireless_switch": [
-        # https://github.com/home-assistant/core/issues/93975
-        Platform.EVENT,
-        Platform.SENSOR,
-    ],
-    "zndb_smart_meter": [
-        # https://github.com/home-assistant/core/issues/138372
-        Platform.SENSOR,
-    ],
-}
+FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
+DEVICE_MOCKS = sorted(
+    str(path.relative_to(FIXTURES_DIR).with_suffix(""))
+    for path in FIXTURES_DIR.glob("*.json")
+)
+
+
+class MockDeviceListener(DeviceListener):
+    """Mocked DeviceListener for testing."""
+
+    async def async_send_device_update(
+        self,
+        hass: HomeAssistant,
+        device: CustomerDevice,
+        updated_status_properties: dict[str, Any] | None = None,
+        dp_timestamps: dict[str, int] | None = None,
+        *,
+        online: bool | None = None,
+    ) -> None:
+        """Mock update device method."""
+        property_list: list[str] | None = None
+        if updated_status_properties is not None:
+            property_list = []
+            for key, value in updated_status_properties.items():
+                if key not in device.status:
+                    raise ValueError(
+                        f"Property {key} not found in device status: {device.status}"
+                    )
+                device.status[key] = value
+                property_list.append(key)
+        if online is not None:
+            device.online = online
+        self.update_device(device, property_list, dp_timestamps)
+        await hass.async_block_till_done()
+
+
+async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Create a CustomerDevice for testing."""
+    details = await async_load_json_object_fixture(
+        hass, f"{mock_device_code}.json", DOMAIN
+    )
+    device = MagicMock(spec=CustomerDevice)
+
+    # Use reverse of the product_id for testing
+    device.id = mock_device_code.replace("_", "")[::-1]
+
+    device.name = details["name"]
+    device.category = details["category"]
+    device.product_id = details["product_id"]
+    device.product_name = details["product_name"]
+    device.online = details["online"]
+    device.sub = details.get("sub")
+    device.time_zone = details.get("time_zone")
+    device.active_time = details.get("active_time")
+    if device.active_time:
+        device.active_time = int(dt_util.as_timestamp(device.active_time))
+    device.create_time = details.get("create_time")
+    if device.create_time:
+        device.create_time = int(dt_util.as_timestamp(device.create_time))
+    device.update_time = details.get("update_time")
+    if device.update_time:
+        device.update_time = int(dt_util.as_timestamp(device.update_time))
+    device.support_local = details.get("support_local")
+    device.local_strategy = details.get("local_strategy")
+    device.mqtt_connected = details.get("mqtt_connected")
+
+    device.function = {
+        key: DeviceFunction(
+            code=key,
+            type=value["type"],
+            values=(
+                values
+                if isinstance(values := value["value"], str)
+                else json_dumps(values)
+            ),
+        )
+        for key, value in details["function"].items()
+    }
+    device.status_range = {
+        key: DeviceStatusRange(
+            code=key,
+            report_type=value.get("report_type"),
+            type=value["type"],
+            values=(
+                values
+                if isinstance(values := value["value"], str)
+                else json_dumps(values)
+            ),
+        )
+        for key, value in details["status_range"].items()
+    }
+    device.status = details["status"]
+    for key, value in device.status.items():
+        # Some devices do not provide a status_range for all status DPs
+        # Others set the type as String in status_range and as Json in function
+        if ((dp_type := device.status_range.get(key)) and dp_type.type == "Json") or (
+            (dp_type := device.function.get(key)) and dp_type.type == "Json"
+        ):
+            device.status[key] = json_dumps(value)
+        if value == "**REDACTED**":
+            # It was redacted, which may cause issue with b64decode
+            device.status[key] = ""
+    return device
+
+
+def create_listener(hass: HomeAssistant, manager: Manager) -> MockDeviceListener:
+    """Create a DeviceListener for testing."""
+    listener = MockDeviceListener(hass, manager)
+    manager.add_device_listener(listener)
+    return listener
+
+
+def create_manager(
+    terminal_id: str = "7cd96aff-6ec8-4006-b093-3dbff7947591",
+) -> Manager:
+    """Create a Manager for testing."""
+    manager = MagicMock(spec=Manager)
+    manager.device_map = {}
+    manager.mq = MagicMock()
+    manager.mq.client = MagicMock()
+    manager.mq.client.is_connected = MagicMock(return_value=True)
+    manager.customer_api = MagicMock(spec=CustomerApi)
+    # Meaningless URL / UUIDs
+    manager.customer_api.endpoint = "https://apigw.tuyaeu.com"
+    manager.terminal_id = terminal_id
+    return manager
 
 
 async def initialize_entry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: CustomerDevice | list[CustomerDevice],
 ) -> None:
     """Initialize the Tuya component with a mock manager and config entry."""
+    if not isinstance(mock_devices, list):
+        mock_devices = [mock_devices]
+    mock_manager.device_map = {device.id: device for device in mock_devices}
+
     # Setup
-    mock_manager.device_map = {
-        mock_device.id: mock_device,
-    }
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch(
-        "homeassistant.components.tuya.ManagerCompat", return_value=mock_manager
-    ):
+    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def check_selective_state_update(
+    hass: HomeAssistant,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+    freezer: FrozenDateTimeFactory,
+    *,
+    entity_id: str,
+    dpcode: str,
+    initial_state: str,
+    updates: dict[str, Any],
+    expected_state: str,
+    last_reported: str,
+) -> None:
+    """Test selective state update.
+
+    This test verifies that when an update event comes with properties that do NOT
+    include the dpcode (e.g., a battery event for a door sensor),
+    the entity state is not changed and last_reported is not updated.
+    """
+    initial_reported = "2024-01-01T00:00:00+00:00"
+    unavailable_reported = "2024-01-01T00:00:10+00:00"
+    available_reported = "2024-01-01T00:00:20+00:00"
+    assert hass.states.get(entity_id).state == initial_state
+    assert hass.states.get(entity_id).last_reported.isoformat() == initial_reported
+
+    # Trigger device offline
+    freezer.tick(10)
+    await mock_listener.async_send_device_update(hass, mock_device, online=False)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).last_reported.isoformat() == unavailable_reported
+
+    # Trigger device online
+    freezer.tick(10)
+    await mock_listener.async_send_device_update(hass, mock_device, online=True)
+    assert hass.states.get(entity_id).state == initial_state
+    assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
+
+    # Force update the dpcode and trigger device update without the dpcode
+    # in updated properties - state should not change
+    freezer.tick(10)
+    mock_device.status[dpcode] = None
+    await mock_listener.async_send_device_update(hass, mock_device, {})
+    assert hass.states.get(entity_id).state == initial_state
+    assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
+
+    # Trigger device update with provided updates
+    freezer.tick(30)
+    await mock_listener.async_send_device_update(hass, mock_device, updates)
+    assert hass.states.get(entity_id).state == expected_state
+    assert hass.states.get(entity_id).last_reported.isoformat() == last_reported

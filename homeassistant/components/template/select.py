@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -32,11 +32,12 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TemplateEntity,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,25 +46,18 @@ CONF_OPTIONS = "options"
 CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
-DEFAULT_OPTIMISTIC = False
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_OPTIONS): cv.template,
+        vol.Required(ATTR_OPTIONS): cv.template,
         vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_STATE): cv.template,
     }
 )
 
-SELECT_YAML_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        }
-    )
-    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(SELECT_COMMON_SCHEMA.schema)
-)
+SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(make_template_entity_common_modern_schema(SELECT_DOMAIN, DEFAULT_NAME).schema)
 
 SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
@@ -117,24 +111,33 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
     """Representation of a template select features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
-    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._template = config.get(CONF_STATE)
-
-        self._options_template = config[ATTR_OPTIONS]
-
-        self._attr_assumed_state = self._optimistic = (
-            self._template is None or config.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC)
-        )
         self._attr_options = []
+
+        self.setup_state_template(
+            CONF_STATE,
+            "_attr_current_option",
+            cv.string,
+        )
+        self.setup_template(
+            CONF_OPTIONS,
+            "_attr_options",
+            template_validators.list_of_strings(self, CONF_OPTIONS),
+        )
+
         self._attr_current_option = None
+
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
+            self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_current_option = option
             self.async_write_ha_state()
         if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
@@ -158,32 +161,10 @@ class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
     ) -> None:
         """Initialize the select."""
         TemplateEntity.__init__(self, hass, config, unique_id)
-        AbstractTemplateSelect.__init__(self, config)
-
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
-
-        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template is not None:
-            self.add_template_attribute(
-                "_attr_current_option",
-                self._template,
-                validator=cv.string,
-                none_on_template_error=True,
-            )
-        self.add_template_attribute(
-            "_attr_options",
-            self._options_template,
-            validator=vol.All(cv.ensure_list, [cv.string]),
-            none_on_template_error=True,
-        )
-        super()._async_setup_templates()
+        AbstractTemplateSelect.__init__(self, name, config)
 
 
 class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
@@ -200,40 +181,5 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        AbstractTemplateSelect.__init__(self, config)
-
-        if CONF_STATE in config:
-            self._to_render_simple.append(CONF_STATE)
-
-        # Scripts can be an empty list, therefore we need to check for None
-        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self.add_script(
-                CONF_SELECT_OPTION,
-                select_option,
-                self._rendered.get(CONF_NAME, DEFAULT_NAME),
-                DOMAIN,
-            )
-
-    def _handle_coordinator_update(self):
-        """Handle updated data from the coordinator."""
-        self._process_data()
-
-        if not self.available:
-            self.async_write_ha_state()
-            return
-
-        write_ha_state = False
-        if (options := self._rendered.get(ATTR_OPTIONS)) is not None:
-            self._attr_options = vol.All(cv.ensure_list, [cv.string])(options)
-            write_ha_state = True
-
-        if (state := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_current_option = cv.string(state)
-            write_ha_state = True
-
-        if len(self._rendered) > 0:
-            # In case any non optimistic template
-            write_ha_state = True
-
-        if write_ha_state:
-            self.async_write_ha_state()
+        name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+        AbstractTemplateSelect.__init__(self, name, config)

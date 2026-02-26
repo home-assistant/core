@@ -129,7 +129,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         ) as mock_auth,
         patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
         patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
             "homeassistant.components.netatmo.webhook_generate_url",

@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -385,7 +385,7 @@ def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
     """
     try:
         return reduce(operator.getitem, items, data)  # type: ignore[arg-type]
-    except (KeyError, IndexError, TypeError):
+    except KeyError, IndexError, TypeError:
         return None
 
 
@@ -604,7 +604,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     try:
         key = next(k for k in schema if k == module.DOMAIN)
-    except (TypeError, AttributeError, StopIteration):
+    except TypeError, AttributeError, StopIteration:
         return None
     except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
@@ -849,6 +849,36 @@ def _get_log_message_and_stack_print_pref(
     )
 
     return (log_message, show_stack_trace, placeholders)
+
+
+# The complicated overloads are due to a limitation in mypy, details in
+# https://github.com/python/mypy/issues/7333
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+) -> ConfigType | None: ...
+
+
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType: ...
+
+
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: bool,
+) -> ConfigType | None: ...
 
 
 async def async_process_component_and_handle_errors(

@@ -161,6 +161,7 @@ def _get_entity_descriptions(
             local_sync=local_sync,
             entity_registry_enabled_default=entity_enabled,
             device_id=data[CONF_DEVICE_ID],
+            initial_color=calendar_item.background_color,
         )
         entity_descriptions.append(entity_description)
         _LOGGER.debug(
@@ -230,7 +231,7 @@ async def async_setup_entry(
             calendar_info = calendars[calendar_id]
         else:
             calendar_info = get_calendar_info(
-                hass, calendar_item.dict(exclude_unset=True)
+                hass, calendar_item.model_dump(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
 
@@ -467,7 +468,7 @@ class GoogleCalendarEntity(
         else:
             start = DateOrDatetime(date=dtstart)
             end = DateOrDatetime(date=dtend)
-        event = Event.parse_obj(
+        event = Event.model_validate(
             {
                 EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
                 "start": start,
@@ -538,7 +539,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
 
     if EVENT_IN in call.data:
         if EVENT_IN_DAYS in call.data[EVENT_IN]:
-            now = datetime.now()
+            now = datetime.now().date()
 
             start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
             end_in = start_in + timedelta(days=1)
@@ -547,7 +548,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             end = DateOrDatetime(date=end_in)
 
         elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
-            now = datetime.now()
+            now = datetime.now().date()
 
             start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
             end_in = start_in + timedelta(days=1)

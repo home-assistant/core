@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
 import logging
 from typing import Any, cast
@@ -56,17 +56,8 @@ from .const import (
 )
 from .models import ZwaveJSConfigEntry
 
+DRIVER_READY_EVENT_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
-
-
-@dataclass
-class ZwaveValueID:
-    """Class to represent a value ID."""
-
-    property_: str | int
-    command_class: int
-    endpoint: int | None = None
-    property_key: str | int | None = None
 
 
 @dataclass
@@ -191,6 +182,13 @@ async def async_disable_server_logging_if_needed(
         entry.runtime_data.old_server_log_level = None
     driver.client.disable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
+
+
+def format_home_id_for_display(home_id: int | None) -> str:
+    """Format home ID as hexadecimal string for display."""
+    if home_id is None:
+        return "Unknown"
+    return f"0x{home_id:08x}"
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
@@ -556,7 +554,7 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
         name=node.name or node.device_config.description or f"Node {node.node_id}",
         model=node.device_config.label,
         manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location if node.location else None,
+        suggested_area=node.location or None,
     )
 
 
@@ -564,9 +562,9 @@ def get_network_identifier_for_notification(
     hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, controller: Controller
 ) -> str:
     """Return the network identifier string for persistent notifications."""
-    home_id = str(controller.home_id)
+    home_id = format_home_id_for_display(controller.home_id)
     if len(hass.config_entries.async_entries(DOMAIN)) > 1:
-        if str(home_id) != config_entry.title:
+        if home_id != config_entry.title:
             return f"`{config_entry.title}`, with the home ID `{home_id}`,"
         return f"with the home ID `{home_id}`"
     return ""
@@ -586,6 +584,58 @@ async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> Versio
         raise CannotConnect from err
 
     return version_info
+
+
+@callback
+def async_wait_for_driver_ready_event(
+    config_entry: ZwaveJSConfigEntry,
+    driver: Driver,
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Wait for the driver ready event and the config entry reload.
+
+    When the driver ready event is received
+    the config entry will be reloaded by the integration.
+    This function helps wait for that to happen
+    before proceeding with further actions.
+
+    If the config entry is reloaded for another reason,
+    this function will not wait for it to be reloaded again.
+
+    Raises TimeoutError if the driver ready event and reload
+    is not received within the specified timeout.
+    """
+    driver_ready_event_received = asyncio.Event()
+    config_entry_reloaded = asyncio.Event()
+    unsubscribers: list[Callable[[], None]] = []
+
+    @callback
+    def driver_ready_received(event: dict) -> None:
+        """Receive the driver ready event."""
+        driver_ready_event_received.set()
+
+    unsubscribers.append(driver.once("driver ready", driver_ready_received))
+
+    @callback
+    def on_config_entry_state_change() -> None:
+        """Check config entry was loaded after driver ready event."""
+        if config_entry.state is ConfigEntryState.LOADED:
+            config_entry_reloaded.set()
+
+    unsubscribers.append(
+        config_entry.async_on_state_change(on_config_entry_state_change)
+    )
+
+    async def wait_for_events() -> None:
+        try:
+            async with asyncio.timeout(DRIVER_READY_EVENT_TIMEOUT):
+                await asyncio.gather(
+                    driver_ready_event_received.wait(), config_entry_reloaded.wait()
+                )
+        finally:
+            for unsubscribe in unsubscribers:
+                unsubscribe()
+
+    return wait_for_events
 
 
 class CannotConnect(HomeAssistantError):

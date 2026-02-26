@@ -29,6 +29,7 @@ async def test_offline(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "offline"
     assert sensor_state.attributes["entity_picture"] == "logo.png"
+    assert sensor_state.attributes["channel_picture"] == "logo.png"
 
 
 async def test_streaming(
@@ -40,6 +41,7 @@ async def test_streaming(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "streaming"
     assert sensor_state.attributes["entity_picture"] == "stream-medium.png"
+    assert sensor_state.attributes["channel_picture"] == "logo.png"
     assert sensor_state.attributes["game"] == "Good game"
     assert sensor_state.attributes["title"] == "Title"
     assert sensor_state.attributes["started_at"] == datetime(

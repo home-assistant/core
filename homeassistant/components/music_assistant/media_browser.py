@@ -70,7 +70,7 @@ LIBRARY_MEDIA_CLASS_MAP = {
 
 MEDIA_CONTENT_TYPE_FLAC = "audio/flac"
 THUMB_SIZE = 200
-SORT_NAME_DESC = "sort_name_desc"
+SORT_NAME = "sort_name"
 LOGGER = logging.getLogger(__name__)
 
 
@@ -143,7 +143,7 @@ async def build_main_listing(hass: HomeAssistant) -> BrowseMedia:
             children.extend(item.children)
         else:
             children.append(item)
-    except media_source.BrowseError:
+    except BrowseError:
         pass
 
     return BrowseMedia(
@@ -173,7 +173,7 @@ async def build_playlists_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for item in await mass.music.get_library_playlists(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if item.available
         ],
@@ -225,7 +225,7 @@ async def build_artists_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for artist in await mass.music.get_library_artists(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if artist.available
         ],
@@ -275,7 +275,7 @@ async def build_albums_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for album in await mass.music.get_library_albums(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if album.available
         ],
@@ -323,7 +323,7 @@ async def build_tracks_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for track in await mass.music.get_library_tracks(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if track.available
         ],
@@ -346,7 +346,7 @@ async def build_podcasts_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for podcast in await mass.music.get_library_podcasts(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if podcast.available
         ],
@@ -369,7 +369,7 @@ async def build_audiobooks_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for audiobook in await mass.music.get_library_audiobooks(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if audiobook.available
         ],
@@ -392,7 +392,7 @@ async def build_radio_listing(mass: MusicAssistantClient) -> BrowseMedia:
             # we only grab the first page here because the
             # HA media browser does not support paging
             for track in await mass.music.get_library_radios(
-                limit=500, order_by=SORT_NAME_DESC
+                limit=500, order_by=SORT_NAME
             )
             if track.available
         ],
