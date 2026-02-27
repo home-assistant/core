@@ -70,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry)
             coordinator.async_config_entry_first_refresh(),
             timeout=30.0,
         )
-        _LOGGER.info("Successfully connected to Diesel Heater at %s", address)
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(
             f"Initial connection to Diesel Heater at {address} "
