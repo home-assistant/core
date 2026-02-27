@@ -307,7 +307,7 @@ def get_rrule_days(days_of_week: int) -> list[str]:
     ]
 
 
-def test_days_of_week(date: datetime, days_of_week: int) -> bool:
+def is_day_of_week(date: datetime, days_of_week: int) -> bool:
     """Check if a specific day is in the days_of_week binary."""
     return (days_of_week & (1 << date.weekday())) > 0
 
@@ -331,7 +331,7 @@ class Schedule:
         current_day = dt_util.start_of_local_day(start_dt)
 
         while current_day < end_dt:
-            if test_days_of_week(current_day, self.days_of_week):
+            if is_day_of_week(current_day, self.days_of_week):
                 event_start = current_day + self.start_mins
                 event_end = current_day + self.end_mins
 
@@ -349,7 +349,7 @@ class Schedule:
             current_day += timedelta(days=1)
 
 
-def async_get_sorted_schedule_events(
+def get_sorted_schedule_events(
     schedules: list[Schedule], start_dt: datetime, end_dt: datetime
 ) -> list[CalendarEvent]:
     """Fetch events from multiple schedules and return them sorted by start time."""
@@ -399,7 +399,7 @@ class TeslemetryChargeSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
         end_date: datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        return async_get_sorted_schedule_events(self.schedules, start_date, end_date)
+        return get_sorted_schedule_events(self.schedules, start_date, end_date)
 
     def _async_update_attrs(self) -> None:
         """Update the calendar events by parsing raw schedule data."""
