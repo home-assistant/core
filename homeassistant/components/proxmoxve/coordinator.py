@@ -181,8 +181,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
-        self.proxmox.nodes.get()
         self.permissions = self.proxmox.access.permissions.get()
+        self.proxmox.nodes.get()
 
     def _fetch_all_nodes(
         self,

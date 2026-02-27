@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from unittest.mock import MagicMock, patch
 
 from proxmoxer import AuthenticationError
@@ -21,7 +20,6 @@ from . import AUDIT_PERMISSIONS, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-_LOGGER = logging.getLogger(__name__)
 BUTTON_DOMAIN = "button"
 
 
@@ -325,7 +323,7 @@ async def test_container_buttons_exceptions(
         "button.vm_web_start",
     ],
 )
-async def test_node_buttons_not_available_for_auditor(
+async def test_node_buttons_permission_denied_for_auditor_role(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
