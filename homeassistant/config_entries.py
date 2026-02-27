@@ -2203,10 +2203,8 @@ class ConfigEntries:
             entry.async_shutdown()
         self.flow.async_shutdown()
 
-    async def async_initialize(self, *, load_empty: bool = False) -> None:
+    async def async_initialize(self) -> None:
         """Initialize config entry config."""
-        if load_empty:
-            self._store.set_load_empty()
         config = await self._store.async_load()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)

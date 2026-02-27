@@ -467,7 +467,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
             create_eager_task(trigger.async_setup(hass)),
         )
     except UnsupportedStorageVersionError as err:
-        # Uf we're already in recovery mode, we don't want to handle the exception
+        # If we're already in recovery mode, we don't want to handle the exception
         # and activate recovery mode again, as that would lead to an infinite loop.
         if recovery:
             raise
