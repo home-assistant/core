@@ -298,11 +298,7 @@ class TemplateEntity(AbstractTemplateEntity):
             if not self._availability_template and not self._attr_available:
                 self._attr_available = True
 
-            # Capture unknown and pass None
-            if result == STATE_UNKNOWN:
-                state = None
-            else:
-                state = validator(result) if validator else result
+            state = validator(result) if validator else result
 
             if on_update:
                 on_update(state)

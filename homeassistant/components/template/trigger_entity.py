@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.const import CONF_VARIABLES, STATE_UNKNOWN
+from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -202,14 +202,11 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
                 write_state = True
                 continue
 
-            if option == self._state_option and rendered == STATE_UNKNOWN:
-                value = None
-            else:
-                value = (
-                    entity_template.validator(rendered)
-                    if entity_template.validator
-                    else rendered
-                )
+            value = (
+                entity_template.validator(rendered)
+                if entity_template.validator
+                else rendered
+            )
 
             if entity_template.on_update:
                 entity_template.on_update(value)
