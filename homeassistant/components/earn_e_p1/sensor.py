@@ -10,6 +10,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EarnEP1ConfigEntry
 from .const import DOMAIN, SENSOR_FIELDS, P1SensorFieldDescriptor
@@ -32,9 +34,9 @@ _FIELD_BY_KEY: dict[str, P1SensorFieldDescriptor] = {f.key: f for f in SENSOR_FI
 
 
 async def async_setup_entry(
-    hass: Any,
+    hass: HomeAssistant,
     entry: EarnEP1ConfigEntry,
-    async_add_entities: Any,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up EARN-E P1 sensor entities."""
     coordinator = entry.runtime_data
@@ -55,11 +57,7 @@ class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._field = _FIELD_BY_KEY[description.key]
-        self._attr_unique_id = (
-            f"{coordinator.serial}_{description.key}"
-            if coordinator.serial
-            else f"{coordinator.host}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
     def available(self) -> bool:

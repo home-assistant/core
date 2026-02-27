@@ -92,10 +92,21 @@ async def test_sensor_native_value(
 
 async def test_device_info(hass: HomeAssistant, mock_config_entry) -> None:
     """Test device info is correct."""
-    coordinator = await _setup_integration(hass, mock_config_entry)
 
-    coordinator.model = "P1-Monitor"
-    coordinator.sw_version = "1.2.3"
+    async def _set_device_info(self: object) -> None:
+        """Simulate device info arriving during async_start."""
+        self.model = "P1-Monitor"  # type: ignore[attr-defined]
+        self.sw_version = "1.2.3"  # type: ignore[attr-defined]
+
+    with patch(
+        "homeassistant.components.earn_e_p1.coordinator.EarnEP1Coordinator.async_start",
+        autospec=True,
+        side_effect=_set_device_info,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
     coordinator.async_set_updated_data({"power_delivered": 1.0})
     await hass.async_block_till_done()
 
@@ -104,17 +115,8 @@ async def test_device_info(hass: HomeAssistant, mock_config_entry) -> None:
     assert device is not None
     assert device.name == "EARN-E P1 Meter"
     assert device.manufacturer == "EARN-E"
-
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(
-        "sensor.earn_e_p1_meter_power_delivered"
-    )
-    entity = hass.data["entity_components"]["sensor"].get_entity(
-        entity_entry.entity_id
-    )
-    info = entity.device_info
-    assert info["model"] == "P1-Monitor"
-    assert info["sw_version"] == "1.2.3"
+    assert device.model == "P1-Monitor"
+    assert device.sw_version == "1.2.3"
 
 
 async def test_sensor_unique_id_uses_serial(

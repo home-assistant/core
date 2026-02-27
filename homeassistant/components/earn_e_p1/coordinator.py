@@ -30,13 +30,17 @@ class EarnEP1UDPProtocol(asyncio.DatagramProtocol):
             return
 
         try:
-            payload: dict[str, Any] = json.loads(data)
+            payload = json.loads(data)
         except (json.JSONDecodeError, UnicodeDecodeError):
             _LOGGER.warning("Failed to decode UDP packet from %s", source_ip)
             return
 
-        # Extract device info from full telegrams
-        if "serial" in payload:
+        if not isinstance(payload, dict):
+            return
+
+        # Extract device info from full telegrams (only set serial once
+        # to keep device identifiers stable for the device registry)
+        if "serial" in payload and self.coordinator.serial is None:
             self.coordinator.serial = payload["serial"]
         if "model" in payload:
             self.coordinator.model = payload["model"]
@@ -73,6 +77,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.host = host
         self.data = {}
         self.serial: str | None = serial
+        self.identifier: str = serial or host
         self.model: str | None = None
         self.sw_version: str | None = None
         self._transport: asyncio.DatagramTransport | None = None

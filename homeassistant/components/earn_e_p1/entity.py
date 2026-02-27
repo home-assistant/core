@@ -18,7 +18,7 @@ class EarnEP1Entity(CoordinatorEntity[EarnEP1Coordinator]):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.serial or self.coordinator.host)},
+            identifiers={(DOMAIN, self.coordinator.identifier)},
             name="EARN-E P1 Meter",
             manufacturer="EARN-E",
             model=self.coordinator.model,

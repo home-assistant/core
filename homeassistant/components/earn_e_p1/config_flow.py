@@ -82,6 +82,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EARN-E P1 Meter."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -228,7 +229,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         serial: str | None = None
 
         # During reconfigure, the coordinator already holds the UDP port.
-        # Try with reuse_port; if that fails, skip validation (device already proven).
+        # If opening the port fails, skip validation (device already proven).
         try:
             info = await self._async_listen_for_device(
                 host_filter=host, timeout=VALIDATION_TIMEOUT

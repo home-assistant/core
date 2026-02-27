@@ -9,6 +9,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DEFAULT_PORT
 from .coordinator import EarnEP1Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
 
     if serial is None:
         _LOGGER.warning(
-            "No serial stored for EARN-E P1 entry %s; consider reconfiguring "
+            "No serial stored for config entry %s; consider reconfiguring "
             "to pick up the device serial for stable unique IDs",
             entry.title,
         )
@@ -36,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
         await coordinator.async_start()
     except OSError as err:
         raise ConfigEntryNotReady(
-            f"Cannot start UDP listener on port 16121: {err}"
+            f"Cannot start UDP listener on port {DEFAULT_PORT}: {err}"
         ) from err
 
     entry.runtime_data = coordinator
