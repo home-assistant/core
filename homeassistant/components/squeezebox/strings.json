@@ -20,10 +20,10 @@
     "step": {
       "choose_server": {
         "data": {
-          "server_list": "Choose discovered server to configure"
+          "server_list": "Server list"
         },
         "data_description": {
-          "server_list": "The discovered server to connect to."
+          "server_list": "Choose the server to configure."
         },
         "title": "Discovered Servers"
       },
