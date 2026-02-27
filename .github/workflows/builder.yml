@@ -20,13 +20,17 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   init:
     name: Initialize build
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read # To check out the repository
     outputs:
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
@@ -45,16 +49,16 @@ jobs:
 
       - name: Get information
         id: info
-        uses: home-assistant/actions/helpers/info@master
+        uses: home-assistant/actions/helpers/info@master # zizmor: ignore[unpinned-uses]
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master
+        uses: home-assistant/actions/helpers/version@master # zizmor: ignore[unpinned-uses]
         with:
           type: ${{ env.BUILD_TYPE }}
 
       - name: Verify version
-        uses: home-assistant/actions/helpers/verify-version@master
+        uses: home-assistant/actions/helpers/verify-version@master # zizmor: ignore[unpinned-uses]
         with:
           ignore-dev: true
 
@@ -88,9 +92,9 @@ jobs:
     needs: init
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: read
-      packages: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
     strategy:
       fail-fast: false
       matrix:
@@ -268,11 +272,11 @@ jobs:
     name: Build ${{ matrix.machine }} machine core image
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     permissions:
-      contents: read
-      packages: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
     strategy:
       matrix:
         machine:
@@ -290,6 +294,21 @@ jobs:
           - raspberrypi5-64
           - yellow
           - green
+        include:
+          # Default: aarch64 on native ARM runner
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+          # Overrides for amd64 machines
+          - machine: generic-x86-64
+            arch: amd64
+            runs-on: ubuntu-24.04
+          - machine: qemux86-64
+            arch: amd64
+            runs-on: ubuntu-24.04
+          # TODO: remove, intel-nuc is a legacy name for x86-64, renamed in 2021
+          - machine: intel-nuc
+            arch: amd64
+            runs-on: ubuntu-24.04
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -316,10 +335,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # home-assistant/builder doesn't support sha pinning
       - name: Build base image
-        uses: home-assistant/builder@2025.11.0
+        uses: home-assistant/builder@6cb4fd3d1338b6e22d0958a4bcb53e0965ea63b4 # 2026.02.1
         with:
+          image: ${{ matrix.arch }}
           args: |
             $BUILD_ARGS \
             --target /data/machine \
@@ -341,14 +360,14 @@ jobs:
           persist-credentials: false
 
       - name: Initialize git
-        uses: home-assistant/actions/helpers/git-init@master
+        uses: home-assistant/actions/helpers/git-init@master # zizmor: ignore[unpinned-uses]
         with:
           name: ${{ secrets.GIT_NAME }}
           email: ${{ secrets.GIT_EMAIL }}
           token: ${{ secrets.GIT_TOKEN }}
 
       - name: Update version file
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: home-assistant/actions/helpers/version-push@master # zizmor: ignore[unpinned-uses]
         with:
           key: "homeassistant[]"
           key-description: "Home Assistant Core"
@@ -358,7 +377,7 @@ jobs:
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: home-assistant/actions/helpers/version-push@master # zizmor: ignore[unpinned-uses]
         with:
           key: "homeassistant[]"
           key-description: "Home Assistant Core"
@@ -373,9 +392,9 @@ jobs:
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
     strategy:
       fail-fast: false
       matrix:
@@ -510,8 +529,8 @@ jobs:
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: read # To check out the repository
+      id-token: write # For PyPI trusted publishing
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
@@ -551,10 +570,10 @@ jobs:
     name: Build and test hassfest image
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      attestations: write # For build provenance attestation
+      id-token: write # For build provenance attestation
     needs: ["init"]
     if: github.repository_owner == 'home-assistant'
     env:

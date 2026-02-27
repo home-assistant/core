@@ -33,6 +33,13 @@
           'model_number': '12345',
         }),
       }),
+      'refrigerators': dict({
+        'Beer fridge': dict({
+          'category': 'refrigerator',
+          'data_model': 'refrigerator',
+          'model_number': '12345',
+        }),
+      }),
       'washers': dict({
         'Washer': dict({
           'category': 'washer_dryer',
