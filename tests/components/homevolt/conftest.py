@@ -87,6 +87,8 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.local_mode_enabled = False
         client.enable_local_mode = AsyncMock()
         client.disable_local_mode = AsyncMock()
+        # SELECT platform – ability to change schedule type
+        client.set_schedule_type = AsyncMock()
 
         yield client
 
