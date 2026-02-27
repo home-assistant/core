@@ -42,29 +42,29 @@
   "selector": {
     "dither_mode": {
       "options": {
-        "0": "None",
-        "1": "Burkes",
-        "2": "Ordered",
-        "3": "Floyd-Steinberg",
-        "4": "Atkinson",
-        "5": "Stucki",
-        "6": "Sierra",
-        "7": "Sierra Lite",
-        "8": "Jarvis, Judice & Ninke"
+        "atkinson": "Atkinson",
+        "burkes": "Burkes",
+        "floyd_steinberg": "Floyd-Steinberg",
+        "jarvis_judice_ninke": "Jarvis, Judice & Ninke",
+        "none": "None",
+        "ordered": "Ordered",
+        "sierra": "Sierra",
+        "sierra_lite": "Sierra Lite",
+        "stucki": "Stucki"
       }
     },
     "fit_mode": {
       "options": {
-        "0": "Stretch",
-        "1": "Contain",
-        "2": "Cover",
-        "3": "Crop"
+        "contain": "Contain",
+        "cover": "Cover",
+        "crop": "Crop",
+        "stretch": "Stretch"
       }
     },
     "refresh_mode": {
       "options": {
-        "0": "Full",
-        "1": "Fast"
+        "fast": "Fast",
+        "full": "Full"
       }
     }
   },

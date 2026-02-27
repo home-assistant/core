@@ -24,40 +24,40 @@ upload_image:
               mode: slider
         dither_mode:
           required: false
-          default: "1"
+          default: "burkes"
           selector:
             select:
               translation_key: dither_mode
               options:
-                - "0"
-                - "1"
-                - "2"
-                - "3"
-                - "4"
-                - "5"
-                - "6"
-                - "7"
-                - "8"
+                - "none"
+                - "burkes"
+                - "ordered"
+                - "floyd_steinberg"
+                - "atkinson"
+                - "stucki"
+                - "sierra"
+                - "sierra_lite"
+                - "jarvis_judice_ninke"
         refresh_mode:
           required: false
-          default: "0"
+          default: "full"
           selector:
             select:
               translation_key: refresh_mode
               options:
-                - "0"
-                - "1"
+                - "full"
+                - "fast"
         fit_mode:
           required: false
-          default: "1"
+          default: "contain"
           selector:
             select:
               translation_key: fit_mode
               options:
-                - "0"
-                - "1"
-                - "2"
-                - "3"
+                - "stretch"
+                - "contain"
+                - "cover"
+                - "crop"
         tone_compression:
           required: false
           selector:
