@@ -190,6 +190,15 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
             *[self._fetch_vehicle_data(device) for device in devices],
         )
 
+        # Reset update interval after a successful fetch in case it was backed
+        # off due to rate limiting (the token-refresh path resets it separately).
+        if self.update_interval != self._default_update_interval:
+            LOGGER.info(
+                "Rate limit cleared, resuming normal update interval (%s)",
+                self._default_update_interval,
+            )
+            self.update_interval = self._default_update_interval
+
         return {
             vehicle.device_id: vehicle
             for vehicle in results
