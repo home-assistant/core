@@ -1,7 +1,13 @@
 press_key:
-  name: Press Key
+  name: Press key
   description: Send a remote key press to madVR Envy.
   fields:
+    entry_id:
+      name: Entry ID
+      description: Optional config entry id when multiple madVR devices are loaded.
+      required: false
+      selector:
+        text:
     key:
       name: Key
       description: Remote key name (for example MENU, INFO, OK, BACK, LEFT, RIGHT, UP, DOWN).
@@ -10,9 +16,15 @@ press_key:
         text:
 
 activate_profile:
-  name: Activate Profile
+  name: Activate profile
   description: Activate a profile in a profile group.
   fields:
+    entry_id:
+      name: Entry ID
+      description: Optional config entry id when multiple madVR devices are loaded.
+      required: false
+      selector:
+        text:
     group_id:
       name: Group ID
       description: Profile group id.
@@ -30,9 +42,15 @@ activate_profile:
           mode: box
 
 run_action:
-  name: Run Action
+  name: Run action
   description: Run a predefined Envy action.
   fields:
+    entry_id:
+      name: Entry ID
+      description: Optional config entry id when multiple madVR devices are loaded.
+      required: false
+      selector:
+        text:
     action:
       name: Action
       description: Action name.

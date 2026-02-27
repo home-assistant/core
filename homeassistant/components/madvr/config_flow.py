@@ -59,6 +59,7 @@ class MadvrEnvyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
             port = int(user_input[CONF_PORT])
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
 
             unique_id, mac_address = await _validate_connection(host, port)
             if unique_id is None:
@@ -97,6 +98,8 @@ class MadvrEnvyConfigFlow(ConfigFlow, domain=DOMAIN):
             if unique_id is None:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry,
                     data={**self._reauth_entry.data, CONF_HOST: host, CONF_PORT: port},

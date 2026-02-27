@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import OPT_ENABLE_ADVANCED_ENTITIES
 from .entity import MadvrEnvyEntity
@@ -17,7 +24,7 @@ from .entity import MadvrEnvyEntity
 
 @dataclass(frozen=True, kw_only=True)
 class MadvrEnvySensorDescription(SensorEntityDescription):
-    value_fn: Any
+    value_fn: Callable[[dict[str, Any]], StateType]
 
 
 SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
@@ -31,6 +38,7 @@ SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
         key="gpu_temperature",
         translation_key="gpu_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: _temperature_value(data, 0),
     ),
@@ -38,6 +46,7 @@ SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
         key="hdmi_input_temperature",
         translation_key="hdmi_input_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: _temperature_value(data, 1),
     ),
@@ -45,6 +54,7 @@ SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
         key="cpu_temperature",
         translation_key="cpu_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: _temperature_value(data, 2),
     ),
@@ -52,6 +62,7 @@ SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
         key="mainboard_temperature",
         translation_key="mainboard_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: _temperature_value(data, 3),
     ),

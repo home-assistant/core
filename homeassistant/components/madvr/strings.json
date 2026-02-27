@@ -19,14 +19,14 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the madVR Envy",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backoff": "Reconnect max backoff must be greater than or equal to initial backoff",
       "invalid_jitter": "Reconnect jitter must be between 0.0 and 1.0",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "reauth_successful": "Re-authentication successful",
-      "already_configured": "Device is already configured"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
@@ -49,52 +49,52 @@
   "entity": {
     "sensor": {
       "power_state": {
-        "name": "Power State"
+        "name": "Power state"
       },
       "gpu_temperature": {
-        "name": "GPU Temperature"
+        "name": "GPU temperature"
       },
       "hdmi_input_temperature": {
-        "name": "HDMI Input Temperature"
+        "name": "HDMI input temperature"
       },
       "cpu_temperature": {
-        "name": "CPU Temperature"
+        "name": "CPU temperature"
       },
       "mainboard_temperature": {
-        "name": "Mainboard Temperature"
+        "name": "Mainboard temperature"
       },
       "version": {
         "name": "Version"
       },
       "current_menu": {
-        "name": "Current Menu"
+        "name": "Current menu"
       },
       "aspect_ratio_mode": {
-        "name": "Aspect Ratio Mode"
+        "name": "Aspect ratio mode"
       },
       "active_profile": {
-        "name": "Active Profile"
+        "name": "Active profile"
       }
     },
     "binary_sensor": {
       "signal_present": {
-        "name": "Signal Present"
+        "name": "Signal present"
       }
     },
     "switch": {
       "tone_map": {
-        "name": "Tone Mapping"
+        "name": "Tone mapping"
       }
     },
     "button": {
       "power_on": {
-        "name": "Power On"
+        "name": "Power on"
       },
       "standby": {
         "name": "Standby"
       },
       "power_off": {
-        "name": "Power Off"
+        "name": "Power off"
       },
       "hotplug": {
         "name": "Hotplug"
@@ -103,27 +103,27 @@
         "name": "Restart"
       },
       "reload_software": {
-        "name": "Reload Software"
+        "name": "Reload software"
       },
       "remote_menu": {
-        "name": "Remote Menu"
+        "name": "Remote menu"
       },
       "remote_info": {
-        "name": "Remote Info"
+        "name": "Remote info"
       },
       "remote_ok": {
         "name": "Remote OK"
       },
       "remote_back": {
-        "name": "Remote Back"
+        "name": "Remote back"
       }
     },
     "select": {
       "power_mode": {
-        "name": "Power Mode"
+        "name": "Power mode"
       },
       "active_profile": {
-        "name": "Active Profile"
+        "name": "Active profile"
       }
     },
     "remote": {

@@ -26,7 +26,7 @@ BINARY_SENSORS: tuple[MadvrEnvyBinarySensorDescription, ...] = (
     MadvrEnvyBinarySensorDescription(
         key="signal_present",
         translation_key="signal_present",
-        device_class=BinarySensorDeviceClass.POWER,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda data: data.get("signal_present"),
     ),
 )

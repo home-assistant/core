@@ -6,7 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from madvr_envy import exceptions
@@ -27,6 +27,7 @@ class MadvrEnvyEntity(CoordinatorEntity[MadvrEnvyCoordinator]):
         self._client = coordinator.client
 
         device_id = self._device_id
+        mac = self._mac_address
         self._attr_unique_id = f"{device_id}_{entity_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
@@ -35,6 +36,7 @@ class MadvrEnvyEntity(CoordinatorEntity[MadvrEnvyCoordinator]):
             model=MODEL,
             sw_version=self.data.get("version"),
             configuration_url=f"http://{self._client.host}",
+            connections={(CONNECTION_NETWORK_MAC, mac)} if mac else None,
         )
 
     @property
@@ -49,10 +51,17 @@ class MadvrEnvyEntity(CoordinatorEntity[MadvrEnvyCoordinator]):
 
     @property
     def _device_id(self) -> str:
-        mac = self.data.get("mac_address")
+        mac = self._mac_address
         if isinstance(mac, str) and mac:
             return mac.lower().replace(":", "")
         return f"{self._client.host}:{self._client.port}"
+
+    @property
+    def _mac_address(self) -> str | None:
+        mac = self.data.get("mac_address")
+        if isinstance(mac, str) and mac:
+            return mac
+        return None
 
     async def _execute(self, command_name: str, command: Callable[[], Any]) -> None:
         try:
