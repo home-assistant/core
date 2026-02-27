@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
+from .common import _sanitize_userid
 from .const import (
     CONF_CONTAINERS,
     CONF_NODE,
@@ -46,15 +47,6 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
-
-
-def _sanitize_userid(data: dict[str, Any]) -> str:
-    """Sanitize the user ID."""
-    return (
-        data[CONF_USERNAME]
-        if "@" in data[CONF_USERNAME]
-        else f"{data[CONF_USERNAME]}@{data[CONF_REALM]}"
-    )
 
 
 def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
