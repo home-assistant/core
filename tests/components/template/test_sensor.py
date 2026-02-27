@@ -2026,6 +2026,8 @@ async def test_numeric_sensor_recovers_from_exception(hass: HomeAssistant) -> No
         ("{{ 10021452 }}", "10021452"),
         ("{{ '1002.1452' }}", "1002.1452"),
         ("{{ 1002.1452 }}", "1002.1452"),
+        ("{{ True }}", STATE_UNKNOWN),
+        ("{{ False }}", STATE_UNKNOWN),
     ],
 )
 @pytest.mark.usefixtures("setup_state_sensor")

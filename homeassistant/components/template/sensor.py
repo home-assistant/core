@@ -257,7 +257,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     ) -> StateType | date | datetime | Decimal | None:
         """Validate the state."""
         if self._numeric_state_expected:
-            if isinstance(result, (int, float)):
+            if not isinstance(result, bool) and isinstance(result, (int, float)):
                 return result
 
             if isinstance(result, str) and "." not in result:
