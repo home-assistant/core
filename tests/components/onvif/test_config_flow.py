@@ -687,10 +687,11 @@ async def test_discovered_by_dhcp_updates_host(
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.onvif.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
