@@ -859,6 +859,9 @@
       "display_lighting": {
         "name": "Display lighting"
       },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
       "dry_plus": {
         "name": "Dry plus"
       },

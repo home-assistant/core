@@ -162,6 +162,14 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         status_attribute=Attribute.STATUS,
         entity_category=EntityCategory.CONFIG,
     ),
+    Capability.CUSTOM_DO_NOT_DISTURB_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.CUSTOM_DO_NOT_DISTURB_MODE,
+        translation_key="do_not_disturb",
+        status_attribute=Attribute.DO_NOT_DISTURB,
+        entity_category=EntityCategory.CONFIG,
+        on_command=Command.DO_NOT_DISTURB_ON,
+        off_command=Command.DO_NOT_DISTURB_OFF,
+    ),
 }
 DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
     Attribute | str, SmartThingsDishwasherWashingOptionSwitchEntityDescription
