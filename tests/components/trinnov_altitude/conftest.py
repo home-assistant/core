@@ -38,6 +38,7 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
         altitude.source_set_by_name = AsyncMock(return_value=None)
         altitude.volume_up = AsyncMock(return_value=None)
         altitude.volume_down = AsyncMock(return_value=None)
+        altitude.volume_set = AsyncMock(return_value=None)
         altitude.volume_percentage_set = AsyncMock(return_value=None)
         altitude.power_on_available.return_value = True
         altitude.power_on.return_value = None
@@ -52,6 +53,7 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
             sources={0: "Apple TV", 1: "Blu-ray"},
             source_format="PCM",
             mute=False,
+            volume=-35.0,
         )
         yield altitude
 
