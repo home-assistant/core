@@ -70,6 +70,15 @@ def dummy_client_fixture() -> Generator[MagicMock]:
         yield client.return_value
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.arcam_fmj.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
 async def test_ssdp(hass: HomeAssistant) -> None:
     """Test a ssdp import flow."""
     result = await hass.config_entries.flow.async_init(
