@@ -50,7 +50,6 @@ async def async_user_store(hass: HomeAssistant, user_id: str) -> UserStore:
             # will otherwise never be retrieved.
             future.exception()
             raise
-
         future.set_result(store)
 
     return await future
