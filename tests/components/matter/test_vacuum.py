@@ -338,6 +338,38 @@ async def test_vacuum_get_segments(
     assert segments[2] == {"id": "2290649224", "name": "My Location C", "group": None}
 
 
+@pytest.mark.parametrize("node_fixture", ["roborock_saros_10"])
+async def test_vacuum_get_segments_nullable_location_info(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test vacuum get_segments handles nullable ServiceArea location info."""
+    await async_setup_component(hass, "homeassistant", {})
+    assert matter_node
+
+    entity_ids = [state.entity_id for state in hass.states.async_all("vacuum")]
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+    state = hass.states.get(entity_id)
+    assert state
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": entity_id}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Living room", "group": None},
+        {"id": "2", "name": "Bathroom", "group": None},
+        {"id": "3", "name": "Bedroom", "group": None},
+        {"id": "4", "name": "Office", "group": None},
+        {"id": "5", "name": "Corridor", "group": None},
+    ]
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_clean_area(
     hass: HomeAssistant,

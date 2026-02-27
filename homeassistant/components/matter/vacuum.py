@@ -168,8 +168,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         segments: dict[str, Segment] = {}
         for area in supported_areas:
             area_name = None
-            if area.areaInfo and area.areaInfo.locationInfo:
-                area_name = area.areaInfo.locationInfo.locationName
+            location_info = area.areaInfo.locationInfo
+            if location_info not in (None, clusters.NullValue):
+                area_name = location_info.locationName
 
             if area_name:
                 segment_id = str(area.areaID)
