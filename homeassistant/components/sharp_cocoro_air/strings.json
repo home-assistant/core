@@ -1,0 +1,90 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Sharp Members EU account credentials.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Your session has expired. Please enter your credentials again.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "fan": {
+      "air_purifier": {
+        "name": "Air purifier",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto",
+              "night": "Night",
+              "pollen": "Pollen",
+              "silent": "Silent",
+              "medium": "Medium",
+              "high": "High",
+              "ai_auto": "AI auto",
+              "realize": "Turbo clean"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "humidification": {
+        "name": "Humidification"
+      }
+    },
+    "sensor": {
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
+      "energy": {
+        "name": "[%key:component::sensor::entity_component::energy::name%]"
+      },
+      "dust": {
+        "name": "Dust level"
+      },
+      "smell": {
+        "name": "Smell level"
+      },
+      "pci_sensor": {
+        "name": "PCI sensor"
+      },
+      "light_sensor": {
+        "name": "Light sensor"
+      },
+      "filter_usage": {
+        "name": "Filter usage"
+      },
+      "cleaning_mode": {
+        "name": "Cleaning mode"
+      },
+      "airflow": {
+        "name": "Airflow"
+      }
+    }
+  }
+}
