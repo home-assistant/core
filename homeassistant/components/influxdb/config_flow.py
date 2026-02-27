@@ -32,7 +32,6 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN, get_influx_connection
-from .issue import import_connection_error_issue
 from .const import (
     API_VERSION_2,
     CONF_API_VERSION,
@@ -44,6 +43,7 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
 )
+from .issue import import_connection_error_issue
 
 _LOGGER = logging.getLogger(__name__)
 
