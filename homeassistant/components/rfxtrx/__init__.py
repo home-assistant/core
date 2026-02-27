@@ -127,6 +127,26 @@ def _create_rfx(
     else:
         transport = rfxtrxmod.PySerialTransport(config[CONF_DEVICE])
 
+        # Work around a race condition in pyRFXtrx during shutdown.
+        # When close_connection() closes the serial port, the background read
+        # thread may still be inside serial.read(), which calls
+        # os.read(self.fd, ...). Since closing sets fd=None, this raises
+        # TypeError. The library's transport_errors decorator only catches
+        # socket.error, SerialException, and OSError — not TypeError.
+        # https://github.com/Danielhiversen/pyRFXtrx/pull/155
+        original_receive = transport.receive_blocking
+
+        def _receive_blocking_wrapper() -> rfxtrxmod.RFXtrxEvent | None:
+            try:
+                return original_receive()
+            except TypeError:
+                if getattr(transport.serial, "fd", ...) is None:
+                    _LOGGER.debug("Serial port closed during read")
+                    return None
+                raise
+
+        transport.receive_blocking = _receive_blocking_wrapper
+
     rfx = rfxtrxmod.Connect(
         transport,
         event_callback,

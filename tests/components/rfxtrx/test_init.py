@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import ANY, call
+from unittest.mock import ANY, MagicMock, call
 
+import pytest
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
@@ -17,6 +18,47 @@ from .conftest import setup_rfx_test_cfg
 from tests.typing import WebSocketGenerator
 
 SOME_PROTOCOLS = ["ac", "arc"]
+
+
+async def test_serial_receive_blocking_type_error_on_shutdown(
+    hass: HomeAssistant, rfxtrx, transport_mock
+) -> None:
+    """Test that TypeError during serial shutdown is suppressed.
+
+    pyRFXtrx has a race condition where closing the serial port sets fd=None
+    while the read thread is still inside os.read(), causing a TypeError.
+    """
+    original_receive = MagicMock(
+        side_effect=TypeError("'NoneType' object cannot be interpreted as an integer")
+    )
+    serial_mock = MagicMock(fd=None)
+    transport_mock.return_value.receive_blocking = original_receive
+    transport_mock.return_value.serial = serial_mock
+
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # After setup, the transport's receive_blocking should have been wrapped.
+    # Calling the wrapper should suppress the TypeError when serial.fd is None.
+    wrapped_receive = transport_mock.return_value.receive_blocking
+    assert wrapped_receive() is None
+
+
+async def test_serial_receive_blocking_type_error_reraised(
+    hass: HomeAssistant, rfxtrx, transport_mock
+) -> None:
+    """Test that unrelated TypeErrors still propagate."""
+    original_receive = MagicMock(side_effect=TypeError("unexpected"))
+    serial_mock = MagicMock(fd=1)
+    transport_mock.return_value.receive_blocking = original_receive
+    transport_mock.return_value.serial = serial_mock
+
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    wrapped_receive = transport_mock.return_value.receive_blocking
+    with pytest.raises(TypeError, match="unexpected"):
+        wrapped_receive()
 
 
 async def test_fire_event(
