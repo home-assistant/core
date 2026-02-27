@@ -95,6 +95,7 @@ ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
 
 ROBOT_CLEANER_MOVEMENT_MAP = {
     "powerOff": "off",
+    "washingMop": "washing_mop",
 }
 
 OVEN_MODE = {
@@ -880,6 +881,7 @@ CAPABILITY_TO_SENSORS: dict[
                     "after",
                     "cleaning",
                     "pause",
+                    "washing_mop",
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
