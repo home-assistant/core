@@ -45,7 +45,7 @@ def handle_backup_errors[_R, **P](
             raise BackupAgentError("Authentication error") from err
         except DropboxUnknownException as err:
             _LOGGER.error(
-                "Error during dropbox %s: %s",
+                "Error during %s: %s",
                 func.__name__,
                 err,
             )
