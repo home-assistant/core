@@ -126,21 +126,18 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
 
         if retry_after is not None:
             new_interval = timedelta(seconds=retry_after)
-            LOGGER.warning(
-                "API rate limited: respecting Retry-After=%s seconds",
-                retry_after,
-            )
         else:
             current_interval = self.update_interval or self._default_update_interval
-            new_interval = min(current_interval * 2, MAX_UPDATE_INTERVAL)
-            LOGGER.warning(
-                "API rate limited: increasing update interval to %s",
-                new_interval,
-            )
+            new_interval = current_interval * 2
 
-        # Enforce bounds
+        # Enforce bounds before logging so the logged value reflects what's used
         new_interval = max(new_interval, MIN_UPDATE_INTERVAL)
         new_interval = min(new_interval, MAX_UPDATE_INTERVAL)
+
+        LOGGER.warning(
+            "API rate limited: next update in %s",
+            new_interval,
+        )
 
         self.update_interval = new_interval
 
