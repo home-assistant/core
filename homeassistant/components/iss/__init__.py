@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -16,7 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, INITIAL_BACKOFF, MAX_RETRIES
+from .const import DOMAIN, MAX_CONSECUTIVE_FAILURES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,57 +30,54 @@ class IssData:
     current_location: dict[str, str]
 
 
-def update(iss: pyiss.ISS) -> IssData:
-    """Retrieve data from the pyiss API."""
-    return IssData(
-        number_of_people_in_space=iss.number_of_people_in_space(),
-        current_location=iss.current_location(),
-    )
+class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
+    """ISS coordinator that tolerates transient API failures."""
 
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the ISS coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=60),
+        )
+        self._consecutive_failures = 0
 
-async def async_update_with_retry(hass: HomeAssistant, iss: pyiss.ISS) -> IssData:
-    """Retrieve data from the pyiss API with retry logic."""
-    last_exception = None
-
-    for attempt in range(MAX_RETRIES):
+    async def _async_update_data(self) -> IssData:
+        """Fetch data from the ISS API, tolerating transient failures."""
+        iss = pyiss.ISS()
         try:
-            return await hass.async_add_executor_job(update, iss)
-        except (HTTPError, requests.exceptions.ConnectionError) as ex:
-            last_exception = ex
-            if attempt < MAX_RETRIES - 1:
-                # Double wait time in seconds at every attempt
-                backoff = INITIAL_BACKOFF * (2**attempt)
-                _LOGGER.warning(
-                    "ISS update failed (attempt %d/%d), retrying in %d seconds: %s",
-                    attempt + 1,
-                    MAX_RETRIES,
-                    backoff,
-                    ex,
+            data = await self.hass.async_add_executor_job(
+                lambda: IssData(
+                    number_of_people_in_space=iss.number_of_people_in_space(),
+                    current_location=iss.current_location(),
                 )
-                await asyncio.sleep(backoff)
-            else:
-                _LOGGER.warning("ISS update failed after %d attempts", MAX_RETRIES)
-
-    raise UpdateFailed("Unable to retrieve data") from last_exception
+            )
+        except (HTTPError, requests.exceptions.ConnectionError) as err:
+            self._consecutive_failures += 1
+            if (
+                self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES
+                or self.data is None
+            ):
+                raise UpdateFailed(
+                    f"Unable to retrieve data after {self._consecutive_failures} attempts"
+                ) from err
+            _LOGGER.debug(
+                "Transient API error (%s/%s), using cached data",
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+            )
+            return self.data
+        self._consecutive_failures = 0
+        return data
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
 
-    iss = pyiss.ISS()
-
-    async def async_update() -> IssData:
-        return await async_update_with_retry(hass, iss)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=DOMAIN,
-        update_method=async_update,
-        update_interval=timedelta(seconds=60),
-    )
+    coordinator = IssDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
