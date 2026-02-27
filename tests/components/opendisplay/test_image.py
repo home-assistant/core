@@ -12,8 +12,10 @@ import pytest
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.opendisplay.const import DOMAIN
-from homeassistant.components.opendisplay.entity import OpenDisplayImageExtraStoredData
-from homeassistant.components.opendisplay.image import OpenDisplayImageEntity
+from homeassistant.components.opendisplay.image import (
+    OpenDisplayImageEntity,
+    OpenDisplayImageExtraStoredData,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import async_get_platforms

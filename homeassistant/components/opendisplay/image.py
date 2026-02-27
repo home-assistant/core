@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from dataclasses import dataclass
 from datetime import timedelta
+import io
 import logging
 from pathlib import Path
 from typing import Any
@@ -21,7 +23,7 @@ from opendisplay import (
     Rotation,
     prepare_image,
 )
-from PIL import Image as PILImage
+from PIL import Image as PILImage, ImageOps
 
 from homeassistant.components.bluetooth import (
     BluetoothCallbackMatcher,
@@ -39,23 +41,82 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from . import OpenDisplayConfigEntry
 from .const import CANCEL_SETTLE_DELAY, DOMAIN, STORAGE_DIR
-from .entity import (
-    OpenDisplayEntity,
-    OpenDisplayImageExtraStoredData,
-    delete_stored_image,
-    image_to_bytes,
-    load_image,
-    load_image_from_bytes,
-    read_stored_image,
-    write_stored_image,
-)
+from .entity import OpenDisplayEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class OpenDisplayImageExtraStoredData(ExtraStoredData):
+    """Extra stored data for OpenDisplay image entity."""
+
+    image_last_updated: str | None
+    has_stored_image: bool
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation."""
+        return {
+            "image_last_updated": self.image_last_updated,
+            "has_stored_image": self.has_stored_image,
+        }
+
+    @classmethod
+    def from_dict(
+        cls, restored: dict[str, Any]
+    ) -> OpenDisplayImageExtraStoredData | None:
+        """Initialize from a dict."""
+        try:
+            return cls(
+                image_last_updated=restored["image_last_updated"],
+                has_stored_image=restored["has_stored_image"],
+            )
+        except KeyError:
+            return None
+
+
+def load_image(path: str) -> PILImage.Image:
+    """Load an image from disk and apply EXIF orientation."""
+    image = PILImage.open(path)
+    image.load()
+    return ImageOps.exif_transpose(image)
+
+
+def load_image_from_bytes(data: bytes) -> PILImage.Image:
+    """Load an image from bytes and apply EXIF orientation."""
+    image = PILImage.open(io.BytesIO(data))
+    image.load()
+    return ImageOps.exif_transpose(image)
+
+
+def image_to_bytes(image: PILImage.Image) -> bytes:
+    """Convert a PIL Image to PNG bytes."""
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def write_stored_image(path: Path, data: bytes) -> None:
+    """Write image bytes to disk."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+
+
+def read_stored_image(path: Path) -> bytes | None:
+    """Read stored image bytes from disk."""
+    try:
+        return path.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def delete_stored_image(path: Path) -> None:
+    """Delete stored image from disk."""
+    path.unlink(missing_ok=True)
 
 
 async def async_setup_entry(
