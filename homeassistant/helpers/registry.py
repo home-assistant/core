@@ -81,6 +81,14 @@ class BaseRegistry[_StoreDataT: Mapping[str, Any] | Sequence[Any]](ABC):
         """Set the store to load empty and become read-only."""
         self._store.set_load_empty()
 
+    async def async_load(self, *, load_empty: bool = False) -> None:
+        """Load the registry.
+
+        Optionally set the store to load empty and become read-only.
+        """
+        if load_empty:
+            self.set_load_empty()
+
     @abstractmethod
     def _data_to_save(self) -> _StoreDataT:
         """Return data of registry to store in a file."""

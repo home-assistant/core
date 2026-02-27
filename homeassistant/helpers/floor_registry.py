@@ -307,8 +307,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
             _EventFloorRegistryUpdatedData_Reorder(action="reorder"),
         )
 
-    async def async_load(self) -> None:
+    async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the floor registry."""
+        await super().async_load(load_empty=load_empty)
         data = await self._store.async_load()
         floors = FloorRegistryItems()
 
@@ -356,7 +357,4 @@ def async_get(hass: HomeAssistant) -> FloorRegistry:
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load floor registry."""
     assert DATA_REGISTRY not in hass.data
-    registry = async_get(hass)
-    if load_empty:
-        registry.set_load_empty()
-    await registry.async_load()
+    await async_get(hass).async_load(load_empty=load_empty)

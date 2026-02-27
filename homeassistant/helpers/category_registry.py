@@ -204,8 +204,9 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         return new
 
-    async def async_load(self) -> None:
+    async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the category registry."""
+        await super().async_load(load_empty=load_empty)
         data = await self._store.async_load()
         category_entries: dict[str, dict[str, CategoryEntry]] = {}
 
@@ -268,7 +269,4 @@ def async_get(hass: HomeAssistant) -> CategoryRegistry:
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load category registry."""
     assert DATA_REGISTRY not in hass.data
-    registry = async_get(hass)
-    if load_empty:
-        registry.set_load_empty()
-    await registry.async_load()
+    await async_get(hass).async_load(load_empty=load_empty)

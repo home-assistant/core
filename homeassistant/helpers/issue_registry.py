@@ -251,8 +251,9 @@ class IssueRegistry(BaseRegistry):
         """
         self._store.make_read_only()
 
-    async def async_load(self) -> None:
+    async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the issue registry."""
+        await super().async_load(load_empty=load_empty)
         data = await self._store.async_load()
 
         issues: dict[tuple[str, str], IssueEntry] = {}
@@ -324,9 +325,7 @@ async def async_load(
     ir = async_get(hass)
     if read_only:  # only used in for check config script
         ir.make_read_only()
-    if load_empty:
-        ir.set_load_empty()
-    return await ir.async_load()
+    await ir.async_load(load_empty=load_empty)
 
 
 @callback

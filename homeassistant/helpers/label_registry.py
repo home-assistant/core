@@ -224,8 +224,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         return new
 
-    async def async_load(self) -> None:
+    async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the label registry."""
+        await super().async_load(load_empty=load_empty)
         data = await self._store.async_load()
         labels = NormalizedNameBaseRegistryItems[LabelEntry]()
 
@@ -273,7 +274,4 @@ def async_get(hass: HomeAssistant) -> LabelRegistry:
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load label registry."""
     assert DATA_REGISTRY not in hass.data
-    registry = async_get(hass)
-    if load_empty:
-        registry.set_load_empty()
-    await registry.async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
