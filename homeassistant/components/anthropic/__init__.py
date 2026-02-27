@@ -75,7 +75,7 @@ class AnthropicRuntimeData:
         """Mark the config entry entities as unavailable."""
         if not self.is_available:
             return
-        LOGGER.info("Claude API become unavailable")
+        LOGGER.info("Claude API is unavailable")
         self.is_available = False
         async_dispatcher_send(
             self._hass, f"{DOMAIN}_availability_{self._entry.entry_id}"
@@ -92,7 +92,7 @@ class AnthropicRuntimeData:
         """Mark the config entry entities as available."""
         if self.is_available:
             return
-        LOGGER.info("Claude API become available")
+        LOGGER.info("Claude API is back online")
         self.is_available = True
         async_dispatcher_send(
             self._hass, f"{DOMAIN}_availability_{self._entry.entry_id}"
