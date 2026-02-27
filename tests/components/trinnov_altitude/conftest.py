@@ -35,6 +35,8 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
         altitude.stop = AsyncMock(return_value=None)
         altitude.power_off = AsyncMock(return_value=None)
         altitude.mute_set = AsyncMock(return_value=None)
+        altitude.dim_set = AsyncMock(return_value=None)
+        altitude.bypass_set = AsyncMock(return_value=None)
         altitude.source_set_by_name = AsyncMock(return_value=None)
         altitude.preset_set = AsyncMock(return_value=None)
         altitude.upmixer_set = AsyncMock(return_value=None)
@@ -54,7 +56,11 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
             source="Apple TV",
             sources={0: "Apple TV", 1: "Blu-ray"},
             source_format="PCM",
+            decoder="Dolby Atmos",
+            audiosync=42,
             mute=False,
+            dim=False,
+            bypass=False,
             volume=-35.0,
             preset="Movie",
             presets={0: "Movie", 1: "Music"},

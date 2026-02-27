@@ -17,5 +17,70 @@
         }
       }
     }
+  },
+  "entity": {
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
+    "select": {
+      "preset": {
+        "name": "Preset"
+      },
+      "source": {
+        "name": "Source"
+      },
+      "upmixer": {
+        "name": "Upmixer"
+      }
+    },
+    "sensor": {
+      "audiosync": {
+        "name": "Audiosync"
+      },
+      "connection_status": {
+        "name": "Connection Status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        }
+      },
+      "decoder": {
+        "name": "Decoder"
+      },
+      "power_status": {
+        "name": "Power Status",
+        "state": {
+          "booting": "Booting",
+          "off": "Off",
+          "ready": "Ready"
+        }
+      },
+      "source_format": {
+        "name": "Source Format"
+      },
+      "sync_status": {
+        "name": "Sync Status",
+        "state": {
+          "synced": "Synced",
+          "syncing": "Syncing"
+        }
+      },
+      "version": {
+        "name": "Version"
+      }
+    },
+    "switch": {
+      "bypass": {
+        "name": "Bypass"
+      },
+      "dim": {
+        "name": "Dim"
+      },
+      "mute": {
+        "name": "Mute"
+      }
+    }
   }
 }
