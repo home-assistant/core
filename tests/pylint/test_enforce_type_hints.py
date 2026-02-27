@@ -1370,6 +1370,13 @@ def test_pytest_fixture(linter: UnittestLinter, type_hint_checker: BaseChecker) 
         """
     import pytest
 
+    class AgentBackup:
+        pass
+
+    @pytest.fixture
+    def test_backup(backup_size: int) -> AgentBackup:
+        pass
+
     @pytest.fixture
     def sample_fixture( #@
         hass: HomeAssistant,
