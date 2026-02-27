@@ -495,7 +495,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[megane_e-tech][binary_sensor.reg_meg_0_charging-entry]
+# name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -531,7 +531,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[megane_e-tech][binary_sensor.reg_meg_0_charging-state]
+# name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
@@ -545,7 +545,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[megane_e-tech][binary_sensor.reg_meg_0_hvac-entry]
+# name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -581,7 +581,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[megane_e-tech][binary_sensor.reg_meg_0_hvac-state]
+# name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 HVAC',
@@ -594,7 +594,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[megane_e-tech][binary_sensor.reg_meg_0_plug-entry]
+# name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -630,7 +630,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[megane_e-tech][binary_sensor.reg_meg_0_plug-state]
+# name: test_binary_sensors[megane_e_tech][binary_sensor.reg_meg_0_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',

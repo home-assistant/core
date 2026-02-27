@@ -2758,7 +2758,7 @@
     'state': 'plugged',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_admissible_charging_power-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2799,7 +2799,7 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_admissible_charging_power-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_admissible_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -2815,7 +2815,7 @@
     'state': '27.0',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2853,7 +2853,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2869,7 +2869,7 @@
     'state': '60',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery_autonomy-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2910,7 +2910,7 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery_autonomy-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
@@ -2926,7 +2926,7 @@
     'state': '141',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery_available_energy-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2967,7 +2967,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery_available_energy-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2983,7 +2983,7 @@
     'state': '31',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery_temperature-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3024,7 +3024,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_battery_temperature-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3040,7 +3040,7 @@
     'state': '20',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_charge_state-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3087,7 +3087,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_charge_state-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3111,7 +3111,7 @@
     'state': 'charge_in_progress',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_charging_remaining_time-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3152,7 +3152,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_charging_remaining_time-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -3168,7 +3168,7 @@
     'state': '145',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_hvac_soc_threshold-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3204,7 +3204,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_hvac_soc_threshold-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 HVAC SoC threshold',
@@ -3218,7 +3218,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_last_battery_activity-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3254,7 +3254,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_last_battery_activity-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -3268,7 +3268,7 @@
     'state': '2020-01-12T21:40:16+00:00',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_last_hvac_activity-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3304,7 +3304,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_last_hvac_activity-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_hvac_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -3318,7 +3318,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_last_location_activity-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3354,7 +3354,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_last_location_activity-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_location_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -3368,7 +3368,7 @@
     'state': '2020-02-18T16:58:38+00:00',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_mileage-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3409,7 +3409,7 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_mileage-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
@@ -3425,7 +3425,7 @@
     'state': '49114',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_outside_temperature-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3466,7 +3466,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_outside_temperature-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3482,7 +3482,7 @@
     'state': '8.0',
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_plug_state-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3526,7 +3526,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[megane_e-tech][sensor.reg_meg_0_plug_state-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',

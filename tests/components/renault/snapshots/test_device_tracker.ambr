@@ -204,7 +204,7 @@
     'state': 'not_home',
   })
 # ---
-# name: test_device_trackers[megane_e-tech][device_tracker.reg_meg_0_location-entry]
+# name: test_device_trackers[megane_e_tech][device_tracker.reg_meg_0_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -240,7 +240,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_trackers[megane_e-tech][device_tracker.reg_meg_0_location-state]
+# name: test_device_trackers[megane_e_tech][device_tracker.reg_meg_0_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Location',

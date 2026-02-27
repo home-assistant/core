@@ -1371,7 +1371,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_flash_lights-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_flash_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1407,7 +1407,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_flash_lights-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_flash_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Flash lights',
@@ -1420,7 +1420,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_sound_horn-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_sound_horn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1456,7 +1456,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_sound_horn-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_sound_horn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Sound horn',
@@ -1469,7 +1469,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_start_air_conditioner-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1505,7 +1505,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_start_air_conditioner-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Start air conditioner',
@@ -1518,7 +1518,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_start_charge-entry]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1554,7 +1554,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[megane_e-tech][button.reg_meg_0_start_charge-state]
+# name: test_buttons[megane_e_tech][button.reg_meg_0_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Start charge',

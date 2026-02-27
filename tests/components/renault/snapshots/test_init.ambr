@@ -65,7 +65,7 @@
     }),
   ])
 # ---
-# name: test_device_registry[megane_e-tech]
+# name: test_device_registry[megane_e_tech]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
