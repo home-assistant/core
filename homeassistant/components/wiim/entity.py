@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, LOGGER
 
 
-def exception_wrap[_WiimEntityT: WiimBaseEntity, **_P, _R](
+def exception_wrap[_WiimEntityT: "WiimBaseEntity", **_P, _R](
     func: Callable[Concatenate[_WiimEntityT, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[_WiimEntityT, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper to catch SDK exceptions and raise HomeAssistant errors."""
