@@ -1172,11 +1172,26 @@ class GetLiveContextTool(Tool):
     )
     parameters = vol.Schema(
         {
-            vol.Optional("domain", description="Filter by domain (e.g., light, switch, sensor)"): str,
-            vol.Optional("device_class", description="Filter by device class (e.g., temperature, humidity, power)"): str,
-            vol.Optional("area", description="Filter devices located in a specific area by exact name"): str,
-            vol.Optional("name", description="Filter devices by their friendly name (exact match by default)"): str,
-            vol.Optional("fuzzy_search", description="Set to true to enable partial string matching for area and name", default=False): bool,
+            vol.Optional(
+                "domain", description="Filter by domain (e.g., light, switch, sensor)"
+            ): str,
+            vol.Optional(
+                "device_class",
+                description="Filter by device class (e.g., temperature, humidity, power)",
+            ): str,
+            vol.Optional(
+                "area",
+                description="Filter devices located in a specific area by exact name",
+            ): str,
+            vol.Optional(
+                "name",
+                description="Filter devices by their friendly name (exact match by default)",
+            ): str,
+            vol.Optional(
+                "fuzzy_search",
+                description="Set to true to enable partial string matching for area and name",
+                default=False,
+            ): bool,
         }
     )
 
@@ -1195,37 +1210,70 @@ class GetLiveContextTool(Tool):
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
-            
+
         filtered_entities = list(exposed_entities["entities"].values())
         args = tool_input.tool_args
 
         if "domain" in args:
-            filtered_entities = [e for e in filtered_entities if e.get("domain") == args["domain"]]
-            
+            filtered_entities = [
+                e for e in filtered_entities if e.get("domain") == args["domain"]
+            ]
+
         if "device_class" in args:
-            filtered_entities = [e for e in filtered_entities if e.get("attributes", {}).get("device_class") == args["device_class"]]
-            
+            filtered_entities = [
+                e
+                for e in filtered_entities
+                if e.get("attributes", {}).get("device_class") == args["device_class"]
+            ]
+
         is_fuzzy = args.get("fuzzy_search", False)
-        
+
         if "area" in args:
             area_query = args["area"].lower()
             if is_fuzzy:
-                filtered_entities = [e for e in filtered_entities if "areas" in e and area_query in e["areas"].lower()]
+                filtered_entities = [
+                    e
+                    for e in filtered_entities
+                    if "areas" in e and area_query in e["areas"].lower()
+                ]
             else:
-                filtered_entities = [e for e in filtered_entities if "areas" in e and any(a.strip() == area_query for a in e["areas"].lower().split(","))]
-            
+                filtered_entities = [
+                    e
+                    for e in filtered_entities
+                    if "areas" in e
+                    and any(
+                        a.strip() == area_query for a in e["areas"].lower().split(",")
+                    )
+                ]
+
         if "name" in args:
             name_query = args["name"].lower()
             if is_fuzzy:
-                filtered_entities = [e for e in filtered_entities if name_query in e.get("names", "").lower()]
+                filtered_entities = [
+                    e
+                    for e in filtered_entities
+                    if name_query in e.get("names", "").lower()
+                ]
             else:
-                filtered_entities = [e for e in filtered_entities if any(n.strip() == name_query for n in e.get("names", "").lower().split(","))]
+                filtered_entities = [
+                    e
+                    for e in filtered_entities
+                    if any(
+                        n.strip() == name_query
+                        for n in e.get("names", "").lower().split(",")
+                    )
+                ]
 
         if not filtered_entities:
-            return {"success": True, "result": "No entities found matching the provided filters."}
+            return {
+                "success": True,
+                "result": "No entities found matching the provided filters.",
+            }
 
         prompt = [
-            f"Live Context (Filtered by {args}):" if args else "Live Context: An overview of the areas and devices:",
+            f"Live Context (Filtered by {args}):"
+            if args
+            else "Live Context: An overview of the areas and devices:",
             yaml_util.dump(filtered_entities),
         ]
         return {

@@ -1658,13 +1658,15 @@ async def test_live_context_domain_filter(
 ) -> None:
     """Test GetLiveContextTool filters strictly by domain."""
     assert await async_setup_component(hass, "homeassistant", {})
-    
+
     async_expose_entity(hass, "conversation", "light.kitchen", True)
     async_expose_entity(hass, "conversation", "sensor.temperature", True)
-    
+
     hass.states.async_set("light.kitchen", "on", {"friendly_name": "Kitchen"})
-    hass.states.async_set("sensor.temperature", "22", {"friendly_name": "Living Room Temp"})
-    
+    hass.states.async_set(
+        "sensor.temperature", "22", {"friendly_name": "Living Room Temp"}
+    )
+
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=Context(),
@@ -1672,12 +1674,14 @@ async def test_live_context_domain_filter(
         assistant="conversation",
         device_id=None,
     )
-    
+
     tool = llm.GetLiveContextTool()
-    tool_input = llm.ToolInput(tool_name="GetLiveContext", tool_args={"domain": "light"})
-    
+    tool_input = llm.ToolInput(
+        tool_name="GetLiveContext", tool_args={"domain": "light"}
+    )
+
     result = await tool.async_call(hass, tool_input, llm_context)
-    
+
     assert result["success"] is True
     assert "Kitchen" in result["result"]
     assert "Living Room Temp" not in result["result"]
@@ -1688,13 +1692,15 @@ async def test_live_context_exact_match(
 ) -> None:
     """Test GetLiveContextTool default exact match optimization."""
     assert await async_setup_component(hass, "homeassistant", {})
-    
+
     async_expose_entity(hass, "conversation", "light.lights", True)
     async_expose_entity(hass, "conversation", "light.living_lights", True)
-    
+
     hass.states.async_set("light.lights", "on", {"friendly_name": "Lights"})
-    hass.states.async_set("light.living_lights", "off", {"friendly_name": "Living Lights"})
-    
+    hass.states.async_set(
+        "light.living_lights", "off", {"friendly_name": "Living Lights"}
+    )
+
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=Context(),
@@ -1702,12 +1708,12 @@ async def test_live_context_exact_match(
         assistant="conversation",
         device_id=None,
     )
-    
+
     tool = llm.GetLiveContextTool()
     tool_input = llm.ToolInput(tool_name="GetLiveContext", tool_args={"name": "Lights"})
-    
+
     result = await tool.async_call(hass, tool_input, llm_context)
-    
+
     assert "Lights" in result["result"]
     assert "Living Lights" not in result["result"]
 
@@ -1717,13 +1723,15 @@ async def test_live_context_fuzzy_search(
 ) -> None:
     """Test GetLiveContextTool fuzzy_search boolean switch for expansive queries."""
     assert await async_setup_component(hass, "homeassistant", {})
-    
+
     async_expose_entity(hass, "conversation", "light.lights", True)
     async_expose_entity(hass, "conversation", "light.living_lights", True)
-    
+
     hass.states.async_set("light.lights", "on", {"friendly_name": "Lights"})
-    hass.states.async_set("light.living_lights", "off", {"friendly_name": "Living Lights"})
-    
+    hass.states.async_set(
+        "light.living_lights", "off", {"friendly_name": "Living Lights"}
+    )
+
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=Context(),
@@ -1731,11 +1739,13 @@ async def test_live_context_fuzzy_search(
         assistant="conversation",
         device_id=None,
     )
-    
+
     tool = llm.GetLiveContextTool()
-    tool_input = llm.ToolInput(tool_name="GetLiveContext", tool_args={"name": "li", "fuzzy_search": True})
-    
+    tool_input = llm.ToolInput(
+        tool_name="GetLiveContext", tool_args={"name": "li", "fuzzy_search": True}
+    )
+
     result = await tool.async_call(hass, tool_input, llm_context)
-    
+
     assert "Lights" in result["result"]
     assert "Living Lights" in result["result"]
