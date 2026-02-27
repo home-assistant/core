@@ -57,8 +57,8 @@
       "battery_charge_discharge_state": {
         "name": "Battery charge/discharge state",
         "state": {
-          "charging": "Charging",
-          "discharging": "Discharging",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
           "static": "Static"
         }
       },
