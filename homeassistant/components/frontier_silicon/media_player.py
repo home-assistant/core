@@ -151,8 +151,8 @@ class AFSAPIDevice(MediaPlayerEntity):
         # If call to get_volume fails set to 0 and try again next time.
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
-            if self._max_volume:
-                self._attr_volume_step = 1 / self._max_volume
+        if self._max_volume:
+            self._attr_volume_step = 1 / self._max_volume
 
         if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
