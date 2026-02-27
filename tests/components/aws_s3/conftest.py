@@ -22,7 +22,7 @@ def backup_size() -> int:
 
 
 @pytest.fixture
-def test_backup(backup_size: int) -> AgentBackup:
+def test_backup(backup_size: int) -> None:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
