@@ -99,7 +99,7 @@ async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Test agent list backups."""
 
@@ -111,24 +111,24 @@ async def test_agents_list_backups(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [
         {
-            "addons": test_backup.addons,
+            "addons": mock_agent_backup.addons,
             "agents": {
                 f"{DOMAIN}.{mock_config_entry.entry_id}": {
-                    "protected": test_backup.protected,
-                    "size": test_backup.size,
+                    "protected": mock_agent_backup.protected,
+                    "size": mock_agent_backup.size,
                 }
             },
-            "backup_id": test_backup.backup_id,
-            "database_included": test_backup.database_included,
-            "date": test_backup.date,
-            "extra_metadata": test_backup.extra_metadata,
+            "backup_id": mock_agent_backup.backup_id,
+            "database_included": mock_agent_backup.database_included,
+            "date": mock_agent_backup.date,
+            "extra_metadata": mock_agent_backup.extra_metadata,
             "failed_addons": [],
             "failed_agent_ids": [],
             "failed_folders": [],
-            "folders": test_backup.folders,
-            "homeassistant_included": test_backup.homeassistant_included,
-            "homeassistant_version": test_backup.homeassistant_version,
-            "name": test_backup.name,
+            "folders": mock_agent_backup.folders,
+            "homeassistant_included": mock_agent_backup.homeassistant_included,
+            "homeassistant_version": mock_agent_backup.homeassistant_version,
+            "name": mock_agent_backup.name,
             "with_automatic_settings": None,
         }
     ]
@@ -138,37 +138,37 @@ async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Test agent get backup."""
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "backup/details", "backup_id": test_backup.backup_id}
+        {"type": "backup/details", "backup_id": mock_agent_backup.backup_id}
     )
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
-        "addons": test_backup.addons,
+        "addons": mock_agent_backup.addons,
         "agents": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": {
-                "protected": test_backup.protected,
-                "size": test_backup.size,
+                "protected": mock_agent_backup.protected,
+                "size": mock_agent_backup.size,
             }
         },
-        "backup_id": test_backup.backup_id,
-        "database_included": test_backup.database_included,
-        "date": test_backup.date,
-        "extra_metadata": test_backup.extra_metadata,
+        "backup_id": mock_agent_backup.backup_id,
+        "database_included": mock_agent_backup.database_included,
+        "date": mock_agent_backup.date,
+        "extra_metadata": mock_agent_backup.extra_metadata,
         "failed_addons": [],
         "failed_agent_ids": [],
         "failed_folders": [],
-        "folders": test_backup.folders,
-        "homeassistant_included": test_backup.homeassistant_included,
-        "homeassistant_version": test_backup.homeassistant_version,
-        "name": test_backup.name,
+        "folders": mock_agent_backup.folders,
+        "homeassistant_included": mock_agent_backup.homeassistant_included,
+        "homeassistant_version": mock_agent_backup.homeassistant_version,
+        "name": mock_agent_backup.name,
         "with_automatic_settings": None,
     }
 
@@ -197,7 +197,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Test listing backups when one metadata file is corrupted."""
     # Create agent
@@ -220,7 +220,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
     ]
 
     # Mock responses for get_object calls
-    valid_metadata = json.dumps(test_backup.as_dict())
+    valid_metadata = json.dumps(mock_agent_backup.as_dict())
     corrupted_metadata = "{invalid json content"
 
     async def mock_get_object(**kwargs):
@@ -239,7 +239,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
 
     backups = await agent.async_list_backups()
     assert len(backups) == 1
-    assert backups[0].backup_id == test_backup.backup_id
+    assert backups[0].backup_id == mock_agent_backup.backup_id
     assert "Failed to process metadata file" in caplog.text
 
 
@@ -303,18 +303,18 @@ async def test_agents_upload_network_failure(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Test agent upload backup with network failure."""
     client = await hass_client()
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=test_backup,
+            return_value=mock_agent_backup,
         ),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
+            return_value=mock_agent_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
@@ -355,7 +355,7 @@ async def test_error_during_delete(
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Test the error wrapper."""
     mock_client.delete_object.side_effect = BotoCoreError
@@ -365,7 +365,7 @@ async def test_error_during_delete(
     await client.send_json_auto_id(
         {
             "type": "backup/delete",
-            "backup_id": test_backup.backup_id,
+            "backup_id": mock_agent_backup.backup_id,
         }
     )
     response = await client.receive_json()
@@ -381,7 +381,7 @@ async def test_error_during_delete(
 async def test_cache_expiration(
     hass: HomeAssistant,
     mock_client: MagicMock,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Test that the cache expires correctly."""
     # Mock the entry
@@ -400,7 +400,7 @@ async def test_cache_expiration(
     mock_client.reset_mock()
 
     # Mock metadata response
-    metadata_content = json.dumps(test_backup.as_dict())
+    metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
@@ -546,7 +546,7 @@ async def test_agent_list_backups_parametrized(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
     config_entry_extra_data: dict,
     expected_paginate_extra_kwargs: dict,
 ) -> None:
@@ -577,7 +577,7 @@ async def test_agent_delete_backup_parametrized(
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
     expected_key_prefix: str,
 ) -> None:
     """Test agent delete backup with and without prefix."""
@@ -594,7 +594,7 @@ async def test_agent_delete_backup_parametrized(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
 
-    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    tar_filename, metadata_filename = suggested_filenames(mock_agent_backup)
 
     expected_tar_key = f"{expected_key_prefix}{tar_filename}"
     expected_metadata_key = f"{expected_key_prefix}{metadata_filename}"
@@ -606,18 +606,18 @@ async def test_agent_delete_backup_parametrized(
 async def _upload_backup(
     hass_client: ClientSessionGenerator,
     agent_id: str,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
 ) -> None:
     """Perform a backup upload with the necessary mocks set up."""
     client = await hass_client()
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=test_backup,
+            return_value=mock_agent_backup,
         ),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
+            return_value=mock_agent_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
@@ -625,7 +625,7 @@ async def _upload_backup(
         # the "appendix" chunk triggers the upload of the final buffer part
         mocked_open.return_value.read = Mock(
             side_effect=[
-                b"a" * test_backup.size,
+                b"a" * mock_agent_backup.size,
                 b"appendix",
                 b"",
             ]
@@ -650,20 +650,20 @@ async def test_agent_upload_small_backup_parametrized(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
     expected_key_prefix: str,
 ) -> None:
     """Test agent upload small backup with and without prefix."""
     await _upload_backup(
-        hass_client, f"{DOMAIN}.{mock_config_entry.entry_id}", test_backup
+        hass_client, f"{DOMAIN}.{mock_config_entry.entry_id}", mock_agent_backup
     )
 
-    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    assert f"Uploading backup {mock_agent_backup.backup_id}" in caplog.text
     assert mock_client.create_multipart_upload.await_count == 0
     assert mock_client.upload_part.await_count == 0
     assert mock_client.complete_multipart_upload.await_count == 0
     assert mock_client.put_object.await_count == 2
-    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    tar_filename, metadata_filename = suggested_filenames(mock_agent_backup)
     mock_client.put_object.assert_has_calls(
         [
             call(Bucket="test", Key=f"{expected_key_prefix}{tar_filename}", Body=ANY),
@@ -690,20 +690,20 @@ async def test_agent_upload_large_backup_parametrized(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
     expected_key_prefix: str,
 ) -> None:
     """Test agent upload large (multipart) backup with and without prefix."""
     await _upload_backup(
-        hass_client, f"{DOMAIN}.{mock_config_entry.entry_id}", test_backup
+        hass_client, f"{DOMAIN}.{mock_config_entry.entry_id}", mock_agent_backup
     )
 
-    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    tar_filename, metadata_filename = suggested_filenames(mock_agent_backup)
 
     tar_key = f"{expected_key_prefix}{tar_filename}"
     metadata_key = f"{expected_key_prefix}{metadata_filename}"
 
-    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    assert f"Uploading backup {mock_agent_backup.backup_id}" in caplog.text
     assert mock_client.create_multipart_upload.await_count == 1
     assert mock_client.upload_part.await_count == 2
     assert mock_client.complete_multipart_upload.await_count == 1
@@ -749,7 +749,7 @@ async def test_agent_download_backup_parametrized(
     hass_client: ClientSessionGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
     expected_key_prefix: str,
 ) -> None:
     """Test agent download backup with and without prefix."""
@@ -762,7 +762,7 @@ async def test_agent_download_backup_parametrized(
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
 
-    tar_filename, _ = suggested_filenames(test_backup)
+    tar_filename, _ = suggested_filenames(mock_agent_backup)
 
     expected_tar_key = f"{expected_key_prefix}{tar_filename}"
 

@@ -22,7 +22,7 @@ def backup_size() -> int:
 
 
 @pytest.fixture
-def test_backup(backup_size: int) -> None:
+def mock_agent_backup(backup_size: int) -> AgentBackup:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -40,7 +40,7 @@ def test_backup(backup_size: int) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
+def mock_client(mock_agent_backup: AgentBackup) -> Generator[AsyncMock]:
     """Mock the S3 client."""
     with patch(
         "aiobotocore.session.AioSession.create_client",
@@ -49,7 +49,7 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
     ) as create_client:
         client = create_client.return_value
 
-        tar_file, metadata_file = suggested_filenames(test_backup)
+        tar_file, metadata_file = suggested_filenames(mock_agent_backup)
 
         # Mock the paginator for list_objects_v2
         client.get_paginator = MagicMock()
@@ -66,7 +66,7 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
                 yield b"backup data"
 
             async def read(self) -> bytes:
-                return json.dumps(test_backup.as_dict()).encode()
+                return json.dumps(mock_agent_backup.as_dict()).encode()
 
         client.get_object.return_value = {"Body": MockStream()}
         client.head_bucket.return_value = {}
