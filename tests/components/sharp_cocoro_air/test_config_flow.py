@@ -182,6 +182,31 @@ async def test_reconfigure_flow_errors(
     assert result["reason"] == "reconfigure_successful"
 
 
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_sharp_config_flow: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow aborts when email doesn't match original account."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "email": "different@example.com",
+            "password": "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [

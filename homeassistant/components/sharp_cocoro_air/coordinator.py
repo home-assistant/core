@@ -71,7 +71,7 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 last_err = err
                 if attempt < STARTUP_RETRIES:
                     _LOGGER.warning(
-                        "Sharp cloud init attempt %d/%d failed: %s, retrying in %ds",
+                        "Cloud init attempt %d/%d failed: %s, retrying in %ds",
                         attempt,
                         STARTUP_RETRIES,
                         err,
@@ -92,7 +92,7 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             devices = await self.api.get_devices()
         except SharpAuthError:
             # Session expired -- attempt automatic re-login
-            _LOGGER.info("Sharp session expired, attempting re-login")
+            _LOGGER.info("Session expired, attempting re-login")
             try:
                 await self.api.authenticate()
                 devices = await self.api.get_devices()
@@ -101,13 +101,13 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     translation_domain=DOMAIN,
                     translation_key="relogin_failed",
                 ) from err
-            except SharpConnectionError as err:
+            except (SharpConnectionError, SharpApiError) as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="cannot_connect",
                     translation_placeholders={"error": str(err)},
                 ) from err
-        except SharpConnectionError as err:
+        except (SharpConnectionError, SharpApiError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",

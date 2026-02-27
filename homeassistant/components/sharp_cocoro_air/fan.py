@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SharpCocoroAirConfigEntry
@@ -24,9 +24,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sharp fan entities."""
     coordinator = entry.runtime_data
+    known_devices: set[str] = set(coordinator.data)
     async_add_entities(
-        SharpAirPurifierFan(coordinator, device_id) for device_id in coordinator.data
+        SharpAirPurifierFan(coordinator, device_id) for device_id in known_devices
     )
+
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add fan entities for newly discovered devices."""
+        new_device_ids = set(coordinator.data) - known_devices
+        if new_device_ids:
+            known_devices.update(new_device_ids)
+            async_add_entities(
+                SharpAirPurifierFan(coordinator, device_id)
+                for device_id in new_device_ids
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class SharpAirPurifierFan(SharpCocoroAirEntity, FanEntity):
@@ -51,7 +65,7 @@ class SharpAirPurifierFan(SharpCocoroAirEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the device is on."""
-        power = self.device_properties.get("power")
+        power = self.device_properties.power
         if power is None:
             return None
         return power == "on"
@@ -59,7 +73,7 @@ class SharpAirPurifierFan(SharpCocoroAirEntity, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        mode_display = self.device_properties.get("operation_mode")
+        mode_display = self.device_properties.operation_mode
         if mode_display is None:
             return None
         return DISPLAY_TO_API_MODE.get(mode_display, mode_display.lower())

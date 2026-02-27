@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -32,6 +33,7 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sharp COCORO Air."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self,
@@ -43,7 +45,9 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 async with SharpCOCOROAir(
-                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
+                    session=async_get_clientsession(self.hass),
                 ) as client:
                     await client.authenticate()
             except SharpAuthError:
@@ -103,7 +107,9 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 async with SharpCOCOROAir(
-                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
+                    session=async_get_clientsession(self.hass),
                 ) as client:
                     await client.authenticate()
             except SharpAuthError:
@@ -114,6 +120,8 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during Sharp reauth")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates=user_input,

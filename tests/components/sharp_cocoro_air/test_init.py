@@ -87,6 +87,22 @@ async def test_update_data_connection_error(
     assert coordinator.last_update_success is False
 
 
+async def test_update_data_api_error(
+    hass: HomeAssistant,
+    mock_sharp_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator handles SharpApiError during data update."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    coordinator = mock_config_entry.runtime_data
+
+    mock_sharp_api.get_devices.side_effect = SharpApiError("server error")
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False
+
+
 async def test_update_data_auth_error_relogin_success(
     hass: HomeAssistant,
     mock_sharp_api: AsyncMock,
@@ -105,6 +121,26 @@ async def test_update_data_auth_error_relogin_success(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is True
+    mock_sharp_api.authenticate.assert_awaited_once()
+
+
+async def test_update_data_auth_error_relogin_api_error(
+    hass: HomeAssistant,
+    mock_sharp_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator handles SharpApiError after re-login retry."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    mock_sharp_api.get_devices.side_effect = [
+        SharpAuthError("expired"),
+        SharpApiError("server error"),
+    ]
+    mock_sharp_api.authenticate.reset_mock()
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False
     mock_sharp_api.authenticate.assert_awaited_once()
 
 

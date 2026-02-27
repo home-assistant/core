@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from aiosharp_cocoro_air import Device, DeviceProperties
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -152,3 +153,38 @@ async def test_fan_properties_when_off(
     state = hass.states.get("fan.bedroom_purifier_air_purifier")
     assert state is not None
     assert state.state == "off"
+
+
+async def test_fan_dynamic_device_addition(
+    hass: HomeAssistant,
+    mock_sharp_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that new devices are dynamically added as fan entities."""
+    # Start with only device 1
+    mock_sharp_api.get_devices.return_value = [DEVICE_1]
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.living_room_purifier_air_purifier") is not None
+    assert hass.states.get("fan.office_purifier_air_purifier") is None
+
+    # Simulate a new device appearing on next poll
+    new_device = Device(
+        box_id="box3",
+        device_id="dev3",
+        name="Office Purifier",
+        echonet_node="node3",
+        echonet_object="obj3",
+        maker="Sharp",
+        model="UA-HG50",
+        properties=DeviceProperties(power="on", operation_mode="Auto"),
+    )
+    mock_sharp_api.get_devices.return_value = [DEVICE_1, new_device]
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # New fan entity should now exist
+    state = hass.states.get("fan.office_purifier_air_purifier")
+    assert state is not None
+    assert state.state == "on"

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import dataclasses
-
-from aiosharp_cocoro_air import Device
+from aiosharp_cocoro_air import Device, DeviceProperties
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,12 +27,12 @@ class SharpCocoroAirEntity(CoordinatorEntity[SharpCocoroAirCoordinator]):
         return self.coordinator.data.get(self._device_id)
 
     @property
-    def device_properties(self) -> dict:
-        """Return the decoded properties as a plain dict."""
+    def device_properties(self) -> DeviceProperties:
+        """Return the device properties dataclass."""
         dev = self.device_data
         if dev is None:
-            return {}
-        return dataclasses.asdict(dev.properties)
+            return DeviceProperties()
+        return dev.properties
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -45,7 +43,7 @@ class SharpCocoroAirEntity(CoordinatorEntity[SharpCocoroAirCoordinator]):
             name=dev.name if dev else "Sharp Air Purifier",
             manufacturer="Sharp",
             model=dev.model if dev else None,
-            sw_version=self.device_properties.get("firmware"),
+            sw_version=self.device_properties.firmware,
         )
 
     @property
