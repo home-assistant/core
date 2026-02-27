@@ -1497,12 +1497,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "duke_energy": {
-      "name": "Duke Energy",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "dunehd": {
       "name": "Dune HD",
       "integration_type": "device",
