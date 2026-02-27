@@ -118,9 +118,15 @@ class BraendstofpriserSensor(CoordinatorEntity[APIClient], RestoreSensor):
 
         self._attr_native_value = self.get_value()
 
-    def get_value(self):
+    def get_value(self) -> float | None:
         """Get the current value of the sensor."""
-        return self.coordinator.products[self._product_key]["price"]
+        if (product := self.coordinator.products.get(self._product_key)) is None:
+            return None
+
+        if isinstance(price := product.get("price"), int | float):
+            return float(price)
+
+        return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
