@@ -275,13 +275,9 @@ class SupervisorIssues:
 
             elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
                 host_info = get_host_info(self._hass)
-                if (
-                    host_info
-                    and "data" in host_info
-                    and "disk_free" in host_info["data"]
-                ):
+                if host_info and "disk_free" in host_info:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = str(
-                        host_info["data"]["disk_free"]
+                        host_info["disk_free"]
                     )
                 else:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
