@@ -45,6 +45,8 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
     _attr_current_option = _attr_options[0]
     _attr_name: str | None = None
 
+    _attr_translation_key = "keypad"
+
     async def async_select_option(self, option: str) -> None:
         """Show existed key & create key."""
         if option == self.default_option:
