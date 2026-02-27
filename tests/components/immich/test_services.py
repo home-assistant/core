@@ -96,7 +96,7 @@ async def test_upload_file_config_entry_not_found(
     """Test upload_file service raising config_entry_not_found."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
@@ -109,6 +109,7 @@ async def test_upload_file_config_entry_not_found(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_upload_file_config_entry_not_loaded(
@@ -120,7 +121,7 @@ async def test_upload_file_config_entry_not_loaded(
     mock_config_entry.disabled_by = er.RegistryEntryDisabler.USER
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
@@ -133,6 +134,7 @@ async def test_upload_file_config_entry_not_loaded(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_upload_file_only_local_media_supported(
