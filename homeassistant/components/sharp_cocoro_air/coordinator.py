@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import dataclasses
 import logging
+from typing import Any
 
 from aiosharp_cocoro_air import (
     Device,
@@ -61,7 +63,10 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             try:
                 await self.api.authenticate()
             except SharpAuthError as err:
-                raise ConfigEntryAuthFailed("Sharp login failed") from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
             except (SharpConnectionError, SharpApiError) as err:
                 last_err = err
                 if attempt < STARTUP_RETRIES:
@@ -75,7 +80,11 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     await asyncio.sleep(STARTUP_RETRY_DELAY)
             else:
                 return
-        raise UpdateFailed(f"Cannot connect to Sharp cloud: {last_err}") from last_err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(last_err)},
+        ) from last_err
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch device data from Sharp cloud API."""
@@ -88,24 +97,42 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 await self.api.authenticate()
                 devices = await self.api.get_devices()
             except SharpAuthError as err:
-                raise ConfigEntryAuthFailed("Re-login failed") from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="relogin_failed",
+                ) from err
             except SharpConnectionError as err:
                 raise UpdateFailed(
-                    f"Error communicating with Sharp cloud: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"error": str(err)},
                 ) from err
         except SharpConnectionError as err:
-            raise UpdateFailed(f"Error communicating with Sharp cloud: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         return {dev.device_id: dev for dev in devices}
 
-    async def _async_control(self, fn, *args) -> None:
+    async def _async_control(
+        self, fn: Callable[..., Coroutine[Any, Any, None]], *args: Any
+    ) -> None:
         """Run a control command with error handling."""
         try:
             await fn(*args)
         except SharpAuthError as err:
-            raise ConfigEntryAuthFailed("Session expired") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
         except (SharpConnectionError, SharpApiError) as err:
-            raise HomeAssistantError(f"Command failed: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     def _optimistic_update(self, device_id: str, **props) -> None:
         """Apply optimistic state update and notify entities immediately.

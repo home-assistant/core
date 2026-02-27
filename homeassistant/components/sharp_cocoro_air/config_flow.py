@@ -9,7 +9,11 @@ from typing import Any
 from aiosharp_cocoro_air import SharpAuthError, SharpCOCOROAir, SharpConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .const import DOMAIN
@@ -51,17 +55,36 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data=user_input,
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"Sharp COCORO Air ({user_input[CONF_EMAIL]})",
                     data=user_input,
                 )
 
+        suggested_values: dict[str, Any] = {}
+        if self.source == SOURCE_RECONFIGURE:
+            suggested_values = dict(self._get_reconfigure_entry().data)
+
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, suggested_values
+            ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of credentials."""
+        return await self.async_step_user(user_input)
 
     async def async_step_reauth(
         self,

@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SharpCocoroAirConfigEntry
@@ -89,12 +90,16 @@ SENSOR_DESCRIPTIONS: tuple[SharpSensorEntityDescription, ...] = (
         key="pci_sensor",
         translation_key="pci_sensor",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_prop("pci_sensor"),
     ),
     SharpSensorEntityDescription(
         key="light_sensor",
         translation_key="light_sensor",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_prop("light_sensor"),
     ),
     SharpSensorEntityDescription(
@@ -102,11 +107,14 @@ SENSOR_DESCRIPTIONS: tuple[SharpSensorEntityDescription, ...] = (
         translation_key="filter_usage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="h",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_prop("filter_usage"),
     ),
     SharpSensorEntityDescription(
         key="cleaning_mode",
         translation_key="cleaning_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_prop("cleaning_mode"),
     ),
     SharpSensorEntityDescription(
