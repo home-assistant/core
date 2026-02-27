@@ -344,7 +344,12 @@ async def test_setup_config_ssl(
     indirect=["mock_client"],
 )
 async def test_setup_minimal_config(
-    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
+    hass: HomeAssistant,
+    mock_client,
+    config_base,
+    config_ext,
+    get_write_api,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the setup with minimal configuration and defaults."""
     config = {"influxdb": {}}
@@ -363,6 +368,15 @@ async def test_setup_minimal_config(
 
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data == config_base
+
+    # Deprecation warning only when connection keys are explicitly provided
+    deprecated_issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_yaml"
+    )
+    if config_ext:
+        assert deprecated_issue
+    else:
+        assert not deprecated_issue
 
 
 @pytest.mark.parametrize(
@@ -2172,4 +2186,47 @@ async def test_setup_import_connection_error(
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id="deprecated_yaml_import_issue_cannot_connect",
+    )
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "get_write_api"),
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            {
+                "host": "localhost",
+                "username": "user",
+                "password": "password",
+                "database": "db",
+            },
+            _get_write_api_mock_v1,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_import_already_exists(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that no error issue is created when a config entry already exists."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=BASE_V1_CONFIG)
+    mock_entry.add_to_hass(hass)
+
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # No error issue should be created for single_instance_allowed
+    for issue in issue_registry.issues.values():
+        assert "deprecated_yaml_import_issue" not in issue.issue_id
+
+    # Deprecation warning should still be shown
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_yaml"
     )
