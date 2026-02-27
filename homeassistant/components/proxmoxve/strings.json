@@ -32,6 +32,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
+          "password": "[%key:component::proxmoxve::config::step::user::data_description::password%]",
+          "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
+          "realm": "[%key:component::proxmoxve::config::step::user::data_description::realm%]",
+          "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
+        },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
         "title": "Reconfigure Proxmox VE integration"
       },
@@ -43,6 +51,14 @@
           "realm": "Realm",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Proxmox VE server",
+          "password": "The password for the Proxmox VE server",
+          "port": "The port of your Proxmox VE server (default: 8006)",
+          "realm": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "username": "The username for the Proxmox VE server",
+          "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"
