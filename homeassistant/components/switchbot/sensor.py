@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import switchbot
-from switchbot import HumidifierWaterLevel
-from switchbot.const.air_purifier import AirQualityLevel
+from switchbot import AirQualityLevel, HumidifierWaterLevel, SwitchbotModel
 
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
@@ -14,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -126,6 +126,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
     ),
+    "pm25": SensorEntityDescription(
+        key="pm25",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PM25,
+    ),
 }
 
 
@@ -145,9 +151,20 @@ async def async_setup_entry(
             if sensor in SENSOR_TYPES
         )
     else:
+        sensors = list(coordinator.device.parsed_data)
+        if (
+            isinstance(coordinator.device, switchbot.SwitchbotAirPurifier)
+            and coordinator.model
+            in (
+                SwitchbotModel.AIR_PURIFIER_US,
+                SwitchbotModel.AIR_PURIFIER_TABLE_US,
+            )
+            and "pm25" not in sensors
+        ):
+            sensors.append("pm25")
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
-            for sensor in coordinator.device.parsed_data
+            for sensor in sensors
             if sensor in SENSOR_TYPES
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
@@ -185,7 +202,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        return self.parsed_data.get(self._sensor)
 
 
 class SwitchbotRSSISensor(SwitchBotSensor):

@@ -116,6 +116,15 @@
       }
     },
     "sensor": {
+      "aqi_quality_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "excellent": "mdi:emoticon-excited-outline",
+          "good": "mdi:emoticon-happy-outline",
+          "moderate": "mdi:emoticon-neutral-outline",
+          "unhealthy": "mdi:emoticon-sad-outline"
+        }
+      },
       "light_level": {
         "default": "mdi:brightness-7",
         "state": {
@@ -138,6 +147,26 @@
           "high": "mdi:water-check",
           "low": "mdi:water-outline",
           "medium": "mdi:water"
+        }
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "state": {
+          "off": "mdi:lock-open",
+          "on": "mdi:lock"
+        }
+      },
+      "light_sensitive": {
+        "state": {
+          "off": "mdi:weather-night",
+          "on": "mdi:weather-sunny"
+        }
+      },
+      "wireless_charging": {
+        "state": {
+          "off": "mdi:battery-charging-wireless-outline",
+          "on": "mdi:battery-charging-wireless"
         }
       }
     }

@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import STATE_ON
@@ -20,6 +21,15 @@ from .entity import SwitchbotSwitchedEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
+
+AIR_PURIFIER_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US,
+}
+AIR_PURIFIER_TABLE_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
+}
 
 
 async def async_setup_entry(
@@ -36,8 +46,119 @@ async def async_setup_entry(
             for channel in range(1, coordinator.device.channel + 1)
         ]
         async_add_entities(entries)
+    elif coordinator.model in AIR_PURIFIER_MODELS:
+        async_add_entities(
+            [
+                SwitchbotChildLockSwitch(coordinator),
+                SwitchbotLightSensitiveSwitch(coordinator),
+            ]
+        )
+    elif coordinator.model in AIR_PURIFIER_TABLE_MODELS:
+        async_add_entities(
+            [
+                SwitchbotChildLockSwitch(coordinator),
+                SwitchbotLightSensitiveSwitch(coordinator),
+                SwitchbotWirelessChargingSwitch(coordinator),
+            ]
+        )
     else:
         async_add_entities([SwitchBotSwitch(coordinator)])
+
+
+class SwitchbotLightSensitiveSwitch(SwitchbotSwitchedEntity, SwitchEntity):
+    """Representation of a Switchbot light sensitive switch."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "light_sensitive"
+    _device: switchbot.SwitchbotDevice
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Switchbot light sensitive switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-light_sensitive"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        return self._device.is_light_sensitive_on()
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn light sensitive on."""
+        _LOGGER.debug("Turn light sensitive on for %s", self._address)
+        await self._device.open_light_sensitive()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn light sensitive off."""
+        _LOGGER.debug("Turn light sensitive off for %s", self._address)
+        await self._device.close_light_sensitive()
+        self.async_write_ha_state()
+
+
+class SwitchbotWirelessChargingSwitch(SwitchbotSwitchedEntity, SwitchEntity):
+    """Representation of a Switchbot wireless charging switch."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "wireless_charging"
+    _device: switchbot.SwitchbotDevice
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Switchbot wireless charging switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-wireless_charging"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        return self._device.is_wireless_charging_on()
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn wireless charging on."""
+        _LOGGER.debug("Turn wireless charging on for %s", self._address)
+        await self._device.open_wireless_charging()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn wireless charging off."""
+        _LOGGER.debug("Turn wireless charging off for %s", self._address)
+        await self._device.close_wireless_charging()
+        self.async_write_ha_state()
+
+
+class SwitchbotChildLockSwitch(SwitchbotSwitchedEntity, SwitchEntity):
+    """Representation of a Switchbot child lock switch."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "child_lock"
+    _device: switchbot.SwitchbotDevice
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Switchbot child lock switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-child_lock"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        return self._device.is_child_lock_on()
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn child lock on."""
+        _LOGGER.debug("Turn child lock on for %s", self._address)
+        await self._device.open_child_lock()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn child lock off."""
+        _LOGGER.debug("Turn child lock off for %s", self._address)
+        await self._device.close_child_lock()
+        self.async_write_ha_state()
 
 
 class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):

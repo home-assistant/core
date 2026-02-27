@@ -323,6 +323,15 @@
             }
           }
         }
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "light_sensitive": {
+        "name": "Light sensitive"
+      },
+      "wireless_charging": {
+        "name": "Wireless charging"
       }
     },
     "vacuum": {
