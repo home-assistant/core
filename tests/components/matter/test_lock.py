@@ -14,18 +14,9 @@ from homeassistant.components.matter.const import (
     ATTR_CREDENTIAL_DATA,
     ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_TYPE,
-    ATTR_MAX_USERS,
-    ATTR_SUPPORTS_USER_MGMT,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     DOMAIN,
-    SERVICE_CLEAR_LOCK_CREDENTIAL,
-    SERVICE_CLEAR_LOCK_USER,
-    SERVICE_GET_LOCK_CREDENTIAL_STATUS,
-    SERVICE_GET_LOCK_INFO,
-    SERVICE_GET_LOCK_USERS,
-    SERVICE_SET_LOCK_CREDENTIAL,
-    SERVICE_SET_LOCK_USER,
 )
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -335,7 +326,7 @@ async def test_set_lock_user_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_USER,
+        "set_lock_user",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_USER_NAME: "TestUser",
@@ -344,6 +335,28 @@ async def test_set_lock_user_service(
     )
 
     assert matter_client.send_device_command.call_count == 2
+    # Verify GetUser was called to find empty slot
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+    # Verify SetUser was called with kAdd operation
+    set_user_cmd = matter_client.send_device_command.call_args_list[1]
+    assert set_user_cmd == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetUser(
+            operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
+            userIndex=1,
+            userName="TestUser",
+            userUniqueID=None,
+            userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
+            userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
+            credentialRule=clusters.DoorLock.Enums.CredentialRuleEnum.kSingle,
+        ),
+        timed_request_timeout_ms=10000,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -370,7 +383,7 @@ async def test_set_lock_user_update_existing(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_USER,
+        "set_lock_user",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_USER_INDEX: 1,
@@ -379,8 +392,28 @@ async def test_set_lock_user_update_existing(
         blocking=True,
     )
 
-    # Should have called GetUser then SetUser
     assert matter_client.send_device_command.call_count == 2
+    # Verify GetUser was called to check existing user
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+    # Verify SetUser was called with kModify, preserving existing values
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetUser(
+            operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kModify,
+            userIndex=1,
+            userName="New Name",
+            userUniqueID=123,
+            userStatus=1,  # Preserved from existing user
+            userType=0,  # Preserved from existing user
+            credentialRule=0,  # Preserved from existing user
+        ),
+        timed_request_timeout_ms=10000,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -399,7 +432,7 @@ async def test_set_lock_user_no_available_slots(
     with pytest.raises(ServiceValidationError, match="No available user slots"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_USER,
+            "set_lock_user",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_USER_NAME: "Test User",
@@ -423,7 +456,7 @@ async def test_set_lock_user_empty_slot_error(
     with pytest.raises(ServiceValidationError, match="is empty"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_USER,
+            "set_lock_user",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_USER_INDEX: 5,
@@ -451,7 +484,7 @@ async def test_clear_lock_user_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_LOCK_USER,
+        "clear_lock_user",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_USER_INDEX: 1,
@@ -460,6 +493,19 @@ async def test_clear_lock_user_service(
     )
 
     assert matter_client.send_device_command.call_count == 2
+    # Verify GetUser was called to check credentials
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+    # Verify ClearUser was called
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearUser(userIndex=1),
+        timed_request_timeout_ms=10000,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -488,7 +534,7 @@ async def test_clear_lock_user_clears_credentials_first(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_LOCK_USER,
+        "clear_lock_user",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_USER_INDEX: 1,
@@ -498,6 +544,39 @@ async def test_clear_lock_user_clears_credentials_first(
 
     # GetUser + 2 ClearCredential + ClearUser
     assert matter_client.send_device_command.call_count == 4
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearCredential(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=1,
+                credentialIndex=1,
+            ),
+        ),
+        timed_request_timeout_ms=10000,
+    )
+    assert matter_client.send_device_command.call_args_list[2] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearCredential(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=1,
+                credentialIndex=2,
+            ),
+        ),
+        timed_request_timeout_ms=10000,
+    )
+    assert matter_client.send_device_command.call_args_list[3] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearUser(userIndex=1),
+        timed_request_timeout_ms=10000,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -510,17 +589,24 @@ async def test_get_lock_info_service(
     """Test get_lock_info entity service returns capabilities."""
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_INFO,
+        "get_lock_info",
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
 
-    assert result
-    # Entity service returns dict keyed by entity_id
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result[ATTR_SUPPORTS_USER_MGMT] is True
-    assert entity_result[ATTR_MAX_USERS] == 10
+    assert result["lock.mock_door_lock"] == {
+        "supports_user_management": True,
+        "supported_credential_types": ["pin"],
+        "max_users": 10,
+        "max_pin_users": 10,
+        "max_rfid_users": 10,
+        "max_credentials_per_user": 5,
+        "min_pin_length": 6,
+        "max_pin_length": 8,
+        "min_rfid_length": 10,
+        "max_rfid_length": 20,
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -548,16 +634,35 @@ async def test_get_lock_users_service(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_USERS,
+        "get_lock_users",
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
 
-    assert result
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert len(entity_result["users"]) == 1
-    assert entity_result["users"][0][ATTR_USER_NAME] == "Alice"
+    # Verify GetUser command was sent
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "max_users": 10,
+        "users": [
+            {
+                "user_index": 1,
+                "user_name": "Alice",
+                "user_unique_id": None,
+                "user_status": "occupied_enabled",
+                "user_type": "unrestricted_user",
+                "credential_rule": "single",
+                "credentials": [],
+                "next_user_index": None,
+            }
+        ],
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -571,7 +676,7 @@ async def test_service_on_lock_without_user_management(
     with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_USER,
+            "set_lock_user",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_USER_NAME: "Test",
@@ -582,7 +687,7 @@ async def test_service_on_lock_without_user_management(
     with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_LOCK_USER,
+            "clear_lock_user",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_USER_INDEX: 1,
@@ -681,16 +786,29 @@ async def test_get_lock_users_iterates_with_next_index(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_USERS,
+        "get_lock_users",
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
 
-    # Should have 2 users
-    assert len(result["lock.mock_door_lock"]["users"]) == 2
-    # Should only need 2 calls (using nextUserIndex)
     assert matter_client.send_device_command.call_count == 2
+    # Verify it jumped from index 1 to index 5 via nextUserIndex
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=5),
+    )
+
+    entity_result = result["lock.mock_door_lock"]
+    assert len(entity_result["users"]) == 2
+    assert entity_result["users"][0]["user_name"] == "User 1"
+    assert entity_result["users"][1]["user_name"] == "User 5"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -745,7 +863,7 @@ async def test_get_lock_users_next_user_index_loop_prevention(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_USERS,
+        "get_lock_users",
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
@@ -787,20 +905,30 @@ async def test_get_lock_users_with_credentials(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_USERS,
+        "get_lock_users",
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
 
-    assert result is not None
-    # Result is keyed by entity_id
-    lock_users = result["lock.mock_door_lock"]
-    assert len(lock_users["users"]) == 1
-    user = lock_users["users"][0]
-    assert len(user["credentials"]) == 2
-    assert user["credentials"][0]["type"] == "pin"
-    assert user["credentials"][0]["index"] == 1
+    assert result["lock.mock_door_lock"] == {
+        "max_users": 10,
+        "users": [
+            {
+                "user_index": 1,
+                "user_name": "User With PIN",
+                "user_unique_id": 123,
+                "user_status": "occupied_enabled",
+                "user_type": "unrestricted_user",
+                "credential_rule": "single",
+                "credentials": [
+                    {"type": "pin", "index": 1},
+                    {"type": "pin", "index": 2},
+                ],
+                "next_user_index": None,
+            }
+        ],
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -819,7 +947,7 @@ async def test_matter_error_converted_to_home_assistant_error(
     with pytest.raises(HomeAssistantError, match="Device communication failed"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_USERS,
+            "get_lock_users",
             {ATTR_ENTITY_ID: "lock.mock_door_lock"},
             blocking=True,
             return_response=True,
@@ -857,7 +985,7 @@ async def test_set_lock_credential_pin(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_CREDENTIAL,
+        "set_lock_credential",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
@@ -868,16 +996,40 @@ async def test_set_lock_credential_pin(
         return_response=True,
     )
 
-    assert result
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result[ATTR_CREDENTIAL_INDEX] == 1
-    assert entity_result[ATTR_USER_INDEX] == 1
+    assert result["lock.mock_door_lock"] == {
+        "credential_index": 1,
+        "user_index": 1,
+        "next_credential_index": 2,
+    }
 
+    assert matter_client.send_device_command.call_count == 2
+    # Verify GetCredentialStatus was called first
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetCredentialStatus(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                credentialIndex=1,
+            ),
+        ),
+    )
     # Verify SetCredential was called with kModify (occupied slot)
-    set_cred_call = matter_client.send_device_command.call_args_list[1]
-    assert (
-        set_cred_call.kwargs["command"].operationType
-        == clusters.DoorLock.Enums.DataOperationTypeEnum.kModify
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetCredential(
+            operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kModify,
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                credentialIndex=1,
+            ),
+            credentialData=b"1234",
+            userIndex=None,
+            userStatus=None,
+            userType=None,
+        ),
+        timed_request_timeout_ms=10000,
     )
 
 
@@ -915,7 +1067,7 @@ async def test_set_lock_credential_auto_find_slot(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_CREDENTIAL,
+        "set_lock_credential",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
@@ -925,15 +1077,20 @@ async def test_set_lock_credential_auto_find_slot(
         return_response=True,
     )
 
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result[ATTR_CREDENTIAL_INDEX] == 2
+    assert result["lock.mock_door_lock"] == {
+        "credential_index": 2,
+        "user_index": 1,
+        "next_credential_index": 3,
+    }
 
-    # Verify SetCredential was called with kAdd (empty slot)
-    set_cred_call = matter_client.send_device_command.call_args_list[2]
+    assert matter_client.send_device_command.call_count == 3
+    # Verify SetCredential was called with kAdd for the empty slot at index 2
+    set_cred_cmd = matter_client.send_device_command.call_args_list[2]
     assert (
-        set_cred_call.kwargs["command"].operationType
+        set_cred_cmd.kwargs["command"].operationType
         == clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
     )
+    assert set_cred_cmd.kwargs["command"].credential.credentialIndex == 2
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -968,7 +1125,7 @@ async def test_set_lock_credential_with_user_index(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_CREDENTIAL,
+        "set_lock_credential",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
@@ -980,10 +1137,13 @@ async def test_set_lock_credential_with_user_index(
         return_response=True,
     )
 
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result[ATTR_USER_INDEX] == 3
+    assert result["lock.mock_door_lock"] == {
+        "credential_index": 1,
+        "user_index": 3,
+        "next_credential_index": 2,
+    }
 
-    # Verify user_index was passed in command
+    # Verify user_index was passed in SetCredential command
     set_cred_call = matter_client.send_device_command.call_args_list[1]
     assert set_cred_call.kwargs["command"].userIndex == 3
 
@@ -1008,7 +1168,7 @@ async def test_set_lock_credential_invalid_pin_too_short(
     with pytest.raises(ServiceValidationError, match="PIN length must be between"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1040,7 +1200,7 @@ async def test_set_lock_credential_invalid_pin_non_digit(
     with pytest.raises(ServiceValidationError, match="PIN must contain only digits"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1064,7 +1224,7 @@ async def test_set_lock_credential_unsupported_type(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1109,7 +1269,7 @@ async def test_set_lock_credential_status_failure(
     with pytest.raises(HomeAssistantError, match="duplicate"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1150,7 +1310,7 @@ async def test_set_lock_credential_no_available_slot(
     with pytest.raises(ServiceValidationError, match="No available credential slots"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1173,7 +1333,7 @@ async def test_clear_lock_credential(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_LOCK_CREDENTIAL,
+        "clear_lock_credential",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
@@ -1183,9 +1343,16 @@ async def test_clear_lock_credential(
     )
 
     assert matter_client.send_device_command.call_count == 1
-    call_kwargs = matter_client.send_device_command.call_args.kwargs
-    assert isinstance(
-        call_kwargs["command"], clusters.DoorLock.Commands.ClearCredential
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearCredential(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                credentialIndex=1,
+            ),
+        ),
+        timed_request_timeout_ms=10000,
     )
 
 
@@ -1207,7 +1374,7 @@ async def test_get_lock_credential_status(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_CREDENTIAL_STATUS,
+        "get_lock_credential_status",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
@@ -1217,11 +1384,22 @@ async def test_get_lock_credential_status(
         return_response=True,
     )
 
-    assert result
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result["credential_exists"] is True
-    assert entity_result[ATTR_USER_INDEX] == 2
-    assert entity_result["next_credential_index"] == 3
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetCredentialStatus(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                credentialIndex=1,
+            ),
+        ),
+    )
+    assert result["lock.mock_door_lock"] == {
+        "credential_exists": True,
+        "user_index": 2,
+        "next_credential_index": 3,
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1242,7 +1420,7 @@ async def test_get_lock_credential_status_empty_slot(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LOCK_CREDENTIAL_STATUS,
+        "get_lock_credential_status",
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_CREDENTIAL_TYPE: "pin",
@@ -1252,9 +1430,11 @@ async def test_get_lock_credential_status_empty_slot(
         return_response=True,
     )
 
-    entity_result = result.get("lock.mock_door_lock", result)
-    assert entity_result["credential_exists"] is False
-    assert entity_result[ATTR_USER_INDEX] is None
+    assert result["lock.mock_door_lock"] == {
+        "credential_exists": False,
+        "user_index": None,
+        "next_credential_index": None,
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1268,7 +1448,7 @@ async def test_credential_services_without_usr_feature(
     with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1282,7 +1462,7 @@ async def test_credential_services_without_usr_feature(
     with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_LOCK_CREDENTIAL,
+            "clear_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1294,7 +1474,7 @@ async def test_credential_services_without_usr_feature(
     with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_CREDENTIAL_STATUS,
+            "get_lock_credential_status",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",
@@ -1329,7 +1509,7 @@ async def test_set_lock_credential_matter_error(
     with pytest.raises(HomeAssistantError, match="Device communication failed"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_CREDENTIAL,
+            "set_lock_credential",
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_CREDENTIAL_TYPE: "pin",

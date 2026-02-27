@@ -36,17 +36,9 @@ ATTR_USER_UNIQUE_ID = "user_unique_id"
 # Magic values
 CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to clear all
 
-# Timed request timeout (used by all lock commands that modify state)
+# Timed request timeout for lock commands that modify state.
+# 10 seconds accounts for Thread network latency and retransmissions.
 LOCK_TIMED_REQUEST_TIMEOUT_MS = 10000
-
-# Service names
-SERVICE_CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
-SERVICE_CLEAR_LOCK_USER = "clear_lock_user"
-SERVICE_GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
-SERVICE_GET_LOCK_INFO = "get_lock_info"
-SERVICE_GET_LOCK_USERS = "get_lock_users"
-SERVICE_SET_LOCK_CREDENTIAL = "set_lock_credential"
-SERVICE_SET_LOCK_USER = "set_lock_user"
 
 # Credential field keys
 ATTR_CREDENTIAL_DATA = "credential_data"

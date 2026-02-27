@@ -22,22 +22,13 @@ from .const import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
-    SERVICE_CLEAR_LOCK_CREDENTIAL,
-    SERVICE_CLEAR_LOCK_USER,
     SERVICE_CREDENTIAL_TYPES,
-    SERVICE_GET_LOCK_CREDENTIAL_STATUS,
-    SERVICE_GET_LOCK_INFO,
-    SERVICE_GET_LOCK_USERS,
-    SERVICE_SET_LOCK_CREDENTIAL,
-    SERVICE_SET_LOCK_USER,
     USER_TYPE_REVERSE_MAP,
 )
 
 ATTR_DURATION = "duration"
 ATTR_EMERGENCY_BOOST = "emergency_boost"
 ATTR_TEMPORARY_SETPOINT = "temporary_setpoint"
-
-SERVICE_WATER_HEATER_BOOST = "water_heater_boost"
 
 
 @callback
@@ -47,7 +38,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_WATER_HEATER_BOOST,
+        "water_heater_boost",
         entity_domain=WATER_HEATER_DOMAIN,
         schema={
             # duration >=1
@@ -64,7 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_LOCK_USER,
+        "set_lock_user",
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Optional(ATTR_USER_INDEX): vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -80,7 +71,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CLEAR_LOCK_USER,
+        "clear_lock_user",
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(ATTR_USER_INDEX): vol.All(
@@ -95,7 +86,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_LOCK_INFO,
+        "get_lock_info",
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_get_lock_info",
@@ -105,7 +96,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_LOCK_USERS,
+        "get_lock_users",
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_get_lock_users",
@@ -116,7 +107,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_LOCK_CREDENTIAL,
+        "set_lock_credential",
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(SERVICE_CREDENTIAL_TYPES),
@@ -137,7 +128,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CLEAR_LOCK_CREDENTIAL,
+        "clear_lock_credential",
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(SERVICE_CREDENTIAL_TYPES),
@@ -151,7 +142,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_LOCK_CREDENTIAL_STATUS,
+        "get_lock_credential_status",
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(
