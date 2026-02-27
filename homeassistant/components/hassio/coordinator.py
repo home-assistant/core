@@ -364,7 +364,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_ADDONS] = {
             slug: {
                 **addon,
-                **addons_stats.get(slug, {}),
+                **(addons_stats.get(slug) or {}),
                 ATTR_REPOSITORY: repositories.get(
                     repo_slug := addon.get(ATTR_REPOSITORY, ""), repo_slug
                 ),
