@@ -39,7 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
         success = True
     finally:
         if not success:
-            await client.close()
+            try:
+                await client.close()
+            except Exception:  # noqa: BLE001 - Best-effort cleanup; preserve original exception
+                _LOGGER.debug("Error closing LoJack client during setup failure", exc_info=True)
 
     entry.runtime_data = coordinator
 
