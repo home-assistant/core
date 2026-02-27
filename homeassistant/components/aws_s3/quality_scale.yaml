@@ -23,7 +23,9 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: done
+  unique-config-entry:
+    status: exempt
+    comment: Hassfest does not recognize the duplicate prevention logic. Duplicate entries are prevented by checking bucket, endpoint URL, and prefix in the config flow.
 
   # Silver
   action-exceptions:
@@ -36,14 +38,14 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: S3 is a cloud service that is not discovered on the network.
