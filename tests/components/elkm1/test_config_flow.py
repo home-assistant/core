@@ -849,15 +849,19 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
     mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
 
-    with patch(
-        "homeassistant.components.elkm1.config_flow.Elk",
-        return_value=mocked_elk,
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.elkm1.config_flow.Elk",
+            return_value=mocked_elk,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -914,15 +918,19 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_form_invalid_auth_no_password(hass: HomeAssistant) -> None:
     """Test we handle invalid auth error when no password is provided."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
     mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
 
-    with patch(
-        "homeassistant.components.elkm1.config_flow.Elk",
-        return_value=mocked_elk,
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.elkm1.config_flow.Elk",
+            return_value=mocked_elk,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1991,6 +1999,7 @@ async def test_reconfigure_nonsecure(
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
     with (
+        _patch_discovery(no_device=True),
         _patch_elk(mocked_elk),
         patch(
             "homeassistant.components.elkm1.async_setup_entry",
