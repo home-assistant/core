@@ -61,6 +61,12 @@
       "day_speed": {
         "name": "Day speed"
       },
+      "high_pulse_time": {
+        "name": "High pulse duration"
+      },
+      "low_pulse_time": {
+        "name": "Low pulse duration"
+      },
       "manual_speed": {
         "name": "Manual speed"
       },
@@ -78,13 +84,32 @@
       }
     },
     "select": {
+      "const_flow_speed": {
+        "name": "Constant flow speed"
+      },
+      "day_speed": {
+        "name": "Day speed"
+      },
       "filter_mode": {
         "name": "Filter mode",
         "state": {
           "bio": "Bio",
+          "constant_flow": "Constant flow",
           "manual": "Manual",
           "pulse": "Pulse"
         }
+      },
+      "high_pulse_speed": {
+        "name": "High pulse speed"
+      },
+      "low_pulse_speed": {
+        "name": "Low pulse speed"
+      },
+      "manual_speed": {
+        "name": "Manual speed"
+      },
+      "night_speed": {
+        "name": "Night speed"
       }
     },
     "sensor": {
@@ -99,8 +124,17 @@
           "rotor_stuck": "Rotor stuck"
         }
       },
+      "operating_time": {
+        "name": "Operating time"
+      },
       "service_hours": {
         "name": "Remaining hours until service"
+      },
+      "turn_feeding_time": {
+        "name": "Remaining off time after feeding"
+      },
+      "turn_off_time": {
+        "name": "Remaining off time"
       }
     },
     "time": {

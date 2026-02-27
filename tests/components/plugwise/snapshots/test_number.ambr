@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -143,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -261,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -320,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -379,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -438,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -497,6 +505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -556,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -615,6 +625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domestic hot water setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -674,6 +685,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum boiler temperature setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

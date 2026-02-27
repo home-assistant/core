@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect decimal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect integer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -214,6 +218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -270,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -326,6 +332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HDMI temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -385,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming aspect ratio',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -444,6 +452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming bit depth',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -503,6 +512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming black levels',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -563,6 +573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming color space',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -628,6 +639,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming colorimetry',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -686,6 +698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming frame rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -734,6 +747,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -787,6 +801,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming signal type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -842,6 +857,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mainboard temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -896,6 +912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Masking decimal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -944,6 +961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Masking integer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -992,6 +1010,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Masking resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1046,6 +1065,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing bit depth',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1105,6 +1125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing black levels',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1165,6 +1186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing color space',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1230,6 +1252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing colorimetry',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1288,6 +1311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing frame rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1336,6 +1360,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1389,6 +1414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing signal type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

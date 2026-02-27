@@ -88,25 +88,15 @@ class PilightBinarySensor(BinarySensorEntity):
 
     def __init__(self, hass, name, variable, payload, on_value, off_value):
         """Initialize the sensor."""
-        self._state = False
+        self._attr_is_on = False
         self._hass = hass
-        self._name = name
+        self._attr_name = name
         self._variable = variable
         self._payload = payload
         self._on_value = on_value
         self._off_value = off_value
 
         hass.bus.listen(EVENT, self._handle_code)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._state
 
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
@@ -128,7 +118,7 @@ class PilightBinarySensor(BinarySensorEntity):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
-            self._state = value == self._on_value
+            self._attr_is_on = value == self._on_value
             self.schedule_update_ha_state()
 
 
@@ -139,9 +129,9 @@ class PilightTriggerSensor(BinarySensorEntity):
         self, hass, name, variable, payload, on_value, off_value, rst_dly_sec=30
     ):
         """Initialize the sensor."""
-        self._state = False
+        self._attr_is_on = False
         self._hass = hass
-        self._name = name
+        self._attr_name = name
         self._variable = variable
         self._payload = payload
         self._on_value = on_value
@@ -152,18 +142,8 @@ class PilightTriggerSensor(BinarySensorEntity):
 
         hass.bus.listen(EVENT, self._handle_code)
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._state
-
     def _reset_state(self, call):
-        self._state = False
+        self._attr_is_on = False
         self._delay_after = None
         self.schedule_update_ha_state()
 
@@ -187,7 +167,7 @@ class PilightTriggerSensor(BinarySensorEntity):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
-            self._state = value == self._on_value
+            self._attr_is_on = value == self._on_value
             if self._delay_after is None:
                 self._delay_after = dt_util.utcnow() + datetime.timedelta(
                     seconds=self._reset_delay_sec
