@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import Cluster, ClusterAttributeDescriptor
@@ -12,7 +12,8 @@ from matter_server.client.models.node import MatterEndpoint
 
 from homeassistant.const import Platform
 
-from .entity import MatterEntityDescription
+if TYPE_CHECKING:
+    from .entity import MatterEntityDescription
 
 type SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
@@ -152,3 +153,19 @@ class MatterDiscoverySchema:
     # [optional] the secondary (required) attribute value must NOT have this value
     # for example to filter out empty lists in list sensor values
     secondary_value_is_not: Any = UNSET
+
+
+@dataclass
+class EndpointBindingInfo:
+    """Binding capability info for a single endpoint."""
+
+    endpoint_id: int
+    cluster_ids: set[int]
+
+
+@dataclass
+class NodeBindingCapabilities:
+    """Binding capabilities for a Matter node."""
+
+    source_endpoints: list[EndpointBindingInfo]
+    target_endpoints: list[EndpointBindingInfo]
