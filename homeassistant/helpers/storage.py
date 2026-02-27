@@ -239,6 +239,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         *,
         atomic_writes: bool = False,
         encoder: type[JSONEncoder] | None = None,
+        max_readable_version: int | None = None,
         minor_version: int = 1,
         read_only: bool = False,
         serialize_in_event_loop: bool = True,
@@ -246,6 +247,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         """Initialize storage class.
 
         Args:
+            max_readable_version: Maximum major version that can be read. Defaults
+            to version. Set higher than version to support forward compatibility,
+            allowing reading data written by newer versions (e.g., after downgrade).
+
             serialize_in_event_loop: Whether to serialize data in the event loop.
             Set to True (default) if data passed to async_save and data produced by
             data_func passed to async_delay_save needs to be serialized in the event
@@ -274,6 +279,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._load_empty = False
+        self._max_readable_version = (
+            max_readable_version if max_readable_version is not None else version
+        )
         self._next_write_time = 0.0
         self._manager = get_internal_store_manager(hass)
         self._serialize_in_event_loop = serialize_in_event_loop
@@ -430,9 +438,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         ):
             stored = data["data"]
         else:
-            if data["version"] > self.version:
+            if data["version"] > self._max_readable_version:
                 raise UnsupportedStorageVersionError(
-                    self.key, data["version"], self.version
+                    self.key, data["version"], self._max_readable_version
                 )
             _LOGGER.info(
                 "Migrating %s storage from %s.%s to %s.%s",
