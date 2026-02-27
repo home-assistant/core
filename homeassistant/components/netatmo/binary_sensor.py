@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -384,7 +385,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
         """Entity created."""
         await super().async_added_to_hass()
 
-        if self.device.device_type == "NACamDoorTag":
+        if self.device.device_type.name == "NACamDoorTag":
             for event_type in (
                 EVENT_TYPE_TAG_BIG_MOVE,
                 EVENT_TYPE_TAG_SMALL_MOVE,
@@ -402,9 +403,11 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
                     )
                 )
 
-        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = (
-            self.device.name
-        )
+        registry = dr.async_get(self.hass)
+        if device := registry.async_get_device(
+            identifiers={(DOMAIN, self.device.entity_id)}
+        ):
+            self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = device.id
 
     @callback
     def async_update_callback(self) -> None:
@@ -487,7 +490,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
                         is_update_needed = True
 
         if is_update_needed:
-            self.schedule_update_ha_state(True)
+            self.async_write_ha_state()
 
 
 class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
