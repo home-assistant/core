@@ -127,6 +127,10 @@ async def test_load_entry_fails_due_to_generic_exception(
             "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
             side_effect=Exception,
         ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 
