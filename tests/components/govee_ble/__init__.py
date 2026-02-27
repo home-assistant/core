@@ -84,18 +84,6 @@ GVH5106_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-# Encodes: temperature=21.5°C, humidity=45.0%, CO2=1000 ppm, no error
-GVH5140_SERVICE_INFO = BluetoothServiceInfo(
-    name="GVH5140_EEFF",
-    address="AA:BB:CC:DD:EE:FF",
-    rssi=-63,
-    manufacturer_data={1: b"\x01\x01\x03\x49\x9a\x03\xe8\x00"},
-    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
-    service_data={},
-    source="local",
-)
-
-
 GV5125_BUTTON_0_SERVICE_INFO = BluetoothServiceInfo(
     name="GV51255367",
     address="C1:37:37:32:0F:45",
@@ -174,6 +162,16 @@ GV5123_CLOSED_SERVICE_INFO = BluetoothServiceInfo(
     source="24:4C:AB:03:E6:B8",
 )
 
+# Encodes: temperature=21.6°C, humidity=67.8%, CO2=531 ppm, no error
+GV5140_SERVICE_INFO = BluetoothServiceInfo(
+    name="GV5140EEFF",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-63,
+    manufacturer_data={1: b"\x01\x01\x03\x4e\x66\x02\x13\x00"},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
 
 GVH5124_SERVICE_INFO = BluetoothServiceInfo(
     name="GV51242F68",
