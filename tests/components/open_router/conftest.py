@@ -11,7 +11,11 @@ from openai.types.chat.chat_completion import Choice
 import pytest
 from python_open_router import ModelsDataWrapper
 
-from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
+from homeassistant.components.open_router.const import (
+    CONF_PROMPT,
+    CONF_WEB_SEARCH,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -38,11 +42,20 @@ def enable_assist() -> bool:
 
 
 @pytest.fixture
-def conversation_subentry_data(enable_assist: bool) -> dict[str, Any]:
+def web_search(request: pytest.FixtureRequest) -> bool:
+    """Mock web search setting."""
+    if hasattr(request, "param"):
+        return request.param
+    return False
+
+
+@pytest.fixture
+def conversation_subentry_data(enable_assist: bool, web_search: bool) -> dict[str, Any]:
     """Mock conversation subentry data."""
     res: dict[str, Any] = {
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "You are a helpful assistant.",
+        CONF_WEB_SEARCH: web_search,
     }
     if enable_assist:
         res[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]

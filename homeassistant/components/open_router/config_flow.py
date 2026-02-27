@@ -34,7 +34,12 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from .const import (
+    CONF_PROMPT,
+    CONF_WEB_SEARCH,
+    DOMAIN,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +48,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     @classmethod
     @callback
@@ -106,7 +112,7 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
-    """Handle subentry flow."""
+    """Handle conversation subentry flow."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -208,13 +214,20 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
+                    vol.Optional(
+                        CONF_WEB_SEARCH,
+                        default=self.options.get(
+                            CONF_WEB_SEARCH,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_WEB_SEARCH],
+                        ),
+                    ): bool,
                 }
             ),
         )
 
 
 class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
-    """Handle subentry flow."""
+    """Handle AI task subentry flow."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""

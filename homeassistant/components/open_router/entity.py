@@ -37,9 +37,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 
 from . import OpenRouterConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import CONF_WEB_SEARCH, DOMAIN, LOGGER
 
-# Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
 
 
@@ -52,7 +51,6 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
         if "required" not in schema:
             schema["required"] = []
 
-        # Ensure all properties are required
         for prop, prop_info in schema["properties"].items():
             _adjust_schema(prop_info)
             if prop not in schema["required"]:
@@ -233,14 +231,20 @@ class OpenRouterEntity(Entity):
     ) -> None:
         """Generate an answer for the chat log."""
 
+        model = self.model
+        if self.subentry.data.get(CONF_WEB_SEARCH):
+            model = f"{model}:online"
+
+        extra_body: dict[str, Any] = {"require_parameters": True}
+
         model_args = {
-            "model": self.model,
+            "model": model,
             "user": chat_log.conversation_id,
             "extra_headers": {
                 "X-Title": "Home Assistant",
                 "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
             },
-            "extra_body": {"require_parameters": True},
+            "extra_body": extra_body,
         }
 
         tools: list[ChatCompletionFunctionToolParam] | None = None
@@ -261,13 +265,11 @@ class OpenRouterEntity(Entity):
 
         last_content = chat_log.content[-1]
 
-        # Handle attachments by adding them to the last user message
         if last_content.role == "user" and last_content.attachments:
             last_message: ChatCompletionMessageParam = model_args["messages"][-1]
             assert last_message["role"] == "user" and isinstance(
                 last_message["content"], str
             )
-            # Encode files with base64 and append them to the text prompt
             files = await async_prepare_files_for_prompt(
                 self.hass,
                 [(a.path, a.mime_type) for a in last_content.attachments],
@@ -295,6 +297,10 @@ class OpenRouterEntity(Entity):
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
+
+            if not result.choices:
+                LOGGER.error("API returned empty choices")
+                raise HomeAssistantError("API returned empty response")
 
             result_message = result.choices[0].message
 

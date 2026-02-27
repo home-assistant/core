@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 from python_open_router import OpenRouterError
 
-from homeassistant.components.open_router.const import CONF_PROMPT, DOMAIN
+from homeassistant.components.open_router.const import (
+    CONF_PROMPT,
+    CONF_WEB_SEARCH,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -131,6 +135,7 @@ async def test_create_conversation_agent(
             CONF_MODEL: "openai/gpt-3.5-turbo",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: ["assist"],
+            CONF_WEB_SEARCH: False,
         },
     )
 
@@ -139,6 +144,7 @@ async def test_create_conversation_agent(
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
         CONF_LLM_HASS_API: ["assist"],
+        CONF_WEB_SEARCH: False,
     }
 
 
@@ -170,6 +176,7 @@ async def test_create_conversation_agent_no_control(
             CONF_MODEL: "openai/gpt-3.5-turbo",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: [],
+            CONF_WEB_SEARCH: False,
         },
     )
 
@@ -177,6 +184,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
+        CONF_WEB_SEARCH: False,
     }
 
 
@@ -263,6 +271,7 @@ async def test_reconfigure_conversation_agent(
             CONF_MODEL: "openai/gpt-4",
             CONF_PROMPT: "updated prompt",
             CONF_LLM_HASS_API: ["assist"],
+            CONF_WEB_SEARCH: True,
         },
     )
 
