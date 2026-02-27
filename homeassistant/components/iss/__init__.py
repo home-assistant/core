@@ -64,9 +64,10 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
                     f"Unable to retrieve data after {self._consecutive_failures} attempts"
                 ) from err
             _LOGGER.debug(
-                "Transient API error (%s/%s), using cached data",
+                "Transient API error (%s/%s), using cached data: %s",
                 self._consecutive_failures,
                 MAX_CONSECUTIVE_FAILURES,
+                err,
             )
             return self.data
         self._consecutive_failures = 0
