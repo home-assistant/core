@@ -239,8 +239,10 @@ def mock_create_stream() -> Generator[AsyncMock]:
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
     ) as mock_create:
-        mock_create.side_effect = lambda **kwargs: mock_generator(
-            mock_create.return_value.pop(0), **kwargs
+        mock_create.side_effect = lambda **kwargs: (
+            mock_generator(mock_create.return_value.pop(0), **kwargs)
+            if isinstance(mock_create.return_value, list)
+            else None
         )
 
         yield mock_create
