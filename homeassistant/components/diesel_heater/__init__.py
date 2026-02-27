@@ -103,8 +103,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry)
                 if not isinstance(coord, VevorHeaterCoordinator):
                     continue
                 if device_id:
-                    if (device_id.upper() in coord.address.upper() or
-                        coord.address.upper().endswith(device_id.upper().replace(":", ""))):
+                    # Normalize both for comparison (strip colons/hyphens)
+                    norm_device = device_id.upper().replace(":", "").replace("-", "")
+                    norm_addr = coord.address.upper().replace(":", "")
+                    if norm_device in norm_addr or norm_addr.endswith(norm_device):
                         target_coords.append(coord)
                 else:
                     target_coords.append(coord)
