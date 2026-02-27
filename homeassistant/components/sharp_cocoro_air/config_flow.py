@@ -124,11 +124,13 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
-                    data_updates=user_input,
+                    data=user_input,
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, self._get_reauth_entry().data
+            ),
             errors=errors,
         )
