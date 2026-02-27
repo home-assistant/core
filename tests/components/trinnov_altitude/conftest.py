@@ -33,9 +33,26 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
         altitude.start = AsyncMock(return_value=None)
         altitude.wait_synced = AsyncMock(return_value=None)
         altitude.stop = AsyncMock(return_value=None)
+        altitude.power_off = AsyncMock(return_value=None)
+        altitude.mute_set = AsyncMock(return_value=None)
+        altitude.source_set_by_name = AsyncMock(return_value=None)
+        altitude.volume_up = AsyncMock(return_value=None)
+        altitude.volume_down = AsyncMock(return_value=None)
+        altitude.volume_percentage_set = AsyncMock(return_value=None)
+        altitude.power_on_available.return_value = True
+        altitude.power_on.return_value = None
+        altitude.volume_percentage = 50.0
         altitude.host = MOCK_HOST
         altitude.connected = True
-        altitude.state = SimpleNamespace(id=MOCK_ID, version="VERSION", synced=True)
+        altitude.state = SimpleNamespace(
+            id=MOCK_ID,
+            version="VERSION",
+            synced=True,
+            source="Apple TV",
+            sources={0: "Apple TV", 1: "Blu-ray"},
+            source_format="PCM",
+            mute=False,
+        )
         yield altitude
 
 
