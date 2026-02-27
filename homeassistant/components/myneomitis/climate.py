@@ -324,11 +324,19 @@ class MyNeoClimate(ClimateEntity):
                         break
 
             if not preset_to_restore:
-                preset_to_restore = (
-                    next((p for p in self._attr_preset_modes if p != "standby"), "auto")
-                    if self._attr_preset_modes is not None
-                    else "auto"
-                )
+                if self._attr_preset_modes:
+                    preset_to_restore = next(
+                        (p for p in self._attr_preset_modes if p != "standby"),
+                        None,
+                    )
+                    if preset_to_restore is None:
+                        raise HomeAssistantError(
+                            f"No available non-standby preset to restore for {self.entity_id}"
+                        )
+                else:
+                    raise HomeAssistantError(
+                        f"No preset modes available to restore for {self.entity_id}"
+                    )
 
             ok = await self._set_device_mode(preset_to_restore)
             if not ok:
