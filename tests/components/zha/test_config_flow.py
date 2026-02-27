@@ -2923,8 +2923,8 @@ async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
-            vid="10C4",
-            pid="EA60",
+            vid="303A",
+            pid="4001",
             serial_number="1234",
             manufacturer="Nabu Casa",
             description="ZWA-2",
@@ -2947,8 +2947,8 @@ async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
         ),
         USBDevice(
             device="/dev/ttyUSB3",
-            vid="1A86",
-            pid="55D4",
+            vid="10C4",
+            pid="EA60",
             serial_number="1237",
             manufacturer="Nabu Casa",
             description="SkyConnect v1.0",
