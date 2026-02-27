@@ -8,6 +8,7 @@ from unittest.mock import patch
 from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from voluptuous import Any
 
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
@@ -178,38 +179,26 @@ async def test_set_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_clear_zone_override_with_ctl_id(
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (EvoService.CLEAR_ZONE_OVERRIDE, {}),
+        (EvoService.SET_ZONE_OVERRIDE, {ATTR_SETPOINT: 19.5}),
+    ],
+)
+async def test_zone_services_with_ctl_id(
     hass: HomeAssistant,
     ctl_id: str,
+    service: EvoService,
+    service_data: dict[str, Any],
 ) -> None:
-    """Test calling clear_zone_override service with a non-zone entity_id fails."""
+    """Test calling zone-only service with a non-zone entity_id fails."""
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            EvoService.CLEAR_ZONE_OVERRIDE,
-            {},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-    assert excinfo.value.translation_key == "zone_only_service"
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_set_zone_override_with_ctl_id(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test calling set_zone_override service with a non-zone entity_id fails."""
-
-    with pytest.raises(ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_ZONE_OVERRIDE,
-            {
-                ATTR_SETPOINT: 19.5,
-            },
+            service,
+            service_data,
             target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
