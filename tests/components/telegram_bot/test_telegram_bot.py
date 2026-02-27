@@ -120,7 +120,10 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
 
 
 async def test_polling_platform_init(
-    hass: HomeAssistant, mock_polling_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    mock_polling_calls: None,
 ) -> None:
     """Test initialization of the polling platform."""
     mock_polling_config_entry.add_to_hass(hass)
