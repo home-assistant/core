@@ -49,7 +49,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
             return
         if payload["service"] in (
             EvoService.SET_ZONE_OVERRIDE,
-            EvoService.RESET_ZONE_OVERRIDE,
+            EvoService.CLEAR_ZONE_OVERRIDE,
         ):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return

@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'zinvolt',
-        'ALG001124100107',
+        'ZVG011025120088',
       ),
     }),
     'labels': set({
@@ -25,7 +25,7 @@
     'name': 'Zinvolt Batterij',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'ALG001124100107',
+    'serial_number': 'ZVG011025120088',
     'sw_version': None,
     'via_device_id': None,
   })
