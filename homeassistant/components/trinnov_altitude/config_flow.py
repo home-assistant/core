@@ -1,4 +1,4 @@
-"""Config flow for Hello World integration."""
+"""Config flow for Trinnov Altitude integration."""
 
 from __future__ import annotations
 
@@ -20,11 +20,13 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from . import TrinnovAltitude
+from trinnov_altitude.trinnov_altitude import TrinnovAltitude
 from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Optional(CONF_MAC): str})
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_HOST): str, vol.Optional(CONF_MAC, default=""): str}
+)
 
 
 class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,7 +43,7 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
-            mac = user_input[CONF_MAC]
+            mac = user_input.get(CONF_MAC, "").strip()
 
             try:
                 device = TrinnovAltitude(host=host, mac=mac)
@@ -55,7 +57,7 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
             except ConnectionTimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: {e}")
+                _LOGGER.exception("Unexpected exception while setting up Trinnov")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device.id, raise_on_progress=False)

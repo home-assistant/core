@@ -9,7 +9,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import AREA, DOMAIN, MANUFACTURER, MODEL, NAME
+from .const import DOMAIN, MANUFACTURER, MODEL, NAME
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -42,7 +42,6 @@ class TrinnovAltitudeEntity(Entity):
             model=MODEL,
             manufacturer=MANUFACTURER,
             sw_version=f"{device.version}",
-            suggested_area=AREA,
             configuration_url=f"http://{device.host}",
         )
 
@@ -57,7 +56,7 @@ class TrinnovAltitudeEntity(Entity):
         self._callback = _update
         self._device.register_callback(self._callback)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Deregister update listener."""
 
         if self._callback is not None:

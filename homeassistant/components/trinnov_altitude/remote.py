@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from typing import TYPE_CHECKING
 
 from trinnov_altitude.exceptions import NoMacAddressError, NotConnectedError
@@ -94,9 +95,11 @@ class TrinnovAltitudeRemote(TrinnovAltitudeEntity, RemoteEntity):
         """Send a command to a device."""
         for cmd in command:
             try:
-                cmd_parts = cmd.split()  # Split the cmd string by spaces
-                method_name = cmd_parts[0]  # The first token is the method name
-                args_strings = cmd_parts[1:]  # The rest of the tokens are the arguments
+                cmd_parts = shlex.split(cmd)
+                if not cmd_parts:
+                    raise HomeAssistantError("Command cannot be empty")
+                method_name = cmd_parts[0]
+                args_strings = cmd_parts[1:]
                 typed_args = [self._cast_to_primitive_type(arg) for arg in args_strings]
 
                 if method_name not in VALID_COMMANDS:

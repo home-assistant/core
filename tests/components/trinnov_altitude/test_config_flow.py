@@ -78,3 +78,19 @@ async def test_user_config_flow_device_exists_abort(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_config_flow_without_mac(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow without MAC address."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context=CONTEXT)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == MOCK_HOST
+    assert result["data"][CONF_MAC] == ""

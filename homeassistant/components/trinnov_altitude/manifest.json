@@ -4,7 +4,8 @@
   "codeowners": ["@binarylogic"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trinnov_altitude",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["trinnov_altitude"],
-  "requirements": ["trinnov_altitude==0.1"]
+  "requirements": ["trinnov-altitude==3.0.0"]
 }

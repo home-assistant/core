@@ -17,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Trinnov Altitude."""
 
     host = entry.data[CONF_HOST].strip()
-    mac = entry.data[CONF_MAC].strip()
+    mac = entry.data.get(CONF_MAC, "").strip()
     device = TrinnovAltitude(host=host, mac=mac, client_id=CLIENT_ID)
 
     # Spawn a task to start listening for events from the device
@@ -46,5 +46,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         client = hass.data[DOMAIN].pop(entry.entry_id)
         await client.disconnect()
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload_ok

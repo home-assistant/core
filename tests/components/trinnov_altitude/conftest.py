@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_device")
-def fixture_mock_device() -> Generator[None, AsyncMock, None]:
+def fixture_mock_device() -> Generator[AsyncMock, None, None]:
     """Return a mocked TrinnovAltitude."""
     with patch(
         "homeassistant.components.trinnov_altitude.TrinnovAltitude", autospec=True
@@ -45,7 +45,7 @@ async def fixture_mock_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Return a mock ConfigEntry setup for Kaleidescape integration."""
+    """Return a mock ConfigEntry setup for Trinnov Altitude integration."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
