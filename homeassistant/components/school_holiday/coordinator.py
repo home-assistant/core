@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, SCAN_INTERVAL
+from .const import INTEGRATION_NAME, LOGGER, SCAN_INTERVAL
 from .utils import clean_string, create_calendar_event, ensure_date
 
 
@@ -28,7 +28,7 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         super().__init__(
             hass,
             logger=LOGGER,
-            name="School Holiday",
+            name=INTEGRATION_NAME,
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )

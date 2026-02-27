@@ -7,12 +7,15 @@ from datetime import date, datetime
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.const import CONF_COUNTRY, CONF_REGION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SchoolHolidayConfigEntry
-from .const import CONF_CALENDAR_NAME, LOGGER
+from .const import CONF_CALENDAR_NAME, DOMAIN, LOGGER
 from .coordinator import SchoolHolidayCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -61,9 +64,11 @@ class SchoolHolidayCalendarEntity(
         self._region = region
         self._attr_unique_id = f"{entry_id}_calendar"
 
-    async def async_update(self) -> None:
-        """Update the calendar events from the coordinator."""
-        await self.coordinator.async_request_refresh()
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            name=calendar_name,
+        )
 
     @property
     def events(self) -> list[dict]:

@@ -38,7 +38,7 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Enter sensor name and select country."""
+        """Enter binary sensor name and select country."""
         errors: dict[str, str] = {}
 
         if user_input is not None:

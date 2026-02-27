@@ -15,6 +15,8 @@ from . import SchoolHolidayConfigEntry
 from .const import CONF_SENSOR_NAME, DOMAIN, LOGGER
 from .coordinator import SchoolHolidayCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -26,13 +28,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     country = str(entry.data.get(CONF_COUNTRY))
     region = str(entry.data.get(CONF_REGION))
-    name = str(entry.data.get(CONF_SENSOR_NAME))
+    sensor_name = str(entry.data.get(CONF_SENSOR_NAME))
 
     async_add_entities(
         [
             SchoolHolidayBinarySensor(
                 coordinator,
-                name,
+                sensor_name,
                 country,
                 region,
                 entry.entry_id,
@@ -49,27 +51,27 @@ class SchoolHolidayBinarySensor(
 
     _attr_has_entity_name = True
     _attr_translation_key = "school_holiday_sensor"
-    _attr_icon = "mdi:calendar-check"
+    _attr_icon = "mdi:school"
 
     def __init__(
         self,
         coordinator: SchoolHolidayCoordinator,
-        name: str,
+        sensor_name: str,
         country: str,
         region: str,
         entry_id: str,
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
+        self._attr_name = sensor_name
         self._country = country
         self._region = region
-        self._attr_name = name
         self._attr_unique_id = f"{entry_id}_sensor"
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
-            name=name,
+            name=sensor_name,
         )
 
     @property

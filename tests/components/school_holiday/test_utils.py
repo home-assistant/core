@@ -6,10 +6,10 @@ import pytest
 
 from homeassistant.components.school_holiday import utils
 
-SUMMARY = "Spring Break"
-START = "2026-02-14"
-END = "2026-02-22"
-DESCRIPTION = "A week's holiday for school and college students in March or April."
+SUMMARY = "Autumn Holiday"
+START = date(2026, 10, 17)
+END = date(2026, 10, 25)
+DESCRIPTION = "A week's holiday for school and college students in the autumn."
 
 
 def test_clean_string() -> None:

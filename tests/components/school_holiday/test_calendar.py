@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
+from .conftest import TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_ENTRY_ID, TEST_REGION
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +50,7 @@ def test_calendar_entity_available() -> None:
     coordinator.last_update_success = True
 
     entity = SchoolHolidayCalendarEntity(
-        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.available is True
@@ -62,7 +62,7 @@ def test_calendar_entity_unavailable() -> None:
     coordinator.last_update_success = False
 
     entity = SchoolHolidayCalendarEntity(
-        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.available is False
@@ -73,14 +73,14 @@ def test_calendar_entity_attributes() -> None:
     coordinator = MagicMock()
 
     entity = SchoolHolidayCalendarEntity(
-        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.has_entity_name is True
     assert entity._attr_name == TEST_CALENDAR_NAME
     assert entity._country == TEST_COUNTRY
     assert entity._region == TEST_REGION
-    assert entity.unique_id == "test_entry_id_calendar"
+    assert entity.unique_id == f"{TEST_ENTRY_ID}_calendar"
 
 
 def test_calendar_entity_with_school_holidays(mock_school_holiday_data) -> None:
@@ -89,13 +89,13 @@ def test_calendar_entity_with_school_holidays(mock_school_holiday_data) -> None:
     coordinator.data = mock_school_holiday_data
 
     entity = SchoolHolidayCalendarEntity(
-        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     events = entity.events
     assert len(events) == 2
 
-    # Verify the calendar events match the mock data.
+    # Verify that the calendar events match the mock data.
     for i, school_holiday in enumerate(mock_school_holiday_data):
         assert events[i]["summary"] == school_holiday["summary"]
         assert events[i]["start"] == school_holiday["start"]
@@ -109,7 +109,7 @@ def test_calendar_entity_without_school_holidays() -> None:
     coordinator.data = []
 
     entity = SchoolHolidayCalendarEntity(
-        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     events = entity.events

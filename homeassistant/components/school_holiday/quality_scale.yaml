@@ -6,8 +6,7 @@ rules:
   appropriate-polling:
     status: done
   brands:
-    status: exempt
-    comment: Integration is not for a commercial brand.
+    status: done
   common-modules:
     status: done
   config-flow-test-coverage:
@@ -20,14 +19,11 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   docs-high-level-description:
-    status: exempt
-    comment: todo
+    status: done
   docs-installation-instructions:
-    status: exempt
-    comment: todo
+    status: done
   docs-removal-instructions:
-    status: exempt
-    comment: todo
+    status: done
   entity-event-setup:
     status: done
   entity-unique-id:
@@ -49,39 +45,80 @@ rules:
     comment: Integration does not register custom actions.
   config-entry-unloading:
     status: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage: todo
+  docs-configuration-parameters:
+    status: done
+  docs-installation-parameters:
+    status: done
+  entity-unavailable:
+    status: done
+  integration-owner:
+    status: done
+  log-when-unavailable:
+    status: exempt
+    comment: Handled by coordinator's last_update_success tracking.
+  parallel-updates:
+    status: exempt
+    comment: Coordinator-based updates are serialized.
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not require authentication.
+  test-coverage:
+    status: done
 
   # Gold
-  devices: todo
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  devices:
+    status: done
+  diagnostics:
+    status: todo
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: Integration does not support discovery.
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices:
+    status: exempt
+    comment: Device count is static per config entry.
+  entity-category:
+    status: todo
+  entity-device-class:
+    status: todo
+  entity-disabled-by-default:
+    status: todo
+  entity-translations:
+    status: done
+  exception-translations:
+    status: todo
+  icon-translations:
+    status: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: No user-configurable parameters after setup.
+  repair-issues:
+    status: exempt
+    comment: No user-actionable repair scenarios.
+  stale-devices:
+    status: exempt
+    comment: Devices tied to config entry lifecycle.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  async-dependency:
+    status: todo
+  inject-websession:
+    status: todo
+  strict-typing:
+    status: todo

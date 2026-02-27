@@ -16,7 +16,7 @@ from .conftest import TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_SENSOR
 
 
 @pytest.mark.asyncio
-async def test_user_flow_success(hass: HomeAssistant) -> None:
+async def test_config_flow(hass: HomeAssistant) -> None:
     """Test successful user config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -57,3 +57,57 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["data"][CONF_COUNTRY] == TEST_COUNTRY
     assert result["data"][CONF_REGION] == TEST_REGION
     assert result["data"][CONF_CALENDAR_NAME] == TEST_CALENDAR_NAME
+
+
+@pytest.mark.asyncio
+async def test_user_flow_empty_sensor_name(hass: HomeAssistant) -> None:
+    """Test user flow with empty sensor name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    user_input = {
+        CONF_SENSOR_NAME: "",
+        CONF_COUNTRY: TEST_COUNTRY,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "required" in result["errors"].get(CONF_SENSOR_NAME, "")
+
+
+@pytest.mark.asyncio
+async def test_calendar_flow_empty_calendar_name(hass: HomeAssistant) -> None:
+    """Test calendar flow with empty calendar name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    user_input = {
+        CONF_SENSOR_NAME: TEST_SENSOR_NAME,
+        CONF_COUNTRY: TEST_COUNTRY,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    region_input = {CONF_REGION: TEST_REGION}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=region_input
+    )
+
+    calendar_input = {CONF_CALENDAR_NAME: ""}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=calendar_input
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "calendar"
+    assert "required" in result["errors"].get(CONF_CALENDAR_NAME, "")

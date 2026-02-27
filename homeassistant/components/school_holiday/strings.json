@@ -33,9 +33,9 @@
         },
         "data_description": {
           "country": "The country for which to show school holidays.",
-          "sensor_name": "The name for this sensor."
+          "sensor_name": "The name for this binary sensor."
         },
-        "description": "Choose a name for your new sensor and select a country."
+        "description": "Choose a name for your new binary sensor and select a country."
       }
     }
   },

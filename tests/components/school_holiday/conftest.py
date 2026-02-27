@@ -9,6 +9,7 @@ from homeassistant.components.school_holiday.const import (
     CONF_CALENDAR_NAME,
     CONF_SENSOR_NAME,
     DOMAIN,
+    INTEGRATION_NAME,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_REGION
 
@@ -16,6 +17,7 @@ from tests.common import MockConfigEntry
 
 TEST_SENSOR_NAME = "School Holiday Sensor"
 TEST_CALENDAR_NAME = "School Holiday Calendar"
+TEST_ENTRY_ID = "550e8400e29b41d4a716446655440000"
 
 TEST_COUNTRY = "The Netherlands"
 TEST_REGION = "Midden"
@@ -25,13 +27,13 @@ TEST_REGION = "Midden"
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=TEST_SENSOR_NAME,
+        title=INTEGRATION_NAME,
         domain=DOMAIN,
         data={
             CONF_SENSOR_NAME: TEST_SENSOR_NAME,
-            CONF_CALENDAR_NAME: TEST_CALENDAR_NAME,
             CONF_COUNTRY: TEST_COUNTRY,
             CONF_REGION: TEST_REGION,
+            CONF_CALENDAR_NAME: TEST_CALENDAR_NAME,
         },
     )
 
@@ -41,16 +43,16 @@ def mock_school_holiday_data() -> list[dict]:
     """Return mock school holiday data."""
     return [
         {
-            "summary": "Spring Break",
-            "start": date(2026, 2, 14),
-            "end": date(2026, 2, 22),
-            "description": "A week's holiday for school and college students in March or April.",
-        },
-        {
             "summary": "Summer Holiday",
             "start": date(2026, 7, 18),
             "end": date(2026, 8, 30),
             "description": None,
+        },
+        {
+            "summary": "Autumn Holiday",
+            "start": date(2026, 10, 17),
+            "end": date(2026, 10, 25),
+            "description": "A week's holiday for school and college students in the autumn.",
         },
     ]
 

@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_COUNTRY, TEST_REGION, TEST_SENSOR_NAME
+from .conftest import TEST_COUNTRY, TEST_ENTRY_ID, TEST_REGION, TEST_SENSOR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +55,7 @@ def test_binary_sensor_entity_available() -> None:
     coordinator.last_update_success = True
 
     entity = SchoolHolidayBinarySensor(
-        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.available is True
@@ -67,7 +67,7 @@ def test_binary_sensor_entity_unavailable() -> None:
     coordinator.last_update_success = False
 
     entity = SchoolHolidayBinarySensor(
-        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.available is False
@@ -79,13 +79,13 @@ def test_binary_sensor_entity_attributes() -> None:
     coordinator.data = []
 
     entity = SchoolHolidayBinarySensor(
-        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.has_entity_name is True
     assert entity._country == TEST_COUNTRY
     assert entity._region == TEST_REGION
-    assert entity.unique_id == "test_entry_id_sensor"
+    assert entity.unique_id == f"{TEST_ENTRY_ID}_sensor"
 
 
 def test_binary_sensor_entity_is_on_during_school_holiday(
@@ -93,11 +93,11 @@ def test_binary_sensor_entity_is_on_during_school_holiday(
 ) -> None:
     """Test binary sensor entity state during a school holiday."""
     coordinator = MagicMock()
-    # Use the second school holiday, the summer holiday, which spans 2026-07-18 to 2026-08-30.
-    coordinator.data = [mock_school_holiday_data[1]]
+    # Use the summer holiday, which spans 2026-07-18 to 2026-08-30.
+    coordinator.data = [mock_school_holiday_data[0]]
 
     entity = SchoolHolidayBinarySensor(
-        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     entity.hass = MagicMock()
@@ -106,6 +106,7 @@ def test_binary_sensor_entity_is_on_during_school_holiday(
     with patch(
         "homeassistant.components.school_holiday.binary_sensor.date"
     ) as mock_date:
+        # Test with random date during school holiday.
         mock_date.today.return_value = date(2026, 8, 22)
         assert entity.is_on is True
 
@@ -115,11 +116,11 @@ def test_binary_sensor_entity_is_off_outside_school_holidays(
 ) -> None:
     """Test binary sensor entity state outside school holidays."""
     coordinator = MagicMock()
-    # Use both school holidays, which span from 2026-02-14 to 2026-02-22 and 2026-07-18 to 2026-08-30.
+    # Use both school holidays, which span from 2026-07-18 to 2026-08-30 and 2026-10-17 to 2026-10-25.
     coordinator.data = mock_school_holiday_data
 
     entity = SchoolHolidayBinarySensor(
-        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     entity.hass = MagicMock()
@@ -128,7 +129,16 @@ def test_binary_sensor_entity_is_off_outside_school_holidays(
     with patch(
         "homeassistant.components.school_holiday.binary_sensor.date"
     ) as mock_date:
+        # Test with random date before school holidays.
         mock_date.today.return_value = date(2026, 6, 25)
+        assert entity.is_on is False
+
+        # Test with random date between school holidays.
+        mock_date.today.return_value = date(2026, 9, 5)
+        assert entity.is_on is False
+
+        # Test with random date after school holidays.
+        mock_date.today.return_value = date(2026, 10, 29)
         assert entity.is_on is False
 
 
@@ -138,7 +148,7 @@ def test_binary_sensor_entity_is_off_without_school_holidays() -> None:
     coordinator.data = []
 
     entity = SchoolHolidayBinarySensor(
-        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, "test_entry_id"
+        coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
     assert entity.is_on is False
