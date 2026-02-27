@@ -134,14 +134,20 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
 
     def _get_away_temp(self) -> int:
         """Get configured away preset temperature."""
-        return self._config_entry.data.get(
-            CONF_PRESET_AWAY_TEMP, DEFAULT_PRESET_AWAY_TEMP
+        return self._config_entry.options.get(
+            CONF_PRESET_AWAY_TEMP,
+            self._config_entry.data.get(
+                CONF_PRESET_AWAY_TEMP, DEFAULT_PRESET_AWAY_TEMP
+            ),
         )
 
     def _get_comfort_temp(self) -> int:
         """Get configured comfort preset temperature."""
-        return self._config_entry.data.get(
-            CONF_PRESET_COMFORT_TEMP, DEFAULT_PRESET_COMFORT_TEMP
+        return self._config_entry.options.get(
+            CONF_PRESET_COMFORT_TEMP,
+            self._config_entry.data.get(
+                CONF_PRESET_COMFORT_TEMP, DEFAULT_PRESET_COMFORT_TEMP
+            ),
         )
 
     @property

@@ -42,6 +42,65 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Diesel Heater integration."""
+
+    async def async_send_command(call: ServiceCall) -> None:
+        """Handle send_command service call for debugging."""
+        command = call.data[ATTR_COMMAND]
+        argument = call.data[ATTR_ARGUMENT]
+        device_id = call.data.get(ATTR_DEVICE_ID)
+
+        _LOGGER.debug(
+            "Service %s.%s called: command=%d, argument=%d, device_id=%s",
+            DOMAIN, SERVICE_SEND_COMMAND, command, argument, device_id
+        )
+
+        # Find target heaters
+        target_coords: list[VevorHeaterCoordinator] = []
+        for config_entry in hass.config_entries.async_entries(DOMAIN):
+            coord = getattr(config_entry, "runtime_data", None)
+            if not isinstance(coord, VevorHeaterCoordinator):
+                continue
+            if device_id:
+                # Normalize both for comparison (strip colons/hyphens)
+                norm_device = device_id.upper().replace(":", "").replace("-", "")
+                norm_addr = coord.address.upper().replace(":", "")
+                if norm_device in norm_addr or norm_addr.endswith(norm_device):
+                    target_coords.append(coord)
+            else:
+                target_coords.append(coord)
+
+        if not target_coords:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_heater_found",
+                translation_placeholders={"device_id": device_id or "all"},
+            )
+
+        for coord in target_coords:
+            try:
+                await coord.async_send_raw_command(command, argument)
+            except Exception as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_failed",
+                    translation_placeholders={
+                        "address": coord.address,
+                        "error": str(err),
+                    },
+                ) from err
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_COMMAND,
+        async_send_command,
+        schema=SERVICE_SEND_COMMAND_SCHEMA,
+    )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry) -> bool:
     """Set up Diesel Heater from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
@@ -81,63 +140,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry)
 
     # Forward entry setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register debug service (only once)
-    if not hass.services.has_service(DOMAIN, SERVICE_SEND_COMMAND):
-        async def async_send_command(call: ServiceCall) -> None:
-            """Handle send_command service call for debugging."""
-            command = call.data[ATTR_COMMAND]
-            argument = call.data[ATTR_ARGUMENT]
-            device_id = call.data.get(ATTR_DEVICE_ID)
-
-            _LOGGER.info(
-                "Service %s.%s called: command=%d, argument=%d, device_id=%s",
-                DOMAIN, SERVICE_SEND_COMMAND, command, argument, device_id
-            )
-
-            # Find target heaters
-            target_coords = []
-            for config_entry in hass.config_entries.async_entries(DOMAIN):
-                coord = getattr(config_entry, "runtime_data", None)
-                if not isinstance(coord, VevorHeaterCoordinator):
-                    continue
-                if device_id:
-                    # Normalize both for comparison (strip colons/hyphens)
-                    norm_device = device_id.upper().replace(":", "").replace("-", "")
-                    norm_addr = coord.address.upper().replace(":", "")
-                    if norm_device in norm_addr or norm_addr.endswith(norm_device):
-                        target_coords.append(coord)
-                else:
-                    target_coords.append(coord)
-
-            if not target_coords:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="no_heater_found",
-                    translation_placeholders={"device_id": device_id or "all"},
-                )
-
-            for coord in target_coords:
-                _LOGGER.info("Sending command to heater: %s", coord.address)
-                try:
-                    await coord.async_send_raw_command(command, argument)
-                except Exception as err:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="command_failed",
-                        translation_placeholders={
-                            "address": coord.address,
-                            "error": str(err),
-                        },
-                    ) from err
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_SEND_COMMAND,
-            async_send_command,
-            schema=SERVICE_SEND_COMMAND_SCHEMA,
-        )
-        _LOGGER.debug("Registered debug service: %s.%s", DOMAIN, SERVICE_SEND_COMMAND)
 
     return True
 
