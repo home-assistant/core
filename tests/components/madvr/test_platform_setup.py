@@ -31,7 +31,7 @@ async def test_platform_setup_entity_counts(hass, mock_envy_client):
 
     await sensor.async_setup_entry(hass, basic_entry, added_basic.extend)
     await sensor.async_setup_entry(hass, full_entry, added_full.extend)
-    assert len(added_basic) == len(sensor.SENSORS) - 3
+    assert len(added_basic) == len(sensor.SENSORS) - 2
     assert len(added_full) == len(sensor.SENSORS)
 
     added_buttons_basic: list[object] = []
@@ -64,6 +64,13 @@ def test_temperature_value_helper_branches():
     assert sensor._temperature_value({}, 0) is None
     assert sensor._temperature_value({"temperatures": (1,)}, 1) is None
     assert sensor._temperature_value({"temperatures": ("x",)}, 0) is None
+    assert sensor._nested_value({}, "incoming_signal", "resolution") is None
+    assert (
+        sensor._nested_value({"incoming_signal": {"aspect_ratio": "16:9"}}, "incoming_signal", "aspect_ratio")
+        == "16:9"
+    )
+    assert sensor._ratio_decimal_value({}, "masking_ratio") is None
+    assert sensor._ratio_decimal_value({"masking_ratio": {"decimal_ratio": 2.259}}, "masking_ratio") == 2.259
     assert sensor._active_profile_value({}) is None
     assert (
         sensor._active_profile_value({"active_profile_group": "1", "active_profile_index": 2})

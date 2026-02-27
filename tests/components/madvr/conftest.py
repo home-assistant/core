@@ -46,6 +46,38 @@ def mock_envy_client() -> MagicMock:
     state.mac_address = "00:11:22:33:44:55"
     state.tone_map_enabled = True
     state.temperatures = MagicMock(gpu=41, hdmi_input=39, cpu=44, mainboard=37)
+    state.incoming_signal = MagicMock(
+        resolution="3840x2160",
+        frame_rate="23.976p",
+        signal_type="2D",
+        color_space="422",
+        bit_depth="10bit",
+        hdr_mode="HDR10",
+        colorimetry="2020",
+        black_levels="TV",
+        aspect_ratio="16:9",
+    )
+    state.outgoing_signal = MagicMock(
+        resolution="3840x2160",
+        frame_rate="23.976p",
+        signal_type="2D",
+        color_space="RGB",
+        bit_depth="12bit",
+        hdr_mode="SDR",
+        colorimetry="2020",
+        black_levels="TV",
+    )
+    state.aspect_ratio = MagicMock(
+        resolution="3840:1600",
+        decimal_ratio=2.4,
+        integer_ratio=240,
+        name="Panavision",
+    )
+    state.masking_ratio = MagicMock(
+        resolution="3840:1700",
+        decimal_ratio=2.259,
+        integer_ratio=220,
+    )
     state.profile_groups = {"1": "Cinema"}
     state.profiles = {"1_1": "Day", "1_2": "Night"}
     state.active_profile_group = "1"

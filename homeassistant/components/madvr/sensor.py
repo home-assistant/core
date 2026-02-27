@@ -84,8 +84,67 @@ SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
         key="aspect_ratio_mode",
         translation_key="aspect_ratio_mode",
         icon="mdi:aspect-ratio",
-        entity_registry_enabled_default=False,
         value_fn=lambda data: data.get("aspect_ratio_mode"),
+    ),
+    MadvrEnvySensorDescription(
+        key="incoming_signal_resolution",
+        translation_key="incoming_signal_resolution",
+        icon="mdi:video-input-hdmi",
+        value_fn=lambda data: _nested_value(data, "incoming_signal", "resolution"),
+    ),
+    MadvrEnvySensorDescription(
+        key="incoming_signal_frame_rate",
+        translation_key="incoming_signal_frame_rate",
+        icon="mdi:speedometer",
+        value_fn=lambda data: _nested_value(data, "incoming_signal", "frame_rate"),
+    ),
+    MadvrEnvySensorDescription(
+        key="incoming_signal_aspect_ratio",
+        translation_key="incoming_signal_aspect_ratio",
+        icon="mdi:aspect-ratio",
+        value_fn=lambda data: _nested_value(data, "incoming_signal", "aspect_ratio"),
+    ),
+    MadvrEnvySensorDescription(
+        key="incoming_signal_hdr_mode",
+        translation_key="incoming_signal_hdr_mode",
+        icon="mdi:brightness-6",
+        value_fn=lambda data: _nested_value(data, "incoming_signal", "hdr_mode"),
+    ),
+    MadvrEnvySensorDescription(
+        key="outgoing_signal_resolution",
+        translation_key="outgoing_signal_resolution",
+        icon="mdi:video-output",
+        value_fn=lambda data: _nested_value(data, "outgoing_signal", "resolution"),
+    ),
+    MadvrEnvySensorDescription(
+        key="outgoing_signal_frame_rate",
+        translation_key="outgoing_signal_frame_rate",
+        icon="mdi:speedometer-medium",
+        value_fn=lambda data: _nested_value(data, "outgoing_signal", "frame_rate"),
+    ),
+    MadvrEnvySensorDescription(
+        key="outgoing_signal_hdr_mode",
+        translation_key="outgoing_signal_hdr_mode",
+        icon="mdi:brightness-5",
+        value_fn=lambda data: _nested_value(data, "outgoing_signal", "hdr_mode"),
+    ),
+    MadvrEnvySensorDescription(
+        key="aspect_ratio_name",
+        translation_key="aspect_ratio_name",
+        icon="mdi:format-letter-case",
+        value_fn=lambda data: _nested_value(data, "aspect_ratio", "name"),
+    ),
+    MadvrEnvySensorDescription(
+        key="aspect_ratio_decimal",
+        translation_key="aspect_ratio_decimal",
+        icon="mdi:aspect-ratio",
+        value_fn=lambda data: _ratio_decimal_value(data, "aspect_ratio"),
+    ),
+    MadvrEnvySensorDescription(
+        key="masking_ratio_decimal",
+        translation_key="masking_ratio_decimal",
+        icon="mdi:crop",
+        value_fn=lambda data: _ratio_decimal_value(data, "masking_ratio"),
     ),
     MadvrEnvySensorDescription(
         key="active_profile",
@@ -105,10 +164,7 @@ async def async_setup_entry(
     entities: list[MadvrEnvySensor] = []
 
     for description in SENSORS:
-        if (
-            description.key in {"version", "current_menu", "aspect_ratio_mode"}
-            and not enable_advanced
-        ):
+        if description.key in {"version", "current_menu"} and not enable_advanced:
             continue
         entities.append(MadvrEnvySensor(entry.runtime_data.coordinator, description))
 
@@ -166,3 +222,23 @@ def _active_profile_value(data: dict[str, Any]) -> str | None:
             profile_name = value
 
     return f"{group_name}: {profile_name}"
+
+
+def _nested_value(data: dict[str, Any], parent_key: str, nested_key: str) -> str | None:
+    parent = data.get(parent_key)
+    if not isinstance(parent, dict):
+        return None
+    value = parent.get(nested_key)
+    if isinstance(value, str):
+        return value
+    return None
+
+
+def _ratio_decimal_value(data: dict[str, Any], ratio_key: str) -> float | None:
+    ratio = data.get(ratio_key)
+    if not isinstance(ratio, dict):
+        return None
+    value = ratio.get("decimal_ratio")
+    if isinstance(value, (int, float)):
+        return float(value)
+    return None

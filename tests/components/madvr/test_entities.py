@@ -26,9 +26,17 @@ async def test_sensor_values(hass, mock_envy_client):
     gpu_sensor = MadvrEnvySensor(
         coordinator, next(item for item in SENSORS if item.key == "gpu_temperature")
     )
+    incoming_aspect_sensor = MadvrEnvySensor(
+        coordinator, next(item for item in SENSORS if item.key == "incoming_signal_aspect_ratio")
+    )
+    masking_ratio_sensor = MadvrEnvySensor(
+        coordinator, next(item for item in SENSORS if item.key == "masking_ratio_decimal")
+    )
 
     assert power_sensor.native_value == "on"
     assert gpu_sensor.native_value == 41
+    assert incoming_aspect_sensor.native_value == "16:9"
+    assert masking_ratio_sensor.native_value == 2.259
 
     await coordinator.async_shutdown()
 
