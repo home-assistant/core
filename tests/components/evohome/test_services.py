@@ -211,11 +211,26 @@ async def test_zone_services_with_ctl_id(
 @pytest.mark.parametrize(
     ("service_data", "expected_key"),
     [
-        ({"mode": "NotARealMode"}, "mode_not_supported"),
-        ({"mode": "Auto", "duration": {"hours": 1}}, "mode_cant_be_temporary"),
-        ({"mode": "Auto", "period": {"days": 1}}, "mode_cant_be_temporary"),
-        ({"mode": "AutoWithEco", "period": {"days": 1}}, "mode_cant_have_period"),
-        ({"mode": "DayOff", "duration": {"hours": 1}}, "mode_cant_have_duration"),
+        (
+            {"mode": "NotARealMode"},
+            "The mode `NotARealMode` is not supported by this controller",
+        ),
+        (
+            {"mode": "Auto", "duration": {"hours": 1}},
+            "The mode `Auto` can not be set temporarily",
+        ),
+        (
+            {"mode": "Auto", "period": {"days": 1}},
+            "The mode `Auto` can not be set temporarily",
+        ),
+        (
+            {"mode": "AutoWithEco", "period": {"days": 1}},
+            "The mode `AutoWithEco` does not support `period`; use `duration` instead",
+        ),
+        (
+            {"mode": "DayOff", "duration": {"hours": 1}},
+            "The mode `DayOff` does not support `duration`; use `period` instead",
+        ),
     ],
 )
 async def test_set_system_mode_validation(
@@ -237,6 +252,6 @@ async def test_set_system_mode_validation(
         target={},
         blocking=True,
     )
-    await hass.async_block_till_done()  # service handler invoked via a task
+    await hass.async_block_till_done()  # service handler is invoked via a task
 
     assert f"ServiceValidationError: {expected_key}" in caplog.text
