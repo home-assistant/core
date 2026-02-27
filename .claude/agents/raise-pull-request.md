@@ -98,8 +98,8 @@ Write a release-note-style PR title summarizing the change. The title becomes th
 | | `Add Nettleie optimization option` |
 | Code quality | `Add exception translations to Teslemetry` |
 | | `Improve test coverage of Tesla Fleet` |
-| | `Revert bthome-ble back to 3.16.0 to fix missing data` |
-| | `Change device class to energy_storage for some enphase_envoy battery entities` |
+| | `Refactor adguard tests to use proper fixtures for mocking` |
+| | `Simplify entity init in Proxmox` |
 
 ## Step 6: Verify Development Checklist
 
