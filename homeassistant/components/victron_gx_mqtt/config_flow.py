@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -190,11 +190,11 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("General error during reauthentication")
                 errors["base"] = "unknown"
             else:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data=data,
+                    data_updates=data,
+                    reason="reauth_successful",
                 )
-                return self.async_abort(reason="reauth_successful")
 
         reauth_schema = vol.Schema(
             {
@@ -318,7 +318,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class VictronMQTTOptionsFlow(OptionsFlow):
+class VictronMQTTOptionsFlow(OptionsFlowWithReload):
     """Handle options flow for Victron MQTT."""
 
     def _get_effective_config(self) -> dict[str, Any]:

@@ -99,8 +99,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")
-async def test_update_listener(hass: HomeAssistant) -> None:
-    """Test update listener triggers reload."""
+async def test_update_entry_does_not_reload(hass: HomeAssistant) -> None:
+    """Test generic config entry updates do not trigger reload."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -128,7 +128,7 @@ async def test_update_listener(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Update the entry to trigger the update listener
+        # Generic config updates should not trigger reloads.
         hass.config_entries.async_update_entry(
             config_entry,
             data={
@@ -141,8 +141,8 @@ async def test_update_listener(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # Verify the reload was triggered
-        assert mock_reload.call_count == 1
+        # Verify no reload is triggered by a generic entry update.
+        assert mock_reload.call_count == 0
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")

@@ -27,16 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await hub.start()
 
-    # Register the update listener
-    async def _update_listener(
-        hass: HomeAssistant, entry: VictronGxConfigEntry
-    ) -> None:
-        _LOGGER.info("Config entry updated - applying changes")
-        # Reload the integration to apply changes
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    entry.async_on_unload(entry.add_update_listener(_update_listener))
-
     async def _async_stop(_: Event) -> None:
         await hub.stop()
 
