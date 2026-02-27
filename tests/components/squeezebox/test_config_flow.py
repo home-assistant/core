@@ -1,6 +1,8 @@
 """Test the Squeezebox config flow."""
 
 from http import HTTPStatus
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -19,10 +21,13 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
+# Use the same UUIDs defined in the conftest
 TEST_UUID = "12345678-1234-1234-1234-123456789012"
 
 
-async def test_manual_setup(hass: HomeAssistant, mock_setup_entry, mock_server) -> None:
+async def test_manual_setup(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
+) -> None:
     """Test we can finish a manual setup successfully."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -44,30 +49,29 @@ async def test_manual_setup(hass: HomeAssistant, mock_setup_entry, mock_server) 
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
     assert result["title"] == "1.2.3.4"
     assert result["data"][CONF_HOST] == "1.2.3.4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
-    ("query_return", "http_status", "side_effect", "expected_error"),
+    ("query_return", "http_status", "expected_error"),
     [
-        (False, HTTPStatus.UNAUTHORIZED, None, "invalid_auth"),
-        (False, HTTPStatus.NOT_FOUND, None, "cannot_connect"),
-        ({"no_uuid": True}, HTTPStatus.OK, None, "missing_uuid"),
-        (None, None, Exception, "unknown"),
+        (False, HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (False, HTTPStatus.NOT_FOUND, "cannot_connect"),
+        ({"no_uuid": True}, HTTPStatus.OK, "missing_uuid"),
     ],
 )
-async def test_manual_setup_errors(
+async def test_manual_setup_data_errors(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_server,
-    query_return,
-    http_status,
-    side_effect,
-    expected_error,
+    mock_setup_entry: AsyncMock,
+    mock_server: AsyncMock,
+    query_return: Any,
+    http_status: HTTPStatus,
+    expected_error: str,
 ) -> None:
-    """Test all possible error states during manual setup."""
+    """Test data-driven error states during manual setup and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -77,20 +81,75 @@ async def test_manual_setup_errors(
 
     mock_server.async_query.return_value = query_return
     mock_server.http_status = http_status
-    if side_effect:
-        mock_server.async_query.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "1.2.3.4", CONF_PORT: 9000},
+        result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_PORT: 9000}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
 
+    mock_server.async_query.return_value = {"uuid": TEST_UUID}
+    mock_server.http_status = HTTPStatus.OK
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: 9000,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_manual_setup_exception_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_server: AsyncMock,
+) -> None:
+    """Test exception error state during manual setup and recovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "edit"}
+    )
+
+    mock_server.async_query.side_effect = Exception("Connection fail")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_PORT: 9000}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "unknown"
+
+    mock_server.async_query.side_effect = None
+    mock_server.async_query.return_value = {"uuid": TEST_UUID}
+    mock_server.http_status = HTTPStatus.OK
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: 9000,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_manual_setup_recovery(
-    hass: HomeAssistant, mock_setup_entry, mock_server
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
 ) -> None:
     """Test manual setup error recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -126,13 +185,17 @@ async def test_manual_setup_recovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
     assert result["title"] == "1.2.3.4"
     assert result["data"][CONF_HOST] == "1.2.3.4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_duplicate_setup(
-    hass: HomeAssistant, mock_setup_entry, mock_server, mock_config_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_server: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test abort if setting up an already configured server."""
     mock_config_entry.add_to_hass(hass)
@@ -155,12 +218,11 @@ async def test_duplicate_setup(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_discover_timeout")
 async def test_discovery_flow_success(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_server,
-    mock_discover,
+    mock_setup_entry: AsyncMock,
+    mock_server: AsyncMock,
+    mock_discover: MagicMock,
 ) -> None:
     """Test discovery flow where default connect succeeds immediately."""
     result = await hass.config_entries.flow.async_init(
@@ -186,33 +248,18 @@ async def test_discovery_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
     assert result["title"] == "1.1.1.1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_discover_timeout")
-@pytest.mark.parametrize(
-    ("query_return", "http_status", "side_effect", "expected_type", "expected_result"),
-    [
-        ({"uuid": TEST_UUID}, HTTPStatus.OK, None, FlowResultType.CREATE_ENTRY, None),
-        (False, HTTPStatus.UNAUTHORIZED, None, FlowResultType.FORM, "invalid_auth"),
-        (False, HTTPStatus.NOT_FOUND, None, FlowResultType.FORM, "cannot_connect"),
-        ({"no_uuid": True}, HTTPStatus.OK, None, FlowResultType.FORM, "missing_uuid"),
-        (None, None, Exception("Test error"), FlowResultType.FORM, "unknown"),
-    ],
-)
-async def test_discovery_flow_edit_discovered_outcomes(
+async def test_discovery_flow_edit_discovered_success(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_server,
-    mock_discover,
-    query_return,
-    http_status,
-    side_effect,
-    expected_type,
-    expected_result,
+    mock_setup_entry: AsyncMock,
+    mock_server: AsyncMock,
+    mock_discover: MagicMock,
 ) -> None:
-    """Test all possible outcomes of the edit_discovered step."""
+    """Test the successful outcome of the edit_discovered step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -232,34 +279,72 @@ async def test_discovery_flow_edit_discovered_outcomes(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "edit_discovered"
 
-    mock_server.http_status = http_status
-    if side_effect:
-        mock_server.async_query.side_effect = [False, side_effect]
-    else:
-        mock_server.async_query.side_effect = [False, query_return]
+    mock_server.http_status = HTTPStatus.OK
+    mock_server.async_query.side_effect = [False, {"uuid": TEST_UUID}]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
     )
 
-    assert result["type"] is expected_type
-    if expected_type is FlowResultType.FORM:
-        assert result["errors"]["base"] == expected_result
-    else:
-        assert result["title"] == "1.1.1.1"
-        assert result["data"][CONF_HOST] == "1.1.1.1"
-        assert result["data"][CONF_USERNAME] == "admin"
-        assert result["data"][CONF_PASSWORD] == "password"
-        assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "1.1.1.1"
+    assert result["data"][CONF_HOST] == "1.1.1.1"
+    assert result["data"][CONF_USERNAME] == "admin"
+    assert result["data"][CONF_PASSWORD] == "password"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_discover_timeout")
+@pytest.mark.parametrize(
+    ("side_effect", "http_status", "expected_error"),
+    [
+        (False, HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (False, HTTPStatus.NOT_FOUND, "cannot_connect"),
+        ({"no_uuid": True}, HTTPStatus.OK, "missing_uuid"),
+        (Exception("Test error"), None, "unknown"),
+    ],
+)
+async def test_discovery_flow_edit_discovered_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_server: AsyncMock,
+    mock_discover: MagicMock,
+    side_effect: Any,
+    http_status: HTTPStatus | None,
+    expected_error: str,
+) -> None:
+    """Test all error outcomes of the edit_discovered step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "start_discovery"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    mock_server.http_status = HTTPStatus.UNAUTHORIZED
+    mock_server.async_query.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SERVER_LIST: "1.1.1.1"}
+    )
+
+    mock_server.http_status = http_status
+    mock_server.async_query.side_effect = [False, side_effect]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == expected_error
+
+
 async def test_discovery_flow_failed(
-    hass: HomeAssistant, mock_setup_entry, mock_discover
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_discover: MagicMock
 ) -> None:
     """Test discovery flow when no servers are found."""
 
-    async def _failed_discover(callback):
+    async def _failed_discover(callback: Any) -> list:
         return []
 
     mock_discover.side_effect = _failed_discover
@@ -283,12 +368,11 @@ async def test_discovery_flow_failed(
     assert result["step_id"] == "edit"
 
 
-@pytest.mark.usefixtures("mock_discover_timeout")
 async def test_discovery_ignores_existing(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_config_entry,
-    mock_discover,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_discover: MagicMock,
 ) -> None:
     """Test discovery properly ignores a server that's already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -307,7 +391,7 @@ async def test_discovery_ignores_existing(
 
 
 async def test_integration_discovery(
-    hass: HomeAssistant, mock_setup_entry, mock_server
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
 ) -> None:
     """Test integration discovery flow with a provided UUID."""
     result = await hass.config_entries.flow.async_init(
@@ -325,12 +409,13 @@ async def test_integration_discovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
     assert result["title"] == "1.2.3.4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_integration_discovery_no_uuid(
-    hass: HomeAssistant, mock_setup_entry, mock_server
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
 ) -> None:
     """Test integration discovery flow without a UUID."""
     mock_server.async_query.return_value = {"uuid": TEST_UUID}
@@ -346,7 +431,7 @@ async def test_integration_discovery_no_uuid(
 
 
 async def test_integration_discovery_no_uuid_fails(
-    hass: HomeAssistant, mock_setup_entry, mock_server
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
 ) -> None:
     """Test integration discovery flow routes to form when connection fails."""
     mock_server.async_query.return_value = False
@@ -362,7 +447,7 @@ async def test_integration_discovery_no_uuid_fails(
 
 
 async def test_integration_discovery_edit_recovery(
-    hass: HomeAssistant, mock_setup_entry, mock_server
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_server: AsyncMock
 ) -> None:
     """Test editing an integration discovery returns errors and can recover."""
     result = await hass.config_entries.flow.async_init(
@@ -390,11 +475,14 @@ async def test_integration_discovery_edit_recovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UUID
     assert result["title"] == "1.2.3.4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_unknown_player(hass: HomeAssistant, dhcp_info) -> None:
+async def test_dhcp_unknown_player(
+    hass: HomeAssistant, dhcp_info: dict[str, Any]
+) -> None:
     """Test DHCP discovery of an unconfigured player routes to user setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -407,7 +495,7 @@ async def test_dhcp_unknown_player(hass: HomeAssistant, dhcp_info) -> None:
 
 
 async def test_dhcp_known_player(
-    hass: HomeAssistant, dhcp_info, mock_config_entry
+    hass: HomeAssistant, dhcp_info: dict[str, Any], mock_config_entry: MockConfigEntry
 ) -> None:
     """Test DHCP discovery aborts if player is already registered."""
     mock_config_entry.add_to_hass(hass)

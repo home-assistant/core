@@ -163,7 +163,7 @@ def mock_discover():
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_discover_timeout():
     """Mock the discovery timeout so tests run fast."""
     with patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0):
