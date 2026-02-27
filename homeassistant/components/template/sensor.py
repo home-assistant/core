@@ -260,11 +260,6 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             if not isinstance(result, bool) and isinstance(result, (int, float)):
                 return result
 
-            if isinstance(result, str) and "." not in result:
-                return template_validators.number(self, CONF_STATE, return_type=int)(
-                    result
-                )
-
             return template_validators.number(self, CONF_STATE)(result)
 
         if result is None or self.device_class not in (

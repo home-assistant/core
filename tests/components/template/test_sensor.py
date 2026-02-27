@@ -684,7 +684,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
     def _record_async_render(self, *args, **kwargs):
         """Catch async_render."""
         async_render_calls.append(self.template)
-        return "75"
+        return 75
 
     later = dt_util.utcnow()
 
