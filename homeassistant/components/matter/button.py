@@ -58,7 +58,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BUTTON,
         entity_description=MatterButtonEntityDescription(
             key="IdentifyButton",
-            entity_category=EntityCategory.CONFIG,
+            entity_category=EntityCategory.DIAGNOSTIC,
             device_class=ButtonDeviceClass.IDENTIFY,
             command=lambda: clusters.Identify.Commands.Identify(identifyTime=15),
         ),

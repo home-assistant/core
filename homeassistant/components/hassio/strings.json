@@ -43,6 +43,17 @@
       }
     }
   },
+  "exceptions": {
+    "mount_reload_error": {
+      "message": "Failed to reload mount {name}: {error}"
+    },
+    "mount_reload_invalid_device": {
+      "message": "Device is not a supervisor mount point"
+    },
+    "mount_reload_unknown_device_id": {
+      "message": "Device ID not found"
+    }
+  },
   "issues": {
     "issue_addon_boot_fail": {
       "fix_flow": {
@@ -51,7 +62,7 @@
         },
         "step": {
           "fix_menu": {
-            "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
+            "description": "App {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple apps. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
             "menu_options": {
               "addon_disable_boot": "[%key:common::action::disable%]",
               "addon_execute_start": "[%key:common::action::start%]"
@@ -59,41 +70,41 @@
           }
         }
       },
-      "title": "Add-on failed to start at boot"
+      "title": "App failed to start at boot"
     },
     "issue_addon_deprecated_addon": {
       "fix_flow": {
         "abort": {
-          "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+          "apply_suggestion_fail": "Could not uninstall the app. Check the Supervisor logs for more details."
         },
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme]({addon_info}) and [documentation]({addon_documentation}) of the add-on to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme]({addon_info}) and [documentation]({addon_documentation}) of the app to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated app. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
-      "title": "Installed add-on is deprecated"
+      "title": "Installed app is deprecated"
     },
     "issue_addon_detached_addon_missing": {
-      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store.",
-      "title": "Missing repository for an installed add-on"
+      "description": "Repository for app {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [app's documentation]({addon_url}) for installation instructions and add the repository to the store.",
+      "title": "Missing repository for an installed app"
     },
     "issue_addon_detached_addon_removed": {
       "fix_flow": {
         "abort": {
-          "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+          "apply_suggestion_fail": "Could not uninstall the app. Check the Supervisor logs for more details."
         },
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated app. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
-      "title": "Installed add-on has been removed from repository"
+      "title": "Installed app has been removed from repository"
     },
     "issue_addon_pwned": {
-      "description": "Add-on {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue.",
-      "title": "Insecure secrets detected in add-on configuration"
+      "description": "App {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue.",
+      "title": "Insecure secrets detected in app configuration"
     },
     "issue_mount_mount_failed": {
       "fix_flow": {
@@ -123,14 +134,14 @@
         },
         "step": {
           "system_execute_rebuild": {
-            "description": "The default configuration for add-ons and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
+            "description": "The default configuration for apps and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
           }
         }
       },
       "title": "Restart(s) required"
     },
     "issue_system_free_space": {
-      "description": "The data disk has only {free_space}GB free space left. This may cause issues with system stability and interfere with functionality such as backups and updates. See [clear up storage]({more_info_free_space}) for tips on how to free up space.",
+      "description": "The data disk has only {free_space}GB free space left. This may cause issues with system stability and interfere with functionality such as backups and updates. Go to [storage]({storage_url}) to see what is taking up space or see [clear up storage]({more_info_free_space}) for tips on how to free up space.",
       "title": "Data disk is running low on free space"
     },
     "issue_system_multiple_data_disks": {
@@ -160,7 +171,7 @@
         },
         "step": {
           "system_execute_reboot": {
-            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period."
+            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the apps inaccessible for a brief period."
           }
         }
       },
@@ -203,7 +214,7 @@
       "title": "Unsupported system - {reason}"
     },
     "unsupported_apparmor": {
-      "description": "System is unsupported because AppArmor is working incorrectly and add-ons are running in an unprotected and insecure way. For troubleshooting information, select Learn more.",
+      "description": "System is unsupported because AppArmor is working incorrectly and apps are running in an unprotected and insecure way. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - AppArmor issues"
     },
     "unsupported_cgroup_version": {
@@ -336,6 +347,50 @@
       },
       "name": "Stop add-on"
     },
+    "app_restart": {
+      "description": "Restarts a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to restart.",
+          "name": "[%key:component::hassio::services::app_start::fields::app::name%]"
+        }
+      },
+      "name": "Restart app"
+    },
+    "app_start": {
+      "description": "Starts a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to start.",
+          "name": "App"
+        }
+      },
+      "name": "Start app"
+    },
+    "app_stdin": {
+      "description": "Writes data to the standard input of a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to write to.",
+          "name": "[%key:component::hassio::services::app_start::fields::app::name%]"
+        },
+        "input": {
+          "description": "The data to write.",
+          "name": "Input"
+        }
+      },
+      "name": "Write data to app stdin"
+    },
+    "app_stop": {
+      "description": "Stops a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to stop.",
+          "name": "[%key:component::hassio::services::app_start::fields::app::name%]"
+        }
+      },
+      "name": "Stop app"
+    },
     "backup_full": {
       "description": "Creates a full backup.",
       "fields": {
@@ -366,8 +421,12 @@
       "description": "Creates a partial backup.",
       "fields": {
         "addons": {
-          "description": "List of add-ons to include in the backup. Use the name slug of each add-on.",
-          "name": "Add-ons"
+          "description": "List of apps (formerly add-ons) to include in the backup. Use the slug of each app. Legacy option - use apps instead.",
+          "name": "Add-ons (legacy)"
+        },
+        "apps": {
+          "description": "List of apps to include in the backup. Use the slug of each app.",
+          "name": "Apps"
         },
         "compressed": {
           "description": "[%key:component::hassio::services::backup_full::fields::compressed::description%]",
@@ -408,6 +467,16 @@
       "description": "Powers off the host system.",
       "name": "Power off the host system"
     },
+    "mount_reload": {
+      "description": "Reloads a network storage mount.",
+      "fields": {
+        "device_id": {
+          "description": "The device ID of the network storage mount to reload.",
+          "name": "Device ID"
+        }
+      },
+      "name": "Reload network storage mount"
+    },
     "restore_full": {
       "description": "Restores from full backup.",
       "fields": {
@@ -426,8 +495,12 @@
       "description": "Restores from a partial backup.",
       "fields": {
         "addons": {
-          "description": "List of add-ons to restore from the backup. Use the name slug of each add-on.",
+          "description": "List of apps (formerly add-ons) to restore from the backup. Use the slug of each app. Legacy option - use apps instead.",
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]"
+        },
+        "apps": {
+          "description": "List of apps to restore from the backup. Use the slug of each app.",
+          "name": "[%key:component::hassio::services::backup_partial::fields::apps::name%]"
         },
         "folders": {
           "description": "List of directories to restore from the backup.",
@@ -458,7 +531,7 @@
       "docker_version": "Docker version",
       "healthy": "Healthy",
       "host_os": "Host operating system",
-      "installed_addons": "Installed add-ons",
+      "installed_addons": "Installed apps",
       "nameservers": "Nameservers",
       "supervisor_api": "Supervisor API",
       "supervisor_version": "Supervisor version",

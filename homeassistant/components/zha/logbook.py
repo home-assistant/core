@@ -44,7 +44,7 @@ def async_describe_events(
             zha_device = async_get_zha_device_proxy(
                 hass, event.data[ATTR_DEVICE_ID]
             ).device
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             pass
 
         if (
@@ -78,6 +78,9 @@ def async_describe_events(
 
         if params := event_data.get("params"):
             message = f"{message} with parameters: {params}"
+
+        if args := event_data.get("args"):
+            message = f"{message} with arguments: {args}"
 
         return {
             LOGBOOK_ENTRY_NAME: device_name,

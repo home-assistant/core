@@ -154,6 +154,7 @@ class LocalTodoListEntity(TodoListEntity):
                     ),
                     due=due,
                     description=item.description,
+                    completed=item.completed,
                 )
             )
         self._attr_todo_items = todo_items

@@ -7,6 +7,7 @@
     "end_time": "End time",
     "end_time_description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
     "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+    "not_available": "Not available",
     "one_time": "One-time",
     "one_time_description": "If this is a one-time schedule.",
     "precondition_time": "Precondition time",
@@ -18,7 +19,6 @@
     "schedule_name_description": "The name of the schedule.",
     "start_time": "Start time",
     "start_time_description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
-    "unavailable": "Unavailable",
     "vehicle": "Vehicle",
     "vehicle_to_remove_schedule": "Vehicle to remove schedule from.",
     "vehicle_to_schedule": "Vehicle to schedule.",
@@ -28,8 +28,15 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_account_mismatch": "The reconfiguration account does not match the original account",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -39,17 +46,8 @@
     },
     "step": {
       "reauth_confirm": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "The {name} integration needs to re-authenticate your account, please enter an access token from {url}",
+        "description": "The {name} integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "user": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter an access token from {url}."
       }
     }
   },
@@ -272,6 +270,14 @@
       },
       "wake": {
         "name": "Wake"
+      }
+    },
+    "calendar": {
+      "tariff_content_v2": {
+        "name": "Buy tariff"
+      },
+      "tariff_content_v2_sell_tariff": {
+        "name": "Sell tariff"
       }
     },
     "climate": {
@@ -521,7 +527,13 @@
         }
       },
       "charge_state_conn_charge_cable": {
-        "name": "Charge cable"
+        "name": "Charge cable",
+        "state": {
+          "gb_ac": "GB/AC",
+          "gb_dc": "GB/DC",
+          "iec": "IEC",
+          "sae": "SAE"
+        }
       },
       "charge_state_est_battery_range": {
         "name": "Estimate battery range"
@@ -638,8 +650,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_state_r": {
@@ -648,8 +660,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_state_rel": {
@@ -658,8 +670,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_state_rer": {
@@ -668,8 +680,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_stator_temp_f": {
@@ -1002,7 +1014,6 @@
       "total_grid_energy_exported": {
         "name": "Grid exported"
       },
-
       "total_home_usage": {
         "name": "Home usage"
       },
@@ -1034,9 +1045,6 @@
       },
       "vehicle_state_tpms_pressure_rr": {
         "name": "Tire pressure rear right"
-      },
-      "version": {
-        "name": "Version"
       },
       "vin": {
         "name": "[%key:component::teslemetry::common::vehicle%]",
@@ -1096,11 +1104,26 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed, please reauthenticate"
+    },
+    "auth_failed_invalid_token": {
+      "message": "Access token is invalid, please reauthenticate"
+    },
+    "auth_failed_migration": {
+      "message": "Failed to migrate to OAuth, please reauthenticate"
+    },
+    "auth_failed_subscription_required": {
+      "message": "Teslemetry subscription required"
+    },
     "command_error": {
       "message": "Command returned error: {error}"
     },
     "command_exception": {
       "message": "Command returned exception: {message}"
+    },
+    "command_no_response": {
+      "message": "Command had no response"
     },
     "command_no_result": {
       "message": "Command had no result"
@@ -1128,6 +1151,33 @@
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
+    },
+    "not_ready_api_error": {
+      "message": "Error communicating with Teslemetry API"
+    },
+    "not_ready_connection_error": {
+      "message": "Unable to connect to Teslemetry"
+    },
+    "oauth_implementation_not_available": {
+      "message": "OAuth implementation not available, try reauthenticating"
+    },
+    "set_scheduled_charging_time": {
+      "message": "Scheduled charging time is required when enabling"
+    },
+    "set_scheduled_departure_off_peak": {
+      "message": "Off-peak charging end time is required when enabling"
+    },
+    "set_scheduled_departure_preconditioning": {
+      "message": "Preconditioning departure time is required when enabling"
+    },
+    "token_data_malformed": {
+      "message": "Token data malformed, try reauthenticating"
+    },
+    "update_failed": {
+      "message": "Error fetching data from Teslemetry API"
+    },
+    "update_failed_invalid_data": {
+      "message": "Received invalid data from API"
     },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
@@ -1358,7 +1408,7 @@
           "name": "Energy Site"
         },
         "tou_settings": {
-          "description": "See https://developer.tesla.com/docs/fleet-api#time_of_use_settings for details.",
+          "description": "See {time_of_use_url} for details.",
           "name": "Settings"
         }
       },

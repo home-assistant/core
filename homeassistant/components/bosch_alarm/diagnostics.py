@@ -20,7 +20,8 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
         "data": {
-            "model": entry.runtime_data.model,
+            "model": entry.runtime_data.model.name,
+            "family": entry.runtime_data.model.family.name,
             "serial_number": entry.runtime_data.serial_number,
             "protocol_version": entry.runtime_data.protocol_version,
             "firmware_version": entry.runtime_data.firmware_version,

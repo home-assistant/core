@@ -1,0 +1,116 @@
+{
+  "entity": {
+    "select": {
+      "bio_fresh_plus": {
+        "default": "mdi:leaf"
+      },
+      "bio_fresh_plus_bottom_zone": {
+        "default": "mdi:leaf"
+      },
+      "bio_fresh_plus_middle_zone": {
+        "default": "mdi:leaf"
+      },
+      "bio_fresh_plus_top_zone": {
+        "default": "mdi:leaf"
+      },
+      "hydro_breeze": {
+        "default": "mdi:weather-windy"
+      },
+      "hydro_breeze_bottom_zone": {
+        "default": "mdi:weather-windy"
+      },
+      "hydro_breeze_middle_zone": {
+        "default": "mdi:weather-windy"
+      },
+      "hydro_breeze_top_zone": {
+        "default": "mdi:weather-windy"
+      },
+      "ice_maker": {
+        "default": "mdi:cube-outline",
+        "state": {
+          "off": "mdi:cube-outline-off"
+        }
+      },
+      "ice_maker_bottom_zone": {
+        "default": "mdi:cube-outline",
+        "state": {
+          "off": "mdi:cube-outline-off"
+        }
+      },
+      "ice_maker_middle_zone": {
+        "default": "mdi:cube-outline",
+        "state": {
+          "off": "mdi:cube-outline-off"
+        }
+      },
+      "ice_maker_top_zone": {
+        "default": "mdi:cube-outline",
+        "state": {
+          "off": "mdi:cube-outline-off"
+        }
+      }
+    },
+    "switch": {
+      "night_mode": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off"
+        }
+      },
+      "party_mode": {
+        "default": "mdi:glass-cocktail",
+        "state": {
+          "off": "mdi:glass-cocktail-off"
+        }
+      },
+      "super_cool": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_cool_bottom_zone": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_cool_middle_zone": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_cool_top_zone": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_frost": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_frost_bottom_zone": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_frost_middle_zone": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "super_frost_top_zone": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      }
+    }
+  }
+}

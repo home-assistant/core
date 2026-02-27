@@ -653,7 +653,7 @@ def _add_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except (InternalError, OperationalError, ProgrammingError):
+        except InternalError, OperationalError, ProgrammingError:
             # Some engines support adding all columns at once,
             # this error is when they don't
             _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
@@ -716,7 +716,7 @@ def _modify_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except (InternalError, OperationalError):
+        except InternalError, OperationalError:
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
         else:
             return
@@ -726,7 +726,7 @@ def _modify_columns(
             try:
                 connection = session.connection()
                 connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
                 )
@@ -791,7 +791,7 @@ def _update_states_table_with_foreign_key_options(
                         add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
                 )
@@ -827,7 +827,7 @@ def _drop_foreign_key_constraints(
             try:
                 connection = session.connection()
                 connection.execute(DropConstraint(drop))
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
                     TABLE_STATES,
@@ -907,7 +907,7 @@ def _add_constraint(
         try:
             connection = session.connection()
             connection.execute(add_constraint)
-        except (InternalError, OperationalError):
+        except InternalError, OperationalError:
             _LOGGER.exception("Could not update foreign options in %s table", table)
             raise
 
@@ -1361,7 +1361,7 @@ class _SchemaVersion20Migrator(_SchemaVersionMigrator, target_version=20):
 class _SchemaVersion21Migrator(_SchemaVersionMigrator, target_version=21):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Try to change the character set of the statistic_meta table
+        # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _correct_table_character_set_and_collation(table, self.session_maker)
@@ -2125,6 +2125,23 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
                 )
 
 
+class _SchemaVersion53Migrator(_SchemaVersionMigrator, target_version=53):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Try to change the character set of events, states and statistics_meta tables
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            for table in (
+                "events",
+                "event_data",
+                "states",
+                "state_attributes",
+                "statistics",
+                "statistics_meta",
+                "statistics_short_term",
+            ):
+                _correct_table_character_set_and_collation(table, self.session_maker)
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2167,8 +2184,10 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. %s",
+        "Updating table %s to character set %s and collation %s. %s",
         table,
+        MYSQL_DEFAULT_CHARSET,
+        MYSQL_COLLATE,
         MIGRATION_NOTE_MINUTES,
     )
     with (

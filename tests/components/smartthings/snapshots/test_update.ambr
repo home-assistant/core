@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -40,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'aq-sensor-3-ikea Firmware',
       'in_progress': False,
       'installed_version': '00010010',
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -101,7 +103,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'Radiator Thermostat II [+M] Wohnzimmer Firmware',
       'in_progress': False,
       'installed_version': '2.00.09 (20009)',
@@ -142,6 +144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -162,7 +165,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'Dimmer Debian Firmware',
       'in_progress': False,
       'installed_version': '16015010',
@@ -203,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -223,7 +227,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': '.Front Door Open/Closed Sensor Firmware',
       'in_progress': False,
       'installed_version': '00000103',
@@ -264,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -284,7 +289,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'Kitchen IKEA KADRILJ Window blind Firmware',
       'in_progress': False,
       'installed_version': '22007631',
@@ -325,6 +330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -345,7 +351,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'Deck Door Firmware',
       'in_progress': False,
       'installed_version': '0000001B',
@@ -386,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -406,7 +413,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'Arlo Beta Basestation Firmware',
       'in_progress': False,
       'installed_version': '00102101',
@@ -447,6 +454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -467,7 +475,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smartthings/icon.png',
+      'entity_picture': '/api/brands/integration/smartthings/icon.png',
       'friendly_name': 'Basement Door Lock Firmware',
       'in_progress': False,
       'installed_version': '00840847',

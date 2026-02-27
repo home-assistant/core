@@ -8,7 +8,7 @@ from typing import Final
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.text import (
-    DOMAIN as TEXT_PLATFORM,
+    DOMAIN as TEXT_DOMAIN,
     TextEntity,
     TextEntityDescription,
 )
@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ROLE_GENERIC
-from .coordinator import ShellyConfigEntry
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -26,6 +26,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_virtual_component_ids,
     is_view_for_platform,
 )
@@ -42,8 +43,8 @@ RPC_TEXT_ENTITIES: Final = {
     "text_generic": RpcTextDescription(
         key="text",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
-            config, key, TEXT_PLATFORM
+        removal_condition=lambda config, _status, key: (
+            not is_view_for_platform(config, key, TEXT_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
@@ -78,14 +79,12 @@ def _async_setup_rpc_entry(
 
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
-    virtual_text_ids = get_virtual_component_ids(
-        coordinator.device.config, TEXT_PLATFORM
-    )
+    virtual_text_ids = get_virtual_component_ids(coordinator.device.config, TEXT_DOMAIN)
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         virtual_text_ids,
         "text",
     )
@@ -97,6 +96,17 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     entity_description: RpcTextDescription
     attribute_value: str | None
     _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcTextDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
     def native_value(self) -> str | None:

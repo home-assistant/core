@@ -107,9 +107,11 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         unavailable_when_not_cooking=True,
         value=(
-            lambda probe: probe.cook.target_temperature
-            if probe.cook and hasattr(probe.cook, "target_temperature")
-            else None
+            lambda probe: (
+                probe.cook.target_temperature
+                if probe.cook and hasattr(probe.cook, "target_temperature")
+                else None
+            )
         ),
     ),
     # Peak temperature
@@ -121,9 +123,11 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         unavailable_when_not_cooking=True,
         value=(
-            lambda probe: probe.cook.peak_temperature
-            if probe.cook and hasattr(probe.cook, "peak_temperature")
-            else None
+            lambda probe: (
+                probe.cook.peak_temperature
+                if probe.cook and hasattr(probe.cook, "peak_temperature")
+                else None
+            )
         ),
     ),
     # Remaining time in seconds. When unknown/calculating default is used. Default: -1

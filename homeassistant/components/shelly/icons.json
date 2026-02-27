@@ -77,15 +77,25 @@
           "on": "mdi:home-export-outline"
         }
       },
-      "cury_boost": {
-        "default": "mdi:rocket-launch"
-      },
-      "cury_slot": {
+      "left_slot": {
         "default": "mdi:scent",
         "state": {
           "off": "mdi:scent-off",
           "on": "mdi:scent"
         }
+      },
+      "left_slot_boost": {
+        "default": "mdi:rocket-launch"
+      },
+      "right_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
+        }
+      },
+      "right_slot_boost": {
+        "default": "mdi:rocket-launch"
       },
       "valve_switch": {
         "default": "mdi:valve",
@@ -94,6 +104,14 @@
           "on": "mdi:valve-open"
         }
       }
+    }
+  },
+  "services": {
+    "get_kvs_value": {
+      "service": "mdi:import"
+    },
+    "set_kvs_value": {
+      "service": "mdi:export"
     }
   }
 }

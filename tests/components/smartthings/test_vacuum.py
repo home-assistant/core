@@ -68,7 +68,7 @@ async def test_vacuum_actions(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
         Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
         command,
         MAIN,
@@ -89,7 +89,7 @@ async def test_state_update(
     await trigger_update(
         hass,
         devices,
-        "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
         Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
         Attribute.OPERATING_STATE,
         "error",
@@ -110,13 +110,13 @@ async def test_availability(
     assert hass.states.get("vacuum.robot_vacuum").state == VacuumActivity.DOCKED
 
     await trigger_health_update(
-        hass, devices, "05accb39-2017-c98b-a5ab-04a81f4d3d9a", HealthStatus.OFFLINE
+        hass, devices, "01b28624-5907-c8bc-0325-8ad23f03a637", HealthStatus.OFFLINE
     )
 
     assert hass.states.get("vacuum.robot_vacuum").state == STATE_UNAVAILABLE
 
     await trigger_health_update(
-        hass, devices, "05accb39-2017-c98b-a5ab-04a81f4d3d9a", HealthStatus.ONLINE
+        hass, devices, "01b28624-5907-c8bc-0325-8ad23f03a637", HealthStatus.ONLINE
     )
 
     assert hass.states.get("vacuum.robot_vacuum").state == VacuumActivity.DOCKED

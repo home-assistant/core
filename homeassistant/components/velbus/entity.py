@@ -7,6 +7,7 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from velbusaio.channels import Channel as VelbusChannel
+from velbusaio.properties import Property as VelbusProperty
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,10 +28,10 @@ class VelbusEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll: bool = False
 
-    def __init__(self, channel: VelbusChannel) -> None:
+    def __init__(self, channel: VelbusChannel | VelbusProperty) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
-        self._module_adress = str(channel.get_module_address())
+        self._module_address = str(channel.get_module_address())
         self._attr_name = channel.get_name()
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -46,16 +47,16 @@ class VelbusEntity(Entity):
         if self._channel.is_sub_device():
             self._attr_device_info["via_device"] = (
                 DOMAIN,
-                self._module_adress,
+                self._module_address,
             )
-        serial = channel.get_module_serial() or self._module_adress
+        serial = channel.get_module_serial() or self._module_address
         self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""
         if not self._channel.is_sub_device():
-            return self._module_adress
-        return f"{self._module_adress}-{self._channel.get_channel_number()}"
+            return self._module_address
+        return f"{self._module_address}-{self._channel.get_channel_number()}"
 
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
@@ -66,7 +67,13 @@ class VelbusEntity(Entity):
         self._channel.remove_on_status_update(self._on_update)
 
     async def _on_update(self) -> None:
+        """Handle status updates from the channel."""
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._channel.is_connected()
 
 
 def api_call[_T: VelbusEntity, **_P](
@@ -80,8 +87,13 @@ def api_call[_T: VelbusEntity, **_P](
         try:
             await func(self, *args, **kwargs)
         except OSError as exc:
+            entity_name = self.name if isinstance(self.name, str) else "Unknown"
             raise HomeAssistantError(
-                f"Could not execute {func.__name__} service for {self.name}"
+                translation_domain=DOMAIN,
+                translation_key="api_call_failed",
+                translation_placeholders={
+                    "entity": entity_name,
+                },
             ) from exc
 
     return cmd_wrapper

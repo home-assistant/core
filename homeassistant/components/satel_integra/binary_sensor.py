@@ -2,31 +2,23 @@
 
 from __future__ import annotations
 
-from satel_integra.satel_integra import AsyncSatel
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
-    DOMAIN,
-    SIGNAL_OUTPUTS_UPDATED,
-    SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry, SatelIntegraBaseCoordinator
+from .entity import SatelIntegraEntity
 
 
 async def async_setup_entry(
@@ -36,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
 
-    controller = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
 
     zone_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,
@@ -46,18 +38,15 @@ async def async_setup_entry(
     for subentry in zone_subentries:
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
         zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
-        zone_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
                 SatelIntegraBinarySensor(
-                    controller,
-                    zone_num,
-                    zone_name,
-                    zone_type,
-                    CONF_ZONES,
-                    SIGNAL_ZONES_UPDATED,
+                    runtime_data.coordinator_zones,
                     config_entry.entry_id,
+                    subentry,
+                    zone_num,
+                    zone_type,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -71,70 +60,52 @@ async def async_setup_entry(
     for subentry in output_subentries:
         output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
         ouput_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
-        output_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
                 SatelIntegraBinarySensor(
-                    controller,
-                    output_num,
-                    output_name,
-                    ouput_type,
-                    CONF_OUTPUTS,
-                    SIGNAL_OUTPUTS_UPDATED,
+                    runtime_data.coordinator_outputs,
                     config_entry.entry_id,
+                    subentry,
+                    output_num,
+                    ouput_type,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class SatelIntegraBinarySensor(BinarySensorEntity):
-    """Representation of an Satel Integra binary sensor."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-    _attr_name = None
+class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
+    SatelIntegraEntity[_CoordinatorT], BinarySensorEntity
+):
+    """Base binary sensor for Satel Integra."""
 
     def __init__(
         self,
-        controller: AsyncSatel,
-        device_number: int,
-        device_name: str,
-        device_class: BinarySensorDeviceClass,
-        sensor_type: str,
-        react_to_signal: str,
+        coordinator: _CoordinatorT,
         config_entry_id: str,
+        subentry: ConfigSubentry,
+        device_number: int,
+        device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize the binary_sensor."""
-        self._device_number = device_number
-        self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
-        self._react_to_signal = react_to_signal
-        self._satel = controller
+        super().__init__(
+            coordinator,
+            config_entry_id,
+            subentry,
+            device_number,
+        )
 
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
-        )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
-            self._attr_is_on = self._device_number in self._satel.violated_outputs
-        else:
-            self._attr_is_on = self._device_number in self._satel.violated_zones
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self._react_to_signal, self._devices_updated
-            )
-        )
+        self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
-    def _devices_updated(self, zones: dict[int, int]):
-        """Update the zone's state, if needed."""
-        if self._device_number in zones:
-            new_state = zones[self._device_number] == 1
-            if new_state != self._attr_is_on:
-                self._attr_is_on = new_state
-                self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self._get_state_from_coordinator()
+        self.async_write_ha_state()
+
+    def _get_state_from_coordinator(self) -> bool | None:
+        """Method to get binary sensor state from coordinator data."""
+        return self.coordinator.data.get(self._device_number)

@@ -281,6 +281,9 @@
       },
       "honk_flash": {
         "default": "mdi:alarm-light"
+      },
+      "lock_reduced_guard": {
+        "default": "mdi:lock-minus"
       }
     },
     "device_tracker": {
@@ -380,6 +383,11 @@
       "trip_meter_manual": {
         "default": "mdi:map-marker-distance"
       }
+    }
+  },
+  "services": {
+    "get_image_url": {
+      "service": "mdi:image-multiple-outline"
     }
   }
 }

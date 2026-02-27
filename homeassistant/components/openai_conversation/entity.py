@@ -64,6 +64,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from .const import (
@@ -72,6 +73,7 @@ from .const import (
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -89,11 +91,14 @@ from .const import (
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+    UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS,
 )
 
 if TYPE_CHECKING:
@@ -182,7 +187,7 @@ def _convert_content_to_param(
                     FunctionCallOutput(
                         type="function_call_output",
                         call_id=content.tool_call_id,
-                        output=json.dumps(content.tool_result),
+                        output=json_dumps(content.tool_result),
                     )
                 )
             continue
@@ -216,7 +221,7 @@ def _convert_content_to_param(
                             ResponseFunctionToolCallParam(
                                 type="function_call",
                                 name=tool_call.tool_name,
-                                arguments=json.dumps(tool_call.tool_args),
+                                arguments=json_dumps(tool_call.tool_args),
                                 call_id=tool_call.id,
                             )
                         )
@@ -456,7 +461,7 @@ class OpenAIBaseLLMEntity(Entity):
     """OpenAI conversation agent."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
 
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
@@ -467,7 +472,12 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="OpenAI",
-            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(
+                CONF_CHAT_MODEL,
+                RECOMMENDED_CHAT_MODEL
+                if subentry.subentry_type != "stt"
+                else RECOMMENDED_STT_MODEL,
+            ),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -477,6 +487,7 @@ class OpenAIBaseLLMEntity(Entity):
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
         force_image: bool = False,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -487,8 +498,6 @@ class OpenAIBaseLLMEntity(Entity):
             model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             user=chat_log.conversation_id,
             store=False,
             stream=True,
@@ -501,14 +510,30 @@ class OpenAIBaseLLMEntity(Entity):
                 )
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
-                "summary": "auto",
+                "summary": options.get(
+                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+                ),
             }
             model_args["include"] = ["reasoning.encrypted_content"]
+
+        if (
+            not model_args["model"].startswith("gpt-5")
+            or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
+        ):
+            model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+            model_args["temperature"] = options.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            )
 
         if model_args["model"].startswith("gpt-5"):
             model_args["text"] = {
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
+
+        if not model_args["model"].startswith(
+            tuple(UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS)
+        ):
+            model_args["prompt_cache_retention"] = "24h"
 
         tools: list[ToolParam] = []
         if chat_log.llm_api:
@@ -574,7 +599,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model == "gpt-image-1":
+            if image_model != "gpt-image-1-mini":
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
@@ -614,7 +639,7 @@ class OpenAIBaseLLMEntity(Entity):
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.responses.create(**model_args)
 
