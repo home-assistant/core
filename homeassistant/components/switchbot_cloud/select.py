@@ -1,15 +1,10 @@
 """SwitchBotCloudSelect entity."""
 
+import asyncio
 import random
 import time
 
-from switchbot_api import (
-    Device,
-    KeyPadCommands,
-    Remote,
-    SwitchBotAPI,
-    SwitchBotConnectionError,
-)
+from switchbot_api import Device, KeyPadCommands, Remote, SwitchBotAPI
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DEFAULT_EXPIRED_DURATION, DOMAIN
+from .const import AFTER_COMMAND_REFRESH, DEFAULT_EXPIRED_DURATION, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -58,17 +53,15 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
                 "startTime": int(time.time()),
                 "endTime": int(time.time()) + DEFAULT_EXPIRED_DURATION,
             }
-            try:
-                await self.send_api_command(
-                    KeyPadCommands.CREATE_KEY, parameters=parameters
-                )
-                self._attr_current_option = password
-            except Exception as e:
-                self._attr_current_option = "unknown"
-                raise SwitchBotConnectionError from e
+            await self.send_api_command(
+                KeyPadCommands.CREATE_KEY, parameters=parameters
+            )
+            self._attr_current_option = password
         else:
             self._attr_current_option = option
         self.async_write_ha_state()
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
