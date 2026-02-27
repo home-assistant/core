@@ -56,12 +56,20 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
+  entity-category:
+    status: exempt
+    comment: Fan entities do not have diagnostic categorization.
+  entity-device-class:
+    status: exempt
+    comment: Fan platform does not use device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: All fan entities are enabled by default.
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: Fan entities use default icons.
   reconfiguration-flow: done
   repair-issues:
     status: exempt

@@ -5,7 +5,7 @@ from datetime import timedelta
 from homeassistant.const import Platform
 
 DOMAIN = "sharp_cocoro_air"
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.FAN]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 

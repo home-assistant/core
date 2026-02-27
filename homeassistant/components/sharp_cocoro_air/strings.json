@@ -69,46 +69,6 @@
           }
         }
       }
-    },
-    "switch": {
-      "humidification": {
-        "name": "Humidification"
-      }
-    },
-    "sensor": {
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "power_consumption": {
-        "name": "Power consumption"
-      },
-      "energy": {
-        "name": "[%key:component::sensor::entity_component::energy::name%]"
-      },
-      "dust": {
-        "name": "Dust level"
-      },
-      "smell": {
-        "name": "Smell level"
-      },
-      "pci_sensor": {
-        "name": "PCI sensor"
-      },
-      "light_sensor": {
-        "name": "Light sensor"
-      },
-      "filter_usage": {
-        "name": "Filter usage"
-      },
-      "cleaning_mode": {
-        "name": "Cleaning mode"
-      },
-      "airflow": {
-        "name": "Airflow"
-      }
     }
   }
 }
