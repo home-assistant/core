@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 import logging
 from typing import Any
@@ -254,6 +255,9 @@ async def test_set_system_mode_validation(
         target={},
         blocking=True,
     )
-    await hass.async_block_till_done()  # service handler is invoked via a task
+
+    # the service handler is invoked via a dispatcher
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
 
     assert f"ServiceValidationError: {expected_msg}" in caplog.text
