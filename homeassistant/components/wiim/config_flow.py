@@ -21,8 +21,8 @@ from .const import (
     CONF_UPNP_LOCATION,
     DOMAIN,
     LOGGER,
+    UPNP_PORT,
     ZEROCONF_TYPE_LINKPLAY,
-    WiimData,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
@@ -100,7 +100,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             try:
-                constructed_location = f"http://{host}:49152/description.xml"
+                constructed_location = f"http://{host}:{UPNP_PORT}/description.xml"
                 device_info = await _validate_device_and_get_info(
                     self.hass, host, location=constructed_location
                 )

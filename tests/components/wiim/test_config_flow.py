@@ -66,27 +66,37 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_step_user_already_configured(flow, mock_config_entry) -> None:
+async def test_async_step_user_already_configured(
+    hass: HomeAssistant, flow, mock_config_entry
+) -> None:
     """Test the user step when device is already configured."""
-    _flow, _ = flow
+
+    domain = "wiim"
+    test_udn = "uuid:test-1234"
     mock_device_info = {
         CONF_HOST: "192.168.1.100",
-        CONF_UDN: "uuid:test-1234",
+        CONF_UDN: test_udn,
         CONF_NAME: "WiiM Pro",
         CONF_UPNP_LOCATION: "http://192.168.1.100:49152/description.xml",
-        "model": "WiiM Pro",
     }
-
-    _flow.async_set_unique_id = AsyncMock()
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=test_udn)
 
     user_input = {CONF_HOST: "192.168.1.100"}
+
+    result = await hass.config_entries.flow.async_init(
+        domain, context={"source": "user"}
+    )
+    assert result["type"] == "form"
+    flow_id = result["flow_id"]
+
     with patch(
         "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
         return_value=mock_device_info,
     ):
-        result = await _flow.async_step_user(user_input)
-
-    assert result["type"] == "create_entry"
+        result = await hass.config_entries.flow.async_configure(flow_id, user_input)
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 class MockZeroconfServiceInfo:

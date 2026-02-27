@@ -7,7 +7,6 @@ from typing import Final
 from wiim.controller import WiimController
 
 from homeassistant.const import Platform
-from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "wiim"
 LOGGER = logging.getLogger(__package__)
@@ -17,8 +16,8 @@ PLATFORMS: Final[list[Platform]] = [
 ]
 
 CONF_UDN = "udn"
-CONF_NAME = "name"
 CONF_UPNP_LOCATION = "upnp_location"
+UPNP_PORT = 49152
 
 ZEROCONF_TYPE_LINKPLAY: Final = "_linkplay._tcp.local."
 
@@ -31,6 +30,3 @@ class WiimData:
 
     controller: WiimController
     entity_id_to_udn_map: dict[str, str] = field(default_factory=dict)
-
-
-WIIM_SHARED_DATA_KEY: HassKey[WiimData] = HassKey(DOMAIN)

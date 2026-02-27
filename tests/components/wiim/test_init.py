@@ -46,23 +46,27 @@ async def test_async_setup_entry_success(
             return_value="192.168.1.10",
         ),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
         mock_controller = MagicMock()
         mock_controller.add_device = AsyncMock()
+        mock_controller.remove_device = AsyncMock()
         mock_controller_cls.return_value = mock_controller
 
-        mock_device = AsyncMock()
-        mock_device.friendly_name = "Test Device"
+        factory_inst = MagicMock()
+        factory_inst.async_create_device = AsyncMock(return_value=mock_upnp_device)
+        mock_factory_cls.return_value = factory_inst
+
+        mock_device = MagicMock()
+        mock_device.udn = "test-udn"
+        mock_device.name = "Test Device"
         mock_device.disconnect = AsyncMock()
         mock_wiim_device_cls.return_value = mock_device
 
-        factory_inst = MagicMock()
-        factory_inst.async_create_device = AsyncMock(return_value=mock_device)
-        mock_factory_cls.return_value = factory_inst
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        assert mock_controller_cls.called
+        mock_controller_cls.assert_called_once()
+        factory_inst.async_create_device.assert_awaited_once()
+        mock_controller.add_device.assert_awaited_once_with(mock_device)
 
 
 @pytest.mark.asyncio
