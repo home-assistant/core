@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import BCU_APP, CHARGING_CARD_ID, DOMAIN, SERVICE_START_CHARGE_SESSION
+from .const import BCU_APP, CHARGING_CARD_ID, DOMAIN
 
 SERVICE_START_CHARGE_SESSION_SCHEMA = vol.Schema(
     {
@@ -73,7 +73,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_START_CHARGE_SESSION,
+        "start_charge_session",
         start_charge_session,
         SERVICE_START_CHARGE_SESSION_SCHEMA,
     )

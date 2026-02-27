@@ -13,11 +13,7 @@ import pytest
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.blue_current import async_setup_entry
-from homeassistant.components.blue_current.const import (
-    CHARGING_CARD_ID,
-    DOMAIN,
-    SERVICE_START_CHARGE_SESSION,
-)
+from homeassistant.components.blue_current.const import CHARGING_CARD_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -124,7 +120,7 @@ async def test_start_charging_action(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_CHARGE_SESSION,
+        "start_charge_session",
         {
             CONF_DEVICE_ID: list(device_registry.devices)[0],
             CHARGING_CARD_ID: "TEST_CARD",
@@ -144,7 +140,7 @@ async def test_start_charging_action_without_card(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_CHARGE_SESSION,
+        "start_charge_session",
         {
             CONF_DEVICE_ID: list(device_registry.devices)[0],
         },
@@ -166,7 +162,7 @@ async def test_start_charging_action_errors(
         # No device id
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            "start_charge_session",
             {},
             blocking=True,
         )
@@ -175,7 +171,7 @@ async def test_start_charging_action_errors(
         # Invalid device id
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            "start_charge_session",
             {CONF_DEVICE_ID: "INVALID"},
             blocking=True,
         )
@@ -192,7 +188,7 @@ async def test_start_charging_action_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            "start_charge_session",
             {
                 CONF_DEVICE_ID: list(device_registry.devices)[0],
             },
@@ -212,7 +208,7 @@ async def test_start_charging_action_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            "start_charge_session",
             {
                 CONF_DEVICE_ID: list(device_registry.devices)[0],
             },
