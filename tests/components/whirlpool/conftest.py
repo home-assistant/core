@@ -4,7 +4,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 import pytest
-from whirlpool import aircon, appliancesmanager, auth, dryer, oven, washer
+from whirlpool import aircon, appliancesmanager, auth, dryer, oven, refrigerator, washer
 from whirlpool.backendselector import Brand, Region
 
 from .const import MOCK_SAID1, MOCK_SAID2
@@ -55,6 +55,7 @@ def fixture_mock_appliances_manager_api(
     mock_dryer_api,
     mock_oven_single_cavity_api,
     mock_oven_dual_cavity_api,
+    mock_refrigerator_api,
 ):
     """Set up AppliancesManager fixture."""
     with (
@@ -77,6 +78,7 @@ def fixture_mock_appliances_manager_api(
             mock_oven_single_cavity_api,
             mock_oven_dual_cavity_api,
         ]
+        mock_appliances_manager.return_value.refrigerators = [mock_refrigerator_api]
         yield mock_appliances_manager
 
 
@@ -177,8 +179,8 @@ def mock_oven_single_cavity_api():
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
-    mock_oven.get_oven_cavity_exists.side_effect = (
-        lambda cavity: cavity == oven.Cavity.Upper
+    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: (
+        cavity == oven.Cavity.Upper
     )
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
@@ -196,10 +198,25 @@ def mock_oven_dual_cavity_api():
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
-    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: cavity in (
-        oven.Cavity.Upper,
-        oven.Cavity.Lower,
+    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: (
+        cavity
+        in (
+            oven.Cavity.Upper,
+            oven.Cavity.Lower,
+        )
     )
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
     return mock_oven
+
+
+@pytest.fixture
+def mock_refrigerator_api():
+    """Get a mock of a refrigerator."""
+    mock_refrigerator = Mock(spec=refrigerator.Refrigerator, said="said_refrigerator")
+    mock_refrigerator.name = "Beer fridge"
+    mock_refrigerator.appliance_info = Mock(
+        data_model="refrigerator", category="refrigerator", model_number="12345"
+    )
+    mock_refrigerator.get_offset_temp.return_value = 0
+    return mock_refrigerator

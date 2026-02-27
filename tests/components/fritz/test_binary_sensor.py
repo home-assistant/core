@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import STATE_ON
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -64,7 +64,7 @@ async def test_binary_sensor_missing_state(
         "homeassistant.components.fritz.coordinator.FritzBoxTools._async_update_data",
         return_value={"entity_states": {}},
     ):
-        freezer.tick(30)
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 

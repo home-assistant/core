@@ -52,6 +52,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 18.6,
       'friendly_name': 'BSB-LAN',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
@@ -128,6 +129,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 18.6,
       'friendly_name': 'BSB-LAN',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
