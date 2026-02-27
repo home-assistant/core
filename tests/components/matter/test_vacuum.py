@@ -16,7 +16,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     set_node_attribute,
-    setup_integration_with_node_fixture,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
@@ -339,48 +338,19 @@ async def test_vacuum_get_segments(
     assert segments[2] == {"id": "2290649224", "name": "My Location C", "group": None}
 
 
+@pytest.mark.parametrize("node_fixture", ["roborock_saros_10"])
 async def test_vacuum_get_segments_nullable_location_info(
     hass: HomeAssistant,
-    matter_client: MagicMock,
+    matter_node: MatterNode,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test vacuum get_segments handles nullable ServiceArea location info."""
-    await setup_integration_with_node_fixture(
-        hass,
-        "mock_vacuum_cleaner",
-        matter_client,
-        {
-            "1/336/0": [
-                {
-                    "0": 1,
-                    "1": 0,
-                    "2": {
-                        "0": {
-                            "0": "Living room",
-                            "1": None,
-                            "2": 52,
-                        },
-                        "1": None,
-                    },
-                },
-                {
-                    "0": 6,
-                    "1": 0,
-                    "2": {
-                        "0": None,
-                        "1": {
-                            "0": 17,
-                            "1": 2,
-                        },
-                    },
-                },
-            ]
-        },
-    )
-
     await async_setup_component(hass, "homeassistant", {})
+    assert matter_node
 
-    entity_id = "vacuum.mock_vacuum"
+    entity_ids = [state.entity_id for state in hass.states.async_all("vacuum")]
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
     state = hass.states.get(entity_id)
     assert state
 
@@ -392,7 +362,11 @@ async def test_vacuum_get_segments_nullable_location_info(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"]["segments"] == [
-        {"id": "1", "name": "Living room", "group": None}
+        {"id": "1", "name": "Living room", "group": None},
+        {"id": "2", "name": "Bathroom", "group": None},
+        {"id": "3", "name": "Bedroom", "group": None},
+        {"id": "4", "name": "Office", "group": None},
+        {"id": "5", "name": "Corridor", "group": None},
     ]
 
 
