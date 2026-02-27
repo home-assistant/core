@@ -31,7 +31,6 @@ ATTR_USER_INDEX = "user_index"
 ATTR_USER_NAME = "user_name"
 ATTR_USER_STATUS = "user_status"
 ATTR_USER_TYPE = "user_type"
-ATTR_USER_UNIQUE_ID = "user_unique_id"
 
 # Magic values
 CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to clear all
