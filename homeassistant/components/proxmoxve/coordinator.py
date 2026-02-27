@@ -22,7 +22,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_NODE, CONF_REALM, DEFAULT_VERIFY_SSL, DOMAIN
@@ -80,7 +84,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         try:
             await self.hass.async_add_executor_job(self._init_proxmox)
         except AuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -97,10 +101,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ResourceException as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except requests.exceptions.ConnectionError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
@@ -112,7 +122,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 self._fetch_all_nodes
             )
         except AuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -129,10 +139,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ResourceException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except requests.exceptions.ConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
@@ -172,7 +188,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         list[dict[str, Any]], list[tuple[list[dict[str, Any]], list[dict[str, Any]]]]
     ]:
         """Fetch all nodes, and then proceed to the VMs and containers."""
-        nodes = self.proxmox.nodes.get()
+        nodes = self.proxmox.nodes.get() or []
         vms_containers = [self._get_vms_containers(node) for node in nodes]
         return nodes, vms_containers
 

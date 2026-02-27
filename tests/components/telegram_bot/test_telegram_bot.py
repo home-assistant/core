@@ -48,9 +48,9 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
@@ -209,7 +209,7 @@ async def test_send_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -307,7 +307,7 @@ async def test_send_message_with_inline_keyboard(
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -353,7 +353,7 @@ async def test_send_sticker_partial_error(
     assert mock_send_sticker.call_count == 2
     assert err.value.translation_key == "multiple_errors"
     assert err.value.translation_placeholders == {
-        "errors": "`entity_id` notify.mock_title_mock_chat_1: Action failed. mock network error\n`entity_id` notify.mock_title_mock_chat_2: Action failed. mock network error"
+        "errors": "`entity_id` notify.mock_title_mock_chat_1: mock network error\n`entity_id` notify.mock_title_mock_chat_2: mock network error"
     }
 
 
@@ -377,6 +377,8 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     await hass.async_block_till_done()
 
     mock_bot.assert_called_once()
+    assert err.typename == "HomeAssistantError"
+    assert "mock network error" in str(err.value)
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "action_failed"
 
@@ -566,7 +568,7 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
         "chats": [
             {
                 ATTR_CHAT_ID: 12345678,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
             }
         ]
@@ -646,14 +648,14 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     assert isinstance(events[0].context, Context)
 
 
-async def test_webhook_endpoint_generates_telegram_callback_event(
+async def test_webhook_callback_inline_query(
     hass: HomeAssistant,
     webhook_bot,
     hass_client: ClientSessionGenerator,
     update_callback_query,
     mock_generate_secret_token,
 ) -> None:
-    """POST to the configured webhook endpoint and assert fired `telegram_callback` event."""
+    """Test callback query triggered by inline query."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_callback")
 
@@ -670,6 +672,47 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+    assert isinstance(events[0].context, Context)
+
+
+async def test_webhook_callback_inline_keyboard(
+    hass: HomeAssistant,
+    webhook_bot: None,
+    hass_client: ClientSessionGenerator,
+    update_callback_inline_keyboard,
+    mock_generate_secret_token,
+) -> None:
+    """Test callback query triggered by inline keyboard button."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_callback")
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        json=update_callback_inline_keyboard,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert (
+        events[0].data["chat_id"]
+        == update_callback_inline_keyboard["callback_query"]["message"]["chat"]["id"]
+    )
+    expected_message = {
+        **update_callback_inline_keyboard["callback_query"]["message"],
+        "delete_chat_photo": False,
+        "group_chat_created": False,
+        "supergroup_chat_created": False,
+        "channel_chat_created": False,
+    }
+    assert events[0].data["message"] == expected_message
+    assert events[0].data["data"] == "/command arg1 arg2"
+    assert events[0].data["command"] == "/command"
+    assert events[0].data["args"] == ["arg1", "arg2"]
     assert isinstance(events[0].context, Context)
 
 
@@ -1012,7 +1055,7 @@ async def test_send_message_with_config_entry(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1099,7 +1142,7 @@ async def test_delete_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 1, ATTR_MESSAGEID: "last"},
+            {ATTR_CHAT_ID: 1, ATTR_MESSAGE_ID: "last"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -1123,7 +1166,7 @@ async def test_delete_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1136,7 +1179,7 @@ async def test_delete_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: "last"},
+            {ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: "last"},
             blocking=True,
         )
 
@@ -1195,7 +1238,7 @@ async def test_edit_message_media(
                 ATTR_CAPTION: "mock caption",
                 ATTR_FILE: "/tmp/mock",  # noqa: S108
                 ATTR_MEDIA_TYPE: media_type,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_CHAT_ID: 123456,
                 ATTR_KEYBOARD_INLINE: "/mock",
                 ATTR_PARSER: PARSER_MD,
@@ -1235,7 +1278,7 @@ async def test_edit_message(
             {
                 ATTR_MESSAGE: "mock message",
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_PARSER: PARSER_PLAIN_TEXT,
             },
             blocking=True,
@@ -1263,7 +1306,7 @@ async def test_edit_message(
             {
                 ATTR_CAPTION: "mock caption",
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_PARSER: PARSER_MD2,
             },
             blocking=True,
@@ -1287,7 +1330,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_REPLYMARKUP,
-            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
+            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: 12345},
             blocking=True,
         )
 
@@ -1400,10 +1443,9 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert (
-        err.value.args[0]
-        == "File path has not been configured in allowlist_external_dirs."
-    )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "allowlist_external_dirs_error"
 
     # test: missing username input
 
@@ -1420,7 +1462,10 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "Username is required."
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "missing_input"
+    assert err.value.translation_placeholders == {"field": "Username"}
 
     # test: missing password input
 
@@ -1436,7 +1481,10 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "Password is required."
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "missing_input"
+    assert err.value.translation_placeholders == {"field": "Password"}
 
     # test: 404 error
 
@@ -1459,8 +1507,11 @@ async def test_send_video(
             )
 
     await hass.async_block_till_done()
+
     assert mock_get.call_count > 0
-    assert err.value.args[0] == "Failed to load URL: 404"
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_url"
+    assert err.value.translation_placeholders == {"error": "404"}
 
     # test: invalid url
 
@@ -1478,11 +1529,13 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
+
     assert mock_get.call_count > 0
-    assert (
-        err.value.args[0]
-        == "Failed to load URL: Request URL is missing an 'http://' or 'https://' protocol."
-    )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_url"
+    assert err.value.translation_placeholders == {
+        "error": "Request URL is missing an 'http://' or 'https://' protocol."
+    }
 
     # test: no url/file input
 
@@ -1495,7 +1548,10 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "URL or File is required."
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "missing_input"
+    assert err.value.translation_placeholders == {"field": "URL or File"}
 
     # test: load file error (e.g. not found, permissions error)
 
@@ -1512,10 +1568,12 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert (
-        err.value.args[0]
-        == "Failed to load file: [Errno 2] No such file or directory: '/tmp/not-exists'"
-    )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_file"
+    assert err.value.translation_placeholders == {
+        "error": "[Errno 2] No such file or directory: '/tmp/not-exists'"
+    }
 
     # test: success with file
     write_utf8_file("/tmp/mock", "mock file contents")  # noqa: S108
@@ -1535,7 +1593,7 @@ async def test_send_video(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1567,7 +1625,7 @@ async def test_send_video(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
             }
         ]
@@ -1593,7 +1651,7 @@ async def test_set_message_reaction(
             "set_message_reaction",
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGEID: 54321,
+                ATTR_MESSAGE_ID: 54321,
                 "reaction": "👍",
                 "is_big": True,
             },
@@ -1718,7 +1776,7 @@ async def test_send_message_multi_target(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -1748,7 +1806,7 @@ async def test_notify_entity_send_message(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -1802,7 +1860,7 @@ async def test_migrate_chat_id(
         "chats": [
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGEID: 12345,
+                ATTR_MESSAGE_ID: 12345,
                 ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
@@ -2232,7 +2290,10 @@ async def test_download_file_when_bot_failed_to_get_file(
             blocking=True,
         )
     await hass.async_block_till_done()
+
+    assert err.typename == "HomeAssistantError"
     assert err.value.translation_key == "action_failed"
+    assert "failed to get file" in str(err.value)
 
 
 async def test_download_file_when_empty_file_path(

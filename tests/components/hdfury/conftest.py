@@ -103,7 +103,9 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
                 "mutetx1": "1",
                 "relay": "0",
                 "macaddr": "c7:1c:df:9d:f6:40",
+                "reboottimer": "0",
                 "oled": "1",
+                "oledfade": "30",
             }
         )
 
