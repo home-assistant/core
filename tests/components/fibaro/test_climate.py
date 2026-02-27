@@ -50,7 +50,7 @@ async def test_climate_setup_2_quickapps(
     mock_thermostat_quickapp_2: Mock,
     mock_room: Mock,
 ) -> None:
-    """Test that the climate creates entities for more then one QuickApp."""
+    """Test that the climate creates entities for more than one QuickApp."""
 
     # Arrange
     mock_fibaro_client.read_rooms.return_value = [mock_room]
