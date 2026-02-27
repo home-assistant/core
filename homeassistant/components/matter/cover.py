@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 from enum import IntEnum
 from math import floor
 from typing import Any
@@ -22,8 +20,8 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
@@ -32,6 +30,7 @@ from .models import MatterDiscoverySchema
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
+WRITE_STATE_DEBOUNCE_SECONDS = 0.1
 
 # map Matter window cover types to HA device class
 TYPE_MAP = {
@@ -73,8 +72,19 @@ class MatterCoverEntityDescription(CoverEntityDescription, MatterEntityDescripti
 class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
-    _cancel_write_state: Callable[[], None] | None = None
+    _write_state_debouncer: Debouncer[None] | None = None
     entity_description: MatterCoverEntityDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity has been added to Home Assistant."""
+        await super().async_added_to_hass()
+        self._write_state_debouncer = Debouncer(
+            self.hass,
+            LOGGER,
+            cooldown=WRITE_STATE_DEBOUNCE_SECONDS,
+            immediate=False,
+            function=self.async_write_ha_state,
+        )
 
     @property
     def is_closed(self) -> bool | None:
@@ -123,24 +133,15 @@ class MatterCover(MatterEntity, CoverEntity):
         """Handle updates from the device."""
         self._attr_available = self._endpoint.node.available
         self._update_from_device()
-        if self._cancel_write_state is not None:
-            self._cancel_write_state()
-        self._cancel_write_state = async_call_later(
-            self.hass, 0.1, self._async_write_state_later
-        )
-
-    @callback
-    def _async_write_state_later(self, now: datetime) -> None:
-        """Write the Home Assistant state after debouncing attribute updates."""
-        self._cancel_write_state = None
-        self.async_write_ha_state()
+        assert self._write_state_debouncer is not None
+        self._write_state_debouncer.async_schedule_call()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
         await super().async_will_remove_from_hass()
-        if self._cancel_write_state is not None:
-            self._cancel_write_state()
-            self._cancel_write_state = None
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_shutdown()
+            self._write_state_debouncer = None
 
     @callback
     def _update_from_device(self) -> None:
