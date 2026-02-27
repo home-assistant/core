@@ -14,19 +14,6 @@ from .const import DOMAIN
 
 ATTR_POWER_STATE = "power_state"
 
-# Fan
-SERVICE_SET_FAN_SPEED_TRACKED_STATE = "set_fan_speed_tracked_state"
-
-# Switch
-SERVICE_SET_POWER_TRACKED_STATE = "set_switch_power_tracked_state"
-
-# Light
-SERVICE_SET_LIGHT_POWER_TRACKED_STATE = "set_light_power_tracked_state"
-SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE = "set_light_brightness_tracked_state"
-SERVICE_START_INCREASING_BRIGHTNESS = "start_increasing_brightness"
-SERVICE_START_DECREASING_BRIGHTNESS = "start_decreasing_brightness"
-SERVICE_STOP = "stop"
-
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -36,7 +23,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+        "set_fan_speed_tracked_state",
         entity_domain=FAN_DOMAIN,
         schema={vol.Required("speed"): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
         func="async_set_speed_belief",
@@ -46,7 +33,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_INCREASING_BRIGHTNESS,
+        "start_increasing_brightness",
         entity_domain=LIGHT_DOMAIN,
         schema=None,
         func="async_start_increasing_brightness",
@@ -54,7 +41,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_DECREASING_BRIGHTNESS,
+        "start_decreasing_brightness",
         entity_domain=LIGHT_DOMAIN,
         schema=None,
         func="async_start_decreasing_brightness",
@@ -62,7 +49,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_STOP,
+        "stop",
         entity_domain=LIGHT_DOMAIN,
         schema=None,
         func="async_stop",
@@ -71,7 +58,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+        "set_light_brightness_tracked_state",
         entity_domain=LIGHT_DOMAIN,
         schema={
             vol.Required(ATTR_BRIGHTNESS): vol.All(
@@ -84,7 +71,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
+        "set_light_power_tracked_state",
         entity_domain=LIGHT_DOMAIN,
         schema={vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
         func="async_set_power_belief",
@@ -94,7 +81,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_POWER_TRACKED_STATE,
+        "set_switch_power_tracked_state",
         entity_domain=SWITCH_DOMAIN,
         schema={vol.Required(ATTR_POWER_STATE): cv.boolean},
         func="async_set_power_belief",
