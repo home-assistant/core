@@ -43,7 +43,6 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
 )
-from .issue import import_connection_error_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,7 +276,6 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = await _validate_influxdb_connection(self.hass, data)
         if errors:
-            import_connection_error_issue(self.hass, errors["base"])
             return self.async_abort(reason=errors["base"])
 
         return self.async_create_entry(title=title, data=data)

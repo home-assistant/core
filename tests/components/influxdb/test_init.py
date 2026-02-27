@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 import datetime
 from http import HTTPStatus
 import logging
@@ -13,11 +14,7 @@ from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    split_entity_id,
-)
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -173,8 +170,8 @@ async def test_setup_config_full(
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data == full_config
     assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN,
-        issue_id=f"deprecated_yaml_{DOMAIN}",
+        domain=DOMAIN,
+        issue_id="deprecated_yaml",
     )
 
 
@@ -402,13 +399,22 @@ async def test_setup_minimal_config(
     indirect=["mock_client"],
 )
 async def test_invalid_config(
-    hass: HomeAssistant, mock_client, config_ext, get_write_api
+    hass: HomeAssistant,
+    mock_client,
+    config_ext,
+    get_write_api,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the setup with invalid config or config options specified for wrong version."""
     config = {"influxdb": {}}
     config["influxdb"].update(config_ext)
 
-    assert not await async_setup_component(hass, influxdb.DOMAIN, config)
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_yaml_import_issue_invalid_config"
+    )
 
 
 @pytest.mark.parametrize(
@@ -2114,3 +2120,56 @@ async def test_precision(
     assert write_api.call_count == 1
     assert write_api.call_args == get_mock_call(body, precision)
     write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "get_write_api"),
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            {
+                "api_version": influxdb.DEFAULT_API_VERSION,
+                "host": "host",
+                "port": 123,
+                "username": "user",
+                "password": "password",
+                "database": "db",
+                "ssl": False,
+                "verify_ssl": False,
+            },
+            _get_write_api_mock_v1,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "token": "token",
+                "organization": "organization",
+                "bucket": "bucket",
+            },
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_import_connection_error(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a repair issue is created on import connection error."""
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = ConnectionError("fail")
+
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="deprecated_yaml_import_issue_cannot_connect",
+    )

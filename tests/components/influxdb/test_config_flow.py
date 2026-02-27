@@ -32,9 +32,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 from . import (
     BASE_V1_CONFIG,
@@ -694,7 +693,6 @@ async def test_import_connection_error(
     get_write_api: Any,
     test_exception: Exception,
     reason: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test abort on connection error."""
     write_api = get_write_api(mock_client)
@@ -708,15 +706,6 @@ async def test_import_connection_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="import_connection_error",
-    )
-    assert not issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN,
-        issue_id=f"deprecated_yaml_{DOMAIN}",
-    )
 
 
 @pytest.mark.parametrize(

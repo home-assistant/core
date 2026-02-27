@@ -154,7 +154,3 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
-
-COMPONENT_CONFIG_SCHEMA_CONNECTION_KEYS_WITHOUT_DEFAULT = {
-    k for k in COMPONENT_CONFIG_SCHEMA_CONNECTION if k.default is vol.UNDEFINED
-}

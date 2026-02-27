@@ -43,6 +43,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
@@ -61,7 +62,6 @@ from .const import (
     CLIENT_ERROR_V2,
     CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
-    COMPONENT_CONFIG_SCHEMA_CONNECTION_KEYS_WITHOUT_DEFAULT,
     CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
@@ -105,7 +105,7 @@ from .const import (
     WRITE_ERROR,
     WROTE_MESSAGE,
 )
-from .issue import deprecate_yaml_issue
+from .issue import async_create_deprecated_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,11 +195,7 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     }
 )
 
-INFLUX_SCHEMA = vol.All(
-    _INFLUX_BASE_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
-    validate_version_specific_config,
-    create_influx_url,
-)
+INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -484,24 +480,48 @@ def get_influx_connection(  # noqa: C901
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
-    conf = config.get(DOMAIN)
+    if DOMAIN not in config:
+        return True
 
-    if conf is not None:
-        if conf.keys() & COMPONENT_CONFIG_SCHEMA_CONNECTION_KEYS_WITHOUT_DEFAULT:
-            deprecate_yaml_issue(hass)
-
-        if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
-            conf[CONF_HOST] = DEFAULT_HOST
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            )
-        )
+    hass.async_create_task(_async_setup(hass, config[DOMAIN]))
 
     return True
+
+
+async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Import YAML configuration into a config entry."""
+    try:
+        validated = vol.All(
+            vol.Schema(COMPONENT_CONFIG_SCHEMA_CONNECTION, extra=vol.ALLOW_EXTRA),
+            validate_version_specific_config,
+            create_influx_url,
+        )(config)
+    except vol.Invalid:
+        async_create_deprecated_yaml_issue(hass, error="invalid_config")
+        return
+
+    if (
+        CONF_HOST not in validated
+        and validated[CONF_API_VERSION] == DEFAULT_API_VERSION
+    ):
+        validated[CONF_HOST] = DEFAULT_HOST
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=validated,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "single_instance_allowed"
+    ):
+        async_create_deprecated_yaml_issue(
+            hass, error=result.get("reason", "unknown")
+        )
+        return
+
+    if config.keys() & set(COMPONENT_CONFIG_SCHEMA_CONNECTION):
+        async_create_deprecated_yaml_issue(hass)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
