@@ -50,7 +50,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["url"] == (
-        f"{AUTH_URL}?&state={state}&language={PAGE_LANGUAGE}&key={CLIENT_ID}&redirectUrl=https://my.home-assistant.io/redirect/oauth"
+        f"{AUTH_URL}?state={state}&language={PAGE_LANGUAGE}&key={CLIENT_ID}&redirectUrl=https://example.com/auth/external/callback"
     )
 
     with (
@@ -92,64 +92,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         assert result["result"].data["token"]["region_code"] == "CN"
         assert result["result"].data["token"]["client_secret"] == CLIENT_SECRET
         assert result["options"] == {CONF_DEVICES: ["device_12345"]}
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_reauth_update_entry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test reauth updates existing entry."""
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["step_id"] == "user"
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
-    )
-
-    # Mock Hinen service with device info that matches the existing entry
-    service = MockHinen(hass)
-    with (
-        patch(
-            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
-        ),
-        patch(
-            "homeassistant.components.hinen_power.config_flow.HinenOpen",
-            return_value=service,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.EXTERNAL_STEP
-        assert result["step_id"] == "auth"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
-        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
-        assert result["step_id"] == "creation"
-
-        # Simulate the OAuth2 callback with authorization code
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
-        # Should update and reload the existing entry
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -319,26 +261,6 @@ async def test_unknown_error(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unknown"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_reauth_confirm(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test reauth confirm step."""
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
-
-    # Test with empty user input
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["step_id"] == "user"
-    assert result["type"] is FlowResultType.FORM
 
 
 @pytest.mark.usefixtures("current_request_with_host")

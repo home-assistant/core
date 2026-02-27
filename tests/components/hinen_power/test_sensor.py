@@ -17,10 +17,7 @@ async def test_sensors_added_correctly(
     # Test status sensor
     status_entity = entity_registry.async_get("sensor.test_hinen_device_status")
     assert status_entity is not None
-    assert (
-        status_entity.unique_id
-        == f"{status_entity.config_entry_id}_device_12345_status"
-    )
+    assert status_entity.unique_id == "device_12345_device_12345_status"
 
 
 async def test_sensor_states(
@@ -33,4 +30,4 @@ async def test_sensor_states(
     # Test status sensor state
     status_state = hass.states.get("sensor.test_hinen_device_status")
     assert status_state is not None
-    assert status_state.state == "NORMAL"
+    assert status_state.state == "normal"

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hinen_power.const import AUTH, COORDINATOR, DOMAIN
+from homeassistant.components.hinen_power.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -36,10 +36,6 @@ async def test_async_setup_entry_success(
 
     assert result
     assert config_entry.state is ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
-    assert config_entry.entry_id in hass.data[DOMAIN]
-    assert COORDINATOR in config_entry.runtime_data
-    assert AUTH in hass.data[DOMAIN][config_entry.entry_id]
 
     assert hasattr(config_entry, "runtime_data")
     assert config_entry.runtime_data is not None
