@@ -175,17 +175,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass, host, location=constructed_location
             )
 
-            wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-            if wiim_data and wiim_data.controller:
-                wiim_device_sdk = wiim_data.controller.get_device(udn_from_txt)
-                if wiim_device_sdk and not wiim_device_sdk.available:
-                    if not await wiim_device_sdk.async_init_services_and_subscribe():
-                        LOGGER.warning(
-                            "Device %s initialized with potentially limited UPnP functionality (location was: %s). HTTP API might be primary",
-                            udn_from_txt,
-                            constructed_location or "Unknown",
-                        )
-
         except CannotConnect:
             try:
                 device_info = await _validate_device_and_get_info(
