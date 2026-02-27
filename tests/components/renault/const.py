@@ -62,7 +62,7 @@ MOCK_VEHICLES = {
             "pressure": "pressure.1.json",
         },
     },
-    "megane_e-tech": {
+    "megane_e_tech": {
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charging_settings": "charging_settings_always.json",
