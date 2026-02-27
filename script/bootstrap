@@ -4,35 +4,43 @@
 # Stop on errors
 set -e
 
+usage() {
+    echo "Usage: ./script/setup [--all | --base]"
+    exit 1
+}
+
 cd "$(realpath "$(dirname "$0")/..")"
 
-INSTALL_PARMS="-r requirements_test_all.txt"
-
-# Parse arguments
-while [ $# -gt 0 ]; do
-  case $1 in
-    --all)
-      shift
-      ;;
-    --base)
-      INSTALL_PARMS="-r requirements_test.txt --constraint homeassistant/package_constraints.txt"
-      shift
-      ;;
+case "$#" in
+    0)
+        MODE="_all"
+        ;;
+    1)
+        case "$1" in
+            --all)
+                MODE="_all"
+                ;;
+            --base)
+                MODE=""
+                ;;
+            *)
+                echo "Error: unknown option '$1'" >&2
+                usage
+                ;;
+        esac
+        ;;
     *)
-      echo "Unknown option: $1"
-      echo "Usage: ./script/[setup | bootstrap] [--all | --base]"
-      echo "  Defaults to --all"
-      exit 1
-      ;;
-  esac
-done
+        echo "Error: too many arguments" >&2
+        usage
+        ;;
+esac
 
 echo "Installing development dependencies..."
-uv pip install \
+echo uv pip install \
   -e . \
-  $INSTALL_PARMS \
+  -r requirements_test$MODE.txt \
   colorlog \
   --upgrade \
   --config-settings editable_mode=compat
 
-python3 -m script.translations develop --all
+echo python3 -m script.translations develop --all
