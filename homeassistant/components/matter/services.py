@@ -30,6 +30,8 @@ ATTR_DURATION = "duration"
 ATTR_EMERGENCY_BOOST = "emergency_boost"
 ATTR_TEMPORARY_SETPOINT = "temporary_setpoint"
 
+SERVICE_WATER_HEATER_BOOST = "water_heater_boost"
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -38,7 +40,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "water_heater_boost",
+        SERVICE_WATER_HEATER_BOOST,
         entity_domain=WATER_HEATER_DOMAIN,
         schema={
             # duration >=1
