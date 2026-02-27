@@ -31,7 +31,7 @@ from .const import (
     WiimData,
 )
 
-type WiimConfigEntry = ConfigEntry
+type WiimConfigEntry = ConfigEntry[WiimDevice]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
