@@ -78,6 +78,9 @@ query ($owner: String!, $repository: String!) {
         number
       }
     }
+    merged_pull_request: pullRequests(states: MERGED) {
+      total: totalCount
+    }
     release: latestRelease {
       name
       url
