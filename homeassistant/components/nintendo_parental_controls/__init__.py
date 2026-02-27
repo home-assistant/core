@@ -20,11 +20,11 @@ from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoor
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
-    Platform.TIME,
-    Platform.SWITCH,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
 ]
 
 PLATFORM_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

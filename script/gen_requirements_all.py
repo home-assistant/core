@@ -212,9 +212,6 @@ num2words==0.5.14
 # This ensures all use the same version
 pymodbus==3.11.2
 
-# Some packages don't support gql 4.0.0 yet
-gql<4.0.0
-
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
 

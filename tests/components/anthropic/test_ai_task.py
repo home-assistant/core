@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from . import create_content_block, create_tool_use_block
+from . import create_content_block, create_thinking_block, create_tool_use_block
 
 from tests.common import MockConfigEntry
 
@@ -52,6 +52,18 @@ async def test_generate_data(
     )
 
     assert result.data == "The test data"
+
+
+async def test_translation_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity translation key."""
+    entry = entity_registry.async_get("ai_task.claude_ai_task")
+    assert entry is not None
+    assert entry.translation_key == "ai_task_data"
 
 
 async def test_empty_data(
@@ -95,7 +107,7 @@ async def test_generate_structured_data_legacy(
 
     mock_create_stream.return_value = [
         create_tool_use_block(
-            1,
+            0,
             "toolu_0123456789AbCdEfGhIjKlM",
             "test_task",
             ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
@@ -135,7 +147,7 @@ async def test_generate_structured_data_legacy_tools(
     """Test AI Task structured data generation with legacy method and tools enabled."""
     mock_create_stream.return_value = [
         create_tool_use_block(
-            1,
+            0,
             "toolu_0123456789AbCdEfGhIjKlM",
             "test_task",
             ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
@@ -181,11 +193,74 @@ async def test_generate_structured_data_legacy_extended_thinking(
 ) -> None:
     """Test AI Task structured data generation with legacy method and extended_thinking."""
     mock_create_stream.return_value = [
-        create_tool_use_block(
-            1,
-            "toolu_0123456789AbCdEfGhIjKlM",
-            "test_task",
-            ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+        (
+            *create_thinking_block(
+                0,
+                ["Let's use the tool to respond"],
+            ),
+            *create_tool_use_block(
+                1,
+                "toolu_0123456789AbCdEfGhIjKlM",
+                "test_task",
+                ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+            ),
+        ),
+    ]
+
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={
+                "chat_model": "claude-sonnet-4-0",
+                "thinking_budget": 1500,
+            },
+        )
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+        structure=vol.Schema(
+            {
+                vol.Required("characters"): selector.selector(
+                    {
+                        "text": {
+                            "multiple": True,
+                        }
+                    }
+                )
+            },
+        ),
+    )
+
+    assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args.kwargs.copy() == snapshot
+
+
+@freeze_time("2026-01-01 12:00:00")
+async def test_generate_structured_data_legacy_extra_text_block(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test AI Task structured data generation with legacy method and extra text block."""
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["Let's use the tool to respond"],
+            ),
+            *create_content_block(1, ["Sure!"]),
+            *create_tool_use_block(
+                2,
+                "toolu_0123456789AbCdEfGhIjKlM",
+                "test_task",
+                ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+            ),
         ),
     ]
 
@@ -239,7 +314,7 @@ async def test_generate_invalid_structured_data_legacy(
 
     mock_create_stream.return_value = [
         create_tool_use_block(
-            1,
+            0,
             "toolu_0123456789AbCdEfGhIjKlM",
             "test_task",
             "INVALID JSON RESPONSE",
