@@ -192,7 +192,7 @@ async def test_zone_services_with_ctl_id(
     service: EvoService,
     service_data: dict[str, Any],
 ) -> None:
-    """Test calling zone-only service with a non-zone entity_id fails."""
+    """Test calling zone-only services with a non-zone entity_id fail."""
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
