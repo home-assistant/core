@@ -314,11 +314,18 @@ def async_get(hass: HomeAssistant) -> IssueRegistry:
     return IssueRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
+async def async_load(
+    hass: HomeAssistant,
+    *,
+    read_only: bool = False,
+    load_empty: bool = False,
+) -> None:
     """Load issue registry."""
     ir = async_get(hass)
     if read_only:  # only used in for check config script
         ir.make_read_only()
+    if load_empty:
+        ir.set_load_empty()
     return await ir.async_load()
 
 

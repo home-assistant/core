@@ -94,7 +94,7 @@ class FloorRegistryStore(Store[FloorRegistryStoreData]):
     ) -> FloorRegistryStoreData:
         """Migrate to the new version."""
         if old_major_version > STORAGE_VERSION_MAJOR:
-            raise ValueError("Can't migrate to future version")
+            raise NotImplementedError
 
         if old_major_version == 1:
             if old_minor_version < 2:
@@ -353,7 +353,10 @@ def async_get(hass: HomeAssistant) -> FloorRegistry:
     return FloorRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load floor registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    registry = async_get(hass)
+    if load_empty:
+        registry.set_load_empty()
+    await registry.async_load()

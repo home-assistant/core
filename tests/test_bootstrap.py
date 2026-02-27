@@ -20,7 +20,7 @@ from homeassistant.const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
@@ -965,6 +965,49 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
     assert "Starting in safe mode" not in caplog.text
 
 
+@pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_storage_version_too_new_triggers_recovery_mode(
+    mock_enable_logging: AsyncMock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a storage file with a newer major version triggers recovery mode."""
+    original_load = bootstrap.async_load_base_functionality
+    call_count = 0
+
+    async def _raise_first_call(hass: HomeAssistant) -> None:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise UnsupportedStorageVersionError("core.entity_registry", 2, 1)
+        return await original_load(hass)
+
+    with patch(
+        "homeassistant.bootstrap.async_load_base_functionality",
+        side_effect=_raise_first_call,
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=False,
+            ),
+        )
+
+    assert hass is not None
+    assert hass.config.recovery_mode is True
+    assert "recovery_mode" in hass.config.components
+    assert "storage version 2 > 1" in caplog.text
+
+
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
@@ -1728,3 +1771,19 @@ async def test_recorder_not_promoted(hass: HomeAssistant) -> None:
     )
 
     assert "recorder" not in all_integrations
+
+
+async def test_async_from_config_dict_returns_none_on_storage_version_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_from_config_dict returns None on UnsupportedStorageVersionError."""
+    with patch(
+        "homeassistant.bootstrap.async_load_base_functionality",
+        side_effect=UnsupportedStorageVersionError("core.entity_registry", 99, 1),
+    ):
+        result = await bootstrap.async_from_config_dict({}, hass)
+
+    assert result is None
+    assert "core.entity_registry" in caplog.text
+    assert "storage version 99 > 1" in caplog.text

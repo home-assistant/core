@@ -1945,10 +1945,13 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
     return EntityRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    registry = async_get(hass)
+    if load_empty:
+        registry.set_load_empty()
+    await registry.async_load()
 
 
 @callback

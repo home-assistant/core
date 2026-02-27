@@ -70,7 +70,7 @@ from .const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
-from .exceptions import HomeAssistantError
+from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from .helpers import (
     area_registry,
     category_registry,
@@ -442,19 +442,20 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
+    load_empty = hass.config.recovery_mode
     await asyncio.gather(
         create_eager_task(get_internal_store_manager(hass).async_initialize()),
-        create_eager_task(area_registry.async_load(hass)),
-        create_eager_task(category_registry.async_load(hass)),
-        create_eager_task(device_registry.async_load(hass)),
-        create_eager_task(entity_registry.async_load(hass)),
-        create_eager_task(floor_registry.async_load(hass)),
-        create_eager_task(issue_registry.async_load(hass)),
-        create_eager_task(label_registry.async_load(hass)),
+        create_eager_task(area_registry.async_load(hass, load_empty=load_empty)),
+        create_eager_task(category_registry.async_load(hass, load_empty=load_empty)),
+        create_eager_task(device_registry.async_load(hass, load_empty=load_empty)),
+        create_eager_task(entity_registry.async_load(hass, load_empty=load_empty)),
+        create_eager_task(floor_registry.async_load(hass, load_empty=load_empty)),
+        create_eager_task(issue_registry.async_load(hass, load_empty=load_empty)),
+        create_eager_task(label_registry.async_load(hass, load_empty=load_empty)),
         hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
         create_eager_task(template.async_load_custom_templates(hass)),
-        create_eager_task(restore_state.async_load(hass)),
-        create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(restore_state.async_load(hass, load_empty=load_empty)),
+        create_eager_task(hass.config_entries.async_initialize(load_empty=load_empty)),
         create_eager_task(async_get_system_info(hass)),
         create_eager_task(condition.async_setup(hass)),
         create_eager_task(trigger.async_setup(hass)),
@@ -475,7 +476,18 @@ async def async_from_config_dict(
     # Prime custom component cache early so we know if registry entries are tied
     # to a custom integration
     await loader.async_get_custom_components(hass)
-    await async_load_base_functionality(hass)
+    try:
+        await async_load_base_functionality(hass)
+    except UnsupportedStorageVersionError as err:
+        _LOGGER.error(
+            "Storage file %s was created by a newer version of Home Assistant"
+            " (storage version %s > %s); activating recovery mode; on-disk data"
+            " is preserved; upgrade Home Assistant or restore from a backup",
+            err.storage_key,
+            err.found_version,
+            err.expected_version,
+        )
+        return None
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)

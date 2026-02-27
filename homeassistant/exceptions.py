@@ -381,3 +381,20 @@ class DependencyError(HomeAssistantError):
             f"Could not setup dependencies: {', '.join(failed_dependencies)}",
         )
         self.failed_dependencies = failed_dependencies
+
+
+class UnsupportedStorageVersionError(HomeAssistantError):
+    """Raised when a storage file has a newer major version than expected."""
+
+    def __init__(
+        self, storage_key: str, found_version: int, expected_version: int
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Storage file {storage_key} has version {found_version}"
+            f" which is newer than the expected version {expected_version};"
+            " upgrade Home Assistant or restore from a backup",
+        )
+        self.storage_key = storage_key
+        self.found_version = found_version
+        self.expected_version = expected_version

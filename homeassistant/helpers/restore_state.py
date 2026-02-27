@@ -95,9 +95,12 @@ class StoredState:
         )
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load the restore state task."""
-    await async_get(hass).async_setup()
+    data = async_get(hass)
+    if load_empty:
+        data.set_load_empty()
+    await data.async_setup()
 
 
 @callback
@@ -123,6 +126,10 @@ class RestoreStateData:
         )
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
+
+    def set_load_empty(self) -> None:
+        """Set the store to load empty and become read-only."""
+        self.store.set_load_empty()
 
     async def async_setup(self) -> None:
         """Set up up the instance of this data helper."""
