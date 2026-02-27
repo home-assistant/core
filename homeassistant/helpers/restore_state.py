@@ -9,7 +9,7 @@ from typing import Any, Self, cast
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
@@ -146,6 +146,8 @@ class RestoreStateData:
         """Load the instance of this data helper."""
         try:
             stored_states = await self.store.async_load()
+        except UnsupportedStorageVersionError:
+            raise
         except HomeAssistantError as exc:
             _LOGGER.error("Error loading last states", exc_info=exc)
             stored_states = None
