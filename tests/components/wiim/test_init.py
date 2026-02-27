@@ -75,13 +75,13 @@ async def test_async_setup_entry_device_init_failure(
 
     with (
         patch("homeassistant.components.wiim.UpnpFactory") as mock_factory_class,
-        patch("wiim.endpoint.WiimApiEndpoint"),
-        patch("wiim.wiim_device.WiimDevice"),
+        patch("homeassistant.components.wiim.WiimApiEndpoint"),
+        patch("homeassistant.components.wiim.WiimDevice"),
         patch(
             "homeassistant.components.wiim.async_get_clientsession",
             return_value=AsyncMock(),
         ),
-        patch("wiim.controller.WiimController") as mock_controller_class,
+        patch("homeassistant.components.wiim.WiimController") as mock_controller_class,
     ):
         mock_factory_instance = MagicMock()
         mock_factory_instance.async_create_device = AsyncMock(
