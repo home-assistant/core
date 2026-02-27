@@ -1221,29 +1221,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     f"Invalid media_id: {media_id}. Expected a valid preset number."
                 ) from None
         elif media_type in {MediaType.MUSIC, MEDIA_TYPE_WIIM_LIBRARY}:
-            try:
-                if media_id.isdigit():
-                    preset_number = int(media_id)
-                    if not self._device.supports_http_api:
-                        raise HomeAssistantError(
-                            f"HTTP API not available for {self._device.name} to play preset."
-                        )
-                    await self._device.play_preset(preset_number)
-                    self._attr_media_content_id = f"wiim_preset_{preset_number}"
-                    self._attr_media_content_type = MediaType.PLAYLIST
-                    self._attr_state = MediaPlayerState.PLAYING
-                else:
-                    LOGGER.warning(
-                        "Skipping media_id %s: not a valid preset number", media_id
+            if media_id.isdigit():
+                preset_number = int(media_id)
+                if not self._device.supports_http_api:
+                    raise HomeAssistantError(
+                        f"HTTP API not available for {self._device.name} to play preset."
                     )
-            except ValueError:
-                LOGGER.error(
-                    "Invalid media_id for playlist/library: %s. Expected integer preset number",
-                    media_id,
-                )
-                raise HomeAssistantError(
-                    f"Invalid media_id: {media_id}. Expected a valid preset number."
-                ) from None
+                await self._device.play_preset(preset_number)
+                self._attr_media_content_id = f"wiim_preset_{preset_number}"
+                self._attr_media_content_type = MediaType.PLAYLIST
+                self._attr_state = MediaPlayerState.PLAYING
+            else:
+                raise HomeAssistantError(f"Invalid preset ID: {media_id}")
         elif media_type == MediaType.TRACK:
             try:
                 track_index = int(media_id)
