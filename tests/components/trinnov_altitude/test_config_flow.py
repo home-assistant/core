@@ -1,0 +1,97 @@
+"""Tests for Trinnov Altitude config flow."""
+
+from unittest.mock import AsyncMock
+
+from trinnov_altitude.exceptions import ConnectionFailedError, ConnectionTimeoutError
+
+from homeassistant.components.trinnov_altitude.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from . import MOCK_HOST, MOCK_MAC
+
+from tests.common import MockConfigEntry
+
+CONTEXT = {"source": SOURCE_USER}
+DATA = {CONF_HOST: MOCK_HOST, CONF_MAC: MOCK_MAC}
+
+
+async def test_user_config_flow_connection_failed(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow connection failed."""
+    mock_device.start.side_effect = ConnectionFailedError(OSError("message"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context=CONTEXT, data=DATA
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"host": "invalid_host"}
+
+
+async def test_user_config_flow_connection_timeout(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow connection timeout."""
+    mock_device.start.side_effect = ConnectionTimeoutError("message")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context=CONTEXT, data=DATA
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_config_flow_success(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow success."""
+    mock_device.start.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context=CONTEXT)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MOCK_HOST, CONF_MAC: MOCK_MAC}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "data" in result
+    assert result["data"][CONF_HOST] == MOCK_HOST
+
+
+async def test_user_config_flow_device_exists_abort(
+    hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
+) -> None:
+    """Test flow aborts when device already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=CONTEXT,
+        data=DATA,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_config_flow_without_mac(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow without MAC address."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context=CONTEXT)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == MOCK_HOST
+    assert result["data"][CONF_MAC] is None
