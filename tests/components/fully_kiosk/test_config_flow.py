@@ -168,6 +168,7 @@ async def test_duplicate_updates_existing_entry(
 async def test_dhcp_discovery_updates_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test DHCP discovery updates config entries."""
     mock_config_entry.add_to_hass(hass)
