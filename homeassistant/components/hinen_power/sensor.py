@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -22,16 +22,13 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     ATTR_ALERT_STATUS,
     ATTR_STATUS,
-    AUTH,
-    COORDINATOR,
     CUMULATIVE_CONSUMPTION,
     CUMULATIVE_GRID_FEED_IN,
     CUMULATIVE_PRODUCTION_ACTIVE,
-    DOMAIN,
     TOTAL_CHARGING_ENERGY,
     TOTAL_DISCHARGING_ENERGY,
 )
-from .coordinator import HinenDataUpdateCoordinator
+from .coordinator import HinenDataUpdateCoordinator, HinenPowerConfigEntry
 from .entity import HinenDeviceEntity
 from .enum import DeviceAlertStatus, DeviceStatus
 
@@ -48,66 +45,75 @@ SENSOR_TYPES = [
     HinenSensorEntityDescription(
         key=ATTR_STATUS,
         translation_key=ATTR_STATUS,
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.name.lower() for status in DeviceStatus],
         available_fn=lambda device_detail: device_detail[ATTR_STATUS] is not None,
-        value_fn=lambda device_detail: DeviceStatus.get_display_name(
+        value_fn=lambda device_detail: DeviceStatus(
             device_detail[ATTR_STATUS]
-        ),
+        ).name.lower(),
     ),
     HinenSensorEntityDescription(
         key=ATTR_ALERT_STATUS,
         translation_key=ATTR_ALERT_STATUS,
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.name.lower() for status in DeviceAlertStatus],
         available_fn=lambda device_detail: device_detail[ATTR_ALERT_STATUS] is not None,
-        value_fn=lambda device_detail: DeviceAlertStatus.get_display_name(
+        value_fn=lambda device_detail: DeviceAlertStatus(
             device_detail[ATTR_ALERT_STATUS]
-        ),
+        ).name.lower(),
     ),
     HinenSensorEntityDescription(
         key=CUMULATIVE_CONSUMPTION,
         translation_key=CUMULATIVE_CONSUMPTION,
-        available_fn=lambda device_detail: device_detail[CUMULATIVE_CONSUMPTION]
-        is not None,
+        available_fn=lambda device_detail: (
+            device_detail[CUMULATIVE_CONSUMPTION] is not None
+        ),
         value_fn=lambda device_detail: device_detail[CUMULATIVE_CONSUMPTION],
-        native_unit_of_measurement="kWh",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     HinenSensorEntityDescription(
         key=CUMULATIVE_PRODUCTION_ACTIVE,
         translation_key=CUMULATIVE_PRODUCTION_ACTIVE,
-        available_fn=lambda device_detail: device_detail[CUMULATIVE_PRODUCTION_ACTIVE]
-        is not None,
+        available_fn=lambda device_detail: (
+            device_detail[CUMULATIVE_PRODUCTION_ACTIVE] is not None
+        ),
         value_fn=lambda device_detail: device_detail[CUMULATIVE_PRODUCTION_ACTIVE],
-        native_unit_of_measurement="kWh",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     HinenSensorEntityDescription(
         key=CUMULATIVE_GRID_FEED_IN,
         translation_key=CUMULATIVE_GRID_FEED_IN,
-        available_fn=lambda device_detail: device_detail[CUMULATIVE_GRID_FEED_IN]
-        is not None,
+        available_fn=lambda device_detail: (
+            device_detail[CUMULATIVE_GRID_FEED_IN] is not None
+        ),
         value_fn=lambda device_detail: device_detail[CUMULATIVE_GRID_FEED_IN],
-        native_unit_of_measurement="kWh",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     HinenSensorEntityDescription(
         key=TOTAL_CHARGING_ENERGY,
         translation_key=TOTAL_CHARGING_ENERGY,
-        available_fn=lambda device_detail: device_detail[TOTAL_CHARGING_ENERGY]
-        is not None,
+        available_fn=lambda device_detail: (
+            device_detail[TOTAL_CHARGING_ENERGY] is not None
+        ),
         value_fn=lambda device_detail: device_detail[TOTAL_CHARGING_ENERGY],
-        native_unit_of_measurement="kWh",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     HinenSensorEntityDescription(
         key=TOTAL_DISCHARGING_ENERGY,
         translation_key=TOTAL_DISCHARGING_ENERGY,
-        available_fn=lambda device_detail: device_detail[TOTAL_DISCHARGING_ENERGY]
-        is not None,
+        available_fn=lambda device_detail: (
+            device_detail[TOTAL_DISCHARGING_ENERGY] is not None
+        ),
         value_fn=lambda device_detail: device_detail[TOTAL_DISCHARGING_ENERGY],
-        native_unit_of_measurement="kWh",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
@@ -116,13 +122,12 @@ SENSOR_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HinenPowerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hinen sensor."""
-    coordinator: HinenDataUpdateCoordinator = entry.runtime_data[COORDINATOR]
-
-    hinen_open: HinenOpen = hass.data[DOMAIN][entry.entry_id][AUTH].hinen_open
+    coordinator: HinenDataUpdateCoordinator = entry.runtime_data.coordinator
+    hinen_open: HinenOpen = entry.runtime_data.auth.hinen_open
 
     entities: list = [
         HinenSensor(coordinator, hinen_open, sensor_type, device_id)

@@ -5,7 +5,6 @@ from __future__ import annotations
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 
 from homeassistant.components.application_credentials import ClientCredential
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -18,13 +17,17 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import application_credentials
 from .auth_config import AsyncConfigEntryAuth
-from .const import AUTH, COORDINATOR, DOMAIN
-from .coordinator import HinenDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import (
+    HinenDataUpdateCoordinator,
+    HinenPowerConfigEntry,
+    HinenPowerRuntimeData,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HinenPowerConfigEntry) -> bool:
     """Set up the Hinen Auth component."""
     hinen_auth_impl: AbstractOAuth2Implementation = (
         await application_credentials.async_get_auth_implementation(
@@ -52,18 +55,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = HinenDataUpdateCoordinator(hass, entry, auth)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        AUTH: auth,
-    }
 
-    entry.runtime_data = {COORDINATOR: coordinator}
+    entry.runtime_data = HinenPowerRuntimeData(
+        coordinator=coordinator,
+        auth=auth,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HinenPowerConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

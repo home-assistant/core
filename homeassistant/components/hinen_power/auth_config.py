@@ -2,13 +2,11 @@
 
 from json import JSONDecodeError
 import logging
-import secrets
 from typing import Any, cast
 
 from aiohttp import ClientError
 from hinen_open_api import HinenOpen
 from hinen_open_api.utils import RespUtil
-import jwt
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
@@ -21,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ATTR_AUTH_LANGUAGE, ATTR_REGION_CODE, HOST, REGION_CODE
+from .const import ATTR_AUTH_LANGUAGE, ATTR_REGION_CODE, DOMAIN, HOST, REGION_CODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,21 +82,12 @@ class HinenImplementation(AuthImplementation):
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
-        if (
-            secret := self.hass.data.get(config_entry_oauth2_flow.DATA_JWT_SECRET)
-        ) is None:
-            secret = self.hass.data[config_entry_oauth2_flow.DATA_JWT_SECRET] = (
-                secrets.token_hex()
-            )
+        # Get standard authorization URL from parent class
+        standard_url = await super().async_generate_authorize_url(flow_id)
 
-        state = jwt.encode(
-            {"flow_id": flow_id, "redirect_uri": self.redirect_uri},
-            secret,
-            algorithm="HS256",
-        )
-
-        redirectUrl = "https://my.home-assistant.io/redirect/oauth"
-        return f"{self.authorize_url}?&state={state}&language={self.hass.data[ATTR_AUTH_LANGUAGE]}&key={self.client_id}&redirectUrl={redirectUrl}"
+        # Extract state from standard URL
+        state = URL(standard_url).query.get("state")
+        return f"{self.authorize_url}?state={state}&language={self.hass.data.get(DOMAIN, {}).get(ATTR_AUTH_LANGUAGE)}&key={self.client_id}&redirectUrl={self.redirect_uri}"
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
@@ -107,7 +96,7 @@ class HinenImplementation(AuthImplementation):
             "clientSecret": self.client_secret,
             "grantType": "1",
             "authorizationCode": external_data["code"],
-            "regionCode": self.hass.data[ATTR_REGION_CODE],
+            "regionCode": self.hass.data.get(DOMAIN, {}).get(ATTR_REGION_CODE),
         }
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
@@ -134,7 +123,7 @@ class HinenImplementation(AuthImplementation):
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
+            except ClientError, JSONDecodeError:
                 error_response = {}
             error_code = error_response.get("code", "unknown")
             error_description = error_response.get("msg", "unknown error")

@@ -3,6 +3,7 @@
     "abort": {
       "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "failed_to_fetch_countries": "Failed to fetch country list. Please check your network connection and try again.",
       "no_device": "Please create a Hinen Device to be able to use the integration",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
@@ -52,7 +53,13 @@
   "entity": {
     "sensor": {
       "alert_status": {
-        "name": "Alert Status"
+        "name": "Alert Status",
+        "state": {
+          "alarm": "ALARM",
+          "error": "ERROR",
+          "normal": "NORMAL",
+          "unknown": "UNKNOWN"
+        }
       },
       "cumulative_consumption": {
         "name": "Cumulative Consumption"
@@ -64,7 +71,13 @@
         "name": "Cumulative Production Active"
       },
       "status": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "normal": "NORMAL",
+          "off": "OFF",
+          "sleep": "SLEEP",
+          "unknown": "UNKNOWN"
+        }
       },
       "total_charging_energy": {
         "name": "Total Charging Energy"

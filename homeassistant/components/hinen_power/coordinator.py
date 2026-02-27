@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -25,13 +26,27 @@ from .const import (
 )
 
 
+@dataclass
+class HinenPowerRuntimeData:
+    """Hinen power runtime data."""
+
+    coordinator: HinenDataUpdateCoordinator
+    auth: AsyncConfigEntryAuth
+
+
+type HinenPowerConfigEntry = ConfigEntry[HinenPowerRuntimeData]
+
+
 class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A Hinen Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: HinenPowerConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, auth: AsyncConfigEntryAuth
+        self,
+        hass: HomeAssistant,
+        config_entry: HinenPowerConfigEntry,
+        auth: AsyncConfigEntryAuth,
     ) -> None:
         """Initialize the Hinen data coordinator."""
         self._auth = auth

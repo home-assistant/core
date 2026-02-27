@@ -9,17 +9,11 @@ class DeviceStatus(Enum):
     OFF = 0
     NORMAL = 1
     SLEEP = 2
+    UNKNOWN = -1
 
     @classmethod
-    def get_display_name(cls, value: int) -> str:
-        """Get display name."""
-        mapping = {
-            cls.NORMAL.value: "NORMAL",
-            cls.OFF.value: "OFF",
-            cls.SLEEP.value: "SLEEP",
-        }
-
-        return mapping.get(value, "UNKNOWN")
+    def _missing_(cls, value):
+        return cls.UNKNOWN
 
 
 class DeviceAlertStatus(Enum):
@@ -28,14 +22,8 @@ class DeviceAlertStatus(Enum):
     NORMAL = 0
     ALARM = 1
     ERROR = 2
+    UNKNOWN = -1
 
     @classmethod
-    def get_display_name(cls, value: int) -> str:
-        """Get display name."""
-        mapping = {
-            cls.NORMAL.value: "NORMAL",
-            cls.ALARM.value: "ALARM",
-            cls.ERROR.value: "ERROR",
-        }
-
-        return mapping.get(value, "UNKNOWN")
+    def _missing_(cls, value):
+        return cls.UNKNOWN
