@@ -11,9 +11,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -24,8 +25,8 @@ from .const import (
     INCOMING_ASPECT_RATIO,
     INCOMING_BIT_DEPTH,
     INCOMING_BLACK_LEVELS,
-    INCOMING_COLOR_SPACE,
     INCOMING_COLORIMETRY,
+    INCOMING_COLOR_SPACE,
     INCOMING_FRAME_RATE,
     INCOMING_RES,
     INCOMING_SIGNAL_TYPE,
@@ -34,8 +35,8 @@ from .const import (
     MASKING_RES,
     OUTGOING_BIT_DEPTH,
     OUTGOING_BLACK_LEVELS,
-    OUTGOING_COLOR_SPACE,
     OUTGOING_COLORIMETRY,
+    OUTGOING_COLOR_SPACE,
     OUTGOING_FRAME_RATE,
     OUTGOING_RES,
     OUTGOING_SIGNAL_TYPE,
@@ -44,8 +45,8 @@ from .const import (
     TEMP_HDMI,
     TEMP_MAINBOARD,
 )
-from .coordinator import MadVRConfigEntry, MadVRCoordinator
-from .entity import MadVREntity
+from .coordinator import MadvrEnvyCoordinator
+from .entity import MadvrEnvyEntity
 
 
 def is_valid_temperature(value: float | None) -> bool:
@@ -53,21 +54,20 @@ def is_valid_temperature(value: float | None) -> bool:
     return value is not None and value > 0
 
 
-def get_temperature(coordinator: MadVRCoordinator, key: str) -> float | None:
+def get_temperature(coordinator: MadvrEnvyCoordinator, key: str) -> float | None:
     """Get temperature value if valid, otherwise return None."""
     try:
         temp = float(coordinator.data.get(key, 0))
-    except AttributeError, ValueError:
+    except (TypeError, ValueError):
         return None
-    else:
-        return temp if is_valid_temperature(temp) else None
+    return temp if is_valid_temperature(temp) else None
 
 
 @dataclass(frozen=True, kw_only=True)
 class MadvrSensorEntityDescription(SensorEntityDescription):
     """Describe madVR sensor entity."""
 
-    value_fn: Callable[[MadVRCoordinator], StateType]
+    value_fn: Callable[[MadvrEnvyCoordinator], StateType]
 
 
 SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
@@ -252,39 +252,30 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MadVRConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(MadvrSensor(coordinator, description) for description in SENSORS)
 
 
-class MadvrSensor(MadVREntity, SensorEntity):
+class MadvrSensor(MadvrEnvyEntity, SensorEntity):
     """Base class for madVR sensors."""
+
+    entity_description: MadvrSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: MadVRCoordinator,
+        coordinator: MadvrEnvyCoordinator,
         description: MadvrSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description: MadvrSensorEntityDescription = description
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     @property
-    def native_value(self) -> float | str | None:
-        """Return the state of the sensor."""
-        val = self.entity_description.value_fn(self.coordinator)
-        # check if sensor is enum
-        if self.entity_description.device_class == SensorDeviceClass.ENUM:
-            if (
-                self.entity_description.options
-                and val in self.entity_description.options
-            ):
-                return val
-            # return None for values that are not in the options
-            return None
-
-        return val
+    def native_value(self) -> StateType:
+        """Return the native value."""
+        return self.entity_description.value_fn(self.coordinator)

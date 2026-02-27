@@ -9,11 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import MadVRConfigEntry, MadVRCoordinator
-from .entity import MadVREntity
+from .coordinator import MadvrEnvyCoordinator
+from .entity import MadvrEnvyEntity
 
 _HDR_FLAG = "hdr_flag"
 _OUTGOING_HDR_FLAG = "outgoing_hdr_flag"
@@ -25,7 +26,7 @@ _SIGNAL_STATE = "signal_state"
 class MadvrBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe madVR binary sensor entity."""
 
-    value_fn: Callable[[MadVRCoordinator], bool]
+    value_fn: Callable[[MadvrEnvyCoordinator], bool]
 
 
 BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
@@ -54,28 +55,28 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MadVRConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary sensor entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
         MadvrBinarySensor(coordinator, description) for description in BINARY_SENSORS
     )
 
 
-class MadvrBinarySensor(MadVREntity, BinarySensorEntity):
+class MadvrBinarySensor(MadvrEnvyEntity, BinarySensorEntity):
     """Base class for madVR binary sensors."""
 
     entity_description: MadvrBinarySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: MadVRCoordinator,
+        coordinator: MadvrEnvyCoordinator,
         description: MadvrBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
