@@ -442,7 +442,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
     Each message could contain multiple blocks of the same type.
     """
-    if stream is None:
+    if stream is None or not hasattr(stream, "__aiter__"):
         raise HomeAssistantError("Expected a stream of messages")
 
     current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
