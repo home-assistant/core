@@ -34,7 +34,10 @@ async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
             devices = await client.list_devices()
             device_count = len(devices) if devices else 0
         finally:
-            await client.close()
+            try:
+                await client.close()
+            except Exception:
+                _LOGGER.debug("Error closing client during validation", exc_info=True)
     except AuthenticationError as err:
         raise InvalidAuth(f"Invalid username or password: {err}") from err
     except ApiError as err:
