@@ -21,7 +21,6 @@ CONF_UDN = "udn"
 CONF_NAME = "name"
 CONF_UPNP_LOCATION = "upnp_location"
 
-UPNP_ST_MEDIA_RENDERER: Final = "urn:schemas-upnp-org:device:MediaRenderer:1"
 ZEROCONF_TYPE_LINKPLAY: Final = "_linkplay._tcp.local."
 
 DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
