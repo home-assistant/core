@@ -23,21 +23,3 @@ def deprecate_yaml_issue(hass: HomeAssistant) -> None:
             "integration_title": "InfluxDB",
         },
     )
-
-
-@callback
-def deprecated_yaml_import_issue_error(hass: HomeAssistant) -> None:
-    """Create a repair issue for a failed YAML import."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml_import_issue_error",
-        breaks_in_ha_version="2026.10.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml_import_issue_error",
-        translation_placeholders={
-            "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
-        },
-    )

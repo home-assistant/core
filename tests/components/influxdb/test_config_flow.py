@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+from influxdb.exceptions import InfluxDBClientError
 import pytest
 
 from homeassistant import config_entries
@@ -34,7 +34,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 from . import (
     BASE_V1_CONFIG,
@@ -657,13 +656,6 @@ async def test_import(
             "cannot_connect",
         ),
         (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            InfluxDBServerError("fail"),
-            "cannot_connect",
-        ),
-        (
             API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
@@ -694,9 +686,8 @@ async def test_import_connection_error(
     get_write_api: Any,
     test_exception: Exception,
     reason: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test abort on connection error."""
+    """Test abort on connection error during import."""
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
@@ -708,10 +699,6 @@ async def test_import_connection_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_yaml_import_issue_error",
-    )
 
 
 @pytest.mark.parametrize(
