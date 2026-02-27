@@ -504,27 +504,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         try:
             (
-                hass.data[DATA_INFO],
-                hass.data[DATA_HOST_INFO],
+                root_info,
+                host_info,
                 store_info,
-                hass.data[DATA_CORE_INFO],
-                hass.data[DATA_SUPERVISOR_INFO],
-                hass.data[DATA_OS_INFO],
-                hass.data[DATA_NETWORK_INFO],
+                homeassistant_info,
+                supervisor_info,
+                os_info,
+                network_info,
             ) = await asyncio.gather(
-                create_eager_task(hassio.get_info()),
-                create_eager_task(hassio.get_host_info()),
+                create_eager_task(supervisor_client.info()),
+                create_eager_task(supervisor_client.host.info()),
                 create_eager_task(supervisor_client.store.info()),
-                create_eager_task(hassio.get_core_info()),
-                create_eager_task(hassio.get_supervisor_info()),
-                create_eager_task(hassio.get_os_info()),
-                create_eager_task(hassio.get_network_info()),
+                create_eager_task(supervisor_client.homeassistant.info()),
+                create_eager_task(supervisor_client.supervisor.info()),
+                create_eager_task(supervisor_client.os.info()),
+                create_eager_task(supervisor_client.network.info()),
             )
 
-        except HassioAPIError as err:
+        except SupervisorError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
         else:
+            hass.data[DATA_INFO] = root_info.to_dict()
+            hass.data[DATA_HOST_INFO] = host_info.to_dict()
             hass.data[DATA_STORE] = store_info.to_dict()
+            hass.data[DATA_CORE_INFO] = homeassistant_info.to_dict()
+            hass.data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
+            hass.data[DATA_OS_INFO] = os_info.to_dict()
+            hass.data[DATA_NETWORK_INFO] = network_info.to_dict()
 
         async_call_later(
             hass,

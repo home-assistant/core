@@ -26,7 +26,6 @@ from .const import (
     ATTR_METHOD,
     ATTR_PARAMS,
     ATTR_SESSION_DATA_USER_ID,
-    ATTR_SLUG,
     ATTR_TIMEOUT,
     ATTR_VERSION,
     ATTR_WS_EVENT,
@@ -39,7 +38,7 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
-from .coordinator import get_supervisor_info
+from .coordinator import get_addons_info
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
@@ -168,9 +167,9 @@ async def websocket_update_addon(
     """Websocket handler to update an addon."""
     addon_name: str | None = None
     addon_version: str | None = None
-    addons: list = (get_supervisor_info(hass) or {}).get("addons", [])
-    for addon in addons:
-        if addon[ATTR_SLUG] == msg["addon"]:
+    addons: dict[str, dict[str, Any]] = get_addons_info(hass) or {}
+    for slug, addon in addons.items():
+        if slug == msg["addon"]:
             addon_name = addon[ATTR_NAME]
             addon_version = addon[ATTR_VERSION]
             break
