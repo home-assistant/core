@@ -80,6 +80,6 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
