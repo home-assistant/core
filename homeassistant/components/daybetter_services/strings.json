@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "This integration has already been configured",
       "reauth_successful": "Reauthentication successful",
+      "reconfigure_successful": "Reconfiguration successful.",
       "single_instance_allowed": "Already configured. Only one instance is allowed."
     },
     "error": {
@@ -20,6 +21,16 @@
         },
         "description": "Your DayBetter authentication has expired. Please enter your DayBetter user code to restore the connection.",
         "title": "Reauthenticate DayBetter Services"
+      },
+      "reconfigure": {
+        "data": {
+          "user_code": "User Code"
+        },
+        "data_description": {
+          "user_code": "Enter the DayBetter user code to use for this integration."
+        },
+        "description": "Update the user code for your DayBetter integration.",
+        "title": "Reconfigure DayBetter Services"
       },
       "user": {
         "data": {
