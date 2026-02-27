@@ -8,10 +8,12 @@ from typing import Any
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_CAN_BE_TEMPORARY,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
+    SZ_TIMING_MODE,
 )
 from evohomeasync2.schemas.const import (
     SystemMode as EvoSystemMode,
@@ -19,6 +21,7 @@ from evohomeasync2.schemas.const import (
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
+from evohomeasync2.schemas.typedefs import EvoAllowedSystemModesResponseT
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -348,9 +351,13 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowed_system_modes]
+        self._evo_modes: dict[str, EvoAllowedSystemModesResponseT] = {
+            m[SZ_SYSTEM_MODE]: m for m in evo_device.allowed_system_modes
+        }
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[EvoSystemMode(m)]
+            for m in self._evo_modes
+            if m in TCS_PRESET_TO_HA
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -359,22 +366,53 @@ class EvoController(EvoClimateEntity):
         )
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (system mode) for a controller.
+        """Process a service request (system mode) for a controller."""
 
-        Data validation is not required, it will have been done upstream.
-        """
         if service == EvoService.SET_SYSTEM_MODE:
             mode = data[ATTR_MODE]
+
+            if (mode_info := self._evo_modes.get(mode)) is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_unknown",
+                    translation_placeholders={"mode": mode},
+                )
+
+            if not mode_info[SZ_CAN_BE_TEMPORARY]:
+                if ATTR_DURATION in data or ATTR_PERIOD in data:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="mode_cant_be_temporary",
+                        translation_placeholders={"mode": mode},
+                    )
+
+            elif mode_info[SZ_TIMING_MODE] == "Duration" and ATTR_PERIOD in data:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_has_no_period",
+                    translation_placeholders={
+                        "mode": mode,
+                        "attribute": ATTR_DURATION,
+                    },
+                )
+
+            elif mode_info[SZ_TIMING_MODE] == "Period" and ATTR_DURATION in data:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_has_no_duration",
+                    translation_placeholders={
+                        "mode": mode,
+                        "attribute": ATTR_PERIOD,
+                    },
+                )
+
         else:  # otherwise it is EvoService.RESET_SYSTEM
             mode = EvoSystemMode.AUTO_WITH_RESET
 
         if ATTR_PERIOD in data:
-            until = dt_util.start_of_local_day()
-            until += data[ATTR_PERIOD]
-
+            until = dt_util.start_of_local_day() + data[ATTR_PERIOD]
         elif ATTR_DURATION in data:
             until = dt_util.now() + data[ATTR_DURATION]
-
         else:
             until = None
 

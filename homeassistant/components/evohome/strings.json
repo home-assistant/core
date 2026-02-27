@@ -1,5 +1,17 @@
 {
   "exceptions": {
+    "mode_cant_be_temporary": {
+      "message": "The mode `{mode}` can only be set permanently"
+    },
+    "mode_has_no_duration": {
+      "message": "The mode `{mode}` does not support `duration`; use `{attribute}` instead"
+    },
+    "mode_has_no_period": {
+      "message": "The mode `{mode}` does not support `period`; use `{attribute}` instead"
+    },
+    "mode_unknown": {
+      "message": "The mode `{mode}` is not supported by this controller"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }

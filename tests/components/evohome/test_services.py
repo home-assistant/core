@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -204,3 +205,38 @@ async def test_zone_services_with_ctl_id(
         )
 
     assert excinfo.value.translation_key == "zone_only_service"
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("service_data", "expected_key"),
+    [
+        ({"mode": "NotARealMode"}, "mode_unknown"),
+        ({"mode": "Auto", "duration": {"hours": 1}}, "mode_cant_be_temporary"),
+        ({"mode": "Auto", "period": {"days": 1}}, "mode_cant_be_temporary"),
+        ({"mode": "AutoWithEco", "period": {"days": 1}}, "mode_has_no_period"),
+        ({"mode": "DayOff", "duration": {"hours": 1}}, "mode_has_no_duration"),
+    ],
+)
+async def test_set_system_mode_validation(
+    hass: HomeAssistant,
+    ctl_id: str,
+    evohome: EvohomeClient,
+    service_data: dict[str, Any],
+    expected_key: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ServiceValidationError for all controller system mode validation cases."""
+
+    caplog.set_level(logging.ERROR)
+
+    await hass.services.async_call(
+        "evohome",
+        "set_system_mode",
+        service_data,
+        target={},
+        blocking=True,
+    )
+    await hass.async_block_till_done()  # service handler invoked via a task
+
+    assert f"ServiceValidationError: {expected_key}" in caplog.text

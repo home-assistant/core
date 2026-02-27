@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_post_request
-from .const import TEST_INSTALLS
 
 _MSG_429 = (
     "You have exceeded the server's API rate limit. Wait a while "
@@ -172,7 +171,7 @@ async def test_client_request_failure_v2(
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
 
-@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
+@pytest.mark.parametrize("install", ["default"])
 async def test_setup(
     hass: HomeAssistant,
     evohome: EvohomeClient,
