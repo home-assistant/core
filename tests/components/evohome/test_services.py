@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import patch
 
 from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from voluptuous import Any
 
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
