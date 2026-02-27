@@ -235,7 +235,7 @@ class FFmpegConvertResponse(web.StreamResponse):
             if request.transport:
                 request.transport.abort()
             raise  # don't log error
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
             raise
         finally:

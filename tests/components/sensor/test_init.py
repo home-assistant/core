@@ -2953,7 +2953,7 @@ def test_async_rounded_state_registered_entity_with_display_precision(
 
 def test_device_class_units_state_classes(hass: HomeAssistant) -> None:
     """Test all numeric device classes have unit and state class."""
-    # DEVICE_CLASS_UNITS should include all device classes except:
+    # DEVICE_CLASS_UNITS should include all device classes except Exception:
     # - SensorDeviceClass.MONETARY
     # - Device classes enumerated in NON_NUMERIC_DEVICE_CLASSES
     assert set(DEVICE_CLASS_UNITS) == set(

@@ -138,7 +138,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
                 await device.open()
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
-        except:
+        except Exception:
             await device.abort()
             raise
 
