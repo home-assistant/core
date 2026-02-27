@@ -131,10 +131,15 @@ def simple_mock_home_fixture():
         get_current_state_async=AsyncMock(),
     )
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
-        autospec=True,
-        return_value=mock_home,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome",
+            autospec=True,
+            return_value=mock_home,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+        ),
     ):
         yield
 
