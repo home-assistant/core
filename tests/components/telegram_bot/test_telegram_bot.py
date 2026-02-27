@@ -1443,10 +1443,9 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert (
-        err.value.args[0]
-        == "File path has not been configured in allowlist_external_dirs."
-    )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "allowlist_external_dirs_error"
 
     # test: missing username input
 
@@ -1463,7 +1462,10 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "Username is required."
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "missing_input"
+    assert err.value.translation_placeholders == {"field": "Username"}
 
     # test: missing password input
 
@@ -1479,7 +1481,10 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "Password is required."
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "missing_input"
+    assert err.value.translation_placeholders == {"field": "Password"}
 
     # test: 404 error
 
@@ -1502,8 +1507,11 @@ async def test_send_video(
             )
 
     await hass.async_block_till_done()
+
     assert mock_get.call_count > 0
-    assert err.value.args[0] == "Failed to load URL: 404"
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_url"
+    assert err.value.translation_placeholders == {"error": "404"}
 
     # test: invalid url
 
@@ -1521,11 +1529,13 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
+
     assert mock_get.call_count > 0
-    assert (
-        err.value.args[0]
-        == "Failed to load URL: Request URL is missing an 'http://' or 'https://' protocol."
-    )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_url"
+    assert err.value.translation_placeholders == {
+        "error": "Request URL is missing an 'http://' or 'https://' protocol."
+    }
 
     # test: no url/file input
 
@@ -1538,7 +1548,10 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "URL or File is required."
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "missing_input"
+    assert err.value.translation_placeholders == {"field": "URL or File"}
 
     # test: load file error (e.g. not found, permissions error)
 
@@ -1555,10 +1568,12 @@ async def test_send_video(
         )
 
     await hass.async_block_till_done()
-    assert (
-        err.value.args[0]
-        == "Failed to load file: [Errno 2] No such file or directory: '/tmp/not-exists'"
-    )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_file"
+    assert err.value.translation_placeholders == {
+        "error": "[Errno 2] No such file or directory: '/tmp/not-exists'"
+    }
 
     # test: success with file
     write_utf8_file("/tmp/mock", "mock file contents")  # noqa: S108

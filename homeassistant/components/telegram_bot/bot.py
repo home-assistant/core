@@ -1080,7 +1080,6 @@ async def load_data(
                     req = await client.get(url)
                 except (httpx.HTTPError, httpx.InvalidURL) as err:
                     raise HomeAssistantError(
-                        f"Failed to load URL: {err!s}",
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
                         translation_placeholders={"error": str(err)},
@@ -1107,7 +1106,6 @@ async def load_data(
                         1
                     )  # Add a sleep to allow other async operations to proceed
             raise HomeAssistantError(
-                f"Failed to load URL: {req.status_code}",
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",
                 translation_placeholders={"error": str(req.status_code)},
@@ -1117,13 +1115,11 @@ async def load_data(
             return await hass.async_add_executor_job(_read_file_as_bytesio, filepath)
 
         raise ServiceValidationError(
-            "File path has not been configured in allowlist_external_dirs.",
             translation_domain=DOMAIN,
             translation_key="allowlist_external_dirs_error",
         )
     else:
         raise ServiceValidationError(
-            "URL or File is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "URL or File"},
@@ -1138,7 +1134,6 @@ def _validate_credentials_input(
         and not username
     ):
         raise ServiceValidationError(
-            "Username is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Username"},
@@ -1154,7 +1149,6 @@ def _validate_credentials_input(
         and not password
     ):
         raise ServiceValidationError(
-            "Password is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Password"},
@@ -1170,7 +1164,6 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             return data
     except OSError as err:
         raise HomeAssistantError(
-            f"Failed to load file: {err!s}",
             translation_domain=DOMAIN,
             translation_key="failed_to_load_file",
             translation_placeholders={"error": str(err)},
