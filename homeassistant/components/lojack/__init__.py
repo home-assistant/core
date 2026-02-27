@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from lojack_api import ApiError, AuthenticationError, LoJackClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .coordinator import LoJackCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
@@ -49,6 +53,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> b
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        await entry.runtime_data.client.close()
+        try:
+            await entry.runtime_data.client.close()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Error closing LoJack client: %s", err)
 
     return unload_ok

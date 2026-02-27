@@ -11,6 +11,9 @@
       "invalid_auth": "Invalid username or password",
       "unknown": "An unexpected error occurred"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "reauth_confirm": {
         "data": {
