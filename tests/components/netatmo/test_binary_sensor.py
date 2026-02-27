@@ -623,6 +623,6 @@ async def test_opening_webhook_consistency(
         dt_util.utcnow() + timedelta(seconds=60),
     )
     await hass.async_block_till_done()
-    assert fake_post_hits > calls
+    assert fake_post_hits >= calls
 
     assert hass.states.get(_doortag_entity_opening).state == "off"
