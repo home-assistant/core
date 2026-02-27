@@ -69,8 +69,6 @@ Run pytest for the specific integration:
 
 ```bash
 pytest tests/components/{integration} \
-  --cov=homeassistant.components.{integration} \
-  --cov-report term-missing \
   --timeout=60 \
   --durations-min=1 \
   --durations=0 \
