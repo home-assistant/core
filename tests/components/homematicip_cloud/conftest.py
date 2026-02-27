@@ -1,11 +1,10 @@
 """Initializer helpers for HomematicIP fake server."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
-from homematicip.connection.connection_context import ConnectionContext
 from homematicip.connection.rest_connection import RestConnection
 import pytest
 
@@ -140,7 +139,7 @@ def simple_mock_home_fixture():
         ),
         patch(
             "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
-            return_value=ConnectionContext(),
+            return_value=MagicMock(),
         ),
     ):
         yield
