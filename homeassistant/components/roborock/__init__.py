@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from roborock import (
     RoborockException,
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _get_user_data(entry: RoborockConfigEntry) -> UserData:
     """Get user data from config entry."""
     try:
-        return UserData.from_dict(entry.data[CONF_USER_DATA])
+        return cast(UserData, UserData.from_dict(entry.data[CONF_USER_DATA]))
     except TypeError as err:
         raise ConfigEntryAuthFailed(
             "Stored user data is invalid",
