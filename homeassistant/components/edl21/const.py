@@ -7,6 +7,9 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "edl21"
 
 CONF_SERIAL_PORT = "serial_port"
+CONF_UPDATE_INTERVAL = "update_interval"
+
+DEFAULT_UPDATE_INTERVAL = 60
 
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
