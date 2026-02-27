@@ -10,7 +10,12 @@ from random import randrange
 from typing import Any
 
 import aiohttp
-from tibber import FatalHttpExceptionError, RetryableHttpExceptionError, TibberHome
+from tibber import (
+    FatalHttpExceptionError,
+    InvalidLoginError,
+    RetryableHttpExceptionError,
+    TibberHome,
+)
 from tibber.data_api import TibberDevice
 
 from homeassistant.components.sensor import (
@@ -33,7 +38,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, PlatformNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -626,7 +631,7 @@ async def _async_setup_graphql_sensors(
             raise PlatformNotReady from err
 
         if home.has_active_subscription:
-            entities.append(TibberSensorElPrice(home))
+            entities.append(TibberSensorElPrice(home, entry))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
             entities.extend(
@@ -743,9 +748,10 @@ class TibberSensorElPrice(TibberSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "electricity_price"
 
-    def __init__(self, tibber_home: TibberHome) -> None:
+    def __init__(self, tibber_home: TibberHome, entry: TibberConfigEntry) -> None:
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
+        self._entry = entry
         self._last_updated: datetime.datetime | None = None
         self._spread_load_constant = randrange(TWENTY_MINUTES)
 
@@ -802,9 +808,12 @@ class TibberSensorElPrice(TibberSensor):
     async def _fetch_data(self) -> None:
         _LOGGER.debug("Fetching data")
         try:
+            await self._entry.runtime_data.async_get_client(self.hass)
             await self._tibber_home.update_info_and_price_info()
-        except TimeoutError, aiohttp.ClientError:
+        except (TimeoutError, aiohttp.ClientError):
             return
+        except InvalidLoginError as err:
+            raise ConfigEntryAuthFailed from err
         data = self._tibber_home.info["viewer"]["home"]
         self._attr_extra_state_attributes["app_nickname"] = data["appNickname"]
         self._attr_extra_state_attributes["grid_company"] = data["meteringPointData"][
