@@ -10,7 +10,6 @@
       "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_nodes_found": "No active nodes found",
-      "permissions_error": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again.",
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {
@@ -199,6 +198,9 @@
     },
     "no_permission_vm_lxc_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "permissions_error": {
+      "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
     "ssl_error": {
       "message": "An SSL error occurred: {error}"

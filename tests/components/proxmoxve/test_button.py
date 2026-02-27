@@ -316,11 +316,11 @@ async def test_container_buttons_exceptions(
 
 
 @pytest.mark.parametrize(
-    "entity_id",
+    ("entity_id", "translation_key"),
     [
-        "button.ct_nginx_start",
-        "button.pve1_start_all",
-        "button.vm_web_start",
+        ("button.pve1_start_all", "no_permission_node_power"),
+        ("button.ct_nginx_start", "no_permission_vm_lxc_power"),
+        ("button.vm_web_start", "no_permission_vm_lxc_power"),
     ],
 )
 async def test_node_buttons_permission_denied_for_auditor_role(
@@ -328,16 +328,18 @@ async def test_node_buttons_permission_denied_for_auditor_role(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
+    translation_key: str,
 ) -> None:
     """Test that buttons are missing when only Audit permissions exist."""
     mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
 
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+    assert exc_info.value.translation_key == translation_key
