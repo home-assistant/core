@@ -79,7 +79,9 @@ async def test_form_invalid_host(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -111,7 +113,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_unexpected_error(hass: HomeAssistant) -> None:
+async def test_form_unexpected_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
