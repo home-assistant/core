@@ -211,11 +211,11 @@ async def test_zone_services_with_ctl_id(
 @pytest.mark.parametrize(
     ("service_data", "expected_key"),
     [
-        ({"mode": "NotARealMode"}, "mode_unknown"),
+        ({"mode": "NotARealMode"}, "mode_not_supported"),
         ({"mode": "Auto", "duration": {"hours": 1}}, "mode_cant_be_temporary"),
         ({"mode": "Auto", "period": {"days": 1}}, "mode_cant_be_temporary"),
-        ({"mode": "AutoWithEco", "period": {"days": 1}}, "mode_has_no_period"),
-        ({"mode": "DayOff", "duration": {"hours": 1}}, "mode_has_no_duration"),
+        ({"mode": "AutoWithEco", "period": {"days": 1}}, "mode_cant_have_period"),
+        ({"mode": "DayOff", "duration": {"hours": 1}}, "mode_cant_have_duration"),
     ],
 )
 async def test_set_system_mode_validation(

@@ -374,7 +374,7 @@ class EvoController(EvoClimateEntity):
             if (mode_info := self._evo_modes.get(mode)) is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="mode_unknown",
+                    translation_key="mode_not_supported",
                     translation_placeholders={"mode": mode},
                 )
 
@@ -389,21 +389,15 @@ class EvoController(EvoClimateEntity):
             elif mode_info[SZ_TIMING_MODE] == "Duration" and ATTR_PERIOD in data:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="mode_has_no_period",
-                    translation_placeholders={
-                        "mode": mode,
-                        "attribute": ATTR_DURATION,
-                    },
+                    translation_key="mode_cant_have_period",
+                    translation_placeholders={"mode": mode},
                 )
 
             elif mode_info[SZ_TIMING_MODE] == "Period" and ATTR_DURATION in data:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="mode_has_no_duration",
-                    translation_placeholders={
-                        "mode": mode,
-                        "attribute": ATTR_PERIOD,
-                    },
+                    translation_key="mode_cant_have_duration",
+                    translation_placeholders={"mode": mode},
                 )
 
         else:  # otherwise it is EvoService.RESET_SYSTEM
