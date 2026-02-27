@@ -38,6 +38,7 @@ def mock_firefly_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.firefly_iii.config_flow.Firefly"
         ) as mock_client,
+        patch("homeassistant.components.firefly_iii.Firefly", new=mock_client),
         patch(
             "homeassistant.components.firefly_iii.coordinator.Firefly", new=mock_client
         ),

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from aiohttp import CookieJar
 from pyfirefly import (
     Firefly,
     FireflyAuthenticationError,
@@ -17,10 +16,8 @@ from pyfirefly import (
 from pyfirefly.models import Account, Bill, Budget, Category, Currency
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -49,7 +46,12 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
 
     config_entry: FireflyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: FireflyConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: FireflyConfigEntry,
+        firefly: Firefly,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -58,15 +60,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self.firefly = Firefly(
-            api_url=self.config_entry.data[CONF_URL],
-            api_key=self.config_entry.data[CONF_API_KEY],
-            session=async_create_clientsession(
-                self.hass,
-                self.config_entry.data[CONF_VERIFY_SSL],
-                cookie_jar=CookieJar(unsafe=True),
-            ),
-        )
+        self.firefly = firefly
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
