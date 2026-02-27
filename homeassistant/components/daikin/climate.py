@@ -112,6 +112,14 @@ def _zone_is_configured(zone: DaikinZone) -> bool:
 
 def _zone_temperature_lists(device: Appliance) -> tuple[list[str], list[str]]:
     """Return the decoded zone temperature lists."""
+    values = getattr(device, "values", None)
+    if (
+        values is None
+        or values.get(DAIKIN_ZONE_TEMP_HEAT) is None
+        or values.get(DAIKIN_ZONE_TEMP_COOL) is None
+    ):
+        return ([], [])
+
     try:
         heating = device.represent(DAIKIN_ZONE_TEMP_HEAT)[1]
         cooling = device.represent(DAIKIN_ZONE_TEMP_COOL)[1]
