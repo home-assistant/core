@@ -61,6 +61,7 @@ from .const import (
     CLIENT_ERROR_V2,
     CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
+    COMPONENT_CONFIG_SCHEMA_CONNECTION_KEYS_WITHOUT_DEFAULT,
     CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
@@ -486,7 +487,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)
 
     if conf is not None:
-        if conf.keys() & set(COMPONENT_CONFIG_SCHEMA_CONNECTION):
+        if conf.keys() & COMPONENT_CONFIG_SCHEMA_CONNECTION_KEYS_WITHOUT_DEFAULT:
             deprecate_yaml_issue(hass)
 
         if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:

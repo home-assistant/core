@@ -32,6 +32,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN, get_influx_connection
+from .issue import import_connection_error_issue
 from .const import (
     API_VERSION_2,
     CONF_API_VERSION,
@@ -276,6 +277,7 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = await _validate_influxdb_connection(self.hass, data)
         if errors:
+            import_connection_error_issue(self.hass, errors["base"])
             return self.async_abort(reason=errors["base"])
 
         return self.async_create_entry(title=title, data=data)
