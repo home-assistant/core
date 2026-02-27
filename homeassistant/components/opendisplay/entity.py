@@ -55,7 +55,7 @@ class OpenDisplayEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._address)},
             name=entry.title,
-            manufacturer=manufacturer.manufacturer_name or "OpenDisplay",
+            manufacturer=manufacturer.manufacturer_name,
             model=model,
             hw_version=hw_version,
             sw_version=f"{firmware['major']}.{firmware['minor']}",
