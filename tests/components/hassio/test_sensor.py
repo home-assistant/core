@@ -48,7 +48,11 @@ def mock_all(
     supervisor_stats: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    _install_default_mocks(aioclient_mock)
+    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
+    )
 
     host_info.return_value = replace(host_info.return_value, agent_version="1.0.0")
     addons_list.return_value[1] = replace(
@@ -80,15 +84,6 @@ def mock_all(
         return addon_installed.return_value
 
     addon_installed.side_effect = mock_addon_info
-
-
-def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
-    """Install default mocks."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
 
 
 @pytest.mark.parametrize(
@@ -187,20 +182,14 @@ async def test_stats_addon_sensor(
     # Verify that the entity is disabled by default.
     assert hass.states.get(entity_id) is None
 
-    aioclient_mock.clear_requests()
-    _install_default_mocks(aioclient_mock)
     addon_stats.side_effect = SupervisorError
-
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Could not fetch stats" not in caplog.text
 
-    aioclient_mock.clear_requests()
-    _install_default_mocks(aioclient_mock)
     addon_stats.side_effect = None
-
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -230,10 +219,7 @@ async def test_stats_addon_sensor(
     state = hass.states.get(entity_id)
     assert state.state == expected
 
-    aioclient_mock.clear_requests()
-    _install_default_mocks(aioclient_mock)
     addon_stats.side_effect = SupervisorError
-
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
