@@ -1,6 +1,6 @@
 """Test the DayBetter Services config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from daybetter_python import APIError
 
@@ -154,6 +154,7 @@ async def test_single_instance(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
@@ -164,51 +165,34 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    original_reload = hass.config_entries.async_reload
-    hass.config_entries.async_reload = AsyncMock(return_value=True)
+    with (
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
+            return_value={"code": 1, "data": {"hassCodeToken": "new_token"}},
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_pids",
+            return_value={},
+        ),
+    ):
+        result = await entry.start_reauth_flow(hass)
 
-    try:
-        with (
-            patch(
-                "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
-                return_value={"code": 1, "data": {"hassCodeToken": "new_token"}},
-            ),
-            patch(
-                "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
-                return_value=[],
-            ),
-            patch(
-                "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_pids",
-                return_value={},
-            ),
-            patch(
-                "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
-            ),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": config_entries.SOURCE_REAUTH,
-                    "entry_id": entry.entry_id,
-                },
-                data=entry.data,
-            )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
 
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "reauth_confirm"
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USER_CODE: "new_code"},
+        )
+        await hass.async_block_till_done()
 
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_USER_CODE: "new_code"},
-            )
-            await hass.async_block_till_done()
-
-            assert result2["type"] == FlowResultType.ABORT
-            assert result2["reason"] == "reauth_successful"
-            assert entry.data == {CONF_USER_CODE: "new_code", CONF_TOKEN: "new_token"}
-            assert hass.config_entries.async_reload.await_count == 1
-    finally:
-        hass.config_entries.async_reload = original_reload
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
+        assert entry.data == {CONF_USER_CODE: "new_code", CONF_TOKEN: "new_token"}
 
 
 async def test_reauth_invalid_code(hass: HomeAssistant) -> None:
@@ -219,40 +203,24 @@ async def test_reauth_invalid_code(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    original_reload = hass.config_entries.async_reload
-    hass.config_entries.async_reload = AsyncMock(return_value=True)
+    with (
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
+            return_value={"code": 0, "msg": "Invalid"},
+        ),
+    ):
+        result = await entry.start_reauth_flow(hass)
 
-    try:
-        with (
-            patch(
-                "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
-                return_value={"code": 0, "msg": "Invalid"},
-            ),
-            patch(
-                "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
-            ),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": config_entries.SOURCE_REAUTH,
-                    "entry_id": entry.entry_id,
-                },
-                data=entry.data,
-            )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
 
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "reauth_confirm"
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USER_CODE: "bad_code"},
+        )
 
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_USER_CODE: "bad_code"},
-            )
-
-            assert result2["type"] == FlowResultType.FORM
-            assert result2["errors"] == {"base": "invalid_code"}
-    finally:
-        hass.config_entries.async_reload = original_reload
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_code"}
 
 
 async def test_form_integrate_cannot_connect(hass: HomeAssistant) -> None:
@@ -277,3 +245,76 @@ async def test_form_integrate_cannot_connect(hass: HomeAssistant) -> None:
 
         assert result2["type"] == FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_success(hass: HomeAssistant) -> None:
+    """Test reconfigure flow updates user code and token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USER_CODE: "old_code", CONF_TOKEN: "old_token"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
+            return_value={"code": 1, "data": {"hassCodeToken": "new_token"}},
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_devices",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.fetch_pids",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
+        ),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USER_CODE: "new_code"},
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reconfigure_successful"
+        assert entry.data == {CONF_USER_CODE: "new_code", CONF_TOKEN: "new_token"}
+
+
+async def test_reconfigure_invalid_code(hass: HomeAssistant) -> None:
+    """Test reconfigure flow with invalid user code."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USER_CODE: "old_code", CONF_TOKEN: "old_token"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.integrate",
+            return_value={"code": 0, "msg": "Invalid"},
+        ),
+        patch(
+            "homeassistant.components.daybetter_services.config_flow.DayBetterClient.close",
+        ),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USER_CODE: "bad_code"},
+        )
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_code"}
+        assert entry.data == {CONF_USER_CODE: "old_code", CONF_TOKEN: "old_token"}

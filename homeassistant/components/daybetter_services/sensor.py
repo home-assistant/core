@@ -95,11 +95,10 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     for device in devices:
-        device_name = device.get("deviceName", "unknown")
-        device_id = device.get("deviceId", device_name)
-        group = (
-            str(device.get("deviceGroupName", device_name)).lower().replace(" ", "_")
-        )
+        device_id_raw = device.get("deviceId")
+        if device_id_raw is None:
+            continue
+        device_id = str(device_id_raw)
 
         for description in DESCRIPTIONS:
             if not description.exists_fn(device):
@@ -110,7 +109,6 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     device=device,
                     device_id=device_id,
-                    group_name=group,
                     description=description,
                 )
             )
@@ -128,42 +126,33 @@ class DayBetterSensor(CoordinatorEntity[DayBetterCoordinator], SensorEntity):
         self,
         coordinator: DayBetterCoordinator,
         device: dict[str, Any],
-        device_id: int | str,
-        group_name: str,
+        device_id: str,
         description: DayBetterSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._device_name = device.get("deviceName", "unknown")
+        self._device = device
         self._device_id = device_id
-        self._group_name = group_name
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_translation_key = description.key
-
-    @property
-    def device_info(self) -> dr.DeviceInfo:
-        """Return device information."""
-        device = self._get_device()
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_id))},
-            name=device.get("deviceGroupName", self._device_name)
-            if device
-            else self._device_name,
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=device.get("deviceGroupName") or device.get("deviceName", "DayBetter"),
             manufacturer="DayBetter",
-            model=device.get("deviceClass", "Sensor") if device else "Sensor",
+            model=device.get("deviceClass", "Sensor"),
         )
 
     def _get_device(self) -> dict[str, Any] | None:
         """Get current device data from coordinator."""
         data = self.coordinator.data
-        if not isinstance(data, list):
-            return None  # type: ignore[unreachable]
+        if not data:
+            return None
 
         for device in data:
             if (
-                isinstance(device, dict)
-                and device.get("deviceName") == self._device_name
+                device.get("deviceId") == self._device_id
+                or str(device.get("deviceId")) == self._device_id
             ):
                 return device
 

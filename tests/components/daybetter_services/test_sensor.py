@@ -13,8 +13,6 @@ from tests.common import async_fire_time_changed
 
 async def test_sensor_setup(hass: HomeAssistant, init_integration: tuple) -> None:
     """Test sensor setup."""
-    _, _, _ = init_integration
-
     temp_entity_id = "sensor.test_group_temperature"
     humi_entity_id = "sensor.test_group_humidity"
 
@@ -29,8 +27,6 @@ async def test_sensor_setup(hass: HomeAssistant, init_integration: tuple) -> Non
 
 async def test_sensor_attributes(hass: HomeAssistant, init_integration: tuple) -> None:
     """Test sensor attributes."""
-    _, _, _ = init_integration
-
     temp_entity_id = "sensor.test_group_temperature"
     humi_entity_id = "sensor.test_group_humidity"
 

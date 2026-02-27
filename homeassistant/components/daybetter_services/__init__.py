@@ -8,6 +8,7 @@ from daybetter_python import DayBetterClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_TOKEN, DayBetterConfigEntry, DayBetterRuntimeData
 from .coordinator import DayBetterCoordinator
@@ -18,7 +19,8 @@ SCAN_INTERVAL = timedelta(seconds=300)
 
 async def async_setup_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) -> bool:
     """Set up DayBetter from a config entry."""
-    client = DayBetterClient(token=entry.data[CONF_TOKEN])
+    session = async_get_clientsession(hass)
+    client = DayBetterClient(token=entry.data[CONF_TOKEN], session=session)
 
     coordinator = DayBetterCoordinator(
         hass,

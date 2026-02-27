@@ -1,7 +1,6 @@
 """Configuration for pytest."""
 
 from copy import deepcopy
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -41,16 +40,11 @@ async def init_integration(
     """Set up the DayBetter Services integration in Home Assistant."""
     param = getattr(request, "param", None)
     payload = (param.get("payload") if param else SENSOR_PAYLOAD) or []
-    fetch_kwargs: dict[str, Any]
-    if param and (side_effect := param.get("side_effect")) is not None:
-        fetch_kwargs = {"side_effect": side_effect}
-    else:
-        fetch_kwargs = {"return_value": deepcopy(payload)}
 
     with (
         patch(
             "homeassistant.components.daybetter_services.coordinator.DayBetterClient.fetch_sensor_data",
-            **fetch_kwargs,
+            return_value=deepcopy(payload),
         ) as mock_fetch,
         patch(
             "homeassistant.components.daybetter_services.coordinator.DayBetterClient.close",

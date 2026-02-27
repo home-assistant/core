@@ -17,7 +17,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: The integration does not create events.
+    comment: Entities use CoordinatorEntity; the coordinator handles updates, no event subscription.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -48,9 +48,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: The integration represents cloud sensors without additional devices metadata beyond entities.
+  devices: done
   diagnostics:
     status: todo
     comment: Provide diagnostics with last API response details.
@@ -72,9 +70,7 @@ rules:
   icon-translations:
     status: todo
     comment: Add icon translation overrides if new sensors are introduced.
-  reconfiguration-flow:
-    status: exempt
-    comment: The integration has no additional configuration.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairs are defined for this integration.
@@ -84,7 +80,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: Evaluate exposing the underlying session for advanced usage.
+  inject-websession: done
   strict-typing: done
