@@ -7,7 +7,6 @@ from blinkpy.auth import LoginError
 import pytest
 
 from homeassistant.components.blink.const import DOMAIN
-from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -73,7 +72,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.services.has_service(DOMAIN, SERVICE_SAVE_VIDEO)
+    assert hass.services.has_service(DOMAIN, "save_video")
 
 
 async def test_migrate_V0(

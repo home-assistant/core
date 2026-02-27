@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.blink.const import DOMAIN
-from homeassistant.components.blink.services import SERVICE_SEND_PIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -42,7 +41,7 @@ async def test_pin_service_calls(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PIN,
+            "send_pin",
             {ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id], CONF_PIN: PIN},
             blocking=True,
         )
@@ -60,7 +59,7 @@ async def test_pin_service_calls(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PIN,
+            "send_pin",
             {ATTR_CONFIG_ENTRY_ID: ["bad-config_id"], CONF_PIN: PIN},
             blocking=True,
         )
@@ -89,7 +88,7 @@ async def test_service_pin_creates_repair_issue(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PIN,
+            "send_pin",
             {ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id], CONF_PIN: PIN},
             blocking=True,
         )
@@ -109,7 +108,7 @@ async def test_service_pin_creates_repair_issue(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_PIN,
+            "send_pin",
             {ATTR_CONFIG_ENTRY_ID: [mock_config_entry.entry_id], CONF_PIN: PIN},
             blocking=True,
         )

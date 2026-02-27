@@ -17,14 +17,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir,
 
 from .const import DOMAIN
 
-SERVICE_RECORD = "record"
-SERVICE_TRIGGER = "trigger_camera"
-SERVICE_SAVE_VIDEO = "save_video"
-SERVICE_SAVE_RECENT_CLIPS = "save_recent_clips"
-
-
 # Deprecated
-SERVICE_SEND_PIN = "send_pin"
 SERVICE_SEND_PIN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
@@ -45,14 +38,14 @@ async def _send_pin(call: ServiceCall) -> None:
         severity=ir.IssueSeverity.ERROR,
         breaks_in_ha_version="2026.5.0",
         translation_key="service_send_pin_deprecation",
-        translation_placeholders={"service_name": f"{DOMAIN}.{SERVICE_SEND_PIN}"},
+        translation_placeholders={"service_name": f"{call.domain}.{call.service}"},
     )
 
     # Service has been removed - raise exception
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="service_removed",
-        translation_placeholders={"service_name": f"{DOMAIN}.{SERVICE_SEND_PIN}"},
+        translation_placeholders={"service_name": f"{call.domain}.{call.service}"},
     )
 
 
@@ -62,7 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_PIN,
+        "send_pin",
         _send_pin,
         schema=SERVICE_SEND_PIN_SCHEMA,
     )
@@ -70,7 +63,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_RECORD,
+        "record",
         entity_domain=CAMERA_DOMAIN,
         schema=None,
         func="record",
@@ -78,7 +71,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_TRIGGER,
+        "trigger_camera",
         entity_domain=CAMERA_DOMAIN,
         schema=None,
         func="trigger_camera",
@@ -86,7 +79,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SAVE_RECENT_CLIPS,
+        "save_recent_clips",
         entity_domain=CAMERA_DOMAIN,
         schema={vol.Required(CONF_FILE_PATH): cv.string},
         func="save_recent_clips",
@@ -94,7 +87,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SAVE_VIDEO,
+        "save_video",
         entity_domain=CAMERA_DOMAIN,
         schema={vol.Required(CONF_FILENAME): cv.string},
         func="save_video",
