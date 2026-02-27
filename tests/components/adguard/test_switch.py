@@ -103,7 +103,6 @@ async def test_switch(
         ),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_actions(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
