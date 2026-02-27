@@ -1,9 +1,9 @@
 {
-  "domain": "fuelprices_dk",
+  "domain": "dk_fuelprices",
   "name": "Fuelprices.dk",
   "codeowners": ["@MTrab"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/fuelprices_dk",
+  "documentation": "https://www.home-assistant.io/integrations/dk_fuelprices",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
   "requirements": ["pybraendstofpriser==2.2.0"]

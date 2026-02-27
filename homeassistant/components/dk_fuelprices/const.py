@@ -1,6 +1,6 @@
-"""Constants for the fuelprices_dk integration."""
+"""Constants for the dk_fuelprices integration."""
 
-DOMAIN = "fuelprices_dk"
+DOMAIN = "dk_fuelprices"
 
 CONF_COMPANY = "company"
 CONF_STATION = "station"

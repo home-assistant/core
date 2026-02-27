@@ -1,4 +1,4 @@
-"""Initialize the fuelprices_dk component."""
+"""Initialize the dk_fuelprices component."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ type DkFuelpricesConfigEntry = ConfigEntry[DkFuelpricesRuntimeData]
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: DkFuelpricesConfigEntry
 ) -> bool:
-    """Set up fuelprices_dk from a config entry."""
+    """Set up dk_fuelprices from a config entry."""
     config_entry.async_on_unload(config_entry.add_update_listener(_update_listener))
     api_key = config_entry.data.get(CONF_API_KEY)
     if not api_key:

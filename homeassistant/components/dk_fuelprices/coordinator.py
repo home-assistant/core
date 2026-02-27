@@ -1,4 +1,4 @@
-"""Coordinator for the fuelprices_dk integration."""
+"""Coordinator for the dk_fuelprices integration."""
 
 from __future__ import annotations
 

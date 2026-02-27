@@ -1,4 +1,4 @@
-"""Config flow for fuelprices_dk integration."""
+"""Config flow for dk_fuelprices integration."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for fuelprices_dk."""
+    """Handle a config flow for dk_fuelprices."""
 
     VERSION = 1
 
@@ -199,7 +199,7 @@ class BraendstofpriserConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class BraendstofpriserStationSubentryFlow(ConfigSubentryFlow):
-    """Handle station subentries for fuelprices_dk."""
+    """Handle station subentries for dk_fuelprices."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""

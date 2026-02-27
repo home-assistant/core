@@ -1,4 +1,4 @@
-"""Sensor platform for fuelprices_dk integration."""
+"""Sensor platform for dk_fuelprices integration."""
 
 from __future__ import annotations
 

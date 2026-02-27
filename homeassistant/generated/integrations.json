@@ -1391,6 +1391,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "dk_fuelprices": {
+      "name": "Fuelprices.dk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "dlink": {
       "name": "D-Link Wi-Fi Smart Plugs",
       "integration_type": "device",
@@ -2260,12 +2266,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "fuelprices_dk": {
-      "name": "Fuelprices.dk",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "fujitsu": {
       "name": "Fujitsu",
