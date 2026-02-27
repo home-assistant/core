@@ -1,4 +1,4 @@
-"""Test sensor platform for dk_fuelprices."""
+"""Test sensor platform for fuelprices_dk."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from datetime import UTC, datetime
 from typing import cast
 from unittest.mock import patch
 
-from homeassistant.components.dk_fuelprices.const import DOMAIN
-from homeassistant.components.dk_fuelprices.coordinator import APIClient
-from homeassistant.components.dk_fuelprices.sensor import (
+from homeassistant.components.fuelprices_dk.const import DOMAIN
+from homeassistant.components.fuelprices_dk.coordinator import APIClient
+from homeassistant.components.fuelprices_dk.sensor import (
     SENSORS,
     BraendstofpriserSensor,
     async_setup_entry,

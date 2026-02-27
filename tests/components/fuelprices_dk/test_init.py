@@ -1,17 +1,17 @@
-"""Test initialization for dk_fuelprices."""
+"""Test initialization for fuelprices_dk."""
 
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.dk_fuelprices import (
+from homeassistant.components.fuelprices_dk import (
     _update_listener,
     async_remove_config_entry_device,
     async_setup_entry,
     async_unload_entry,
     remove_stale_devices,
 )
-from homeassistant.components.dk_fuelprices.const import (
+from homeassistant.components.fuelprices_dk.const import (
     CONF_COMPANY,
     CONF_STATION,
     DOMAIN,
@@ -59,7 +59,7 @@ async def test_async_setup_entry_creates_coordinator(hass: HomeAssistant) -> Non
     config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.dk_fuelprices.APIClient") as mock_api_client,
+        patch("homeassistant.components.fuelprices_dk.APIClient") as mock_api_client,
         patch.object(
             hass.config_entries, "async_forward_entry_setups", return_value=True
         ) as forward_mock,
@@ -95,7 +95,7 @@ async def test_async_setup_entry_returns_false_without_api_key(
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dk_fuelprices.APIClient") as mock_api_client:
+    with patch("homeassistant.components.fuelprices_dk.APIClient") as mock_api_client:
         assert await async_setup_entry(hass, config_entry) is False
         mock_api_client.assert_not_called()
 
@@ -195,7 +195,7 @@ async def test_async_setup_and_unload_entry(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.dk_fuelprices.APIClient") as mock_api_client,
+        patch("homeassistant.components.fuelprices_dk.APIClient") as mock_api_client,
         patch.object(
             hass.config_entries, "async_forward_entry_setups", return_value=True
         ),

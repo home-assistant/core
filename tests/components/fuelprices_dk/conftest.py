@@ -1,11 +1,11 @@
-"""Common fixtures for dk_fuelprices tests."""
+"""Common fixtures for fuelprices_dk tests."""
 
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.dk_fuelprices.const import (
+from homeassistant.components.fuelprices_dk.const import (
     CONF_COMPANY,
     CONF_STATION,
     DOMAIN,
@@ -38,11 +38,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry for config flow tests."""
     with (
         patch(
-            "homeassistant.components.dk_fuelprices.async_setup_entry",
+            "homeassistant.components.fuelprices_dk.async_setup_entry",
             return_value=True,
         ) as mock_setup,
         patch(
-            "homeassistant.components.dk_fuelprices.async_unload_entry",
+            "homeassistant.components.fuelprices_dk.async_unload_entry",
             return_value=True,
         ),
     ):
@@ -76,11 +76,11 @@ async def mock_braendstofpriser() -> AsyncGenerator[AsyncMock]:
     """Mock pybraendstofpriser client in both config_flow and api modules."""
     with (
         patch(
-            "homeassistant.components.dk_fuelprices.config_flow.Braendstofpriser",
+            "homeassistant.components.fuelprices_dk.config_flow.Braendstofpriser",
             autospec=True,
         ) as mock_config_flow_client,
         patch(
-            "homeassistant.components.dk_fuelprices.coordinator.Braendstofpriser",
+            "homeassistant.components.fuelprices_dk.coordinator.Braendstofpriser",
             autospec=True,
         ) as mock_api_client,
     ):

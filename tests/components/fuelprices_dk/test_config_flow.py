@@ -1,4 +1,4 @@
-"""Test the dk_fuelprices config flow."""
+"""Test the fuelprices_dk config flow."""
 
 from unittest.mock import AsyncMock, Mock
 
@@ -28,7 +28,7 @@ def _client_error(status: int) -> ClientResponseError:
 async def test_user_form(hass: HomeAssistant) -> None:
     """Test the initial user form is shown."""
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -42,7 +42,7 @@ async def test_full_user_flow(
 ) -> None:
     """Test a full successful config flow."""
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -88,7 +88,7 @@ async def test_user_flow_invalid_api_key(
     mock_braendstofpriser.list_companies.side_effect = _client_error(401)
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -107,7 +107,7 @@ async def test_user_flow_rate_limit(
     mock_braendstofpriser.list_companies.side_effect = _client_error(429)
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
@@ -125,7 +125,7 @@ async def test_user_flow_cannot_connect(
     mock_braendstofpriser.list_companies.side_effect = _client_error(500)
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
@@ -143,7 +143,7 @@ async def test_company_selection_aborts_without_companies(
     mock_braendstofpriser.list_companies.return_value = []
 
     result = await hass.config_entries.flow.async_init(
-        "dk_fuelprices", context={"source": SOURCE_USER}
+        "fuelprices_dk", context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
@@ -262,7 +262,7 @@ async def test_subentry_flow_duplicate_station(
 async def test_subentry_flow_api_init_error_no_api_key(hass: HomeAssistant) -> None:
     """Test subentry flow aborts when config entry has no API key."""
     config_entry = MockConfigEntry(
-        domain="dk_fuelprices",
+        domain="fuelprices_dk",
         title="Fuelprices.dk",
         version=1,
         data={},

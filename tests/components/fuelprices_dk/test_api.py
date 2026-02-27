@@ -1,4 +1,4 @@
-"""Test API client for dk_fuelprices."""
+"""Test API client for fuelprices_dk."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from aiohttp import ClientResponseError
 from pybraendstofpriser.exceptions import ProductNotFoundError
 import pytest
 
-from homeassistant.components.dk_fuelprices.const import DOMAIN
-from homeassistant.components.dk_fuelprices.coordinator import APIClient
+from homeassistant.components.fuelprices_dk.const import DOMAIN
+from homeassistant.components.fuelprices_dk.coordinator import APIClient
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.util import dt as dt_util
