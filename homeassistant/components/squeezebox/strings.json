@@ -15,7 +15,7 @@
     "flow_title": "{host}",
     "progress": {
       "start_discovery": "Attempting to discover new LMS servers\n\nThis will take about 5 seconds",
-      "title": "Lyrion Music Server"
+      "title": "LMS Discovery"
     },
     "step": {
       "choose_server": {
@@ -81,9 +81,9 @@
       "user": {
         "menu_options": {
           "edit": "Enter configuration manually",
-          "start_discovery": "Discover new Lyrion Music Servers"
+          "start_discovery": "Discover new LMS"
         },
-        "title": "Lyrion Music Server Configuration"
+        "title": "LMS Configuration"
       }
     }
   },
@@ -307,11 +307,11 @@
       "description": "Calls a custom Squeezebox JSONRPC API.",
       "fields": {
         "command": {
-          "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation).",
+          "description": "Command to pass to LMS (p0 in the CLI documentation).",
           "name": "Command"
         },
         "parameters": {
-          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).",
+          "description": "Array of additional parameters to pass to LMS (p1, ..., pN in the CLI documentation).",
           "name": "Parameters"
         }
       },
