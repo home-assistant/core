@@ -140,7 +140,7 @@ Based on the verification steps above, determine checkbox states:
 
 | Checkbox | Condition to tick |
 |----------|-------------------|
-| The code change is tested and works locally | Tick only if `TESTS_PASSED` is true |
+| The code change is tested and works locally | Leave unchecked for the contributor to verify manually (this refers to manual testing, not unit tests) |
 | Local tests pass | Tick only if `TESTS_PASSED` is true |
 | I understand the code I am submitting and can explain how it works | Leave unchecked for the contributor to review and set manually |
 | There is no commented out code | Tick only if `NO_COMMENTED_CODE` is true |
