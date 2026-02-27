@@ -2921,41 +2921,62 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
 async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
     """Test that list_serial_ports filters out ignored non-Zigbee devices."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
-        ListPortInfo("/dev/ttyUSB4"),
-        ListPortInfo("/dev/ttyUSB5"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="10C4",
+            pid="EA60",
+            serial_number="1234",
+            manufacturer="Nabu Casa",
+            description="ZWA-2",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="303A",
+            pid="4001",
+            serial_number="1235",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="10C4",
+            pid="EA60",
+            serial_number="1236",
+            manufacturer="Nabu Casa",
+            description="Home Assistant Connect ZBT-1",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="1A86",
+            pid="55D4",
+            serial_number="1237",
+            manufacturer="Nabu Casa",
+            description="SkyConnect v1.0",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="1234",
+            pid="5678",
+            serial_number="1238",
+            manufacturer="Another Manufacturer",
+            description="Zigbee USB Adapter",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB5",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        ),
     ]
-
-    # ZWA-2, should be filtered
-    mock_ports[0].manufacturer = "Nabu Casa"
-    mock_ports[0].description = "ZWA-2"
-
-    # ZBT-2, should be shown
-    mock_ports[1].manufacturer = "Nabu Casa"
-    mock_ports[1].description = "ZBT-2"
-
-    # ZBT-1, should be shown
-    mock_ports[2].manufacturer = "Nabu Casa"
-    mock_ports[2].description = "Home Assistant Connect ZBT-1"
-
-    # SkyConnect, should be shown
-    mock_ports[3].manufacturer = "Nabu Casa"
-    mock_ports[3].description = "SkyConnect v1.0"
-
-    # unknown device with manufacturer/description, should be shown
-    mock_ports[4].manufacturer = "Another Manufacturer"
-    mock_ports[4].description = "Zigbee USB Adapter"
-
-    # unknown device with no manufacturer/description, should be shown
-    mock_ports[5].manufacturer = None
-    mock_ports[5].description = None
 
     with (
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
-        patch("serial.tools.list_ports.comports", return_value=mock_ports),
+        patch(
+            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            return_value=mock_ports,
+        ),
     ):
         ports = await config_flow.list_serial_ports(hass)
 
