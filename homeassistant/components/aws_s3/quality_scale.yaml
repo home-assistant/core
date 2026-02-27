@@ -45,7 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: S3 is a cloud service that is not discovered on the network.
