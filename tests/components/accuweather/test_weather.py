@@ -158,7 +158,7 @@ async def test_forecast_daily_missing_average_humidity(
         return_response=True,
     )
 
-    assert response["weather.home"]["forecast"][0][ATTR_FORECAST_HUMIDITY] is None
+    assert response["weather.home"]["forecast"][0].get("humidity") is None
 
 
 async def test_forecast_subscription(
