@@ -12,10 +12,7 @@ from bring_api import (
 import pytest
 
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.components.bring.services import (
-    ATTR_REACTION,
-    SERVICE_ACTIVITY_STREAM_REACTION,
-)
+from homeassistant.components.bring.services import ATTR_REACTION
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -51,7 +48,7 @@ async def test_send_reaction(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ACTIVITY_STREAM_REACTION,
+        "send_reaction",
         service_data={
             ATTR_ENTITY_ID: "event.einkauf_activities",
             ATTR_REACTION: reaction,
@@ -85,7 +82,7 @@ async def test_send_reaction_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            "send_reaction",
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
                 ATTR_REACTION: "heart",
@@ -113,7 +110,7 @@ async def test_send_reaction_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            "send_reaction",
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
                 ATTR_REACTION: "heart",
@@ -144,7 +141,7 @@ async def test_send_reaction_unknown_entity(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            "send_reaction",
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
                 ATTR_REACTION: "heart",
@@ -177,7 +174,7 @@ async def test_send_reaction_not_found(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            "send_reaction",
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
                 ATTR_REACTION: "heart",

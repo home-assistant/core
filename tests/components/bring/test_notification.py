@@ -9,7 +9,6 @@ from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.bring.services import (
     ATTR_ITEM_NAME,
     ATTR_NOTIFICATION_TYPE,
-    SERVICE_PUSH_NOTIFICATION,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
@@ -34,7 +33,7 @@ async def test_send_notification(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PUSH_NOTIFICATION,
+        "send_message",
         service_data={
             ATTR_NOTIFICATION_TYPE: "GOING_SHOPPING",
         },
@@ -65,7 +64,7 @@ async def test_send_notification_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUSH_NOTIFICATION,
+            "send_message",
             service_data={
                 ATTR_NOTIFICATION_TYPE: "GOING_SHOPPING",
             },
@@ -91,7 +90,7 @@ async def test_send_notification_service_validation_error(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUSH_NOTIFICATION,
+            "send_message",
             service_data={ATTR_NOTIFICATION_TYPE: "URGENT_MESSAGE", ATTR_ITEM_NAME: ""},
             target={ATTR_ENTITY_ID: "todo.einkauf"},
             blocking=True,

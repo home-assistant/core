@@ -29,9 +29,6 @@ ATTR_NOTIFICATION_TYPE = "message"
 ATTR_REACTION = "reaction"
 ATTR_RECEIVER = "publicUserUuid"
 
-SERVICE_PUSH_NOTIFICATION = "send_message"
-SERVICE_ACTIVITY_STREAM_REACTION = "send_reaction"
-
 SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -96,7 +93,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ACTIVITY_STREAM_REACTION,
+        "send_reaction",
         async_send_activity_stream_reaction,
         SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA,
     )
@@ -104,7 +101,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PUSH_NOTIFICATION,
+        "send_message",
         entity_domain=TODO_DOMAIN,
         schema={
             vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
