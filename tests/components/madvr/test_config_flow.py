@@ -1,236 +1,188 @@
-"""Tests for the MadVR config flow."""
+"""Test config flow for madVR Envy."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from __future__ import annotations
+
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-from .const import MOCK_CONFIG, MOCK_MAC, MOCK_MAC_NEW
-
-from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True)
-async def avoid_wait() -> AsyncGenerator[None]:
-    """Mock sleep."""
-    with patch("homeassistant.components.madvr.config_flow.RETRY_INTERVAL", 0):
-        yield
+from homeassistant.components.madvr.const import (
+    DOMAIN,
+    OPT_RECONNECT_INITIAL_BACKOFF,
+    OPT_RECONNECT_JITTER,
+    OPT_RECONNECT_MAX_BACKOFF,
+)
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test full config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+async def test_user_flow_success(hass):
+    """Test successful config flow."""
+    client = MagicMock()
+    client.start = AsyncMock()
+    client.wait_synced = AsyncMock()
+    client.stop = AsyncMock()
+    client.state = SimpleNamespace(mac_address="00:11:22:33:44:55")
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
-    )
+    with patch("homeassistant.components.madvr.config_flow.MadvrEnvyClient", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_HOST: MOCK_CONFIG[CONF_HOST],
-        CONF_PORT: MOCK_CONFIG[CONF_PORT],
-    }
-    assert result["result"].unique_id == MOCK_MAC
-    mock_madvr_client.open_connection.assert_called_once()
-    mock_madvr_client.async_add_tasks.assert_called_once()
-    mock_madvr_client.async_cancel_tasks.assert_called_once()
+    assert result["title"] == "madVR Envy (00:11:22:33:44:55)"
+    assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PORT: 44077}
 
 
-async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test error handling in config flow."""
-    mock_madvr_client.open_connection.side_effect = TimeoutError
+async def test_user_flow_cannot_connect(hass):
+    """Test user flow connection failure."""
+    client = MagicMock()
+    client.start = AsyncMock(side_effect=TimeoutError)
+    client.stop = AsyncMock()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
-    )
+    with patch("homeassistant.components.madvr.config_flow.MadvrEnvyClient", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
+        )
+
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_madvr_client.open_connection.side_effect = None
-    mock_madvr_client.connected = False
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
-    )
+
+async def test_user_flow_unknown_exception_maps_to_cannot_connect(hass):
+    """Test unexpected validation exception doesn't crash flow."""
+    client = MagicMock()
+    client.start = AsyncMock(side_effect=RuntimeError("boom"))
+    client.stop = AsyncMock()
+
+    with patch("homeassistant.components.madvr.config_flow.MadvrEnvyClient", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
+        )
+
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_madvr_client.connected = True
-    mock_madvr_client.mac_address = None
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "no_mac"}
+async def test_user_flow_success_without_mac(hass):
+    """Test successful config flow when MAC is not available."""
+    client = MagicMock()
+    client.start = AsyncMock()
+    client.wait_synced = AsyncMock()
+    client.stop = AsyncMock()
+    client.state = SimpleNamespace(mac_address=None)
 
-    # ensure an error is recoverable
-    mock_madvr_client.mac_address = MOCK_MAC
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
-    )
+    with patch("homeassistant.components.madvr.config_flow.MadvrEnvyClient", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {
-        CONF_HOST: MOCK_CONFIG[CONF_HOST],
-        CONF_PORT: MOCK_CONFIG[CONF_PORT],
-    }
-
-    # Verify method calls
-    assert mock_madvr_client.open_connection.call_count == 4
-    assert mock_madvr_client.async_add_tasks.call_count == 2
-    # the first call will not call this due to timeout as expected
-    assert mock_madvr_client.async_cancel_tasks.call_count == 2
+    assert result["title"] == "madVR Envy (192.168.1.100)"
 
 
-async def test_duplicate(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test duplicate config entries."""
+async def test_reauth_flow_success(hass, mock_config_entry):
+    """Test successful reauth."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
-    )
+    client = MagicMock()
+    client.start = AsyncMock()
+    client.wait_synced = AsyncMock()
+    client.stop = AsyncMock()
+    client.state = SimpleNamespace(mac_address="00:11:22:33:44:55")
+
+    with (
+        patch("homeassistant.components.madvr.config_flow.MadvrEnvyClient", return_value=client),
+        patch.object(
+            hass.config_entries,
+            "async_reload",
+            AsyncMock(),
+        ) as mock_reload,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+            data=mock_config_entry.data,
+        )
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "reauth_successful"
+    assert mock_reload.await_count == 1
 
 
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfigure flow."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {}
-
-    # define new host
-    new_host = "192.168.1.100"
-    # make sure setting port works
-    new_port = 44078
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: new_host, CONF_PORT: new_port},
-    )
-
-    # should get the abort with success result
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    # Verify that the config entry was updated
-    assert mock_config_entry.data[CONF_HOST] == new_host
-    assert mock_config_entry.data[CONF_PORT] == new_port
-
-    # Verify that the connection was tested
-    mock_madvr_client.open_connection.assert_called()
-    mock_madvr_client.async_add_tasks.assert_called()
-    mock_madvr_client.async_cancel_tasks.assert_called()
-
-
-async def test_reconfigure_new_device(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfigure flow."""
-    mock_config_entry.add_to_hass(hass)
-    # test reconfigure with a new device (should fail)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    # define new host
-    new_host = "192.168.1.100"
-    # make sure setting port works
-    new_port = 44078
-
-    # modify test_connection so it returns new_mac
-    mock_madvr_client.mac_address = MOCK_MAC_NEW
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: new_host, CONF_PORT: new_port},
-    )
-
-    # unique id should remain unchanged with new device, should fail
-    assert mock_config_entry.unique_id == MOCK_MAC
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "set_up_new_device"
-
-
-async def test_reconfigure_flow_errors(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test error handling in reconfigure flow."""
+async def test_options_flow_invalid_backoff(hass, mock_config_entry):
+    """Test options flow validates reconnect backoff ordering."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
 
-    # Test CannotConnect error
-    mock_madvr_client.open_connection.side_effect = TimeoutError
-    result = await hass.config_entries.flow.async_configure(
+    result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
+        user_input={
+            "sync_timeout": 10.0,
+            "connect_timeout": 3.0,
+            "command_timeout": 2.0,
+            "read_timeout": 30.0,
+            OPT_RECONNECT_INITIAL_BACKOFF: 5.0,
+            OPT_RECONNECT_MAX_BACKOFF: 2.0,
+            OPT_RECONNECT_JITTER: 0.2,
+            "enable_advanced_entities": True,
+        },
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
 
-    # Test no_mac error
-    mock_madvr_client.open_connection.side_effect = None
-    mock_madvr_client.connected = True
-    mock_madvr_client.mac_address = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "no_mac"}
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_backoff"}
 
-    # Ensure errors are recoverable
-    mock_madvr_client.mac_address = MOCK_MAC
-    result = await hass.config_entries.flow.async_configure(
+
+async def test_options_flow_invalid_jitter(hass, mock_config_entry):
+    """Test options flow validates reconnect jitter bounds."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "sync_timeout": 10.0,
+                "connect_timeout": 3.0,
+                "command_timeout": 2.0,
+                "read_timeout": 30.0,
+                OPT_RECONNECT_INITIAL_BACKOFF: 1.0,
+                OPT_RECONNECT_MAX_BACKOFF: 2.0,
+                OPT_RECONNECT_JITTER: 1.5,
+                "enable_advanced_entities": True,
+            },
+        )
+
+
+async def test_options_flow_success(hass, mock_config_entry):
+    """Test options flow saves valid options."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_HOST: "192.168.1.100", CONF_PORT: 44077},
+        user_input={
+            "sync_timeout": 11.0,
+            "connect_timeout": 4.0,
+            "command_timeout": 3.0,
+            "read_timeout": 15.0,
+            OPT_RECONNECT_INITIAL_BACKOFF: 0.5,
+            OPT_RECONNECT_MAX_BACKOFF: 8.0,
+            OPT_RECONNECT_JITTER: 0.1,
+            "enable_advanced_entities": False,
+        },
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY

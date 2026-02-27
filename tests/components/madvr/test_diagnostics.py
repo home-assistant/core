@@ -1,48 +1,33 @@
-"""Test madVR diagnostics."""
+"""Test diagnostics for madVR Envy integration."""
+
+from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
+from homeassistant.const import CONF_HOST
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
-from .conftest import get_update_callback
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
+from homeassistant.components.madvr.diagnostics import async_get_config_entry_diagnostics
 
 
-@pytest.mark.parametrize(
-    ("positive_payload"),
-    [
-        {"is_on": True},
-    ],
-)
-async def test_entry_diagnostics(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-    mock_madvr_client: AsyncMock,
-    snapshot: SnapshotAssertion,
-    positive_payload: dict,
-) -> None:
-    """Test config entry diagnostics."""
-    with patch("homeassistant.components.madvr.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+async def test_diagnostics_redacts_sensitive_data(hass, mock_config_entry, mock_envy_client):
+    """Test diagnostics redaction behavior."""
+    mock_config_entry.add_to_hass(hass)
 
-    update_callback = get_update_callback(mock_madvr_client)
+    with (
+        patch("homeassistant.components.madvr.MadvrEnvyClient", return_value=mock_envy_client),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(return_value=True),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Add data to test storing diagnostic data
-    update_callback(positive_payload)
-    await hass.async_block_till_done()
+    diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
-    result = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
+    assert diagnostics["entry"]["data"][CONF_HOST] == "**REDACTED**"
+    assert diagnostics["runtime"]["host"] == "**REDACTED**"
+    assert diagnostics["runtime"]["state"]["mac_address"] == "**REDACTED**"
 
-    assert result == snapshot(exclude=props("created_at", "modified_at"))
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)

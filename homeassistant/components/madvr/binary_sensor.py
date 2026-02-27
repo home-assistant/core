@@ -1,85 +1,62 @@
-"""Binary sensor entities for the madVR integration."""
+"""Binary sensor platform for madVR Envy."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import MadVRConfigEntry, MadVRCoordinator
-from .entity import MadVREntity
-
-_HDR_FLAG = "hdr_flag"
-_OUTGOING_HDR_FLAG = "outgoing_hdr_flag"
-_POWER_STATE = "power_state"
-_SIGNAL_STATE = "signal_state"
+from .entity import MadvrEnvyEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class MadvrBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describe madVR binary sensor entity."""
-
-    value_fn: Callable[[MadVRCoordinator], bool]
+class MadvrEnvyBinarySensorDescription(BinarySensorEntityDescription):
+    value_fn: Any
 
 
-BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
-    MadvrBinarySensorEntityDescription(
-        key=_POWER_STATE,
-        translation_key=_POWER_STATE,
-        value_fn=lambda coordinator: coordinator.data.get("is_on", False),
-    ),
-    MadvrBinarySensorEntityDescription(
-        key=_SIGNAL_STATE,
-        translation_key=_SIGNAL_STATE,
-        value_fn=lambda coordinator: coordinator.data.get("is_signal", False),
-    ),
-    MadvrBinarySensorEntityDescription(
-        key=_HDR_FLAG,
-        translation_key=_HDR_FLAG,
-        value_fn=lambda coordinator: coordinator.data.get("hdr_flag", False),
-    ),
-    MadvrBinarySensorEntityDescription(
-        key=_OUTGOING_HDR_FLAG,
-        translation_key=_OUTGOING_HDR_FLAG,
-        value_fn=lambda coordinator: coordinator.data.get("outgoing_hdr_flag", False),
+BINARY_SENSORS: tuple[MadvrEnvyBinarySensorDescription, ...] = (
+    MadvrEnvyBinarySensorDescription(
+        key="signal_present",
+        translation_key="signal_present",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_fn=lambda data: data.get("signal_present"),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MadVRConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the binary sensor entities."""
-    coordinator = entry.runtime_data
     async_add_entities(
-        MadvrBinarySensor(coordinator, description) for description in BINARY_SENSORS
+        [
+            MadvrEnvyBinarySensor(entry.runtime_data.coordinator, description)
+            for description in BINARY_SENSORS
+        ]
     )
 
 
-class MadvrBinarySensor(MadVREntity, BinarySensorEntity):
-    """Base class for madVR binary sensors."""
+class MadvrEnvyBinarySensor(MadvrEnvyEntity, BinarySensorEntity):
+    """madVR Envy binary sensor."""
 
-    entity_description: MadvrBinarySensorEntityDescription
+    entity_description: MadvrEnvyBinarySensorDescription
 
-    def __init__(
-        self,
-        coordinator: MadVRCoordinator,
-        description: MadvrBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator)
+    def __init__(self, coordinator, description: MadvrEnvyBinarySensorDescription) -> None:  # noqa: ANN001
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self.entity_description.value_fn(self.coordinator)
+    def is_on(self) -> bool | None:
+        value = self.entity_description.value_fn(self.data)
+        if value is None:
+            return None
+        return bool(value)

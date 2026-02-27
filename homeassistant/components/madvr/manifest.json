@@ -1,10 +1,11 @@
 {
   "domain": "madvr",
   "name": "madVR Envy",
-  "codeowners": ["@iloveicedgreentea"],
+  "codeowners": ["@binarylogic"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/madvr",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["py-madvr2==1.6.40"]
+  "loggers": ["madvr_envy"],
+  "requirements": ["madvr-envy==0.1.6"]
 }

@@ -1,0 +1,49 @@
+press_key:
+  name: Press Key
+  description: Send a remote key press to madVR Envy.
+  fields:
+    key:
+      name: Key
+      description: Remote key name (for example MENU, INFO, OK, BACK, LEFT, RIGHT, UP, DOWN).
+      required: true
+      selector:
+        text:
+
+activate_profile:
+  name: Activate Profile
+  description: Activate a profile in a profile group.
+  fields:
+    group_id:
+      name: Group ID
+      description: Profile group id.
+      required: true
+      selector:
+        text:
+    profile_index:
+      name: Profile Index
+      description: Profile index in the group.
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+
+run_action:
+  name: Run Action
+  description: Run a predefined Envy action.
+  fields:
+    action:
+      name: Action
+      description: Action name.
+      required: true
+      selector:
+        select:
+          options:
+            - standby
+            - power_off
+            - hotplug
+            - restart
+            - reload_software
+            - tone_map_on
+            - tone_map_off

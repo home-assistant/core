@@ -1,290 +1,157 @@
-"""Sensor entities for the madVR integration."""
+"""Sensor platform for madVR Envy."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ASPECT_DEC,
-    ASPECT_INT,
-    ASPECT_NAME,
-    ASPECT_RES,
-    INCOMING_ASPECT_RATIO,
-    INCOMING_BIT_DEPTH,
-    INCOMING_BLACK_LEVELS,
-    INCOMING_COLOR_SPACE,
-    INCOMING_COLORIMETRY,
-    INCOMING_FRAME_RATE,
-    INCOMING_RES,
-    INCOMING_SIGNAL_TYPE,
-    MASKING_DEC,
-    MASKING_INT,
-    MASKING_RES,
-    OUTGOING_BIT_DEPTH,
-    OUTGOING_BLACK_LEVELS,
-    OUTGOING_COLOR_SPACE,
-    OUTGOING_COLORIMETRY,
-    OUTGOING_FRAME_RATE,
-    OUTGOING_RES,
-    OUTGOING_SIGNAL_TYPE,
-    TEMP_CPU,
-    TEMP_GPU,
-    TEMP_HDMI,
-    TEMP_MAINBOARD,
-)
-from .coordinator import MadVRConfigEntry, MadVRCoordinator
-from .entity import MadVREntity
-
-
-def is_valid_temperature(value: float | None) -> bool:
-    """Check if the temperature value is valid."""
-    return value is not None and value > 0
-
-
-def get_temperature(coordinator: MadVRCoordinator, key: str) -> float | None:
-    """Get temperature value if valid, otherwise return None."""
-    try:
-        temp = float(coordinator.data.get(key, 0))
-    except AttributeError, ValueError:
-        return None
-    else:
-        return temp if is_valid_temperature(temp) else None
+from .const import OPT_ENABLE_ADVANCED_ENTITIES
+from .entity import MadvrEnvyEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class MadvrSensorEntityDescription(SensorEntityDescription):
-    """Describe madVR sensor entity."""
-
-    value_fn: Callable[[MadVRCoordinator], StateType]
+class MadvrEnvySensorDescription(SensorEntityDescription):
+    value_fn: Any
 
 
-SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
-    MadvrSensorEntityDescription(
-        key=TEMP_GPU,
+SENSORS: tuple[MadvrEnvySensorDescription, ...] = (
+    MadvrEnvySensorDescription(
+        key="power_state",
+        translation_key="power_state",
+        icon="mdi:power",
+        value_fn=lambda data: data.get("power_state"),
+    ),
+    MadvrEnvySensorDescription(
+        key="gpu_temperature",
+        translation_key="gpu_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_GPU),
-        translation_key=TEMP_GPU,
-        entity_registry_enabled_default=False,
+        value_fn=lambda data: _temperature_value(data, 0),
     ),
-    MadvrSensorEntityDescription(
-        key=TEMP_HDMI,
+    MadvrEnvySensorDescription(
+        key="hdmi_input_temperature",
+        translation_key="hdmi_input_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_HDMI),
-        translation_key=TEMP_HDMI,
-        entity_registry_enabled_default=False,
+        value_fn=lambda data: _temperature_value(data, 1),
     ),
-    MadvrSensorEntityDescription(
-        key=TEMP_CPU,
+    MadvrEnvySensorDescription(
+        key="cpu_temperature",
+        translation_key="cpu_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_CPU),
-        translation_key=TEMP_CPU,
-        entity_registry_enabled_default=False,
+        value_fn=lambda data: _temperature_value(data, 2),
     ),
-    MadvrSensorEntityDescription(
-        key=TEMP_MAINBOARD,
+    MadvrEnvySensorDescription(
+        key="mainboard_temperature",
+        translation_key="mainboard_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_MAINBOARD),
-        translation_key=TEMP_MAINBOARD,
+        value_fn=lambda data: _temperature_value(data, 3),
+    ),
+    MadvrEnvySensorDescription(
+        key="version",
+        translation_key="version",
+        icon="mdi:identifier",
         entity_registry_enabled_default=False,
+        value_fn=lambda data: data.get("version"),
     ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_RES,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_RES),
-        translation_key=INCOMING_RES,
-    ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_SIGNAL_TYPE,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_SIGNAL_TYPE),
-        translation_key=INCOMING_SIGNAL_TYPE,
-        device_class=SensorDeviceClass.ENUM,
-        options=["2D", "3D"],
+    MadvrEnvySensorDescription(
+        key="current_menu",
+        translation_key="current_menu",
+        icon="mdi:menu",
         entity_registry_enabled_default=False,
+        value_fn=lambda data: data.get("current_menu"),
     ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_FRAME_RATE,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_FRAME_RATE),
-        translation_key=INCOMING_FRAME_RATE,
-    ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_COLOR_SPACE,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_COLOR_SPACE),
-        translation_key=INCOMING_COLOR_SPACE,
-        device_class=SensorDeviceClass.ENUM,
-        options=["RGB", "444", "422", "420"],
-    ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_BIT_DEPTH,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_BIT_DEPTH),
-        translation_key=INCOMING_BIT_DEPTH,
-        device_class=SensorDeviceClass.ENUM,
-        options=["8bit", "10bit", "12bit"],
-    ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_COLORIMETRY,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_COLORIMETRY),
-        translation_key=INCOMING_COLORIMETRY,
-        device_class=SensorDeviceClass.ENUM,
-        options=["SDR", "HDR10", "HLG 601", "PAL", "709", "DCI", "2020"],
-    ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_BLACK_LEVELS,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_BLACK_LEVELS),
-        translation_key=INCOMING_BLACK_LEVELS,
-        device_class=SensorDeviceClass.ENUM,
-        options=["TV", "PC"],
-    ),
-    MadvrSensorEntityDescription(
-        key=INCOMING_ASPECT_RATIO,
-        value_fn=lambda coordinator: coordinator.data.get(INCOMING_ASPECT_RATIO),
-        translation_key=INCOMING_ASPECT_RATIO,
-        device_class=SensorDeviceClass.ENUM,
-        options=["16:9", "4:3"],
+    MadvrEnvySensorDescription(
+        key="aspect_ratio_mode",
+        translation_key="aspect_ratio_mode",
+        icon="mdi:aspect-ratio",
         entity_registry_enabled_default=False,
+        value_fn=lambda data: data.get("aspect_ratio_mode"),
     ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_RES,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_RES),
-        translation_key=OUTGOING_RES,
-    ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_SIGNAL_TYPE,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_SIGNAL_TYPE),
-        translation_key=OUTGOING_SIGNAL_TYPE,
-        device_class=SensorDeviceClass.ENUM,
-        options=["2D", "3D"],
-        entity_registry_enabled_default=False,
-    ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_FRAME_RATE,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_FRAME_RATE),
-        translation_key=OUTGOING_FRAME_RATE,
-    ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_COLOR_SPACE,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_COLOR_SPACE),
-        translation_key=OUTGOING_COLOR_SPACE,
-        device_class=SensorDeviceClass.ENUM,
-        options=["RGB", "444", "422", "420"],
-    ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_BIT_DEPTH,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_BIT_DEPTH),
-        translation_key=OUTGOING_BIT_DEPTH,
-        device_class=SensorDeviceClass.ENUM,
-        options=["8bit", "10bit", "12bit"],
-    ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_COLORIMETRY,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_COLORIMETRY),
-        translation_key=OUTGOING_COLORIMETRY,
-        device_class=SensorDeviceClass.ENUM,
-        options=["SDR", "HDR10", "HLG 601", "PAL", "709", "DCI", "2020"],
-    ),
-    MadvrSensorEntityDescription(
-        key=OUTGOING_BLACK_LEVELS,
-        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_BLACK_LEVELS),
-        translation_key=OUTGOING_BLACK_LEVELS,
-        device_class=SensorDeviceClass.ENUM,
-        options=["TV", "PC"],
-    ),
-    MadvrSensorEntityDescription(
-        key=ASPECT_RES,
-        value_fn=lambda coordinator: coordinator.data.get(ASPECT_RES),
-        translation_key=ASPECT_RES,
-        entity_registry_enabled_default=False,
-    ),
-    MadvrSensorEntityDescription(
-        key=ASPECT_DEC,
-        value_fn=lambda coordinator: coordinator.data.get(ASPECT_DEC),
-        translation_key=ASPECT_DEC,
-    ),
-    MadvrSensorEntityDescription(
-        key=ASPECT_INT,
-        value_fn=lambda coordinator: coordinator.data.get(ASPECT_INT),
-        translation_key=ASPECT_INT,
-        entity_registry_enabled_default=False,
-    ),
-    MadvrSensorEntityDescription(
-        key=ASPECT_NAME,
-        value_fn=lambda coordinator: coordinator.data.get(ASPECT_NAME),
-        translation_key=ASPECT_NAME,
-        entity_registry_enabled_default=False,
-    ),
-    MadvrSensorEntityDescription(
-        key=MASKING_RES,
-        value_fn=lambda coordinator: coordinator.data.get(MASKING_RES),
-        translation_key=MASKING_RES,
-        entity_registry_enabled_default=False,
-    ),
-    MadvrSensorEntityDescription(
-        key=MASKING_DEC,
-        value_fn=lambda coordinator: coordinator.data.get(MASKING_DEC),
-        translation_key=MASKING_DEC,
-    ),
-    MadvrSensorEntityDescription(
-        key=MASKING_INT,
-        value_fn=lambda coordinator: coordinator.data.get(MASKING_INT),
-        translation_key=MASKING_INT,
-        entity_registry_enabled_default=False,
+    MadvrEnvySensorDescription(
+        key="active_profile",
+        translation_key="active_profile",
+        icon="mdi:playlist-play",
+        value_fn=lambda data: _active_profile_value(data),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MadVRConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the sensor entities."""
-    coordinator = entry.runtime_data
-    async_add_entities(MadvrSensor(coordinator, description) for description in SENSORS)
+    enable_advanced = entry.options.get(OPT_ENABLE_ADVANCED_ENTITIES, True)
+    entities: list[MadvrEnvySensor] = []
+
+    for description in SENSORS:
+        if (
+            description.key in {"version", "current_menu", "aspect_ratio_mode"}
+            and not enable_advanced
+        ):
+            continue
+        entities.append(MadvrEnvySensor(entry.runtime_data.coordinator, description))
+
+    async_add_entities(entities)
 
 
-class MadvrSensor(MadVREntity, SensorEntity):
-    """Base class for madVR sensors."""
+class MadvrEnvySensor(MadvrEnvyEntity, SensorEntity):
+    """madVR Envy sensor."""
 
-    def __init__(
-        self,
-        coordinator: MadVRCoordinator,
-        description: MadvrSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description: MadvrSensorEntityDescription = description
-        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+    entity_description: MadvrEnvySensorDescription
+
+    def __init__(self, coordinator, description: MadvrEnvySensorDescription) -> None:  # noqa: ANN001
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
 
     @property
-    def native_value(self) -> float | str | None:
-        """Return the state of the sensor."""
-        val = self.entity_description.value_fn(self.coordinator)
-        # check if sensor is enum
-        if self.entity_description.device_class == SensorDeviceClass.ENUM:
-            if (
-                self.entity_description.options
-                and val in self.entity_description.options
-            ):
-                return val
-            # return None for values that are not in the options
-            return None
+    def native_value(self) -> Any:
+        return self.entity_description.value_fn(self.data)
 
-        return val
+
+def _temperature_value(data: dict[str, Any], index: int) -> int | None:
+    temperatures = data.get("temperatures")
+    if not isinstance(temperatures, (tuple, list)):
+        return None
+    if len(temperatures) <= index:
+        return None
+
+    value = temperatures[index]
+    if isinstance(value, int):
+        return value
+    return None
+
+
+def _active_profile_value(data: dict[str, Any]) -> str | None:
+    group = data.get("active_profile_group")
+    index = data.get("active_profile_index")
+    if not isinstance(group, str) or not isinstance(index, int):
+        return None
+
+    groups = data.get("profile_groups")
+    group_name = group
+    if isinstance(groups, dict):
+        value = groups.get(group)
+        if isinstance(value, str) and value:
+            group_name = value
+
+    profiles = data.get("profiles")
+    profile_name = str(index)
+    if isinstance(profiles, dict):
+        key = f"{group}_{index}"
+        value = profiles.get(key)
+        if not isinstance(value, str):
+            value = profiles.get(str(index))
+        if isinstance(value, str) and value:
+            profile_name = value
+
+    return f"{group_name}: {profile_name}"
