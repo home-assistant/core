@@ -830,16 +830,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
             if wiim_data:
                 if self.entity_id in wiim_data.entity_id_to_udn_map:
-                    try:
-                        del wiim_data.entity_id_to_udn_map[self.entity_id]
-                        LOGGER.debug(
-                            "Removed %s from entity_id_to_udn_map", self.entity_id
-                        )
-                    except KeyError:
-                        LOGGER.debug(
-                            "Entity %s not found in entity_id_to_udn_map for removal",
-                            self.entity_id,
-                        )
+                    del wiim_data.entity_id_to_udn_map[self.entity_id]
+                    LOGGER.debug(
+                        "Removed %s from entity_id_to_udn_map", self.entity_id
+                    )
 
         await super().async_will_remove_from_hass()
 
