@@ -10,6 +10,7 @@
       "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_nodes_found": "No active nodes found",
+      "permissions_error": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again.",
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {

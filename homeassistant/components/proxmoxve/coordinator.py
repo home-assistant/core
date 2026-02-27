@@ -102,7 +102,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except ResourceException as err:
+        except ProxmoxPermissionsError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="permissions_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except ProxmoxNodesNotFoundError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
@@ -181,8 +187,15 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
-        self.permissions = self.proxmox.access.permissions.get()
-        self.proxmox.nodes.get()
+        try:
+            self.permissions = self.proxmox.access.permissions.get()
+        except ResourceException as err:
+            raise ProxmoxPermissionsError from err
+
+        try:
+            self.proxmox.nodes.get()
+        except ResourceException as err:
+            raise ProxmoxNodesNotFoundError from err
 
     def _fetch_all_nodes(
         self,
@@ -232,3 +245,15 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+
+
+class ProxmoxSetupError(Exception):
+    """Base exception for Proxmox setup issues."""
+
+
+class ProxmoxNodesNotFoundError(ProxmoxSetupError):
+    """Raised when the API works but no nodes are visible."""
+
+
+class ProxmoxPermissionsError(ProxmoxSetupError):
+    """Raised when failing to retrieve permissions."""
