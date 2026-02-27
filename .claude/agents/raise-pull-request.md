@@ -112,7 +112,7 @@ Check each item from the [development checklist](https://developers.home-assista
 
 **Track results:**
 - `NO_COMMENTED_CODE`: true if no blocks of commented-out code found in the diff
-- `REQUIREMENTS_UPDATED`: true if requirements_all.txt was regenerated (or `MANIFEST_CHANGED` is false, making it not applicable)
+- `REQUIREMENTS_UPDATED`: true if `MANIFEST_CHANGED` is true and requirements_all.txt was regenerated successfully; not applicable if `MANIFEST_CHANGED` is false
 - `CHECKLIST_PASSED`: true if all items above pass
 
 ## Step 7: Determine Type of Change
