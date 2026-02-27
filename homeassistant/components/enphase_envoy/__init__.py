@@ -9,11 +9,28 @@ from pyenphase import Envoy
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+from .services import (
+    add_envoy_to_coordinators_list,
+    remove_envoy_from_coordinators_list,
+    setup_envoy_service_actions,
+)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set Enphase Envoy integration."""
+
+    # setup the enphase_envoy services
+    await setup_envoy_service_actions(hass, config)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
@@ -54,12 +71,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
         manufacturer="Enphase",
         name=coordinator.name,
         model=envoy.envoy_model,
+        model_id="ENVOY",
         sw_version=str(envoy.firmware),
         hw_version=envoy.part_number,
         serial_number=envoy.serial_number,
     )
 
     entry.runtime_data = coordinator
+
+    # Add coordinator to list of known coordinators so it can be found by services
+    await add_envoy_to_coordinators_list(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -72,6 +93,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
     coordinator.async_cancel_mac_verification()
+    # Remove coordinator from list of known coordinators so it can no longer be found by services
+    await remove_envoy_from_coordinators_list(hass, entry)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
