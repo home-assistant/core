@@ -105,9 +105,9 @@ class RenaultNumberEntity(
             raise NotImplementedError(
                 f"Unsupported Renault number entity key: {self.entity_description.key}"
             )
-
-        # Request coordinator refresh to update the displayed value
-        await self.coordinator.async_request_refresh()
+        # No coordinator refresh here: Renault servers cache the previous
+        # values for an extended period, so an immediate refresh would
+        # overwrite the new values with stale data.
 
 
 NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
