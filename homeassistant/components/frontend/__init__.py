@@ -439,7 +439,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     # Keep import here so that we can import frontend without installing reqs
     import hass_frontend  # noqa: PLC0415
 
-    return hass_frontend.where()
+    return pathlib.Path(hass_frontend.where())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
