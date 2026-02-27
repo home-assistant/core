@@ -1,4 +1,3 @@
-# homeassistant/components/wiim/const.py
 """Constants for the WiiM integration."""
 
 from dataclasses import dataclass, field

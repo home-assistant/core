@@ -1,4 +1,3 @@
-# homeassistant/components/wiim/media_player.py
 """Support for WiiM Media Players."""
 
 from __future__ import annotations
@@ -682,7 +681,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 track_source = ""
 
             LOGGER.debug(
-                "_from_device_update_supported_features PlayMedium = %s and trackSource = %s",
+                "_from_device_update_supported_features play_medium = %s and track_source = %s",
                 play_medium,
                 track_source,
             )
@@ -831,9 +830,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if wiim_data:
                 if self.entity_id in wiim_data.entity_id_to_udn_map:
                     del wiim_data.entity_id_to_udn_map[self.entity_id]
-                    LOGGER.debug(
-                        "Removed %s from entity_id_to_udn_map", self.entity_id
-                    )
+                    LOGGER.debug("Removed %s from entity_id_to_udn_map", self.entity_id)
 
         await super().async_will_remove_from_hass()
 
@@ -1406,9 +1403,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         )
                     )
             except Exception as err:
-                LOGGER.error(
-                    "Error fetching favorites for browse_media: %s", err
-                )
+                LOGGER.error("Error fetching favorites for browse_media: %s", err)
                 raise BrowseError("Error fetching favorites for browse_media") from err
 
             return BrowseMedia(
@@ -1426,7 +1421,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             playlist_track_items: list = []
             try:
                 sdk_playlist_tracks = await self._device.async_get_queue_items()
-                trackSourceQueue = next(
+                track_source_queue = next(
                     (
                         item["SourceName"]
                         for item in sdk_playlist_tracks
@@ -1449,17 +1444,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         children=[],
                     )
 
-                playMedium = media_info.get("PlayMedium")
-                trackSource = media_info.get("TrackSource")
+                play_medium = media_info.get("PlayMedium")
+                track_source = media_info.get("TrackSource")
 
-                LOGGER.warning(
-                    "MEDIA_CONTENT_ID_PLAYLISTS PlayMedium = %s and trackSource = %s and trackSourceQueue = %s",
-                    playMedium,
-                    trackSource,
-                    trackSourceQueue,
+                LOGGER.debug(
+                    "MEDIA_CONTENT_ID_PLAYLISTS play_medium = %s and track_source = %s and track_source_queue = %s",
+                    play_medium,
+                    track_source,
+                    track_source_queue,
                 )
 
-                if playMedium not in VALID_PLAY_MEDIUMS:
+                if play_medium not in VALID_PLAY_MEDIUMS:
                     return BrowseMedia(
                         media_class=MediaClass.PLAYLIST,
                         media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,
@@ -1471,9 +1466,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     )
 
                 if (
-                    trackSourceQueue
-                    and trackSource not in trackSourceQueue
-                    and trackSourceQueue != "MyFavouriteQueue"
+                    track_source_queue
+                    and track_source not in track_source_queue
+                    and track_source_queue != "MyFavouriteQueue"
                 ):
                     return BrowseMedia(
                         media_class=MediaClass.PLAYLIST,
@@ -1485,7 +1480,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         children=playlist_track_items,
                     )
 
-                if trackSource == "":
+                if track_source == "":
                     return BrowseMedia(
                         media_class=MediaClass.PLAYLIST,
                         media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,

@@ -1,4 +1,3 @@
-# homeassistant/components/wiim/entity.py
 """Base entity for the WiiM integration."""
 
 from __future__ import annotations
