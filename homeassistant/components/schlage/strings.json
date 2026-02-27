@@ -77,11 +77,11 @@
       "description": "Adds a PIN code to a lock.",
       "fields": {
         "code": {
-          "description": "The PIN code to add. Must be unique to lock and be between 4 and 8 digits long.",
+          "description": "The PIN code to add. Must be unique to the lock and be between 4 and 8 digits long.",
           "name": "PIN code"
         },
         "name": {
-          "description": "Name for PIN code. Must be case insensitively unique to lock.",
+          "description": "Name for PIN code. Must be case insensitively unique to the lock.",
           "name": "PIN name"
         }
       },
