@@ -188,7 +188,7 @@ EOF
 
 Read the PR template from `.github/PULL_REQUEST_TEMPLATE.md` and use it as the basis for the PR body. **Do not hardcode the template — always read it from the file to stay in sync with upstream changes.**
 
-Use any HTML comments (`<!-- ... -->`) in the template as guidance to understand what to fill in. For the final PR body sent to GitHub, remove only non-essential comments (such as greetings), and preserve instructional comments that convey required constraints. Then fill in the sections:
+Use any HTML comments (`<!-- ... -->`) in the template as guidance to understand what to fill in. For the final PR body sent to GitHub, keep the template text intact — do not delete any text from the template unless it explicitly instructs removal (e.g., the breaking change section when not applicable). Then fill in the sections:
 
 1. **Breaking change section**: If the type is NOT "Breaking change" or "Deprecation", remove the entire `## Breaking change` section (heading and body). Otherwise, describe what breaks, how users can fix it, and why.
 2. **Proposed change section**: Fill in a description of the change extracted from commit messages.
