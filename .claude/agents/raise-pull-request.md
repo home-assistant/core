@@ -166,15 +166,12 @@ If `CHANGE_TYPE` IS "Breaking change" or "Deprecation", keep the `## Breaking ch
 ## Step 10: Push Branch and Create PR
 
 ```bash
-# Get branch name, push remote, and GitHub username
+# Get branch name and GitHub username
 BRANCH=$(git branch --show-current)
 PUSH_REMOTE=$(git config "branch.$BRANCH.remote" 2>/dev/null || git remote | head -1)
 GITHUB_USER=$(gh api user --jq .login 2>/dev/null || git remote get-url "$PUSH_REMOTE" | sed -E 's#.*[:/]([^/]+)/([^/]+)(\.git)?$#\1#')
 
-# Push branch
-git push -u "$PUSH_REMOTE" "$BRANCH"
-
-# Create PR
+# Create PR (gh pr create pushes the branch automatically)
 gh pr create --repo home-assistant/core --base dev \
   --head "$GITHUB_USER:$BRANCH" \
   --title "TITLE_HERE" \
