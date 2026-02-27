@@ -59,7 +59,7 @@ def mock_application_credentials():
 def mock_api_client():
     """Mock API client."""
     with patch(
-        "custom_components.hisense_connectlife.api.HisenseApiClient"
+        "homeassistant.components.hisense_connectlife.api.HisenseApiClient"
     ) as mock_client:
         mock_instance = AsyncMock()
         mock_instance.async_get_devices = AsyncMock(return_value=[])
@@ -72,7 +72,7 @@ def mock_api_client():
 def mock_coordinator():
     """Mock data update coordinator."""
     with patch(
-        "custom_components.hisense_connectlife.coordinator.HisenseACPluginDataUpdateCoordinator"
+        "homeassistant.components.hisense_connectlife.coordinator.HisenseACPluginDataUpdateCoordinator"
     ) as mock_coord:
         mock_instance = AsyncMock()
         mock_instance.async_setup = AsyncMock(return_value=True)

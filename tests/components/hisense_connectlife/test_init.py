@@ -31,7 +31,7 @@ async def test_async_setup_entry(
         patch("aiohttp.ClientSession") as mock_client_session,
     ):
         mock_coordinator = AsyncMock()
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock()  # 关键改这里
+        mock_coordinator.async_config_entry_first_refresh = AsyncMock()
         mock_coord_class.return_value = mock_coordinator
 
         mock_get_impl.return_value = MagicMock()
@@ -53,7 +53,7 @@ async def test_async_setup_entry(
         result = await async_setup_entry(hass, mock_config_entry)
 
         assert result is True
-        mock_coordinator.async_config_entry_first_refresh.assert_called_once()  # 改成这个断言
+        mock_coordinator.async_config_entry_first_refresh.assert_called_once()  # Changed to this assertion
 
 
 @pytest.mark.asyncio

@@ -258,7 +258,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         else:  # status_devicestatus
             self._update_device_status(device_data, content_data)
 
-        # 写回
+        # Write back updated device information
         updated_device = DeviceInfo(device_data)
         device_key = next(
             (k for k, v in self._devices.items() if v.puid == device.puid), None
@@ -282,7 +282,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         status = content_data.get("status")
         properties = content_data.get("properties", {})
 
-        # 处理 base64 编码的 status
+        # Process base64 encoded status
         if status and isinstance(status, str):
             try:
                 decoded = base64.b64decode(status).decode("utf-8")
@@ -293,15 +293,13 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             except Exception as e:  # noqa: BLE001
                 _LOGGER.warning("Failed to decode base64 status: %s", e)
 
-        # 处理 properties
+        # Process properties
         if isinstance(properties, dict):
             device_data["statusList"].update(properties)
             _LOGGER.debug("Updated with properties: %s", properties)
 
     def _notify_update(self) -> None:
         """Notify update(include try get parser and trigger sync update)."""
-        # 为了保持原有日志顺序，这里重新获取一次 updated_device
-        # 但实际可以优化为把 updated_device 传进来
         for device in self._devices.values():
             device_type = device.get_device_type()
             if not device_type:
@@ -318,6 +316,6 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             except Exception as err:  # noqa: BLE001
                 _LOGGER.error("Failed to get device parser: %s", err)
 
-        # 通知
+        # Notify
         self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, self._devices)
         _LOGGER.debug("Device(s) updated via WebSocket")
