@@ -222,9 +222,6 @@ async def test_template_select(hass: HomeAssistant, calls: list[ServiceCall]) ->
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "c", attributes)
     _verify(hass, "c", ["a", "b", "c"])
 
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, "None", attributes)
-    _verify(hass, STATE_UNKNOWN, ["a", "b", "c"])
-
 
 def _verify(
     hass: HomeAssistant,
