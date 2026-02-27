@@ -9,7 +9,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import LOGGER
 from .coordinator import LoJackCoordinator
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
@@ -36,10 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
         success = True
     finally:
         if not success:
-            try:
-                await client.close()
-            except Exception:  # noqa: BLE001 - Cleanup during setup failure should not fail
-                LOGGER.debug("Error closing client after setup failure", exc_info=True)
+            await client.close()
 
     entry.runtime_data = coordinator
 
@@ -53,9 +49,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> b
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        try:
-            await entry.runtime_data.client.close()
-        except Exception:  # noqa: BLE001 - Cleanup during unload should not fail
-            LOGGER.debug("Error closing LoJack client during unload", exc_info=True)
+        await entry.runtime_data.client.close()
 
     return unload_ok
