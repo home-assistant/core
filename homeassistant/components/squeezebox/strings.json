@@ -22,6 +22,9 @@
         "data": {
           "server_list": "Choose discovered server to configure"
         },
+        "data_description": {
+          "server_list": "The discovered server to connect to."
+        },
         "title": "Discovered Servers"
       },
       "discovery_failed": {
