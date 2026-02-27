@@ -42,15 +42,13 @@ async def async_user_store(hass: HomeAssistant, user_id: str) -> UserStore:
         store = UserStore(hass, user_id)
         try:
             await store.async_load()
-        except BaseException as ex:
+        except BaseException as ex:  # noqa: BLE001
+            # We rely on the final `return await future`
+            # to ensure the exception is re-raised.
             del stores[user_id]
             future.set_exception(ex)
-            # Ensure the future is marked as retrieved
-            # since if there is no concurrent call it
-            # will otherwise never be retrieved.
-            future.exception()
-            raise
-        future.set_result(store)
+        else:
+            future.set_result(store)
 
     return await future
 
