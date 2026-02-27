@@ -281,6 +281,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         await ha_zha_data.gateway_proxy.shutdown()
         ha_zha_data.gateway_proxy = None
 
+    ha_zha_data.update_coordinator = None
+
     # clean up any remaining entity metadata
     # (entities that have been discovered but not yet added to HA)
     # suppress KeyError because we don't know what state we may
