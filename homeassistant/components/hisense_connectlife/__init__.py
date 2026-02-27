@@ -20,23 +20,18 @@ from .oauth2 import HisenseOAuth2Implementation, OAuth2Session
 
 _LOGGER = logging.getLogger(__name__)
 
-# This integration can only be configured via config entry
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Hisense AC Plugin component."""
-    _LOGGER.debug("Setting up Hisense AC Plugin")
-
-    implementation = HisenseOAuth2Implementation(
-        hass,
-    )
+    """Set up the Hisense ConnectLife."""
+    _LOGGER.debug("Setting up Hisense ConnectLife")
 
     OAuth2FlowHandler.async_register_implementation(
         hass,
-        implementation,
+        HisenseOAuth2Implementation(hass),
     )
 
     return True
@@ -61,16 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await ha_session.async_ensure_token_valid()
 
     token_info = entry.data.get("token", {})
-    if "expires_in" in token_info and "expires_at" not in token_info:
+    if "expires_in" in token_info:
         token_info["expires_at"] = time.time() + token_info["expires_in"]
-
-    _LOGGER.debug(
-        "Token info: %s",
-        {
-            k: "***" if k in ("access_token", "refresh_token") else v
-            for k, v in token_info.items()
-        },
-    )
 
     hisense_impl = HisenseOAuth2Implementation(hass)
     oauth_session = OAuth2Session(
@@ -80,11 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = HisenseACPluginDataUpdateCoordinator(hass, api_client, entry)
 
-    # 核心测试：直接让 HA 处理异常
     await coordinator.async_config_entry_first_refresh()
-    # 如果上面没抛异常 → 测试通过
 
-    # 可选：加一行 log 确认成功
     _LOGGER.debug("Initial data refresh successful during setup")
 
     entry.runtime_data = coordinator
