@@ -1,6 +1,10 @@
 """SwitchBotCloudSelect entity."""
 
-from switchbot_api import Device, Remote, SwitchBotAPI
+import asyncio
+import random
+import time
+
+from switchbot_api import Device, KeyPadCommands, Remote, SwitchBotAPI
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -8,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from .const import AFTER_COMMAND_REFRESH, DEFAULT_EXPIRED_DURATION, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -28,19 +32,38 @@ async def async_setup_entry(
 class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
     """SwitchBotCloud Keypad."""
 
+    default_option: str = "create key"
+
     _attr_options = [
-        "create key",
+        default_option,
     ]
     _attr_current_option = _attr_options[0]
+    _attr_name: str | None = None
 
     async def async_select_option(self, option: str) -> None:
         """Show existed key & create key."""
+        if option == self.default_option:
+            parameters = {
+                "name": "PW" + f"{int(time.time())}"[-8:],
+                "type": "disposable",
+                "password": f"{random.randint(100000, 999999)}",
+                "startTime": int(time.time()),
+                "endTime": int(time.time()) + DEFAULT_EXPIRED_DURATION,
+            }
+            await self.send_api_command(
+                KeyPadCommands.CREATE_KEY, parameters=parameters
+            )
+            await asyncio.sleep(AFTER_COMMAND_REFRESH)
+            await self.coordinator.async_request_refresh()
+        else:
+            self._attr_current_option = option
+            self.async_write_ha_state()
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        options = ["Create Key"]
+        options = [self.default_option]
         keyList = self.coordinator.data["keyList"]
         for item in keyList:
             password = item["password"]
