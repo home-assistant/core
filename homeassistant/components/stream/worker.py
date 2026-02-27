@@ -177,7 +177,7 @@ class StreamMuxer:
             # in test_durations
             "avoid_negative_ts": "make_non_negative",
             "fragment_index": str(sequence + 1),
-            "video_track_timescale": str(int(1 / input_vstream.time_base)),  # type: ignore[operator]
+            "video_track_timescale": str(int(1 / input_vstream.time_base)),
             # Only do extra fragmenting if we are using ll_hls
             # Let ffmpeg do the work using frag_duration
             # Fragment durations may exceed the 15% allowed variance but it seems ok
@@ -594,8 +594,8 @@ def stream_worker(
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
     dts_validator = TimestampValidator(
-        int(1 / video_stream.time_base),  # type: ignore[operator]
-        int(1 / audio_stream.time_base) if audio_stream else 1,  # type: ignore[operator]
+        int(1 / video_stream.time_base),
+        int(1 / audio_stream.time_base) if audio_stream else 1,
     )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
