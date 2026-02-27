@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
-PySwitchbot==1.0.0
+PySwitchbot==1.1.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -225,9 +225,6 @@ aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
 aiodns==4.0.0
-
-# homeassistant.components.duke_energy
-aiodukeenergy==0.3.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -1499,6 +1496,9 @@ opower==0.17.0
 # homeassistant.components.oralb
 oralb-ble==1.0.2
 
+# homeassistant.components.orvibo
+orvibo==1.1.2
+
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
 
@@ -2105,7 +2105,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.3
+pysmartthings==3.6.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2648,7 +2648,7 @@ uasiren==0.0.1
 uhooapi==1.2.6
 
 # homeassistant.components.unifiprotect
-uiprotect==10.2.1
+uiprotect==10.2.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
