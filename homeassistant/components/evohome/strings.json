@@ -1,7 +1,7 @@
 {
   "exceptions": {
     "zone_only_service": {
-      "message": "Only zones support the `{service}` service"
+      "message": "Only zones support the `{service}` action"
     }
   },
   "services": {
