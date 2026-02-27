@@ -41,6 +41,8 @@ ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
+CONF_MAX_VOLUME = "max_volume"
+
 DOMAIN = "media_player"
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"

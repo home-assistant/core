@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_SEARCH_QUERY,
+    ATTR_MEDIA_VOLUME_LEVEL,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
@@ -20,13 +21,24 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.components.media_player.const import (
+    CONF_MAX_VOLUME,
+    DOMAIN,
     SERVICE_BROWSE_MEDIA,
     SERVICE_SEARCH_MEDIA,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from .conftest import MockMediaPlayer, MockMediaPlayerVolumeUpDown
 
 from tests.common import MockEntityPlatform
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -634,3 +646,363 @@ async def test_play_media_via_selector(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+
+async def test_max_volume_option_default(
+    hass: HomeAssistant,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that max_volume option is None by default."""
+    assert mock_media_player_entity._media_player_option_max_volume is None
+
+
+async def test_max_volume_option_set(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that max_volume option is read from the entity registry."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    assert mock_media_player_entity._media_player_option_max_volume == 0.5
+
+
+async def test_max_volume_option_cleared(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that max_volume option can be cleared."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+    assert mock_media_player_entity._media_player_option_max_volume == 0.5
+
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        None,
+    )
+    await hass.async_block_till_done()
+    assert mock_media_player_entity._media_player_option_max_volume is None
+
+
+async def test_volume_set_clamped_by_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_set service clamps to max_volume."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.8,
+        },
+        blocking=True,
+    )
+
+    assert mock_media_player_entity.volume_level == 0.5
+
+
+async def test_volume_set_below_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_set below max_volume is not clamped."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.8},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        },
+        blocking=True,
+    )
+
+    assert mock_media_player_entity.volume_level == 0.5
+
+
+async def test_volume_set_without_max_volume(
+    hass: HomeAssistant,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_set without max_volume is not clamped."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.9,
+        },
+        blocking=True,
+    )
+
+    assert mock_media_player_entity.volume_level == 0.9
+
+
+async def test_volume_up_respects_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_up respects max_volume."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    # Set volume to 0.45
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.45,
+        },
+        blocking=True,
+    )
+
+    # Volume up should be clamped to max_volume (0.5)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: mock_media_player_entity.entity_id},
+        blocking=True,
+    )
+
+    assert mock_media_player_entity.volume_level == 0.5
+
+
+async def test_volume_up_does_not_exceed_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_up does nothing when already at max_volume."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    # Set volume to exactly max
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        },
+        blocking=True,
+    )
+
+    # Volume up should not go above max
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: mock_media_player_entity.entity_id},
+        blocking=True,
+    )
+
+    assert mock_media_player_entity.volume_level == 0.5
+
+
+async def test_volume_down_with_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_down works normally when max_volume is set."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    # Set volume to 0.5
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        },
+        blocking=True,
+    )
+
+    # Volume down should decrease
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: mock_media_player_entity.entity_id},
+        blocking=True,
+    )
+
+    assert mock_media_player_entity.volume_level == pytest.approx(0.4)
+
+
+async def test_max_volume_overrides_custom_volume_up(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_custom_vol_entity: MockMediaPlayerVolumeUpDown,
+) -> None:
+    """Test that max_volume forces fallback and skips custom volume_up."""
+    entity = mock_media_player_custom_vol_entity
+
+    entity_registry.async_update_entity_options(
+        entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    # Set volume to 0.45
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.45,
+        },
+        blocking=True,
+    )
+
+    # Volume up should use fallback (not custom), and clamp to max
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+
+    # Custom volume_up should NOT have been called
+    entity.calls_volume_up.assert_not_called()
+    assert entity.volume_level == 0.5
+
+
+async def test_max_volume_overrides_custom_volume_down(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_custom_vol_entity: MockMediaPlayerVolumeUpDown,
+) -> None:
+    """Test that max_volume forces fallback and skips custom volume_down."""
+    entity = mock_media_player_custom_vol_entity
+
+    entity_registry.async_update_entity_options(
+        entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.5},
+    )
+    await hass.async_block_till_done()
+
+    # Set volume to 0.4
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.4,
+        },
+        blocking=True,
+    )
+
+    # Volume down should use fallback (not custom)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+
+    # Custom volume_down should NOT have been called
+    entity.calls_volume_down.assert_not_called()
+    assert entity.volume_level == pytest.approx(0.3)
+
+
+async def test_no_max_volume_uses_custom_volume_up(
+    hass: HomeAssistant,
+    mock_media_player_custom_vol_entity: MockMediaPlayerVolumeUpDown,
+) -> None:
+    """Test that without max_volume, custom volume_up is used."""
+    entity = mock_media_player_custom_vol_entity
+
+    # Set volume to 0.5
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        },
+        blocking=True,
+    )
+
+    # Volume up should use the custom method
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+
+    entity.calls_volume_up.assert_called_once()
+    assert entity.volume_level == pytest.approx(0.6)
+
+
+async def test_no_max_volume_uses_custom_volume_down(
+    hass: HomeAssistant,
+    mock_media_player_custom_vol_entity: MockMediaPlayerVolumeUpDown,
+) -> None:
+    """Test that without max_volume, custom volume_down is used."""
+    entity = mock_media_player_custom_vol_entity
+
+    # Set volume to 0.5
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        },
+        blocking=True,
+    )
+
+    # Volume down should use the custom method
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+
+    entity.calls_volume_down.assert_called_once()
+    assert entity.volume_level == pytest.approx(0.4)

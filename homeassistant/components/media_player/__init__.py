@@ -52,7 +52,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -102,6 +102,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    CONF_MAX_VOLUME,
     CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
     INTENT_MEDIA_SEARCH_AND_PLAY,
@@ -353,7 +354,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
-        "async_set_volume_level",
+        "_async_handle_set_volume_level",
         [MediaPlayerEntityFeature.VOLUME_SET],
     )
     component.async_register_entity_service(
@@ -552,6 +553,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
+    _media_player_option_max_volume: float | None = None
 
     _attr_app_id: str | None = None
     _attr_app_name: str | None = None
@@ -799,6 +801,33 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the media player entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self._async_read_entity_options()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_read_entity_options()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from entity registry.
+
+        Called when the entity registry entry has been updated and before the
+        media player is added to the state machine.
+        """
+        assert self.registry_entry
+        if (
+            media_player_options := self.registry_entry.options.get(DOMAIN)
+        ) and (max_volume := media_player_options.get(CONF_MAX_VOLUME)) is not None:
+            self._media_player_option_max_volume = max_volume
+            return
+        self._media_player_option_max_volume = None
+
     def turn_on(self) -> None:
         """Turn the media player on."""
         raise NotImplementedError
@@ -830,6 +859,13 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.hass.async_add_executor_job(self.set_volume_level, volume)
+
+    @final
+    async def _async_handle_set_volume_level(self, volume: float) -> None:
+        """Set volume level, clamping to max volume if set."""
+        if self._media_player_option_max_volume is not None:
+            volume = min(volume, self._media_player_option_max_volume)
+        await self.async_set_volume_level(volume)
 
     def media_play(self) -> None:
         """Send play command."""
@@ -1038,17 +1074,25 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         This method is a coroutine.
         """
-        if hasattr(self, "volume_up"):
+        if (
+            self._media_player_option_max_volume is None
+            and hasattr(self, "volume_up")
+        ):
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
+        max_volume = (
+            self._media_player_option_max_volume
+            if self._media_player_option_max_volume is not None
+            else 1
+        )
         if (
             self.volume_level is not None
-            and self.volume_level < 1
+            and self.volume_level < max_volume
             and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
-                min(1, self.volume_level + self.volume_step)
+                min(max_volume, self.volume_level + self.volume_step)
             )
 
     async def async_volume_down(self) -> None:
@@ -1056,7 +1100,10 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         This method is a coroutine.
         """
-        if hasattr(self, "volume_down"):
+        if (
+            self._media_player_option_max_volume is None
+            and hasattr(self, "volume_down")
+        ):
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
