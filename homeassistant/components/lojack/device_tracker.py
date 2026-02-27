@@ -157,12 +157,17 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # Log when vehicle becomes unavailable or recovers
-        is_available = self.available
+        coordinator_available = super().available
+        vehicle_present = self._vehicle is not None
+        is_available = coordinator_available and vehicle_present
         if not is_available and not self._unavailable_logged:
-            LOGGER.info(
-                "The %s is unavailable: vehicle removed from account",
-                self._device_name,
-            )
+            if coordinator_available and not vehicle_present:
+                LOGGER.info(
+                    "The %s is unavailable: vehicle removed from account",
+                    self._device_name,
+                )
+            else:
+                LOGGER.info("The %s is unavailable", self._device_name)
             self._unavailable_logged = True
         elif is_available and self._unavailable_logged:
             LOGGER.info("The %s is back online", self._device_name)
