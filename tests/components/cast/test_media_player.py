@@ -2413,8 +2413,6 @@ async def test_entity_media_states_active_app_reported_idle(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    # BEFORE FIX: This would be "off"
-    # AFTER FIX: This should be "idle"
     assert state.state == "idle"
 
     # Scenario: Backdrop (Screensaver) is running. Should still be OFF.
