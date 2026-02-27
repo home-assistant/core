@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 2
+  CACHE_VERSION: 3
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.3"
+  HA_SHORT_VERSION: "2026.4"
   DEFAULT_PYTHON: "3.14.2"
   ALL_PYTHON_VERSIONS: "['3.14.2']"
   # 10.3 is the oldest supported version
@@ -169,9 +169,8 @@ jobs:
 
           if [[ "${INTEGRATION_CHANGES}" != "[]" ]];
           then
-            # Create a file glob for the integrations
-            integrations_glob=$(echo "${INTEGRATION_CHANGES}" | jq -cSr '. | join(",")')
-            [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
+            # Create a space-separated list of integrations
+            integrations_glob=$(echo "${INTEGRATION_CHANGES}" | jq -r '. | join(" ")')
 
             # Create list of testable integrations
             possible_integrations=$(echo "${INTEGRATION_CHANGES}" | jq -cSr '.[]')
@@ -190,9 +189,8 @@ jobs:
             # Test group count should be 1, we don't split partial tests
             test_group_count=1
 
-            # Create a file glob for the integrations tests
-            tests_glob=$(echo "${tests}" | jq -cSr '. | join(",")')
-            [[ "${tests_glob}" == *","* ]] && tests_glob="{${tests_glob}}"
+            # Create a space-separated list of test integrations
+            tests_glob=$(echo "${tests}" | jq -r '. | join(" ")')
 
             mariadb_groups="[]"
             postgresql_groups="[]"
@@ -280,8 +278,28 @@ jobs:
       - name: Run prek
         uses: j178/prek-action@0bb87d7f00b0c99306c8bcb8b8beba1eb581c037 # v1.1.1
         env:
-          PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config
+          PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
+
+  zizmor:
+    name: Check GitHub Actions workflows
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # To check out the repository
+    needs: [info]
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run zizmor
+        uses: j178/prek-action@0bb87d7f00b0c99306c8bcb8b8beba1eb581c037 # v1.1.1
+        with:
+          extra-args: --all-files zizmor
 
   lint-hadolint:
     name: Check ${{ matrix.file }}
@@ -587,7 +605,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Dependency review
-        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
+        uses: actions/dependency-review-action@05fe4576374b728f0c523d6a13d64c25081e0803 # v4.8.3
         with:
           license-check: false # We use our own license audit checks
 
@@ -696,7 +714,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${INTEGRATIONS_GLOB}
+          pylint --ignore-missing-annotations=y $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   pylint-tests:
     name: Check pylint on tests
@@ -749,7 +767,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint tests/components/${TESTS_GLOB}
+          pylint $(printf "tests/components/%s " ${TESTS_GLOB})
 
   mypy:
     name: Check mypy
@@ -817,7 +835,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant/components/${INTEGRATIONS_GLOB}
+          mypy $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   prepare-pytest-full:
     name: Split tests for full run

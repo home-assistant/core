@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 import json
 from time import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from botocore.exceptions import ConnectTimeoutError
 import pytest
@@ -387,7 +387,8 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    assert mock_client.get_object.call_count == 2  # One for metadata, one for tar file
+    # Coordinator first refresh reads metadata (1) + download reads metadata (1) + tar (1)
+    assert mock_client.get_object.call_count == 3
 
 
 async def test_error_during_delete(
@@ -431,10 +432,13 @@ async def test_cache_expiration(
         unique_id="test-unique-id",
         title="Test S3",
     )
-    mock_entry.runtime_data = mock_client
+    mock_entry.runtime_data = MagicMock(client=mock_client)
 
     # Create agent
     agent = S3BackupAgent(hass, mock_entry)
+
+    # Reset call counts from coordinator's initial refresh
+    mock_client.reset_mock()
 
     # Mock metadata response
     metadata_content = json.dumps(test_backup.as_dict())
@@ -542,7 +546,7 @@ async def test_list_backups_with_pagination(
     }
 
     # Setup mock client
-    mock_client = mock_config_entry.runtime_data
+    mock_client = mock_config_entry.runtime_data.client
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
         page1,
         page2,
@@ -568,3 +572,185 @@ async def test_list_backups_with_pagination(
     assert len(backups) == 2
     backup_ids = {backup.backup_id for backup in backups}
     assert backup_ids == {"backup1", "backup2"}
+
+
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_paginate_extra_kwargs"),
+    [
+        ({"prefix": "backups/home"}, {"Prefix": "backups/home/"}),
+        ({}, {}),
+    ],
+    ids=["with_prefix", "no_prefix"],
+)
+async def test_agent_list_backups_parametrized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    test_backup: AgentBackup,
+    config_entry_extra_data: dict,
+    expected_paginate_extra_kwargs: dict,
+) -> None:
+    """Test agent list backups with and without prefix."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+
+    # Verify pagination call with expected parameters
+    mock_client.get_paginator.return_value.paginate.assert_called_with(
+        **{"Bucket": "test"} | expected_paginate_extra_kwargs
+    )
+
+
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_key_prefix"),
+    [
+        ({"prefix": "backups/home"}, "backups/home/"),
+        ({}, ""),
+    ],
+    ids=["with_prefix", "no_prefix"],
+)
+async def test_agent_delete_backup_parametrized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+    expected_key_prefix: str,
+) -> None:
+    """Test agent delete backup with and without prefix."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": "23e64aec",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+
+    expected_tar_key = f"{expected_key_prefix}{tar_filename}"
+    expected_metadata_key = f"{expected_key_prefix}{metadata_filename}"
+
+    mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_tar_key)
+    mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_metadata_key)
+
+
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_key_prefix"),
+    [
+        ({"prefix": "backups/home"}, "backups/home/"),
+        ({}, ""),
+    ],
+    ids=["with_prefix", "no_prefix"],
+)
+async def test_agent_upload_backup_parametrized(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+    expected_key_prefix: str,
+) -> None:
+    """Test agent upload backup with and without prefix."""
+    client = await hass_client()
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=test_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        # we must emit at least two chunks
+        # the "appendix" chunk triggers the upload of the final buffer part
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * test_backup.size,
+                b"appendix",
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+        assert resp.status == 201
+
+        tar_filename, metadata_filename = suggested_filenames(test_backup)
+
+        expected_tar_key = f"{expected_key_prefix}{tar_filename}"
+        expected_metadata_key = f"{expected_key_prefix}{metadata_filename}"
+
+        if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
+            mock_client.put_object.assert_any_call(
+                Bucket="test", Key=expected_tar_key, Body=ANY
+            )
+            mock_client.put_object.assert_any_call(
+                Bucket="test", Key=expected_metadata_key, Body=ANY
+            )
+        else:
+            mock_client.create_multipart_upload.assert_called_with(
+                Bucket="test", Key=expected_tar_key
+            )
+            mock_client.upload_part.assert_any_call(
+                Bucket="test",
+                Key=expected_tar_key,
+                PartNumber=1,
+                UploadId="upload_id",
+                Body=ANY,
+            )
+            mock_client.complete_multipart_upload.assert_called_with(
+                Bucket="test",
+                Key=expected_tar_key,
+                UploadId="upload_id",
+                MultipartUpload=ANY,
+            )
+            mock_client.put_object.assert_called_with(
+                Bucket="test", Key=expected_metadata_key, Body=ANY
+            )
+
+
+@pytest.mark.parametrize(
+    ("config_entry_extra_data", "expected_key_prefix"),
+    [
+        ({"prefix": "backups/home"}, "backups/home/"),
+        ({}, ""),
+    ],
+    ids=["with_prefix", "no_prefix"],
+)
+async def test_agent_download_backup_parametrized(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+    expected_key_prefix: str,
+) -> None:
+    """Test agent download backup with and without prefix."""
+    client = await hass_client()
+    backup_id = "23e64aec"
+
+    resp = await client.get(
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+    )
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
+
+    tar_filename, _ = suggested_filenames(test_backup)
+
+    expected_tar_key = f"{expected_key_prefix}{tar_filename}"
+
+    mock_client.get_object.assert_any_call(Bucket="test", Key=expected_tar_key)

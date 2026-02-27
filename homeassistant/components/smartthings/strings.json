@@ -23,6 +23,9 @@
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a SmartThings device on your network. Press **Submit** to continue setting up SmartThings."
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
@@ -715,7 +718,8 @@
           "off": "[%key:common::state::off%]",
           "pause": "[%key:common::state::paused%]",
           "point": "Point",
-          "reserve": "Reserve"
+          "reserve": "Reserve",
+          "washing_mop": "Washing mop"
         }
       },
       "robot_cleaner_turbo_mode": {
@@ -854,6 +858,9 @@
       },
       "display_lighting": {
         "name": "Display lighting"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
       },
       "dry_plus": {
         "name": "Dry plus"
