@@ -10,8 +10,8 @@ send_command:
       selector:
         text:
     command:
-      name: Command
-      description: "Command number (0-255). Known: 1=Status, 2=Mode, 3=Power, 4=Temp/Level, 14=Language, 15=TempUnit, 16=AltUnit, 17=TankVol, 18=PumpType, 20=Offset"
+      name: Command code
+      description: "Command number (0-255)."
       required: true
       example: 20
       selector:
@@ -20,7 +20,7 @@ send_command:
           max: 255
           mode: box
     argument:
-      name: Argument
+      name: Argument value
       description: "Argument value (-128 to 127). Negative values are encoded as two's complement."
       required: true
       example: 0
