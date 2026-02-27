@@ -187,20 +187,22 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         }
 
         # Fuel consumption tracking (minimal)
-        self._store = Store(hass, 1, f"{DOMAIN}_{ble_device.address}")
-        self._last_update_time: float = time.time()
+        # Sanitize MAC address for storage key (: not valid on Windows)
+        safe_address = ble_device.address.replace(":", "").lower()
+        self._store = Store(hass, 1, f"{DOMAIN}_{safe_address}")
+        self._last_update_time: float = time.monotonic()
         self._total_fuel_consumed: float = 0.0
         self._daily_fuel_consumed: float = 0.0
         self._daily_fuel_history: dict[str, float] = {}  # date -> liters consumed
         self._fuel_consumed_since_reset: float = 0.0  # Fuel since last refuel reset
-        self._last_save_time: float = time.time()
-        self._last_reset_date: str = datetime.now().date().isoformat()
+        self._last_save_time: float = time.monotonic()
+        self._last_reset_date: str = dt_util.now().date().isoformat()
 
         # Runtime tracking
         self._total_runtime_seconds: float = 0.0
         self._daily_runtime_seconds: float = 0.0
         self._daily_runtime_history: dict[str, float] = {}  # date -> hours running
-        self._last_runtime_reset_date: str = datetime.now().date().isoformat()
+        self._last_runtime_reset_date: str = dt_util.now().date().isoformat()
 
         # Auto temperature offset from external sensor
         self._auto_offset_unsub: callable | None = None
@@ -234,7 +236,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 # Check if we need to reset daily fuel counter
                 saved_date = data.get(STORAGE_KEY_DAILY_DATE)
                 if saved_date:
-                    today = datetime.now().date().isoformat()
+                    today = dt_util.now().date().isoformat()
                     if saved_date != today:
                         self._logger.info("New day detected at startup, resetting daily fuel counter")
                         # Save yesterday's consumption to history before resetting
@@ -247,12 +249,12 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                         self._last_reset_date = saved_date
                 else:
                     # No saved date, use today
-                    self._last_reset_date = datetime.now().date().isoformat()
+                    self._last_reset_date = dt_util.now().date().isoformat()
 
                 # Check if we need to reset daily runtime counter
                 saved_runtime_date = data.get(STORAGE_KEY_DAILY_RUNTIME_DATE)
                 if saved_runtime_date:
-                    today = datetime.now().date().isoformat()
+                    today = dt_util.now().date().isoformat()
                     if saved_runtime_date != today:
                         self._logger.info("New day detected at startup, resetting daily runtime counter")
                         # Save yesterday's runtime to history before resetting
@@ -266,7 +268,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                         self._last_runtime_reset_date = saved_runtime_date
                 else:
                     # No saved date, use today
-                    self._last_runtime_reset_date = datetime.now().date().isoformat()
+                    self._last_runtime_reset_date = dt_util.now().date().isoformat()
 
                 # Update data dictionary with loaded values
                 self.data["total_fuel_consumed"] = round(self._total_fuel_consumed, 2)
@@ -375,7 +377,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             return
 
         # Throttle offset updates to avoid too many BLE commands
-        current_time = time.time()
+        current_time = time.monotonic()
         if current_time - self._last_auto_offset_time < AUTO_OFFSET_THROTTLE_SECONDS:
             self._logger.debug("Auto offset throttled (last update %.0fs ago)",
                          current_time - self._last_auto_offset_time)
@@ -454,12 +456,12 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 # Fuel data
                 STORAGE_KEY_TOTAL_FUEL: self._total_fuel_consumed,
                 STORAGE_KEY_DAILY_FUEL: self._daily_fuel_consumed,
-                STORAGE_KEY_DAILY_DATE: datetime.now().date().isoformat(),
+                STORAGE_KEY_DAILY_DATE: dt_util.now().date().isoformat(),
                 STORAGE_KEY_DAILY_HISTORY: self._daily_fuel_history,
                 # Runtime data
                 STORAGE_KEY_TOTAL_RUNTIME: self._total_runtime_seconds,
                 STORAGE_KEY_DAILY_RUNTIME: self._daily_runtime_seconds,
-                STORAGE_KEY_DAILY_RUNTIME_DATE: datetime.now().date().isoformat(),
+                STORAGE_KEY_DAILY_RUNTIME_DATE: dt_util.now().date().isoformat(),
                 STORAGE_KEY_DAILY_RUNTIME_HISTORY: self._daily_runtime_history,
                 # Fuel level tracking
                 STORAGE_KEY_FUEL_SINCE_RESET: self._fuel_consumed_since_reset,
@@ -483,7 +485,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if not self._daily_fuel_history:
             return
 
-        cutoff_date = (datetime.now().date() - timedelta(days=MAX_HISTORY_DAYS)).isoformat()
+        cutoff_date = (dt_util.now().date() - timedelta(days=MAX_HISTORY_DAYS)).isoformat()
         old_keys = [date for date in self._daily_fuel_history if date < cutoff_date]
 
         for date in old_keys:
@@ -497,7 +499,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if not self._daily_runtime_history:
             return
 
-        cutoff_date = (datetime.now().date() - timedelta(days=MAX_HISTORY_DAYS)).isoformat()
+        cutoff_date = (dt_util.now().date() - timedelta(days=MAX_HISTORY_DAYS)).isoformat()
         old_keys = [date for date in self._daily_runtime_history if date < cutoff_date]
 
         for date in old_keys:
@@ -726,7 +728,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
     async def _check_daily_reset(self) -> None:
         """Check if we need to reset daily fuel counter (runs every update, even if offline)."""
-        current_date = datetime.now().date().isoformat()
+        current_date = dt_util.now().date().isoformat()
         if current_date != self._last_reset_date:
             # Save yesterday's consumption to history before resetting
             if self._daily_fuel_consumed > 0:
@@ -761,7 +763,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
     async def _check_daily_runtime_reset(self) -> None:
         """Check if we need to reset daily runtime counter (runs every update, even if offline)."""
-        current_date = datetime.now().date().isoformat()
+        current_date = dt_util.now().date().isoformat()
         if current_date != self._last_runtime_reset_date:
             # Save yesterday's runtime to history before resetting
             if self._daily_runtime_seconds > 0:
@@ -880,7 +882,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 self._save_valid_data()
 
                 # Update fuel consumption and runtime tracking
-                current_time = time.time()
+                current_time = time.monotonic()
                 elapsed_seconds = current_time - self._last_update_time
                 self._last_update_time = current_time
 
@@ -921,7 +923,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         await self._cleanup_connection()
 
         # Exponential backoff: 5s, 10s, 20s, 40s
-        current_time = time.time()
+        current_time = time.monotonic()
         if self._connection_attempts > 0:
             backoff_delays = [5, 10, 20, 40]
             delay_index = min(self._connection_attempts - 1, len(backoff_delays) - 1)
@@ -938,7 +940,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 await asyncio.sleep(remaining)
 
         self._connection_attempts += 1
-        self._last_connection_attempt = time.time()
+        self._last_connection_attempt = time.monotonic()
 
         self._logger.debug(
             "Connecting to Vevor Heater at %s (attempt %d)",
@@ -1501,7 +1503,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         The time is sent as: 60 * hours + minutes
         Example: 14:30 = 60 * 14 + 30 = 870
         """
-        now = datetime.now()
+        now = dt_util.now()
         time_value = 60 * now.hour + now.minute
         self._logger.info("Syncing heater time to %02d:%02d (value=%d)", now.hour, now.minute, time_value)
         # Command 10 for time sync
