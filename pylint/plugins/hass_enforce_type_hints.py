@@ -3518,9 +3518,6 @@ class HassTypeHintChecker(BaseChecker):
             matchers = _METHOD_MATCH
         else:
             if self._in_test_module and node.parent is self._module_node:
-                if node.name.startswith("test_"):
-                    self._check_test_function(node, False)
-                    return
                 if (decoratornames := node.decoratornames()) and (
                     # `@pytest.fixture`
                     "_pytest.fixtures.fixture" in decoratornames
@@ -3528,6 +3525,9 @@ class HassTypeHintChecker(BaseChecker):
                     or "_pytest.fixtures.FixtureFunctionMarker" in decoratornames
                 ):
                     self._check_test_function(node, True)
+                    return
+                if node.name.startswith("test_"):
+                    self._check_test_function(node, False)
                     return
             matchers = self._function_matchers
 
