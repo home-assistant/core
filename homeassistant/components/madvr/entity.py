@@ -28,6 +28,7 @@ class MadvrEnvyEntity(CoordinatorEntity[MadvrEnvyCoordinator]):
 
         device_id = coordinator.mac
         mac = self._mac_address
+        self._attr_unique_id = f"{device_id}_{entity_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=NAME,

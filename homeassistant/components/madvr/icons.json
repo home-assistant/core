@@ -1,112 +1,90 @@
 {
   "entity": {
     "binary_sensor": {
-      "hdr_flag": {
-        "default": "mdi:hdr",
-        "state": {
-          "off": "mdi:hdr-off"
-        }
-      },
-      "outgoing_hdr_flag": {
-        "default": "mdi:hdr",
-        "state": {
-          "off": "mdi:hdr-off"
-        }
-      },
-      "power_state": {
-        "default": "mdi:power",
-        "state": {
-          "off": "mdi:power-off"
-        }
-      },
-      "signal_state": {
+      "signal_present": {
         "default": "mdi:signal",
         "state": {
           "off": "mdi:signal-off"
         }
       }
     },
+    "button": {
+      "hotplug": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "power_off": {
+        "default": "mdi:power-off"
+      },
+      "power_on": {
+        "default": "mdi:power-on"
+      },
+      "reload_software": {
+        "default": "mdi:update"
+      },
+      "remote_back": {
+        "default": "mdi:arrow-left-circle-outline"
+      },
+      "remote_info": {
+        "default": "mdi:information"
+      },
+      "remote_menu": {
+        "default": "mdi:menu"
+      },
+      "remote_ok": {
+        "default": "mdi:check-circle-outline"
+      },
+      "restart": {
+        "default": "mdi:restart"
+      },
+      "standby": {
+        "default": "mdi:sleep"
+      }
+    },
+    "remote": {
+      "remote": {
+        "default": "mdi:remote"
+      }
+    },
+    "select": {
+      "active_profile": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "power_mode": {
+        "default": "mdi:power-settings"
+      }
+    },
     "sensor": {
-      "aspect_dec": {
+      "active_profile": {
+        "default": "mdi:playlist-play"
+      },
+      "aspect_ratio_mode": {
         "default": "mdi:aspect-ratio"
       },
-      "aspect_int": {
-        "default": "mdi:aspect-ratio"
-      },
-      "aspect_name": {
-        "default": "mdi:aspect-ratio"
-      },
-      "aspect_res": {
-        "default": "mdi:aspect-ratio"
-      },
-      "incoming_aspect_ratio": {
-        "default": "mdi:aspect-ratio"
-      },
-      "incoming_bit_depth": {
-        "default": "mdi:television"
-      },
-      "incoming_black_levels": {
-        "default": "mdi:television"
-      },
-      "incoming_color_space": {
-        "default": "mdi:television"
-      },
-      "incoming_colorimetry": {
-        "default": "mdi:television"
-      },
-      "incoming_frame_rate": {
-        "default": "mdi:television"
-      },
-      "incoming_res": {
-        "default": "mdi:television"
-      },
-      "incoming_signal_type": {
-        "default": "mdi:video-image"
-      },
-      "mac_address": {
-        "default": "mdi:ethernet"
-      },
-      "masking_dec": {
-        "default": "mdi:television"
-      },
-      "masking_int": {
-        "default": "mdi:television"
-      },
-      "masking_res": {
-        "default": "mdi:television"
-      },
-      "outgoing_bit_depth": {
-        "default": "mdi:television"
-      },
-      "outgoing_black_levels": {
-        "default": "mdi:television"
-      },
-      "outgoing_color_space": {
-        "default": "mdi:television"
-      },
-      "outgoing_colorimetry": {
-        "default": "mdi:television"
-      },
-      "outgoing_frame_rate": {
-        "default": "mdi:television"
-      },
-      "outgoing_res": {
-        "default": "mdi:television"
-      },
-      "outgoing_signal_type": {
-        "default": "mdi:video-image"
-      },
-      "temp_cpu": {
+      "cpu_temperature": {
         "default": "mdi:thermometer"
       },
-      "temp_gpu": {
+      "current_menu": {
+        "default": "mdi:menu"
+      },
+      "gpu_temperature": {
         "default": "mdi:thermometer"
       },
-      "temp_hdmi": {
+      "hdmi_input_temperature": {
         "default": "mdi:thermometer"
       },
-      "temp_mainboard": {
+      "mainboard_temperature": {
         "default": "mdi:thermometer"
+      },
+      "power_state": {
+        "default": "mdi:power"
+      },
+      "version": {
+        "default": "mdi:identifier"
+      }
+    },
+    "switch": {
+      "tone_map": {
+        "default": "mdi:lightbulb-on"
       }
     }
   }

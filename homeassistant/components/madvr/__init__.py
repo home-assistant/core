@@ -32,6 +32,7 @@ from .const import (
 )
 from .coordinator import MadvrEnvyCoordinator
 from .models import MadvrEnvyRuntimeData
+from .services import async_setup_services, async_unload_services
 
 MadvrEnvyConfigEntry = ConfigEntry
 
@@ -86,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadvrEnvyConfigEntry) ->
     runtime_data = MadvrEnvyRuntimeData(client=client, coordinator=coordinator, last_data={})
     entry.runtime_data = runtime_data
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
+    await async_setup_services(hass)
 
     async def _handle_hass_stop(_event: Event) -> None:
         await coordinator.async_shutdown()
@@ -102,6 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadvrEnvyConfigEntry) -
         hass.data[DOMAIN].pop(entry.entry_id, None)
         await entry.runtime_data.coordinator.async_shutdown()
         if not hass.data[DOMAIN]:
+            await async_unload_services(hass)
             hass.data.pop(DOMAIN, None)
     return unload_ok
 

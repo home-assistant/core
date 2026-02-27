@@ -1,134 +1,164 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
+    "step": {
+      "user": {
+        "title": "Connect to madVR Envy",
+        "description": "Set up a madVR Envy processor",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect madVR Envy",
+        "description": "Update host or port and revalidate the connection",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_mac": "A MAC address was not found. It is required to identify the device. Please ensure your device is connectable."
+      "invalid_backoff": "Reconnect max backoff must be greater than or equal to initial backoff",
+      "invalid_jitter": "Reconnect jitter must be between 0.0 and 1.0",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
     "step": {
-      "reconfigure": {
+      "init": {
+        "title": "madVR Envy options",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "[%key:component::madvr::config::step::user::data_description::host%]",
-          "port": "[%key:component::madvr::config::step::user::data_description::port%]"
-        },
-        "description": "Your device needs to be on in order to reconfigure the integration.",
-        "title": "Reconfigure madVR Envy"
-      },
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your madVR Envy device.",
-          "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
-        },
-        "description": "Your device needs to be on in order to add the integration.",
-        "title": "Set up madVR Envy"
+          "sync_timeout": "Sync timeout (seconds)",
+          "connect_timeout": "Connect timeout (seconds)",
+          "command_timeout": "Command timeout (seconds)",
+          "read_timeout": "Read timeout (seconds)",
+          "reconnect_initial_backoff": "Reconnect initial backoff (seconds)",
+          "reconnect_max_backoff": "Reconnect max backoff (seconds)",
+          "reconnect_jitter": "Reconnect jitter factor",
+          "enable_advanced_entities": "Enable advanced entities"
+        }
       }
     }
   },
   "entity": {
-    "binary_sensor": {
-      "hdr_flag": {
-        "name": "HDR flag"
-      },
-      "outgoing_hdr_flag": {
-        "name": "Outgoing HDR flag"
-      },
+    "sensor": {
       "power_state": {
         "name": "Power state"
       },
-      "signal_state": {
-        "name": "Signal state"
-      }
-    },
-    "sensor": {
-      "aspect_dec": {
-        "name": "Aspect decimal"
-      },
-      "aspect_int": {
-        "name": "Aspect integer"
-      },
-      "aspect_name": {
-        "name": "Aspect name"
-      },
-      "aspect_res": {
-        "name": "Aspect resolution"
-      },
-      "incoming_aspect_ratio": {
-        "name": "Incoming aspect ratio"
-      },
-      "incoming_bit_depth": {
-        "name": "Incoming bit depth"
-      },
-      "incoming_black_levels": {
-        "name": "Incoming black levels"
-      },
-      "incoming_color_space": {
-        "name": "Incoming color space"
-      },
-      "incoming_colorimetry": {
-        "name": "Incoming colorimetry"
-      },
-      "incoming_frame_rate": {
-        "name": "Incoming frame rate"
-      },
-      "incoming_res": {
-        "name": "Incoming resolution"
-      },
-      "incoming_signal_type": {
-        "name": "Incoming signal type"
-      },
-      "masking_dec": {
-        "name": "Masking decimal"
-      },
-      "masking_int": {
-        "name": "Masking integer"
-      },
-      "masking_res": {
-        "name": "Masking resolution"
-      },
-      "outgoing_bit_depth": {
-        "name": "Outgoing bit depth"
-      },
-      "outgoing_black_levels": {
-        "name": "Outgoing black levels"
-      },
-      "outgoing_color_space": {
-        "name": "Outgoing color space"
-      },
-      "outgoing_colorimetry": {
-        "name": "Outgoing colorimetry"
-      },
-      "outgoing_frame_rate": {
-        "name": "Outgoing frame rate"
-      },
-      "outgoing_res": {
-        "name": "Outgoing resolution"
-      },
-      "outgoing_signal_type": {
-        "name": "Outgoing signal type"
-      },
-      "temp_cpu": {
-        "name": "CPU temperature"
-      },
-      "temp_gpu": {
+      "gpu_temperature": {
         "name": "GPU temperature"
       },
-      "temp_hdmi": {
-        "name": "HDMI temperature"
+      "hdmi_input_temperature": {
+        "name": "HDMI input temperature"
       },
-      "temp_mainboard": {
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "mainboard_temperature": {
         "name": "Mainboard temperature"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "current_menu": {
+        "name": "Current menu"
+      },
+      "aspect_ratio_mode": {
+        "name": "Aspect ratio mode"
+      },
+      "incoming_signal_resolution": {
+        "name": "Incoming signal resolution"
+      },
+      "incoming_signal_frame_rate": {
+        "name": "Incoming signal frame rate"
+      },
+      "incoming_signal_aspect_ratio": {
+        "name": "Incoming signal aspect ratio"
+      },
+      "incoming_signal_hdr_mode": {
+        "name": "Incoming signal HDR mode"
+      },
+      "outgoing_signal_resolution": {
+        "name": "Outgoing signal resolution"
+      },
+      "outgoing_signal_frame_rate": {
+        "name": "Outgoing signal frame rate"
+      },
+      "outgoing_signal_hdr_mode": {
+        "name": "Outgoing signal HDR mode"
+      },
+      "aspect_ratio_name": {
+        "name": "Aspect ratio name"
+      },
+      "aspect_ratio_decimal": {
+        "name": "Aspect ratio decimal"
+      },
+      "masking_ratio_decimal": {
+        "name": "Masking ratio decimal"
+      },
+      "active_profile": {
+        "name": "Active profile"
+      }
+    },
+    "binary_sensor": {
+      "signal_present": {
+        "name": "Signal present"
+      }
+    },
+    "switch": {
+      "tone_map": {
+        "name": "Tone mapping"
+      }
+    },
+    "button": {
+      "power_on": {
+        "name": "Power on"
+      },
+      "standby": {
+        "name": "Standby"
+      },
+      "power_off": {
+        "name": "Power off"
+      },
+      "hotplug": {
+        "name": "Hotplug"
+      },
+      "restart": {
+        "name": "Restart"
+      },
+      "reload_software": {
+        "name": "Reload software"
+      },
+      "remote_menu": {
+        "name": "Remote menu"
+      },
+      "remote_info": {
+        "name": "Remote info"
+      },
+      "remote_ok": {
+        "name": "Remote OK"
+      },
+      "remote_back": {
+        "name": "Remote back"
+      }
+    },
+    "select": {
+      "power_mode": {
+        "name": "Power mode"
+      },
+      "active_profile": {
+        "name": "Active profile"
+      }
+    },
+    "remote": {
+      "remote": {
+        "name": "Remote"
       }
     }
   }

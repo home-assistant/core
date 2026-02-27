@@ -34,6 +34,9 @@ EVENT_PREFIX = f"{DOMAIN}."
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+    Platform.BUTTON,
+    Platform.SELECT,
     Platform.REMOTE,
 ]
 
@@ -71,3 +74,7 @@ ASPECT_NAME = "aspect_name"
 MASKING_RES = "masking_res"
 MASKING_DEC = "masking_dec"
 MASKING_INT = "masking_int"
+
+SERVICE_PRESS_KEY = "press_key"
+SERVICE_ACTIVATE_PROFILE = "activate_profile"
+SERVICE_RUN_ACTION = "run_action"
