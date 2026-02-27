@@ -59,11 +59,12 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception while setting up device")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(device.state.id, raise_on_progress=False)
+                unique_id = str(device.state.id)
+                await self.async_set_unique_id(unique_id, raise_on_progress=False)
                 processed_input = {CONF_HOST: host, CONF_MAC: mac}
                 self._abort_if_unique_id_configured(processed_input)
                 return self.async_create_entry(
-                    title=f"{NAME} ({device.state.id})", data=processed_input
+                    title=f"{NAME} ({unique_id})", data=processed_input
                 )
             finally:
                 await device.stop()

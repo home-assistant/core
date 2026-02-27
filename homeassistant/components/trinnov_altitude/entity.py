@@ -13,8 +13,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, MANUFACTURER, MODEL, NAME
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from trinnov_altitude.client import TrinnovAltitudeClient
     from trinnov_altitude.protocol import Message
 
@@ -31,11 +29,11 @@ class TrinnovAltitudeEntity(Entity):
         """Initialize entity."""
 
         self._device = device
-        self._callback: Callable[[Any], None] | None = None
+        self._callback: Callable[[str, Message | None], None] | None = None
+        self._device_id = str(device.state.id)
 
-        self._attr_unique_id = str(device.state.id)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(device.state.id))},
+            identifiers={(DOMAIN, self._device_id)},
             name=f"{NAME} ({device.state.id})",
             model=MODEL,
             manufacturer=MANUFACTURER,

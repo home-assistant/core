@@ -20,8 +20,18 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Trinnov Altitude."""
 
-    host = entry.data[CONF_HOST].strip()
-    mac = entry.data.get(CONF_MAC, "").strip() or None
+    host_value = entry.data.get(CONF_HOST, "")
+    if isinstance(host_value, str):
+        host = host_value.strip()
+    else:
+        host = str(host_value)
+
+    mac_value = entry.data.get(CONF_MAC)
+    if isinstance(mac_value, str):
+        mac = mac_value.strip() or None
+    else:
+        mac = None
+
     device = TrinnovAltitudeClient(host=host, mac=mac, client_id=CLIENT_ID)
 
     try:

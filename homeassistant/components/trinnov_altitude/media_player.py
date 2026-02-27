@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from trinnov_altitude.client import TrinnovAltitudeClient
 
 
 async def async_setup_entry(
@@ -41,6 +42,11 @@ class TrinnovAltitudeMediaPlayer(TrinnovAltitudeEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
+
+    def __init__(self, device: TrinnovAltitudeClient) -> None:
+        """Initialize the media player entity."""
+        super().__init__(device)
+        self._attr_unique_id = f"{self._device_id}_media_player"
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute/unmute volume."""
