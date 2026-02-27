@@ -36,6 +36,8 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
         altitude.power_off = AsyncMock(return_value=None)
         altitude.mute_set = AsyncMock(return_value=None)
         altitude.source_set_by_name = AsyncMock(return_value=None)
+        altitude.preset_set = AsyncMock(return_value=None)
+        altitude.upmixer_set = AsyncMock(return_value=None)
         altitude.volume_up = AsyncMock(return_value=None)
         altitude.volume_down = AsyncMock(return_value=None)
         altitude.volume_set = AsyncMock(return_value=None)
@@ -54,6 +56,9 @@ def fixture_mock_device() -> Generator[AsyncMock, None, None]:
             source_format="PCM",
             mute=False,
             volume=-35.0,
+            preset="Movie",
+            presets={0: "Movie", 1: "Music"},
+            upmixer="native",
         )
         yield altitude
 
