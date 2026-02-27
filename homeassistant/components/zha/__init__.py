@@ -274,6 +274,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
+
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
 
@@ -293,7 +296,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     websocket_api.async_unload_api(hass)
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
