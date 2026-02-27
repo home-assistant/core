@@ -18,15 +18,10 @@ CONTEXT = {"source": SOURCE_USER}
 DATA = {CONF_HOST: MOCK_HOST, CONF_MAC: MOCK_MAC}
 
 
-async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> None:
-    """Test user config flow."""
-
-    # Note: I could not get this test to pass when isolating each failure in
-    # separate tests. There appears to be a race condition with mocking that
-    # I could not resolve despite other tests having the same pattern.
-
-    # Test connection failed
-
+async def test_user_config_flow_connection_failed(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow connection failed."""
     mock_device.start.side_effect = ConnectionFailedError(OSError("message"))
 
     result = await hass.config_entries.flow.async_init(
@@ -37,8 +32,11 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "invalid_host"}
 
-    # Test connection timeout
 
+async def test_user_config_flow_connection_timeout(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow connection timeout."""
     mock_device.start.side_effect = ConnectionTimeoutError("message")
 
     result = await hass.config_entries.flow.async_init(
@@ -49,8 +47,11 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Test success
 
+async def test_user_config_flow_success(
+    hass: HomeAssistant, mock_device: AsyncMock
+) -> None:
+    """Test user config flow success."""
     mock_device.start.side_effect = None
 
     result = await hass.config_entries.flow.async_init(DOMAIN, context=CONTEXT)

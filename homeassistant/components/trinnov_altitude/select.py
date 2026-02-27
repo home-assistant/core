@@ -10,7 +10,6 @@ from trinnov_altitude.const import UpmixerMode
 from homeassistant.components.select import SelectEntity
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
 from .entity import TrinnovAltitudeEntity
 
 if TYPE_CHECKING:
@@ -23,7 +22,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up select entities from config entry."""
-    device = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
     async_add_entities(
         [
             TrinnovAltitudeSourceSelect(device),
@@ -89,6 +88,7 @@ class TrinnovAltitudePresetSelect(TrinnovAltitudeEntity, SelectEntity):
             if name == option:
                 await self._device.preset_set(preset_id)
                 return
+        raise HomeAssistantError(f"Invalid preset option: {option}")
 
 
 class TrinnovAltitudeUpmixerSelect(TrinnovAltitudeEntity, SelectEntity):

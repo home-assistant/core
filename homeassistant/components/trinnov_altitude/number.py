@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.number import NumberEntity, NumberMode
 
-from .const import DOMAIN
 from .entity import TrinnovAltitudeEntity
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up number entities from config entry."""
-    async_add_entities([TrinnovAltitudeVolumeNumber(hass.data[DOMAIN][entry.entry_id])])
+    async_add_entities([TrinnovAltitudeVolumeNumber(entry.runtime_data)])
 
 
 class TrinnovAltitudeVolumeNumber(TrinnovAltitudeEntity, NumberEntity):

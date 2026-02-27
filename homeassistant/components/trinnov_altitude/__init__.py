@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from trinnov_altitude.client import TrinnovAltitudeClient
+from trinnov_altitude.exceptions import ConnectionFailedError, ConnectionTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CLIENT_ID, DOMAIN
 
-PLATFORMS: list[str] = [
+PLATFORMS: list[Platform] = [
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.REMOTE,
@@ -26,11 +28,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST].strip()
     mac = entry.data.get(CONF_MAC, "").strip() or None
     device = TrinnovAltitudeClient(host=host, mac=mac, client_id=CLIENT_ID)
-    device.state.id = entry.unique_id
 
-    await device.start()
+    try:
+        await device.start()
+        await device.wait_synced()
+    except (ConnectionFailedError, ConnectionTimeoutError, TimeoutError) as err:
+        await device.stop()
+        raise ConfigEntryNotReady(
+            f"Could not connect to Trinnov Altitude at {host}"
+        ) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
+    entry.runtime_data = device
 
     async def stop(_event: Event) -> None:
         await device.stop()
@@ -48,9 +56,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        client = hass.data[DOMAIN].pop(entry.entry_id)
-        await client.stop()
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+        await entry.runtime_data.stop()
 
     return unload_ok

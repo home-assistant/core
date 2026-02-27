@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 
-from .const import DOMAIN
 from .entity import TrinnovAltitudeEntity
 
 if TYPE_CHECKING:
@@ -62,7 +61,7 @@ async def async_setup_entry(
     """Set up switch entities from config entry."""
     async_add_entities(
         [
-            TrinnovAltitudeSwitch(hass.data[DOMAIN][entry.entry_id], description)
+            TrinnovAltitudeSwitch(entry.runtime_data, description)
             for description in SWITCHES
         ]
     )

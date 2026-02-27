@@ -11,8 +11,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.exceptions import HomeAssistantError
+from trinnov_altitude.exceptions import NoMacAddressError
 
-from .const import DOMAIN
 from .entity import TrinnovAltitudeEntity
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the media player platform from a config entry."""
-    async_add_entities([TrinnovAltitudeMediaPlayer(hass.data[DOMAIN][entry.entry_id])])
+    async_add_entities([TrinnovAltitudeMediaPlayer(entry.runtime_data)])
 
 
 class TrinnovAltitudeMediaPlayer(TrinnovAltitudeEntity, MediaPlayerEntity):
@@ -55,7 +55,12 @@ class TrinnovAltitudeMediaPlayer(TrinnovAltitudeEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Power on."""
-        self._device.power_on()
+        try:
+            self._device.power_on()
+        except NoMacAddressError as exc:
+            raise HomeAssistantError(
+                "Device is not configured with a MAC address. Add the MAC address in the integration configuration to power it on"
+            ) from exc
 
     async def async_turn_off(self) -> None:
         """Power off."""

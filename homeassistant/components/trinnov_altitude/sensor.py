@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 
-from .const import DOMAIN
 from .entity import TrinnovAltitudeEntity
 
 if TYPE_CHECKING:
@@ -123,7 +122,7 @@ async def async_setup_entry(
     """Set up sensor entities from config entry."""
     async_add_entities(
         [
-            TrinnovAltitudeSensor(hass.data[DOMAIN][entry.entry_id], description)
+            TrinnovAltitudeSensor(entry.runtime_data, description)
             for description in SENSORS
         ]
     )

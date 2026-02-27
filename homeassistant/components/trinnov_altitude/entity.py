@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
@@ -12,7 +13,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, MANUFACTURER, MODEL, NAME
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from typing import Any
 
     from trinnov_altitude.client import TrinnovAltitudeClient
@@ -36,8 +36,6 @@ class TrinnovAltitudeEntity(Entity):
         self._attr_unique_id = str(device.state.id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device.state.id))},
-            # Instead of setting the device name to the entity name,
-            # this should be updated to set has_entity_name = True
             name=f"{NAME} ({device.state.id})",
             model=MODEL,
             manufacturer=MANUFACTURER,

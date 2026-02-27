@@ -67,8 +67,24 @@ async def test_dim_and_bypass_commands(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: DIM_ENTITY_ID},
+        blocking=True,
+    )
+    mock_device.dim_set.assert_called_with(False)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: BYPASS_ENTITY_ID},
         blocking=True,
     )
     mock_device.bypass_set.assert_called_once_with(True)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: BYPASS_ENTITY_ID},
+        blocking=True,
+    )
+    mock_device.bypass_set.assert_called_with(False)

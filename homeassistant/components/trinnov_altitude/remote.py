@@ -1,6 +1,7 @@
 """Remote for Trinnov integration."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from trinnov_altitude.command_bridge import (
@@ -13,7 +14,6 @@ from trinnov_altitude.exceptions import NoMacAddressError, NotConnectedError
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
 from .entity import TrinnovAltitudeEntity
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the platform from a config entry."""
-    entities = [TrinnovAltitudeRemote(hass.data[DOMAIN][entry.entry_id])]
+    entities = [TrinnovAltitudeRemote(entry.runtime_data)]
     async_add_entities(entities)
 
 
@@ -49,7 +49,7 @@ class TrinnovAltitudeRemote(TrinnovAltitudeEntity, RemoteEntity):
             self._device.power_on()
         except NoMacAddressError as exc:
             raise HomeAssistantError(
-                "Trinnov Altitude is not configured with a mac address, which is required to power it on."
+                "Device is not configured with a MAC address. Add the MAC address in the integration configuration to power it on"
             ) from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:

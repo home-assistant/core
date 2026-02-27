@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from .const import DOMAIN, NAME  # pylint:disable=unused-import
+from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
@@ -32,6 +32,7 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trinnov Altitude."""
 
     VERSION = 1
+    MINOR_VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(
@@ -55,7 +56,7 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
             except (ConnectionTimeoutError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception while setting up Trinnov")
+                _LOGGER.exception("Unexpected exception while setting up device")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device.state.id, raise_on_progress=False)
