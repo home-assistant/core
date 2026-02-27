@@ -1205,17 +1205,46 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             "async_play_media: type=%s, id=%s, kwargs=%s", media_type, media_id, kwargs
         )
 
-        if media_type in {MediaType.MUSIC, MEDIA_TYPE_WIIM_LIBRARY}:
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+
+            url = async_process_play_media_url(self.hass, media_id)
+            LOGGER.debug("HTTP media_type for play_media: %s", url)
+
             try:
-                preset_number = int(media_id)
                 if not self._device.supports_http_api:
                     raise HomeAssistantError(
                         f"HTTP API not available for {self._device.name} to play preset."
                     )
-                await self._device.play_preset(preset_number)
-                self._attr_media_content_id = f"wiim_preset_{preset_number}"
-                self._attr_media_content_type = MediaType.PLAYLIST
+                await self._device.play_url(url)
                 self._attr_state = MediaPlayerState.PLAYING
+            except ValueError:
+                LOGGER.error(
+                    "Invalid media_id for playlist/library: %s. Expected integer preset number",
+                    media_id,
+                )
+                raise HomeAssistantError(
+                    f"Invalid media_id: {media_id}. Expected a valid preset number."
+                ) from None
+        elif media_type in {MediaType.MUSIC, MEDIA_TYPE_WIIM_LIBRARY}:
+            try:
+                if media_id.isdigit():
+                    preset_number = int(media_id)
+                    if not self._device.supports_http_api:
+                        raise HomeAssistantError(
+                            f"HTTP API not available for {self._device.name} to play preset."
+                        )
+                    await self._device.play_preset(preset_number)
+                    self._attr_media_content_id = f"wiim_preset_{preset_number}"
+                    self._attr_media_content_type = MediaType.PLAYLIST
+                    self._attr_state = MediaPlayerState.PLAYING
+                else:
+                    LOGGER.warning(
+                        "Skipping media_id %s: not a valid preset number", media_id
+                    )
             except ValueError:
                 LOGGER.error(
                     "Invalid media_id for playlist/library: %s. Expected integer preset number",
@@ -1238,33 +1267,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 )
                 raise HomeAssistantError(
                     f"Invalid media_id: {media_id}. Expected a valid track index."
-                ) from None
-        elif media_source.is_media_source_id(media_id):
-            source_media_id = media_id
-            play_item = await media_source.async_resolve_media(
-                self.hass, media_id, self.entity_id
-            )
-            media_id = play_item.url
-
-            url = async_process_play_media_url(self.hass, media_id)
-            LOGGER.debug(
-                "Resolved media_source for play_media (id=%s)", source_media_id
-            )
-
-            try:
-                if not self._device.supports_http_api:
-                    raise HomeAssistantError(
-                        f"HTTP API not available for {self._device.name} to play preset."
-                    )
-                await self._device.play_url(url)
-                self._attr_state = MediaPlayerState.PLAYING
-            except ValueError:
-                LOGGER.error(
-                    "Invalid media_id for playlist/library: %s. Expected integer preset number",
-                    media_id,
-                )
-                raise HomeAssistantError(
-                    f"Invalid media_id: {media_id}. Expected a valid preset number."
                 ) from None
         else:
             LOGGER.warning("Unsupported media_type for play_media: %s", media_type)
@@ -1514,9 +1516,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         )
                     )
             except Exception as err:
-                LOGGER.error(
-                    "Error fetching playlist tracks for browse_media: %s", err
-                )
+                LOGGER.error("Error fetching playlist tracks for browse_media: %s", err)
                 raise BrowseError("Error fetching playlist tracks") from err
 
             return BrowseMedia(

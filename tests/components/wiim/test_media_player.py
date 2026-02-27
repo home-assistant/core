@@ -23,8 +23,10 @@ from homeassistant.components.wiim.media_player import (
     SDK_TO_HA_STATE,
     SUPPORT_WIIM_BASE,
     WiimMediaPlayerEntity,
+    async_process_play_media_url,
     async_setup_entry,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
@@ -540,3 +542,39 @@ async def test_media_player_browse_media_playlists_queue(
 
         mock_get_queue_items.assert_awaited_once()
         mock_set_AVT_cmd.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_async_play_media_source(hass: HomeAssistant) -> None:
+    """Test async_play_media for a media-source URL."""
+    mock_device = AsyncMock()
+    mock_device.supports_http_api = True
+
+    mock_entry = MagicMock(spec=ConfigEntry)
+    mock_entry.runtime_data = mock_device
+
+    entity = WiimMediaPlayerEntity(mock_device, mock_entry)
+    entity.hass = hass
+    entity.entity_id = "media_player.test_device"
+    entity._attr_state = MediaPlayerState.IDLE
+
+    media_id = "media-source://some-song"
+    mock_play_item = MagicMock()
+    mock_play_item.url = "http://resolved-url/song.mp3"
+
+    with (
+        patch(
+            "homeassistant.components.media_source.is_media_source_id",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=mock_play_item,
+        ),
+    ):
+        await entity.async_play_media(media_type=MediaType.MUSIC, media_id=media_id)
+
+    expected_url = async_process_play_media_url(hass, mock_play_item.url)
+    mock_device.play_url.assert_called_once_with(expected_url)
+
+    assert entity._attr_state == MediaPlayerState.PLAYING
