@@ -20,6 +20,15 @@
         "description": "Do you want to add the device `{name}` to Home Assistant?",
         "title": "Discovered Nexa System 2 device"
       },
+      "reconfigure": {
+        "data": {
+          "host": "IP/Hostname"
+        },
+        "data_description": {
+          "host": "Hostname or IP Address of the device"
+        },
+        "description": "Update the IP address or hostname if your device has moved to a different address on the network"
+      },
       "user": {
         "data": {
           "host": "IP/hostname"
