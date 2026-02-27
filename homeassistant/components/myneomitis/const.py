@@ -105,7 +105,7 @@ PRESET_MODE_MODELS: dict[str, list[str]] = {
 PRESET_MODE_MAP_RELAIS: dict[str, int] = {
     "on": 1,
     "off": 2,
-    "auto": PRESET_BY_KEY["auto"].code,
+    "auto": Preset.AUTO.code,
 }
 REVERSE_PRESET_MODE_MAP_RELAIS: dict[int, str] = {
     v: k for k, v in PRESET_MODE_MAP_RELAIS.items()
