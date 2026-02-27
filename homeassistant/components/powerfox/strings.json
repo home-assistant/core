@@ -116,6 +116,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Error while connecting to the Powerfox service: {error}"
+    },
     "invalid_auth": {
       "message": "Error while authenticating with the Powerfox service: {error}"
     },
