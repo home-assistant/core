@@ -26,11 +26,11 @@
     }
   },
   "exceptions": {
-    "connection_error": {
-      "message": "Failed to connect to device: {error}"
-    },
     "device_not_found": {
-      "message": "Could not find Bluetooth device with address `{address}`."
+      "message": "Could not find Bluetooth device with address `{device_id}`."
+    },
+    "invalid_device_id": {
+      "message": "Device `{device_id}` is not a valid OpenDisplay device."
     },
     "media_download_error": {
       "message": "Failed to download media: {error}"
@@ -72,6 +72,10 @@
     "upload_image": {
       "description": "Uploads an image to an OpenDisplay device.",
       "fields": {
+        "device_id": {
+          "description": "The OpenDisplay device to upload the image to.",
+          "name": "Device"
+        },
         "dither_mode": {
           "description": "The dithering algorithm to use for converting the image to the display's color palette.",
           "name": "Dither mode"
@@ -81,7 +85,7 @@
           "name": "Fit mode"
         },
         "image": {
-          "description": "The image to upload to the displays.",
+          "description": "The image to upload to the display.",
           "name": "Image"
         },
         "refresh_mode": {

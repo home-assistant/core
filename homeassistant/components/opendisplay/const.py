@@ -7,15 +7,12 @@ from typing import TYPE_CHECKING
 
 from opendisplay import GlobalConfig
 
+from homeassistant.config_entries import ConfigEntry
+
 if TYPE_CHECKING:
     from opendisplay.models import FirmwareVersion
 
 DOMAIN = "opendisplay"
-
-STORAGE_DIR = "opendisplay"
-
-# Brief delay after cancelling an in-flight BLE upload to let the device reset.
-CANCEL_SETTLE_DELAY = 0.5
 
 
 @dataclass
@@ -24,3 +21,6 @@ class OpenDisplayRuntimeData:
 
     firmware: FirmwareVersion
     device_config: GlobalConfig
+
+
+type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]

@@ -1,9 +1,10 @@
 upload_image:
-  target:
-    entity:
-      domain: image
-      integration: opendisplay
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: opendisplay
     image:
       required: true
       selector:
