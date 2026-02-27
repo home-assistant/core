@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import timedelta
-from typing import Any
-
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
 
@@ -41,7 +37,6 @@ from .const import (
     SIGNAL_EDL21_TELEGRAM,
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -292,7 +287,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
-    api = EDL21(hass, config_entry.data, async_add_entities)
+    api = EDL21(hass, config_entry, async_add_entities)
     await api.connect()
 
 
@@ -316,19 +311,20 @@ class EDL21:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: Mapping[str, Any],
+        config_entry: ConfigEntry,
         async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._serial_port = config[CONF_SERIAL_PORT]
-        self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
+        self._entry_id = config_entry.entry_id
+        self._serial_port = config_entry.data[CONF_SERIAL_PORT]
+        self._proto = SmlProtocol(config_entry.data[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
         LOGGER.debug(
             "Initialized EDL21 on %s",
-            config[CONF_SERIAL_PORT],
+            config_entry.data[CONF_SERIAL_PORT],
         )
 
     async def connect(self) -> None:
@@ -367,6 +363,7 @@ class EDL21:
                             obis,
                             entity_description,
                             telegram,
+                            self._entry_id,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -388,12 +385,12 @@ class EDL21Entity(SensorEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, entity_description, telegram):
+    def __init__(self, electricity_id, obis, entity_description, telegram, entry_id):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
         self._telegram = telegram
-        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._entry_id = entry_id
         self._last_update = utcnow()
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
@@ -417,7 +414,7 @@ class EDL21Entity(SensorEntity):
                 return
 
             now = utcnow()
-            if now - self._last_update < self._min_time:
+            if now - self._last_update < self.hass.data[DOMAIN][self._entry_id]:
                 return
 
             self._telegram = telegram
