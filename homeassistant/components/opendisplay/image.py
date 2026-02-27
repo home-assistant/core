@@ -119,6 +119,37 @@ def delete_stored_image(path: Path) -> None:
     path.unlink(missing_ok=True)
 
 
+def _prepare_and_write(
+    storage_path: Path,
+    pil_image: PILImage.Image,
+    device_config: Any,
+    dither_mode: DitherMode,
+    tone_compression: float | str,
+    fit_mode: FitMode,
+    rotation: Rotation,
+) -> tuple[tuple[bytes, bytes | None, PILImage.Image], bytes]:
+    """Prepare image for display and persist to storage; intended for executor."""
+    prepared_data = prepare_image(
+        pil_image,
+        device_config,
+        None,  # capabilities (extracted from config)
+        True,  # use_measured_palettes
+        None,  # panel_ic_type (extracted from config)
+        dither_mode,
+        True,  # compress
+        tone_compression,
+        fit_mode,
+        rotation,
+    )
+    _, _, processed_image = prepared_data
+    image_bytes = image_to_bytes(processed_image)
+    try:
+        write_stored_image(storage_path, image_bytes)
+    except OSError:
+        _LOGGER.warning("Failed to persist image to storage")
+    return prepared_data, image_bytes
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OpenDisplayConfigEntry,
@@ -232,37 +263,24 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
         else:
             pil_image = await self._async_download_and_load_image(media.url)
 
-        # Phase 1: Process image offline (no BLE needed)
-        prepared_data = await self.hass.async_add_executor_job(
-            prepare_image,
+        # Phase 1: Process image offline (no BLE needed), then persist to disk.
+        # All three operations are CPU-bound or blocking I/O — combine into one
+        # executor call to avoid unnecessary event-loop round-trips.
+        prepared_data, image_bytes = await self.hass.async_add_executor_job(
+            _prepare_and_write,
+            self._get_storage_path(),
             pil_image,
             self._entry.runtime_data.device_config,
-            None,  # capabilities (extracted from config)
-            True,  # use_measured_palettes
-            None,  # panel_ic_type (extracted from config)
             dither_mode,
-            True,  # compress
             tone_compression,
             fit_mode,
             rotation,
         )
 
         # Update entity state immediately with processed preview
-        _, _, processed_image = prepared_data
-        image_bytes = await self.hass.async_add_executor_job(
-            image_to_bytes, processed_image
-        )
         self._current_image = image_bytes
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
-
-        # Persist to disk for restoration after restart
-        try:
-            await self.hass.async_add_executor_job(
-                write_stored_image, self._get_storage_path(), image_bytes
-            )
-        except OSError:
-            _LOGGER.warning("Failed to persist image to storage")
 
         # Track the prepared data for automatic retry on BLE failure
         self._pending_upload = (prepared_data, refresh_mode)
