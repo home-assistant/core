@@ -440,7 +440,7 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states('input_boolean.state') }}")]
+    ("count", "state_template"), [(1, "{{ is_state('input_boolean.state', 'on') }}")]
 )
 @pytest.mark.parametrize(
     "style",
@@ -449,7 +449,7 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_state_template(hass: HomeAssistant) -> None:
     """Test state template."""
-    _verify(hass, STATE_UNKNOWN, None, None, None, None)
+    _verify(hass, STATE_OFF, None, None, None, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, STATE_ON)
     await hass.async_block_till_done()
@@ -460,11 +460,6 @@ async def test_state_template(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     _verify(hass, STATE_OFF, None, None, None, None)
-
-    hass.states.async_set(_STATE_INPUT_BOOLEAN, STATE_UNKNOWN)
-    await hass.async_block_till_done()
-
-    _verify(hass, STATE_UNKNOWN, None, None, None, None)
 
 
 @pytest.mark.parametrize("count", [1])

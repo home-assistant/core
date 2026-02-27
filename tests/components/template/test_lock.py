@@ -325,7 +325,7 @@ async def test_template_state(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.OPEN
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_UNKNOWN)
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "None")
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)

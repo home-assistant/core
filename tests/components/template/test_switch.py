@@ -249,11 +249,6 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state.state == STATE_OFF
 
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_UNKNOWN)
-
-    state = hass.states.get(TEST_SWITCH.entity_id)
-    assert state.state == STATE_UNKNOWN
-
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(

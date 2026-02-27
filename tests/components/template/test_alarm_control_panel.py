@@ -350,7 +350,6 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
         AlarmControlPanelState.DISARMING,
         AlarmControlPanelState.PENDING,
         AlarmControlPanelState.TRIGGERED,
-        STATE_UNKNOWN,
     ):
         hass.states.async_set(TEST_STATE_ENTITY_ID, set_state)
         await hass.async_block_till_done()

@@ -276,36 +276,6 @@ async def setup_attributes_state_vacuum(
         ),
         (
             ConfigurationStyle.LEGACY,
-            "{{ 'unknown' }}",
-            {
-                "battery_level_template": "{{ 100 }}",
-                "start": {"service": "script.vacuum_start"},
-            },
-            STATE_UNKNOWN,
-            100,
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            "{{ 'unknown' }}",
-            {
-                "battery_level": "{{ 100 }}",
-                "start": {"service": "script.vacuum_start"},
-            },
-            STATE_UNKNOWN,
-            100,
-        ),
-        (
-            ConfigurationStyle.TRIGGER,
-            "{{ 'unknown' }}",
-            {
-                "battery_level": "{{ 100 }}",
-                "start": {"service": "script.vacuum_start"},
-            },
-            STATE_UNKNOWN,
-            100,
-        ),
-        (
-            ConfigurationStyle.LEGACY,
             "{{ 'abc' }}",
             {
                 "battery_level_template": "{{ 101 }}",

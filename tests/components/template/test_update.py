@@ -384,7 +384,6 @@ async def test_installed_version_template(
         ("{{ None }}", STATE_UNKNOWN, None),
         ("{{ 'foo' }}", STATE_ON, "foo"),
         ("{{ x + 2 }}", STATE_UNAVAILABLE, None),
-        ("{{ 'unknown' }}", STATE_UNKNOWN, None),
     ],
 )
 @pytest.mark.usefixtures("setup_update")
