@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
+from universal_silabs_flasher.flasher import Zbt2Flasher
+
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
 from homeassistant.components.homeassistant_hardware.helpers import (
@@ -13,7 +15,6 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
 )
 from homeassistant.components.usb import (
     usb_service_info_from_device,
@@ -76,15 +77,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 460800
-
-    # Early ZBT-2 samples used RTS/DTR to trigger the bootloader, later ones use the
-    # baudrate method. Since the two are mutually exclusive we just use both.
-    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR, ResetTarget.BAUDRATE]
-    APPLICATION_PROBE_METHODS = [
-        (ApplicationType.GECKO_BOOTLOADER, 115200),
-        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
-        (ApplicationType.SPINEL, 460800),
-    ]
+    _flasher_cls = Zbt2Flasher
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None

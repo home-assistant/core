@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from universal_silabs_flasher.flasher import YellowFlasher
+
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -23,7 +25,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeAssistantYellowConfigEntry
-from .config_flow import YellowFirmwareMixin
 from .const import DOMAIN, FIRMWARE, FIRMWARE_VERSION, MANUFACTURER, MODEL, RADIO_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,8 +151,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
-    BOOTLOADER_RESET_METHODS = YellowFirmwareMixin.BOOTLOADER_RESET_METHODS
-    APPLICATION_PROBE_METHODS = YellowFirmwareMixin.APPLICATION_PROBE_METHODS
+    _flasher_cls = YellowFlasher
 
     def __init__(
         self,
