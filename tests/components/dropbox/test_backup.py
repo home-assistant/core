@@ -6,6 +6,7 @@ from io import StringIO
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from python_dropbox_api import DropboxAuthException
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -18,7 +19,8 @@ from homeassistant.components.dropbox.backup import (
     DropboxUnknownException,
     async_register_backup_agents_listener,
 )
-from homeassistant.components.dropbox.const import DATA_BACKUP_AGENT_LISTENERS
+from homeassistant.components.dropbox.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -146,6 +148,37 @@ async def test_agents_list_backups_fail(
     assert response["result"]["agent_errors"] == {
         TEST_AGENT_ID: "Failed to list backups"
     }
+
+
+async def test_agents_list_backups_reauth(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_dropbox_client: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication is triggered on auth error."""
+
+    mock_dropbox_client.async_list_backups = AsyncMock(
+        side_effect=DropboxAuthException("auth failed")
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["backups"] == []
+    assert response["result"]["agent_errors"] == {TEST_AGENT_ID: "Authentication error"}
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == config_entry.entry_id
 
 
 @pytest.mark.parametrize(

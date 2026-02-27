@@ -40,10 +40,10 @@ def handle_backup_errors[_R, **P](
             raise BackupNotFound(
                 f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
             ) from err
-        except (
-            DropboxAuthException,
-            DropboxUnknownException,
-        ) as err:
+        except DropboxAuthException as err:
+            self._entry.async_start_reauth(self._hass)
+            raise BackupAgentError("Authentication error") from err
+        except DropboxUnknownException as err:
             _LOGGER.error(
                 "Error during dropbox %s: %s",
                 func.__name__,
@@ -63,7 +63,7 @@ async def async_get_backup_agents(
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
-    return [DropboxBackupAgent(entry) for entry in entries]
+    return [DropboxBackupAgent(hass, entry) for entry in entries]
 
 
 @callback
@@ -94,9 +94,11 @@ class DropboxBackupAgent(BackupAgent):
 
     domain = DOMAIN
 
-    def __init__(self, entry: DropboxConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: DropboxConfigEntry) -> None:
         """Initialize the backup agent."""
         super().__init__()
+        self._hass = hass
+        self._entry = entry
         self.name = entry.title
         assert entry.unique_id
         self.unique_id = entry.unique_id
