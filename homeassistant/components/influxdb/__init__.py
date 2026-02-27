@@ -486,7 +486,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)
 
     if conf is not None:
-        # Always check and run as import flow only runs once due to "single_config_entry": true
         if conf.keys() & set(COMPONENT_CONFIG_SCHEMA_CONNECTION):
             deprecate_yaml_issue(hass)
 
