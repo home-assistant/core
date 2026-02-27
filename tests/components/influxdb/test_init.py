@@ -2,10 +2,10 @@
 
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any
 import datetime
 from http import HTTPStatus
 import logging
+from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest

@@ -515,9 +515,7 @@ async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
         result.get("type") is FlowResultType.ABORT
         and result.get("reason") != "single_instance_allowed"
     ):
-        async_create_deprecated_yaml_issue(
-            hass, error=result.get("reason", "unknown")
-        )
+        async_create_deprecated_yaml_issue(hass, error=result.get("reason", "unknown"))
         return
 
     if config.keys() & set(COMPONENT_CONFIG_SCHEMA_CONNECTION):
