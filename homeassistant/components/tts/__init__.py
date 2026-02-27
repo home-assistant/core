@@ -1164,15 +1164,15 @@ class SpeechManager:
                 if isinstance(tts_file.tags, ID3):
                     tts_file["artist"] = ID3Text(
                         encoding=3,
-                        text=artist,  # type: ignore[no-untyped-call]
+                        text=artist,
                     )
                     tts_file["album"] = ID3Text(
                         encoding=3,
-                        text=album,  # type: ignore[no-untyped-call]
+                        text=album,
                     )
                     tts_file["title"] = ID3Text(
                         encoding=3,
-                        text=message,  # type: ignore[no-untyped-call]
+                        text=message,
                     )
                 else:
                     tts_file["artist"] = artist
