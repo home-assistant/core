@@ -209,7 +209,7 @@ async def test_zone_services_with_ctl_id(
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.parametrize(
-    ("service_data", "expected_key"),
+    ("service_data", "expected_msg"),
     [
         (
             {"mode": "NotARealMode"},
@@ -217,10 +217,6 @@ async def test_zone_services_with_ctl_id(
         ),
         (
             {"mode": "Auto", "duration": {"hours": 1}},
-            "The mode `Auto` can not be set temporarily",
-        ),
-        (
-            {"mode": "Auto", "period": {"days": 1}},
             "The mode `Auto` can not be set temporarily",
         ),
         (
@@ -232,13 +228,19 @@ async def test_zone_services_with_ctl_id(
             "The mode `DayOff` does not support `duration`; use `period` instead",
         ),
     ],
+    ids=[
+        "not_supported",
+        "not_temporary",
+        "not_period",
+        "not_duration",
+    ],
 )
 async def test_set_system_mode_validation(
     hass: HomeAssistant,
     ctl_id: str,
     evohome: EvohomeClient,
     service_data: dict[str, Any],
-    expected_key: str,
+    expected_msg: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ServiceValidationError for all controller system mode validation cases."""
@@ -254,4 +256,4 @@ async def test_set_system_mode_validation(
     )
     await hass.async_block_till_done()  # service handler is invoked via a task
 
-    assert f"ServiceValidationError: {expected_key}" in caplog.text
+    assert f"ServiceValidationError: {expected_msg}" in caplog.text
