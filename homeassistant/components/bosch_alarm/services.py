@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE_TIME
+from .const import ATTR_DATETIME, DOMAIN
 from .types import BoschAlarmConfigEntry
 
 
@@ -61,7 +61,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_DATE_TIME,
+        "set_date_time",
         async_set_panel_date,
         schema=SET_DATE_TIME_SCHEMA,
     )

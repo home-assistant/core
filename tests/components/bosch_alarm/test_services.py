@@ -8,11 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.bosch_alarm.const import (
-    ATTR_DATETIME,
-    DOMAIN,
-    SERVICE_SET_DATE_TIME,
-)
+from homeassistant.components.bosch_alarm.const import ATTR_DATETIME, DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -41,7 +37,7 @@ async def test_set_date_time_service(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_DATE_TIME,
+        "set_date_time",
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             ATTR_DATETIME: dt_util.now(),
@@ -62,7 +58,7 @@ async def test_set_date_time_service_fails_bad_entity(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            "set_date_time",
             {
                 ATTR_CONFIG_ENTRY_ID: "bad-config_id",
                 ATTR_DATETIME: dt_util.now(),
@@ -87,7 +83,7 @@ async def test_set_date_time_service_fails_bad_params(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            "set_date_time",
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_DATETIME: "",
@@ -110,7 +106,7 @@ async def test_set_date_time_service_fails_bad_year_before(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            "set_date_time",
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_DATETIME: dt.datetime(2038, 1, 1),
@@ -134,7 +130,7 @@ async def test_set_date_time_service_fails_bad_year_after(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            "set_date_time",
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_DATETIME: dt.datetime(2009, 1, 1),
@@ -158,7 +154,7 @@ async def test_set_date_time_service_fails_connection_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            "set_date_time",
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_DATETIME: dt_util.now(),
@@ -179,7 +175,7 @@ async def test_set_date_time_service_fails_unloaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            "set_date_time",
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_DATETIME: dt_util.now(),
