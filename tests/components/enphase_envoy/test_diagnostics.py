@@ -119,24 +119,24 @@ async def test_entry_diagnostics_with_interface_information(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    # fix order of entities by device to avoid snapshot assertion
+    # failures due to changed id based order between test runs
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
-
-    # FIX this in separate PR, envoy_entities_by_device is not consistent across test runs
-    # for some reason when parameterizing test fixtures with encharge and enpower.
-    # For now replacing overall diagnostics with snapshot with top level diagnostic key
-    # snapshot assertion, skipping entities by device section, should be fixed in separate PR
-
-    assert diagnostics["config_entry"] == snapshot(exclude=limit_diagnostic_attrs)
-    assert diagnostics["envoy_properties"] == snapshot(exclude=limit_diagnostic_attrs)
-    assert diagnostics["raw_data"] == snapshot(exclude=limit_diagnostic_attrs)
-    assert diagnostics["envoy_model_data"] == snapshot(exclude=limit_diagnostic_attrs)
-    # disabling for now until fix is separate pr
-    # assert diagnostics["envoy_entities_by_device"] == snapshot(
-    #     exclude=limit_diagnostic_attrs
-    # )
-    assert diagnostics["fixtures"] == snapshot(exclude=limit_diagnostic_attrs)
+    diagnostics["envoy_entities_by_device"] = [
+        {
+            "device": device_entities["device"],
+            "entities": sorted(
+                device_entities["entities"], key=lambda e: e["entity"]["entity_id"]
+            ),
+        }
+        for device_entities in sorted(
+            diagnostics["envoy_entities_by_device"],
+            key=lambda e: e["device"]["identifiers"],
+        )
+    ]
+    assert diagnostics == snapshot(exclude=limit_diagnostic_attrs)
 
 
 @pytest.mark.parametrize(
