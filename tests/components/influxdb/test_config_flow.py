@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from influxdb.exceptions import InfluxDBClientError
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pytest
 
 from homeassistant import config_entries
@@ -656,6 +656,13 @@ async def test_import(
             "cannot_connect",
         ),
         (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            InfluxDBServerError("fail"),
+            "cannot_connect",
+        ),
+        (
             API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
@@ -687,7 +694,7 @@ async def test_import_connection_error(
     test_exception: Exception,
     reason: str,
 ) -> None:
-    """Test abort on connection error during import."""
+    """Test abort on connection error."""
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
