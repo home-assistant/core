@@ -19,6 +19,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     GVH5075_SERVICE_INFO,
     GVH5106_SERVICE_INFO,
+    GVH5140_SERVICE_INFO,
     GVH5178_PRIMARY_SERVICE_INFO,
     GVH5178_REMOTE_SERVICE_INFO,
     GVH5178_SERVICE_INFO_ERROR,
@@ -161,6 +162,33 @@ async def test_gvh5178_multi_sensor(hass: HomeAssistant) -> None:
 
     primary_temp_sensor = hass.states.get("sensor.b51782bc8_primary_temperature")
     assert primary_temp_sensor.state == STATE_UNAVAILABLE
+
+
+async def test_gvh5140(hass: HomeAssistant) -> None:
+    """Test setting up creates the sensors for a device with CO2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AA:BB:CC:DD:EE:FF",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info(hass, GVH5140_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    co2_sensor = hass.states.get("sensor.h5140_eeff_carbon_dioxide")
+    co2_sensor_attributes = co2_sensor.attributes
+    assert co2_sensor.state == "1000"
+    assert co2_sensor_attributes[ATTR_FRIENDLY_NAME] == "H5140 EEFF Carbon Dioxide"
+    assert co2_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
+    assert co2_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_gvh5106(hass: HomeAssistant) -> None:
