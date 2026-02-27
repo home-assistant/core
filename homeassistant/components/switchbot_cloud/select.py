@@ -1,10 +1,15 @@
 """SwitchBotCloudSelect entity."""
 
-import asyncio
 import random
 import time
 
-from switchbot_api import Device, KeyPadCommands, Remote, SwitchBotAPI
+from switchbot_api import (
+    Device,
+    KeyPadCommands,
+    Remote,
+    SwitchBotAPI,
+    SwitchBotConnectionError,
+)
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import AFTER_COMMAND_REFRESH, DEFAULT_EXPIRED_DURATION, DOMAIN
+from .const import DEFAULT_EXPIRED_DURATION, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -43,21 +48,25 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Show existed key & create key."""
         if option == self.default_option:
+            password = f"{random.randint(100000, 999999)}"
             parameters = {
                 "name": "PW" + f"{int(time.time())}"[-8:],
                 "type": "disposable",
-                "password": f"{random.randint(100000, 999999)}",
+                "password": password,
                 "startTime": int(time.time()),
                 "endTime": int(time.time()) + DEFAULT_EXPIRED_DURATION,
             }
-            await self.send_api_command(
-                KeyPadCommands.CREATE_KEY, parameters=parameters
-            )
-            await asyncio.sleep(AFTER_COMMAND_REFRESH)
-            await self.coordinator.async_request_refresh()
+            try:
+                await self.send_api_command(
+                    KeyPadCommands.CREATE_KEY, parameters=parameters
+                )
+                self._attr_current_option = password
+            except Exception as e:
+                self._attr_current_option = "unknown"
+                raise SwitchBotConnectionError from e
         else:
             self._attr_current_option = option
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
