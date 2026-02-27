@@ -22,8 +22,6 @@ CONF_NAME = "name"
 CONF_UPNP_LOCATION = "upnp_location"
 CONF_DEVICES = "devices"
 
-DEFAULT_DEVICE_NAME = "WiiM Player"
-
 UPNP_ST_MEDIA_RENDERER: Final = "urn:schemas-upnp-org:device:MediaRenderer:1"
 ZEROCONF_TYPE_LINKPLAY: Final = "_linkplay._tcp.local."
 
