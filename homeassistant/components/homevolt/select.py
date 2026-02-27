@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
-from .entity import HomevoltEntity
+from .entity import HomevoltEntity, homevolt_exception_handler
 
 PARALLEL_UPDATES = 0  # Coordinator-based updates
 
@@ -29,8 +29,6 @@ SELECT_DESCRIPTION = HomevoltSelectEntityDescription(
     has_entity_name=True,
     options=list(SCHEDULE_TYPE.values()),
 )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomevoltConfigEntry,
@@ -63,6 +61,7 @@ class HomevoltModeSelect(HomevoltEntity, SelectEntity):
         mode_int = self.coordinator.client.schedule_mode
         return SCHEDULE_TYPE.get(mode_int)
 
+    @homevolt_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         await self.coordinator.client.set_battery_mode(mode=option)
