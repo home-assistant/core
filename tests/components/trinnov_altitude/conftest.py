@@ -1,6 +1,7 @@
 """Fixtures for Trinnov Altitude integration."""
 
 from collections.abc import Generator
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,15 +18,24 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="mock_device")
 def fixture_mock_device() -> Generator[AsyncMock, None, None]:
     """Return a mocked TrinnovAltitude."""
-    with patch(
-        "homeassistant.components.trinnov_altitude.TrinnovAltitude", autospec=True
-    ) as mock:
-        altitude = mock.return_value
-        altitude.connect = AsyncMock(return_value=None)
-        altitude.disconnect = AsyncMock(return_value=None)
+    with (
+        patch(
+            "homeassistant.components.trinnov_altitude.TrinnovAltitudeClient",
+            autospec=True,
+        ) as init_mock,
+        patch(
+            "homeassistant.components.trinnov_altitude.config_flow.TrinnovAltitudeClient",
+            autospec=True,
+        ) as flow_mock,
+    ):
+        altitude = init_mock.return_value
+        flow_mock.return_value = altitude
+        altitude.start = AsyncMock(return_value=None)
+        altitude.wait_synced = AsyncMock(return_value=None)
+        altitude.stop = AsyncMock(return_value=None)
         altitude.host = MOCK_HOST
-        altitude.id = MOCK_ID
-        altitude.version = "VERSION"
+        altitude.connected = True
+        altitude.state = SimpleNamespace(id=MOCK_ID, version="VERSION", synced=True)
         yield altitude
 
 

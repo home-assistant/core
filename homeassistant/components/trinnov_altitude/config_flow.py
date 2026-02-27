@@ -5,10 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from trinnov_altitude.client import TrinnovAltitudeClient
 from trinnov_altitude.exceptions import (
     ConnectionFailedError,
     ConnectionTimeoutError,
-    InvalidMacAddressOUIError,
     MalformedMacAddressError,
 )
 import voluptuous as vol
@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from trinnov_altitude.trinnov_altitude import TrinnovAltitude
 from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,29 +42,30 @@ class TrinnovAltitudeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
-            mac = user_input.get(CONF_MAC, "").strip()
+            mac = user_input.get(CONF_MAC, "").strip() or None
 
+            device = TrinnovAltitudeClient(host=host, mac=mac)
             try:
-                device = TrinnovAltitude(host=host, mac=mac)
-                await device.connect()
+                await device.start()
+                await device.wait_synced()
             except MalformedMacAddressError:
-                errors[CONF_MAC] = "invalid_mac"
-            except InvalidMacAddressOUIError:
                 errors[CONF_MAC] = "invalid_mac"
             except ConnectionFailedError:
                 errors[CONF_HOST] = "invalid_host"
-            except ConnectionTimeoutError:
+            except (ConnectionTimeoutError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception while setting up Trinnov")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(device.id, raise_on_progress=False)
+                await self.async_set_unique_id(device.state.id, raise_on_progress=False)
                 processed_input = {CONF_HOST: host, CONF_MAC: mac}
                 self._abort_if_unique_id_configured(processed_input)
                 return self.async_create_entry(
-                    title=f"{NAME} ({device.id})", data=processed_input
+                    title=f"{NAME} ({device.state.id})", data=processed_input
                 )
+            finally:
+                await device.stop()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

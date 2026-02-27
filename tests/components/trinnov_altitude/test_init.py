@@ -20,13 +20,13 @@ async def test_setup_entry(
     """Test config entry loading and unloading."""
     mock_config_entry = mock_integration
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_device.start_listening.call_count == 1
-    assert mock_device.disconnect.call_count == 0
+    assert mock_device.start.call_count == 1
+    assert mock_device.stop.call_count == 0
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_device.disconnect.call_count == 1
+    assert mock_device.stop.call_count == 1
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
 
 

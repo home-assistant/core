@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
 
-    from trinnov_altitude.messages import Message
-    from trinnov_altitude.trinnov_altitude import TrinnovAltitude
+    from trinnov_altitude.client import TrinnovAltitudeClient
+    from trinnov_altitude.protocol import Message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,21 +27,21 @@ class TrinnovAltitudeEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, device: TrinnovAltitude) -> None:
+    def __init__(self, device: TrinnovAltitudeClient) -> None:
         """Initialize entity."""
 
         self._device = device
         self._callback: Callable[[Any], None] | None = None
 
-        self._attr_unique_id = device.id
+        self._attr_unique_id = str(device.state.id)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(device.id))},
+            identifiers={(DOMAIN, str(device.state.id))},
             # Instead of setting the device name to the entity name,
             # this should be updated to set has_entity_name = True
-            name=f"{NAME} ({device.id})",
+            name=f"{NAME} ({device.state.id})",
             model=MODEL,
             manufacturer=MANUFACTURER,
-            sw_version=f"{device.version}",
+            sw_version=device.state.version,
             configuration_url=f"http://{device.host}",
         )
 
@@ -49,7 +49,7 @@ class TrinnovAltitudeEntity(Entity):
         """Register update listener."""
 
         @callback
-        def _update(event: Message) -> None:
+        def _update(_event: str, _message: Message | None) -> None:
             """Handle device state changes."""
             self.async_write_ha_state()
 

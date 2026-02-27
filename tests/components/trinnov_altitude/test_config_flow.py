@@ -27,7 +27,7 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
 
     # Test connection failed
 
-    mock_device.connect.side_effect = ConnectionFailedError("message")
+    mock_device.start.side_effect = ConnectionFailedError(OSError("message"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=CONTEXT, data=DATA
@@ -39,7 +39,7 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
 
     # Test connection timeout
 
-    mock_device.connect.side_effect = ConnectionTimeoutError("message")
+    mock_device.start.side_effect = ConnectionTimeoutError("message")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=CONTEXT, data=DATA
@@ -51,7 +51,7 @@ async def test_user_config_flow(hass: HomeAssistant, mock_device: AsyncMock) -> 
 
     # Test success
 
-    mock_device.connect.side_effect = None
+    mock_device.start.side_effect = None
 
     result = await hass.config_entries.flow.async_init(DOMAIN, context=CONTEXT)
     assert result["type"] is FlowResultType.FORM
@@ -93,4 +93,4 @@ async def test_user_config_flow_without_mac(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == MOCK_HOST
-    assert result["data"][CONF_MAC] == ""
+    assert result["data"][CONF_MAC] is None
