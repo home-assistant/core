@@ -196,6 +196,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(
         hass, websocket.websocket_lovelace_delete_config
     )
+    websocket_api.async_register_command(
+        hass, websocket.websocket_lovelace_generate_dashboard
+    )
 
     yaml_dashboards = config[DOMAIN].get(CONF_DASHBOARDS, {})
 

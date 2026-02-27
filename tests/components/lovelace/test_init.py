@@ -7,11 +7,32 @@ from unittest.mock import MagicMock, patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import ai_task
 from homeassistant.components.lovelace import _validate_url_slug
+from homeassistant.components.lovelace.llm import LovelaceDashboardGenerationAPI
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
+    llm,
+)
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+def _llm_context() -> llm.LLMContext:
+    """Create an LLM context for tests."""
+    return llm.LLMContext(
+        platform="test",
+        context=None,
+        language="en",
+        assistant=None,
+        device_id=None,
+    )
 
 
 @pytest.fixture
@@ -98,6 +119,214 @@ async def test_create_dashboards_when_not_onboarded(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"strategy": {"type": "map"}}
+
+
+async def test_generate_dashboard_with_ai(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onboarding_done,
+) -> None:
+    """Test generating a dashboard with AI over websocket."""
+    hass.config.components.add(ai_task.DOMAIN)
+    assert await async_setup_component(hass, "lovelace", {})
+
+    client = await hass_ws_client(hass)
+    generated_config = {"views": [{"title": "Home", "cards": []}]}
+
+    with patch(
+        "homeassistant.components.lovelace.websocket.ai_task.async_generate_data",
+        return_value=ai_task.GenDataTaskResult(
+            conversation_id="conversation-1",
+            data=generated_config,
+        ),
+    ) as mock_generate:
+        await client.send_json_auto_id(
+            {"type": "lovelace/config/generate", "prompt": "Create a lights dashboard"}
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "conversation_id": "conversation-1",
+        "config": generated_config,
+    }
+
+    kwargs = mock_generate.call_args.kwargs
+    assert kwargs["task_name"] == "lovelace_dashboard_generation"
+    assert "Create a lights dashboard" in kwargs["instructions"]
+    assert isinstance(kwargs["llm_api"], LovelaceDashboardGenerationAPI)
+
+
+async def test_generate_dashboard_with_ai_invalid_response(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onboarding_done,
+) -> None:
+    """Test generating a dashboard fails when model returns invalid config."""
+    hass.config.components.add(ai_task.DOMAIN)
+    assert await async_setup_component(hass, "lovelace", {})
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.lovelace.websocket.ai_task.async_generate_data",
+        return_value=ai_task.GenDataTaskResult(
+            conversation_id="conversation-1",
+            data={"title": "Broken"},
+        ),
+    ):
+        await client.send_json_auto_id(
+            {"type": "lovelace/config/generate", "prompt": "Broken dashboard"}
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "error"
+    assert "at least one view" in response["error"]["message"]
+
+
+async def test_generate_dashboard_with_ai_json_markdown(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onboarding_done,
+) -> None:
+    """Test generating a dashboard when model returns JSON in markdown."""
+    hass.config.components.add(ai_task.DOMAIN)
+    assert await async_setup_component(hass, "lovelace", {})
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.lovelace.websocket.ai_task.async_generate_data",
+        return_value=ai_task.GenDataTaskResult(
+            conversation_id="conversation-1",
+            data='```json\n{"views":[{"title":"Home"}]}\n```',
+        ),
+    ):
+        await client.send_json_auto_id(
+            {"type": "lovelace/config/generate", "prompt": "Markdown dashboard"}
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["config"] == {"views": [{"title": "Home"}]}
+
+
+async def test_lovelace_generation_list_tools_match_hab(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test list tool behavior matches Home Assistant Builder list commands."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    floor_1 = floor_registry.async_create("First floor")
+    floor_2 = floor_registry.async_create("Second floor")
+    kitchen = area_registry.async_create("Kitchen", floor_id=floor_1.floor_id)
+    bedroom = area_registry.async_create("Bedroom", floor_id=floor_2.floor_id)
+
+    device_kitchen = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "kitchen_device")},
+        name="Kitchen Device",
+        manufacturer="Acme",
+        model="M1",
+    )
+    device_registry.async_update_device(device_kitchen.id, area_id=kitchen.id)
+
+    device_bedroom = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "bedroom_device")},
+        name="Bedroom Device",
+        manufacturer="Acme",
+        model="M2",
+    )
+    device_registry.async_update_device(device_bedroom.id, area_id=bedroom.id)
+
+    kitchen_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "kitchen_temperature",
+        device_id=device_kitchen.id,
+        original_device_class="temperature",
+    )
+    entity_registry.async_update_entity(
+        kitchen_entry.entity_id, area_id=kitchen.id, labels={"important"}
+    )
+
+    bedroom_entry = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "bedroom_motion",
+        device_id=device_bedroom.id,
+        original_device_class="motion",
+    )
+    entity_registry.async_update_entity(bedroom_entry.entity_id, area_id=bedroom.id)
+
+    hass.states.async_set(
+        kitchen_entry.entity_id, "21", {"friendly_name": "Kitchen Temp"}
+    )
+    hass.states.async_set(
+        bedroom_entry.entity_id, "off", {"friendly_name": "Bedroom Motion"}
+    )
+
+    api = LovelaceDashboardGenerationAPI(hass)
+    api_instance = await api.async_get_api_instance(_llm_context())
+    tools = {tool.name: tool for tool in api_instance.tools}
+
+    assert sorted(tools) == ["area_list", "device_list", "entity_list"]
+
+    area_result = await tools["area_list"].async_call(
+        hass,
+        llm.ToolInput(
+            tool_name="area_list",
+            tool_args={"floor": floor_1.floor_id, "brief": True},
+        ),
+        _llm_context(),
+    )
+    assert area_result == {"areas": [{"area_id": kitchen.id, "name": "Kitchen"}]}
+
+    device_result = await tools["device_list"].async_call(
+        hass,
+        llm.ToolInput(
+            tool_name="device_list",
+            tool_args={"area": kitchen.id, "brief": True},
+        ),
+        _llm_context(),
+    )
+    assert device_result == {
+        "devices": [{"id": device_kitchen.id, "name": "Kitchen Device"}]
+    }
+
+    entity_result = await tools["entity_list"].async_call(
+        hass,
+        llm.ToolInput(
+            tool_name="entity_list",
+            tool_args={
+                "domain": "sensor",
+                "device-class": "temperature",
+                "label": "important",
+                "brief": True,
+            },
+        ),
+        _llm_context(),
+    )
+    assert entity_result == {
+        "entities": [{"entity_id": kitchen_entry.entity_id, "name": "Kitchen Temp"}]
+    }
+
+    entity_count = await tools["entity_list"].async_call(
+        hass,
+        llm.ToolInput(
+            tool_name="entity_list",
+            tool_args={"device": device_kitchen.id, "count": True},
+        ),
+        _llm_context(),
+    )
+    assert entity_count == {"count": 1}
 
 
 @pytest.mark.parametrize(

@@ -8,11 +8,12 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import ai_task, websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_fragment
+from homeassistant.util.json import json_loads
 
 from .const import (
     CONF_RESOURCE_MODE,
@@ -22,6 +23,7 @@ from .const import (
     ConfigNotFound,
 )
 from .dashboard import LovelaceConfig
+from .llm import LovelaceDashboardGenerationAPI, build_generation_instructions
 
 if TYPE_CHECKING:
     from .resources import ResourceStorageCollection
@@ -184,3 +186,93 @@ async def websocket_lovelace_delete_config(
 ) -> None:
     """Delete Lovelace UI configuration."""
     await config.async_delete()
+
+
+def _coerce_generated_dashboard(data: Any) -> dict[str, Any]:
+    """Coerce AI output into a dashboard config object."""
+    if isinstance(data, dict):
+        return data
+
+    if not isinstance(data, str):
+        raise HomeAssistantError("Generated dashboard must be a valid JSON object")
+
+    candidates = [data.strip()]
+
+    if "```" in data:
+        for block in data.split("```"):
+            candidate = block.strip()
+            if not candidate:
+                continue
+            if candidate.casefold().startswith("json"):
+                candidate = candidate[4:].strip()
+            candidates.append(candidate)
+
+    for candidate in candidates:
+        try:
+            parsed = json_loads(candidate)
+        except ValueError:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+
+    raise HomeAssistantError("Generated dashboard must be a valid JSON object")
+
+
+def _validate_generated_dashboard(data: Any) -> dict[str, Any]:
+    """Validate generated dashboard response."""
+    if not isinstance(data, dict):
+        raise HomeAssistantError("Generated dashboard must be an object")
+
+    views = data.get("views")
+    if not isinstance(views, list) or not views:
+        raise HomeAssistantError(
+            "Generated dashboard must include at least one view in `views`"
+        )
+
+    if not all(isinstance(view, dict) for view in views):
+        raise HomeAssistantError("Each dashboard view must be an object")
+
+    return data
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "lovelace/config/generate",
+        vol.Required("prompt"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_lovelace_generate_dashboard(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate a Lovelace dashboard configuration from a prompt."""
+    if ai_task.DOMAIN not in hass.config.components:
+        connection.send_error(
+            msg["id"],
+            "error",
+            "AI Task integration is not available. Configure AI Task first.",
+        )
+        return
+
+    try:
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="lovelace_dashboard_generation",
+            instructions=await build_generation_instructions(hass, msg["prompt"]),
+            llm_api=LovelaceDashboardGenerationAPI(hass),
+        )
+        config = _validate_generated_dashboard(_coerce_generated_dashboard(result.data))
+    except HomeAssistantError as err:
+        connection.send_error(msg["id"], "error", str(err))
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "conversation_id": result.conversation_id,
+            "config": config,
+        },
+    )
