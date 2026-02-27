@@ -569,7 +569,7 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
-            return_value=mock_play_item,
+            new=AsyncMock(return_value=mock_play_item),
         ),
     ):
         await entity.async_play_media(media_type=MediaType.MUSIC, media_id=media_id)
