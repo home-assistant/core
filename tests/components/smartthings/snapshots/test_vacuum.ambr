@@ -31,14 +31,14 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12308>,
     'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][vacuum.robot_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum',
+      'friendly_name': 'Robot Vacuum',
       'supported_features': <VacuumEntityFeature: 12308>,
     }),
     'context': <ANY>,
@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'docked',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum-entry]
