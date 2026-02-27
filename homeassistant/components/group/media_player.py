@@ -423,20 +423,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_volume_up(self) -> None:
-        """Turn volume up for media player(s)."""
-        for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
-            if volume_level < 1:
-                await self.async_set_volume_level(min(1, volume_level + 0.1))
-
-    async def async_volume_down(self) -> None:
-        """Turn volume down for media player(s)."""
-        for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
-            if volume_level > 0:
-                await self.async_set_volume_level(max(0, volume_level - 0.1))
-
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the media group state."""
