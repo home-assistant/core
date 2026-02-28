@@ -718,7 +718,8 @@
           "off": "[%key:common::state::off%]",
           "pause": "[%key:common::state::paused%]",
           "point": "Point",
-          "reserve": "Reserve"
+          "reserve": "Reserve",
+          "washing_mop": "Washing mop"
         }
       },
       "robot_cleaner_turbo_mode": {
@@ -857,6 +858,9 @@
       },
       "display_lighting": {
         "name": "Display lighting"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
       },
       "dry_plus": {
         "name": "Dry plus"
