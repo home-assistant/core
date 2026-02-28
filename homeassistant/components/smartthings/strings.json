@@ -919,6 +919,20 @@
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "maximum": "Maximum",
+              "normal": "Normal",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {
