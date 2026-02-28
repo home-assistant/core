@@ -112,7 +112,7 @@
       "message": "Failed to set temperature to {temperature}."
     },
     "set_value_failed": {
-      "message": "Failed to set value: {error}"
+      "message": "Failed to set value."
     },
     "switch_turn_off_failed": {
       "message": "Failed to turn off {switch}."
