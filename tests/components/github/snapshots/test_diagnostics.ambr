@@ -41,6 +41,9 @@
           ]),
           'total': 1,
         }),
+        'merged_pull_request': dict({
+          'total': 42,
+        }),
         'pull_request': dict({
           'pull_requests': list([
             dict({
