@@ -158,6 +158,7 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_fan_speed = AsyncMock()
     b01_trait.set_mode = AsyncMock()
     b01_trait.set_water_level = AsyncMock()
+    b01_trait.clean_segments = AsyncMock()
     b01_trait.send = AsyncMock()
     return b01_trait
 

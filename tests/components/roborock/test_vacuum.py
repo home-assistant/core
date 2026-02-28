@@ -497,6 +497,7 @@ def fake_q7_vacuum_api_fixture(
         api.return_to_dock.side_effect = send_message_exception
         api.find_me.side_effect = send_message_exception
         api.set_fan_speed.side_effect = send_message_exception
+        api.clean_segments.side_effect = send_message_exception
         api.send.side_effect = send_message_exception
     return api
 
@@ -620,6 +621,51 @@ async def test_q7_send_command(
     assert q7_vacuum_api.send.call_args[0] == ("test_command", None)
 
 
+async def test_q7_clean_segments_with_clean_area(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test cleaning Q7 segments via the clean_area service."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "segments": ["10", "1_11"]},
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 1
+    assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+
+
+async def test_q7_app_segment_clean_alias_routes_to_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test APP_SEGMENT_CLEAN style send_command is normalized for Q7."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: Q7_ENTITY_ID,
+            "command": "app_segment_clean",
+            "params": [{"segments": [10, "11"]}],
+        },
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 1
+    assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+    assert q7_vacuum_api.send.call_count == 0
+
+
 @pytest.mark.parametrize(
     ("service", "api_method", "service_params"),
     [
@@ -629,6 +675,7 @@ async def test_q7_send_command(
         (SERVICE_RETURN_TO_BASE, "return_to_dock", None),
         (SERVICE_LOCATE, "find_me", None),
         (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}),
+        (SERVICE_CLEAN_AREA, "clean_segments", {"segments": ["10"]}),
         (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}),
     ],
 )
