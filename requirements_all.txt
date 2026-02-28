@@ -797,6 +797,9 @@ deluge-client==1.10.2
 # homeassistant.components.lametric
 demetriek==1.3.0
 
+# homeassistant.components.denon_rs232
+denon-rs232==0.1.0
+
 # homeassistant.components.denonavr
 denonavr==1.3.2
 
