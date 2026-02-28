@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import combine_hex
 from enocean_async import ERP1Telegram, ESP3PacketType
 import voluptuous as vol
 
@@ -21,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 CONF_SENDER_ID = "sender_id"
 
