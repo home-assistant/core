@@ -257,7 +257,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             mutable_data = dict(subentry.data)
             forecast_hours: list[int] = []
             if user_input.get("forecast") is True:
-                _LOGGER.debug("user_input: %s", user_input)
+
                 forecast_hours.append(1)
             section_data = user_input.get(SECTIONS_ADDITIONAL_FORECASTS) or {}
             additional_times = section_data.get("additional_forecast_times", [])
@@ -289,7 +289,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                         "forecast",
                         default=bool(subentry.data.get("forecast")),
                     ): bool,
-                    vol.Optional("section_addtitional_forecasts"): section(
+                    vol.Optional(SECTIONS_ADDITIONAL_FORECASTS): section(
                         vol.Schema(
                             {
                                 vol.Optional(

@@ -90,17 +90,16 @@ async def async_setup_entry(
             coordinators_forecast={},
         )
 
-        if subentry.data.get("forecast"):
-            for hour in subentry.data.get("forecast", []):
-                subentry_runtime_data.coordinators_forecast[hour] = (
-                    GoogleAirQualityForecastCoordinator(
-                        hass,
-                        entry,
-                        subentry.subentry_id,
-                        client,
-                        hour,
-                    )
+        for hour in subentry.data.get("forecast", []):
+            subentry_runtime_data.coordinators_forecast[hour] = (
+                GoogleAirQualityForecastCoordinator(
+                    hass,
+                    entry,
+                    subentry.subentry_id,
+                    client,
+                    hour,
                 )
+            )
 
         subentries_runtime_data[subentry.subentry_id] = subentry_runtime_data
     tasks: list[Coroutine[Any, Any, None]] = []

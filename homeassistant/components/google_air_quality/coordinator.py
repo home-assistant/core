@@ -104,7 +104,7 @@ class GoogleAirQualityForecastCoordinator(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN}_{subentry_id}",
+            name=f"{DOMAIN}_{subentry_id}_forecast_{hour}h",
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client

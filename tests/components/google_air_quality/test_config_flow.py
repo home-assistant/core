@@ -423,7 +423,7 @@ async def test_reconfigure_flow(
         result["flow_id"],
         user_input={
             "forecast": True,
-            "section_additional_forecasts": {"additional_forecast_times": []},
+            "section_addtitional_forecasts": {"additional_forecast_times": []},
         },
     )
     assert result["type"] is FlowResultType.ABORT
