@@ -194,7 +194,7 @@ async def test_zone_services_with_ctl_id(
 ) -> None:
     """Test calling zone-only services with a non-zone entity_id fail."""
 
-    with pytest.raises(ServiceValidationError) as excinfo:
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -203,4 +203,5 @@ async def test_zone_services_with_ctl_id(
             blocking=True,
         )
 
-    assert excinfo.value.translation_key == "zone_only_service"
+    assert exc_info.value.translation_key == "zone_only_service"
+    assert exc_info.value.translation_placeholders == {"service": service}
