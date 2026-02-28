@@ -129,7 +129,7 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="envoy_error",
-                translation_placeholders={"host": envoy.host, "args": err.args[0]},
+                translation_placeholders={"host": envoy.host, "args": str(err)},
             ) from err
         if response.status >= 300:
             raise HomeAssistantError(
