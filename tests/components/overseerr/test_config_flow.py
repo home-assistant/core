@@ -54,7 +54,7 @@ async def test_full_flow(
         {CONF_URL: "http://overseerr.test", CONF_API_KEY: "test-key"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Overseerr"
+    assert result["title"] == "Seerr"
     assert result["data"] == {
         CONF_HOST: "overseerr.test",
         CONF_PORT: 80,
