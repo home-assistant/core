@@ -109,7 +109,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxPermissionsError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="permissions_error",
             ) from err
@@ -193,9 +193,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         try:
             self.permissions = self.proxmox.access.permissions.get()
         except ResourceException as err:
-            # Only reauth on auth errors (i.e. not on server errors)
             if 400 <= err.status_code < 500:
-                self.hass.add_job(self.config_entry.async_start_reauth, self.hass)
                 raise ProxmoxPermissionsError from err
             raise ProxmoxServerError from err
 
