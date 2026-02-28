@@ -166,6 +166,7 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.LEVEL,
         command=Command.SET_LEVEL,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     Capability.CUSTOM_WASHER_SPIN_LEVEL: SmartThingsSelectDescription(
         key=Capability.CUSTOM_WASHER_SPIN_LEVEL,
