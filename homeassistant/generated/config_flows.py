@@ -225,6 +225,7 @@ FLOWS = {
         "foscam",
         "freebox",
         "freedompro",
+        "freshr",
         "fritz",
         "fritzbox",
         "fritzbox_callmonitor",
