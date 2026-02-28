@@ -21,6 +21,3 @@ CONNECT_TIMEOUT = 5
 CAMBRIDGE_MEDIA_TYPE_PRESET = "preset"
 CAMBRIDGE_MEDIA_TYPE_AIRABLE = "airable"
 CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO = "internet_radio"
-
-# EQ preset key for identifying when custom EQ is in use
-EQ_PRESET_CUSTOM = "custom"

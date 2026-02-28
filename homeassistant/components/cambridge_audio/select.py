@@ -2,19 +2,16 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from aiostreammagic import StreamMagicClient
-from aiostreammagic.models import EQ_PRESETS, ControlBusMode, DisplayBrightness, EQBand
+from aiostreammagic.models import ControlBusMode, DisplayBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CambridgeAudioConfigEntry
-from .const import DOMAIN, EQ_PRESET_CUSTOM
 from .entity import CambridgeAudioEntity, command
 
 PARALLEL_UPDATES = 0
@@ -50,47 +47,6 @@ def _audio_output_value_fn(client: StreamMagicClient) -> str | None:
         ),
         None,
     )
-
-
-def _eq_gains_match(current_bands: list[EQBand], preset_gains: list[float]) -> bool:
-    """Check if current EQ band gains match preset gains."""
-    if len(current_bands) != len(preset_gains):
-        return False
-    return all(
-        band.gain == gain
-        for band, gain in zip(current_bands, preset_gains, strict=False)
-    )
-
-
-def _eq_preset_value_fn(client: StreamMagicClient) -> str | None:
-    """Detect the current EQ preset based on band gain settings."""
-    if TYPE_CHECKING:
-        assert client.audio.user_eq is not None
-
-    if not (current_bands := client.audio.user_eq.bands):
-        return None
-
-    # Check if current gain settings match any preset
-    for preset_name, preset_gains in EQ_PRESETS.items():
-        if _eq_gains_match(current_bands, preset_gains):
-            return preset_name
-
-    # If no preset matches, return custom
-    return EQ_PRESET_CUSTOM
-
-
-async def _eq_preset_set_value_fn(client: StreamMagicClient, value: str) -> None:
-    """Apply an EQ preset to the device."""
-    if TYPE_CHECKING:
-        assert client.audio.user_eq is not None
-
-    if value == EQ_PRESET_CUSTOM:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="equalizer_preset_custom_not_selectable",
-        )
-
-    await client.set_equalizer_preset(value)
 
 
 CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
@@ -133,15 +89,6 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
         set_value_fn=lambda client, value: client.set_control_bus_mode(
             ControlBusMode(value)
         ),
-    ),
-    CambridgeAudioSelectEntityDescription(
-        key="equalizer_preset",
-        translation_key="equalizer_preset",
-        options=[*EQ_PRESETS.keys(), EQ_PRESET_CUSTOM],
-        entity_category=EntityCategory.CONFIG,
-        load_fn=lambda client: client.audio.user_eq is not None,
-        value_fn=_eq_preset_value_fn,
-        set_value_fn=_eq_preset_set_value_fn,
     ),
 )
 

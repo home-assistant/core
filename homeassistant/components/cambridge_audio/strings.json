@@ -35,11 +35,6 @@
     }
   },
   "entity": {
-    "number": {
-      "room_correction_intensity": {
-        "name": "Room correction intensity"
-      }
-    },
     "select": {
       "audio_output": {
         "name": "Audio output"
@@ -58,21 +53,6 @@
           "bright": "Bright",
           "dim": "Dim",
           "off": "[%key:common::state::off%]"
-        }
-      },
-      "equalizer_preset": {
-        "name": "Equalizer preset",
-        "state": {
-          "bass_boost": "Bass boost",
-          "bass_reduction": "Bass reduction",
-          "custom": "Custom",
-          "flat": "Flat",
-          "gaming": "Gaming",
-          "movie": "Movie",
-          "treble_boost": "Treble boost",
-          "treble_reduction": "Treble reduction",
-          "tv": "TV",
-          "voice_clarity": "Voice clarity"
         }
       }
     },
@@ -97,9 +77,6 @@
     },
     "entry_cannot_connect": {
       "message": "Error while connecting to {host}"
-    },
-    "equalizer_preset_custom_not_selectable": {
-      "message": "The 'Custom' equalizer preset cannot be selected directly. It is used when the current band gains do not match any known preset."
     },
     "missing_preset": {
       "message": "Missing preset for media_id: {preset_id}"
