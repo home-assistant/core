@@ -774,7 +774,7 @@ CAPABILITY_TO_SENSORS: dict[
                     value * 1000
                     if presentation_id is not None
                     and "EHS" in presentation_id
-                    and isinstance(value, int)
+                    and isinstance(value, (int, float))
                     else value
                 ),
             ),
