@@ -400,7 +400,7 @@ def _convert_content(
                 # If there is only one text block, simplify the content to a string
                 messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
-            # Note: We don't pass SystemContent here as its passed to the API as the prompt
+            # Note: We don't pass SystemContent here as it's passed to the API as the prompt
             raise HomeAssistantError("Unexpected content type in chat log")
 
     return messages, container_id
