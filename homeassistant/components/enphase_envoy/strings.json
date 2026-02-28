@@ -724,7 +724,7 @@
       "message": "Error communicating with Envoy API on {host}: {args}"
     },
     "envoy_service_envoy_not_found": {
-      "message": "No Envoy found by {service}, {device_id} specified"
+      "message": "No Envoy found by {service}, {device_id} specified or loaded"
     },
     "not_initialized": {
       "message": "{service}: Enphase envoy is not yet initialized"
