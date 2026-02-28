@@ -43,7 +43,7 @@ from .const import (
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
     """Return a list of repositories that the user owns or has starred."""
     client = GitHubAPI(token=access_token, session=async_get_clientsession(hass))
-    repositories = set()
+    repositories: set[str] = set()
 
     async def _get_starred_repositories() -> None:
         response = await client.user.starred(params={"per_page": 100})
@@ -61,7 +61,7 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
             for result in results:
                 response.data.extend(result.data)
 
-        repositories.update(response.data)
+        repositories.update(repo.full_name for repo in response.data)
 
     async def _get_personal_repositories() -> None:
         response = await client.user.repos(params={"per_page": 100})
@@ -79,7 +79,7 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
             for result in results:
                 response.data.extend(result.data)
 
-        repositories.update(response.data)
+        repositories.update(repo.full_name for repo in response.data)
 
     try:
         await asyncio.gather(
@@ -90,15 +90,20 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
         )
 
     except GitHubException:
-        return DEFAULT_REPOSITORIES
+        repositories.update(DEFAULT_REPOSITORIES)
 
     if len(repositories) == 0:
-        return DEFAULT_REPOSITORIES
+        repositories.update(DEFAULT_REPOSITORIES)
 
-    return sorted(
-        (repo.full_name for repo in repositories),
-        key=str.casefold,
-    )
+    current_repositories = {
+        subentry.data[CONF_REPOSITORY]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_REPOSITORY
+    }
+    repositories = repositories - current_repositories
+
+    return sorted(repositories, key=str.casefold)
 
 
 class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
