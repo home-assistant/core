@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -43,7 +43,7 @@ class TeslemetryVehicleData:
     vin: str
     firmware: str
     device: DeviceInfo
-    wakelock = asyncio.Lock()
+    wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 @dataclass
