@@ -182,15 +182,15 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         if preset_mode == PRESET_AWAY:
             self._user_cleared_preset = False  # Clear the "None" flag
             temp = self._get_away_temp()
-            _LOGGER.info("Setting preset to Away (%d°C)", temp)
+            _LOGGER.debug("Setting preset to Away (%d°C)", temp)
             await self.coordinator.async_set_temperature(temp)
         elif preset_mode == PRESET_COMFORT:
             self._user_cleared_preset = False  # Clear the "None" flag
             temp = self._get_comfort_temp()
-            _LOGGER.info("Setting preset to Comfort (%d°C)", temp)
+            _LOGGER.debug("Setting preset to Comfort (%d°C)", temp)
             await self.coordinator.async_set_temperature(temp)
         elif preset_mode == PRESET_NONE:
-            _LOGGER.info("Clearing preset mode")
+            _LOGGER.debug("Clearing preset mode")
             # Keep current temperature, just clear the preset
             self._current_preset = None
             self._user_cleared_preset = True  # User explicitly selected "None"
@@ -215,16 +215,16 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         else:
             self._current_preset = None
 
-        _LOGGER.info("Setting target temperature to %d°C", temperature)
+        _LOGGER.debug("Setting target temperature to %d°C", temperature)
         await self.coordinator.async_set_temperature(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
-            _LOGGER.info("Turning heater ON")
+            _LOGGER.debug("Turning heater ON")
             await self.coordinator.async_turn_on()
         elif hvac_mode == HVACMode.OFF:
-            _LOGGER.info("Turning heater OFF")
+            _LOGGER.debug("Turning heater OFF")
             await self.coordinator.async_turn_off()
 
     async def async_turn_on(self) -> None:

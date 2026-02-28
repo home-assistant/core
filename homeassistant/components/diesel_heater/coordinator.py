@@ -328,7 +328,10 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             self._auto_offset_unsub = None
 
         # Get external sensor entity_id from config
-        external_sensor = self.config_entry.data.get(CONF_EXTERNAL_TEMP_SENSOR, "")
+        external_sensor = self.config_entry.options.get(
+            CONF_EXTERNAL_TEMP_SENSOR,
+            self.config_entry.data.get(CONF_EXTERNAL_TEMP_SENSOR, ""),
+        )
         if not external_sensor:
             self._logger.debug("No external temperature sensor configured")
             return
@@ -336,7 +339,10 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         self._logger.info(
             "Setting up auto offset from external sensor: %s (max offset: %d°C)",
             external_sensor,
-            self.config_entry.data.get(CONF_AUTO_OFFSET_MAX, DEFAULT_AUTO_OFFSET_MAX)
+            self.config_entry.options.get(
+                CONF_AUTO_OFFSET_MAX,
+                self.config_entry.data.get(CONF_AUTO_OFFSET_MAX, DEFAULT_AUTO_OFFSET_MAX),
+            ),
         )
 
         # Subscribe to state changes
@@ -371,7 +377,10 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             self._logger.debug("Auto offset disabled")
             return
 
-        external_sensor = self.config_entry.data.get(CONF_EXTERNAL_TEMP_SENSOR, "")
+        external_sensor = self.config_entry.options.get(
+            CONF_EXTERNAL_TEMP_SENSOR,
+            self.config_entry.data.get(CONF_EXTERNAL_TEMP_SENSOR, ""),
+        )
         if not external_sensor:
             self._logger.debug("No external temperature sensor configured")
             return
@@ -430,7 +439,10 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
         # Calculate new offset (clamped to -max to +max range)
         # Both positive and negative offsets now work via BLE
-        max_offset = self.config_entry.data.get(CONF_AUTO_OFFSET_MAX, DEFAULT_AUTO_OFFSET_MAX)
+        max_offset = self.config_entry.options.get(
+            CONF_AUTO_OFFSET_MAX,
+            self.config_entry.data.get(CONF_AUTO_OFFSET_MAX, DEFAULT_AUTO_OFFSET_MAX),
+        )
         max_offset = min(max_offset, MAX_HEATER_OFFSET)  # Cap at 10
         new_offset = int(max(-max_offset, min(max_offset, difference)))
 
@@ -439,9 +451,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             old_offset = self._current_heater_offset
             self._last_auto_offset_time = current_time
 
-            self._logger.info(
+            self._logger.debug(
                 "Auto offset: external=%.1f°C (rounded=%d), heater_raw=%.1f°C, "
-                "difference=%.1f°C, sending offset: %d → +%d°C",
+                "difference=%.1f°C, sending offset: %d -> +%d°C",
                 external_temp, external_temp_rounded, raw_heater_temp,
                 difference, old_offset, new_offset
             )
@@ -1322,7 +1334,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             timeout: Timeout in seconds for waiting response
         """
         if not self._client or not self._client.is_connected:
-            self._logger.info(
+            self._logger.warning(
                 "Cannot send command: heater not connected. "
                 "The integration will attempt to reconnect automatically."
             )
@@ -1381,7 +1393,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         # ABBA uses a toggle command (0xA1) for both ON and OFF.
         # Guard against accidental toggle: skip if already heating.
         if self._protocol_mode == 5 and self.data.get("running_state", 0) == 1:
-            self._logger.info("ABBA: Heater already on, skipping toggle command")
+            self._logger.debug("ABBA: Heater already on, skipping toggle command")
             return
         success = await self._send_command(3, 1)
         if success:
@@ -1392,7 +1404,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         # ABBA uses a toggle command (0xA1) for both ON and OFF.
         # Guard against accidental toggle: skip if already off.
         if self._protocol_mode == 5 and self.data.get("running_state", 0) == 0:
-            self._logger.info("ABBA: Heater already off, skipping toggle command")
+            self._logger.debug("ABBA: Heater already off, skipping toggle command")
             return
         success = await self._send_command(3, 0)
         if success:
@@ -1424,14 +1436,14 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         # Some mode 4 heaters use Fahrenheit, others use Celsius
         if self._heater_uses_fahrenheit:
             temp_fahrenheit = round(temperature * 9 / 5 + 32)
-            self._logger.info(
-                "SET TEMPERATURE REQUEST: target=%d°C (%d°F), current=%s, mode=%s, protocol=%d (heater uses Fahrenheit)",
+            self._logger.debug(
+                "Set temperature: target=%d°C (%d°F), current=%s, mode=%s, protocol=%d (Fahrenheit)",
                 temperature, temp_fahrenheit, current_temp, current_mode, self._protocol_mode
             )
             command_temp = temp_fahrenheit
         else:
-            self._logger.info(
-                "SET TEMPERATURE REQUEST: target=%d°C, current=%s, mode=%s, protocol=%d (heater uses Celsius)",
+            self._logger.debug(
+                "Set temperature: target=%d°C, current=%s, mode=%s, protocol=%d (Celsius)",
                 temperature, current_temp, current_mode, self._protocol_mode
             )
             command_temp = temperature
@@ -1442,10 +1454,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             await self.async_request_refresh()
             # Log result after refresh
             new_temp = self.data.get("set_temp", "unknown")
-            self._logger.info(
-                "SET TEMPERATURE RESULT: requested=%d°C, heater_reports=%s°C, %s",
-                temperature, new_temp,
-                "SUCCESS" if new_temp == temperature else "FAILED - heater did not accept"
+            self._logger.debug(
+                "Set temperature result: requested=%d°C, heater_reports=%s°C",
+                temperature, new_temp
             )
         else:
             self._logger.warning("SET TEMPERATURE FAILED: command not sent successfully")
@@ -1470,7 +1481,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 )
                 return
 
-            self._logger.info("Activating ventilation mode (ABBA 0xA4)")
+            self._logger.debug("Activating ventilation mode (ABBA 0xA4)")
             success = await self._send_command(101, 0)  # Command 101 = ventilation
             if success:
                 await self.async_request_refresh()
@@ -1478,7 +1489,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
         # Standard modes (0-2)
         mode = max(0, min(2, mode))
-        self._logger.info("Setting running mode to %d", mode)
+        self._logger.debug("Setting running mode to %d", mode)
         success = await self._send_command(2, mode)
         if success:
             await self.async_request_refresh()
@@ -1490,7 +1501,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         when the room temperature reaches 2°C above the target, and restart
         when it drops 2°C below the target.
         """
-        self._logger.info("Setting Auto Start/Stop to %s", "enabled" if enabled else "disabled")
+        self._logger.debug("Setting Auto Start/Stop to %s", "enabled" if enabled else "disabled")
         # Command 18, arg=1 for enabled, arg=0 for disabled
         success = await self._send_command(18, 1 if enabled else 0)
         if success:
@@ -1504,11 +1515,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         """
         now = dt_util.now()
         time_value = 60 * now.hour + now.minute
-        self._logger.info("Syncing heater time to %02d:%02d (value=%d)", now.hour, now.minute, time_value)
+        self._logger.debug("Syncing heater time to %02d:%02d (value=%d)", now.hour, now.minute, time_value)
         # Command 10 for time sync
         success = await self._send_command(10, time_value)
         if success:
-            self._logger.info("Time sync successful")
+            self._logger.debug("Time sync successful")
         else:
             self._logger.warning("Time sync failed")
 
@@ -1530,7 +1541,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         # Clamp to valid range
         offset = max(MIN_HEATER_OFFSET, min(MAX_HEATER_OFFSET, offset))
 
-        self._logger.info("Setting heater temperature offset to %d°C (cmd 20)", offset)
+        self._logger.debug("Setting heater temperature offset to %d°C (cmd 20)", offset)
 
         # Command 20 for temperature offset
         # Pass offset directly - _build_command_packet handles encoding
@@ -1539,7 +1550,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if success:
             self._current_heater_offset = offset
             self.data["heater_offset"] = offset
-            self._logger.info("Heater offset set to %d°C", offset)
+            self._logger.debug("Heater offset set to %d°C", offset)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set heater offset")
@@ -1550,11 +1561,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         Args:
             language: Language code (0=Chinese, 1=English, 2=Russian, etc.)
         """
-        self._logger.info("🗣️ Setting language to %d (cmd 14)", language)
+        self._logger.debug("Setting language to %d (cmd 14)", language)
         success = await self._send_command(14, language)
         if success:
             self.data["language"] = language
-            self._logger.info("Language set to %d", language)
+            self._logger.debug("Language set to %d", language)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set language")
@@ -1567,12 +1578,12 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         """
         value = 1 if use_fahrenheit else 0
         unit_name = "Fahrenheit" if use_fahrenheit else "Celsius"
-        self._logger.info("Setting temperature unit to %s (cmd 15, value=%d)", unit_name, value)
+        self._logger.debug("Setting temperature unit to %s (cmd 15, value=%d)", unit_name, value)
         success = await self._send_command(15, value)
         if success:
             self.data["temp_unit"] = value
             self._heater_uses_fahrenheit = use_fahrenheit
-            self._logger.info("Temperature unit set to %s", unit_name)
+            self._logger.debug("Temperature unit set to %s", unit_name)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set temperature unit")
@@ -1585,11 +1596,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         """
         value = 1 if use_feet else 0
         unit_name = "Feet" if use_feet else "Meters"
-        self._logger.info("📏 Setting altitude unit to %s (cmd 19, value=%d)", unit_name, value)
+        self._logger.debug("Setting altitude unit to %s (cmd 19, value=%d)", unit_name, value)
         success = await self._send_command(19, value)
         if success:
             self.data["altitude_unit"] = value
-            self._logger.info("Altitude unit set to %s", unit_name)
+            self._logger.debug("Altitude unit set to %s", unit_name)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set altitude unit")
@@ -1603,11 +1614,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             self._logger.warning("High altitude mode is only available for ABBA/HeaterCC devices")
             return
         state_name = "ON" if enabled else "OFF"
-        self._logger.info("🏔️ Setting high altitude mode to %s", state_name)
+        self._logger.debug("Setting high altitude mode to %s", state_name)
         success = await self._send_command(99, 0)
         if success:
             self.data["high_altitude"] = 1 if enabled else 0
-            self._logger.info("High altitude mode set to %s", state_name)
+            self._logger.debug("High altitude mode set to %s", state_name)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set high altitude mode")
@@ -1622,11 +1633,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             volume_index: Tank volume index (0-10)
         """
         volume_index = max(0, min(10, volume_index))
-        self._logger.info("Setting tank volume to index %d (cmd 16)", volume_index)
+        self._logger.debug("Setting tank volume to index %d (cmd 16)", volume_index)
         success = await self._send_command(16, volume_index)
         if success:
             self.data["tank_volume"] = volume_index
-            self._logger.info("Tank volume set to index %d", volume_index)
+            self._logger.debug("Tank volume set to index %d", volume_index)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set tank volume")
@@ -1640,11 +1651,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             pump_type: Pump type (0-3)
         """
         pump_type = max(0, min(3, pump_type))
-        self._logger.info("🔧 Setting pump type to %d (cmd 17)", pump_type)
+        self._logger.debug("Setting pump type to %d (cmd 17)", pump_type)
         success = await self._send_command(17, pump_type)
         if success:
             self.data["pump_type"] = pump_type
-            self._logger.info("Pump type set to %d", pump_type)
+            self._logger.debug("Pump type set to %d", pump_type)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set pump type")
@@ -1659,11 +1670,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             level: Brightness level (0-100)
         """
         level = max(0, min(100, level))
-        self._logger.info("Setting backlight to %d (cmd 21)", level)
+        self._logger.debug("Setting backlight to %d (cmd 21)", level)
         success = await self._send_command(21, level)
         if success:
             self.data["backlight"] = level
-            self._logger.info("Backlight set to %d", level)
+            self._logger.debug("Backlight set to %d", level)
             await self.async_request_refresh()
         else:
             self._logger.warning("Failed to set backlight")
@@ -1678,7 +1689,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         Args:
             enabled: True to enable, False to disable
         """
-        self._logger.info("Setting auto offset to %s", "enabled" if enabled else "disabled")
+        self._logger.debug("Setting auto offset to %s", "enabled" if enabled else "disabled")
         self.data["auto_offset_enabled"] = enabled
 
         # Persist the setting immediately
@@ -1690,7 +1701,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         else:
             # Reset heater offset to 0 when disabling
             if self._current_heater_offset != 0:
-                self._logger.info("Resetting heater offset to 0")
+                self._logger.debug("Resetting heater offset to 0")
                 await self.async_set_heater_offset(0)
 
     async def async_send_raw_command(self, command: int, argument: int) -> bool:
@@ -1706,18 +1717,18 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         Returns:
             True if command was sent successfully
         """
-        self._logger.info(
-            "🔧 DEBUG: Sending raw command: cmd=%d, arg=%d",
+        self._logger.debug(
+            "Sending raw command: cmd=%d, arg=%d",
             command, argument
         )
 
         success = await self._send_command(command, argument)
 
         if success:
-            self._logger.info("DEBUG: Raw command sent successfully")
+            self._logger.debug("Raw command sent successfully")
             await self.async_request_refresh()
         else:
-            self._logger.warning("DEBUG: Failed to send raw command")
+            self._logger.warning("Failed to send raw command")
 
         return success
 
