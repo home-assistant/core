@@ -14,7 +14,7 @@ from homeassistant.components.inelnet import (
 from homeassistant.components.inelnet.const import CONF_CHANNELS, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -57,6 +57,21 @@ async def test_setup_entry_stores_runtime_data(
         1: mock_client,
         2: mock_client,
     }
+
+
+async def test_setup_entry_raises_config_entry_error_when_channels_empty(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_setup_entry raises ConfigEntryError when channels list is empty."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="INELNET empty",
+        data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: []},
+        unique_id="192.168.1.67-",
+    )
+    entry.add_to_hass(hass)
+    with pytest.raises(ConfigEntryError, match="No channels"):
+        await async_setup_entry(hass, entry)
 
 
 async def test_setup_entry_raises_not_ready_when_ping_fails(

@@ -13,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 class TestParseChannels:
     """Tests for parse_channels helper."""
@@ -77,9 +75,13 @@ class TestIsValidHost:
         assert is_valid_host("   ") is False
 
     def test_invalid_ip_octets(self) -> None:
-        """Invalid IPv4-like string can be rejected (implementation may allow)."""
-        # Current impl allows any \d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}
-        assert is_valid_host("256.1.1.1") is True  # regex allows it
+        """Invalid IPv4 octet (>255) is rejected."""
+        assert is_valid_host("256.1.1.1") is False
+
+    def test_valid_ipv6(self) -> None:
+        """Valid IPv6 is accepted."""
+        assert is_valid_host("::1") is True
+        assert is_valid_host("2001:db8::1") is True
 
     def test_invalid_hostname_returns_false(self) -> None:
         """Non-empty host that is neither IPv4 nor valid hostname returns False."""
@@ -233,38 +235,32 @@ async def test_config_flow_ping_fails_shows_cannot_connect(
     assert result["errors"]["base"] == "cannot_connect"
 
 
-@pytest.mark.skip(
-    reason="Duplicate abort depends on flow using mocked InelnetChannel; "
-    "loader imports config_flow in worker so patch is not visible"
-)
 async def test_config_flow_duplicate_aborts(
     hass: HomeAssistant,
 ) -> None:
-    """Test duplicate host+channels aborts (same unique_id already configured)."""
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="192.168.1.67-1",
-        data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: [1]},
-    )
-    existing_entry.add_to_hass(hass)
-
+    """Test duplicate host+channels aborts when already configured."""
     mock_client = MagicMock()
     mock_client.ping = AsyncMock(return_value=True)
-    with (
-        patch("inelnet_api.InelnetChannel", return_value=mock_client),
-        patch(
-            "homeassistant.components.inelnet.config_flow.InelnetChannel",
-            return_value=mock_client,
-        ),
+    with patch(
+        "homeassistant.components.inelnet.config_flow.InelnetChannel",
+        return_value=mock_client,
     ):
-        result = await hass.config_entries.flow.async_init(
+        first_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        first_result = await hass.config_entries.flow.async_configure(
+            first_result["flow_id"],
             {CONF_HOST: "192.168.1.67", CONF_CHANNELS: "1"},
         )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+        assert first_result["type"] is FlowResultType.CREATE_ENTRY
+        second_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        second_result = await hass.config_entries.flow.async_configure(
+            second_result["flow_id"],
+            {CONF_HOST: "192.168.1.67", CONF_CHANNELS: "1"},
+        )
+    assert second_result["type"] is FlowResultType.ABORT
+    assert second_result["reason"] == "already_configured"

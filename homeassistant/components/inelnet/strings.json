@@ -12,13 +12,13 @@
       "user": {
         "data": {
           "channels": "Channels",
-          "host": "IP address"
+          "host": "IP address or hostname"
         },
         "data_description": {
           "channels": "Channel numbers comma-separated (positive integers).",
-          "host": "e.g. 192.168.1.67"
+          "host": "e.g. 192.168.1.67 or my-controller.local"
         },
-        "description": "Define all channels in this step. Enter the controller IP address and all channel numbers as a comma-separated list (e.g. 1 or 1,2,3). One device with cover and action buttons will be created per channel.",
+        "description": "Define all channels in this step. Enter the controller IP address or hostname and all channel numbers as a comma-separated list (e.g. 1 or 1,2,3). One device with cover and action buttons will be created per channel.",
         "title": "Configure INELNET"
       }
     }
