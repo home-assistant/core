@@ -6,6 +6,7 @@ DOMAIN = "lg_infrared"
 CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
 CONF_DEVICE_TYPE = "device_type"
 
+MODULATION = 38000
 LG_ADDRESS = 0xFB04
 
 

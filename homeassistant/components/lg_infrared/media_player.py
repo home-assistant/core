@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from homeassistant.components.infrared import NECInfraredCommand, async_send_command
+from infrared_protocols import NECCommand
+
+from homeassistant.components.infrared import async_send_command
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -21,6 +23,7 @@ from .const import (
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
     LG_ADDRESS,
+    MODULATION,
     LGDeviceType,
     LGTVCommand,
 )
@@ -94,8 +97,11 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
 
     async def _send_command(self, command_code: int, repeat_count: int = 1) -> None:
         """Send an IR command using the LG protocol."""
-        command = NECInfraredCommand(
-            address=LG_ADDRESS, command=command_code, repeat_count=repeat_count
+        command = NECCommand(
+            address=LG_ADDRESS,
+            command=command_code,
+            modulation=MODULATION,
+            repeat_count=repeat_count,
         )
         await async_send_command(
             self.hass, self._infrared_entity_id, command, context=self._context

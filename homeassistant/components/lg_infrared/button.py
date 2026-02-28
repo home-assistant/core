@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from infrared_protocols import NECCommand
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.components.infrared import NECInfraredCommand, async_send_command
+from homeassistant.components.infrared import async_send_command
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -18,6 +20,7 @@ from .const import (
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
     LG_ADDRESS,
+    MODULATION,
     LGDeviceType,
     LGTVCommand,
 )
@@ -246,9 +249,10 @@ class LgIrButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        command = NECInfraredCommand(
+        command = NECCommand(
             address=LG_ADDRESS,
             command=self._description.command_code,
+            modulation=MODULATION,
             repeat_count=1,
         )
         await async_send_command(
