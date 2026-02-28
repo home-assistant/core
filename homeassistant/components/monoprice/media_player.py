@@ -212,4 +212,3 @@ class MonopriceZone(MediaPlayerEntity):
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._monoprice.set_volume(self._zone_id, round(volume * MAX_VOLUME))
-
