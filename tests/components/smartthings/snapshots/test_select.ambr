@@ -452,14 +452,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lamp',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.lamp_brightnessLevel_brightnessLevel',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum Lamp',
+      'friendly_name': 'Robot Vacuum Lamp',
       'options': list([
         'on',
         'off',
