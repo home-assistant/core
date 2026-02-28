@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import logging
 
-from aioesphomeapi import EntityInfo, EntityState, InfraredCapability, InfraredInfo
+from aioesphomeapi import (
+    APIConnectionError,
+    EntityInfo,
+    EntityState,
+    InfraredCapability,
+    InfraredInfo,
+)
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEntity
 from homeassistant.core import HomeAssistant, callback
@@ -54,7 +60,7 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
                 carrier_frequency=command.modulation,
                 timings=timings,
             )
-        except Exception as err:
+        except APIConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="error_sending_ir_command",
