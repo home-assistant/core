@@ -484,6 +484,22 @@ async def test_subentry_flow(
     assert subentry.data == {CONF_CHAT_ID: 987654321}
 
 
+async def test_subentry_flow_config_not_ready(
+    hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
+) -> None:
+    """Test subentry flow where config entry is not loaded."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+    assert result["description_placeholders"] == {"telegram_bot": "Mock Title"}
+
+
 async def test_subentry_flow_chat_error(
     hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
 ) -> None:
@@ -574,6 +590,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"
+        assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
         assert result["options"][ATTR_PARSER] == PARSER_MD
 
         # test: import 2nd entry failed due to duplicate

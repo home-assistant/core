@@ -28,7 +28,7 @@ DEFAULT_TIMEOUT = 5
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PIN): vol.All(vol.Coerce(str), vol.Match(r"\d{4}")),
+        vol.Required(CONF_PIN): cv.string,
         vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
@@ -101,7 +101,7 @@ class WorxLandroidSensor(SensorEntity):
             async with asyncio.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth("admin", self.pin)
                 mower_response = await session.get(self.url, auth=auth)
-        except (TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             if self.allow_unreachable is False:
                 _LOGGER.error("Error connecting to mower at %s", self.url)
 

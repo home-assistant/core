@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import final
 
+from infrared_protocols import Command as InfraredCommand
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -19,15 +22,11 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .protocols import InfraredCommand, NECInfraredCommand, Timing
 
 __all__ = [
     "DOMAIN",
-    "InfraredCommand",
     "InfraredEntity",
     "InfraredEntityDescription",
-    "NECInfraredCommand",
-    "Timing",
     "async_get_emitters",
     "async_send_command",
 ]
@@ -73,7 +72,7 @@ def async_get_emitters(hass: HomeAssistant) -> list[InfraredEntity]:
 
 async def async_send_command(
     hass: HomeAssistant,
-    entity_uuid: str,
+    entity_id_or_uuid: str,
     command: InfraredCommand,
     context: Context | None = None,
 ) -> None:
@@ -90,7 +89,7 @@ async def async_send_command(
         )
 
     ent_reg = er.async_get(hass)
-    entity_id = er.async_validate_entity_id(ent_reg, entity_uuid)
+    entity_id = er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
     entity = component.get_entity(entity_id)
     if entity is None:
         raise HomeAssistantError(
@@ -114,17 +113,15 @@ class InfraredEntity(RestoreEntity):
 
     entity_description: InfraredEntityDescription
     _attr_should_poll = False
-    _attr_state: None
+    _attr_state: None = None
 
-    __last_command_sent: datetime | None = None
+    __last_command_sent: str | None = None
 
     @property
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if (last_command := self.__last_command_sent) is None:
-            return None
-        return last_command.isoformat(timespec="milliseconds")
+        return self.__last_command_sent
 
     @final
     async def async_send_command_internal(self, command: InfraredCommand) -> None:
@@ -133,7 +130,7 @@ class InfraredEntity(RestoreEntity):
         Should not be overridden, handles setting last sent timestamp.
         """
         await self.async_send_command(command)
-        self.__last_command_sent = dt_util.utcnow()
+        self.__last_command_sent = dt_util.utcnow().isoformat(timespec="milliseconds")
         self.async_write_ha_state()
 
     @final
@@ -141,8 +138,8 @@ class InfraredEntity(RestoreEntity):
         """Call when the infrared entity is added to hass."""
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.state is not None:
-            self.__last_command_sent = dt_util.parse_datetime(state.state)
+        if state is not None and state.state not in (STATE_UNAVAILABLE, None):
+            self.__last_command_sent = state.state
 
     @abstractmethod
     async def async_send_command(self, command: InfraredCommand) -> None:
