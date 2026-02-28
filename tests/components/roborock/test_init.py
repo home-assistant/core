@@ -98,11 +98,8 @@ async def test_reauth_started_when_stored_user_data_invalid(
 ) -> None:
     """Test reauth flow starts when stored user data cannot be parsed."""
     invalid_data = dict(mock_roborock_entry.data)
-    invalid_data[CONF_USER_DATA] = {
-        key: value
-        for key, value in mock_roborock_entry.data[CONF_USER_DATA].items()
-        if key != "rriot"
-    }
+    invalid_data[CONF_USER_DATA] = dict(mock_roborock_entry.data[CONF_USER_DATA])
+    del invalid_data[CONF_USER_DATA]["rriot"]
     mock_roborock_entry.data = invalid_data
 
     await async_setup_component(hass, DOMAIN, {})

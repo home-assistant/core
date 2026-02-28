@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _get_user_data(entry: RoborockConfigEntry) -> UserData:
+def _get_user_data(entry: RoborockConfigEntry) -> UserData:
     """Get user data from config entry."""
     try:
         return cast(UserData, UserData.from_dict(entry.data[CONF_USER_DATA]))
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     """Set up roborock from a config entry."""
     await async_cleanup_map_storage(hass, entry.entry_id)
 
-    user_data = await _get_user_data(entry)
+    user_data = _get_user_data(entry)
     user_params = UserParams(
         username=entry.data[CONF_USERNAME],
         user_data=user_data,
@@ -217,10 +217,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
 
     # 1->2: Migrate from unique id as email address to unique id as rruid
     if entry.minor_version == 1:
-        try:
-            user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-        except TypeError:
-            return False
+        user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
         _LOGGER.debug("Updating unique id to %s", user_data.rruid)
         hass.config_entries.async_update_entry(
             entry,
