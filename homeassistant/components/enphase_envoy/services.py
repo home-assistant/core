@@ -75,7 +75,7 @@ def _find_envoy_coordinator(
     return None
 
 
-async def add_envoy_to_coordinators_list(
+def add_envoy_to_coordinators_list(
     hass: HomeAssistant, entry: EnphaseConfigEntry
 ) -> None:
     """Add Envoy config entry to list of known envoy coordinators."""
@@ -84,7 +84,7 @@ async def add_envoy_to_coordinators_list(
         envoy_coordinators_list[entry_envoy.serial_number] = entry.runtime_data
 
 
-async def remove_envoy_from_coordinators_list(
+def remove_envoy_from_coordinators_list(
     hass: HomeAssistant, entry: EnphaseConfigEntry
 ) -> None:
     """Remove Envoy config entry from list of known envoy coordinators."""
@@ -131,6 +131,7 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
                 translation_key="envoy_error",
                 translation_placeholders={"host": envoy.host, "args": str(err)},
             ) from err
+        result_data = await response.text()
         if response.status >= 300:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -141,7 +142,6 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
                 },
             )
         try:
-            result_data = await response.text()
             result = orjson.loads(result_data)
         except orjson.JSONDecodeError:
             # Try xml or html

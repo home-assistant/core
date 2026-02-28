@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Add coordinator to list of known coordinators so it can be found by services
-    await add_envoy_to_coordinators_list(hass, entry)
+    add_envoy_to_coordinators_list(hass, entry)
     return True
 
 
@@ -96,7 +96,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
     if unload_ok:
         # Remove coordinator from list of known coordinators so it can no longer be
         # found by services
-        await remove_envoy_from_coordinators_list(hass, entry)
+        remove_envoy_from_coordinators_list(hass, entry)
     return unload_ok
 
 
