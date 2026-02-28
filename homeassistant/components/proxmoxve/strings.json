@@ -32,6 +32,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
+          "password": "[%key:component::proxmoxve::config::step::user::data_description::password%]",
+          "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
+          "realm": "[%key:component::proxmoxve::config::step::user::data_description::realm%]",
+          "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
+        },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
         "title": "Reconfigure Proxmox VE integration"
       },
@@ -43,6 +51,14 @@
           "realm": "Realm",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Proxmox VE server",
+          "password": "The password for the Proxmox VE server",
+          "port": "The port of your Proxmox VE server (default: 8006)",
+          "realm": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "username": "The username for the Proxmox VE server",
+          "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"
@@ -77,6 +93,85 @@
       "stop_all": {
         "name": "Stop all"
       }
+    },
+    "sensor": {
+      "container_cpu": {
+        "name": "CPU usage"
+      },
+      "container_disk": {
+        "name": "Disk usage"
+      },
+      "container_max_cpu": {
+        "name": "Max CPU"
+      },
+      "container_max_disk": {
+        "name": "Max disk usage"
+      },
+      "container_max_memory": {
+        "name": "Max memory usage"
+      },
+      "container_memory": {
+        "name": "Memory usage"
+      },
+      "container_status": {
+        "name": "Status",
+        "state": {
+          "running": "Running",
+          "stopped": "Stopped",
+          "suspended": "Suspended"
+        }
+      },
+      "node_cpu": {
+        "name": "CPU usage"
+      },
+      "node_disk": {
+        "name": "Disk usage"
+      },
+      "node_max_cpu": {
+        "name": "Max CPU"
+      },
+      "node_max_disk": {
+        "name": "Max disk usage"
+      },
+      "node_max_memory": {
+        "name": "Max memory usage"
+      },
+      "node_memory": {
+        "name": "Memory usage"
+      },
+      "node_status": {
+        "name": "Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
+      "vm_cpu": {
+        "name": "CPU usage"
+      },
+      "vm_disk": {
+        "name": "Disk usage"
+      },
+      "vm_max_cpu": {
+        "name": "Max CPU"
+      },
+      "vm_max_disk": {
+        "name": "Max disk usage"
+      },
+      "vm_max_memory": {
+        "name": "Max memory usage"
+      },
+      "vm_memory": {
+        "name": "Memory usage"
+      },
+      "vm_status": {
+        "name": "Status",
+        "state": {
+          "running": "Running",
+          "stopped": "Stopped",
+          "suspended": "Suspended"
+        }
+      }
     }
   },
   "exceptions": {
@@ -109,6 +204,10 @@
     }
   },
   "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    },
     "deprecated_yaml_import_issue_connect_timeout": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection timeout occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"

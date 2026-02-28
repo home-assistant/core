@@ -16,17 +16,6 @@
               101,
             ]),
           }),
-          dict({
-            'containers': list([
-              200,
-              201,
-            ]),
-            'node': 'pve2',
-            'vms': list([
-              100,
-              101,
-            ]),
-          }),
         ]),
         'password': '**REDACTED**',
         'port': 8006,
@@ -56,6 +45,7 @@
         'containers': dict({
           '200': dict({
             'cpu': 0.05,
+            'cpus': 1,
             'disk': 1125899906,
             'maxdisk': 21474836480,
             'maxmem': 1073741824,
@@ -66,8 +56,15 @@
             'vmid': 200,
           }),
           '201': dict({
+            'cpu': 0.05,
+            'cpus': 1,
+            'disk': 1125899906,
+            'maxdisk': 21474836480,
+            'maxmem': 1073741824,
+            'mem': 536870912,
             'name': 'ct-backup',
             'status': 'stopped',
+            'uptime': 43200,
             'vmid': 201,
           }),
         }),
@@ -89,6 +86,7 @@
         'vms': dict({
           '100': dict({
             'cpu': 0.15,
+            'cpus': 2,
             'disk': 1234567890,
             'maxdisk': 34359738368,
             'maxmem': 2147483648,
@@ -99,61 +97,15 @@
             'vmid': 100,
           }),
           '101': dict({
-            'name': 'vm-db',
-            'status': 'stopped',
-            'vmid': 101,
-          }),
-        }),
-      }),
-      'pve2': dict({
-        'containers': dict({
-          '200': dict({
-            'cpu': 0.05,
-            'disk': 1125899906,
-            'maxdisk': 21474836480,
-            'maxmem': 1073741824,
-            'mem': 536870912,
-            'name': 'ct-nginx',
-            'status': 'running',
-            'uptime': 43200,
-            'vmid': 200,
-          }),
-          '201': dict({
-            'name': 'ct-backup',
-            'status': 'stopped',
-            'vmid': 201,
-          }),
-        }),
-        'node': dict({
-          'cpu': 0.25,
-          'disk': 120000000000,
-          'id': 'node/pve2',
-          'level': '',
-          'maxcpu': 8,
-          'maxdisk': 500000000000,
-          'maxmem': 34359738368,
-          'mem': 16106127360,
-          'node': 'pve2',
-          'ssl_fingerprint': '7A:E1:DF:...:AC',
-          'status': 'online',
-          'type': 'node',
-          'uptime': 72000,
-        }),
-        'vms': dict({
-          '100': dict({
             'cpu': 0.15,
+            'cpus': 2,
             'disk': 1234567890,
             'maxdisk': 34359738368,
             'maxmem': 2147483648,
             'mem': 1073741824,
-            'name': 'vm-web',
-            'status': 'running',
-            'uptime': 86400,
-            'vmid': 100,
-          }),
-          '101': dict({
             'name': 'vm-db',
             'status': 'stopped',
+            'uptime': 86400,
             'vmid': 101,
           }),
         }),

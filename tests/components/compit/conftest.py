@@ -65,6 +65,7 @@ def mock_connector():
     mock_device_2.state.params = [
         MagicMock(code="_jezyk", value="english"),
         MagicMock(code="__aerokonfbypass", value="off"),
+        MagicMock(code="__rd_alarmwent", value="no_alarm"),
         MagicMock(code="__rd_co2", value="normal"),
         MagicMock(code="__rd_pm10", value="warning"),
         MagicMock(code="__rr_wietrzenie", value="on"),
@@ -73,6 +74,8 @@ def mock_connector():
         MagicMock(
             code="__tempzadpozadomem", value=18.5
         ),  # Target temperature out of home
+        MagicMock(code="__aerowentylacjaon&off", value="on"),
+        MagicMock(code="__trybaero2", value="gear_2"),
     ]
     mock_device_2.definition.code = 223  # Nano Color 2
 

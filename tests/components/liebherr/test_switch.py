@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
+from .conftest import MOCK_DEVICE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -148,46 +148,6 @@ async def test_switch_failure(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_switch_update_failure(
-    hass: HomeAssistant,
-    mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test switch becomes unavailable when coordinator update fails and recovers."""
-    entity_id = "switch.test_fridge_top_zone_supercool"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-    # Simulate update error
-    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError(
-        "Connection failed"
-    )
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        MOCK_DEVICE_STATE
-    )
-
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")
