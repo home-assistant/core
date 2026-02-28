@@ -624,7 +624,6 @@ async def test_double_system_messages(
 ) -> None:
     """Test error for two or more system prompts."""
     conversation_id = "conversation_id"
-    mock_create_stream.return_value = [create_content_block(0, ["It's noon."])]
     with (
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
