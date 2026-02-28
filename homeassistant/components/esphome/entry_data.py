@@ -530,27 +530,6 @@ class RuntimeEntryData:
         )
 
     @callback
-    def async_on_infrared_proxy_receive(
-        self, hass: HomeAssistant, receive_event: Any
-    ) -> None:
-        """Handle an infrared proxy receive event."""
-        # Fire a Home Assistant event with the infrared data
-        device_info = self.device_info
-        if not device_info:
-            return
-
-        hass.bus.async_fire(
-            f"{DOMAIN}_infrared_proxy_received",
-            {
-                "device_name": device_info.name,
-                "device_mac": device_info.mac_address,
-                "entry_id": self.entry_id,
-                "key": receive_event.key,
-                "timings": receive_event.timings,
-            },
-        )
-
-    @callback
     def async_register_assist_satellite_config_updated_callback(
         self,
         callback_: Callable[[AssistSatelliteConfiguration], None],
