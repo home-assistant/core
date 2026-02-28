@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.enphase_envoy.const import DOMAIN, Platform
 from homeassistant.components.enphase_envoy.services import (
+    ACTION_COORDINATORS,
     ACTION_INSPECT,
     ATTR_ENDPOINT,
     ATTR_ENVOY_DEVICE_ID,
@@ -72,8 +73,7 @@ async def test_service_load_unload(
     with (
         patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
         patch.dict(
-            "homeassistant.components.enphase_envoy.services.envoy_coordinators_list",
-            {"4321": "hello world"},
+            hass.data[DOMAIN][ACTION_COORDINATORS], {"4321": "hello world"}, clear=True
         ),
     ):
         await setup_integration(hass, config_entry)

@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .services import (
+    ACTION_COORDINATORS,
     add_envoy_to_coordinators_list,
     remove_envoy_from_coordinators_list,
     setup_envoy_service_actions,
@@ -26,6 +27,10 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set Enphase Envoy integration."""
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][ACTION_COORDINATORS] = {}
 
     # setup the enphase_envoy services
     setup_envoy_service_actions(hass)

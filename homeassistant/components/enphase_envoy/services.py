@@ -25,6 +25,8 @@ def _normalize_endpoint(endpoint: str) -> str:
     return f"/{endpoint}"
 
 
+ACTION_COORDINATORS = "action_coordinators"
+
 ATTR_ENDPOINT = "endpoint"
 ATTR_ENVOY_DEVICE_ID = "device_id"
 
@@ -39,11 +41,6 @@ ACTION_INSPECT_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-# keep track of loaded envoy entries to route service action calls
-# to the correct coordinator when multiple envoys are present.
-envoy_coordinators_list: dict[str, EnphaseUpdateCoordinator] = {}
-
-
 def _find_envoy_coordinator(
     hass: HomeAssistant, device_id: str | None
 ) -> EnphaseUpdateCoordinator | None:
@@ -54,23 +51,25 @@ def _find_envoy_coordinator(
     device_id is specified, the first coordinator in the list is returned.
     """
     dev_reg = dr.async_get(hass)
+    action_coordinators = hass.data[DOMAIN][ACTION_COORDINATORS]
+
     # find the device coordinator
     if device_id and (device_entry := dev_reg.async_get(device_id)):
         if device_entry.serial_number and (
-            coordinator := envoy_coordinators_list.get(device_entry.serial_number)
+            coordinator := action_coordinators.get(device_entry.serial_number)
         ):
-            return coordinator
+            return coordinator  # type: ignore[no-any-return]
         # if child device was passed, use parent
         if (
             device_entry.via_device_id
             and (via_device := dev_reg.async_get(device_entry.via_device_id))
             and via_device.serial_number
-            and (coordinator := envoy_coordinators_list.get(via_device.serial_number))
+            and (coordinator := action_coordinators.get(via_device.serial_number))
         ):
-            return coordinator
+            return coordinator  # type: ignore[no-any-return]
     # use first entry if no specific id was specified
-    if device_id is None and len(envoy_coordinators_list) > 0:
-        return next(iter(envoy_coordinators_list.values()))
+    if device_id is None and len(action_coordinators) > 0:
+        return next(iter(action_coordinators.values()))  # type: ignore[no-any-return]
 
     return None
 
@@ -81,7 +80,9 @@ def add_envoy_to_coordinators_list(
     """Add Envoy config entry to list of known envoy coordinators."""
     # keep track of our coordinator
     if (entry_envoy := entry.runtime_data.envoy) and entry_envoy.serial_number:
-        envoy_coordinators_list[entry_envoy.serial_number] = entry.runtime_data
+        hass.data[DOMAIN][ACTION_COORDINATORS][entry_envoy.serial_number] = (
+            entry.runtime_data
+        )
 
 
 def remove_envoy_from_coordinators_list(
@@ -89,7 +90,7 @@ def remove_envoy_from_coordinators_list(
 ) -> None:
     """Remove Envoy config entry from list of known envoy coordinators."""
     if (entry_envoy := entry.runtime_data.envoy) and entry_envoy.serial_number:
-        envoy_coordinators_list.pop(entry_envoy.serial_number, None)
+        hass.data[DOMAIN][ACTION_COORDINATORS].pop(entry_envoy.serial_number, None)
 
 
 @callback
