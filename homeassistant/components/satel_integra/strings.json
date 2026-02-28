@@ -164,7 +164,7 @@
   },
   "exceptions": {
     "missing_output_access_code": {
-      "message": "Switchable outputs require a code to be set on the config flow"
+      "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
     }
   },
   "issues": {
