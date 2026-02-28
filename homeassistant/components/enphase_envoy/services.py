@@ -51,14 +51,16 @@ def _find_envoy_coordinator(
     device_id is specified, the first coordinator in the list is returned.
     """
     dev_reg = dr.async_get(hass)
-    action_coordinators = hass.data[DOMAIN][ACTION_COORDINATORS]
+    action_coordinators: dict[str, EnphaseUpdateCoordinator] = hass.data[DOMAIN][
+        ACTION_COORDINATORS
+    ]
 
     # find the device coordinator
     if device_id and (device_entry := dev_reg.async_get(device_id)):
         if device_entry.serial_number and (
             coordinator := action_coordinators.get(device_entry.serial_number)
         ):
-            return coordinator  # type: ignore[no-any-return]
+            return coordinator
         # if child device was passed, use parent
         if (
             device_entry.via_device_id
@@ -66,10 +68,10 @@ def _find_envoy_coordinator(
             and via_device.serial_number
             and (coordinator := action_coordinators.get(via_device.serial_number))
         ):
-            return coordinator  # type: ignore[no-any-return]
+            return coordinator
     # use first entry if no specific id was specified
     if device_id is None and len(action_coordinators) > 0:
-        return next(iter(action_coordinators.values()))  # type: ignore[no-any-return]
+        return next(iter(action_coordinators.values()))
 
     return None
 
@@ -97,7 +99,7 @@ def remove_envoy_from_coordinators_list(
 def setup_envoy_service_actions(hass: HomeAssistant) -> None:
     """Configure Home Assistant services for Enphase_Envoy."""
 
-    async def inspect_action(call: ServiceCall) -> Any:
+    async def inspect_action(call: ServiceCall) -> dict[str, Any]:
         """Inspect action sends get request to Envoy and returns reply."""
         device_id = call.data.get(ATTR_ENVOY_DEVICE_ID)
         if not (coordinator := _find_envoy_coordinator(hass, device_id)):
@@ -148,6 +150,12 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
             # Try xml or html
             result = f"{result_data}"
         return {endpoint: result}
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    if ACTION_COORDINATORS not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][ACTION_COORDINATORS] = dict[str, EnphaseUpdateCoordinator]()
 
     # declare service actions
     hass.services.async_register(
