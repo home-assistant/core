@@ -258,6 +258,9 @@ async def test_set_system_mode_validation(
 
     # the service handler is invoked via a dispatcher
     await hass.async_block_till_done()
-    await asyncio.sleep(0.01)
+    for _ in range(50):
+        if "ServiceValidationError" in caplog.text:
+            break
+        await asyncio.sleep(0.01)
 
     assert f"ServiceValidationError: {expected_msg}" in caplog.text
