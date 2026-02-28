@@ -135,7 +135,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Add explicit check for known Vevor heater MAC address A4:C1:37:24:B8:64
         for discovery_info in discovered:
-            address = discovery_info.address
+            address = _normalize_mac_address(discovery_info.address)
 
             # Skip already configured devices
             if address in current_addresses or address in self._discovered_devices:
