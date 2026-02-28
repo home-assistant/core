@@ -104,7 +104,7 @@ async def setup_envoy_service_actions(
                 translation_key="envoy_service_envoy_not_found",
                 translation_placeholders={
                     "service": call.service,
-                    "args": str(device_id),
+                    "device_id": str(device_id),
                 },
             )
 
