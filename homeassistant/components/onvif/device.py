@@ -398,6 +398,8 @@ class ONVIFDevice:
             except (
                 ONVIFError,
                 Fault,
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
                 TransportError,
                 XMLParseError,
                 XMLSyntaxError,
@@ -405,7 +407,11 @@ class ONVIFDevice:
                 TypeError,
                 ValueError,
             ):
-                # Fallback: try to get relay outputs directly
+                pass
+            # Fall back to GetRelayOutputs if relay count is still unknown,
+            # e.g. when GetServiceCapabilities() succeeds but omits RelayOutputs
+            # or when it raised an exception that was suppressed above
+            if relay_outputs == 0:
                 try:
                     relay_list = await deviceio_service.GetRelayOutputs()
                     if relay_list and hasattr(relay_list, "RelayOutput"):
@@ -417,6 +423,8 @@ class ONVIFDevice:
                 except (
                     ONVIFError,
                     Fault,
+                    aiohttp.ClientError,
+                    asyncio.TimeoutError,
                     TransportError,
                     XMLParseError,
                     XMLSyntaxError,
@@ -736,7 +744,7 @@ class ONVIFDevice:
             if result and hasattr(result, "RelayOutput"):
                 relays = result.RelayOutput
                 return relays if isinstance(relays, list) else [relays]
-        except ONVIFError as err:
+        except GET_CAPABILITIES_EXCEPTIONS as err:
             LOGGER.error("Error trying to get relay outputs: %s", err)
 
         return []

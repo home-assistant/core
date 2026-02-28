@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, GET_CAPABILITIES_EXCEPTIONS
 from .device import ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
@@ -144,7 +144,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
             await self.device.async_set_relay_output_state(self._relay_token, "active")
             self._attr_is_on = True
             self.async_write_ha_state()
-        except Exception:
+        except GET_CAPABILITIES_EXCEPTIONS:
             # Revert to previous state on error
             self._attr_is_on = previous_state
             self.async_write_ha_state()
@@ -159,7 +159,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
             )
             self._attr_is_on = False
             self.async_write_ha_state()
-        except Exception:
+        except GET_CAPABILITIES_EXCEPTIONS:
             # Revert to previous state on error
             self._attr_is_on = previous_state
             self.async_write_ha_state()
