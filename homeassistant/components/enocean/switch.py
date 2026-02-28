@@ -146,7 +146,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
         elif telegram.rorg == 0xD2:
             # actuator status telegram
-            if eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xD2, 0x01, 0x01)) is None:
+            if (eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xD2, 0x01, 0x01))) is None:
                 return
 
             msg = EEPHandler(eep).decode(telegram)
