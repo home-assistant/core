@@ -883,6 +883,11 @@ class Integration:
         return "translations" in self._top_level_files
 
     @cached_property
+    def has_branding(self) -> bool:
+        """Return if the integration has brand assets."""
+        return "brand" in self._top_level_files
+
+    @cached_property
     def has_triggers(self) -> bool:
         """Return if the integration has triggers."""
         return "triggers.yaml" in self._top_level_files

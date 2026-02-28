@@ -295,13 +295,19 @@ class TemplateEntity(AbstractTemplateEntity):
                 self._attr_available = False
                 return
 
+            # Recover from template errors if they happened before.
+            if not self._availability_template and not self._attr_available:
+                self._attr_available = True
+
             state = validator(result) if validator else result
             if on_update:
                 on_update(state)
             else:
                 setattr(self, attribute, state)
 
-        self.add_template(option, attribute, on_update=_update_state)
+        self.add_template(
+            option, attribute, on_update=_update_state, none_on_template_error=False
+        )
 
     def setup_template(
         self,
@@ -309,6 +315,8 @@ class TemplateEntity(AbstractTemplateEntity):
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        none_on_template_error: bool = True,
     ):
         """Set up a template that manages any property or attribute of the entity.
 
@@ -324,8 +332,17 @@ class TemplateEntity(AbstractTemplateEntity):
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
         """
-        self.add_template(option, attribute, validator, on_update, True)
+        self.add_template(
+            option, attribute, validator, on_update, none_on_template_error
+        )
 
     def add_template_attribute(
         self,

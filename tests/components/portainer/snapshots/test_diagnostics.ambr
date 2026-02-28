@@ -4,7 +4,7 @@
     'config_entry': dict({
       'data': dict({
         'api_token': '**REDACTED**',
-        'url': 'https://127.0.0.1:9000/',
+        'url': '**REDACTED**',
         'verify_ssl': True,
       }),
       'disabled_by': None,
@@ -22,7 +22,7 @@
       ]),
       'title': 'Portainer test',
       'unique_id': 'test_api_token',
-      'version': 2,
+      'version': 4,
     }),
     'coordinator': dict({
       'endpoints': list([

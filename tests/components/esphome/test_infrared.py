@@ -1,6 +1,12 @@
 """Test ESPHome infrared platform."""
 
-from aioesphomeapi import APIClient, InfraredCapability, InfraredInfo
+from aioesphomeapi import (
+    APIClient,
+    APIConnectionError,
+    InfraredCapability,
+    InfraredInfo,
+)
+from infrared_protocols import NECCommand
 import pytest
 
 from homeassistant.components import infrared
@@ -101,7 +107,7 @@ async def test_infrared_send_command_success(
     """Test sending IR command successfully."""
     await _mock_ir_device(mock_esphome_device, mock_client)
 
-    command = infrared.NECInfraredCommand(address=0x04, command=0x08, modulation=38000)
+    command = NECCommand(address=0x04, command=0x08, modulation=38000)
     await infrared.async_send_command(hass, ENTITY_ID, command)
 
     # Verify the command was sent to the ESPHome client
@@ -124,14 +130,14 @@ async def test_infrared_send_command_failure(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test sending IR command with failure raises HomeAssistantError."""
+    """Test sending IR command with APIConnectionError raises HomeAssistantError."""
     await _mock_ir_device(mock_esphome_device, mock_client)
 
-    mock_client.infrared_rf_transmit_raw_timings.side_effect = Exception(
+    mock_client.infrared_rf_transmit_raw_timings.side_effect = APIConnectionError(
         "Connection lost"
     )
 
-    command = infrared.NECInfraredCommand(address=0x04, command=0x08, modulation=38000)
+    command = NECCommand(address=0x04, command=0x08, modulation=38000)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await infrared.async_send_command(hass, ENTITY_ID, command)
