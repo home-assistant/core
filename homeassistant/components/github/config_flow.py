@@ -109,7 +109,7 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
 class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GitHub."""
 
-    VERSION = 1
+    MINOR_VERSION = 2
 
     login_task: asyncio.Task | None = None
 

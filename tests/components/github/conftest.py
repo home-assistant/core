@@ -55,6 +55,7 @@ def mock_config_entry(
         domain=DOMAIN,
         data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
         subentries_data=[*mock_subentries],
+        minor_version=2,
     )
 
 

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from aiogithubapi import GitHubAPI
 
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import (
@@ -11,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 
-from .const import CONF_REPOSITORY
+from .const import CONF_REPOSITORIES, CONF_REPOSITORY, SUBENTRY_TYPE_REPOSITORY
 from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -60,3 +63,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> b
         coordinator.unsubscribe()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.minor_version == 1:
+        # In version 1 we added support for multiple repositories, so we need to
+        # migrate the old repository to a subentry.
+        for repository in entry.options[CONF_REPOSITORIES]:
+            subentry = ConfigSubentry(
+                data=MappingProxyType({CONF_REPOSITORY: repository}),
+                subentry_type=SUBENTRY_TYPE_REPOSITORY,
+                title=repository,
+                unique_id=None,
+            )
+
+            hass.config_entries.async_add_subentry(entry, subentry)
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+    return True
