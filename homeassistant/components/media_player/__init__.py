@@ -862,9 +862,9 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     async def _async_handle_set_volume_level(self, volume: float) -> None:
-        """Set volume level, clamping to max volume if set."""
+        """Set volume level, rescaling to max volume if set."""
         if self._media_player_option_max_volume is not None:
-            volume = min(volume, self._media_player_option_max_volume)
+            volume = volume * self._media_player_option_max_volume
         await self.async_set_volume_level(volume)
 
     def media_play(self) -> None:
@@ -1092,7 +1092,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
-                min(max_volume, self.volume_level + self.volume_step)
+                min(max_volume, self.volume_level + self.volume_step * max_volume)
             )
 
     async def async_volume_down(self) -> None:
@@ -1107,13 +1107,18 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
+        max_volume = (
+            self._media_player_option_max_volume
+            if self._media_player_option_max_volume is not None
+            else 1
+        )
         if (
             self.volume_level is not None
             and self.volume_level > 0
             and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
-                max(0, self.volume_level - self.volume_step)
+                max(0, self.volume_level - self.volume_step * max_volume)
             )
 
     async def async_media_play_pause(self) -> None:
@@ -1182,6 +1187,16 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         for attr in ATTR_TO_PROPERTY:
             if (value := getattr(self, attr)) is not None:
                 state_attr[attr] = value
+
+        if (
+            self._media_player_option_max_volume is not None
+            and ATTR_MEDIA_VOLUME_LEVEL in state_attr
+        ):
+            state_attr[ATTR_MEDIA_VOLUME_LEVEL] = min(
+                1.0,
+                state_attr[ATTR_MEDIA_VOLUME_LEVEL]
+                / self._media_player_option_max_volume,
+            )
 
         if self.media_image_remotely_accessible:
             state_attr[ATTR_ENTITY_PICTURE_LOCAL] = self.media_image_local

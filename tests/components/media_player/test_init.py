@@ -695,12 +695,15 @@ async def test_max_volume_option_cleared(
     assert mock_media_player_entity._media_player_option_max_volume is None
 
 
-async def test_volume_set_clamped_by_max_volume(
+async def test_volume_set_rescaled_by_max_volume(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_media_player_entity: MockMediaPlayer,
 ) -> None:
-    """Test that volume_set service clamps to max_volume."""
+    """Test that volume_set service rescales to max_volume.
+
+    Setting 80% with max_volume=0.5 should send 0.4 to the device (80% of 0.5).
+    """
     entity_registry.async_update_entity_options(
         mock_media_player_entity.entity_id,
         DOMAIN,
@@ -718,19 +721,20 @@ async def test_volume_set_clamped_by_max_volume(
         blocking=True,
     )
 
-    assert mock_media_player_entity.volume_level == 0.5
+    # Device receives 0.8 * 0.5 = 0.4
+    assert mock_media_player_entity.volume_level == pytest.approx(0.4)
 
 
-async def test_volume_set_below_max_volume(
+async def test_volume_set_half_with_max_volume(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_media_player_entity: MockMediaPlayer,
 ) -> None:
-    """Test that volume_set below max_volume is not clamped."""
+    """Test that setting 50% with max_volume=0.6 sends 0.3 to the device."""
     entity_registry.async_update_entity_options(
         mock_media_player_entity.entity_id,
         DOMAIN,
-        {CONF_MAX_VOLUME: 0.8},
+        {CONF_MAX_VOLUME: 0.6},
     )
     await hass.async_block_till_done()
 
@@ -744,14 +748,42 @@ async def test_volume_set_below_max_volume(
         blocking=True,
     )
 
-    assert mock_media_player_entity.volume_level == 0.5
+    # Device receives 0.5 * 0.6 = 0.3
+    assert mock_media_player_entity.volume_level == pytest.approx(0.3)
+
+
+async def test_volume_set_full_with_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that setting 100% with max_volume sends max_volume to device."""
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.6},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 1.0,
+        },
+        blocking=True,
+    )
+
+    # Device receives 1.0 * 0.6 = 0.6
+    assert mock_media_player_entity.volume_level == pytest.approx(0.6)
 
 
 async def test_volume_set_without_max_volume(
     hass: HomeAssistant,
     mock_media_player_entity: MockMediaPlayer,
 ) -> None:
-    """Test that volume_set without max_volume is not clamped."""
+    """Test that volume_set without max_volume passes through unchanged."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
@@ -765,12 +797,54 @@ async def test_volume_set_without_max_volume(
     assert mock_media_player_entity.volume_level == 0.9
 
 
-async def test_volume_up_respects_max_volume(
+async def test_volume_state_rescaled_by_max_volume(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_media_player_entity: MockMediaPlayer,
 ) -> None:
-    """Test that volume_up respects max_volume."""
+    """Test that volume_level in state is rescaled back to 0..1 range.
+
+    Device at 0.3 with max_volume=0.6 should report 0.5 (50%) in the state.
+    """
+    entity_registry.async_update_entity_options(
+        mock_media_player_entity.entity_id,
+        DOMAIN,
+        {CONF_MAX_VOLUME: 0.6},
+    )
+    await hass.async_block_till_done()
+
+    # Set 50% → device gets 0.3
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        },
+        blocking=True,
+    )
+
+    # Raw device value is 0.3
+    assert mock_media_player_entity.volume_level == pytest.approx(0.3)
+
+    # Trigger a state write so the state attributes are updated
+    mock_media_player_entity.async_write_ha_state()
+    state = hass.states.get(mock_media_player_entity.entity_id)
+    assert state is not None
+    # State should report rescaled value: 0.3 / 0.6 = 0.5
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.5)
+
+
+async def test_volume_up_rescaled_with_max_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_media_player_entity: MockMediaPlayer,
+) -> None:
+    """Test that volume_up uses rescaled step with max_volume.
+
+    With max_volume=0.5 and step=0.1, a volume_up should add
+    0.1 * 0.5 = 0.05 to the device volume.
+    """
     entity_registry.async_update_entity_options(
         mock_media_player_entity.entity_id,
         DOMAIN,
@@ -778,18 +852,20 @@ async def test_volume_up_respects_max_volume(
     )
     await hass.async_block_till_done()
 
-    # Set volume to 0.45
+    # Set volume to 80% → device gets 0.8 * 0.5 = 0.4
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
-            ATTR_MEDIA_VOLUME_LEVEL: 0.45,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.8,
         },
         blocking=True,
     )
+    assert mock_media_player_entity.volume_level == pytest.approx(0.4)
 
-    # Volume up should be clamped to max_volume (0.5)
+    # Volume up: step in device space = 0.1 * 0.5 = 0.05
+    # New device volume = 0.4 + 0.05 = 0.45
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_UP,
@@ -797,7 +873,7 @@ async def test_volume_up_respects_max_volume(
         blocking=True,
     )
 
-    assert mock_media_player_entity.volume_level == 0.5
+    assert mock_media_player_entity.volume_level == pytest.approx(0.45)
 
 
 async def test_volume_up_does_not_exceed_max_volume(
@@ -813,18 +889,19 @@ async def test_volume_up_does_not_exceed_max_volume(
     )
     await hass.async_block_till_done()
 
-    # Set volume to exactly max
+    # Set volume to 100% → device gets 1.0 * 0.5 = 0.5
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
-            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            ATTR_MEDIA_VOLUME_LEVEL: 1.0,
         },
         blocking=True,
     )
+    assert mock_media_player_entity.volume_level == pytest.approx(0.5)
 
-    # Volume up should not go above max
+    # Volume up should not go above max_volume
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_UP,
@@ -832,15 +909,15 @@ async def test_volume_up_does_not_exceed_max_volume(
         blocking=True,
     )
 
-    assert mock_media_player_entity.volume_level == 0.5
+    assert mock_media_player_entity.volume_level == pytest.approx(0.5)
 
 
-async def test_volume_down_with_max_volume(
+async def test_volume_down_rescaled_with_max_volume(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_media_player_entity: MockMediaPlayer,
 ) -> None:
-    """Test that volume_down works normally when max_volume is set."""
+    """Test that volume_down uses rescaled step with max_volume."""
     entity_registry.async_update_entity_options(
         mock_media_player_entity.entity_id,
         DOMAIN,
@@ -848,18 +925,20 @@ async def test_volume_down_with_max_volume(
     )
     await hass.async_block_till_done()
 
-    # Set volume to 0.5
+    # Set volume to 100% → device gets 0.5
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: mock_media_player_entity.entity_id,
-            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            ATTR_MEDIA_VOLUME_LEVEL: 1.0,
         },
         blocking=True,
     )
+    assert mock_media_player_entity.volume_level == pytest.approx(0.5)
 
-    # Volume down should decrease
+    # Volume down: step in device space = 0.1 * 0.5 = 0.05
+    # New device volume = 0.5 - 0.05 = 0.45
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_DOWN,
@@ -867,7 +946,7 @@ async def test_volume_down_with_max_volume(
         blocking=True,
     )
 
-    assert mock_media_player_entity.volume_level == pytest.approx(0.4)
+    assert mock_media_player_entity.volume_level == pytest.approx(0.45)
 
 
 async def test_max_volume_overrides_custom_volume_up(
@@ -885,18 +964,18 @@ async def test_max_volume_overrides_custom_volume_up(
     )
     await hass.async_block_till_done()
 
-    # Set volume to 0.45
+    # Set volume to 80% → device gets 0.8 * 0.5 = 0.4
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: entity.entity_id,
-            ATTR_MEDIA_VOLUME_LEVEL: 0.45,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.8,
         },
         blocking=True,
     )
 
-    # Volume up should use fallback (not custom), and clamp to max
+    # Volume up should use fallback (not custom)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_UP,
@@ -906,7 +985,8 @@ async def test_max_volume_overrides_custom_volume_up(
 
     # Custom volume_up should NOT have been called
     entity.calls_volume_up.assert_not_called()
-    assert entity.volume_level == 0.5
+    # Device: 0.4 + 0.1 * 0.5 = 0.45
+    assert entity.volume_level == pytest.approx(0.45)
 
 
 async def test_max_volume_overrides_custom_volume_down(
@@ -924,13 +1004,13 @@ async def test_max_volume_overrides_custom_volume_down(
     )
     await hass.async_block_till_done()
 
-    # Set volume to 0.4
+    # Set volume to 80% → device gets 0.8 * 0.5 = 0.4
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: entity.entity_id,
-            ATTR_MEDIA_VOLUME_LEVEL: 0.4,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.8,
         },
         blocking=True,
     )
@@ -945,7 +1025,8 @@ async def test_max_volume_overrides_custom_volume_down(
 
     # Custom volume_down should NOT have been called
     entity.calls_volume_down.assert_not_called()
-    assert entity.volume_level == pytest.approx(0.3)
+    # Device: 0.4 - 0.1 * 0.5 = 0.35
+    assert entity.volume_level == pytest.approx(0.35)
 
 
 async def test_no_max_volume_uses_custom_volume_up(
@@ -955,7 +1036,7 @@ async def test_no_max_volume_uses_custom_volume_up(
     """Test that without max_volume, custom volume_up is used."""
     entity = mock_media_player_custom_vol_entity
 
-    # Set volume to 0.5
+    # Set volume to 0.5 (no max_volume, so no rescaling)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
@@ -985,7 +1066,7 @@ async def test_no_max_volume_uses_custom_volume_down(
     """Test that without max_volume, custom volume_down is used."""
     entity = mock_media_player_custom_vol_entity
 
-    # Set volume to 0.5
+    # Set volume to 0.5 (no max_volume, so no rescaling)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_VOLUME_SET,
