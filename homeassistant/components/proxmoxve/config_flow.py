@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .common import _sanitize_userid
+from .common import sanitize_userid
 from .const import (
     CONF_CONTAINERS,
     CONF_NODE,
@@ -55,7 +55,7 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         client = ProxmoxAPI(
             data[CONF_HOST],
             port=data[CONF_PORT],
-            user=_sanitize_userid(data),
+            user=sanitize_userid(data),
             password=data[CONF_PASSWORD],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )

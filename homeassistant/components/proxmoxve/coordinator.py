@@ -23,7 +23,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .common import _sanitize_userid
+from .common import sanitize_userid
 from .const import CONF_NODE, DEFAULT_VERIFY_SSL, DOMAIN
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
@@ -165,7 +165,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.proxmox = ProxmoxAPI(
             host=self.config_entry.data[CONF_HOST],
             port=self.config_entry.data[CONF_PORT],
-            user=_sanitize_userid(dict(self.config_entry.data)),
+            user=sanitize_userid(dict(self.config_entry.data)),
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )

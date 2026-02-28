@@ -7,7 +7,7 @@ from homeassistant.const import CONF_USERNAME
 from .const import CONF_REALM
 
 
-def _sanitize_userid(data: dict[str, Any]) -> str:
+def sanitize_userid(data: dict[str, Any]) -> str:
     """Sanitize the user ID."""
     return (
         data[CONF_USERNAME]
