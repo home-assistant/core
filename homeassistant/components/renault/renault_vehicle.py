@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from renault_api.exceptions import RenaultException
-from renault_api.kamereon import models, schemas
+from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
@@ -201,18 +201,7 @@ class RenaultVehicleProxy:
     @with_error_wrapping
     async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:
         """Get vehicle charging settings."""
-        full_endpoint = await self._vehicle.get_full_endpoint("charging-settings")
-        response = await self._vehicle.http_get(full_endpoint)
-        response_data = cast(
-            models.KamereonVehicleDataResponse,
-            schemas.KamereonVehicleDataResponseSchema.load(response.raw_data),
-        )
-        return cast(
-            models.KamereonVehicleChargingSettingsData,
-            response_data.get_attributes(
-                schemas.KamereonVehicleChargingSettingsDataSchema
-            ),
-        )
+        return await self._vehicle.get_charging_settings()
 
     @with_error_wrapping
     async def set_charge_schedules(
@@ -259,6 +248,12 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         key="charge_mode",
         requires_electricity=True,
         update_method=lambda x: x.get_charge_mode,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="charging-settings",
+        key="charging_settings",
+        requires_electricity=True,
+        update_method=lambda x: x.get_charging_settings,
     ),
     RenaultCoordinatorDescription(
         endpoint="lock-status",

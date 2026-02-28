@@ -65,6 +65,7 @@ MOCK_VEHICLES = {
     "megane_e_tech": {
         "endpoints": {
             "battery_status": "battery_status_charging.json",
+            "charging_settings": "charging_settings_always.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.1.json",
             "location": "location.json",
