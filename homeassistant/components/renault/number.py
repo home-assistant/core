@@ -78,7 +78,7 @@ class RenaultNumberEntity(
         int_value = round(value)
 
         # Update the appropriate value based on which entity this is
-       ​ if self.entity_description.key == "charge_limit_min":
+        if self.entity_description.key == "charge_limit_min":
             await self.vehicle.set_battery_soc(
                 min_soc=int_value, target_soc=current_target
             )
@@ -99,7 +99,9 @@ class RenaultNumberEntity(
 
         # Notify listeners about the updated SoC limits without triggering
         # a remote refresh, as Renault servers may still cache old values.
-        await self.coordinator.async_set_updated_data(self.coordinator.data)
+        self.coordinator.async_set_updated_data(self.coordinator.data)
+
+
 NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
     RenaultNumberEntityDescription(
         key="charge_limit_min",
