@@ -188,7 +188,7 @@ class EnOceanPowerSensor(EnOceanSensor):
         if telegram.rorg != 0xA5:
             return
 
-        if eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01)) is None:
+        if (eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01))) is None:
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
