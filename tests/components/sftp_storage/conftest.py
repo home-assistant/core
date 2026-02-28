@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry
 type ComponentSetup = Callable[[], Awaitable[None]]
 
 BACKUP_METADATA = {
-    "file_path": "backup_location/backup.tar",
+    "file_path": "/backup_location/backup.tar",
     "metadata": {
         "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
         "backup_id": "test-backup",
@@ -60,7 +60,7 @@ USER_INPUT = {
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
     CONF_PRIVATE_KEY_FILE: PRIVATE_KEY_FILE_UUID,
-    CONF_BACKUP_LOCATION: "backup_location",
+    CONF_BACKUP_LOCATION: "/backup_location",
 }
 TEST_AGENT_ID = ulid()
 
@@ -118,7 +118,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
             CONF_PRIVATE_KEY_FILE: str(private_key),
-            CONF_BACKUP_LOCATION: "backup_location",
+            CONF_BACKUP_LOCATION: "/backup_location",
         },
     )
 

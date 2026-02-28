@@ -28,7 +28,7 @@ class TeslemetryRootEntity(Entity):
     _attr_has_entity_name = True
     scoped: bool
 
-    def raise_for_scope(self, scope: Scope):
+    def raise_for_scope(self, scope: Scope) -> None:
         """Raise an error if a scope is not available."""
         if not self.scoped:
             raise ServiceValidationError(
@@ -231,11 +231,12 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     @property
     def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
-        return (
+        value: StateType = (
             self.coordinator.data.get("wall_connectors", {})
             .get(self.din, {})
             .get(self.key)
         )
+        return value
 
     @property
     def exists(self) -> bool:
