@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import NODE_ONLINE, VM_CONTAINER_RUNNING
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
+from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,18 +147,6 @@ class ProxmoxNodeBinarySensor(ProxmoxNodeEntity, BinarySensorEntity):
 
     entity_description: ProxmoxNodeBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeBinarySensorEntityDescription,
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize Proxmox node binary sensor entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -170,19 +158,6 @@ class ProxmoxVMBinarySensor(ProxmoxVMEntity, BinarySensorEntity):
 
     entity_description: ProxmoxVMBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxVMBinarySensorEntityDescription,
-        vm_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox VM binary sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, vm_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -193,19 +168,6 @@ class ProxmoxContainerBinarySensor(ProxmoxContainerEntity, BinarySensorEntity):
     """Representation of a Proxmox Container binary sensor."""
 
     entity_description: ProxmoxContainerBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxContainerBinarySensorEntityDescription,
-        container_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox Container binary sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, container_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
