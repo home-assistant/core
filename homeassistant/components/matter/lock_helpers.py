@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import Nullable
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -156,11 +157,17 @@ def _get_attr(obj: Any, attr: str) -> Any:
     """Get attribute from object or dict.
 
     Matter SDK responses can be either dataclass objects or dicts depending on
-    the SDK version and serialization context.
+    the SDK version and serialization context. NullValue (a truthy,
+    non-iterable singleton) is normalized to None.
     """
     if isinstance(obj, dict):
-        return obj.get(attr)
-    return getattr(obj, attr, None)
+        value = obj.get(attr)
+    else:
+        value = getattr(obj, attr, None)
+    # The Matter SDK uses NullValue for nullable fields instead of None.
+    if isinstance(value, Nullable):
+        return None
+    return value
 
 
 def _get_supported_credential_types(feature_map: int) -> list[str]:
@@ -195,7 +202,7 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
             type=CREDENTIAL_TYPE_MAP.get(_get_attr(cred, "credentialType"), "unknown"),
             index=_get_attr(cred, "credentialIndex"),
         )
-        for cred in (creds if isinstance(creds, list) else [])
+        for cred in (creds or [])
     ]
 
     return LockUserData(
@@ -232,7 +239,7 @@ async def _clear_user_credentials(
     )
 
     creds = _get_attr(get_user_response, "credentials")
-    if not creds or not isinstance(creds, list):
+    if not creds:
         return
 
     for cred in creds:
