@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
@@ -518,6 +519,42 @@ async def test_clear_lock_user_service(
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_clear_lock_user_credentials_nullvalue(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_lock_user handles NullValue credentials from Matter SDK."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # GetUser returns user with credentials as NullValue (not None)
+            {"userStatus": 1, "credentials": NullValue},
+            None,  # ClearUser
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_lock_user",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+    )
+
+    # Should skip credential clearing and go straight to ClearUser
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearUser(userIndex=2),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_clear_lock_user_clears_credentials_first(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -973,6 +1010,42 @@ async def test_get_lock_users_with_credentials(
             }
         ],
     }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_with_nullvalue_credentials(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users handles NullValue credentials from Matter SDK."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {
+                "userIndex": 1,
+                "userStatus": 1,
+                "userName": "User No Creds",
+                "userUniqueID": 100,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": NullValue,
+                "nextUserIndex": None,
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_users",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    lock_users = result["lock.mock_door_lock"]
+    assert len(lock_users["users"]) == 1
+    assert lock_users["users"][0]["credentials"] == []
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])

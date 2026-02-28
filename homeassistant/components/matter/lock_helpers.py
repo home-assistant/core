@@ -195,7 +195,7 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
             type=CREDENTIAL_TYPE_MAP.get(_get_attr(cred, "credentialType"), "unknown"),
             index=_get_attr(cred, "credentialIndex"),
         )
-        for cred in (creds or [])
+        for cred in (creds if isinstance(creds, list) else [])
     ]
 
     return LockUserData(
@@ -232,7 +232,7 @@ async def _clear_user_credentials(
     )
 
     creds = _get_attr(get_user_response, "credentials")
-    if not creds:
+    if not creds or not isinstance(creds, list):
         return
 
     for cred in creds:
