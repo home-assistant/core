@@ -116,11 +116,17 @@
     }
   },
   "exceptions": {
-    "invalid_auth": {
-      "message": "Error while authenticating with the Powerfox service: {error}"
+    "auth_failed": {
+      "message": "Authentication with the Powerfox service failed. Please re-authenticate your account."
     },
-    "update_failed": {
-      "message": "Error while updating the Powerfox service: {error}"
+    "connection_error": {
+      "message": "Could not connect to the Powerfox service. Please check your network connection."
+    },
+    "no_data_error": {
+      "message": "No data available for device \"{device_name}\". The device may not have reported data yet."
+    },
+    "privacy_error": {
+      "message": "Data for device \"{device_name}\" is restricted due to privacy settings in the Powerfox app."
     }
   }
 }
