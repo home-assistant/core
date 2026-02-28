@@ -207,3 +207,52 @@ async def test_zone_services_with_ctl_id(
 
     assert exc_info.value.translation_key == "zone_only_service"
     assert exc_info.value.translation_placeholders == {"service": service}
+
+
+_SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
+    (
+        {"mode": "NotARealMode"},
+        "mode_not_supported",
+    ),
+    (
+        {"mode": "Auto", "duration": {"hours": 1}},
+        "mode_cant_be_temporary",
+    ),
+    (
+        {"mode": "AutoWithEco", "period": {"days": 1}},
+        "mode_cant_have_period",
+    ),
+    (
+        {"mode": "DayOff", "duration": {"hours": 1}},
+        "mode_cant_have_duration",
+    ),
+]
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("service_data", "expected_translation_key"),
+    _SET_SYSTEM_MODE_VALIDATOR_PARAMS,
+    ids=[k for _, k in _SET_SYSTEM_MODE_VALIDATOR_PARAMS],
+)
+async def test_set_system_mode_validator(
+    hass: HomeAssistant,
+    evohome: EvohomeClient,
+    service_data: dict[str, Any],
+    expected_translation_key: str,
+) -> None:
+    """Test ServiceValidationError for all controller system mode validation cases."""
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            service_data,
+            target={},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_placeholders == {
+        ATTR_MODE: service_data[ATTR_MODE]
+    }
