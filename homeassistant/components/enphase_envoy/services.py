@@ -149,7 +149,10 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
         except orjson.JSONDecodeError:
             # Try xml or html
             result = f"{result_data}"
-        return {endpoint: result}
+        return {
+            "endpoint": endpoint,
+            "data": result,
+        }
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}

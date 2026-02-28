@@ -118,7 +118,8 @@ async def test_service_inspect_json(
         blocking=True,
         return_response=True,
     )
-    assert result[normalized_endpoint] == data
+    assert result["endpoint"] == normalized_endpoint
+    assert result["data"] == data
 
 
 async def test_service_inspect_text(
@@ -142,7 +143,9 @@ async def test_service_inspect_text(
         blocking=True,
         return_response=True,
     )
-    assert result["/some/endpoint"] == data
+
+    assert result["endpoint"] == "/some/endpoint"
+    assert result["data"] == data
 
 
 async def test_service_inspect_error(
@@ -255,7 +258,8 @@ async def test_service_inspect_device_id(
         blocking=True,
         return_response=True,
     )
-    assert result["/some/endpoint"] == data
+    assert result["endpoint"] == "/some/endpoint"
+    assert result["data"] == data
 
 
 async def test_service_inspect_device_id_error(
@@ -313,4 +317,5 @@ async def test_service_inspect_via_device_id(
         blocking=True,
         return_response=True,
     )
-    assert result["/some/endpoint"] == data
+    assert result["endpoint"] == "/some/endpoint"
+    assert result["data"] == data
