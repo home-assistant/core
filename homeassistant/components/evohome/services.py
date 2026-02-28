@@ -5,12 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Final
 
-from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
-from evohomeasync2.schemas.const import (
-    S2_DURATION as SZ_DURATION,
-    S2_PERIOD as SZ_PERIOD,
-    SystemMode as EvoSystemMode,
-)
+from evohomeasync2.schemas.const import SystemMode as EvoSystemMode
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -101,54 +96,11 @@ def setup_service_functions(
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
     hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
-    # Enumerate which operating modes are supported by this system
-    modes = list(coordinator.tcs.allowed_system_modes)
-
-    system_mode_schemas = []
-    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != EvoSystemMode.AUTO_WITH_RESET]
-
-    # Permanent-only modes will use this schema
-    perm_modes = [m[SZ_SYSTEM_MODE] for m in modes if not m[SZ_CAN_BE_TEMPORARY]]
-    if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
-        schema = vol.Schema({vol.Required(ATTR_MODE): vol.In(perm_modes)})
-        system_mode_schemas.append(schema)
-
-    modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]
-
-    # These modes are set for a number of hours (or indefinitely): use this schema
-    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_DURATION]
-    if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
-        schema = vol.Schema(
-            {
-                vol.Required(ATTR_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_DURATION): vol.All(
-                    cv.time_period,
-                    vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
-                ),
-            }
-        )
-        system_mode_schemas.append(schema)
-
-    # These modes are set for a number of days (or indefinitely): use this schema
-    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_PERIOD]
-    if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
-        schema = vol.Schema(
-            {
-                vol.Required(ATTR_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_PERIOD): vol.All(
-                    cv.time_period,
-                    vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
-                ),
-            }
-        )
-        system_mode_schemas.append(schema)
-
-    if system_mode_schemas:
-        hass.services.async_register(
-            DOMAIN,
-            EvoService.SET_SYSTEM_MODE,
-            set_system_mode,
-            schema=vol.Schema(vol.Any(*system_mode_schemas)),
-        )
+    hass.services.async_register(
+        DOMAIN,
+        EvoService.SET_SYSTEM_MODE,
+        set_system_mode,
+        schema=vol.Schema(SET_SYSTEM_MODE_SCHEMA),
+    )
 
     _register_zone_entity_services(hass)
