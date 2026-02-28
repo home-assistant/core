@@ -219,6 +219,9 @@
       "sanitizing_wash": {
         "default": "mdi:lotion"
       },
+      "sound_detection": {
+        "default": "mdi:home-sound-in"
+      },
       "sound_effect": {
         "default": "mdi:volume-high",
         "state": {
