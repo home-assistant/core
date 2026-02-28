@@ -94,6 +94,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -473,7 +474,12 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="OpenAI",
-            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(
+                CONF_CHAT_MODEL,
+                RECOMMENDED_CHAT_MODEL
+                if subentry.subentry_type != "stt"
+                else RECOMMENDED_STT_MODEL,
+            ),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 

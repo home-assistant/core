@@ -110,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp313", "cp314"]
+        abi: ["cp314"]
         arch: ["amd64", "aarch64"]
         include:
           - arch: amd64
@@ -161,7 +161,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp313", "cp314"]
+        abi: ["cp314"]
         arch: ["amd64", "aarch64"]
         include:
           - arch: amd64
