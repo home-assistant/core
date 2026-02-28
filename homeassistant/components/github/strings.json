@@ -48,6 +48,10 @@
       "latest_tag": {
         "name": "Latest tag"
       },
+      "merged_pulls_count": {
+        "name": "Merged pull requests",
+        "unit_of_measurement": "pull requests"
+      },
       "pulls_count": {
         "name": "Pull requests",
         "unit_of_measurement": "pull requests"
