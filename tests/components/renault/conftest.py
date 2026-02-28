@@ -93,9 +93,9 @@ def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
 
         def mock_supports_endpoint(endpoint: str) -> bool:
             if endpoint == "soc-levels":
-                return (
-                    vehicle_type in MOCK_VEHICLES
-                    and "battery_soc" in MOCK_VEHICLES[vehicle_type]["endpoints"]
+                vehicle_fixtures = MOCK_VEHICLES.get(fixture_code)
+                return bool(
+                    vehicle_fixtures and "battery_soc" in vehicle_fixtures["endpoints"]
                 )
             return original_supports_endpoint(endpoint)
 
