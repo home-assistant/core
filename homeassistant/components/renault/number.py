@@ -78,23 +78,28 @@ class RenaultNumberEntity(
         int_value = round(value)
 
         # Update the appropriate value based on which entity this is
-        if self.entity_description.key == "charge_limit_min":
+       ​ if self.entity_description.key == "charge_limit_min":
             await self.vehicle.set_battery_soc(
                 min_soc=int_value, target_soc=current_target
             )
+            # Optimistically update local coordinator data so the new
+            # limits are reflected immediately without a remote refresh.
+            self.coordinator.data.socMin = int_value
         elif self.entity_description.key == "charge_limit_target":
             await self.vehicle.set_battery_soc(
                 min_soc=current_min, target_soc=int_value
             )
+            # Optimistically update local coordinator data so the new
+            # limits are reflected immediately without a remote refresh.
+            self.coordinator.data.socTarget = int_value
         else:
             raise NotImplementedError(
                 f"Unsupported Renault number entity key: {self.entity_description.key}"
             )
-        # No coordinator refresh here: Renault servers cache the previous
-        # values for an extended period, so an immediate refresh would
-        # overwrite the new values with stale data.
 
-
+        # Notify listeners about the updated SoC limits without triggering
+        # a remote refresh, as Renault servers may still cache old values.
+        await self.coordinator.async_set_updated_data(self.coordinator.data)
 NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
     RenaultNumberEntityDescription(
         key="charge_limit_min",
