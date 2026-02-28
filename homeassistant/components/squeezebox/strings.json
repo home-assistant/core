@@ -15,7 +15,7 @@
     "flow_title": "{host}",
     "progress": {
       "start_discovery": "Attempting to discover new LMS servers\n\nThis will take about 5 seconds",
-      "title": "LMS Discovery"
+      "title": "LMS discovery"
     },
     "step": {
       "choose_server": {
@@ -25,7 +25,7 @@
         "data_description": {
           "server_list": "Choose the server to configure."
         },
-        "title": "Discovered Servers"
+        "title": "Discovered servers"
       },
       "discovery_failed": {
         "description": "No LMS were discovered on the network.",
@@ -83,7 +83,7 @@
           "edit": "Enter configuration manually",
           "start_discovery": "Discover new LMS"
         },
-        "title": "LMS Configuration"
+        "title": "LMS configuration"
       }
     }
   },

@@ -82,7 +82,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
-    async def _discover(self, uuid: str | None = None) -> None:
+    async def _discover(self) -> None:
         """Discover an unconfigured LMS server."""
         _discovery_task: asyncio.Task | None = None
 
