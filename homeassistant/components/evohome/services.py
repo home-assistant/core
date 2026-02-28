@@ -78,7 +78,6 @@ def setup_service_functions(
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
-        assert coordinator.tcs is not None  # mypy
 
         payload = {
             "unique_id": coordinator.tcs.id,
