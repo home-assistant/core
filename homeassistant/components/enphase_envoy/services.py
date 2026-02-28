@@ -15,10 +15,10 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
@@ -90,9 +90,8 @@ async def remove_envoy_from_coordinators_list(
         envoy_coordinators_list.pop(entry_envoy.serial_number, None)
 
 
-async def setup_envoy_service_actions(
-    hass: HomeAssistant, config: ConfigType
-) -> ServiceResponse:
+@callback
+def setup_envoy_service_actions(hass: HomeAssistant) -> ServiceResponse:
     """Configure Home Assistant services for Enphase_Envoy."""
 
     async def inspect_action(call: ServiceCall) -> Any:

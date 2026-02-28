@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set Enphase Envoy integration."""
 
     # setup the enphase_envoy services
-    await setup_envoy_service_actions(hass, config)
+    setup_envoy_service_actions(hass)
 
     return True
 

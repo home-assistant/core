@@ -80,7 +80,7 @@ async def test_service_load_unload(
         assert config_entry.state is ConfigEntryState.LOADED
 
         # existing envoy_coordinators_list entry for COV of return in service setup
-        await setup_envoy_service_actions(hass, config_entry)
+        setup_envoy_service_actions(hass)
 
         # existing envoy_coordinators_list entry for COV of return in service unload.
         await hass.config_entries.async_unload(config_entry.entry_id)
