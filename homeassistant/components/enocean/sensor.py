@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean.utils import combine_hex
 from enocean_async import (
     EEPID,
     ENOCEAN_EEP_DATABASE,
@@ -37,7 +36,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -189,7 +188,7 @@ class EnOceanPowerSensor(EnOceanSensor):
         if telegram.rorg != 0xA5:
             return
 
-        if (eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01))) is None:
+        if eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01)) is None:
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
