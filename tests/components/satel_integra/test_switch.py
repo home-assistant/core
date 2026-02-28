@@ -185,13 +185,14 @@ async def test_switch_actions_require_code(
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
-    """Test switch actions with an access code."""
+    """Test switch actions fail when access code is missing."""
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     hass.config_entries.async_update_entry(
         mock_config_entry_with_subentries, options={CONF_CODE: None}
     )
+    await hass.async_block_till_done()
 
     # Turning the device on or off should raise ServiceValidationError.
     with pytest.raises(ServiceValidationError):
