@@ -19,10 +19,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import SERVER_UUIDS
+
 from tests.common import MockConfigEntry
 
 # Use the same UUIDs defined in the conftest
-TEST_UUID = "12345678-1234-1234-1234-123456789012"
+TEST_UUID = SERVER_UUIDS[0]
 
 
 async def test_manual_setup(
