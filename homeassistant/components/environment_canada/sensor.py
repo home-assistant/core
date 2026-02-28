@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from env_canada import ECWeather
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -29,9 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_STATION
-from .coordinator import ECConfigEntry, ECDataType, ECDataUpdateCoordinator
-
-ATTR_TIME = "alert time"
+from .coordinator import ECConfigEntry, ECDataUpdateCoordinator, ECSensorDataType
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -272,7 +269,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class ECBaseSensorEntity[DataT: ECDataType](
+class ECBaseSensorEntity[DataT: ECSensorDataType](
     CoordinatorEntity[ECDataUpdateCoordinator[DataT]], SensorEntity
 ):
     """Environment Canada sensor base."""
@@ -302,7 +299,7 @@ class ECBaseSensorEntity[DataT: ECDataType](
         return value
 
 
-class ECSensorEntity[DataT: ECDataType](ECBaseSensorEntity[DataT]):
+class ECSensorEntity[DataT: ECSensorDataType](ECBaseSensorEntity[DataT]):
     """Environment Canada sensor for conditions."""
 
     def __init__(
@@ -328,12 +325,25 @@ class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
         if not value:
             return None
 
-        extra_state_attrs = {
+        alerts = []
+        for alert in value:
+            alert_attrs = {
+                "title": alert.get("title"),
+                "issued": alert.get("date"),
+                "colour": alert.get("alertColourLevel"),
+                "expiry": alert.get("expiryTime"),
+                "url": alert.get("url"),
+                "text": alert.get("text"),
+                "area": alert.get("area"),
+                "status": alert.get("status"),
+                "confidence": alert.get("confidence"),
+                "impact": alert.get("impact"),
+                "alert_code": alert.get("alert_code"),
+            }
+            alerts.append({k: v for k, v in alert_attrs.items() if v is not None})
+
+        return {
             ATTR_LOCATION: self._ec_data.metadata.location,
             ATTR_STATION: self._ec_data.metadata.station,
+            "alerts": alerts,
         }
-        for index, alert in enumerate(value, start=1):
-            extra_state_attrs[f"alert_{index}"] = alert.get("title")
-            extra_state_attrs[f"alert_time_{index}"] = alert.get("date")
-
-        return extra_state_attrs
