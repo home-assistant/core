@@ -32,6 +32,32 @@ class HDFuryNumberEntityDescription(NumberEntityDescription):
 
 NUMBERS: tuple[HDFuryNumberEntityDescription, ...] = (
     HDFuryNumberEntityDescription(
+        key="unmutecnt",
+        translation_key="audio_unmute",
+        entity_registry_enabled_default=False,
+        mode=NumberMode.BOX,
+        native_min_value=50,
+        native_max_value=1000,
+        native_step=1,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_audio_unmute(value),
+    ),
+    HDFuryNumberEntityDescription(
+        key="earcunmutecnt",
+        translation_key="earc_unmute",
+        entity_registry_enabled_default=False,
+        mode=NumberMode.BOX,
+        native_min_value=0,
+        native_max_value=1000,
+        native_step=1,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_earc_unmute(value),
+    ),
+    HDFuryNumberEntityDescription(
         key="oledfade",
         translation_key="oled_fade",
         mode=NumberMode.BOX,

@@ -57,6 +57,8 @@ async def test_service_reconnect_client(
 
 async def test_service_reconnect_failed_with_invalid_entry(
     hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconnect with invalid config entry raises ServiceValidationError."""
@@ -102,6 +104,8 @@ async def test_service_reconnect_without_config_entry_id(
 
 async def test_service_reconnect_entry_not_loaded(
     hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconnect service raises error when entry is not loaded."""
