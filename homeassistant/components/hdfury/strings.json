@@ -41,6 +41,12 @@
       }
     },
     "number": {
+      "audio_unmute": {
+        "name": "Unmute delay"
+      },
+      "earc_unmute": {
+        "name": "eARC unmute delay"
+      },
       "oled_fade": {
         "name": "OLED fade timer"
       },
