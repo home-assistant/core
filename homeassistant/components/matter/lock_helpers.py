@@ -736,12 +736,17 @@ async def set_lock_credential(
     operation_type = clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
 
     if credential_index is None:
-        # Auto-find first available credential slot
-        # Use the credential-type-specific user count as the upper bound
-        max_creds_attr = (
-            clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported
-            if credential_type == CRED_TYPE_RFID
-            else clusters.DoorLock.Attributes.NumberOfPINUsersSupported
+        # Auto-find first available credential slot.
+        # Use the credential-type-specific capacity as the upper bound.
+        _CREDENTIAL_TYPE_CAPACITY_ATTR: dict[str, type] = {
+            CRED_TYPE_PIN: clusters.DoorLock.Attributes.NumberOfPINUsersSupported,
+            CRED_TYPE_RFID: clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported,
+        }
+        max_creds_attr = _CREDENTIAL_TYPE_CAPACITY_ATTR.get(
+            credential_type,
+            # Biometric types (fingerprint, finger_vein, face) have no
+            # dedicated capacity attribute; fall back to total users.
+            clusters.DoorLock.Attributes.NumberOfTotalUsersSupported,
         )
         max_creds = lock_endpoint.get_attribute_value(None, max_creds_attr) or 5
         for idx in range(1, max_creds + 1):

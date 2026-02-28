@@ -1116,6 +1116,8 @@ async def test_set_lock_credential_pin(
     [
         {
             "1/257/65532": _FEATURE_USR_PIN,
+            "1/257/18": 3,  # NumberOfPINUsersSupported
+            "1/257/28": 2,  # NumberOfCredentialsSupportedPerUser (must NOT be used)
             "1/257/24": 4,  # MinPINCodeLength
             "1/257/23": 8,  # MaxPINCodeLength
         }
@@ -1126,19 +1128,24 @@ async def test_set_lock_credential_auto_find_slot(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test set_lock_credential auto-finds first available slot."""
+    """Test set_lock_credential auto-finds first available PIN slot."""
+    # Place the empty slot at index 3 (the last position within
+    # NumberOfPINUsersSupported=3) so the test would fail if the code
+    # used NumberOfCredentialsSupportedPerUser=2 instead.
     matter_client.send_device_command = AsyncMock(
         side_effect=[
             # GetCredentialStatus(1): occupied
             {"credentialExists": True, "userIndex": 1, "nextCredentialIndex": 2},
-            # GetCredentialStatus(2): empty
+            # GetCredentialStatus(2): occupied
+            {"credentialExists": True, "userIndex": 2, "nextCredentialIndex": 3},
+            # GetCredentialStatus(3): empty — found at the bound limit
             {
                 "credentialExists": False,
                 "userIndex": None,
-                "nextCredentialIndex": 3,
+                "nextCredentialIndex": None,
             },
             # SetCredential response
-            {"status": 0, "userIndex": 1, "nextCredentialIndex": 3},
+            {"status": 0, "userIndex": 1, "nextCredentialIndex": None},
         ]
     )
 
@@ -1155,19 +1162,20 @@ async def test_set_lock_credential_auto_find_slot(
     )
 
     assert result["lock.mock_door_lock"] == {
-        "credential_index": 2,
+        "credential_index": 3,
         "user_index": 1,
-        "next_credential_index": 3,
+        "next_credential_index": None,
     }
 
-    assert matter_client.send_device_command.call_count == 3
-    # Verify SetCredential was called with kAdd for the empty slot at index 2
-    set_cred_cmd = matter_client.send_device_command.call_args_list[2]
+    # 3 GetCredentialStatus calls + 1 SetCredential = 4 total
+    assert matter_client.send_device_command.call_count == 4
+    # Verify SetCredential was called with kAdd for the empty slot at index 3
+    set_cred_cmd = matter_client.send_device_command.call_args_list[3]
     assert (
         set_cred_cmd.kwargs["command"].operationType
         == clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
     )
-    assert set_cred_cmd.kwargs["command"].credential.credentialIndex == 2
+    assert set_cred_cmd.kwargs["command"].credential.credentialIndex == 3
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1402,6 +1410,50 @@ async def test_set_lock_credential_no_available_slot(
     # Verify it iterated over NumberOfPINUsersSupported (3), not
     # NumberOfCredentialsSupportedPerUser (5)
     assert matter_client.send_device_command.call_count == 3
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/257/65532": _FEATURE_USR_PIN,
+            "1/257/18": None,  # NumberOfPINUsersSupported not available
+            "1/257/24": 4,  # MinPINCodeLength
+            "1/257/23": 8,  # MaxPINCodeLength
+        }
+    ],
+)
+async def test_set_lock_credential_auto_find_defaults_to_five(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_credential falls back to 5 slots when capacity attribute is None."""
+    # All GetCredentialStatus calls return occupied
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "credentialExists": True,
+            "userIndex": 1,
+            "nextCredentialIndex": None,
+        }
+    )
+
+    with pytest.raises(ServiceValidationError, match="No available credential slots"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_lock_credential",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_CREDENTIAL_TYPE: "pin",
+                ATTR_CREDENTIAL_DATA: "1234",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # With NumberOfPINUsersSupported=None, falls back to default of 5
+    assert matter_client.send_device_command.call_count == 5
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1659,7 +1711,7 @@ async def test_set_lock_credential_rfid(
         {
             "1/257/65532": _FEATURE_USR_RFID,
             "1/257/19": 3,  # NumberOfRFIDUsersSupported
-            "1/257/28": 5,  # NumberOfCredentialsSupportedPerUser (should NOT be used)
+            "1/257/28": 2,  # NumberOfCredentialsSupportedPerUser (must NOT be used)
             "1/257/26": 4,  # MinRFIDCodeLength
             "1/257/25": 20,  # MaxRFIDCodeLength
         }
@@ -1671,18 +1723,24 @@ async def test_set_lock_credential_rfid_auto_find_slot(
     matter_node: MatterNode,
 ) -> None:
     """Test set_lock_credential auto-finds RFID slot using NumberOfRFIDUsersSupported."""
+    # Place the empty slot at index 3 (the last position within
+    # NumberOfRFIDUsersSupported=3) so the test would fail if the code
+    # used a smaller bound like NumberOfCredentialsSupportedPerUser=2
+    # or stopped iterating too early.
     matter_client.send_device_command = AsyncMock(
         side_effect=[
             # GetCredentialStatus(1): occupied
             {"credentialExists": True, "userIndex": 1, "nextCredentialIndex": 2},
-            # GetCredentialStatus(2): empty
+            # GetCredentialStatus(2): occupied
+            {"credentialExists": True, "userIndex": 2, "nextCredentialIndex": 3},
+            # GetCredentialStatus(3): empty — found at the bound limit
             {
                 "credentialExists": False,
                 "userIndex": None,
-                "nextCredentialIndex": 3,
+                "nextCredentialIndex": None,
             },
             # SetCredential response
-            {"status": 0, "userIndex": 1, "nextCredentialIndex": 3},
+            {"status": 0, "userIndex": 1, "nextCredentialIndex": None},
         ]
     )
 
@@ -1699,12 +1757,13 @@ async def test_set_lock_credential_rfid_auto_find_slot(
     )
 
     assert result["lock.mock_door_lock"] == {
-        "credential_index": 2,
+        "credential_index": 3,
         "user_index": 1,
-        "next_credential_index": 3,
+        "next_credential_index": None,
     }
 
-    assert matter_client.send_device_command.call_count == 3
+    # 3 GetCredentialStatus calls + 1 SetCredential = 4 total
+    assert matter_client.send_device_command.call_count == 4
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
