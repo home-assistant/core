@@ -23,8 +23,18 @@ from homeassistant.helpers.service import verify_domain_control
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
-# system mode schemas are built dynamically when the services are registered
-# because supported modes can vary for edge-case systems
+# System service schemas (registered as domain services)
+SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+    vol.Required(ATTR_MODE): vol.In(EvoSystemMode),
+    vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+    ),
+    vol.Exclusive(ATTR_PERIOD, "temporary"): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+    ),
+}
 
 # Zone service schemas (registered as entity services)
 SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
