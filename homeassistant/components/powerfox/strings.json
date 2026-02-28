@@ -120,7 +120,7 @@
       "message": "Authentication with the Powerfox service failed. Please re-authenticate your account."
     },
     "connection_error": {
-      "message": "Could not connect to the Powerfox service for device \"{device_name}\". Please check your network connection."
+      "message": "Could not connect to the Powerfox service. Please check your network connection."
     },
     "no_data_error": {
       "message": "No data available for device \"{device_name}\". The device may not have reported data yet."

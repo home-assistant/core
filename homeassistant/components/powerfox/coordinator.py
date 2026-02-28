@@ -65,7 +65,6 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={"device_name": self.device.name},
             ) from err
         except PowerfoxNoDataError as err:
             raise UpdateFailed(
