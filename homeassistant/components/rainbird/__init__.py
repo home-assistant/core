@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.async_client import AsyncRainbirdController, CreateController
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.const import (
@@ -77,12 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     clientsession = async_create_clientsession()
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
-    controller = AsyncRainbirdController(
-        AsyncRainbirdClient(
-            clientsession,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PASSWORD],
-        )
+    controller = CreateController(
+        clientsession,
+        entry.data[CONF_HOST],
+        entry.data[CONF_PASSWORD],
     )
 
     if not (await _async_fix_unique_id(hass, controller, entry)):

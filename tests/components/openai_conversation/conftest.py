@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from openai.types import ResponseFormatText
+from openai.types.audio import Transcription
 from openai.types.responses import (
     Response,
     ResponseCompletedEvent,
@@ -24,8 +25,10 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
 from homeassistant.config_entries import ConfigSubentryData
@@ -55,7 +58,7 @@ def mock_config_entry(
             "api_key": "bla",
         },
         version=2,
-        minor_version=5,
+        minor_version=6,
         subentries_data=[
             ConfigSubentryData(
                 data=mock_conversation_subentry_data,
@@ -67,6 +70,12 @@ def mock_config_entry(
                 data=RECOMMENDED_AI_TASK_OPTIONS,
                 subentry_type="ai_task_data",
                 title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=RECOMMENDED_STT_OPTIONS,
+                subentry_type="stt",
+                title=DEFAULT_STT_NAME,
                 unique_id=None,
             ),
             ConfigSubentryData(
@@ -216,6 +225,22 @@ def mock_create_stream() -> Generator[AsyncMock]:
             mock_create.return_value.pop(0), **kwargs
         )
 
+        yield mock_create
+
+
+@pytest.fixture
+def mock_create_transcription() -> Generator[AsyncMock]:
+    """Mock transcription response."""
+
+    with patch(
+        "openai.resources.audio.transcriptions.AsyncTranscriptions.create",
+        AsyncMock(return_value=""),
+    ) as mock_create:
+        mock_create.side_effect = lambda *args, **kwargs: (
+            Transcription(text=mock_create.return_value)
+            if isinstance(mock_create.return_value, str)
+            else mock_create.return_value
+        )
         yield mock_create
 
 

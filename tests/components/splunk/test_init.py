@@ -41,12 +41,21 @@ async def test_setup_entry_success(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "expected_error_key"),
     [
-        ([False, False], ConfigEntryState.SETUP_RETRY),
-        (ClientConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
-        (TimeoutError(), ConfigEntryState.SETUP_RETRY),
-        ([True, False], ConfigEntryState.SETUP_ERROR),
+        ([False, False], ConfigEntryState.SETUP_RETRY, "cannot_connect"),
+        (
+            ClientConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+            "connection_error",
+        ),
+        (TimeoutError(), ConfigEntryState.SETUP_RETRY, "timeout_connect"),
+        (
+            Exception("Unexpected error"),
+            ConfigEntryState.SETUP_RETRY,
+            "unexpected_error",
+        ),
+        ([True, False], ConfigEntryState.SETUP_ERROR, "invalid_auth"),
     ],
 )
 async def test_setup_entry_error(
@@ -55,6 +64,7 @@ async def test_setup_entry_error(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception | list[bool],
     expected_state: ConfigEntryState,
+    expected_error_key: str,
 ) -> None:
     """Test setup with various errors results in appropriate states."""
     mock_config_entry.add_to_hass(hass)
@@ -65,6 +75,7 @@ async def test_setup_entry_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == expected_error_key
 
 
 async def test_unload_entry(
