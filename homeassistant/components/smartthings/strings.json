@@ -919,6 +919,14 @@
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "name": "Do not disturb end time"
+      },
+      "do_not_disturb_start_time": {
+        "name": "Do not disturb start time"
+      }
     }
   },
   "exceptions": {
