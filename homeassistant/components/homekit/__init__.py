@@ -6,6 +6,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from copy import deepcopy
+from datetime import datetime, timedelta
 import ipaddress
 import logging
 import os
@@ -74,6 +75,7 @@ from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     EntityFilter,
 )
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.start import async_at_started
@@ -163,6 +165,7 @@ PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     10  # number of seconds to wait for homekit to see the c# change
 )
+_AUTO_ADVERTISE_IP_REFRESH_INTERVAL = timedelta(minutes=1)
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
 
@@ -345,10 +348,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     port: int = conf[CONF_PORT]
     # ip_address and advertise_ip are yaml only
     ip_address: str | list[str] | None = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
+    configured_advertise_ips: list[str] | str | None = conf.get(CONF_ADVERTISE_IP)
+    if isinstance(configured_advertise_ips, str):
+        configured_advertise_ips = [configured_advertise_ips]
     advertise_ips: list[str]
-    advertise_ips = conf.get(
-        CONF_ADVERTISE_IP
-    ) or await network.async_get_announce_addresses(hass)
+    auto_advertise_ips = not configured_advertise_ips
+    advertise_ips = configured_advertise_ips or await network.async_get_announce_addresses(
+        hass
+    )
 
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
@@ -379,6 +386,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         entry.entry_id,
         entry.title,
         devices=devices,
+        auto_advertise_ips=auto_advertise_ips,
     )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -551,6 +559,7 @@ class HomeKit:
         entry_id: str,
         entry_title: str,
         devices: list[str] | None = None,
+        auto_advertise_ips: bool = False,
     ) -> None:
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -567,6 +576,7 @@ class HomeKit:
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
         self._devices = devices or []
+        self._auto_advertise_ips = auto_advertise_ips
         self.aid_storage: AccessoryAidStorage | None = None
         self.iid_storage: AccessoryIIDStorage | None = None
         self.status = STATUS_READY
@@ -574,6 +584,7 @@ class HomeKit:
         self.bridge: HomeBridge | None = None
         self._reset_lock = asyncio.Lock()
         self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
+        self._cancel_advertise_ip_refresh: CALLBACK_TYPE | None = None
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> bool:
         """Set up bridge and accessory driver.
@@ -873,6 +884,7 @@ class HomeKit:
             SIGNAL_RELOAD_ENTITIES.format(self._entry_id),
             self.async_reload_accessories,
         )
+        await self._async_refresh_advertise_ips()
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
         uuid = await instance_id.async_get(self.hass)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
@@ -897,10 +909,51 @@ class HomeKit:
             async with self.hass.data[PERSIST_LOCK_DATA]:
                 await self.hass.async_add_executor_job(self.driver.persist)
         self.status = STATUS_RUNNING
+        if self._auto_advertise_ips:
+            self._cancel_advertise_ip_refresh = async_track_time_interval(
+                self.hass,
+                self._async_refresh_advertise_ips,
+                _AUTO_ADVERTISE_IP_REFRESH_INTERVAL,
+                name=f"HomeKit {self._entry_id} advertise ip refresh",
+            )
 
         if self.driver.state.paired:
             return
         self._async_show_setup_message()
+
+    @callback
+    def _async_cancel_advertise_ip_refresh(self) -> None:
+        """Cancel the periodic advertise IP refresh."""
+        if self._cancel_advertise_ip_refresh is None:
+            return
+        self._cancel_advertise_ip_refresh()
+        self._cancel_advertise_ip_refresh = None
+
+    async def _async_refresh_advertise_ips(
+        self, _now: datetime | None = None
+    ) -> None:
+        """Refresh auto-detected advertise IPs when network addresses change."""
+        if not self._auto_advertise_ips:
+            return
+        try:
+            advertise_ips = await network.async_get_announce_addresses(self.hass)
+        except HomeAssistantError as ex:
+            _LOGGER.debug("Failed to refresh advertise IPs for %s: %s", self._name, ex)
+            return
+        if not advertise_ips or advertise_ips == self._advertise_ips:
+            return
+        self._advertise_ips = advertise_ips
+        if self.driver is None:
+            _LOGGER.debug(
+                "Updated advertise IPs for %s before start: %s",
+                self._name,
+                advertise_ips,
+            )
+            return
+        self.driver.advertised_address = advertise_ips
+        if self.status == STATUS_RUNNING:
+            self.driver.async_update_advertisement()
+        _LOGGER.debug("Updated advertise IPs for %s: %s", self._name, advertise_ips)
 
     @callback
     def _async_show_setup_message(self) -> None:
@@ -1091,6 +1144,7 @@ class HomeKit:
             self.status = STATUS_STOPPED
             assert self._cancel_reload_dispatcher is not None
             self._cancel_reload_dispatcher()
+            self._async_cancel_advertise_ip_refresh()
             _LOGGER.debug("Driver stop for %s", self._name)
             if self.driver:
                 await self.driver.async_stop()

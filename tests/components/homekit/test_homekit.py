@@ -472,6 +472,36 @@ async def test_homekit_setup_advertise_ips(hass: HomeAssistant, hk_driver) -> No
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_refresh_auto_advertise_ips(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test auto advertise IPs are refreshed and advertisement is updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+    homekit.driver = hk_driver
+    homekit.status = STATUS_RUNNING
+    homekit._auto_advertise_ips = True
+    homekit._advertise_ips = ["1.2.3.4"]
+
+    with (
+        patch(
+            f"{PATH_HOMEKIT}.network.async_get_announce_addresses",
+            return_value=["5.6.7.8"],
+        ),
+        patch.object(hk_driver, "async_update_advertisement") as mock_update_adv,
+    ):
+        await homekit._async_refresh_advertise_ips()
+
+    assert homekit._advertise_ips == ["5.6.7.8"]
+    assert homekit.driver.advertised_address == ["5.6.7.8"]
+    mock_update_adv.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_add_accessory(hass: HomeAssistant, mock_hap) -> None:
     """Add accessory if config exists and get_acc returns an accessory."""
 
