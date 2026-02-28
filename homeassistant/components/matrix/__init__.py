@@ -9,7 +9,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Any, Final, NewType, Required, TypedDict
+from typing import Any, NewType, Required, TypedDict
 
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
@@ -53,8 +53,13 @@ from .const import (
     ATTR_REACTION,
     ATTR_ROOM,
     ATTR_THREAD_ID,
+    CONF_COMMANDS,
+    CONF_EXPRESSION,
     CONF_HOMESERVER,
+    CONF_REACTION,
+    CONF_ROOMS,
     CONF_ROOMS_REGEX,
+    CONF_WORD,
     DOMAIN,
     FORMAT_HTML,
 )
@@ -63,12 +68,6 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = ".matrix.conf"
-
-CONF_ROOMS: Final = "rooms"
-CONF_COMMANDS: Final = "commands"
-CONF_WORD: Final = "word"
-CONF_EXPRESSION: Final = "expression"
-CONF_REACTION: Final = "reaction"
 
 CONF_USERNAME_REGEX = "^@[^:]*:.*"
 
@@ -181,7 +180,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     """Set up Matrix from a config entry."""
-    raw_commands: list[dict[str, Any]] = entry.data.get(CONF_COMMANDS, [])
+    raw_commands: list[dict[str, Any]] = entry.options.get(
+        CONF_COMMANDS, entry.data.get(CONF_COMMANDS, [])
+    )
     commands: list[ConfigCommand] = []
     for command in raw_commands:
         try:
@@ -189,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
         except vol.Invalid as err:
             _LOGGER.warning("Skipping invalid command in config entry: %s", err)
 
-    raw_rooms = entry.data.get(CONF_ROOMS, [])
+    raw_rooms = entry.options.get(CONF_ROOMS, entry.data.get(CONF_ROOMS, []))
     try:
         rooms: list[RoomAnyID] = vol.All(
             cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]

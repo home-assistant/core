@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import voluptuous as vol
 
@@ -13,13 +13,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_CONFIG_ENTRY_ID,
     ATTR_FORMAT,
     ATTR_IMAGES,
     ATTR_MESSAGE_ID,
     ATTR_REACTION,
     ATTR_ROOM,
     ATTR_THREAD_ID,
+    CONF_CONFIG_ENTRY_ID,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
@@ -62,8 +62,9 @@ SERVICE_SCHEMA_REACT = vol.Schema(
     }
 )
 
+
 def _match_bots_for_rooms(
-    matrix_data: dict[str, MatrixBot], target_rooms: list[str]
+    matrix_data: Mapping[str, MatrixBot], target_rooms: list[str]
 ) -> list[MatrixBot]:
     matches: list[MatrixBot] = []
     for matrix_bot in matrix_data.values():
@@ -93,21 +94,23 @@ def _get_matrix_bot(
         raise ServiceValidationError("You do not have any Matrix config entries loaded")
 
     if not isinstance(matrix_data, Mapping):
-        return matrix_data
+        return cast("MatrixBot", matrix_data)
 
     config_entry_id = call.data.get(CONF_CONFIG_ENTRY_ID)
     if config_entry_id is not None:
         if config_entry := matrix_data.get(config_entry_id):
-            return config_entry
+            return cast("MatrixBot", config_entry)
         raise ServiceValidationError(
             "No Matrix config entry found for the provided config entry id"
         )
 
     if len(matrix_data) == 1:
-        return next(iter(matrix_data.values()))
+        return cast("MatrixBot", next(iter(matrix_data.values())))
 
     if target_rooms:
-        matches = _match_bots_for_rooms(matrix_data, target_rooms)
+        matches = _match_bots_for_rooms(
+            cast("Mapping[str, MatrixBot]", matrix_data), target_rooms
+        )
         if len(matches) == 1:
             return matches[0]
         if len(matches) > 1:

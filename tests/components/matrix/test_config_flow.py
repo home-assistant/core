@@ -6,7 +6,14 @@ from nio import LoginError, LoginResponse, WhoamiResponse
 
 from homeassistant import config_entries
 from homeassistant.components.matrix.config_flow import validate_input
-from homeassistant.components.matrix.const import DOMAIN
+from homeassistant.components.matrix.const import (
+    CONF_COMMANDS,
+    CONF_EXPRESSION,
+    CONF_REACTION,
+    CONF_ROOMS,
+    CONF_WORD,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -337,6 +344,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
 
     # Verify the config entry was updated
     updated_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert updated_entry is not None
     assert updated_entry.data["password"] == new_password
 
 
@@ -487,3 +495,272 @@ async def test_reauth_flow_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "unknown"}
+
+
+# ---------------------------------------------------------------------------
+# Options flow tests
+# ---------------------------------------------------------------------------
+
+TEST_ROOMS = ["!roomA:example.com", "#roomB:example.com"]
+TEST_COMMANDS = [
+    {CONF_WORD: "testword", "name": "testword"},
+    {CONF_EXPRESSION: "My name is (?P<name>.*)", "name": "introduction"},
+    {CONF_REACTION: "👍", "name": "thumbsup"},
+]
+
+
+async def test_options_flow_empty(hass: HomeAssistant) -> None:
+    """Test options flow with no rooms or commands (empty config)."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ROOMS: [], CONF_COMMANDS: []},
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {CONF_ROOMS: [], CONF_COMMANDS: []}
+
+
+async def test_options_flow_with_rooms_and_commands(hass: HomeAssistant) -> None:
+    """Test options flow saving rooms and commands."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ROOMS: TEST_ROOMS, CONF_COMMANDS: TEST_COMMANDS},
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_ROOMS] == TEST_ROOMS
+    assert result2["data"][CONF_COMMANDS] == TEST_COMMANDS
+
+
+async def test_options_flow_shows_existing_values(hass: HomeAssistant) -> None:
+    """Test that the options form is pre-filled with current options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data={**TEST_USER_INPUT, CONF_ROOMS: TEST_ROOMS},
+        options={CONF_ROOMS: TEST_ROOMS, CONF_COMMANDS: TEST_COMMANDS},
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    # Verify the schema has suggested values (rooms and commands pre-filled)
+    assert result["data_schema"] is not None
+    schema_keys = {str(k) for k in result["data_schema"].schema}
+    assert CONF_ROOMS in schema_keys
+    assert CONF_COMMANDS in schema_keys
+
+
+async def test_options_flow_falls_back_to_data(hass: HomeAssistant) -> None:
+    """Test that options form falls back to entry.data when options is empty."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data={**TEST_USER_INPUT, CONF_ROOMS: TEST_ROOMS, CONF_COMMANDS: TEST_COMMANDS},
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    # Submit with the same values that were in data
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ROOMS: TEST_ROOMS, CONF_COMMANDS: TEST_COMMANDS},
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_ROOMS] == TEST_ROOMS
+
+
+async def test_options_flow_invalid_rooms(hass: HomeAssistant) -> None:
+    """Test options flow with invalid room IDs."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    # Room ID without proper format
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ROOMS: ["invalid-room"], CONF_COMMANDS: []},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_ROOMS: "invalid_rooms"}
+
+
+async def test_options_flow_invalid_rooms_not_a_list(hass: HomeAssistant) -> None:
+    """Test options flow when rooms is not a list."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ROOMS: "not-a-list", CONF_COMMANDS: []},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_ROOMS: "invalid_rooms"}
+
+
+async def test_options_flow_invalid_commands_no_name(hass: HomeAssistant) -> None:
+    """Test options flow with command missing name."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ROOMS: [],
+            CONF_COMMANDS: [{CONF_WORD: "hello"}],  # missing 'name'
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_COMMANDS: "invalid_commands"}
+
+
+async def test_options_flow_invalid_commands_no_trigger(hass: HomeAssistant) -> None:
+    """Test options flow with command missing a trigger."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ROOMS: [],
+            CONF_COMMANDS: [{"name": "no_trigger"}],  # no word/expression/reaction
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_COMMANDS: "invalid_commands"}
+
+
+async def test_options_flow_invalid_commands_not_a_list(hass: HomeAssistant) -> None:
+    """Test options flow when commands is not a list."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ROOMS: [], CONF_COMMANDS: "not-a-list"},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_COMMANDS: "invalid_commands"}
+
+
+async def test_options_flow_all_trigger_types(hass: HomeAssistant) -> None:
+    """Test options flow accepts word, expression, and reaction triggers."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    commands = [
+        {CONF_WORD: "testword", "name": "testword"},
+        {CONF_EXPRESSION: "My name is (?P<name>.*)", "name": "introduction"},
+        {CONF_REACTION: "👍", "name": "thumbsup"},
+    ]
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ROOMS: ["!room:example.com", "#alias:example.com"],
+            CONF_COMMANDS: commands,
+        },
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert len(result2["data"][CONF_COMMANDS]) == 3
+
+
+async def test_options_flow_commands_with_room_subset(hass: HomeAssistant) -> None:
+    """Test options flow with commands restricted to specific rooms."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="@user:example.com",
+        data=TEST_USER_INPUT,
+        title="@user:example.com",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    commands = [
+        {
+            CONF_WORD: "testword",
+            "name": "testword",
+            CONF_ROOMS: ["#someothertest:matrix.org"],
+        },
+    ]
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ROOMS: ["#hasstest:matrix.org", "#someothertest:matrix.org"],
+            CONF_COMMANDS: commands,
+        },
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_COMMANDS][0][CONF_ROOMS] == [
+        "#someothertest:matrix.org"
+    ]

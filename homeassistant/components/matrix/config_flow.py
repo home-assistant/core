@@ -4,26 +4,49 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import re
 from typing import Any
 
 from nio import AsyncClient, LoginError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, selector
 
-from .const import CONF_HOMESERVER, DEFAULT_HOMESERVER, DOMAIN
+from .const import (
+    CONF_COMMANDS,
+    CONF_EXPRESSION,
+    CONF_HOMESERVER,
+    CONF_REACTION,
+    CONF_ROOMS,
+    CONF_ROOMS_REGEX,
+    CONF_WORD,
+    DEFAULT_HOMESERVER,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOMESERVER, default=DEFAULT_HOMESERVER): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_HOMESERVER, default=DEFAULT_HOMESERVER): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+
+_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ROOMS): selector.ObjectSelector(),
+        vol.Optional(CONF_COMMANDS): selector.ObjectSelector(),
     }
 )
 
@@ -76,6 +99,12 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.reauth_entry: ConfigEntry | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> MatrixOptionsFlowHandler:
+        """Create the options flow."""
+        return MatrixOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -194,4 +223,81 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
                 "homeserver": self.reauth_entry.data[CONF_HOMESERVER],
                 "name": self.reauth_entry.title,
             },
+        )
+
+
+class MatrixOptionsFlowHandler(OptionsFlow):
+    """Handle Matrix options (rooms and commands)."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage rooms and commands."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            rooms = user_input.get(CONF_ROOMS) or []
+            commands = user_input.get(CONF_COMMANDS) or []
+
+            # Validate rooms: must be a list of strings matching the room regex
+            if not isinstance(rooms, list):
+                errors[CONF_ROOMS] = "invalid_rooms"
+            else:
+                room_re = re.compile(CONF_ROOMS_REGEX)
+                for room in rooms:
+                    if not isinstance(room, str) or not room_re.match(room):
+                        errors[CONF_ROOMS] = "invalid_rooms"
+                        break
+
+            # Validate commands: list of dicts with name + one trigger
+            if not isinstance(commands, list):
+                errors[CONF_COMMANDS] = "invalid_commands"
+            else:
+                for cmd in commands:
+                    if not isinstance(cmd, dict):
+                        errors[CONF_COMMANDS] = "invalid_commands"
+                        break
+                    if not cmd.get(CONF_NAME):
+                        errors[CONF_COMMANDS] = "invalid_commands"
+                        break
+                    if not any(
+                        cmd.get(k) for k in (CONF_WORD, CONF_EXPRESSION, CONF_REACTION)
+                    ):
+                        errors[CONF_COMMANDS] = "invalid_commands"
+                        break
+
+            if not errors:
+                return self.async_create_entry(
+                    data={
+                        CONF_ROOMS: rooms,
+                        CONF_COMMANDS: commands,
+                    }
+                )
+
+        # Build suggested values from current options, falling back to data
+        current_rooms: list[Any] = self.config_entry.options.get(
+            CONF_ROOMS, self.config_entry.data.get(CONF_ROOMS, [])
+        )
+        current_commands: list[Any] = self.config_entry.options.get(
+            CONF_COMMANDS, self.config_entry.data.get(CONF_COMMANDS, [])
+        )
+
+        # Serialize any compiled regex patterns back to strings for display
+        serialized_commands = []
+        for cmd in current_commands:
+            serialized_cmd = dict(cmd)
+            if expr := serialized_cmd.get(CONF_EXPRESSION):
+                if hasattr(expr, "pattern"):
+                    serialized_cmd[CONF_EXPRESSION] = expr.pattern
+            serialized_commands.append(serialized_cmd)
+
+        suggested = {
+            CONF_ROOMS: current_rooms,
+            CONF_COMMANDS: serialized_commands,
+        }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(_OPTIONS_SCHEMA, suggested),
+            errors=errors,
         )
