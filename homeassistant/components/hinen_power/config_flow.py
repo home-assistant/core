@@ -1,4 +1,4 @@
-"""Config flow for Hinen integration."""
+"""Config flow for Hinen Power integration."""
 
 from __future__ import annotations
 
@@ -217,7 +217,10 @@ class HinenOpenFlowHandler(OptionsFlow):
                 data=user_input,
             )
 
-        hinen_open = HinenOpen(self.config_entry.data[CONF_TOKEN][HOST])
+        hinen_open = HinenOpen(
+            self.config_entry.data[CONF_TOKEN][HOST],
+            session=async_get_clientsession(self.hass),
+        )
         await hinen_open.set_user_authentication(
             self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN],
             self.config_entry.data[CONF_TOKEN]["refresh_token"],

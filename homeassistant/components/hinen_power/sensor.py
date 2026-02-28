@@ -1,4 +1,4 @@
-"""Support for Hinen Sensors."""
+"""Support for Hinen Power Sensors."""
 
 from __future__ import annotations
 

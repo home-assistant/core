@@ -1,4 +1,4 @@
-"""Constants for hello auth integration."""
+"""Constants for the Hinen Power integration."""
 
 import logging
 

@@ -1,4 +1,4 @@
-"""Entity representing a Hinen."""
+"""Entity representing a Hinen Power."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the Hinen integration."""
+"""DataUpdateCoordinator for the Hinen Power integration."""
 
 from __future__ import annotations
 

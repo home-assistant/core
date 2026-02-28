@@ -1,4 +1,4 @@
-"""API for hello auth bound to Home Assistant OAuth."""
+"""Authentication for Hinen Power using Home Assistant OAuth2."""
 
 from json import JSONDecodeError
 import logging
@@ -91,7 +91,7 @@ class HinenImplementation(AuthImplementation):
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        _LOGGER.info("Sending token request to %s", external_data)
+        _LOGGER.debug("Sending token request to %s", external_data)
         request_data: dict = {
             "clientSecret": self.client_secret,
             "grantType": "1",
@@ -119,30 +119,29 @@ class HinenImplementation(AuthImplementation):
         url = str(URL(self.token_url).with_query(data))
         _LOGGER.debug("Sending token request to %s", self.token_url)
 
-        resp = await session.get(url)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except ClientError, JSONDecodeError:
-                error_response = {}
-            error_code = error_response.get("code", "unknown")
-            error_description = error_response.get("msg", "unknown error")
-            error_trace_id = error_response.get("traceId", "unknown error")
-            _LOGGER.error(
-                "Token request for %s failed (%s): %s tranceId:%s",
-                self.domain,
-                error_code,
-                error_description,
-                error_trace_id,
+        async with session.get(url) as resp:
+            if resp.status >= 400:
+                try:
+                    error_response = await resp.json()
+                except ClientError, JSONDecodeError:
+                    error_response = {}
+                error_code = error_response.get("code", "unknown")
+                error_description = error_response.get("msg", "unknown error")
+                error_trace_id = error_response.get("traceId", "unknown error")
+                _LOGGER.error(
+                    "Token request for %s failed (%s): %s traceId:%s",
+                    self.domain,
+                    error_code,
+                    error_description,
+                    error_trace_id,
+                )
+            resp.raise_for_status()
+            custom_token = cast(dict[str, Any], await resp.json()).get("data", {})
+            custom_token.update(
+                {
+                    "clientId": self.client_id,
+                    "clientSecret": self.client_secret,
+                    REGION_CODE: data.get(REGION_CODE),
+                }
             )
-        resp.raise_for_status()
-        custom_token = cast(dict[str, Any], await resp.json()).get("data", {})
-        custom_token.update(
-            {
-                "clientId": self.client_id,
-                "clientSecret": self.client_secret,
-                REGION_CODE: data.get(REGION_CODE),
-            }
-        )
-        _LOGGER.debug("resp: %s", custom_token)
         return RespUtil.convert_to_snake_case(custom_token)

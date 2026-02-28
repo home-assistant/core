@@ -33,7 +33,6 @@ REDIRECTION_URL = "https://example.com/auth/hinen/callback"
 REGION_CODE = "region_code"
 HOST = "https://dev-iot-api.celinksmart.cn"
 TITLE = "Test Hinen Device"
-TOKEN = "homeassistant.components.hinen_power.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
 
 
 @pytest.fixture(autouse=True)

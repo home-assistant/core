@@ -172,9 +172,7 @@ async def test_no_device(
         assert result["step_id"] == "creation"
 
         # Simulate the OAuth2 callback with authorization code
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_device"
 
@@ -214,9 +212,7 @@ async def test_forbidden_error(
         assert result["step_id"] == "creation"
 
         # Simulate the OAuth2 callback with authorization code
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "access_not_configured"
         assert result["description_placeholders"] == {"message": "Access denied"}
@@ -256,9 +252,7 @@ async def test_unknown_error(
         assert result["step_id"] == "creation"
 
         # Simulate the OAuth2 callback with authorization code
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
@@ -319,9 +313,7 @@ async def test_device_selection_flow(
         assert result["step_id"] == "creation"
 
         # Simulate the OAuth2 callback with authorization code
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "devices"
 

@@ -1,4 +1,4 @@
-"""application_credentials platform for Hinen."""
+"""application_credentials platform for Hinen Power."""
 
 from homeassistant.components.application_credentials import (
     AuthorizationServer,

@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+      "access_not_configured": "Please read the message below from the Hinen service:\n\n{message}",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "failed_to_fetch_countries": "Failed to fetch country list. Please check your network connection and try again.",
       "no_device": "Please create a Hinen Device to be able to use the integration",
