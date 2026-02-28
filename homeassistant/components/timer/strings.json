@@ -70,9 +70,9 @@
   },
   "title": "Timer",
   "triggers": {
-    "canceled": {
-      "description": "Triggers when the timer gets canceled.",
-      "name": "Timer canceled"
+    "cancelled": {
+      "description": "Triggers when the timer gets cancelled.",
+      "name": "Timer cancelled"
     },
     "finished": {
       "description": "Triggers when the timer finishes.",

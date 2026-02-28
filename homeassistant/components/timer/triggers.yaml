@@ -6,5 +6,5 @@
 started: *trigger_common
 finished: *trigger_common
 paused: *trigger_common
-canceled: *trigger_common
+cancelled: *trigger_common
 restarted: *trigger_common

@@ -75,7 +75,7 @@ async def config_setup(hass: HomeAssistant, triggers: list[str]) -> None:
         "timer.started",
         "timer.finished",
         "timer.paused",
-        "timer.canceled",
+        "timer.cancelled",
         "timer.restarted",
     ],
 )
@@ -99,7 +99,7 @@ async def test_timer_triggers_gated_by_labs_flag(
         ("started", [SERVICE_START], "timer.started"),
         ("finished", [SERVICE_START, SERVICE_FINISH], "timer.finished"),
         ("paused", [SERVICE_START, SERVICE_PAUSE], "timer.paused"),
-        ("canceled", [SERVICE_START, SERVICE_CANCEL], "timer.cancelled"),
+        ("cancelled", [SERVICE_START, SERVICE_CANCEL], "timer.cancelled"),
         ("restarted", [SERVICE_START, SERVICE_PAUSE, SERVICE_START], "timer.restarted"),
         ("restarted", [SERVICE_START, SERVICE_START], "timer.restarted"),
     ],
@@ -132,7 +132,9 @@ async def test_full_usage(
 ) -> None:
     """Test timer triggers by attaching to all kind of events."""
 
-    await config_setup(hass, ["started", "paused", "finished", "canceled", "restarted"])
+    await config_setup(
+        hass, ["started", "paused", "finished", "cancelled", "restarted"]
+    )
 
     steps = [
         {"call": SERVICE_START},
@@ -169,7 +171,7 @@ async def test_full_usage(
         "timer.started",
         "timer.finished",
         "timer.paused",
-        "timer.canceled",
+        "timer.cancelled",
         "timer.restarted",
     ],
 )

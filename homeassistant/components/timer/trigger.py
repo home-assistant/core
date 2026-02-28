@@ -109,7 +109,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started": TimerStartEventTrigger,
     "finished": TimerFinishEventTrigger,
     "paused": TimerPauseEventTrigger,
-    "canceled": TimerCancelEventTrigger,
+    "cancelled": TimerCancelEventTrigger,
     "restarted": TimerRestartEventTrigger,
 }
 

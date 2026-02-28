@@ -20,7 +20,7 @@
     }
   },
   "triggers": {
-    "canceled": {
+    "cancelled": {
       "trigger": "mdi:timer-cancel-outline"
     },
     "finished": {
