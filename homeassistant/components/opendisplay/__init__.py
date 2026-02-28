@@ -2,24 +2,43 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from opendisplay import (
     BLEConnectionError,
     BLETimeoutError,
+    GlobalConfig,
     OpenDisplayDevice,
     OpenDisplayError,
 )
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, OpenDisplayConfigEntry, OpenDisplayRuntimeData
+if TYPE_CHECKING:
+    from opendisplay.models import FirmwareVersion
+
+from .const import DOMAIN
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+@dataclass
+class OpenDisplayRuntimeData:
+    """Runtime data for an OpenDisplay config entry."""
+
+    firmware: FirmwareVersion
+    device_config: GlobalConfig
+
+
+type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

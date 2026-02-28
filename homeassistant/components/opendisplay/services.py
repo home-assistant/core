@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from enum import IntEnum
 import io
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from opendisplay import (
@@ -34,7 +34,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
-from .const import DOMAIN, OpenDisplayConfigEntry
+if TYPE_CHECKING:
+    from . import OpenDisplayConfigEntry
+
+from .const import DOMAIN
 
 
 def _str_to_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
