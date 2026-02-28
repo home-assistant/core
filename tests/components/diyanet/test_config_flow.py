@@ -1,18 +1,20 @@
 """Test the Diyanet config flow (multi-step country/state/city)."""
 
+import sys
 from unittest.mock import AsyncMock, patch
 
+from pydiyanet import DiyanetAuthError, DiyanetConnectionError
+
 from homeassistant import config_entries
-from homeassistant.components.diyanet.api import (
-    DiyanetAuthError,
-    DiyanetConnectionError,
-)
+from homeassistant.components.diyanet import config_flow as diyanet_config_flow
 from homeassistant.components.diyanet.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+sys.modules.setdefault("homeassistant.components.diyanet.api", diyanet_config_flow)
 
 
 async def test_full_flow_success(

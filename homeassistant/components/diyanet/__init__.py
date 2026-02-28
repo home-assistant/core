@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from pydiyanet import DiyanetApiClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .api import DiyanetApiClient
 from .const import CONF_LOCATION_ID, DOMAIN
 from .coordinator import DiyanetCoordinator
 

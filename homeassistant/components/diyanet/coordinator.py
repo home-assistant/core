@@ -5,13 +5,14 @@ from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
+from pydiyanet import DiyanetApiClient, DiyanetConnectionError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import DiyanetApiClient, DiyanetConnectionError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

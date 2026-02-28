@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pydiyanet import DiyanetApiClient, DiyanetAuthError, DiyanetConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,7 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import DiyanetApiClient, DiyanetAuthError, DiyanetConnectionError
 from .const import CONF_LOCATION_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> tuple[dict[str, Any], DiyanetApiClient]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -48,8 +50,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # Test authentication
     await client.authenticate()
 
-    # Return info that you want to store in the config entry
-    return {"title": f"Diyanet ({data[CONF_EMAIL]})"}
+    # Return info and authenticated client for subsequent steps
+    return {"title": f"Diyanet ({data[CONF_EMAIL]})"}, client
 
 
 class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -76,13 +78,11 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 # Validate credentials by authenticating
-                await validate_input(self.hass, user_input)
+                _, client = await validate_input(self.hass, user_input)
                 self._email = user_input[CONF_EMAIL]
                 self._password = user_input[CONF_PASSWORD]
-                # Create API client for subsequent steps
-                session = async_get_clientsession(self.hass)
-                self._client = DiyanetApiClient(session, self._email, self._password)
-                await self._client.authenticate()
+                # Reuse the already authenticated client for subsequent steps
+                self._client = client
 
                 # Prevent duplicate entries for the same email
                 await self.async_set_unique_id(self._email.lower())
