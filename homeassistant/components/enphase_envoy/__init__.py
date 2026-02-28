@@ -79,11 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     entry.runtime_data = coordinator
 
-    # Add coordinator to list of known coordinators so it can be found by services
-    await add_envoy_to_coordinators_list(hass, entry)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Add coordinator to list of known coordinators so it can be found by services
+    await add_envoy_to_coordinators_list(hass, entry)
     return True
 
 
@@ -93,9 +92,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
     coordinator.async_cancel_mac_verification()
-    # Remove coordinator from list of known coordinators so it can no longer be found by services
-    await remove_envoy_from_coordinators_list(hass, entry)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # Remove coordinator from list of known coordinators so it can no longer be
+        # found by services
+        await remove_envoy_from_coordinators_list(hass, entry)
+    return unload_ok
 
 
 async def async_remove_config_entry_device(
