@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyschlage.code import AccessCode
+from pyschlage.exceptions import Error as SchlageError
+
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
@@ -64,3 +69,108 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         """Unlock the device."""
         await self.hass.async_add_executor_job(self._lock.unlock)
         await self.coordinator.async_request_refresh()
+
+    @staticmethod
+    def _normalize_code_name(name: str) -> str:
+        """Normalize a code name for comparison."""
+        return name.lower().strip()
+
+    def _validate_code_name(
+        self, codes: dict[str, AccessCode] | None, name: str
+    ) -> None:
+        """Validate that the code name doesn't already exist."""
+        normalized = self._normalize_code_name(name)
+        if codes and any(
+            self._normalize_code_name(code.name) == normalized
+            for code in codes.values()
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_name_exists",
+                translation_placeholders={"name": name},
+            )
+
+    def _validate_code_value(
+        self, codes: dict[str, AccessCode] | None, code: str
+    ) -> None:
+        """Validate that the code value doesn't already exist."""
+        if codes and any(
+            existing_code.code == code for existing_code in codes.values()
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_code_exists",
+            )
+
+    async def _async_fetch_access_codes(self) -> dict[str, AccessCode] | None:
+        """Fetch access codes from the lock on demand."""
+        try:
+            await self.hass.async_add_executor_job(self._lock.refresh_access_codes)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_refresh_failed",
+            ) from ex
+        return self._lock.access_codes
+
+    async def add_code(self, name: str, code: str) -> None:
+        """Add a lock code."""
+
+        codes = await self._async_fetch_access_codes()
+        self._validate_code_name(codes, name)
+        self._validate_code_value(codes, code)
+
+        access_code = AccessCode(name=name, code=code)
+        try:
+            await self.hass.async_add_executor_job(
+                self._lock.add_access_code, access_code
+            )
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_add_code_failed",
+            ) from ex
+        await self.coordinator.async_request_refresh()
+
+    async def delete_code(self, name: str) -> None:
+        """Delete a lock code."""
+        codes = await self._async_fetch_access_codes()
+        if not codes:
+            return
+
+        normalized = self._normalize_code_name(name)
+        code_id_to_delete = next(
+            (
+                code_id
+                for code_id, code_data in codes.items()
+                if self._normalize_code_name(code_data.name) == normalized
+            ),
+            None,
+        )
+
+        if not code_id_to_delete:
+            # Code not found in defined codes, operation successful
+            return
+
+        try:
+            await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_delete_code_failed",
+            ) from ex
+        await self.coordinator.async_request_refresh()
+
+    async def get_codes(self) -> ServiceResponse:
+        """Get lock codes."""
+        await self._async_fetch_access_codes()
+
+        if self._lock.access_codes:
+            return {
+                code: {
+                    "name": self._lock.access_codes[code].name,
+                    "code": self._lock.access_codes[code].code,
+                }
+                for code in self._lock.access_codes
+            }
+        return {}
