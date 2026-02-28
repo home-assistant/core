@@ -22,7 +22,7 @@ async def test_alert_sensor_single_alert(
 
     state = hass.states.get("sensor.home_alerts")
     assert state is not None
-    assert state.state == "Yellow - Frost Advisory"
+    assert state.state == "1"
     assert state.attributes == snapshot
 
 
@@ -80,7 +80,7 @@ async def test_alert_sensor_xml_fallback_fields(
 
     state = hass.states.get("sensor.home_alerts")
     assert state is not None
-    assert state.state == "Red - Winter Storm Warning"
+    assert state.state == "1"
 
     alerts = state.attributes.get("alerts")
     assert alerts is not None

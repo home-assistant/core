@@ -229,15 +229,9 @@ def _get_all_alerts(data: ECWeather) -> list[dict[str, Any]]:
     return all_alerts
 
 
-def _get_alerts_state(data: ECWeather) -> str | int:
-    """Return state for the combined alerts sensor."""
-    all_alerts = _get_all_alerts(data)
-    if len(all_alerts) == 1:
-        alert = all_alerts[0]
-        colour = (alert.get("alertColourLevel") or "").capitalize()
-        title = alert.get("title") or ""
-        return f"{colour} - {title}".strip(" -")
-    return len(all_alerts)
+def _get_alerts_state(data: ECWeather) -> int:
+    """Return the total count of active alerts across all categories."""
+    return len(_get_all_alerts(data))
 
 
 ALERTS_SENSOR = ECSensorEntityDescription(
