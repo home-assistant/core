@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
@@ -82,13 +83,14 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
         )
 
     mac_address = next(
-        (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
+        (conn[1] for conn in device.connections if conn[0] == CONNECTION_BLUETOOTH),
+        None,
     )
-    entry: OpenDisplayConfigEntry | None = (
-        call.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, mac_address)
-        if mac_address is not None
-        else None
-    )
+    entry: OpenDisplayConfigEntry | None = None
+    if mac_address:
+        entry = call.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, mac_address
+        )
 
     if entry is None or entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(

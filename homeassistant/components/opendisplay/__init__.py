@@ -50,7 +50,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> bool:
     """Set up OpenDisplay from a config entry."""
     address = entry.unique_id
-    assert address is not None
+    if TYPE_CHECKING:
+        assert address is not None
 
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     if ble_device is None:
@@ -63,12 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             mac_address=address, ble_device=ble_device
         ) as device:
             fw = await device.read_firmware_version()
-            device_config = device.config
-            assert device_config is not None
     except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to OpenDisplay device: {err}"
         ) from err
+    device_config = device.config
+    if TYPE_CHECKING:
+        assert device_config is not None
 
     entry.runtime_data = OpenDisplayRuntimeData(
         firmware=fw,
@@ -88,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
 
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, address)},
         connections={(CONNECTION_BLUETOOTH, address)},
         name=entry.title,
         manufacturer=manufacturer.manufacturer_name,
