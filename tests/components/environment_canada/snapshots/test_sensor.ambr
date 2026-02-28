@@ -1,10 +1,11 @@
 # serializer version: 1
-# name: test_alert_sensor_with_alerts
+# name: test_alert_sensor_single_alert
   ReadOnlyDict({
     'alerts': list([
       dict({
         'alert_code': 'frost_advisory',
         'area': 'Ottawa (Kanata - Orléans)',
+        'category': 'advisories',
         'colour': 'yellow',
         'confidence': 'High',
         'expiry': '2022-10-04T08:00:00+00:00',
@@ -17,7 +18,7 @@
       }),
     ]),
     'attribution': 'Data provided by Environment Canada',
-    'friendly_name': 'Home Advisories',
+    'friendly_name': 'Home Alerts',
     'location': 'Ottawa (Kanata - Orléans)',
     'station': 'Ottawa Macdonald-Cartier Intl Airport',
   })

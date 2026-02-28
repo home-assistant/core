@@ -10,28 +10,45 @@ from homeassistant.core import HomeAssistant
 from . import init_integration
 
 
-async def test_alert_sensor_with_alerts(
+async def test_alert_sensor_single_alert(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     ec_data: dict[str, Any],
 ) -> None:
-    """Test alert sensor state and attributes when alerts are present."""
+    """Test combined alert sensor state when exactly one alert is active."""
+    local_ec_data = copy.deepcopy(ec_data)
+    local_ec_data["alerts"]["warnings"]["value"] = []
+    await init_integration(hass, local_ec_data)
+
+    state = hass.states.get("sensor.home_alerts")
+    assert state is not None
+    assert state.state == "Yellow - Frost Advisory"
+    assert state.attributes == snapshot
+
+
+async def test_alert_sensor_multiple_alerts(
+    hass: HomeAssistant,
+    ec_data: dict[str, Any],
+) -> None:
+    """Test combined alert sensor shows count when multiple alerts are active."""
     await init_integration(hass, ec_data)
 
-    state = hass.states.get("sensor.home_advisories")
+    state = hass.states.get("sensor.home_alerts")
     assert state is not None
-    assert state.state == "1"
-    assert state.attributes == snapshot
+    assert state.state == "2"
 
 
 async def test_alert_sensor_no_alerts(
     hass: HomeAssistant,
     ec_data: dict[str, Any],
 ) -> None:
-    """Test alert sensor has no extra attributes when no alerts are active."""
-    await init_integration(hass, ec_data)
+    """Test combined alert sensor shows 0 and no extra attributes when no alerts are active."""
+    local_ec_data = copy.deepcopy(ec_data)
+    for category in ("advisories", "endings", "statements", "warnings", "watches"):
+        local_ec_data["alerts"][category]["value"] = []
+    await init_integration(hass, local_ec_data)
 
-    state = hass.states.get("sensor.home_warnings")
+    state = hass.states.get("sensor.home_alerts")
     assert state is not None
     assert state.state == "0"
     assert "alerts" not in state.attributes
@@ -47,6 +64,7 @@ async def test_alert_sensor_xml_fallback_fields(
     v0.13.0 fields are populated.
     """
     local_ec_data = copy.deepcopy(ec_data)
+    local_ec_data["alerts"]["advisories"]["value"] = []
     local_ec_data["alerts"]["warnings"]["value"] = [
         {
             "title": "Winter Storm Warning",
@@ -60,9 +78,9 @@ async def test_alert_sensor_xml_fallback_fields(
 
     await init_integration(hass, local_ec_data)
 
-    state = hass.states.get("sensor.home_warnings")
+    state = hass.states.get("sensor.home_alerts")
     assert state is not None
-    assert state.state == "1"
+    assert state.state == "Red - Winter Storm Warning"
 
     alerts = state.attributes.get("alerts")
     assert alerts is not None
@@ -74,6 +92,7 @@ async def test_alert_sensor_xml_fallback_fields(
     assert alert["colour"] == "red"
     assert alert["expiry"] == "20250226060000"
     assert alert["url"] == "https://weather.gc.ca/warnings/report_e.html?on61"
+    assert alert["category"] == "warnings"
     # WFS-only fields should be absent (not just None)
     assert "text" not in alert
     assert "area" not in alert

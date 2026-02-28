@@ -1,7 +1,15 @@
 {
   "alerts": {
     "warnings": {
-      "value": [],
+      "value": [
+        {
+          "title": "Winter Storm Warning",
+          "date": "2022-10-03T20:00:00+00:00",
+          "alertColourLevel": "red",
+          "expiryTime": "2022-10-04T12:00:00+00:00",
+          "url": "https://weather.gc.ca/warnings/report_e.html?on61"
+        }
+      ],
       "label": "Warnings"
     },
     "watches": {

@@ -215,37 +215,35 @@ AQHI_SENSOR = ECSensorEntityDescription(
     value_fn=_get_aqhi_value,
 )
 
-ALERT_TYPES: tuple[ECSensorEntityDescription, ...] = (
-    ECSensorEntityDescription(
-        key="advisories",
-        translation_key="advisories",
-        value_fn=lambda data: data.alerts.get("advisories", {}).get("value"),
-        transform=len,
-    ),
-    ECSensorEntityDescription(
-        key="endings",
-        translation_key="endings",
-        value_fn=lambda data: data.alerts.get("endings", {}).get("value"),
-        transform=len,
-    ),
-    ECSensorEntityDescription(
-        key="statements",
-        translation_key="statements",
-        value_fn=lambda data: data.alerts.get("statements", {}).get("value"),
-        transform=len,
-    ),
-    ECSensorEntityDescription(
-        key="warnings",
-        translation_key="warnings",
-        value_fn=lambda data: data.alerts.get("warnings", {}).get("value"),
-        transform=len,
-    ),
-    ECSensorEntityDescription(
-        key="watches",
-        translation_key="watches",
-        value_fn=lambda data: data.alerts.get("watches", {}).get("value"),
-        transform=len,
-    ),
+ALERT_CATEGORIES = ("advisories", "endings", "statements", "warnings", "watches")
+
+
+def _get_all_alerts(data: ECWeather) -> list[dict]:
+    """Collect all alerts from all categories into a flat list."""
+    all_alerts: list[dict] = []
+    for category in ALERT_CATEGORIES:
+        all_alerts.extend(
+            {**alert, "category": category}
+            for alert in data.alerts.get(category, {}).get("value") or []
+        )
+    return all_alerts
+
+
+def _get_alerts_state(data: ECWeather) -> str | int:
+    """Return state for the combined alerts sensor."""
+    all_alerts = _get_all_alerts(data)
+    if len(all_alerts) == 1:
+        alert = all_alerts[0]
+        colour = (alert.get("alertColourLevel") or "").capitalize()
+        title = alert.get("title") or ""
+        return f"{colour} - {title}".strip(" -")
+    return len(all_alerts)
+
+
+ALERTS_SENSOR = ECSensorEntityDescription(
+    key="alerts",
+    translation_key="alerts",
+    value_fn=_get_alerts_state,
 )
 
 
@@ -259,9 +257,7 @@ async def async_setup_entry(
     sensors: list[ECBaseSensorEntity] = [
         ECSensorEntity(weather_coordinator, desc) for desc in SENSOR_TYPES
     ]
-    sensors.extend(
-        [ECAlertSensorEntity(weather_coordinator, desc) for desc in ALERT_TYPES]
-    )
+    sensors.append(ECAlertSensorEntity(weather_coordinator, ALERTS_SENSOR))
 
     sensors.append(
         ECSensorEntity(config_entry.runtime_data.aqhi_coordinator, AQHI_SENSOR)
@@ -321,12 +317,12 @@ class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
-        value = self.entity_description.value_fn(self._ec_data)
-        if not value:
+        all_alerts = _get_all_alerts(self._ec_data)
+        if not all_alerts:
             return None
 
         alerts = []
-        for alert in value:
+        for alert in all_alerts:
             alert_attrs = {
                 "title": alert.get("title"),
                 "issued": alert.get("date"),
@@ -339,6 +335,7 @@ class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
                 "confidence": alert.get("confidence"),
                 "impact": alert.get("impact"),
                 "alert_code": alert.get("alert_code"),
+                "category": alert.get("category"),
             }
             alerts.append({k: v for k, v in alert_attrs.items() if v is not None})
 
