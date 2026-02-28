@@ -162,7 +162,9 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.send = AsyncMock()
 
     b01_trait.map_content = AsyncMock()
-    b01_trait.map_content.refresh = AsyncMock(return_value=MapContent(image_content=b"\x89PNG-Q7", map_data=None))
+    map_content = MapContent(image_content=b"\x89PNG-Q7", map_data=None)
+    map_content.rooms = {10: "room1", 11: "room2"}
+    b01_trait.map_content.refresh = AsyncMock(return_value=map_content)
     return b01_trait
 
 

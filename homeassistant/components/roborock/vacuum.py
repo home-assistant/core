@@ -423,6 +423,30 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments/rooms that can be cleaned on Q7 devices."""
+        map_content_trait = self.coordinator.api.map_content
+        if map_content_trait is None:
+            return []
+
+        try:
+            map_content = await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh Q7 map content: %s", err)
+            return []
+
+        if not map_content.rooms:
+            return []
+
+        return [
+            Segment(
+                id=str(room_id),
+                name=room_name,
+                group="Current map",
+            )
+            for room_id, room_name in sorted(map_content.rooms.items())
+        ]
+
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified room ids on Q7 devices.
 
@@ -464,8 +488,11 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         try:
             if command == "app_segment_clean" and isinstance(params, list) and params:
                 first_param = params[0]
-                if isinstance(first_param, dict) and isinstance(
-                    first_param.get("segments"), list
+                if (
+                    len(params) == 1
+                    and isinstance(first_param, dict)
+                    and isinstance(first_param.get("segments"), list)
+                    and set(first_param) <= {"segments"}
                 ):
                     await self.async_clean_segments(
                         [str(segment) for segment in first_param["segments"]]

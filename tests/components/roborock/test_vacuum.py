@@ -625,20 +625,53 @@ async def test_q7_clean_segments_with_clean_area(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     q7_vacuum_api: Mock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cleaning Q7 segments via the clean_area service."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
 
+    entity_registry.async_update_entity_options(
+        Q7_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_1": ["10", "1_11"]},
+            "last_seen_segments": [
+                {"id": "10", "name": "room1", "group": "Current map"},
+                {"id": "11", "name": "room2", "group": "Current map"},
+            ],
+        },
+    )
+
     await hass.services.async_call(
         VACUUM_DOMAIN,
         SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "segments": ["10", "1_11"]},
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["area_1"]},
         blocking=True,
     )
 
     assert q7_vacuum_api.clean_segments.call_count == 1
     assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+
+
+async def test_q7_get_segments_returns_rooms_from_map_content(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that Q7 async_get_segments returns room ids from map content."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "10", "name": "room1", "group": "Current map"},
+        {"id": "11", "name": "room2", "group": "Current map"},
+    ]
 
 
 async def test_q7_app_segment_clean_alias_routes_to_clean_segments(
@@ -666,6 +699,31 @@ async def test_q7_app_segment_clean_alias_routes_to_clean_segments(
     assert q7_vacuum_api.send.call_count == 0
 
 
+async def test_q7_app_segment_clean_with_extra_payload_passthrough(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test APP_SEGMENT_CLEAN payload with extra keys is passed through unchanged."""
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: Q7_ENTITY_ID,
+            "command": "app_segment_clean",
+            "params": [{"segments": [10], "repeat": 2}],
+        },
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 0
+    assert q7_vacuum_api.send.call_count == 1
+    assert q7_vacuum_api.send.call_args[0] == (
+        "app_segment_clean",
+        [{"segments": [10], "repeat": 2}],
+    )
+
+
 @pytest.mark.parametrize(
     ("service", "api_method", "service_params"),
     [
@@ -675,7 +733,7 @@ async def test_q7_app_segment_clean_alias_routes_to_clean_segments(
         (SERVICE_RETURN_TO_BASE, "return_to_dock", None),
         (SERVICE_LOCATE, "find_me", None),
         (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}),
-        (SERVICE_CLEAN_AREA, "clean_segments", {"segments": ["10"]}),
+        (SERVICE_CLEAN_AREA, "clean_segments", {"cleaning_area_id": ["area_1"]}),
         (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}),
     ],
 )
@@ -687,12 +745,25 @@ async def test_q7_failed_commands(
     api_method: str,
     service_params: dict[str, Any] | None,
     q7_vacuum_api: Mock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that when Q7 commands fail, we raise HomeAssistantError."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     # Store the original state to verify it doesn't change on error
     original_state = vacuum.state
+
+    if service == SERVICE_CLEAN_AREA:
+        entity_registry.async_update_entity_options(
+            Q7_ENTITY_ID,
+            VACUUM_DOMAIN,
+            {
+                "area_mapping": {"area_1": ["10"]},
+                "last_seen_segments": [
+                    {"id": "10", "name": "room1", "group": "Current map"}
+                ],
+            },
+        )
 
     data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
     command_name = (
