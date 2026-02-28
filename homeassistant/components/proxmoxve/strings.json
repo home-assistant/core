@@ -175,6 +175,9 @@
     }
   },
   "exceptions": {
+    "api_error_details": {
+      "message": "An error occurred while communicating with the Proxmox VE instance: {error}"
+    },
     "api_error_no_details": {
       "message": "An error occurred while communicating with the Proxmox VE instance."
     },

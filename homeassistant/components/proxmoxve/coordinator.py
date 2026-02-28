@@ -102,17 +102,21 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        except ProxmoxServerError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="api_error_details",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except ProxmoxPermissionsError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="permissions_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxNodesNotFoundError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except requests.exceptions.ConnectionError as err:
             raise ConfigEntryError(
@@ -150,7 +154,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except requests.exceptions.ConnectionError as err:
             raise UpdateFailed(
@@ -190,12 +193,18 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         try:
             self.permissions = self.proxmox.access.permissions.get()
         except ResourceException as err:
-            raise ProxmoxPermissionsError from err
+            # Only reauth on auth errors (i.e. not on server errors)
+            if 400 <= err.status_code < 500:
+                self.hass.add_job(self.config_entry.async_start_reauth, self.hass)
+                raise ProxmoxPermissionsError from err
+            raise ProxmoxServerError from err
 
         try:
             self.proxmox.nodes.get()
         except ResourceException as err:
-            raise ProxmoxNodesNotFoundError from err
+            if 400 <= err.status_code < 500:
+                raise ProxmoxNodesNotFoundError from err
+            raise ProxmoxServerError from err
 
     def _fetch_all_nodes(
         self,
@@ -257,3 +266,7 @@ class ProxmoxNodesNotFoundError(ProxmoxSetupError):
 
 class ProxmoxPermissionsError(ProxmoxSetupError):
     """Raised when failing to retrieve permissions."""
+
+
+class ProxmoxServerError(ProxmoxSetupError):
+    """Raised when the Proxmox server returns an error."""

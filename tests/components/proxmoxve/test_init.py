@@ -95,13 +95,23 @@ async def test_config_import(
             "access.permissions.get",
         ),
         (
-            ResourceException(500, "Internal Server Error", ""),
+            ResourceException(403, "Forbidden", ""),
             ConfigEntryState.SETUP_ERROR,
             "access.permissions.get",
         ),
         (
             ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_RETRY,
+            "access.permissions.get",
+        ),
+        (
+            ResourceException(403, "Forbidden", ""),
             ConfigEntryState.SETUP_ERROR,
+            "nodes.get",
+        ),
+        (
+            ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_RETRY,
             "nodes.get",
         ),
         (
@@ -124,8 +134,10 @@ async def test_config_import(
         "auth_error",
         "ssl_error",
         "connect_timeout",
-        "resource_exception_permissions",
-        "resource_exception_nodes",
+        "resource_exception_permissions_403",
+        "resource_exception_permissions_500",
+        "resource_exception_nodes_403",
+        "resource_exception_nodes_500",
         "connection_error",
         "permissions_error",
         "nodes_not_found",
