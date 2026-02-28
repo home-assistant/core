@@ -182,7 +182,12 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or None
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors or None,
+            description_placeholders={
+                "api_key_url": "https://console.anthropic.com/settings/keys",
+            },
         )
 
     @classmethod
