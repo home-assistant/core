@@ -1426,7 +1426,7 @@ class MqttEntity(
                 (entity_platform, DOMAIN, self.unique_id)
             )
         ) and deleted_entry.entity_id != self.entity_id:
-            # Plan to update the entity_id basis on `default_entity_id`
+            # Plan to update the entity_id based on `default_entity_id`
             # if a deleted entity was found
             self._update_registry_entity_id = self.entity_id
 
