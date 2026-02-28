@@ -89,7 +89,7 @@
       "to_foreground": {
         "name": "Bring to foreground"
       },
-      "triggerMotion": {
+      "trigger_motion": {
         "name": "Trigger Motion Activity"
       }
     },
