@@ -107,7 +107,6 @@ ABBREVIATIONS = {
     "modes": "modes",
     "name": "name",
     "o": "origin",
-    "obj_id": "object_id",
     "off_dly": "off_delay",
     "on_cmd_type": "on_command_type",
     "ops": "options",
