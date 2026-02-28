@@ -7,11 +7,7 @@ from typing import Any, Final
 
 import evohomeasync2 as ec2
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
-from evohomeasync2.schemas.const import (
-    S2_DURATION,
-    S2_PERIOD,
-    SystemMode as EvoSystemMode,
-)
+from evohomeasync2.schemas.const import S2_DURATION, S2_PERIOD
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -27,7 +23,7 @@ from .coordinator import EvoDataUpdateCoordinator
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(ATTR_MODE): vol.In(EvoSystemMode),
+    vol.Required(ATTR_MODE): str,  # avoid vol.In(SystemMode)
     vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
