@@ -2157,6 +2157,7 @@ async def test_zeroconf(
     assert result["title"] == "Test name"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
@@ -2210,6 +2211,7 @@ async def test_zeroconf_sleeping_device(
     assert result["title"] == "Test name"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 600,
         CONF_GEN: 1,
@@ -2243,6 +2245,49 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_custom_port(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test zeroconf discovery uses the port advertised in the mDNS record."""
+    discovery_info_custom_port = ZeroconfServiceInfo(
+        ip_address=ip_address("1.1.1.1"),
+        ip_addresses=[ip_address("1.1.1.1")],
+        hostname="mock_hostname",
+        name="shellypro3em-AABBCCDDEEFF",
+        port=8812,
+        properties={ATTR_PROPERTIES_ID: "shellypro3em-AABBCCDDEEFF"},
+        type="mock_type",
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "model": "SPEM-003CEBEU",
+            "auth": False,
+            "gen": 2,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=discovery_info_custom_port,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "1.1.1.1"
+    assert result["data"][CONF_PORT] == 8812
 
 
 async def test_options_flow_abort_setup_retry(

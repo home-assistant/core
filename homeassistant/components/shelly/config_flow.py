@@ -1136,6 +1136,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
         self.host = host
+        self.port = port
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
@@ -1169,6 +1170,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.device_info["title"],
                 data={
                     CONF_HOST: self.host,
+                    CONF_PORT: self.port,
                     CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                     CONF_MODEL: self.device_info[CONF_MODEL],
                     CONF_GEN: self.device_info[CONF_GEN],
