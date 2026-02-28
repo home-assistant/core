@@ -84,6 +84,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _discover(self) -> None:
         """Discover an unconfigured LMS server."""
+        # Reset discovery state to avoid stale or duplicate servers across runs
+        self.discovered_servers = []
+        self.chosen_server = {}
         _discovery_task: asyncio.Task | None = None
 
         def _discovery_callback(server: Server) -> None:
