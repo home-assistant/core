@@ -89,7 +89,7 @@ async def test_alert_sensor_xml_fallback_fields(
     alert = alerts[0]
     # Fields present in XML fallback should appear
     assert alert["title"] == "Winter Storm Warning"
-    assert alert["colour"] == "red"
+    assert alert["color"] == "red"
     assert alert["expiry"] == "20250226060000"
     assert alert["url"] == "https://weather.gc.ca/warnings/report_e.html?on61"
     assert alert["category"] == "warnings"

@@ -6,7 +6,7 @@
         'alert_code': 'frost_advisory',
         'area': 'Ottawa (Kanata - Orléans)',
         'category': 'advisories',
-        'colour': 'yellow',
+        'color': 'yellow',
         'confidence': 'High',
         'expiry': '2022-10-04T08:00:00+00:00',
         'impact': 'Frost may damage crops and plants.',
