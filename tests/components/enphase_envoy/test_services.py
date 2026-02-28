@@ -109,7 +109,7 @@ async def test_service_inspect_json(
     data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
     data = data.get("data", {}).get("system_production", {"Dont": "Know"})
 
-    mock_envoy.request.return_value.text.return_value = orjson.dumps(data)
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -158,7 +158,7 @@ async def test_service_inspect_error(
     data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
     data = data.get("data", {}).get("system_production", {"Dont": "Know"})
 
-    mock_envoy.request.return_value.text.return_value = orjson.dumps(data)
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
     mock_envoy.request.return_value.status = 320
 
     with pytest.raises(
@@ -187,7 +187,7 @@ async def test_service_inspect_uninitialized(
     data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
     data = data.get("data", {}).get("system_production", {"Dont": "Know"})
 
-    mock_envoy.request.return_value.text.return_value = orjson.dumps(data)
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
     mock_envoy.data = None
 
     with pytest.raises(
@@ -241,7 +241,7 @@ async def test_service_inspect_device_id(
     data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
     data = data.get("data", {}).get("system_production", {"Dont": "Know"})
 
-    mock_envoy.request.return_value.text.return_value = orjson.dumps(data)
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
 
     entity_reg = er.async_get(hass)
     device_id = entity_reg.async_get(
@@ -271,7 +271,7 @@ async def test_service_inspect_device_id_error(
     data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
     data = data.get("data", {}).get("system_production", {"Dont": "Know"})
 
-    mock_envoy.request.return_value.text.return_value = orjson.dumps(data)
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
 
     device_id = "some-bogus-device-id"
 
@@ -301,7 +301,7 @@ async def test_service_inspect_via_device_id(
     data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
     data = data.get("data", {}).get("system_production", {"Dont": "Know"})
 
-    mock_envoy.request.return_value.text.return_value = orjson.dumps(data)
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
 
     entity_reg = er.async_get(hass)
     device_id = entity_reg.async_get("sensor.inverter_1").device_id
