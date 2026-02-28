@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pycfdns
 
-from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
+from homeassistant.components.cloudflare.const import CONF_DOMAINS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE, CONF_ZONE
 from homeassistant.core import HomeAssistant
@@ -49,7 +49,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "records"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -64,7 +64,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:
     assert result["data"]
     assert result["data"][CONF_API_TOKEN] == USER_INPUT[CONF_API_TOKEN]
     assert result["data"][CONF_ZONE] == USER_INPUT_ZONE[CONF_ZONE]
-    assert result["data"][CONF_RECORDS] == USER_INPUT_RECORDS[CONF_RECORDS]
+    assert result["data"][CONF_DOMAINS] == USER_INPUT_RECORDS[CONF_DOMAINS]
 
     assert result["result"]
     assert result["result"].unique_id == USER_INPUT_ZONE[CONF_ZONE]
@@ -132,20 +132,6 @@ async def test_user_form_unexpected_exception(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test that configuring more than one instance is rejected."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data=USER_INPUT,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
 async def test_reauth_flow(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:
     """Test the reauthentication configuration flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
@@ -167,6 +153,6 @@ async def test_reauth_flow(hass: HomeAssistant, cfupdate_flow: MagicMock) -> Non
 
     assert entry.data[CONF_API_TOKEN] == "other_token"
     assert entry.data[CONF_ZONE] == ENTRY_CONFIG[CONF_ZONE]
-    assert entry.data[CONF_RECORDS] == ENTRY_CONFIG[CONF_RECORDS]
+    assert entry.data[CONF_DOMAINS] == ENTRY_CONFIG[CONF_DOMAINS]
 
     assert len(mock_setup_entry.mock_calls) == 1

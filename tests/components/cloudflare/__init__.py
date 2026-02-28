@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pycfdns
 
-from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
+from homeassistant.components.cloudflare.const import CONF_DOMAINS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 ENTRY_CONFIG = {
     CONF_API_TOKEN: "mock-api-token",
     CONF_ZONE: "mock.com",
-    CONF_RECORDS: ["ha.mock.com", "homeassistant.mock.com"],
+    CONF_DOMAINS: ["ha.mock.com", "homeassistant.mock.com"],
 }
 
 ENTRY_OPTIONS = {}
@@ -28,7 +28,7 @@ USER_INPUT = {
 
 USER_INPUT_ZONE = {CONF_ZONE: "mock.com"}
 
-USER_INPUT_RECORDS = {CONF_RECORDS: ["ha.mock.com", "homeassistant.mock.com"]}
+USER_INPUT_RECORDS = {CONF_DOMAINS: ["ha.mock.com", "homeassistant.mock.com"]}
 
 MOCK_ZONE: pycfdns.ZoneModel = {"name": "mock.com", "id": "mock-zone-id"}
 MOCK_ZONE_RECORDS: list[pycfdns.RecordModel] = [

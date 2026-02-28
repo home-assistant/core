@@ -24,26 +24,33 @@ async def test_sensor_setup(
             "name": "ha.mock.com",
             "proxied": True,
             "content": "1.2.3.4",
-        }
+        },
+        {
+            "id": "zone-record-id-2",
+            "type": "A",
+            "name": "homeassistant.mock.com",
+            "proxied": True,
+            "content": "1.2.3.4",
+        },
     ]
 
     await init_integration(hass)
 
     # Check Last Update Sensor
-    state = hass.states.get("sensor.last_update")
+    state = hass.states.get("sensor.cloudflare_zone_mock_com_last_update")
     assert state
     assert state.state != STATE_UNAVAILABLE
 
-    entry = entity_registry.async_get("sensor.last_update")
+    entry = entity_registry.async_get("sensor.cloudflare_zone_mock_com_last_update")
     assert entry
     assert entry.unique_id == "mock-zone-id_last_update"
 
     # Check External IP Sensor
-    state = hass.states.get("sensor.external_ip")
+    state = hass.states.get("sensor.cloudflare_zone_mock_com_external_ip")
     assert state
     assert state.state == "0.0.0.0"  # This comes from location_info fixture
 
-    entry = entity_registry.async_get("sensor.external_ip")
+    entry = entity_registry.async_get("sensor.cloudflare_zone_mock_com_external_ip")
     assert entry
     assert entry.unique_id == "mock-zone-id_external_ip"
 
@@ -54,6 +61,6 @@ async def test_sensor_values(hass: HomeAssistant, cfupdate: MagicMock) -> None:
     await init_integration(hass)
 
     # Verify initial state
-    state = hass.states.get("sensor.external_ip")
+    state = hass.states.get("sensor.cloudflare_zone_mock_com_external_ip")
     assert state
     assert state.state == "0.0.0.0"  # From location_info fixture

@@ -1,6 +1,6 @@
 """Test the Cloudflare switch platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -35,7 +35,6 @@ async def test_switch_turn_off(
     hass: HomeAssistant, cfupdate: MagicMock, entity_registry: er.EntityRegistry
 ) -> None:
     """Test turning off the proxy switch."""
-    client = cfupdate.return_value
 
     await init_integration(hass)
 
@@ -43,22 +42,22 @@ async def test_switch_turn_off(
     entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, unique_id)
     assert entity_id
 
-    # Turn off
-    await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
+    with (
+        patch(
+            "homeassistant.components.cloudflare.switch.async_update_proxied_state",
+            return_value=True,
+        ) as mock_update,
+    ):
+        # Turn off
+        await hass.services.async_call(
+            "switch",
+            "turn_off",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
 
-    # Verify client call
-    # The client method is update_dns_record
-    assert client.update_dns_record.called
-    # Check arguments: record_proxied=False
-    _args, kwargs = client.update_dns_record.call_args
-    # In __init__.py it could be args or kwargs depending on call.
-    # client.update_dns_record(..., record_proxied=False)
-    assert kwargs.get("record_proxied") is False
+        mock_update.assert_called_once()
+        assert mock_update.call_args[1]["proxied"] is False
 
 
 @pytest.mark.usefixtures("location_info")
@@ -82,14 +81,19 @@ async def test_switch_turn_on(
     entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, unique_id)
     assert entity_id
 
-    # Turn on
-    await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
+    with (
+        patch(
+            "homeassistant.components.cloudflare.switch.async_update_proxied_state",
+            return_value=True,
+        ) as mock_update,
+    ):
+        # Turn on
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
 
-    assert client.update_dns_record.called
-    _args, kwargs = client.update_dns_record.call_args
-    assert kwargs.get("record_proxied") is True
+        mock_update.assert_called_once()
+        assert mock_update.call_args[1]["proxied"] is True
