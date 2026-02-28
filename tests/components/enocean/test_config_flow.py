@@ -17,8 +17,10 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
-DONGLE_VALIDATE_PATH_METHOD = "homeassistant.components.enocean.dongle.validate_path"
-DONGLE_DETECT_METHOD = "homeassistant.components.enocean.dongle.detect"
+DONGLE_VALIDATE_PATH_METHOD = (
+    "homeassistant.components.enocean.config_flow._validate_usb_dongle_path"
+)
+DONGLE_DETECT_METHOD = "homeassistant.components.enocean.config_flow._detect_usb_dongle"
 SETUP_ENTRY_METHOD = "homeassistant.components.enocean.async_setup_entry"
 
 
@@ -29,7 +31,7 @@ async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -69,7 +71,7 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the detection flow with a valid path selected."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -84,7 +86,7 @@ async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
     FAKE_DONGLE_PATH = "/fake/dongle"
 
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=True)),
         patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -103,7 +105,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     FAKE_DONGLE_PATH = "/fake/dongle"
 
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)),
+        patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=False)),
         patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -121,7 +123,7 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the manual flow with a valid path."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -136,7 +138,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     with patch(
         DONGLE_VALIDATE_PATH_METHOD,
-        Mock(return_value=False),
+        AsyncMock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
@@ -151,7 +153,7 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the import flow with a valid path."""
     DATA_TO_IMPORT = {CONF_DEVICE: "/valid/path/to/import"}
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -168,7 +170,7 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     with patch(
         DONGLE_VALIDATE_PATH_METHOD,
-        Mock(return_value=False),
+        AsyncMock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -206,7 +208,7 @@ async def test_usb_discovery(
 
     # test device path
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(DONGLE_VALIDATE_PATH_METHOD, AsyncMock(return_value=True)),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
         patch(
             "homeassistant.components.usb.get_serial_by_id",
