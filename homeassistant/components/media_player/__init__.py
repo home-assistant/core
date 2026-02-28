@@ -304,13 +304,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
         None,
-        "async_volume_up",
+        "_async_handle_volume_up",
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_DOWN,
         None,
-        "async_volume_down",
+        "_async_handle_volume_down",
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
@@ -867,6 +867,44 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             volume = volume * self._media_player_option_max_volume
         await self.async_set_volume_level(volume)
 
+    @final
+    async def _async_handle_volume_up(self) -> None:
+        """Handle volume up, respecting max volume setting."""
+        if self._media_player_option_max_volume is not None:
+            max_volume = self._media_player_option_max_volume
+            if (
+                self.volume_level is not None
+                and self.volume_level < max_volume
+                and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
+            ):
+                await self.async_set_volume_level(
+                    min(
+                        max_volume,
+                        self.volume_level + self.volume_step * max_volume,
+                    )
+                )
+            return
+        await self.async_volume_up()
+
+    @final
+    async def _async_handle_volume_down(self) -> None:
+        """Handle volume down, respecting max volume setting."""
+        if self._media_player_option_max_volume is not None:
+            max_volume = self._media_player_option_max_volume
+            if (
+                self.volume_level is not None
+                and self.volume_level > 0
+                and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
+            ):
+                await self.async_set_volume_level(
+                    max(
+                        0,
+                        self.volume_level - self.volume_step * max_volume,
+                    )
+                )
+            return
+        await self.async_volume_down()
+
     def media_play(self) -> None:
         """Send play command."""
         raise NotImplementedError
@@ -1074,25 +1112,17 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         This method is a coroutine.
         """
-        if (
-            self._media_player_option_max_volume is None
-            and hasattr(self, "volume_up")
-        ):
+        if hasattr(self, "volume_up"):
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
-        max_volume = (
-            self._media_player_option_max_volume
-            if self._media_player_option_max_volume is not None
-            else 1
-        )
         if (
             self.volume_level is not None
-            and self.volume_level < max_volume
+            and self.volume_level < 1
             and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
-                min(max_volume, self.volume_level + self.volume_step * max_volume)
+                min(1, self.volume_level + self.volume_step)
             )
 
     async def async_volume_down(self) -> None:
@@ -1100,25 +1130,17 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         This method is a coroutine.
         """
-        if (
-            self._media_player_option_max_volume is None
-            and hasattr(self, "volume_down")
-        ):
+        if hasattr(self, "volume_down"):
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
-        max_volume = (
-            self._media_player_option_max_volume
-            if self._media_player_option_max_volume is not None
-            else 1
-        )
         if (
             self.volume_level is not None
             and self.volume_level > 0
             and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
-                max(0, self.volume_level - self.volume_step * max_volume)
+                max(0, self.volume_level - self.volume_step)
             )
 
     async def async_media_play_pause(self) -> None:
