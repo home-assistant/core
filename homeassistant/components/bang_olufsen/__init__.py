@@ -17,10 +17,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
+from .services import async_setup_services
 from .websocket import BeoWebsocket
 
 
@@ -34,7 +36,20 @@ class BeoData:
 
 type BeoConfigEntry = ConfigEntry[BeoData]
 
-PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.EVENT,
+    Platform.MEDIA_PLAYER,
+    Platform.SENSOR,
+]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:

@@ -1,0 +1,158 @@
+# serializer version: 1
+# name: test_climate_entities[climate.living_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 16,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.living_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'actron_air',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '123456_zone_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities[climate.living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 50.0,
+      'current_temperature': 22.0,
+      'friendly_name': 'Living Room',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 16,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 24.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_climate_entities[climate.test_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 16,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'actron_air',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities[climate.test_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 50.0,
+      'current_temperature': 22.0,
+      'fan_mode': 'low',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Test System',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 16,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'temperature': 24.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

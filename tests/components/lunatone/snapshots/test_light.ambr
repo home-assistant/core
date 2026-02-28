@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -63,7 +64,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.ONOFF: 'onoff'>,
+        <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -98,10 +100,11 @@
 # name: test_setup[light.device_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'brightness': None,
       'color_mode': None,
       'friendly_name': 'Device 2',
       'supported_color_modes': list([
-        <ColorMode.ONOFF: 'onoff'>,
+        <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
@@ -138,6 +141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,6 +200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

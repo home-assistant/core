@@ -7,7 +7,10 @@ from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     ATTR_CREATED_AT,
     ATTR_DROPLET_ID,
     ATTR_DROPLET_NAME,
@@ -80,12 +80,12 @@ class DigitalOceanSwitch(SwitchEntity):
         return self.data.name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.data.status == "active"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Digital Ocean droplet."""
         return {
             ATTR_CREATED_AT: self.data.created_at,

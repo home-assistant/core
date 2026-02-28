@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect.data import Camera
+from uiprotect.data import AiPort, Camera
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
@@ -295,3 +295,15 @@ async def test_media_player_play_error(
 
         assert mock_play.called
         assert not mock_wait.called
+
+
+async def test_aiport_no_media_player_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """Test that AI Port devices do not create camera-specific media player entities."""
+    await init_entry(hass, ufp, [aiport])
+
+    # AI Port should not create any media player entities (speaker)
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 0, 0)

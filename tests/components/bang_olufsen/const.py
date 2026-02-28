@@ -1,7 +1,6 @@
 """Constants used for testing the bang_olufsen integration."""
 
 from ipaddress import IPv4Address, IPv6Address
-from unittest.mock import Mock
 
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
@@ -72,7 +71,10 @@ TEST_NAME_4 = f"{TEST_MODEL_A5}-{TEST_SERIAL_NUMBER_4}"
 TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = f"media_player.beosound_a5_{TEST_SERIAL_NUMBER_4}"
 TEST_HOST_4 = "192.168.0.4"
-TEST_BATTERY_A5_SENSOR_ENTITY_ID = f"sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_battery"
+TEST_BATTERY_SENSOR_ENTITY_ID = f"sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_battery"
+TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = (
+    f"binary_sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_charging"
+)
 
 # Beoremote One
 TEST_REMOTE_SERIAL = "55555555"
@@ -243,11 +245,7 @@ TEST_DEEZER_TRACK = PlayQueueItem(
 TEST_DEEZER_INVALID_FLOW = ApiException(
     status=400,
     reason="Bad Request",
-    http_resp=Mock(
-        status=400,
-        reason="Bad Request",
-        data='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
-    ),
+    body='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
 )
 TEST_SOUND_MODE = 123
 TEST_SOUND_MODE_2 = 234

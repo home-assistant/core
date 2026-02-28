@@ -95,6 +95,7 @@ ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
 
 ROBOT_CLEANER_MOVEMENT_MAP = {
     "powerOff": "off",
+    "washingMop": "washing_mop",
 }
 
 OVEN_MODE = {
@@ -227,9 +228,11 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="audio_volume",
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
-                    lambda status: ("2025.10.0", "media_player")
-                    if Capability.AUDIO_MUTE in status
-                    else None
+                    lambda status: (
+                        ("2025.10.0", "media_player")
+                        if Capability.AUDIO_MUTE in status
+                        else None
+                    )
                 ),
             )
         ]
@@ -645,9 +648,19 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.OVEN_MODE,
                 translation_key="oven_mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
-                options=list(OVEN_MODE.values()),
+                options=[
+                    *OVEN_MODE.values(),
+                    "heating",
+                    "grill",
+                    "defrosting",
+                    "warming",
+                ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: OVEN_MODE.get(value, value),
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_mode_cavity_01",
+                },
             )
         ]
     },
@@ -658,6 +671,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="oven_machine_state",
                 options=["ready", "running", "paused"],
                 device_class=SensorDeviceClass.ENUM,
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_machine_state_cavity_01",
+                },
             )
         ],
         Attribute.OVEN_JOB_STATE: [
@@ -685,6 +702,10 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: OVEN_JOB_STATE_MAP.get(value, value),
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_job_state_cavity_01",
+                },
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -693,6 +714,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
                 value_fn=dt_util.parse_datetime,
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_completion_time_cavity_01",
+                },
             )
         ],
     },
@@ -705,6 +730,10 @@ CAPABILITY_TO_SENSORS: dict[
                 use_temperature_unit=True,
                 # Set the value to None if it is 0 F (-17 C)
                 value_fn=lambda value: None if value in {-17, 0, 1} else value,
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_setpoint_cavity_01",
+                },
             )
         ]
     },
@@ -852,6 +881,7 @@ CAPABILITY_TO_SENSORS: dict[
                     "after",
                     "cleaning",
                     "pause",
+                    "washing_mop",
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
@@ -908,16 +938,21 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 deprecated=(
-                    lambda status: ("2025.12.0", "dhw")
-                    if Capability.CUSTOM_OUTING_MODE in status
-                    else None
+                    lambda status: (
+                        ("2025.12.0", "dhw")
+                        if Capability.CUSTOM_OUTING_MODE in status
+                        else None
+                    )
                 ),
                 component_fn=(
-                    lambda component: component in {"freezer", "cooler", "onedoor"}
+                    lambda component: (
+                        component in {"freezer", "cooler", "onedoor", "cavity-01"}
+                    )
                 ),
                 component_translation_key={
                     "freezer": "freezer_temperature",
                     "cooler": "cooler_temperature",
+                    "cavity-01": "oven_temperature_cavity_01",
                 },
             )
         ]
@@ -937,9 +972,11 @@ CAPABILITY_TO_SENSORS: dict[
                     THERMOSTAT_CAPABILITIES,
                 ],
                 deprecated=(
-                    lambda status: ("2025.12.0", "dhw")
-                    if Capability.CUSTOM_OUTING_MODE in status
-                    else None
+                    lambda status: (
+                        ("2025.12.0", "dhw")
+                        if Capability.CUSTOM_OUTING_MODE in status
+                        else None
+                    )
                 ),
             )
         ]
