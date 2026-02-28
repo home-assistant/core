@@ -85,13 +85,15 @@ async def test_buttons(
     )
     assert len(mock_fully_kiosk.clearCache.mock_calls) == 1
 
-    entry = entity_registry.async_get("button.amazon_fire_trigger_motion")
+    entry = entity_registry.async_get(
+        "button.amazon_fire_trigger_motion_activity",
+    )
     assert entry
     assert entry.unique_id == "abcdef-123456-triggerMotion"
     await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_trigger_motion"},
+        {ATTR_ENTITY_ID: "button.amazon_fire_trigger_motion_activity"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.triggerMotion.mock_calls) == 1

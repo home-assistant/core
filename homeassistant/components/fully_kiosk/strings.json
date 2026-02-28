@@ -90,7 +90,7 @@
         "name": "Bring to foreground"
       },
       "trigger_motion": {
-        "name": "Trigger Motion Activity"
+        "name": "Trigger motion activity"
       }
     },
     "image": {
