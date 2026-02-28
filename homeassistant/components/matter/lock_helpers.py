@@ -738,7 +738,7 @@ async def set_lock_credential(
     if credential_index is None:
         # Auto-find first available credential slot.
         # Use the credential-type-specific capacity as the upper bound.
-        _CREDENTIAL_TYPE_CAPACITY_ATTR: dict[str, type] = {
+        _CREDENTIAL_TYPE_CAPACITY_ATTR = {
             CRED_TYPE_PIN: clusters.DoorLock.Attributes.NumberOfPINUsersSupported,
             CRED_TYPE_RFID: clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported,
         }

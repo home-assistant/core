@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Types import NullValue
+from chip.clusters.Objects import NullValue
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
