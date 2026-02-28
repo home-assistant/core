@@ -15,12 +15,14 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_CODE,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -176,3 +178,35 @@ async def test_switch_last_reported(
 
     assert first_reported != hass.states.get("switch.switchable_output").last_reported
     assert len(events) == 1  # last_reported shall not fire state_changed
+
+
+async def test_switch_actions_require_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test switch actions fail when access code is missing."""
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_subentries, options={CONF_CODE: None}
+    )
+    await hass.async_block_till_done()
+
+    # Turning the device on or off should raise ServiceValidationError.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )
