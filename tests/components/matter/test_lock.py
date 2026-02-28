@@ -1364,6 +1364,8 @@ async def test_set_lock_credential_status_failure(
     [
         {
             "1/257/65532": _FEATURE_USR_PIN,
+            "1/257/18": 3,  # NumberOfPINUsersSupported
+            "1/257/28": 5,  # NumberOfCredentialsSupportedPerUser (should NOT be used)
             "1/257/24": 4,  # MinPINCodeLength
             "1/257/23": 8,  # MaxPINCodeLength
         }
@@ -1396,6 +1398,10 @@ async def test_set_lock_credential_no_available_slot(
             blocking=True,
             return_response=True,
         )
+
+    # Verify it iterated over NumberOfPINUsersSupported (3), not
+    # NumberOfCredentialsSupportedPerUser (5)
+    assert matter_client.send_device_command.call_count == 3
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1644,6 +1650,106 @@ async def test_set_lock_credential_rfid(
         ),
         timed_request_timeout_ms=10000,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/257/65532": _FEATURE_USR_RFID,
+            "1/257/19": 3,  # NumberOfRFIDUsersSupported
+            "1/257/28": 5,  # NumberOfCredentialsSupportedPerUser (should NOT be used)
+            "1/257/26": 4,  # MinRFIDCodeLength
+            "1/257/25": 20,  # MaxRFIDCodeLength
+        }
+    ],
+)
+async def test_set_lock_credential_rfid_auto_find_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_credential auto-finds RFID slot using NumberOfRFIDUsersSupported."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # GetCredentialStatus(1): occupied
+            {"credentialExists": True, "userIndex": 1, "nextCredentialIndex": 2},
+            # GetCredentialStatus(2): empty
+            {
+                "credentialExists": False,
+                "userIndex": None,
+                "nextCredentialIndex": 3,
+            },
+            # SetCredential response
+            {"status": 0, "userIndex": 1, "nextCredentialIndex": 3},
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "set_lock_credential",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_CREDENTIAL_TYPE: "rfid",
+            ATTR_CREDENTIAL_DATA: "AABBCCDD",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "credential_index": 2,
+        "user_index": 1,
+        "next_credential_index": 3,
+    }
+
+    assert matter_client.send_device_command.call_count == 3
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/257/65532": _FEATURE_USR_RFID,
+            "1/257/19": 3,  # NumberOfRFIDUsersSupported
+            "1/257/28": 5,  # NumberOfCredentialsSupportedPerUser (should NOT be used)
+            "1/257/26": 4,  # MinRFIDCodeLength
+            "1/257/25": 20,  # MaxRFIDCodeLength
+        }
+    ],
+)
+async def test_set_lock_credential_rfid_no_available_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_credential RFID raises error when all slots are full."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "credentialExists": True,
+            "userIndex": 1,
+            "nextCredentialIndex": None,
+        }
+    )
+
+    with pytest.raises(ServiceValidationError, match="No available credential slots"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_lock_credential",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_CREDENTIAL_TYPE: "rfid",
+                ATTR_CREDENTIAL_DATA: "AABBCCDD",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Verify it iterated over NumberOfRFIDUsersSupported (3), not
+    # NumberOfCredentialsSupportedPerUser (5)
+    assert matter_client.send_device_command.call_count == 3
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])

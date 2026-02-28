@@ -737,13 +737,13 @@ async def set_lock_credential(
 
     if credential_index is None:
         # Auto-find first available credential slot
-        max_creds = (
-            lock_endpoint.get_attribute_value(
-                None,
-                clusters.DoorLock.Attributes.NumberOfCredentialsSupportedPerUser,
-            )
-            or 5
+        # Use the credential-type-specific user count as the upper bound
+        max_creds_attr = (
+            clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported
+            if credential_type == CRED_TYPE_RFID
+            else clusters.DoorLock.Attributes.NumberOfPINUsersSupported
         )
+        max_creds = lock_endpoint.get_attribute_value(None, max_creds_attr) or 5
         for idx in range(1, max_creds + 1):
             status_response = await matter_client.send_device_command(
                 node_id=node.node_id,
