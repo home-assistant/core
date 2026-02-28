@@ -904,6 +904,9 @@
       "sanitizing_wash": {
         "name": "Sanitizing wash"
       },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
       "sound_effect": {
         "name": "Sound effect"
       },
