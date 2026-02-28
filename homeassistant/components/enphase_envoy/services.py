@@ -23,13 +23,21 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
+
+def _normalize_endpoint(endpoint: str) -> str:
+    """Ensure the endpoint starts with a leading slash."""
+    if endpoint.startswith("/"):
+        return endpoint
+    return f"/{endpoint}"
+
+
 ATTR_ENDPOINT = "endpoint"
 ATTR_ENVOY_DEVICE_ID = "device_id"
 
 ACTION_INSPECT = "inspect"
 ACTION_INSPECT_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENDPOINT): cv.string,
+        vol.Required(ATTR_ENDPOINT): vol.All(cv.string, _normalize_endpoint),
         vol.Optional(ATTR_ENVOY_DEVICE_ID): cv.string,
     }
 )

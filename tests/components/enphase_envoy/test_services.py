@@ -87,10 +87,19 @@ async def test_service_load_unload(
         assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("user_endpoint", "normalized_endpoint"),
+    [
+        ("/some/endpoint", "/some/endpoint"),
+        ("some/endpoint", "/some/endpoint"),
+    ],
+)
 async def test_service_inspect_json(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
+    user_endpoint: str,
+    normalized_endpoint: str,
 ) -> None:
     """Test inspect service action for json data return."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
@@ -105,11 +114,11 @@ async def test_service_inspect_json(
     result = await hass.services.async_call(
         DOMAIN,
         ACTION_INSPECT,
-        {ATTR_ENDPOINT: "/some/endpoint"},
+        {ATTR_ENDPOINT: user_endpoint},
         blocking=True,
         return_response=True,
     )
-    assert result["/some/endpoint"] == data
+    assert result[normalized_endpoint] == data
 
 
 async def test_service_inspect_text(
