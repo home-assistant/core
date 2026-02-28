@@ -5,11 +5,13 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Final
 
+from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
@@ -62,6 +64,40 @@ def setup_service_functions(
         """Set the system mode."""
         assert coordinator.tcs is not None  # mypy
 
+        if call.service == EvoService.SET_SYSTEM_MODE:
+            mode = call.data[ATTR_MODE]
+            evo_modes = {
+                m[SZ_SYSTEM_MODE]: m for m in coordinator.tcs.allowed_system_modes
+            }
+
+            if (mode_info := evo_modes.get(mode)) is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_not_supported",
+                    translation_placeholders={"mode": mode},
+                )
+
+            if not mode_info[SZ_CAN_BE_TEMPORARY]:
+                if ATTR_DURATION in call.data or ATTR_PERIOD in call.data:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="mode_cant_be_temporary",
+                        translation_placeholders={"mode": mode},
+                    )
+
+            elif mode_info[SZ_TIMING_MODE] == "Duration" and ATTR_PERIOD in call.data:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_have_period",
+                    translation_placeholders={"mode": mode},
+                )
+
+            elif mode_info[SZ_TIMING_MODE] == "Period" and ATTR_DURATION in call.data:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_have_duration",
+                    translation_placeholders={"mode": mode},
+                )
         payload = {
             "unique_id": coordinator.tcs.id,
             "service": call.service,

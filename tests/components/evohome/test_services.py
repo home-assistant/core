@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import UTC, datetime
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -196,7 +194,7 @@ async def test_zone_services_with_ctl_id(
 ) -> None:
     """Test calling zone-only services with a non-zone entity_id fail."""
 
-    with pytest.raises(ServiceValidationError) as excinfo:
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -205,62 +203,52 @@ async def test_zone_services_with_ctl_id(
             blocking=True,
         )
 
-    assert excinfo.value.translation_key == "zone_only_service"
+    assert exc_info.value.translation_key == "zone_only_service"
+    assert exc_info.value.translation_placeholders == {}
+
+
+_SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
+    (
+        {"mode": "NotARealMode"},
+        "mode_not_supported",
+    ),
+    (
+        {"mode": "Auto", "duration": {"hours": 1}},
+        "mode_cant_be_temporary",
+    ),
+    (
+        {"mode": "AutoWithEco", "period": {"days": 1}},
+        "mode_cant_have_period",
+    ),
+    (
+        {"mode": "DayOff", "duration": {"hours": 1}},
+        "mode_cant_have_duration",
+    ),
+]
 
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.parametrize(
-    ("service_data", "expected_msg"),
-    [
-        (
-            {"mode": "NotARealMode"},
-            "The mode `NotARealMode` is not supported by this controller",
-        ),
-        (
-            {"mode": "Auto", "duration": {"hours": 1}},
-            "The mode `Auto` does not support `duration` or `period`",
-        ),
-        (
-            {"mode": "AutoWithEco", "period": {"days": 1}},
-            "The mode `AutoWithEco` does not support `period`; use `duration` instead",
-        ),
-        (
-            {"mode": "DayOff", "duration": {"hours": 1}},
-            "The mode `DayOff` does not support `duration`; use `period` instead",
-        ),
-    ],
-    ids=[
-        "not_supported",
-        "not_temporary",
-        "not_period",
-        "not_duration",
-    ],
+    ("service_data", "expected_translation_key"),
+    _SET_SYSTEM_MODE_VALIDATOR_PARAMS,
+    ids=[k for _, k in _SET_SYSTEM_MODE_VALIDATOR_PARAMS],
 )
-async def test_set_system_mode_validation(
+async def test_set_system_mode_validator(
     hass: HomeAssistant,
-    ctl_id: str,
     evohome: EvohomeClient,
     service_data: dict[str, Any],
-    expected_msg: str,
-    caplog: pytest.LogCaptureFixture,
+    expected_translation_key: str,
 ) -> None:
     """Test ServiceValidationError for all controller system mode validation cases."""
 
-    caplog.set_level(logging.ERROR)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "evohome",
+            "set_system_mode",
+            service_data,
+            target={},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "evohome",
-        "set_system_mode",
-        service_data,
-        target={},
-        blocking=True,
-    )
-
-    # the service handler is invoked via a dispatcher
-    await hass.async_block_till_done()
-    for _ in range(50):
-        if "ServiceValidationError" in caplog.text:
-            break
-        await asyncio.sleep(0.01)
-
-    assert f"ServiceValidationError: {expected_msg}" in caplog.text
+    assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_placeholders == {"mode": service_data[ATTR_MODE]}

@@ -8,12 +8,10 @@ from typing import Any
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
-    SZ_CAN_BE_TEMPORARY,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-    SZ_TIMING_MODE,
 )
 from evohomeasync2.schemas.const import (
     SystemMode as EvoSystemMode,
@@ -368,40 +366,7 @@ class EvoController(EvoClimateEntity):
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller."""
 
-        if service == EvoService.SET_SYSTEM_MODE:
-            mode = data[ATTR_MODE]
-
-            if (mode_info := self._evo_modes.get(mode)) is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="mode_not_supported",
-                    translation_placeholders={"mode": mode},
-                )
-
-            if not mode_info[SZ_CAN_BE_TEMPORARY]:
-                if ATTR_DURATION in data or ATTR_PERIOD in data:
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="mode_cant_be_temporary",
-                        translation_placeholders={"mode": mode},
-                    )
-
-            elif mode_info[SZ_TIMING_MODE] == "Duration" and ATTR_PERIOD in data:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="mode_cant_have_period",
-                    translation_placeholders={"mode": mode},
-                )
-
-            elif mode_info[SZ_TIMING_MODE] == "Period" and ATTR_DURATION in data:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="mode_cant_have_duration",
-                    translation_placeholders={"mode": mode},
-                )
-
-        else:  # otherwise it is EvoService.RESET_SYSTEM
-            mode = EvoSystemMode.AUTO_WITH_RESET
+        mode = data[ATTR_MODE]
 
         if ATTR_PERIOD in data:
             until = dt_util.start_of_local_day() + data[ATTR_PERIOD]
