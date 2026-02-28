@@ -123,6 +123,12 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> ServiceResponse:
                 translation_placeholders={"service": call.service},
             )
         endpoint: str = call.data[ATTR_ENDPOINT]
+        _LOGGER.debug(
+            "Service action %s for Envoy %s endpoint %s executing",
+            call.service,
+            envoy.serial_number,
+            endpoint,
+        )
         try:
             response: aiohttp.ClientResponse = await envoy.request(endpoint)
         except EnvoyError as err:
