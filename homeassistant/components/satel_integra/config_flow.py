@@ -28,6 +28,8 @@ from .const import (
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
+    DEFAULT_CONF_ARM_HOME_MODE,
+    DEFAULT_PORT,
     DOMAIN,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
@@ -41,10 +43,11 @@ _LOGGER = logging.getLogger(__package__)
 CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=7094): cv.port,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_CODE): cv.string,
     }
 )
+
 
 CODE_SCHEMA = vol.Schema(
     {
@@ -55,7 +58,9 @@ CODE_SCHEMA = vol.Schema(
 PARTITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ARM_HOME_MODE, default=1): vol.In([1, 2, 3]),
+        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
+            [1, 2, 3]
+        ),
     }
 )
 
