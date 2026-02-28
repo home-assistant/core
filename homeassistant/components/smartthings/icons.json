@@ -104,6 +104,9 @@
       "soil_level": {
         "default": "mdi:liquid-spot"
       },
+      "sound_detection_sensitivity": {
+        "default": "mdi:home-sound-in"
+      },
       "spin_level": {
         "default": "mdi:rotate-right"
       },

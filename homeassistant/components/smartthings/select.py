@@ -159,6 +159,14 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         extra_components=["hood"],
         capability_ignore_list=[Capability.SAMSUNG_CE_CONNECTION_STATE],
     ),
+    Capability.SAMSUNG_CE_SOUND_DETECTION_SENSITIVITY: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_SOUND_DETECTION_SENSITIVITY,
+        translation_key="sound_detection_sensitivity",
+        options_attribute=Attribute.SUPPORTED_LEVELS,
+        status_attribute=Attribute.LEVEL,
+        command=Command.SET_LEVEL,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.CUSTOM_WASHER_SPIN_LEVEL: SmartThingsSelectDescription(
         key=Capability.CUSTOM_WASHER_SPIN_LEVEL,
         translation_key="spin_level",
