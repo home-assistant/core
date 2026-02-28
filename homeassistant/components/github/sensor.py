@@ -79,7 +79,7 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
         key="merged_pulls_count",
         translation_key="merged_pulls_count",
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data["merged_pull_request"]["total"],
     ),
     GitHubSensorEntityDescription(
