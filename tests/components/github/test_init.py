@@ -111,3 +111,4 @@ async def test_minor_v1_v2_migration(
     subentry = list(mock_config_entry.subentries.values())[0]
     assert subentry.data[CONF_REPOSITORY] == "test/repository"
     assert subentry.title == "test/repository"
+    assert subentry.unique_id == "test/repository"

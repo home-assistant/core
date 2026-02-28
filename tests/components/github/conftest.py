@@ -40,7 +40,7 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
             subentry_type=SUBENTRY_TYPE_REPOSITORY,
             title="Core",
             subentry_id="home-subentry-id",
-            unique_id=None,
+            unique_id="home-assistant/core",
         )
     ]
 

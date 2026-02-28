@@ -1,7 +1,7 @@
 """Test the GitHub config flow."""
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aiogithubapi import GitHubException
 import pytest
@@ -150,6 +150,8 @@ async def test_repository_subentry_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_REPOSITORY: "home-assistant/core"}
+    subentry = list(mock_config_entry.subentries.values())[0]
+    assert subentry.unique_id == "home-assistant/core"
 
 
 @pytest.mark.parametrize("mock_subentries", [[]])
@@ -162,6 +164,39 @@ async def test_repository_subentry_flow_repository_error(
     mock_config_entry.add_to_hass(hass)
 
     github_client.user.repos.side_effect = GitHubException()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_REPOSITORY),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    schema = result["data_schema"]
+    repositories = schema.schema[CONF_REPOSITORY]
+    assert len(repositories.config["options"]) == 2
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_REPOSITORY: "home-assistant/core"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_REPOSITORY: "home-assistant/core"}
+
+
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_repository_subentry_flow_no_repositories(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the repository subentry flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    github_client.user.repos.side_effect = [MagicMock(is_last_page=True, data=[])]
+    github_client.user.starred.side_effect = [MagicMock(is_last_page=True, data=[])]
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_REPOSITORY),

@@ -236,10 +236,6 @@ class RepositoryFlowHandler(ConfigSubentryFlow):
             )
         repository = user_input[CONF_REPOSITORY]
 
-        for subentry in self._get_entry().subentries.values():
-            if subentry.unique_id == repository:
-                return self.async_abort(reason="already_configured")
-
         return self.async_create_entry(
-            title=user_input[CONF_REPOSITORY], data=user_input, unique_id=repository
+            title=repository, data=user_input, unique_id=repository
         )

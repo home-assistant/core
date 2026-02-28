@@ -75,7 +75,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> 
                 data=MappingProxyType({CONF_REPOSITORY: repository}),
                 subentry_type=SUBENTRY_TYPE_REPOSITORY,
                 title=repository,
-                unique_id=None,
+                unique_id=repository,
             )
 
             hass.config_entries.async_add_subentry(entry, subentry)
