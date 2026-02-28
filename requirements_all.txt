@@ -235,9 +235,6 @@ aiodiscover==2.7.1
 # homeassistant.components.dnsip
 aiodns==4.0.0
 
-# homeassistant.components.duke_energy
-aiodukeenergy==0.3.0
-
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
@@ -1119,7 +1116,7 @@ goslide-api==0.7.0
 gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
-govee-ble==0.44.0
+govee-ble==1.2.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==2.3.0
@@ -2479,7 +2476,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.3
+pysmartthings==3.6.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
