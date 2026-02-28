@@ -141,7 +141,7 @@ async def test_fan_speed_update(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test state update."""
+    """Test fan speed state update."""
     await setup_integration(hass, mock_config_entry)
 
     assert (
