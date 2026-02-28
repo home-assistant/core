@@ -2022,7 +2022,7 @@ pydexcom==0.5.1
 pydiscovergy==3.0.2
 
 # homeassistant.components.diyanet
-pydiyanet==0.1.0
+pydiyanet==0.1.1
 
 # homeassistant.components.doods
 pydoods==1.0.2

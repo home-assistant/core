@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/diyanet",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pydiyanet==0.1.0"]
+  "requirements": ["pydiyanet==0.1.1"]
 }
