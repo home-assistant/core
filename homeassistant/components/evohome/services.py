@@ -5,12 +5,19 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Final
 
-from evohomeasync2.schemas.const import SystemMode as EvoSystemMode
+import evohomeasync2 as ec2
+from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
+from evohomeasync2.schemas.const import (
+    S2_DURATION,
+    S2_PERIOD,
+    SystemMode as EvoSystemMode,
+)
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
@@ -64,6 +71,42 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
+def _validate_set_system_mode_params(call: ServiceCall, tcs: ec2.ControlSystem) -> None:
+    """Validate that a set_system_mode service call is properly formed."""
+
+    mode = call.data[ATTR_MODE]
+    evo_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
+
+    if (mode_info := evo_modes.get(mode)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_not_supported",
+            translation_placeholders={ATTR_MODE: mode},
+        )
+
+    if not mode_info[SZ_CAN_BE_TEMPORARY]:
+        if ATTR_DURATION in call.data or ATTR_PERIOD in call.data:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mode_cant_be_temporary",
+                translation_placeholders={ATTR_MODE: mode},
+            )
+
+    elif mode_info[SZ_TIMING_MODE] == S2_DURATION and ATTR_PERIOD in call.data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_cant_have_period",
+            translation_placeholders={ATTR_MODE: mode},
+        )
+
+    elif mode_info[SZ_TIMING_MODE] == S2_PERIOD and ATTR_DURATION in call.data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_cant_have_duration",
+            translation_placeholders={ATTR_MODE: mode},
+        )
+
+
 @callback
 def setup_service_functions(
     hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
@@ -82,7 +125,10 @@ def setup_service_functions(
 
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
-        """Set the system mode."""
+        """Set the system mode or reset the system."""
+
+        if call.service == EvoService.SET_SYSTEM_MODE:  # no validation for RESET_SYSTEM
+            _validate_set_system_mode_params(call, coordinator.tcs)
 
         payload = {
             "unique_id": coordinator.tcs.id,
