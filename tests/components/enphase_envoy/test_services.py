@@ -277,7 +277,7 @@ async def test_service_inspect_device_id_error(
 
     with pytest.raises(
         ServiceValidationError,
-        match="No Envoy found with device ID",
+        match="No Envoy found by",
     ):
         await hass.services.async_call(
             DOMAIN,
