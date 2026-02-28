@@ -451,3 +451,108 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("light.standing_light").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+@pytest.mark.parametrize(
+    ("service", "service_data", "command_data"),
+    [
+        (
+            SERVICE_TURN_ON,
+            {},
+            {
+                "capability": Capability.SWITCH,
+                "command": Command.ON,
+                "component": "lamp",
+            },
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            {
+                "capability": Capability.SWITCH,
+                "command": Command.OFF,
+                "component": "lamp",
+            },
+        ),
+    ],
+)
+async def test_lamp_with_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    command_data: dict[str, Any],
+) -> None:
+    """Test samsungce.lamp on/off with switch capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = next(iter(hass.states.async_entity_ids(LIGHT_DOMAIN)))
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id} | service_data,
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        command_data["capability"],
+        command_data["command"],
+        command_data["component"],
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_range_0101x"])
+@pytest.mark.parametrize(
+    ("service", "service_data", "command_data"),
+    [
+        (
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 255},
+            {
+                "capability": Capability.SAMSUNG_CE_LAMP,
+                "command": Command.SET_BRIGHTNESS_LEVEL,
+                "component": MAIN,
+                "argument": "extraHigh",
+            },
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            {
+                "capability": Capability.SAMSUNG_CE_LAMP,
+                "command": Command.SET_BRIGHTNESS_LEVEL,
+                "component": MAIN,
+                "argument": "off",
+            },
+        ),
+    ],
+)
+async def test_lamp_without_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    command_data: dict[str, Any],
+) -> None:
+    """Test samsungce.lamp on/off without switch capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = next(iter(hass.states.async_entity_ids(LIGHT_DOMAIN)))
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id} | service_data,
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18",
+        command_data["capability"],
+        command_data["command"],
+        command_data["component"],
+        argument=command_data["argument"],
+    )
