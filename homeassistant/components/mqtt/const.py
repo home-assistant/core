@@ -268,7 +268,6 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
-CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
 DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE = "{{action}}"
