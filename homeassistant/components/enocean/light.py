@@ -88,7 +88,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self.send_command(command, [], packet_type)
         self._attr_is_on = False
 
-    def value_changed(self, telegram: ERP1Telegram):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of this device.
 
         Dimmer devices like Eltako FUD61 send telegram in different RORGs.

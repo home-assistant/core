@@ -48,7 +48,7 @@ class EnOceanEntity(Entity):
             )
         )
 
-    def _message_received_callback(self, telegram: ERP1Telegram):
+    def _message_received_callback(self, telegram: ERP1Telegram) -> None:
         """Handle incoming packets."""
         if not self.address:
             return
@@ -56,10 +56,10 @@ class EnOceanEntity(Entity):
         if telegram.sender == self.address:
             self.value_changed(telegram)
 
-    def value_changed(self, telegram: ERP1Telegram):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the device when a packet arrives."""
 
-    def send_command(self, data, optional, packet_type: ESP3PacketType):
+    def send_command(self, data, optional, packet_type: ESP3PacketType) -> None:
         """Send a command via the EnOcean dongle."""
         packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)

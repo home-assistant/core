@@ -1,8 +1,5 @@
 """Support for EnOcean devices."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
 from enocean_async import EnOceanGateway
 import voluptuous as vol
 
@@ -16,16 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
-
-@dataclass
-class EnOceanRuntimeData:
-    """Store gateway and dispatcher in runtime_data."""
-
-    gateway: EnOceanGateway
-    disconnect_handle: Callable[[], None] | None
-
-
-type EnOceanConfigEntry = ConfigEntry[EnOceanRuntimeData]
+type EnOceanConfigEntry = ConfigEntry[EnOceanGateway]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -67,11 +55,10 @@ async def async_setup_entry(
     except ConnectionError as err:
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
-    config_entry.runtime_data = EnOceanRuntimeData(
-        gateway=gateway,
-        disconnect_handle=async_dispatcher_connect(
-            hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet
-        ),
+    config_entry.runtime_data = gateway
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
     return True
 
@@ -81,11 +68,8 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry."""
 
-    runtime_data: EnOceanRuntimeData = config_entry.runtime_data
-    runtime_data.gateway.stop()
-
-    if runtime_data.disconnect_handle is not None:
-        runtime_data.disconnect_handle()
-        runtime_data.disconnect_handle = None
+    gateway = config_entry.runtime_data
+    if gateway:
+        gateway.stop()
 
     return True

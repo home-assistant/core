@@ -33,7 +33,7 @@ MANUAL_SCHEMA = vol.Schema(
 )
 
 
-def _detect_usb_dongle():
+def _detect_usb_dongle() -> list[str]:
     """Return a list of candidate paths for USB EnOcean dongles.
 
     This method is currently a bit simplistic, it may need to be
@@ -51,7 +51,7 @@ def _detect_usb_dongle():
     return found_paths
 
 
-async def _validate_usb_dongle_path(path: str):
+async def _validate_usb_dongle_path(path: str) -> bool:
     """Return True if the provided path points to a valid serial port, False otherwise."""
     try:
         # Starting the gateway will raise an exception

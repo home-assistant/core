@@ -126,7 +126,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._attr_is_on = False
 
-    def value_changed(self, telegram: ERP1Telegram):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the switch."""
         if telegram.rorg == 0xA5:
             # power meter telegram, turn on if > 1 watts

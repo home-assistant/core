@@ -68,7 +68,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
         self._attr_name = dev_name
 
-    def value_changed(self, telegram: ERP1Telegram):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Fire an event with the data that have changed.
 
         This method is called when there is an incoming packet associated
