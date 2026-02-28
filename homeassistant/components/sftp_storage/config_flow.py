@@ -124,6 +124,17 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             )
 
+            if not user_input[CONF_BACKUP_LOCATION].startswith("/"):
+                errors[CONF_BACKUP_LOCATION] = "backup_location_relative"
+                return self.async_show_form(
+                    step_id=step_id,
+                    data_schema=self.add_suggested_values_to_schema(
+                        DATA_SCHEMA, user_input
+                    ),
+                    description_placeholders=placeholders,
+                    errors=errors,
+                )
+
             try:
                 # Validate auth input and save uploaded key file if provided
                 user_input = await self._validate_auth_and_save_keyfile(user_input)
