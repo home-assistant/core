@@ -301,6 +301,8 @@ async def test_reconfigure_flow(
 
     mock_config_entry.add_to_hass(hass)
 
+    assert mock_config_entry.data[CONF_HOST] != "10.0.0.132"
+
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -315,21 +317,14 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_HOST] == "10.0.0.132"
 
 
-async def test_reconfigure_flow_invalid_host(hass: HomeAssistant) -> None:
+async def test_reconfigure_flow_invalid_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test reconfiguration flow with invalid host."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "10.0.0.131",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_ID: "test_device_id",
-            CONF_MODEL: "Test Model",
-        },
-        unique_id="test_device_id",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # Mock socket.gethostbyname to raise error for invalid hostname
     with patch("socket.gethostbyname", side_effect=socket.gaierror):
@@ -352,8 +347,7 @@ async def test_reconfigure_flow_cannot_connect(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    # Mock connection failure
-    mock_system_nexa_2_device.initiate_device.side_effect = Exception(
+    mock_system_nexa_2_device.initiate_device.side_effect = TimeoutError(
         "Connection failed"
     )
 
@@ -364,6 +358,16 @@ async def test_reconfigure_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_system_nexa_2_device.initiate_device.side_effect = Exception("Unknown")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_reconfigure_flow_wrong_device(

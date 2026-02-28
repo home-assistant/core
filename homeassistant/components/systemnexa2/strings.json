@@ -22,10 +22,10 @@
       },
       "reconfigure": {
         "data": {
-          "host": "IP/Hostname"
+          "host": "IP/hostname"
         },
         "data_description": {
-          "host": "Hostname or IP Address of the device"
+          "host": "Hostname or IP address of the device"
         },
         "description": "Update the IP address or hostname if your device has moved to a different address on the network"
       },
