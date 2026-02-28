@@ -120,7 +120,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="timeout",
             )
-        del self.login_task
+        self.login_task = None
         return await self.async_step_user()
 
     async def async_step_reauth(
