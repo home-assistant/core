@@ -68,7 +68,7 @@
           },
           "description": "Configure the air-quality forecast settings.",
           "sections": {
-            "section_addtitional_forecasts": {
+            "section_additional_forecasts": {
               "data": {
                 "additional_forecast_times": "Additional forecast time"
               },

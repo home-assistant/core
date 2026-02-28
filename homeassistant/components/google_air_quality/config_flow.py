@@ -40,7 +40,7 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
 
-SECTIONS_ADDITIONAL_FORECASTS = "section_addtitional_forecasts"
+SECTIONS_ADDITIONAL_FORECASTS = "section_additional_forecasts"
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(

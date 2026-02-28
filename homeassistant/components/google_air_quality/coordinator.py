@@ -28,7 +28,7 @@ UPDATE_INTERVAL: Final = timedelta(hours=1)
 
 @dataclass
 class GoogleAirQualitySubEntryRuntimeData:
-    """Runtime data for a Google Weather sub-entry."""
+    """Runtime data for a Google Air Quality sub-entry."""
 
     coordinator_current_conditions: GoogleAirQualityCurrentConditionsCoordinator
     coordinators_forecast: dict[int, GoogleAirQualityForecastCoordinator]
