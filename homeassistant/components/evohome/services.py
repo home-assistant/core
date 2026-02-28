@@ -27,7 +27,6 @@ from .coordinator import EvoDataUpdateCoordinator
 # because supported modes can vary for edge-case systems
 
 # Zone service schemas (registered as entity services)
-CLEAR_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {}
 SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     vol.Required(ATTR_SETPOINT): vol.All(
         vol.Coerce(float), vol.Range(min=4.0, max=35.0)
@@ -47,7 +46,7 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         DOMAIN,
         EvoService.CLEAR_ZONE_OVERRIDE,
         entity_domain=CLIMATE_DOMAIN,
-        schema=CLEAR_ZONE_OVERRIDE_SCHEMA,
+        schema=None,
         func="async_clear_zone_override",
     )
     service.async_register_platform_entity_service(
