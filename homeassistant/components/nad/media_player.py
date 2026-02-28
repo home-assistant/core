@@ -201,9 +201,7 @@ class NADtcp(MediaPlayerEntity):
         self._nad_volume = None
         vol_range = self._max_vol - self._min_vol
         if vol_range:
-            self._attr_volume_step = (
-                2 * config[CONF_VOLUME_STEP] / vol_range
-            )
+            self._attr_volume_step = 2 * config[CONF_VOLUME_STEP] / vol_range
         self._source_list = self._nad_receiver.available_sources()
 
     def turn_off(self) -> None:
