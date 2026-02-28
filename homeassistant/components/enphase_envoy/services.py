@@ -141,7 +141,7 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
                 translation_key="envoy_error",
                 translation_placeholders={
                     "host": envoy.host,
-                    "args": f" Status:{response.status} - {response.reason}",
+                    "args": f"Status:{response.status} - {response.reason}",
                 },
             )
         try:

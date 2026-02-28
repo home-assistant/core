@@ -53,7 +53,7 @@ async def test_service_load_unload(
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test service loading and unloding."""
+    """Test service loading and unloading."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -192,7 +192,7 @@ async def test_service_inspect_uninitialized(
 
     with pytest.raises(
         HomeAssistantError,
-        match="inspect: Enphase envoy is not yet initialized",
+        match="inspect: Enphase Envoy is not yet initialized",
     ):
         await hass.services.async_call(
             DOMAIN,

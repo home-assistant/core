@@ -727,7 +727,7 @@
       "message": "No Envoy found by {service}, {device_id} specified or loaded"
     },
     "not_initialized": {
-      "message": "{service}: Enphase envoy is not yet initialized"
+      "message": "{service}: Enphase Envoy is not yet initialized"
     },
     "unexpected_device": {
       "message": "Unexpected Envoy serial number found at {host}; expected {expected_serial}, found {actual_serial}"
@@ -753,7 +753,7 @@
       "description": "Send GET request to Envoy and return received data for inspection.",
       "fields": {
         "device_id": {
-          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an envoy from the dropdown list. In YAML mode enter a device_id or use an expression like device_id('sensor.envoy_123456789012_current_power_production')",
+          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a device_id or use an expression like device_id('sensor.envoy_123456789012_current_power_production')",
           "name": "Envoy device id"
         },
         "endpoint": {
