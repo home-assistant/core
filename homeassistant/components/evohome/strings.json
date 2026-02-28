@@ -1,7 +1,7 @@
 {
   "exceptions": {
     "mode_cant_be_temporary": {
-      "message": "The mode `{mode}` can not be set temporarily"
+      "message": "The mode `{mode}` does not support `duration` or `period`"
     },
     "mode_cant_have_duration": {
       "message": "The mode `{mode}` does not support `duration`; use `period` instead"

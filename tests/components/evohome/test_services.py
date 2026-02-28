@@ -218,7 +218,7 @@ async def test_zone_services_with_ctl_id(
         ),
         (
             {"mode": "Auto", "duration": {"hours": 1}},
-            "The mode `Auto` can not be set temporarily",
+            "The mode `Auto` does not support `duration` or `period`",
         ),
         (
             {"mode": "AutoWithEco", "period": {"days": 1}},
