@@ -753,11 +753,11 @@
       "description": "Send GET request to Envoy and return received data for inspection.",
       "fields": {
         "device_id": {
-          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a device_id or use an expression like device_id('sensor.envoy_123456789012_current_power_production')",
-          "name": "Envoy device id"
+          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a `device_id` or use an expression like `device_id('sensor.envoy_123456789012_current_power_production')`",
+          "name": "Envoy device ID"
         },
         "endpoint": {
-          "description": "The Envoy endpoint to inspect. Start with leading /. For instance, use /ivp/pdm/energy",
+          "description": "The Envoy endpoint to inspect. Start with a leading /. For instance, use `/api/v1/production`",
           "name": "Envoy endpoint"
         }
       },

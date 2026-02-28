@@ -2,7 +2,7 @@ inspect:
   fields:
     endpoint:
       required: true
-      example: "/ivp/pdm/energy"
+      example: "/api/v1/production"
       selector:
         text:
     device_id:

@@ -132,7 +132,10 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="envoy_error",
-                translation_placeholders={"host": envoy.host, "args": str(err)},
+                translation_placeholders={
+                    "host": f"{envoy.host} / {envoy.serial_number}",
+                    "args": str(err),
+                },
             ) from err
         result_data = await response.text()
         if response.status >= 300:
@@ -140,8 +143,8 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="envoy_error",
                 translation_placeholders={
-                    "host": envoy.host,
-                    "args": f"Status:{response.status} - {response.reason}",
+                    "host": f"{envoy.host} / {envoy.serial_number}",
+                    "args": f"Status: {response.status} - {response.reason}",
                 },
             )
         try:
