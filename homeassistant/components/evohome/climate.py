@@ -363,10 +363,12 @@ class EvoController(EvoClimateEntity):
 
         Data validation is not required, it will have been done upstream.
         """
-        if service == EvoService.SET_SYSTEM_MODE:
-            mode = data[ATTR_MODE]
-        else:  # otherwise it is EvoService.RESET_SYSTEM
-            mode = EvoSystemMode.AUTO_WITH_RESET
+
+        if service == EvoService.RESET_SYSTEM:
+            await self.coordinator.call_client_api(self._evo_device.reset())
+            return
+
+        mode = data[ATTR_MODE]  # otherwise it is EvoService.SET_SYSTEM_MODE
 
         if ATTR_PERIOD in data:
             until = dt_util.start_of_local_day()

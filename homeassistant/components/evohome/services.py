@@ -91,17 +91,10 @@ def setup_service_functions(
     assert coordinator.tcs is not None  # mypy
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
+    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     # Enumerate which operating modes are supported by this system
     modes = list(coordinator.tcs.allowed_system_modes)
-
-    # Not all systems support "AutoWithReset": register this handler only if required
-    if any(
-        m[SZ_SYSTEM_MODE]
-        for m in modes
-        if m[SZ_SYSTEM_MODE] == EvoSystemMode.AUTO_WITH_RESET
-    ):
-        hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
     modes = [m for m in modes if m[SZ_SYSTEM_MODE] != EvoSystemMode.AUTO_WITH_RESET]
