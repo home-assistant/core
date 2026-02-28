@@ -10,13 +10,7 @@ import orjson
 from pyenphase import Envoy, EnvoyError
 import voluptuous as vol
 
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -99,7 +93,7 @@ async def remove_envoy_from_coordinators_list(
 
 
 @callback
-def setup_envoy_service_actions(hass: HomeAssistant) -> ServiceResponse:
+def setup_envoy_service_actions(hass: HomeAssistant) -> None:
     """Configure Home Assistant services for Enphase_Envoy."""
 
     async def inspect_action(call: ServiceCall) -> Any:
@@ -162,5 +156,3 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> ServiceResponse:
         schema=ACTION_INSPECT_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-
-    return None
