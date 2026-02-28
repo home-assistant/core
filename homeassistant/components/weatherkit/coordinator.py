@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -67,10 +67,13 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
+            now = datetime.now(tz=timezone.utc)
             updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
+                hourly_start=now,
+                hourly_end=now + timedelta(days=7),
             )
         except WeatherKitApiClientError as exception:
             if self.data is None or (
