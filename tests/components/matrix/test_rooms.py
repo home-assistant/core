@@ -9,9 +9,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 from .conftest import MOCK_CONFIG_DATA, TEST_BAD_ROOM, TEST_JOINABLE_ROOMS, TEST_MXID
+
+from tests.common import MockConfigEntry
 
 
 async def test_join(
@@ -36,9 +36,7 @@ async def test_join(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Accessing hass.data in tests is not desirable, but all the tests here
-    # currently do this.
-    matrix_bot = hass.data[DOMAIN][config_entry.entry_id]
+    matrix_bot = config_entry.runtime_data
 
     for room_id in TEST_JOINABLE_ROOMS:
         assert f"Joined or already in room '{room_id}'" in caplog.messages

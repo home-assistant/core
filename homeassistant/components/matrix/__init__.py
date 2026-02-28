@@ -37,7 +37,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -217,37 +216,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
         commands,
     )
 
-    # Store in runtime_data (preferred modern approach)
     entry.runtime_data = matrix_bot
-
-    # Also store in hass.data for service access and backward compatibility
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = matrix_bot
+    entry.async_on_unload(matrix_bot.async_close)
 
     if hass.is_running:
         hass.async_create_background_task(
             matrix_bot.async_start(),
             name=f"{matrix_bot.__class__.__name__}: start for '{entry.unique_id}'",
         )
+    else:
+
+        async def _async_startup(_: HassEvent) -> None:
+            await matrix_bot.async_start()
+
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
+        )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     """Unload a config entry."""
-    # Remove from hass.data
-    if DOMAIN in hass.data:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN, None)
-
-    # Close the MatrixBot stored in runtime_data
-    if matrix_bot := getattr(entry, "runtime_data", None):
-        try:
-            await matrix_bot.async_close()
-        except Exception:
-            _LOGGER.exception(
-                "Error closing Matrix client for entry %s", entry.entry_id
-            )
-
     return True
 
 
@@ -291,19 +281,6 @@ class MatrixBot:
         self._start_lock = asyncio.Lock()
         self._started = False
 
-        async def stop_client(event: HassEvent) -> None:
-            """Run once when Home Assistant stops."""
-            if self._client is not None:
-                await self._client.close()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
-
-        async def handle_startup(event: HassEvent) -> None:
-            """Run once when Home Assistant finished startup."""
-            await self.async_start()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
-
     async def async_start(self) -> None:
         """Start the Matrix client."""
         async with self._start_lock:
@@ -320,6 +297,13 @@ class MatrixBot:
             except Exception:
                 self._started = False
                 raise
+
+        _LOGGER.debug(
+            "Startup complete for %s: listening_rooms=%s, word_commands=%s",
+            self._mx_id,
+            list(self._listening_rooms.keys()),
+            {room: list(words.keys()) for room, words in self._word_commands.items()},
+        )
 
         # Sync once so that we don't respond to past events.
         _LOGGER.debug("Starting initial sync for %s", self._mx_id)
@@ -383,8 +367,16 @@ class MatrixBot:
         # Corresponds to message type 'm.text' and NOT other RoomMessage subtypes, like 'm.notice' and 'm.emote'.
         if not isinstance(message, (RoomMessageText, ReactionEvent)):
             return
+        _LOGGER.debug(
+            "_handle_room_message: room=%s sender=%s (bot=%s) type=%s",
+            room.room_id,
+            message.sender,
+            self._mx_id,
+            type(message).__name__,
+        )
         # Don't respond to our own messages.
         if message.sender == self._mx_id:
+            _LOGGER.debug("Ignoring message from self (%s)", self._mx_id)
             return
 
         room_id = RoomID(room.room_id)
@@ -412,6 +404,13 @@ class MatrixBot:
             # Could trigger a single-word command.
             pieces = message.body.split()
             word = WordCommand(pieces[0].lstrip("!"))
+
+            _LOGGER.debug(
+                "Word command lookup: room=%s word=%r known_rooms=%s",
+                room_id,
+                word,
+                list(self._word_commands.keys()),
+            )
 
             if command := self._word_commands.get(room_id, {}).get(word):
                 message_data = {

@@ -191,7 +191,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "@user:example.com (from YAML)"
+    assert result["title"] == "@user:example.com"
     assert result["data"] == TEST_USER_INPUT
 
 
@@ -304,7 +304,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     assert result["description_placeholders"] == {
         "username": "@user:example.com",
         "homeserver": "https://matrix.example.com",
-        "name": "@user:example.com",
+        "name": "@user:example.com",  # auto-injected by HA framework for reauth flows
     }
 
     # Complete reauth with new password
@@ -333,10 +333,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "@user:example.com",
-                "password": new_password,
-            },
+            {"password": new_password},
         )
 
     assert result2["type"] is FlowResultType.ABORT
@@ -386,10 +383,7 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "@user:example.com",
-                "password": "wrong_password",
-            },
+            {"password": "wrong_password"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -445,10 +439,7 @@ async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "@different_user:example.com",
-                "password": "password",
-            },
+            {"password": "password"},
         )
 
     assert result2["type"] is FlowResultType.ABORT
@@ -486,10 +477,7 @@ async def test_reauth_flow_unexpected_error(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "@user:example.com",
-                "password": "password",
-            },
+            {"password": "password"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -613,26 +601,6 @@ async def test_options_flow_invalid_rooms(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={CONF_ROOMS: ["invalid-room"], CONF_COMMANDS: []},
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {CONF_ROOMS: "invalid_rooms"}
-
-
-async def test_options_flow_invalid_rooms_not_a_list(hass: HomeAssistant) -> None:
-    """Test options flow when rooms is not a list."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="@user:example.com",
-        data=TEST_USER_INPUT,
-        title="@user:example.com",
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ROOMS: "not-a-list", CONF_COMMANDS: []},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_ROOMS: "invalid_rooms"}

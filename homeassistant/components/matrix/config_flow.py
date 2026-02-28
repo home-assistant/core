@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_COMMANDS,
@@ -36,10 +36,24 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOMESERVER, default=DEFAULT_HOMESERVER): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Required(
+            CONF_HOMESERVER, default=DEFAULT_HOMESERVER
+        ): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.URL)
+        ),
+        vol.Required(CONF_USERNAME): selector.TextSelector(),
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+    }
+)
+
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -98,10 +112,6 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.reauth_entry: ConfigEntry | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> MatrixOptionsFlowHandler:
@@ -159,7 +169,7 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"{info['title']} (from YAML)",
+            title=info["title"],
             data=import_data,
         )
 
@@ -167,25 +177,18 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        if self.reauth_entry is None:
-            return self.async_abort(reason="unknown")
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauthentication confirmation."""
-        if self.reauth_entry is None:
-            return self.async_abort(reason="unknown")
-
+        reauth_entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Merge existing config with new credentials
-            reauth_data = {**self.reauth_entry.data, **user_input}
+            # Merge existing config with new password
+            reauth_data = {**reauth_entry.data, **user_input}
 
             try:
                 info = await validate_input(self.hass, reauth_data)
@@ -198,32 +201,21 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Verify the user ID matches to prevent account switching
-                if info["user_id"] != self.reauth_entry.unique_id:
+                if info["user_id"] != reauth_entry.unique_id:
                     return self.async_abort(reason="wrong_account")
 
                 return self.async_update_reload_and_abort(
-                    self.reauth_entry,
+                    reauth_entry,
                     data_updates=user_input,
                 )
 
-        # Show form with only credentials (homeserver should not change during reauth)
-        reauth_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_USERNAME, default=self.reauth_entry.data[CONF_USERNAME]
-                ): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=reauth_schema,
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
             description_placeholders={
-                "username": self.reauth_entry.data[CONF_USERNAME],
-                "homeserver": self.reauth_entry.data[CONF_HOMESERVER],
-                "name": self.reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "homeserver": reauth_entry.data[CONF_HOMESERVER],
             },
         )
 

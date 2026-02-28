@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, cast
 
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -64,10 +64,10 @@ SERVICE_SCHEMA_REACT = vol.Schema(
 
 
 def _match_bots_for_rooms(
-    matrix_data: Mapping[str, MatrixBot], target_rooms: list[str]
+    bots: list[MatrixBot], target_rooms: list[str]
 ) -> list[MatrixBot]:
     matches: list[MatrixBot] = []
-    for matrix_bot in matrix_data.values():
+    for matrix_bot in bots:
         known_rooms: set[str] = set()
 
         configured_rooms = getattr(matrix_bot, "_configured_rooms", ())
@@ -76,10 +76,8 @@ def _match_bots_for_rooms(
 
         listening_rooms = getattr(matrix_bot, "_listening_rooms", ())
         if listening_rooms:
-            if isinstance(listening_rooms, Mapping):
-                known_rooms |= set(listening_rooms) | set(listening_rooms.values())
-            else:
-                known_rooms |= set(listening_rooms)
+            known_rooms |= set(listening_rooms) | set(listening_rooms.values())
+
         if any(room in known_rooms for room in target_rooms):
             matches.append(matrix_bot)
     return matches
@@ -89,38 +87,46 @@ def _get_matrix_bot(
     call: ServiceCall, target_rooms: list[str] | None = None
 ) -> MatrixBot:
     """Resolve the MatrixBot to use for a service call."""
-    matrix_data = call.hass.data.get(DOMAIN)
-    if not matrix_data:
-        raise ServiceValidationError("You do not have any Matrix config entries loaded")
-
-    if not isinstance(matrix_data, Mapping):
-        return cast("MatrixBot", matrix_data)
+    entries = [
+        entry
+        for entry in call.hass.config_entries.async_entries(DOMAIN)
+        if entry.state is ConfigEntryState.LOADED
+    ]
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entries_loaded",
+        )
 
     config_entry_id = call.data.get(CONF_CONFIG_ENTRY_ID)
     if config_entry_id is not None:
-        if config_entry := matrix_data.get(config_entry_id):
-            return cast("MatrixBot", config_entry)
+        for entry in entries:
+            if entry.entry_id == config_entry_id:
+                return cast("MatrixBot", entry.runtime_data)
         raise ServiceValidationError(
-            "No Matrix config entry found for the provided config entry id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
         )
 
-    if len(matrix_data) == 1:
-        return cast("MatrixBot", next(iter(matrix_data.values())))
+    if len(entries) == 1:
+        return cast("MatrixBot", entries[0].runtime_data)
 
     if target_rooms:
         matches = _match_bots_for_rooms(
-            cast("Mapping[str, MatrixBot]", matrix_data), target_rooms
+            [cast("MatrixBot", entry.runtime_data) for entry in entries],
+            target_rooms,
         )
         if len(matches) == 1:
             return matches[0]
         if len(matches) > 1:
             raise ServiceValidationError(
-                "Multiple Matrix config entries match the target rooms. "
-                "Set config_entry_id to choose one."
+                translation_domain=DOMAIN,
+                translation_key="multiple_entries_match",
             )
 
     raise ServiceValidationError(
-        "Multiple Matrix config entries are loaded. Set config_entry_id to choose one."
+        translation_domain=DOMAIN,
+        translation_key="multiple_entries_loaded",
     )
 
 

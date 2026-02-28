@@ -3,8 +3,8 @@
     "abort": {
       "already_configured": "Account is already configured",
       "cannot_connect": "Failed to connect to the Matrix server during import",
-      "import_failed": "Failed to import configuration",
       "reauth_successful": "Re-authentication was successful",
+      "unknown": "An unexpected error occurred",
       "wrong_account": "You must use the same account that was originally configured"
     },
     "error": {
@@ -19,14 +19,12 @@
       },
       "reauth_confirm": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "Password"
         },
         "data_description": {
-          "password": "Your Matrix account password",
-          "username": "Your Matrix username including the domain (e.g. @user:matrix.org)"
+          "password": "Your Matrix account password"
         },
-        "description": "Update your Matrix credentials for {username} on {homeserver}",
+        "description": "Update your Matrix password for {username} on {homeserver}",
         "title": "Reauthenticate Matrix"
       },
       "user": {
@@ -45,6 +43,20 @@
         "description": "Configure your Matrix account",
         "title": "Set up Matrix"
       }
+    }
+  },
+  "exceptions": {
+    "config_entry_not_found": {
+      "message": "No Matrix config entry found for the provided config entry ID."
+    },
+    "multiple_entries_loaded": {
+      "message": "Multiple Matrix config entries are loaded. Set config_entry_id to choose one."
+    },
+    "multiple_entries_match": {
+      "message": "Multiple Matrix config entries match the target rooms. Set config_entry_id to choose one."
+    },
+    "no_config_entries_loaded": {
+      "message": "You do not have any Matrix config entries loaded."
     }
   },
   "options": {

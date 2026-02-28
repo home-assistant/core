@@ -129,40 +129,11 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
         assert result is True
         mock_bot_class.assert_called_once()
-        # async_setup_entry should store the bot in runtime_data and hass.data
         assert config_entry.runtime_data is mock_bot
-        assert hass.data[DOMAIN][config_entry.entry_id] is mock_bot
 
 
 async def test_async_unload_entry(hass: HomeAssistant) -> None:
-    """Test unloading a config entry."""
-    # Setup a matrix bot in runtime_data
-    mock_matrix_bot = Mock()
-    mock_matrix_bot.async_close = AsyncMock()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="@user:example.com",
-        data={
-            "homeserver": "https://matrix.example.com",
-            "username": "@user:example.com",
-            "password": "password",
-            "verify_ssl": True,
-        },
-    )
-    hass.data[DOMAIN] = {entry.entry_id: mock_matrix_bot}
-    # Set runtime_data to simulate proper setup
-    entry.runtime_data = mock_matrix_bot
-
-    result = await async_unload_entry(hass, entry)
-
-    assert result is True
-    mock_matrix_bot.async_close.assert_called_once()
-    assert DOMAIN not in hass.data
-
-
-async def test_async_unload_entry_no_matrix_bot(hass: HomeAssistant) -> None:
-    """Test unloading a config entry when no matrix bot exists."""
+    """Test unloading a config entry always returns True."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="@user:example.com",
@@ -177,4 +148,3 @@ async def test_async_unload_entry_no_matrix_bot(hass: HomeAssistant) -> None:
     result = await async_unload_entry(hass, entry)
 
     assert result is True
-    assert DOMAIN not in hass.data
