@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 from anthropic.pagination import AsyncPage
 from anthropic.types import (
@@ -239,8 +239,10 @@ def mock_create_stream() -> Generator[AsyncMock]:
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
     ) as mock_create:
-        mock_create.side_effect = lambda **kwargs: mock_generator(
-            mock_create.return_value.pop(0), **kwargs
+        mock_create.side_effect = lambda **kwargs: (
+            mock_generator(mock_create.return_value.pop(0), **kwargs)
+            if isinstance(mock_create.return_value, list)
+            else DEFAULT
         )
 
         yield mock_create
