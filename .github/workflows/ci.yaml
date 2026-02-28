@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 3
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.3"
+  HA_SHORT_VERSION: "2026.4"
   DEFAULT_PYTHON: "3.14.2"
   ALL_PYTHON_VERSIONS: "['3.14.2']"
   # 10.3 is the oldest supported version
@@ -605,7 +605,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Dependency review
-        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
+        uses: actions/dependency-review-action@05fe4576374b728f0c523d6a13d64c25081e0803 # v4.8.3
         with:
           license-check: false # We use our own license audit checks
 
