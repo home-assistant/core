@@ -340,10 +340,27 @@ class MatrixBot:
         )
 
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
+        # Build a lookup that accepts both the original alias/ID keys *and* the
+        # resolved room IDs as keys, so commands can reference listening rooms by
+        # either form (e.g. "#alias:server" or "!resolvedid:server").
+        room_lookup: dict[RoomAnyID, RoomID] = {
+            **self._listening_rooms,
+            **{v: v for v in self._listening_rooms.values()},
+        }
+
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
             if rooms := command.get(CONF_ROOMS):
-                command[CONF_ROOMS] = [self._listening_rooms[room] for room in rooms]
+                resolved: list[RoomID] = []
+                for room in rooms:
+                    if (room_id := room_lookup.get(room)) is not None:
+                        resolved.append(room_id)
+                    else:
+                        _LOGGER.warning(
+                            "Command room '%s' is not in the listening rooms list, skipping",
+                            room,
+                        )
+                command[CONF_ROOMS] = resolved
             else:
                 command[CONF_ROOMS] = list(self._listening_rooms.values())
 

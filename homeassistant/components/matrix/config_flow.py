@@ -45,7 +45,9 @@ DATA_SCHEMA = vol.Schema(
 
 _OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ROOMS): selector.ObjectSelector(),
+        vol.Optional(CONF_ROOMS, default=[]): selector.TextSelector(
+            selector.TextSelectorConfig(multiple=True)
+        ),
         vol.Optional(CONF_COMMANDS): selector.ObjectSelector(),
     }
 )
@@ -236,18 +238,16 @@ class MatrixOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            rooms = user_input.get(CONF_ROOMS) or []
+            rooms: list[str] = user_input.get(CONF_ROOMS) or []
             commands = user_input.get(CONF_COMMANDS) or []
 
-            # Validate rooms: must be a list of strings matching the room regex
-            if not isinstance(rooms, list):
-                errors[CONF_ROOMS] = "invalid_rooms"
-            else:
-                room_re = re.compile(CONF_ROOMS_REGEX)
-                for room in rooms:
-                    if not isinstance(room, str) or not room_re.match(room):
-                        errors[CONF_ROOMS] = "invalid_rooms"
-                        break
+            # Validate rooms: TextSelector(multiple=True) always returns list[str],
+            # but still verify each value matches the expected room format.
+            room_re = re.compile(CONF_ROOMS_REGEX)
+            for room in rooms:
+                if not room_re.match(room):
+                    errors[CONF_ROOMS] = "invalid_rooms"
+                    break
 
             # Validate commands: list of dicts with name + one trigger
             if not isinstance(commands, list):

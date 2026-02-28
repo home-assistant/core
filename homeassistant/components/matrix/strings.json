@@ -60,7 +60,7 @@
         },
         "data_description": {
           "commands": "List of word, expression, or reaction commands. Each command requires a 'name' and one of: 'word', 'expression', or 'reaction'. Optionally restrict to specific 'rooms'.",
-          "rooms": "List of room IDs or aliases to listen in. Example:\n- \"!roomid:matrix.org\"\n- \"#alias:matrix.org\""
+          "rooms": "Room IDs or aliases to listen in. Add each room separately (e.g. !roomid:matrix.org or #alias:matrix.org)."
         },
         "description": "Configure which rooms to listen in and which commands to respond to",
         "title": "Configure Matrix rooms and commands"
