@@ -6,6 +6,7 @@ import pytest
 from victron_mqtt import CannotConnectError
 from victron_mqtt.hub import AuthenticationError
 
+from homeassistant.components.victron_gx_mqtt.config_flow import validate_input
 from homeassistant.components.victron_gx_mqtt.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -920,3 +921,21 @@ async def test_options_flow_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_validate_input_ignores_disconnect_error(
+    hass: HomeAssistant, mock_victron_hub: MagicMock
+) -> None:
+    """Test validate_input ignores disconnect errors in cleanup."""
+    mock_victron_hub.return_value.disconnect.side_effect = Exception("disconnect fail")
+
+    installation_id = await validate_input(
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+        }
+    )
+
+    assert installation_id == MOCK_INSTALLATION_ID

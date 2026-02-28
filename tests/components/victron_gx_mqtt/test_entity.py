@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from victron_mqtt import (
     Device as VictronVenusDevice,
+    FormulaMetric as VictronFormulaMetric,
     Metric as VictronVenusMetric,
     MetricKind,
     MetricNature,
@@ -132,3 +133,93 @@ async def test_translation_fields(
 
     assert sensor.translation_key == "phase_voltage"
     assert sensor.translation_placeholders == {"phase": "L1"}
+
+
+async def test_sensor_update_task_uses_baseline(
+    hass: HomeAssistant, mock_device, base_metric
+) -> None:
+    """_on_update_task should add baseline before updating state."""
+    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    sensor = VictronSensor(mock_device, base_metric, device_info)
+    sensor._baseline = 10.0
+
+    with patch.object(sensor, "async_write_ha_state") as mock_sched:
+        sensor._on_update_task(2.5)
+        assert sensor.native_value == 12.5
+        mock_sched.assert_called_once()
+
+
+async def test_sensor_async_added_restores_formula_metric_baseline(
+    hass: HomeAssistant, mock_device
+) -> None:
+    """Restore baseline for cumulative formula metrics."""
+    metric = MagicMock(spec=VictronFormulaMetric)
+    metric.metric_kind = MetricKind.SENSOR
+    metric.unique_id = "metric_restore"
+    metric.short_id = "metric.restore"
+    metric.generic_short_id = "energy"
+    metric.key_values = {}
+    metric.precision = 2
+    metric.unit_of_measurement = "kWh"
+    metric.metric_type = MetricType.ENERGY
+    metric.metric_nature = MetricNature.CUMULATIVE
+    metric.value = 1.5
+
+    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    sensor = VictronSensor(mock_device, metric, device_info)
+
+    last_state = MagicMock()
+    last_state.state = "2.0"
+
+    with (
+        patch(
+            "homeassistant.components.victron_gx_mqtt.sensor.VictronBaseEntity.async_added_to_hass",
+            new=AsyncMock(),
+        ) as mock_super_added,
+        patch.object(
+            sensor, "async_get_last_state", new=AsyncMock(return_value=last_state)
+        ),
+    ):
+        await sensor.async_added_to_hass()
+
+    assert sensor.native_value == 3.5
+    assert sensor._baseline == 2.0
+    mock_super_added.assert_awaited_once()
+
+
+async def test_sensor_async_added_ignores_invalid_restored_value(
+    hass: HomeAssistant, mock_device
+) -> None:
+    """Invalid stored state should not crash and should not set baseline."""
+    metric = MagicMock(spec=VictronFormulaMetric)
+    metric.metric_kind = MetricKind.SENSOR
+    metric.unique_id = "metric_invalid_restore"
+    metric.short_id = "metric.restore"
+    metric.generic_short_id = "energy"
+    metric.key_values = {}
+    metric.precision = 2
+    metric.unit_of_measurement = "kWh"
+    metric.metric_type = MetricType.ENERGY
+    metric.metric_nature = MetricNature.CUMULATIVE
+    metric.value = 4.0
+
+    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    sensor = VictronSensor(mock_device, metric, device_info)
+
+    last_state = MagicMock()
+    last_state.state = "not-a-number"
+
+    with (
+        patch(
+            "homeassistant.components.victron_gx_mqtt.sensor.VictronBaseEntity.async_added_to_hass",
+            new=AsyncMock(),
+        ) as mock_super_added,
+        patch.object(
+            sensor, "async_get_last_state", new=AsyncMock(return_value=last_state)
+        ),
+    ):
+        await sensor.async_added_to_hass()
+
+    assert sensor.native_value == 4.0
+    assert sensor._baseline is None
+    mock_super_added.assert_awaited_once()
