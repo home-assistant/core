@@ -6,6 +6,8 @@ import logging
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
 
+from homeassistant.util import dt as dt_util
+
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -13,8 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockCoordinatedEntityV1
+from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01Q7, RoborockCoordinatedEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,20 +34,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock image platform."""
 
-    async_add_entities(
-        (
-            RoborockMap(
-                config_entry,
-                coord,
-                coord.properties_api.home,
-                map_info.map_flag,
-                map_info.name,
-            )
-            for coord in config_entry.runtime_data.v1
-            if coord.properties_api.home is not None
-            for map_info in (coord.properties_api.home.home_map_info or {}).values()
-        ),
+    entities = [
+        RoborockMap(
+            config_entry,
+            coord,
+            coord.properties_api.home,
+            map_info.map_flag,
+            map_info.name,
+        )
+        for coord in config_entry.runtime_data.v1
+        if coord.properties_api.home is not None
+        for map_info in (coord.properties_api.home.home_map_info or {}).values()
+    ]
+    entities.extend(
+        RoborockQ7Map(config_entry, coord)
+        for coord in config_entry.runtime_data.b01_q7
+        if getattr(coord.api, "map_content", None) is not None
     )
+    async_add_entities(entities)
 
 
 class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
@@ -105,4 +115,30 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Get the cached image."""
         if (map_content := self._map_content) is None:
             raise HomeAssistantError("Map flag not found in coordinator maps")
+        return map_content.image_content
+
+
+class RoborockQ7Map(RoborockCoordinatedEntityB01Q7, ImageEntity):
+    """Image entity for B01/Q7 map content."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, config_entry: ConfigEntry, coordinator: RoborockB01Q7UpdateCoordinator) -> None:
+        unique_id = f"{coordinator.duid_slug}_map_current"
+        RoborockCoordinatedEntityB01Q7.__init__(self, unique_id, coordinator)
+        ImageEntity.__init__(self, coordinator.hass)
+        self.config_entry = config_entry
+        self._attr_name = "Current map"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._cached_map: bytes | None = None
+        self._attr_image_last_updated = dt_util.utcnow()
+
+    async def async_image(self) -> bytes | None:
+        map_content_trait = self.coordinator.api.map_content
+        map_content = await map_content_trait.refresh()
+        if map_content.image_content is None:
+            raise HomeAssistantError("No map image content available")
+        if self._cached_map != map_content.image_content:
+            self._cached_map = map_content.image_content
+            self._attr_image_last_updated = dt_util.utcnow()
         return map_content.image_content
