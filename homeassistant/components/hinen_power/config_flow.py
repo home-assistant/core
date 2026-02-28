@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hinen_open_api import HinenOpen
+from hinen_open_api import HinenOpen, HinenPublic
 from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
 import voluptuous as vol
 
@@ -198,16 +198,10 @@ class OAuth2FlowHandler(
         )
 
     async def _get_country_list(self) -> list[str]:
-        """Fetch the list of countries from the external API."""
-        url = "https://global.knowledge.celinksmart.com/prod-api/iot-global/app-api/countries"
-        language = "zh_CN" if self.hass.config.language.startswith("zh") else "en_US"
-        headers = {"accept-language": language}
-        session = async_get_clientsession(self.hass)
-        async with session.get(url, headers=headers) as response:
-            if response.status == 200:
-                data = await response.json()
-                return [country["code"] for country in data.get("data", [])]
-            return []
+        """Fetch the list of countries."""
+        hinen_public = HinenPublic(session=async_get_clientsession(self.hass))
+        countries = await hinen_public.get_country_list()
+        return [country["code"] for country in countries]
 
 
 class HinenOpenFlowHandler(OptionsFlow):

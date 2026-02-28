@@ -113,6 +113,16 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_country_list():
+    """Mock HinenPublic.get_country_list to return China."""
+    with patch(
+        "homeassistant.components.hinen_power.config_flow.HinenPublic.get_country_list",
+        return_value=[{"code": "CN", "name": "China"}],
+    ):
+        yield
+
+
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
