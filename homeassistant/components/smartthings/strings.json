@@ -223,6 +223,15 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "name": "Cleaning type",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuum",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop_together": "Vacuum and mop together"
+        }
+      },
       "selected_zone": {
         "name": "Selected zone",
         "state": {

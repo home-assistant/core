@@ -93,6 +93,9 @@
           "stop": "mdi:stop"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "default": "mdi:vacuum"
+      },
       "selected_zone": {
         "state": {
           "all": "mdi:card",
