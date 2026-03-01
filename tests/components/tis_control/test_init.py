@@ -112,7 +112,7 @@ async def test_async_setup_entry_event_listener(
         await async_setup_entry(hass, mock_config_entry)
 
         # Wait for background task to process.
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Assert event was fired.
     assert len(captured_events) == 1
