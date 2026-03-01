@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "Cannot change the account username."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,6 +21,16 @@
         },
         "description": "Your Fresh-r session has expired. Re-enter your password to continue."
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your Fresh-r account password.",
+          "username": "Your Fresh-r account username (email address)."
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -28,6 +40,28 @@
           "password": "Your Fresh-r account password.",
           "username": "Your Fresh-r account username (email address)."
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2": {
+        "name": "CO2"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "flow": {
+        "name": "Flow"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
       }
     }
   }

@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pyfreshr==0.9.0"]
+  "requirements": ["pyfreshr==0.10.0"]
 }

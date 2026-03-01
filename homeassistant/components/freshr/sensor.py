@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pyfreshr.models import DeviceCurrent
+from pyfreshr.models import DeviceReadings
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,36 +24,36 @@ PARALLEL_UPDATES = 0
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="t1",
-        name="Inside temperature",
+        translation_key="inside_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="t2",
-        name="Outside temperature",
+        translation_key="outside_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="co2",
-        name="Inside CO2",
+        translation_key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement="ppm",
     ),
     SensorEntityDescription(
         key="hum",
-        name="Inside humidity",
+        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="flow",
-        name="Flow",
+        translation_key="flow",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     ),
     SensorEntityDescription(
         key="dp",
-        name="Dew point",
+        translation_key="dew_point",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
@@ -102,12 +102,11 @@ class FreshrSensor(CoordinatorEntity[FreshrCoordinator], SensorEntity):
         self._device_id = device_id
         self._attr_device_info = device_info
         self._attr_unique_id = f"{device_id}_{description.key}"
-        self._attr_translation_key = description.key
 
     @property
     def native_value(self) -> StateType:
         """Return the value from coordinator data."""
-        device_current: DeviceCurrent | None = self.coordinator.data.get(
+        device_current: DeviceReadings | None = self.coordinator.data.get(
             self._device_id
         )
         if device_current is None:
@@ -123,11 +122,11 @@ class FreshrSensor(CoordinatorEntity[FreshrCoordinator], SensorEntity):
             except (TypeError, ValueError):
                 return None
         if self.entity_description.key == "flow":
-            # Already converted to m³/h by the library (convert_flow=True)
-            return value
+            # Calibrated to m³/h by the library
+            return float(value)
         if self.entity_description.key in ("co2", "hum"):
             try:
                 return int(value)
             except (TypeError, ValueError):
                 return None
-        return value
+        return None
