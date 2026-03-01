@@ -1,5 +1,7 @@
 """Test the OpenDisplay upload_image service."""
 
+import asyncio
+from collections.abc import Generator
 import io
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -18,11 +20,41 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
-async def _setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
-    """Set up the config entry."""
+@pytest.fixture(autouse=True)
+async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Set up the config entry for service tests."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.fixture
+def mock_upload_device() -> Generator[AsyncMock]:
+    """Mock OpenDisplayDevice for upload service tests."""
+    mock_device = AsyncMock()
+    mock_device.upload_image = AsyncMock()
+    mock_device.__aenter__.return_value = mock_device
+    with patch(
+        "homeassistant.components.opendisplay.services.OpenDisplayDevice",
+        return_value=mock_device,
+    ):
+        yield mock_device
+
+
+@pytest.fixture
+def mock_session() -> Generator[MagicMock]:
+    """Return a mock aiohttp client session."""
+    mock_resp = AsyncMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_resp.__aexit__ = AsyncMock(return_value=False)
+    session = MagicMock()
+    session.get = MagicMock(return_value=mock_resp)
+    with patch(
+        "homeassistant.components.opendisplay.services.async_get_clientsession",
+        return_value=session,
+    ):
+        yield session
 
 
 def _device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
@@ -33,22 +65,13 @@ def _device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
     return devices[0].id
 
 
-def _mock_upload_device() -> AsyncMock:
-    """Return a mock OpenDisplayDevice context manager."""
-    mock_device = AsyncMock()
-    mock_device.upload_image = AsyncMock()
-    mock_device.__aenter__ = AsyncMock(return_value=mock_device)
-    mock_device.__aexit__ = AsyncMock(return_value=False)
-    return mock_device
-
-
 async def test_upload_image_local_file(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_upload_device: AsyncMock,
     tmp_path: Path,
 ) -> None:
-    """Test successful upload from a local file."""
-    await _setup_entry(hass, mock_config_entry)
+    """Test successful upload from a local file with tone compression."""
     device_id = _device_id(hass, mock_config_entry)
 
     image_path = tmp_path / "test.png"
@@ -56,21 +79,10 @@ async def test_upload_image_local_file(
 
     mock_media = MagicMock()
     mock_media.path = image_path
-    mock_upload_dev = _mock_upload_device()
 
-    with (
-        patch(
-            "homeassistant.components.opendisplay.services.async_resolve_media",
-            return_value=mock_media,
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.async_ble_device_from_address",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.OpenDisplayDevice",
-            return_value=mock_upload_dev,
-        ),
+    with patch(
+        "homeassistant.components.opendisplay.services.async_resolve_media",
+        return_value=mock_media,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -81,59 +93,35 @@ async def test_upload_image_local_file(
                     "media_content_id": "media-source://local/test.png",
                     "media_content_type": "image/png",
                 },
+                "tone_compression": 50,
             },
             blocking=True,
         )
 
-    mock_upload_dev.upload_image.assert_called_once()
+    mock_upload_device.upload_image.assert_called_once()
 
 
 async def test_upload_image_remote_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_upload_device: AsyncMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test successful upload from a remote URL."""
-    await _setup_entry(hass, mock_config_entry)
     device_id = _device_id(hass, mock_config_entry)
 
     image = PILImage.new("RGB", (10, 10))
     buf = io.BytesIO()
     image.save(buf, format="PNG")
-    image_bytes = buf.getvalue()
+    mock_session.get.return_value.read.return_value = buf.getvalue()
 
     mock_media = MagicMock()
     mock_media.path = None
     mock_media.url = "http://example.com/image.png"
 
-    mock_resp = AsyncMock()
-    mock_resp.raise_for_status = MagicMock()
-    mock_resp.read = AsyncMock(return_value=image_bytes)
-    mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
-    mock_resp.__aexit__ = AsyncMock(return_value=False)
-
-    mock_session = MagicMock()
-    mock_session.get = MagicMock(return_value=mock_resp)
-
-    mock_upload_dev = _mock_upload_device()
-
-    with (
-        patch(
-            "homeassistant.components.opendisplay.services.async_resolve_media",
-            return_value=mock_media,
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.async_get_clientsession",
-            return_value=mock_session,
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.async_ble_device_from_address",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.OpenDisplayDevice",
-            return_value=mock_upload_dev,
-        ),
+    with patch(
+        "homeassistant.components.opendisplay.services.async_resolve_media",
+        return_value=mock_media,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -148,16 +136,13 @@ async def test_upload_image_remote_url(
             blocking=True,
         )
 
-    mock_upload_dev.upload_image.assert_called_once()
+    mock_upload_device.upload_image.assert_called_once()
 
 
 async def test_upload_image_invalid_device_id(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that an invalid device_id raises ServiceValidationError."""
-    await _setup_entry(hass, mock_config_entry)
-
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -177,8 +162,7 @@ async def test_upload_image_device_not_in_range(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that ServiceValidationError is raised if device is out of BLE range."""
-    await _setup_entry(hass, mock_config_entry)
+    """Test that HomeAssistantError is raised if device is out of BLE range."""
     device_id = _device_id(hass, mock_config_entry)
 
     with (
@@ -208,7 +192,6 @@ async def test_upload_image_ble_error(
     tmp_path: Path,
 ) -> None:
     """Test that HomeAssistantError is raised on BLE upload failure."""
-    await _setup_entry(hass, mock_config_entry)
     device_id = _device_id(hass, mock_config_entry)
 
     image_path = tmp_path / "test.png"
@@ -217,24 +200,16 @@ async def test_upload_image_ble_error(
     mock_media = MagicMock()
     mock_media.path = image_path
 
-    mock_upload_dev = AsyncMock()
-    mock_upload_dev.__aenter__ = AsyncMock(
-        side_effect=BLEConnectionError("connection lost")
-    )
-    mock_upload_dev.__aexit__ = AsyncMock(return_value=False)
-
     with (
         patch(
             "homeassistant.components.opendisplay.services.async_resolve_media",
             return_value=mock_media,
         ),
         patch(
-            "homeassistant.components.opendisplay.services.async_ble_device_from_address",
-            return_value=MagicMock(),
-        ),
-        patch(
             "homeassistant.components.opendisplay.services.OpenDisplayDevice",
-            return_value=mock_upload_dev,
+            return_value=AsyncMock(
+                __aenter__=AsyncMock(side_effect=BLEConnectionError("connection lost"))
+            ),
         ),
         pytest.raises(HomeAssistantError),
     ):
@@ -255,37 +230,23 @@ async def test_upload_image_ble_error(
 async def test_upload_image_download_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
 ) -> None:
-    """Test that ServiceValidationError is raised on media download failure."""
-    await _setup_entry(hass, mock_config_entry)
+    """Test that HomeAssistantError is raised on media download failure."""
     device_id = _device_id(hass, mock_config_entry)
 
     mock_media = MagicMock()
     mock_media.path = None
     mock_media.url = "http://example.com/image.png"
 
-    mock_resp = AsyncMock()
-    mock_resp.raise_for_status = MagicMock(
-        side_effect=aiohttp.ClientError("connection refused")
+    mock_session.get.return_value.raise_for_status.side_effect = aiohttp.ClientError(
+        "connection refused"
     )
-    mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
-    mock_resp.__aexit__ = AsyncMock(return_value=False)
-
-    mock_session = MagicMock()
-    mock_session.get = MagicMock(return_value=mock_resp)
 
     with (
         patch(
             "homeassistant.components.opendisplay.services.async_resolve_media",
             return_value=mock_media,
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.async_ble_device_from_address",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.opendisplay.services.async_get_clientsession",
-            return_value=mock_session,
         ),
         pytest.raises(HomeAssistantError),
     ):
@@ -313,7 +274,6 @@ async def test_upload_image_invalid_mode(
     field: str,
 ) -> None:
     """Test that invalid mode strings are rejected by the schema."""
-    await _setup_entry(hass, mock_config_entry)
     device_id = _device_id(hass, mock_config_entry)
 
     with pytest.raises(vol.Invalid):
@@ -330,3 +290,42 @@ async def test_upload_image_invalid_mode(
             },
             blocking=True,
         )
+
+
+async def test_upload_image_cancels_previous_task(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: AsyncMock,
+    tmp_path: Path,
+) -> None:
+    """Test that starting a new upload cancels an in-progress upload task."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    image_path = tmp_path / "test.png"
+    PILImage.new("RGB", (10, 10)).save(image_path)
+
+    prev_task = hass.async_create_task(asyncio.sleep(3600))
+    mock_config_entry.runtime_data.upload_task = prev_task
+
+    mock_media = MagicMock()
+    mock_media.path = image_path
+
+    with patch(
+        "homeassistant.components.opendisplay.services.async_resolve_media",
+        return_value=mock_media,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert prev_task.cancelled()

@@ -1,7 +1,7 @@
 """OpenDisplay test fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -22,9 +22,19 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_ble_device() -> Generator[None]:
     """Mock the BLE device being visible."""
     ble_device = generate_ble_device(TEST_ADDRESS, TEST_TITLE)
-    with patch(
-        "homeassistant.components.opendisplay.async_ble_device_from_address",
-        return_value=ble_device,
+    with (
+        patch(
+            "homeassistant.components.opendisplay.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.config_flow.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.services.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
     ):
         yield
 
@@ -32,16 +42,24 @@ def mock_ble_device() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_opendisplay_device() -> Generator[None]:
     """Mock the OpenDisplayDevice for setup entry."""
-    mock_device = AsyncMock()
-    mock_device.read_firmware_version = AsyncMock(return_value=FIRMWARE_VERSION)
-    mock_device.config = DEVICE_CONFIG
-    mock_device.__aenter__ = AsyncMock(return_value=mock_device)
-    mock_device.__aexit__ = AsyncMock(return_value=False)
-
-    with patch(
-        "homeassistant.components.opendisplay.OpenDisplayDevice",
-        return_value=mock_device,
+    with (
+        patch(
+            "homeassistant.components.opendisplay.OpenDisplayDevice",
+            autospec=True,
+        ) as mock_device_init,
+        patch(
+            "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
+            new=mock_device_init,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.services.OpenDisplayDevice",
+            new=mock_device_init,
+        ),
     ):
+        mock_device = mock_device_init.return_value
+        mock_device.__aenter__.return_value = mock_device
+        mock_device.read_firmware_version.return_value = FIRMWARE_VERSION
+        mock_device.config = DEVICE_CONFIG
         yield
 
 

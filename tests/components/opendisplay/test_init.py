@@ -1,5 +1,6 @@
 """Test the OpenDisplay integration setup and unload."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from opendisplay import BLEConnectionError, BLETimeoutError, OpenDisplayError
@@ -7,8 +8,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from . import DEVICE_CONFIG, FIRMWARE_VERSION
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -62,13 +62,9 @@ async def test_setup_connection_error(
     """Test setup retries on BLE connection errors."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_device = AsyncMock()
-    mock_device.__aenter__ = AsyncMock(side_effect=exception)
-    mock_device.__aexit__ = AsyncMock(return_value=False)
-
     with patch(
         "homeassistant.components.opendisplay.OpenDisplayDevice",
-        return_value=mock_device,
+        return_value=AsyncMock(__aenter__=AsyncMock(side_effect=exception)),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -76,14 +72,33 @@ async def test_setup_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_runtime_data_populated(
+async def test_setup_device_registered(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test that runtime data is populated after setup."""
+    """Test that a device is registered in the device registry after setup."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.runtime_data.firmware == FIRMWARE_VERSION
-    assert mock_config_entry.runtime_data.device_config is DEVICE_CONFIG
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 1
+
+
+async def test_unload_cancels_active_upload_task(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that unloading the entry cancels an in-progress upload task."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    task = hass.async_create_task(asyncio.sleep(3600))
+    mock_config_entry.runtime_data.upload_task = task
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert task.cancelled()
