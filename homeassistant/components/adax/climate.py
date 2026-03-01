@@ -190,7 +190,6 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         """Update hvac mode, current temperature, and target temperature from coordinator data."""
         if data := self.coordinator.data:
             self._attr_current_temperature = data["current_temperature"]
-            self._attr_available = self._attr_current_temperature is not None
             if (target_temp := data["target_temperature"]) == 0:
                 self._attr_hvac_mode = HVACMode.OFF
                 self._attr_icon = "mdi:radiator-off"
