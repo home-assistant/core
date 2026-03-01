@@ -188,7 +188,14 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         self.async_write_ha_state()
 
     def _update_hvac_attributes(self) -> None:
-        """Update hvac mode, current temperature, and target temperature from coordinator data."""
+        """Update hvac mode and temperatures from coordinator data.
+
+        The coordinator reports a target temperature of 0 when the heater is
+        turned off. In that case, only the hvac mode and icon are updated and
+        the previous non-zero target temperature is preserved. When the
+        reported target temperature is non-zero, the stored target temperature
+        is updated to match the coordinator value.
+        """
         if data := self.coordinator.data:
             self._attr_current_temperature = data["current_temperature"]
             if (target_temp := data["target_temperature"]) == 0:
