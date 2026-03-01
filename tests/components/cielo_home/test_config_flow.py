@@ -20,6 +20,7 @@ from homeassistant.data_entry_flow import FlowResultType
 MOCK_TOKEN = "valid-test-token"
 MOCK_AUTH_PATH = "cieloconnectapi.CieloClient.get_or_refresh_token"
 MOCK_DEVICES_PATH = "cieloconnectapi.CieloClient.get_devices_data"
+MOCK_CIELO_CLIENT_CTOR = "homeassistant.components.cielo_home.config_flow.CieloClient"
 
 
 def _devices_payload(parsed: dict | None) -> MagicMock:
@@ -31,14 +32,15 @@ def _devices_payload(parsed: dict | None) -> MagicMock:
 
 
 async def test_full_config_flow_success(hass: HomeAssistant) -> None:
-    """Test a full config flow successfully creates an entry."""
-    with (
-        patch(MOCK_AUTH_PATH, new=AsyncMock(return_value=MOCK_TOKEN)),
-        patch(
-            MOCK_DEVICES_PATH,
-            new=AsyncMock(return_value=_devices_payload({"dev1": MagicMock()})),
-        ),
-    ):
+    """Test successful config flow with valid API key."""
+    mock_client = MagicMock()
+    mock_client.username = "test-user"
+    mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
+    mock_client.get_devices_data = AsyncMock(
+        return_value=_devices_payload({"dev1": MagicMock()})
+    )
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=mock_client):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )

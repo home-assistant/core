@@ -34,6 +34,24 @@ CIELO_TO_HA_HVAC: dict[str, HVACMode] = {
     "heat_cool": HVACMode.HEAT_COOL,
     "off": HVACMode.OFF,
 }
+HA_TO_CIELO_HVAC: dict[HVACMode, str] = {v: k for k, v in CIELO_TO_HA_HVAC.items()}
+
+
+def _to_ha_hvac_mode(value: str | HVACMode | None) -> HVACMode | None:
+    """Map Cielo string -> HA HVACMode. If already HVACMode, return as-is."""
+    if value is None:
+        return None
+    if isinstance(value, HVACMode):
+        return value
+    return CIELO_TO_HA_HVAC.get(value)
+
+
+def _to_cielo_hvac_mode(value: str | HVACMode) -> str:
+    """Map HA HVACMode -> Cielo string. If already string, return as-is."""
+    if isinstance(value, HVACMode):
+        # fallback to 'off' if unexpected, but ideally always found
+        return HA_TO_CIELO_HVAC.get(value, "off")
+    return value
 
 
 async def async_setup_entry(
@@ -165,13 +183,18 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
-        return self._device_client.hvac_mode()
+        return _to_ha_hvac_mode(self._device_client.hvac_mode())
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
         modes = self._device_client.hvac_modes()
-        return [CIELO_TO_HA_HVAC[m] for m in modes if m in CIELO_TO_HA_HVAC]
+        mapped_modes: list[HVACMode] = []
+        for m in modes:
+            ha = _to_ha_hvac_mode(m)
+            if ha is not None:
+                mapped_modes.append(ha)
+        return mapped_modes
 
     @property
     def current_temperature(self) -> float | None:
@@ -254,7 +277,9 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @async_handle_api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
-        return await self._device_client.async_set_hvac_mode(hvac_mode)
+        return await self._device_client.async_set_hvac_mode(
+            _to_cielo_hvac_mode(hvac_mode)
+        )
 
     @async_handle_api_call
     async def async_set_swing_mode(self, swing_mode: str) -> None:

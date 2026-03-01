@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any, Final
 
+from aiohttp import ClientError
 from cieloconnectapi import CieloClient
-from cieloconnectapi.exceptions import AuthenticationError
+from cieloconnectapi.exceptions import AuthenticationError, CieloError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -64,7 +65,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except AuthenticationError:
             return {"base": "invalid_auth"}
-        except ConnectionError:
+        except ConnectionError, TimeoutError, ClientError, CieloError:
             return {"base": "cannot_connect"}
         except NoDevicesError:
             return {"base": "no_devices"}
