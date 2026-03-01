@@ -39,7 +39,7 @@ async def test_valid_port(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        # Configure the mock to simulate a successful connect
+        # Configure the mock to simulate a successful connect.
         mock_instance = mock_tis_api.return_value
         mock_instance.connect = AsyncMock(return_value=True)
 
@@ -56,7 +56,7 @@ async def test_valid_port(hass: HomeAssistant) -> None:
 
     # Ensure the setup function was called.
     assert len(mock_setup_entry.mock_calls) == 1
-    # Ensure connect was called once
+    # Ensure connect was called once.
     assert len(mock_instance.connect.mock_calls) == 1
 
 
@@ -67,7 +67,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     )
 
     with patch(PATCH_TIS_API) as mock_tis_api:
-        # Configure the mock to raise ConnectionError when connect is called
+        # Configure the mock to raise ConnectionError when connect is called.
         mock_instance = mock_tis_api.return_value
         mock_instance.connect = AsyncMock(side_effect=ConnectionError("Boom"))
 
@@ -88,7 +88,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # We need to mock success for the first entry creation
+    # We need to mock success for the first entry creation.
     with (
         patch(PATCH_TIS_API) as mock_tis_api,
         patch(
@@ -114,7 +114,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     )
 
     # Note: connect() is not called for the second attempt because
-    # _abort_if_unique_id_configured happens BEFORE validate_input
+    # _abort_if_unique_id_configured happens BEFORE validate_input.
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
         user_input={CONF_PORT: 6000},
