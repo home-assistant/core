@@ -8,50 +8,47 @@ from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
 from . import ATTR_STEP, CONF_INITIAL, CONF_MAXIMUM, DOMAIN
 
 
-class CounterDecrementedTrigger(EntityTriggerBase):
+class CounterStepTrigger(EntityTriggerBase):
+    """Base trigger for when a counter value is changed by one step."""
+
+    _domain = DOMAIN
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if not super().is_valid_transition(from_state, to_state):
+            return False
+        step = to_state.attributes[ATTR_STEP]
+        if TYPE_CHECKING:
+            assert isinstance(step, int)
+        return abs(int(from_state.state) - int(to_state.state)) == step
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute matches the expected one."""
+        try:
+            int(state.state)
+        except TypeError, ValueError:
+            return False
+        return True
+
+
+class CounterDecrementedTrigger(CounterStepTrigger):
     """Trigger for when a counter is decremented."""
 
-    _domain = DOMAIN
-
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
         if not super().is_valid_transition(from_state, to_state):
             return False
-        step = to_state.attributes[ATTR_STEP]
-        if TYPE_CHECKING:
-            assert isinstance(step, int)
-        return int(from_state.state) - step == int(to_state.state)
-
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
-        try:
-            int(state.state)
-        except TypeError, ValueError:
-            return False
-        return True
+        return int(from_state.state) > int(to_state.state)
 
 
-class CounterIncrementedTrigger(EntityTriggerBase):
+class CounterIncrementedTrigger(CounterStepTrigger):
     """Trigger for when a counter is incremented."""
 
-    _domain = DOMAIN
-
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
         if not super().is_valid_transition(from_state, to_state):
             return False
-        step = to_state.attributes[ATTR_STEP]
-        if TYPE_CHECKING:
-            assert isinstance(step, int)
-        return int(from_state.state) + step == int(to_state.state)
-
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
-        try:
-            int(state.state)
-        except TypeError, ValueError:
-            return False
-        return True
+        return int(from_state.state) < int(to_state.state)
 
 
 class CounterMaxReachedTrigger(EntityTriggerBase):
