@@ -38,10 +38,12 @@ from .common import (
 # Feature map bits
 _FEATURE_PIN = 1  # kPinCredential (bit 0)
 _FEATURE_RFID = 2  # kRfidCredential (bit 1)
+_FEATURE_FINGER = 4  # kFingerCredentials (bit 2)
 _FEATURE_USR = 256  # kUser (bit 8)
 _FEATURE_USR_PIN = _FEATURE_USR | _FEATURE_PIN  # 257
 _FEATURE_USR_RFID = _FEATURE_USR | _FEATURE_RFID  # 258
 _FEATURE_USR_PIN_RFID = _FEATURE_USR | _FEATURE_PIN | _FEATURE_RFID  # 259
+_FEATURE_USR_FINGER = _FEATURE_USR | _FEATURE_FINGER  # 260
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -1876,6 +1878,66 @@ async def test_set_lock_credential_rfid_no_available_slot(
     # Verify it iterated over NumberOfRFIDUsersSupported (3), not
     # NumberOfCredentialsSupportedPerUser (5)
     assert matter_client.send_device_command.call_count == 3
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/257/65532": _FEATURE_USR_FINGER,
+            "1/257/17": 3,  # NumberOfTotalUsersSupported (fallback for biometrics)
+            "1/257/18": 10,  # NumberOfPINUsersSupported (should NOT be used)
+            "1/257/28": 2,  # NumberOfCredentialsSupportedPerUser (should NOT be used)
+        }
+    ],
+)
+async def test_set_lock_credential_fingerprint_auto_find_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_credential auto-finds fingerprint slot using NumberOfTotalUsersSupported."""
+    # Place the empty slot at index 3 (the last position within
+    # NumberOfTotalUsersSupported=3) so the test would fail if the code
+    # used NumberOfPINUsersSupported (10) or NumberOfCredentialsSupportedPerUser (2).
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # GetCredentialStatus(1): occupied
+            {"credentialExists": True, "userIndex": 1, "nextCredentialIndex": 2},
+            # GetCredentialStatus(2): occupied
+            {"credentialExists": True, "userIndex": 2, "nextCredentialIndex": 3},
+            # GetCredentialStatus(3): empty — found at the bound limit
+            {
+                "credentialExists": False,
+                "userIndex": None,
+                "nextCredentialIndex": None,
+            },
+            # SetCredential response
+            {"status": 0, "userIndex": 1, "nextCredentialIndex": None},
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "set_lock_credential",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_CREDENTIAL_TYPE: "fingerprint",
+            ATTR_CREDENTIAL_DATA: "AABBCCDD",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "credential_index": 3,
+        "user_index": 1,
+        "next_credential_index": None,
+    }
+
+    # 3 GetCredentialStatus calls + 1 SetCredential = 4 total
+    assert matter_client.send_device_command.call_count == 4
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
