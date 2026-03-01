@@ -24,6 +24,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "default": "mdi:air-filter"
+      },
       "reset_water_filter": {
         "default": "mdi:reload"
       },
