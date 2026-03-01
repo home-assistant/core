@@ -49,7 +49,7 @@ async def test_sensor_entities_created(
     }
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_sensor_states(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -73,6 +73,7 @@ async def test_sensor_states(
     assert get_state("dp") == "10.2"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_none_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -99,6 +100,7 @@ async def test_sensor_none_values(
         assert state.state == "unknown"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_invalid_numeric_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -199,9 +201,9 @@ async def test_sensor_device_disappears(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors return unknown when a device is no longer in coordinator data."""
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data = {}
-    coordinator.async_update_listeners()
+    runtime_data = mock_config_entry.runtime_data
+    runtime_data.readings.data = {}
+    runtime_data.readings.async_update_listeners()
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_t1")

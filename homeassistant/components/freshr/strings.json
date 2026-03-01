@@ -62,7 +62,21 @@
       },
       "outside_temperature": {
         "name": "Outside temperature"
+      },
+      "temperature": {
+        "name": "Temperature"
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed. Check your Fresh-r username and password."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the Fresh-r service."
+    },
+    "no_devices_found": {
+      "message": "No devices were found on your Fresh-r account."
     }
   }
 }

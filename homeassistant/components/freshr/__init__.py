@@ -5,7 +5,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
-from .coordinator import FreshrConfigEntry, FreshrCoordinator
+from .coordinator import (
+    FreshrConfigEntry,
+    FreshrData,
+    FreshrDevicesCoordinator,
+    FreshrReadingsCoordinator,
+)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -14,10 +19,16 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bool:
     """Set up Fresh-r from a config entry."""
-    coordinator = FreshrCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    devices_coordinator = FreshrDevicesCoordinator(hass, entry)
+    await devices_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    readings_coordinator = FreshrReadingsCoordinator(hass, entry, devices_coordinator)
+    await readings_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = FreshrData(
+        devices=devices_coordinator,
+        readings=readings_coordinator,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
