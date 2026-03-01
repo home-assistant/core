@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.counter import CONF_INITIAL, DOMAIN
+from homeassistant.components.counter import CONF_INITIAL, CONF_MAXIMUM, DOMAIN
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
@@ -26,9 +26,7 @@ async def target_counters(hass: HomeAssistant) -> list[str]:
 
 @pytest.mark.parametrize(
     "trigger_key",
-    [
-        "counter.reset",
-    ],
+    ["counter.reset", "counter.maximum_reached"],
 )
 async def test_counter_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
@@ -55,6 +53,20 @@ async def test_counter_triggers_gated_by_labs_flag(
             trigger="counter.reset",
             target_states=[(2, {CONF_INITIAL: 2})],
             other_states=[(3, {CONF_INITIAL: 2})],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.maximum_reached",
+            target_states=[(2, {CONF_MAXIMUM: 2})],
+            other_states=[(1, {CONF_MAXIMUM: 2})],
+        ),
+        (
+            "counter.maximum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+            ],
         ),
     ],
 )
@@ -109,6 +121,20 @@ async def test_counter_state_trigger_behavior_any(
             target_states=[(2, {CONF_INITIAL: 2})],
             other_states=[(3, {CONF_INITIAL: 2})],
         ),
+        *parametrize_trigger_states(
+            trigger="counter.maximum_reached",
+            target_states=[(2, {CONF_MAXIMUM: 2})],
+            other_states=[(1, {CONF_MAXIMUM: 2})],
+        ),
+        (
+            "counter.maximum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+            ],
+        ),
     ],
 )
 async def test_counter_state_trigger_behavior_first(
@@ -160,6 +186,20 @@ async def test_counter_state_trigger_behavior_first(
             trigger="counter.reset",
             target_states=[(2, {CONF_INITIAL: 2})],
             other_states=[(3, {CONF_INITIAL: 2})],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.maximum_reached",
+            target_states=[(2, {CONF_MAXIMUM: 2})],
+            other_states=[(1, {CONF_MAXIMUM: 2})],
+        ),
+        (
+            "counter.maximum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+            ],
         ),
     ],
 )
