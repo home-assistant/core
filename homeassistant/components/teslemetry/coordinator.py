@@ -252,6 +252,8 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         time_series = data["time_series"]
+        if not time_series:
+            raise UpdateFailed("Empty time series data")
 
         # Add all time periods together
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
