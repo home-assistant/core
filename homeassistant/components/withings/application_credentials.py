@@ -1,5 +1,6 @@
 """application_credentials platform for Withings."""
 
+import logging
 from typing import Any
 
 from aiowithings import AUTHORIZATION_URL, TOKEN_URL
@@ -36,6 +37,7 @@ class WithingsLocalOAuth2Implementation(AuthImplementation):
     async def _token_request(self, data: dict) -> dict:
         """Make a token request and adapt Withings API reply."""
         new_token = await super()._token_request(data)
+        logging.getLogger(__name__).warning(new_token)
         # Withings API returns habitual token data under json key "body":
         # {
         #     "status": [{integer} Withings API response status],
