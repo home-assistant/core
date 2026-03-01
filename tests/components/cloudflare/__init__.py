@@ -86,7 +86,7 @@ def get_mock_client() -> Mock:
 
     client.list_zones = AsyncMock(return_value=[MOCK_ZONE])
     client.list_dns_records = AsyncMock(return_value=MOCK_ZONE_RECORDS)
-    client.update_dns_record = AsyncMock(return_value=None)
+    client.update_dns_record = AsyncMock(return_value=MOCK_ZONE_RECORDS[0])
 
     return client
 

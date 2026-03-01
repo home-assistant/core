@@ -47,6 +47,7 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
     """Representation of a proxied state toggle for a DNS record."""
 
     _attr_has_entity_name = True
+    _attr_translation_key = "proxy"
 
     def __init__(
         self,
@@ -65,7 +66,7 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
         self._domain = domain
         self._api_token = api_token
         self._attr_unique_id = f"{zone_id}_{domain}_proxied"
-        self._attr_name = f"{domain} Proxy"
+        self._attr_translation_placeholders = {"domain": domain}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, zone_id)},
             name=f"Cloudflare Zone {zone_name}",
@@ -112,6 +113,7 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
             name=record["name"],
             content=record["content"],
             proxied=desired,
+            ttl=record.get("ttl"),
         )
         if success:
             await self.coordinator.async_request_refresh()

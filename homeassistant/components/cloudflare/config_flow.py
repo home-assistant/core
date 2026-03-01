@@ -138,6 +138,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_ZONE])
+                self._abort_if_unique_id_configured()
                 # Proceed to records selection step (existing A records)
                 self.records = info["records"]
                 return await self.async_step_records()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import timedelta
 from logging import getLogger
@@ -14,6 +15,7 @@ import pycfdns
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -83,44 +85,40 @@ class CloudflareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Retrieve existing A records for zone
             records = await self.client.list_dns_records(zone_id=zone_id, type="A")
         except pycfdns.AuthenticationException as error:
-            raise UpdateFailed("Authentication failed") from error
+            raise ConfigEntryAuthFailed("Authentication failed") from error
         except pycfdns.ComunicationException as error:
             raise UpdateFailed("Communication error") from error
 
         record_index: dict[str, pycfdns.RecordModel] = {r["name"]: r for r in records}
         results: dict[str, Any] = {}
 
-        tasks: list[asyncio.Task] = []
+        tasks: list[Awaitable[Any]] = []
         task_domains: list[str] = []
         for domain in configured_domains:
             record = record_index.get(domain)
             if record is None:
                 # Create missing record (proxied True by default)
                 tasks.append(
-                    asyncio.create_task(
-                        async_create_a_record(
-                            session=async_get_clientsession(self.hass),
-                            api_token=self.config_entry.data[CONF_API_TOKEN],
-                            zone_id=zone_id,
-                            name=domain,
-                            content=external_ip,
-                            proxied=True,
-                        )
+                    async_create_a_record(
+                        session=async_get_clientsession(self.hass),
+                        api_token=self.config_entry.data[CONF_API_TOKEN],
+                        zone_id=zone_id,
+                        name=domain,
+                        content=external_ip,
+                        proxied=True,
                     )
                 )
                 task_domains.append(domain)
             elif record["content"] != external_ip:
                 # Update IP while keeping proxied state
                 tasks.append(
-                    asyncio.create_task(
-                        self.client.update_dns_record(
-                            zone_id=zone_id,
-                            record_id=record["id"],
-                            record_content=external_ip,
-                            record_name=record["name"],
-                            record_type=record["type"],
-                            record_proxied=record["proxied"],
-                        )
+                    self.client.update_dns_record(
+                        zone_id=zone_id,
+                        record_id=record["id"],
+                        record_content=external_ip,
+                        record_name=record["name"],
+                        record_type=record["type"],
+                        record_proxied=record["proxied"],
                     )
                 )
                 task_domains.append(domain)
@@ -131,22 +129,28 @@ class CloudflareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for domain, result in zip(task_domains, update_results, strict=True):
                 if isinstance(result, Exception):
                     _LOGGER.error("Error updating %s: %s", domain, result)
+                elif result is None:
+                    _LOGGER.error(
+                        "Error creating record for %s: Result was None", domain
+                    )
 
-            if any(isinstance(result, Exception) for result in update_results):
+            if any(
+                isinstance(result, Exception) or result is None
+                for result in update_results
+            ):
                 raise UpdateFailed("Error updating one or more Cloudflare records")
 
-        # Refresh records after modifications
-        try:
-            refreshed = await self.client.list_dns_records(zone_id=zone_id, type="A")
-        except (
-            pycfdns.AuthenticationException,
-            pycfdns.ComunicationException,
-        ) as error:
-            # If we fail here, we still might have partial success, but the state will be possibly inconsistent
-            # For now raising UpdateFailed seems appropriate
-            raise UpdateFailed(f"Failed to refresh records: {error}") from error
+            # Refresh records after modifications
+            try:
+                records = await self.client.list_dns_records(zone_id=zone_id, type="A")
+            except pycfdns.AuthenticationException as error:
+                raise ConfigEntryAuthFailed("Authentication failed") from error
+            except pycfdns.ComunicationException as error:
+                # If we fail here, we still might have partial success, but the state will be possibly inconsistent
+                # For now raising UpdateFailed seems appropriate
+                raise UpdateFailed(f"Failed to refresh records: {error}") from error
 
-        refreshed_index = {r["name"]: r for r in refreshed}
+        refreshed_index = {r["name"]: r for r in records}
         for domain in configured_domains:
             results[domain] = refreshed_index.get(domain)
 

@@ -67,18 +67,20 @@ async def async_update_proxied_state(
     name: str,
     content: str,
     proxied: bool,
+    ttl: int | None = None,
 ) -> bool:
     """Update only the proxied state of an existing record."""
     url = (
         f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}"
     )
-    payload = {
+    payload: dict[str, Any] = {
         "type": "A",
         "name": name,
         "content": content,
-        "ttl": 1,
         "proxied": proxied,
     }
+    if ttl is not None:
+        payload["ttl"] = ttl
     headers = {
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/json",

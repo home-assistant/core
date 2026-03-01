@@ -1,12 +1,12 @@
 {
   "entity": {
     "sensor": {
-      "cloudflare": {
+      "last_update": {
         "default": "mdi:update"
       }
     },
     "switch": {
-      "cloudflare": {
+      "proxy": {
         "default": "mdi:cloud"
       }
     }

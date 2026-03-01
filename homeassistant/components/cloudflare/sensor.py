@@ -66,7 +66,7 @@ class CloudflareLastUpdateSensor(CloudflareBaseSensor):
     """Sensor showing the timestamp of last successful update."""
 
     _attr_has_entity_name = True
-    _attr_name = "Last Update"
+    _attr_translation_key = "last_update"
     _attr_unique_id = "cloudflare_last_update_{zone}"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
@@ -90,7 +90,7 @@ class CloudflareExternalIpSensor(CloudflareBaseSensor):
     """Sensor showing current external IP used for DDNS."""
 
     _attr_has_entity_name = True
-    _attr_name = "External IP"
+    _attr_translation_key = "external_ip"
     _attr_unique_id = "cloudflare_external_ip_{zone}"
     _attr_device_class = None
 

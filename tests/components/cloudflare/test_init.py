@@ -16,6 +16,7 @@ from homeassistant.components.cloudflare.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import ENTRY_CONFIG, init_integration
 from .conftest import LOCATION_PATCH_TARGET
@@ -121,7 +122,10 @@ async def test_integration_services_with_issue(
     assert len(instance.update_dns_record.mock_calls) == 2
     instance.update_dns_record.reset_mock()
 
-    with patch(LOCATION_PATCH_TARGET, return_value=None):
+    with (
+        patch(LOCATION_PATCH_TARGET, return_value=None),
+        pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_RECORDS,
@@ -189,14 +193,14 @@ async def test_integration_update_interval(
     list_calls_before = len(instance.list_dns_records.mock_calls)
     update_calls_before = len(instance.update_dns_record.mock_calls)
 
-    instance.list_dns_records.side_effect = pycfdns.AuthenticationException()
+    instance.list_dns_records.side_effect = pycfdns.ComunicationException()
     freezer.tick(timedelta(minutes=DEFAULT_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(instance.list_dns_records.mock_calls) == list_calls_before + 1
     assert len(instance.update_dns_record.mock_calls) == update_calls_before
 
-    instance.list_dns_records.side_effect = pycfdns.ComunicationException()
+    instance.list_dns_records.side_effect = pycfdns.AuthenticationException()
     freezer.tick(timedelta(minutes=DEFAULT_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

@@ -5,10 +5,10 @@ DOMAIN = "cloudflare"
 # Legacy config key kept for migration
 CONF_RECORDS = "records"
 
-# New config key for domains list (comma-separated in flow, stored as list)
+# New config key for list of domains (stored as list[str] from flow)
 CONF_DOMAINS = "domains"
 
-PLATFORMS: list[str] = ["switch", "sensor"]
+PLATFORMS: list[str] = ["sensor", "switch"]
 
 # Defaults
 DEFAULT_UPDATE_INTERVAL = 60  # in minutes
