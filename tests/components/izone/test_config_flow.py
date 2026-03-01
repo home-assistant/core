@@ -53,9 +53,7 @@ async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
         assert result["step_id"] == "user"
 
         # Submit with blank host to trigger auto-discovery
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
@@ -91,17 +89,13 @@ async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
         assert result["step_id"] == "user"
 
         # Submit with blank host to trigger auto-discovery
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
         # Discovery confirmation form
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "discover"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {}
 

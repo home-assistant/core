@@ -85,9 +85,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                     errors[CONF_HOST] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(device_uid)
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: host}
-                    )
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                     self._host = host
                     self._device_uid = device_uid
 

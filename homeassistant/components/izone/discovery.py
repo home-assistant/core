@@ -153,9 +153,7 @@ async def async_get_device_uid(hass: HomeAssistant, host: str) -> str:
                 )
             return device_uid
     except (aiohttp.ClientError, TimeoutError, KeyError, TypeError) as ex:
-        raise ConnectionError(
-            f"Unable to connect to iZone device at {host}"
-        ) from ex
+        raise ConnectionError(f"Unable to connect to iZone device at {host}") from ex
 
 
 async def async_add_controller_by_ip(
