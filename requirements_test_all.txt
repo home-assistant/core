@@ -2068,7 +2068,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.saunum
-pysaunum==0.5.0
+pysaunum==0.6.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
