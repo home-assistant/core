@@ -1,4 +1,5 @@
 """Config flow for AuroraWatch UK integration."""
+
 import logging
 
 from homeassistant import config_entries

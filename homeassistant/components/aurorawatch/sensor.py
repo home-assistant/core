@@ -1,4 +1,5 @@
 """Sensor platform for AuroraWatch UK integration."""
+
 import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
@@ -27,10 +28,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the AuroraWatch sensor."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([
-        AurowatchSensor(coordinator),
-        AurowatchActivitySensor(coordinator),
-    ])
+    async_add_entities(
+        [
+            AurowatchSensor(coordinator),
+            AurowatchActivitySensor(coordinator),
+        ]
+    )
 
 
 class AurowatchSensor(AurowatchEntity, SensorEntity):

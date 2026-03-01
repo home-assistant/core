@@ -1,4 +1,5 @@
 """Data coordinator for AuroraWatch UK integration."""
+
 import logging
 import xml.etree.ElementTree as ET
 from datetime import timedelta
@@ -57,34 +58,34 @@ class AurowatchDataUpdateCoordinator(DataUpdateCoordinator):
             # Extract data
             try:
                 # Get updated datetime from status
-                datetime_element = status_root.find('.//updated/datetime')
+                datetime_element = status_root.find(".//updated/datetime")
                 if datetime_element is None or datetime_element.text is None:
                     raise UpdateFailed("Missing 'updated/datetime' element in XML")
                 last_updated = datetime_element.text
 
                 # Get site status information
-                status_element = status_root.find('.//site_status')
+                status_element = status_root.find(".//site_status")
                 if status_element is None:
                     raise UpdateFailed("Missing 'site_status' element in XML")
 
-                status_id = status_element.get('status_id')
+                status_id = status_element.get("status_id")
                 if status_id is None:
                     raise UpdateFailed("Missing 'status_id' attribute in site_status")
 
-                project_id = status_element.get('project_id', 'Unknown')
-                site_id = status_element.get('site_id', 'Unknown')
-                site_url = status_element.get('site_url', '')
+                project_id = status_element.get("project_id", "Unknown")
+                site_id = status_element.get("site_id", "Unknown")
+                site_url = status_element.get("site_url", "")
 
                 # Get API version
-                api_version = status_root.get('api_version', 'Unknown')
+                api_version = status_root.get("api_version", "Unknown")
 
                 # Get current activity value (most recent in the list)
-                activity_elements = activity_root.findall('.//activity')
+                activity_elements = activity_root.findall(".//activity")
                 activity_value = None
                 if activity_elements:
                     # Get the last (most recent) activity reading
                     last_activity = activity_elements[-1]
-                    value_element = last_activity.find('value')
+                    value_element = last_activity.find("value")
                     if value_element is not None and value_element.text is not None:
                         activity_value = float(value_element.text)
 
