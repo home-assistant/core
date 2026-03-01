@@ -108,4 +108,9 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: OpenDisplayConfigEntry
 ) -> bool:
     """Unload a config entry."""
+
+    # Cancel any ongoing upload tasks
+    if (task := entry.runtime_data.upload_task) and not task.done():
+        task.cancel()
+
     return True

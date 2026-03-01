@@ -186,7 +186,7 @@ async def test_upload_image_device_not_in_range(
             "homeassistant.components.opendisplay.services.async_ble_device_from_address",
             return_value=None,
         ),
-        pytest.raises(ServiceValidationError),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -287,7 +287,7 @@ async def test_upload_image_download_error(
             "homeassistant.components.opendisplay.services.async_get_clientsession",
             return_value=mock_session,
         ),
-        pytest.raises(ServiceValidationError),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             DOMAIN,

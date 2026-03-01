@@ -136,7 +136,7 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
             resp.raise_for_status()
             data = await resp.read()
     except aiohttp.ClientError as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="media_download_error",
             translation_placeholders={"error": str(err)},
@@ -156,14 +156,14 @@ async def _async_upload_image(call: ServiceCall) -> None:
     dither_mode: DitherMode = call.data[ATTR_DITHER_MODE]
     refresh_mode: RefreshMode = call.data[ATTR_REFRESH_MODE]
     fit_mode: FitMode = call.data[ATTR_FIT_MODE]
-    tone_compression_pct: float = call.data[ATTR_TONE_COMPRESSION]
+    tone_compression_pct: float | None = call.data.get(ATTR_TONE_COMPRESSION)
     tone_compression: float | str = (
         tone_compression_pct / 100.0 if tone_compression_pct is not None else "auto"
     )
 
     ble_device = async_ble_device_from_address(call.hass, address, connectable=True)
     if ble_device is None:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
             translation_placeholders={"device_id": call.data[ATTR_DEVICE_ID]},
