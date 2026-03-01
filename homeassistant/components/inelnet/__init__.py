@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelnetConfigEntry) -> b
             _raise_not_ready(f"Controller at {host} did not respond or returned error")
     except ConfigEntryNotReady:
         raise
-    except Exception as err:
+    except (TimeoutError, OSError) as err:
         raise ConfigEntryNotReady(f"Cannot connect to controller at {host}") from err
 
     entry.runtime_data = InelnetRuntimeData(

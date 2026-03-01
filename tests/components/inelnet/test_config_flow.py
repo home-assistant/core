@@ -13,6 +13,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 class TestParseChannels:
     """Tests for parse_channels helper."""
@@ -83,12 +85,25 @@ class TestIsValidHost:
         assert is_valid_host("::1") is True
         assert is_valid_host("2001:db8::1") is True
 
+    def test_hostname_over_253_chars_invalid(self) -> None:
+        """Hostname longer than 253 characters is rejected (RFC 1035)."""
+        # Valid labels (each ≤63 chars), total 253 chars is OK
+        valid_253 = "a" * 63 + "." + "a" * 63 + "." + "a" * 63 + "." + "a" * 61
+        assert len(valid_253) == 253
+        assert is_valid_host(valid_253) is True
+        # 254 chars is rejected
+        invalid_254 = "a" * 63 + "." + "a" * 63 + "." + "a" * 63 + "." + "a" * 62
+        assert len(invalid_254) == 254
+        assert is_valid_host(invalid_254) is False
+
     def test_invalid_hostname_returns_false(self) -> None:
-        """Non-empty host that is neither IPv4 nor valid hostname returns False."""
+        """Non-empty host that is neither IP nor valid hostname returns False."""
         assert is_valid_host("-leading-hyphen") is False
         assert is_valid_host(".leading-dot") is False
         assert is_valid_host("has space") is False
         assert is_valid_host("underscore_not_allowed") is False
+        assert is_valid_host("host-") is False  # label must not end with hyphen
+        assert is_valid_host("host.") is False  # no empty label after dot
 
 
 async def test_config_flow_user_step_form(
@@ -235,35 +250,74 @@ async def test_config_flow_ping_fails_shows_cannot_connect(
     assert result["errors"]["base"] == "cannot_connect"
 
 
-@pytest.mark.skip(
-    reason="Second flow runs with loader-loaded config_flow; patch not visible there"
-)
 async def test_config_flow_duplicate_aborts(
     hass: HomeAssistant,
 ) -> None:
-    """Test duplicate host+channels aborts when already configured."""
+    """Test duplicate host aborts when entry for same controller already exists."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="192.168.1.67",
+        data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: [1]},
+    )
+    existing_entry.add_to_hass(hass)
+
     mock_client = MagicMock()
     mock_client.ping = AsyncMock(return_value=True)
     with patch(
         "homeassistant.components.inelnet.config_flow.InelnetChannel",
         return_value=mock_client,
     ):
-        first_result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        first_result = await hass.config_entries.flow.async_configure(
-            first_result["flow_id"],
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {CONF_HOST: "192.168.1.67", CONF_CHANNELS: "1"},
         )
-        assert first_result["type"] is FlowResultType.CREATE_ENTRY
-        second_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        second_result = await hass.config_entries.flow.async_configure(
-            second_result["flow_id"],
-            {CONF_HOST: "192.168.1.67", CONF_CHANNELS: "1"},
-        )
-    assert second_result["type"] is FlowResultType.ABORT
-    assert second_result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_options_flow_updates_channels(
+    hass: HomeAssistant,
+) -> None:
+    """Test options flow updates config entry channels."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="192.168.1.67",
+        data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: [1, 2]},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHANNELS: "1,2,3"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_CHANNELS] == [1, 2, 3]
+
+
+async def test_options_flow_invalid_channels_shows_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test options flow shows error when channels invalid."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="192.168.1.67",
+        data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: [1]},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHANNELS: "a,b"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_channels"

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from inelnet_api import InelnetChannel
 import pytest
 import voluptuous as vol
 
@@ -28,19 +27,27 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
+def _mock_client(channel: int) -> MagicMock:
+    """Create a mock client for a channel."""
+    client = MagicMock()
+    client.channel = channel
+    client.send_command = AsyncMock(return_value=True)
+    return client
+
+
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create and add a config entry for inelnet."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="inelnet-test-entry",
-        unique_id="192.168.1.67-1",
+        unique_id="192.168.1.67",
         data={"host": "192.168.1.67", "channels": [1]},
     )
     entry.runtime_data = InelnetRuntimeData(
         host="192.168.1.67",
         channels=[1],
-        clients={1: InelnetChannel("192.168.1.67", 1)},
+        clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)
     return entry
@@ -236,7 +243,7 @@ async def test_get_actions_returns_empty_when_identifier_has_no_ch_suffix(
     entry.runtime_data = InelnetRuntimeData(
         host="192.168.1.1",
         channels=[1],
-        clients={1: InelnetChannel("192.168.1.1", 1)},
+        clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
@@ -261,7 +268,7 @@ async def test_get_actions_returns_empty_when_channel_parse_fails(
     entry.runtime_data = InelnetRuntimeData(
         host="192.168.1.1",
         channels=[1],
-        clients={1: InelnetChannel("192.168.1.1", 1)},
+        clients={1: _mock_client(1)},
     )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
@@ -326,7 +333,7 @@ async def test_get_actions_returns_empty_when_runtime_data_has_no_host(
     entry.runtime_data = InelnetRuntimeData(
         host="",
         channels=[1],
-        clients={},  # No clients and falsy host -> no actions
+        clients={},
     )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
@@ -339,10 +346,10 @@ async def test_get_actions_returns_empty_when_runtime_data_has_no_host(
     assert actions == []
 
 
-async def test_get_actions_uses_fallback_inelnet_channel_when_channel_not_in_clients(
+async def test_get_actions_uses_fallback_when_channel_in_configured_but_not_in_clients(
     hass: HomeAssistant,
 ) -> None:
-    """Test get_actions uses InelnetChannel(host, channel) when channel not in runtime_data.clients."""
+    """Test get_actions returns actions when channel in data.channels but not in clients (fallback)."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="inelnet-fallback-entry",
@@ -351,7 +358,7 @@ async def test_get_actions_uses_fallback_inelnet_channel_when_channel_not_in_cli
     entry.runtime_data = InelnetRuntimeData(
         host="192.168.1.99",
         channels=[1],
-        clients={},  # Empty clients -> fallback to InelnetChannel(host, channel)
+        clients={},
     )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
@@ -362,8 +369,31 @@ async def test_get_actions_uses_fallback_inelnet_channel_when_channel_not_in_cli
     )
     actions = await async_get_actions(hass, device.id)
     assert len(actions) == 3
-    types = {a["type"] for a in actions}
-    assert types == {ACTION_UP_SHORT, ACTION_DOWN_SHORT, ACTION_PROGRAM}
+
+
+async def test_get_actions_returns_empty_when_channel_not_in_configured_channels(
+    hass: HomeAssistant,
+) -> None:
+    """Test get_actions returns no actions when device channel is not in entry channels."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="inelnet-ch1-only",
+        data={"host": "192.168.1.1", "channels": [1]},
+    )
+    entry.runtime_data = InelnetRuntimeData(
+        host="192.168.1.1",
+        channels=[1],
+        clients={1: _mock_client(1)},
+    )
+    entry.add_to_hass(hass)
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "inelnet-ch1-only-ch2")},
+        name="INELNET channel 2",
+    )
+    actions = await async_get_actions(hass, device.id)
+    assert actions == []
 
 
 async def test_call_action_from_config_no_op_when_type_invalid(

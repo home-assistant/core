@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This instance is already configured."
+      "already_configured": "This controller is already configured."
     },
     "error": {
       "cannot_connect": "Cannot connect to the controller. Check IP and network.",
@@ -45,6 +45,23 @@
       },
       "short_up": {
         "name": "Short move up"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_channels": "Invalid channels. Enter positive channel numbers comma-separated (e.g. 1,2,3)."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "channels": "Channels"
+        },
+        "data_description": {
+          "channels": "Channel numbers comma-separated (e.g. 1,2,3)."
+        },
+        "description": "Add or remove channels for this controller. One device (cover + buttons) is created per channel.",
+        "title": "INELNET channels"
       }
     }
   }
