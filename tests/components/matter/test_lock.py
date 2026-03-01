@@ -1050,9 +1050,20 @@ async def test_get_lock_users_with_nullvalue_credentials(
         return_response=True,
     )
 
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+
     lock_users = result["lock.mock_door_lock"]
     assert len(lock_users["users"]) == 1
-    assert lock_users["users"][0]["credentials"] == []
+    user = lock_users["users"][0]
+    assert user["user_index"] == 1
+    assert user["user_name"] == "User No Creds"
+    assert user["user_unique_id"] == 100
+    assert user["credentials"] == []
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
