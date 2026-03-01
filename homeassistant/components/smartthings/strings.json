@@ -227,7 +227,7 @@
         "name": "Cleaning type",
         "state": {
           "mop": "Mop",
-          "mop_after_vacuum": "Mop after vacuum",
+          "mop_after_vacuum": "Mop after vacuuming",
           "vacuum": "Vacuum",
           "vacuum_and_mop_together": "Vacuum and mop together"
         }
