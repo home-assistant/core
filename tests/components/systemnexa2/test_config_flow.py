@@ -327,7 +327,10 @@ async def test_reconfigure_flow_invalid_host(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # Mock socket.gethostbyname to raise error for invalid hostname
-    with patch("socket.gethostbyname", side_effect=socket.gaierror):
+    with patch(
+        "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror(-2, "Name or service not known"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "invalid_hostname"},
