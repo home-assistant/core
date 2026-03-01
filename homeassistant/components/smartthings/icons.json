@@ -24,6 +24,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "default": "mdi:air-filter"
+      },
       "reset_water_filter": {
         "default": "mdi:reload"
       },
@@ -92,6 +95,9 @@
           "run": "mdi:play",
           "stop": "mdi:stop"
         }
+      },
+      "robot_cleaner_driving_mode": {
+        "default": "mdi:car-cog"
       },
       "selected_zone": {
         "state": {
@@ -218,6 +224,9 @@
       },
       "sanitizing_wash": {
         "default": "mdi:lotion"
+      },
+      "sound_detection": {
+        "default": "mdi:home-sound-in"
       },
       "sound_effect": {
         "default": "mdi:volume-high",
