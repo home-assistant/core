@@ -1,6 +1,5 @@
 """The generic_thermostat component."""
 
-from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -94,7 +93,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
         if config_entry.minor_version < 3:
             # Set `cycle_cooldown` to `min_cycle_duration` to mimic the old behavior
-            options[CONF_DUR_COOLDOWN] = options.get(CONF_MIN_DUR, timedelta())
+            if CONF_MIN_DUR in options:
+                options[CONF_DUR_COOLDOWN] = options[CONF_MIN_DUR]
 
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=3

@@ -259,7 +259,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.cycle_cooldown = cycle_cooldown or timedelta()
         self._cold_tolerance = cold_tolerance
         # Subtract the cooldown so it doesn't impact startup
-        self._cycle_timer = dt_util.utcnow() - self.cycle_cooldown
+        self._last_toggled_time = dt_util.utcnow() - self.cycle_cooldown
         self._cycle_callback: CALLBACK_TYPE | None = None
         self._check_callback: CALLBACK_TYPE | None = None
         # Context used to detect our own toggles
@@ -312,6 +312,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 self.hass, [self.heater_entity_id], self._async_switch_changed
             )
         )
+        self.async_on_remove(self._cancel_timers)
 
         if self._keep_alive:
             self.async_on_remove(
@@ -319,19 +320,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self.hass, self._async_control_heating, self._keep_alive
                 )
             )
-
-        if self.platform.config_entry is not None:
-
-            @callback
-            def _async_unload_entry() -> None:
-                """Tear-down on unload."""
-                if self._cycle_callback:
-                    _LOGGER.debug("Cancelling scheduled shut-off")
-                    self._cycle_callback()
-                if self._check_callback:
-                    self._check_callback()
-
-            self.platform.config_entry.async_on_unload(_async_unload_entry)
 
         @callback
         def _async_startup(_: Event | None = None) -> None:
@@ -519,24 +507,15 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 self._check_switch_initial_state(), eager_start=True
             )
 
-        # Update cycle timer timestamp on toggle
-        self._cycle_timer = new_state.last_changed
+        # Update timestamp on toggle
+        self._last_toggled_time = new_state.last_changed
 
         # Clear any lingering timers if the state change didn't originate from us
         origin_id = getattr(event.context, "id", None)
         if origin_id != self._last_context_id:
             _LOGGER.debug("External switch change detected, clearing timers")
-            if self._check_callback:
-                try:
-                    self._check_callback()
-                finally:
-                    self._check_callback = None
-            if self._cycle_callback:
-                try:
-                    self._cycle_callback()
-                finally:
-                    self._cycle_callback = None
             self._last_context_id = None
+            self._cancel_timers()
         self.async_write_ha_state()
 
     @callback
@@ -579,9 +558,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self.heater_entity_id,
                     self.max_cycle_duration,
                 )
-                if self._cycle_callback:
-                    self._cycle_callback()
-                    self._cycle_callback = None
+                self._cancel_cycle_timer()
                 await self._async_heater_turn_off()
                 return
 
@@ -593,17 +570,20 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
                     # Make sure it's past the `min_cycle_duration` before turning off
-                    if self._cycle_timer + self.min_cycle_duration <= now or force:
+                    if (
+                        self._last_toggled_time + self.min_cycle_duration <= now
+                        or force
+                    ):
                         _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                         await self._async_heater_turn_off()
                     elif self._check_callback is None:
                         _LOGGER.debug(
                             "Minimum cycle time not reached, check again at %s",
-                            self._cycle_timer + self.min_cycle_duration,
+                            self._last_toggled_time + self.min_cycle_duration,
                         )
                         self._check_callback = async_call_later(
                             self.hass,
-                            now - self._cycle_timer + self.min_cycle_duration,
+                            now - self._last_toggled_time + self.min_cycle_duration,
                             self._async_control_heating,
                         )
                 elif time is not None:
@@ -615,17 +595,17 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     await self._async_heater_turn_on(keepalive=True)
             elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
                 # Make sure it's past the `cycle_cooldown` before turning on
-                if self._cycle_timer + self.cycle_cooldown <= now or force:
+                if self._last_toggled_time + self.cycle_cooldown <= now or force:
                     _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                     await self._async_heater_turn_on()
                 elif self._check_callback is None:
                     _LOGGER.debug(
                         "Cooldown time not reached, check again at %s",
-                        self._cycle_timer + self.cycle_cooldown,
+                        self._last_toggled_time + self.cycle_cooldown,
                     )
                     self._check_callback = async_call_later(
                         self.hass,
-                        now - self._cycle_timer + self.cycle_cooldown,
+                        now - self._last_toggled_time + self.cycle_cooldown,
                         self._async_control_heating,
                     )
             elif time is not None:
@@ -654,19 +634,15 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
         )
         if not keepalive:
-            self._cycle_timer = dt_util.utcnow()
-            if self._check_callback:
-                self._check_callback()
-                self._check_callback = None
+            # Update timestamp on turn on
+            self._last_toggled_time = dt_util.utcnow()
+            self._cancel_check_timer()
             if self.max_cycle_duration:
                 _LOGGER.debug(
                     "Scheduling maximum run-time shut-off for %s",
-                    self._cycle_timer + self.max_cycle_duration,
+                    self._last_toggled_time + self.max_cycle_duration,
                 )
-                if self._cycle_callback:
-                    _LOGGER.debug("Cancelling previous scheduled shut-off")
-                    self._cycle_callback()
-                    self._cycle_callback = None
+                self._cancel_cycle_timer()
                 self._cycle_callback = async_call_later(
                     self.hass,
                     self.max_cycle_duration,
@@ -684,14 +660,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )
         if not keepalive:
-            self._cycle_timer = dt_util.utcnow()
-            if self._check_callback:
-                self._check_callback()
-                self._check_callback = None
-            if self._cycle_callback:
-                _LOGGER.debug("Cancelling scheduled shut-off")
-                self._cycle_callback()
-                self._cycle_callback = None
+            # Update timestamp on turn off
+            self._last_toggled_time = dt_util.utcnow()
+            self._cancel_timers()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -715,3 +686,25 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             await self._async_control_heating(force=True)
 
         self.async_write_ha_state()
+
+    @callback
+    def _cancel_check_timer(self) -> None:
+        """Reset check timer."""
+        if self._check_callback:
+            _LOGGER.debug("Cancelling scheduled state check")
+            self._check_callback()
+            self._check_callback = None
+
+    @callback
+    def _cancel_cycle_timer(self) -> None:
+        """Reset cycle timer."""
+        if self._cycle_callback:
+            _LOGGER.debug("Cancelling scheduled shut-off")
+            self._cycle_callback()
+            self._cycle_callback = None
+
+    @callback
+    def _cancel_timers(self) -> None:
+        """Reset timers."""
+        self._cancel_check_timer()
+        self._cancel_cycle_timer()
