@@ -61,7 +61,7 @@ async def test_remote_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_remote_trigger_behavior_any(
+async def test_remote_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_remotes: list[str],
