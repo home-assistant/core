@@ -84,6 +84,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "name": "Reset HEPA filter"
+      },
       "reset_hood_filter": {
         "name": "Reset filter"
       },
@@ -904,6 +907,9 @@
       "sanitizing_wash": {
         "name": "Sanitizing wash"
       },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
       "sound_effect": {
         "name": "Sound effect"
       },
@@ -926,6 +932,20 @@
       },
       "do_not_disturb_start_time": {
         "name": "Do not disturb start time"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "maximum": "Maximum",
+              "normal": "Normal",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
       }
     }
   },
