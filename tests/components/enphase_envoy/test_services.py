@@ -281,7 +281,7 @@ async def test_service_inspect_device_id_error(
 
     with pytest.raises(
         ServiceValidationError,
-        match="No Envoy found by",
+        match="No Envoy found by inspect for device_id some-bogus-device-id. Specify a correct",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -319,3 +319,77 @@ async def test_service_inspect_via_device_id(
     )
     assert result["endpoint"] == "/some/endpoint"
     assert result["data"] == data
+
+
+async def test_service_inspect_dual_envoy_with_device_id(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test inspect service action with device_id specified and multiple envoys."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
+    data = data.get("data", {}).get("system_production", {"Dont": "Know"})
+
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
+
+    entity_reg = er.async_get(hass)
+    device_id = entity_reg.async_get("sensor.inverter_1").device_id
+
+    # dual envoy with device_id should work and find correct coordinator
+    with (
+        patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
+        patch.dict(
+            hass.data[DOMAIN][ACTION_COORDINATORS],
+            {"4321": "hello world"},
+        ),
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            ACTION_INSPECT,
+            {ATTR_ENDPOINT: "/some/endpoint", ATTR_ENVOY_DEVICE_ID: device_id},
+            blocking=True,
+            return_response=True,
+        )
+
+        assert result["endpoint"] == "/some/endpoint"
+        assert result["data"] == data
+
+
+async def test_service_inspect_dual_envoy_no_device_id(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test inspect service action with no device_id specified and multiple envoys."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    data = await async_load_json_object_fixture(hass, "envoy.json", DOMAIN)
+    data = data.get("data", {}).get("system_production", {"Dont": "Know"})
+
+    mock_envoy.request.return_value.text.return_value = orjson.dumps(data).decode()
+
+    # dual envoy with no device_id should raise
+    with (
+        patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
+        patch.dict(
+            hass.data[DOMAIN][ACTION_COORDINATORS],
+            {"4321": "hello world"},
+        ),
+        pytest.raises(
+            ServiceValidationError,
+            match="No Envoy found by inspect. Configure an Envoy",
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            ACTION_INSPECT,
+            {ATTR_ENDPOINT: "/some/endpoint"},
+            blocking=True,
+            return_response=True,
+        )

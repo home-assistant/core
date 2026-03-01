@@ -69,8 +69,9 @@ def _find_envoy_coordinator(
             and (coordinator := action_coordinators.get(via_device.serial_number))
         ):
             return coordinator
-    # use first entry if no specific id was specified
-    if device_id is None and len(action_coordinators) > 0:
+
+    # use first entry if no specific id was specified and only 1 exists
+    if device_id is None and len(action_coordinators) == 1:
         return next(iter(action_coordinators.values()))
 
     return None
@@ -103,9 +104,14 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
         """Inspect action sends get request to Envoy and returns reply."""
         device_id = call.data.get(ATTR_ENVOY_DEVICE_ID)
         if not (coordinator := _find_envoy_coordinator(hass, device_id)):
+            translation_key = (
+                "envoy_service_envoy_not_found"
+                if device_id
+                else "envoy_service_no_device_id"
+            )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="envoy_service_envoy_not_found",
+                translation_key=translation_key,
                 translation_placeholders={
                     "service": call.service,
                     "device_id": str(device_id),

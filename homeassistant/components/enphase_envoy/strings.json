@@ -724,7 +724,10 @@
       "message": "Error communicating with Envoy API on {host}: {args}"
     },
     "envoy_service_envoy_not_found": {
-      "message": "No Envoy found by {service}, {device_id} specified or loaded"
+      "message": "No Envoy found by {service} for device_id {device_id}. Specify a correct `device_id`."
+    },
+    "envoy_service_no_device_id": {
+      "message": "No Envoy found by {service}. Configure an Envoy or specify a `device_id` if more then 1 Envoy is configured."
     },
     "not_initialized": {
       "message": "{service}: Enphase Envoy is not yet initialized"
@@ -750,7 +753,7 @@
   },
   "services": {
     "inspect": {
-      "description": "Send GET request to Envoy and return received data for inspection.",
+      "description": "Send a GET request to Envoy and return received data.",
       "fields": {
         "device_id": {
           "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a `device_id` or use an expression like `device_id('sensor.envoy_123456789012_current_power_production')`",
