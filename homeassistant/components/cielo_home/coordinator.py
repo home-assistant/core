@@ -83,7 +83,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
                     )
 
         self._known_device_ids = new_ids
-        raw = dict(data.parsed or {})
+        raw = dict(data.raw or {})
         parsed = dict(data.parsed or {})
         return CieloData(raw=raw, parsed=parsed)
 

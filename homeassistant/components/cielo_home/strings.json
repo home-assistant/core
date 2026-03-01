@@ -2,27 +2,18 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "Cannot connect",
-      "invalid_auth": "Invalid or expired API key! Kindly generate a new one",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Invalid or expired API key; generate a new one",
       "no_devices": "No devices found; make sure devices are set up in the Cielo Home app",
       "no_username": "No valid user information found for the API key",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Follow the [documentation]({url}) to get your API key"
-        },
-        "title": "Reauthenticate Cielo Home"
-      },
+
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

@@ -62,14 +62,23 @@ def async_handle_api_call(
                 res = await function(*args, **kwargs)
 
         except CIELO_ERRORS as err:
+            if isinstance(err, TimeoutError):
+                raise HomeAssistantError("API call timed out") from err
             raise HomeAssistantError from err
-        except TimeoutError as err:
-            raise HomeAssistantError("API call timed out") from err
 
-        LOGGER.debug("API call result for entity %s: %s", entity.entity_id, res)
+        LOGGER.debug(
+            "API call result for entity %s: type=%s keys=%s",
+            entity.entity_id,
+            type(res),
+            list(res.keys()) if isinstance(res, dict) else None,
+        )
 
         if not isinstance(res, dict):
-            LOGGER.error("API function did not return a dictionary: %s", res)
+            LOGGER.error(
+                "API function did not return a dictionary for entity %s, got %s",
+                entity.entity_id,
+                type(res),
+            )
             return None
 
         data: dict[str, Any] | None = res.get("data")

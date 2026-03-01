@@ -23,7 +23,7 @@ from .const import DOMAIN, LOGGER, TIMEOUT, NoDevicesError, NoUsernameError
 DATA_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_API_KEY): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.TEXT)
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
@@ -33,6 +33,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cielo integration."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -88,12 +89,13 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TOKEN] = token
                 assert self.client is not None
 
-                username = self.client.username
-                await self.async_set_unique_id(username)
-                self._abort_if_unique_id_configured()
+                username = getattr(self.client, "username", None)
+                if isinstance(username, str) and username:
+                    await self.async_set_unique_id(username)
+                    self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"Cielo Home ({api_key[:4]}*****************{api_key[-4:]})",
+                    title="Cielo Home",
                     data=user_input,
                 )
 

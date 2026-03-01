@@ -62,7 +62,6 @@ async def test_climate_set_temperature_calls_library(
         )
 
         device_api.async_set_temperature.assert_awaited_once_with(
-            ANY,
-            entity_id=[state.entity_id],
+            "°C",
             temperature=25.0,
         )

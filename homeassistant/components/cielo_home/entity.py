@@ -34,12 +34,16 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         self._device_api_id: str | None = None
 
     @property
-    def client(self) -> Any:
+    def client(self) -> CieloDeviceAPI | None:
         """Return a per-device API wrapper (no shared mutable state)."""
         dev = self.device_data
-        if self._client is None or dev is None:
+        if self._client is None:
+            # Without an underlying client we cannot create a device API
             return None
 
+        if dev is None:
+            # Device data may be temporarily missing; return any cached API
+            return self._device_api
         # Recreate wrapper if device changed (coordinator refresh can replace objects)
         if self._device_api is None or self._device_api_id != dev.id:
             self._device_api = CieloDeviceAPI(self._client, dev)
@@ -78,7 +82,7 @@ class CieloDeviceBaseEntity(CieloBaseEntity):
         super().__init__(coordinator, device_id)
         self.device_id = device_id
 
-        device = coordinator.data.parsed.get(device_id)
+
         device = self._get_device()
 
         self._attr_device_info = DeviceInfo(
