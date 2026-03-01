@@ -51,8 +51,8 @@ async def test_async_setup_entry_success(
         result = await async_setup_entry(hass, mock_config_entry)
 
         assert result is True
-        mock_tis_api.connect.assert_called_once()
-        mock_tis_api.scan_devices.assert_called_once()
+        mock_tis_api.connect.assert_awaited_once()
+        mock_tis_api.scan_devices.assert_awaited_once()
         mock_forward.assert_called_once()
         assert mock_config_entry.runtime_data.tis_api == mock_tis_api
 
