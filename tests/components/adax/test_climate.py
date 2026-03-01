@@ -5,9 +5,9 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    HVACMode,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -111,9 +111,7 @@ async def test_climate_local_initial_state_from_first_refresh(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT
-    assert (
-        state.attributes[ATTR_TEMPERATURE] == LOCAL_DEVICE_DATA["target_temperature"]
-    )
+    assert state.attributes[ATTR_TEMPERATURE] == LOCAL_DEVICE_DATA["target_temperature"]
     assert (
         state.attributes[ATTR_CURRENT_TEMPERATURE]
         == LOCAL_DEVICE_DATA["current_temperature"]
