@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.cloudflare.const import DOMAIN
-from homeassistant.const import STATE_ON
+from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_ZONE, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -97,3 +97,25 @@ async def test_switch_turn_on(
 
         mock_update.assert_called_once()
         assert mock_update.call_args[1]["proxied"] is True
+
+
+@pytest.mark.usefixtures("location_info")
+async def test_switch_setup_legacy_records_key(
+    hass: HomeAssistant, cfupdate: MagicMock, entity_registry: er.EntityRegistry
+) -> None:
+    """Test switch setup for legacy entries using records key."""
+    await init_integration(
+        hass,
+        data={
+            CONF_API_TOKEN: "mock-api-token",
+            CONF_ZONE: "mock.com",
+            CONF_RECORDS: ["ha.mock.com", "homeassistant.mock.com"],
+        },
+    )
+
+    unique_id = "mock-zone-id_ha.mock.com_proxied"
+    entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, unique_id)
+    assert entity_id
+
+    state = hass.states.get(entity_id)
+    assert state

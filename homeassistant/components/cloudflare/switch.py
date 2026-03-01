@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DOMAINS, DOMAIN
+from .const import CONF_DOMAINS, CONF_RECORDS, DOMAIN
 from .coordinator import CloudflareConfigEntry
 from .helpers import async_update_proxied_state
 
@@ -26,7 +26,9 @@ async def async_setup_entry(
     runtime = entry.runtime_data
     coordinator = runtime.coordinator
     zone = runtime.dns_zone
-    domains: list[str] = entry.data.get(CONF_DOMAINS, [])
+    domains: list[str] = entry.data.get(CONF_DOMAINS) or entry.data.get(
+        CONF_RECORDS, []
+    )
 
     entities: list[CloudflareProxySwitch] = [
         CloudflareProxySwitch(
