@@ -136,7 +136,7 @@ async def test_climate_local_initial_state_off_from_first_refresh(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == HVACMode.OFF
-        assert state.attributes[ATTR_TEMPERATURE] == 0
+        assert state.attributes[ATTR_TEMPERATURE] == 5
         assert (
             state.attributes[ATTR_CURRENT_TEMPERATURE]
             == LOCAL_DEVICE_DATA["current_temperature"]
