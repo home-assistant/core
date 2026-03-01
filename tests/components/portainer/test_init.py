@@ -8,6 +8,7 @@ from pyportainer.exceptions import (
     PortainerTimeoutError,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -19,10 +20,13 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -63,9 +67,119 @@ async def test_migrations(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 3
     assert CONF_HOST not in entry.data
     assert CONF_API_KEY not in entry.data
     assert entry.data[CONF_URL] == "http://test_host"
     assert entry.data[CONF_API_TOKEN] == "test_key"
     assert entry.data[CONF_VERIFY_SSL] is True
+    # Confirm we went through all current migrations
+    assert entry.version == 4
+
+
+@pytest.mark.parametrize(
+    ("container_id", "expected_result"),
+    [("1", False), ("5", True)],
+    ids=("Present container", "Stale container"),
+)
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    container_id: str,
+    expected_result: bool,
+) -> None:
+    """Test manually removing a stale device."""
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{container_id}")},
+    )
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(
+        device_entry.id, mock_config_entry.entry_id
+    )
+    assert response["success"] == expected_result
+
+
+async def test_migration_v3_to_v4(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from v3 config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://test_host",
+            CONF_API_KEY: "test_key",
+        },
+        unique_id="1",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    assert entry.version == 3
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_endpoint_1")},
+        name="Test Endpoint",
+    )
+
+    original_container_identifier = f"{entry.entry_id}_adguard"
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, original_container_identifier)},
+        via_device=(DOMAIN, f"{entry.entry_id}_endpoint_1"),
+        name="Test Container",
+    )
+
+    container_entity = entity_registry.async_get_or_create(
+        domain="switch",
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_adguard_container",
+        config_entry=entry,
+        device_id=container_device.id,
+        original_name="Test Container Switch",
+    )
+
+    assert container_device.via_device_id == endpoint_device.id
+    assert container_device.identifiers == {(DOMAIN, original_container_identifier)}
+    assert container_entity.unique_id == f"{entry.entry_id}_adguard_container"
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 4
+
+    # Fetch again, to assert the new identifiers
+    container_after = device_registry.async_get(container_device.id)
+    entity_after = entity_registry.async_get(container_entity.entity_id)
+
+    assert container_after.identifiers == {
+        (DOMAIN, original_container_identifier),
+        (DOMAIN, f"{entry.entry_id}_1_adguard"),
+    }
+    assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test devices are correctly registered."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert device_entries == snapshot

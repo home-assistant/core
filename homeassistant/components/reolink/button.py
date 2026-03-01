@@ -106,6 +106,46 @@ BUTTON_ENTITIES = (
         ptz_cmd=PtzEnum.zoomout.value,
     ),
     ReolinkButtonEntityDescription(
+        key="ptz_left_up",
+        translation_key="ptz_left_up",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.leftup.value),
+        ptz_cmd=PtzEnum.leftup.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_left_down",
+        translation_key="ptz_left_down",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.leftdown.value),
+        ptz_cmd=PtzEnum.leftdown.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_right_up",
+        translation_key="ptz_right_up",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.rightup.value),
+        ptz_cmd=PtzEnum.rightup.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_right_down",
+        translation_key="ptz_right_down",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.rightdown.value),
+        ptz_cmd=PtzEnum.rightdown.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_auto",
+        translation_key="ptz_auto",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_auto"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.auto.value),
+        ptz_cmd=PtzEnum.auto.value,
+    ),
+    ReolinkButtonEntityDescription(
         key="ptz_calibrate",
         translation_key="ptz_calibrate",
         entity_category=EntityCategory.CONFIG,
@@ -203,7 +243,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         await self.entity_description.method(self._host.api, self._channel)
 
     @raise_translated_error
-    async def async_ptz_move(self, *, speed: int) -> None:
+    async def async_ptz_move(self, speed: int) -> None:
         """PTZ move with speed."""
         await self._host.api.set_ptz_command(
             self._channel, command=self.entity_description.ptz_cmd, speed=speed

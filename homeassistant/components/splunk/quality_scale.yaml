@@ -1,0 +1,116 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Integration does not provide custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Event-driven push integration that listens to state changes, no polling occurs.
+  brands: done
+  common-modules: done
+  config-entry-unloading: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Integration does not provide custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-unique-id:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  has-entity-name:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  integration-owner: done
+  reauthentication-flow: done
+  runtime-data:
+    status: exempt
+    comment: |
+      Integration has no per-entry runtime state to store. The only data in
+      hass.data is a YAML entity filter bridged from async_setup to
+      async_setup_entry; no platforms or other code accesses it afterward.
+  test-before-configure: done
+  test-before-setup: done
+  test-coverage: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      Integration does not provide custom actions.
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      Integration does not have an options flow.
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      Verify docs describe all config flow parameters including host, port, token, SSL settings, and entity filter. The strings.json has good data_description fields that should be reflected in documentation.
+  entity-unavailable:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  parallel-updates:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+
+  # Gold
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: |
+      Integration does not support automatic discovery.
+  devices:
+    status: exempt
+    comment: |
+      Integration does not create devices.
+  entity-category:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-translations:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  reconfiguration-flow: done
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: |
+      Verify all methods in hass-splunk library at https://github.com/Bre77/hass_splunk are truly async with no blocking calls or synchronous I/O operations.
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: |
+      Add py.typed marker to hass-splunk library, add comprehensive type hints to all functions and methods in both library and integration, use custom typed ConfigEntry, add integration to homeassistant/components/.strict-typing file, and verify mypy passes. This should be done after runtime-data is implemented.
