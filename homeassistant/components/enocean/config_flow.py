@@ -4,7 +4,7 @@ import glob
 import logging
 from typing import Any
 
-from enocean_async import EnOceanGateway
+from enocean_async import Gateway
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -56,7 +56,7 @@ async def _validate_usb_dongle_path(path: str) -> bool:
     try:
         # Starting the gateway will raise an exception
         # if it cannot connect
-        gateway = EnOceanGateway(port=path)
+        gateway = Gateway(port=path)
         await gateway.start()
         gateway.stop()
     except ConnectionError as exception:

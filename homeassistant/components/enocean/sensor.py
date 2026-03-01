@@ -5,13 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean_async import (
-    EEPID,
-    ENOCEAN_EEP_DATABASE,
-    EEPHandler,
-    EEPMessage,
-    ERP1Telegram,
-)
+from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -188,7 +182,7 @@ class EnOceanPowerSensor(EnOceanSensor):
         if telegram.rorg != 0xA5:
             return
 
-        if (eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01))) is None:
+        if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 

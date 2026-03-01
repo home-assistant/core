@@ -1,6 +1,6 @@
 """Support for EnOcean devices."""
 
-from enocean_async import EnOceanGateway
+from enocean_async import Gateway
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
-type EnOceanConfigEntry = ConfigEntry[EnOceanGateway]
+type EnOceanConfigEntry = ConfigEntry[Gateway]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -44,7 +44,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
     """Set up an EnOcean dongle for the given entry."""
-    gateway = EnOceanGateway(port=config_entry.data[CONF_DEVICE])
+    gateway = Gateway(port=config_entry.data[CONF_DEVICE])
 
     gateway.add_erp1_received_callback(
         lambda packet: dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)

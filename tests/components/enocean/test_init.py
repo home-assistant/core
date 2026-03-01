@@ -15,7 +15,7 @@ async def test_device_not_connected(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.enocean.EnOceanGateway.start",
+        "homeassistant.components.enocean.Gateway.start",
         side_effect=ConnectionError("Device not found"),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

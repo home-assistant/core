@@ -1,14 +1,7 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import (
-    EnOceanAddress,
-    EnOceanBaseAddress,
-    EnOceanSenderAddress,
-    EnOceanUniqueRadioID,
-    ERP1Telegram,
-    ESP3Packet,
-    ESP3PacketType,
-)
+from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
+from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -21,7 +14,7 @@ def combine_hex(dev_id: list[int]) -> int:
 
     This function replaces the previously used function from the enocean library and is considered tech debt that will have to be replaced.
     """
-    return EnOceanAddress.from_bytelist(dev_id).to_number()
+    return Address.from_bytelist(dev_id).to_number()
 
 
 class EnOceanEntity(Entity):
@@ -29,14 +22,14 @@ class EnOceanEntity(Entity):
 
     def __init__(self, dev_id: list[int]) -> None:
         """Initialize the device."""
-        self.address: EnOceanSenderAddress | None = None
+        self.address: SenderAddress | None = None
 
         try:
-            address = EnOceanAddress.from_bytelist(dev_id)
+            address = Address.from_bytelist(dev_id)
             if address.is_eurid():
-                self.address = EnOceanUniqueRadioID.from_number(address.to_number())
+                self.address = EURID.from_number(address.to_number())
             elif address.is_base_address():
-                self.address = EnOceanBaseAddress.from_number(address.to_number())
+                self.address = BaseAddress.from_number(address.to_number())
         except ValueError:
             self.address = None
 

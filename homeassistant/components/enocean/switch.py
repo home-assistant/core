@@ -4,14 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean_async import (
-    EEPID,
-    ENOCEAN_EEP_DATABASE,
-    EEPHandler,
-    EEPMessage,
-    ERP1Telegram,
-    ESP3PacketType,
-)
+from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
+from enocean_async.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -130,7 +124,8 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Update the internal state of the switch."""
         if telegram.rorg == 0xA5:
             # power meter telegram, turn on if > 1 watts
-            if (eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xA5, 0x12, 0x01))) is None:
+            if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
+                LOGGER.warning("EEP A5-12-01 cannot be decoded")
                 return
 
             msg: EEPMessage = EEPHandler(eep).decode(telegram)
@@ -146,12 +141,13 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
         elif telegram.rorg == 0xD2:
             # actuator status telegram
-            if (eep := ENOCEAN_EEP_DATABASE.get(EEPID(0xD2, 0x01, 0x01))) is None:
+            if (eep := EEP_SPECIFICATIONS.get(EEP(0xD2, 0x01, 0x01))) is None:
+                LOGGER.warning("EEP D2-01-01 cannot be decoded")
                 return
 
             msg = EEPHandler(eep).decode(telegram)
             if msg.values["CMD"].raw == 4:
-                channel = msg.values["IO"].raw
+                channel = msg.values["I/O"].raw
                 output = msg.values["OV"].raw
                 if channel == self.channel:
                     self._attr_is_on = output > 0
