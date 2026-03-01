@@ -169,9 +169,11 @@ async def test_stop_on_homeassistant_stop(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    hub_disconnect = config_entry.runtime_data._hub.disconnect
+    hub_disconnect.assert_not_awaited()
 
     # Fire the stop event
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    # The event handler should have been called (hub stop is internal)
+    hub_disconnect.assert_awaited_once()
