@@ -226,6 +226,14 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "robot_cleaner_sound_mode": {
+        "name": "Sound mode",
+        "state": {
+          "mute": "Mute",
+          "tone": "Tone",
+          "voice": "Voice"
+        }
+      },
       "selected_zone": {
         "name": "Selected zone",
         "state": {
