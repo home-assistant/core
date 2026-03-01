@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, LOGGER
 from .entity import EnOceanEntity, combine_hex
+from .light import CONF_SENDER_ID
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"
@@ -29,6 +30,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
+        vol.Optional(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     }
 )
 
@@ -70,12 +72,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean switch platform."""
+    sender_id: list[int] = config.get(CONF_SENDER_ID, [0x00, 0x00, 0x00, 0x00])
     channel: int = config[CONF_CHANNEL]
     dev_id: list[int] = config[CONF_ID]
     dev_name: str = config[CONF_NAME]
 
     _migrate_to_new_unique_id(hass, dev_id, channel)
-    async_add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
+    async_add_entities([EnOceanSwitch(dev_id, dev_name, channel, sender_id)])
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
@@ -83,13 +86,16 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     _attr_is_on = False
 
-    def __init__(self, dev_id: list[int], dev_name: str, channel: int) -> None:
+    def __init__(
+        self, dev_id: list[int], dev_name: str, channel: int, sender_id: list[int]
+    ) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id)
         self._light = None
         self.channel = channel
         self._attr_unique_id = generate_unique_id(dev_id, channel)
         self._attr_name = dev_name
+        self._sender_id = sender_id
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -100,7 +106,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         optional.extend(self.address.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
-            data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
+            data=[0xD2, 0x01, self.channel & 0xFF, 0x64, *self._sender_id, 0x00],
             optional=optional,
             packet_type=ESP3PacketType(0x01),
         )
@@ -114,7 +120,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         optional.extend(self.address.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
-            data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+            data=[0xD2, 0x01, self.channel & 0xFF, 0x00, *self._sender_id, 0x00],
             optional=optional,
             packet_type=ESP3PacketType(0x01),
         )
