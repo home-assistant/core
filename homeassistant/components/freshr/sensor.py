@@ -163,17 +163,8 @@ class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
         if value is None:
             return None
 
-        if self.entity_description.key in ("t1", "t2", "dp", "temp"):
-            try:
-                return float(value)
-            except (TypeError, ValueError):
-                return None
-        if self.entity_description.key == "flow":
-            # Calibrated to m³/h by the library
+        if self.entity_description.key in ("t1", "t2", "dp", "temp", "flow"):
             return float(value)
         if self.entity_description.key in ("co2", "hum"):
-            try:
-                return int(value)
-            except (TypeError, ValueError):
-                return None
+            return int(value)
         return None

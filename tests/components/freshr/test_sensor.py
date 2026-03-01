@@ -106,17 +106,19 @@ async def test_sensor_invalid_numeric_values(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensors return unknown when numeric conversion fails."""
+    """Test sensors return unknown when the API returns unparsable values."""
     with patch(
         "homeassistant.components.freshr.coordinator.FreshrClient",
         return_value=_make_client(
-            DeviceReadings(
-                t1="not-a-number",
-                t2="not-a-number",
-                co2="not-a-number",
-                hum="not-a-number",
-                flow=0.05,
-                dp="not-a-number",
+            DeviceReadings.from_dict(
+                {
+                    "t1": "not-a-number",
+                    "t2": "not-a-number",
+                    "co2": "not-a-number",
+                    "hum": "not-a-number",
+                    "flow": 0.05,
+                    "dp": "not-a-number",
+                }
             )
         ),
     ):
