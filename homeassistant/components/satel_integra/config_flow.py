@@ -141,7 +141,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
-        controller = AsyncSatel(host, port, self.hass.loop)
+        controller = AsyncSatel(host, port)
 
         result = await controller.connect()
 
