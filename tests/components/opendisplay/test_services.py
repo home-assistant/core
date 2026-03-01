@@ -57,6 +57,20 @@ def mock_session() -> Generator[MagicMock]:
         yield session
 
 
+@pytest.fixture
+def mock_resolve_media(tmp_path: Path) -> Generator[MagicMock]:
+    """Mock async_resolve_media to return a local test image."""
+    image_path = tmp_path / "test.png"
+    PILImage.new("RGB", (10, 10)).save(image_path)
+    mock_media = MagicMock()
+    mock_media.path = image_path
+    with patch(
+        "homeassistant.components.opendisplay.services.async_resolve_media",
+        return_value=mock_media,
+    ):
+        yield mock_media
+
+
 def _device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
     """Return the device registry ID for the config entry."""
     registry = dr.async_get(hass)
@@ -69,34 +83,24 @@ async def test_upload_image_local_file(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_upload_device: AsyncMock,
-    tmp_path: Path,
+    mock_resolve_media: MagicMock,
 ) -> None:
     """Test successful upload from a local file with tone compression."""
     device_id = _device_id(hass, mock_config_entry)
 
-    image_path = tmp_path / "test.png"
-    PILImage.new("RGB", (100, 100), color="red").save(image_path)
-
-    mock_media = MagicMock()
-    mock_media.path = image_path
-
-    with patch(
-        "homeassistant.components.opendisplay.services.async_resolve_media",
-        return_value=mock_media,
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            "upload_image",
-            {
-                "device_id": device_id,
-                "image": {
-                    "media_content_id": "media-source://local/test.png",
-                    "media_content_type": "image/png",
-                },
-                "tone_compression": 50,
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
             },
-            blocking=True,
-        )
+            "tone_compression": 50,
+        },
+        blocking=True,
+    )
 
     mock_upload_device.upload_image.assert_called_once()
 
@@ -189,22 +193,12 @@ async def test_upload_image_device_not_in_range(
 async def test_upload_image_ble_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+    mock_resolve_media: MagicMock,
 ) -> None:
     """Test that HomeAssistantError is raised on BLE upload failure."""
     device_id = _device_id(hass, mock_config_entry)
 
-    image_path = tmp_path / "test.png"
-    PILImage.new("RGB", (10, 10)).save(image_path)
-
-    mock_media = MagicMock()
-    mock_media.path = image_path
-
     with (
-        patch(
-            "homeassistant.components.opendisplay.services.async_resolve_media",
-            return_value=mock_media,
-        ),
         patch(
             "homeassistant.components.opendisplay.services.OpenDisplayDevice",
             return_value=AsyncMock(
@@ -296,36 +290,26 @@ async def test_upload_image_cancels_previous_task(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_upload_device: AsyncMock,
-    tmp_path: Path,
+    mock_resolve_media: MagicMock,
 ) -> None:
     """Test that starting a new upload cancels an in-progress upload task."""
     device_id = _device_id(hass, mock_config_entry)
 
-    image_path = tmp_path / "test.png"
-    PILImage.new("RGB", (10, 10)).save(image_path)
-
     prev_task = hass.async_create_task(asyncio.sleep(3600))
     mock_config_entry.runtime_data.upload_task = prev_task
 
-    mock_media = MagicMock()
-    mock_media.path = image_path
-
-    with patch(
-        "homeassistant.components.opendisplay.services.async_resolve_media",
-        return_value=mock_media,
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            "upload_image",
-            {
-                "device_id": device_id,
-                "image": {
-                    "media_content_id": "media-source://local/test.png",
-                    "media_content_type": "image/png",
-                },
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
             },
-            blocking=True,
-        )
+        },
+        blocking=True,
+    )
     await hass.async_block_till_done()
 
     assert prev_task.cancelled()
