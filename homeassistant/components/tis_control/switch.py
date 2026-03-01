@@ -9,7 +9,7 @@ from TISApi.components.switch.base_switch import TISAPISwitch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TISConfigEntry
@@ -108,6 +108,7 @@ class TISSwitch(SwitchEntity):
 
         self._attr_is_on = self.device_api.is_on
 
+    @callback
     def _handle_update(self) -> None:
         """Handle state updates from the TISAPISwitch object."""
         self._attr_is_on = self.device_api.is_on
@@ -128,7 +129,6 @@ class TISSwitch(SwitchEntity):
         result = await self.device_api.turn_switch_on()
 
         if result:
-            # Optimistic update: assume the command succeeded if we got an ack.
             self._attr_is_on = True
             self._attr_available = True
         else:
@@ -142,11 +142,11 @@ class TISSwitch(SwitchEntity):
         # Send the 'off' packet and wait for an acknowledgement.
         result = await self.device_api.turn_switch_off()
 
-        # Optimistically update the state based on whether the command was acknowledged.
         if result:
             self._attr_is_on = False
             self._attr_available = True
         else:
+            # If no ack was received, the device is likely offline.
             self._attr_available = False
 
         self.async_write_ha_state()
