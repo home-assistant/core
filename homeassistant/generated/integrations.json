@@ -381,7 +381,7 @@
       "iot_class": "local_push"
     },
     "anthropic": {
-      "name": "Anthropic Conversation",
+      "name": "Anthropic",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1500,12 +1500,6 @@
     },
     "duckdns": {
       "name": "Duck DNS",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "duke_energy": {
-      "name": "Duke Energy",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5009,7 +5003,7 @@
     "orvibo": {
       "name": "Orvibo",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "osoenergy": {
@@ -5049,7 +5043,7 @@
       "iot_class": "local_polling"
     },
     "overseerr": {
-      "name": "Overseerr",
+      "name": "Seerr",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
