@@ -37,8 +37,8 @@ class KioskerData:
     """Data structure for Kiosker integration."""
 
     status: Status
-    blackout: Blackout
-    screensaver: ScreensaverState
+    blackout: Blackout | None
+    screensaver: ScreensaverState | None
 
 
 class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
