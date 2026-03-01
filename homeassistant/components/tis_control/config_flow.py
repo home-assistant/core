@@ -20,6 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 class TISConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TIS Control."""
 
+    VERSION = 1
+    MINOR_VERSION = 1
+
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
@@ -34,7 +37,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 return self._show_setup_form(errors=errors)
 
-            _LOGGER.info("Received user input %s", user_input)
+            _LOGGER.debug("Received user input %s", user_input)
             return self.async_create_entry(title="TIS Control Bridge", data=user_input)
 
         # If user_input is None (initial step), show the setup form
