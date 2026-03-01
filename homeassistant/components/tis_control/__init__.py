@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
-from attr import dataclass
 from TISApi.api import TISApi
 
 from homeassistant.config_entries import ConfigEntry
@@ -53,12 +53,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     entry.runtime_data = TISData(tis_api=tis_api)
 
     async def listen_for_events():
-        # This will run forever, pulling data from the library
+        # This will run forever, pulling data from the library.
         async for event in tis_api.consume_events():
             device_id = event["device_id"]
             hass.bus.async_fire(f"tis_device_{device_id}", event)
 
-    # Add this listener to the HA loop as a background task
+    # Add this listener to the HA loop as a background task.
     entry.async_create_background_task(hass, listen_for_events(), "tis_event_listener")
 
     try:
