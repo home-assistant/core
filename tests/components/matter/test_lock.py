@@ -1490,6 +1490,18 @@ async def test_set_lock_credential_no_available_slot(
     # Verify it iterated over NumberOfPINUsersSupported (3), not
     # NumberOfCredentialsSupportedPerUser (5)
     assert matter_client.send_device_command.call_count == 3
+    pin_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    for idx in range(3):
+        assert matter_client.send_device_command.call_args_list[idx] == call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.DoorLock.Commands.GetCredentialStatus(
+                credential=clusters.DoorLock.Structs.CredentialStruct(
+                    credentialType=pin_type,
+                    credentialIndex=idx + 1,
+                ),
+            ),
+        )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1534,6 +1546,18 @@ async def test_set_lock_credential_auto_find_defaults_to_five(
 
     # With NumberOfPINUsersSupported=None, falls back to default of 5
     assert matter_client.send_device_command.call_count == 5
+    pin_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    for idx in range(5):
+        assert matter_client.send_device_command.call_args_list[idx] == call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.DoorLock.Commands.GetCredentialStatus(
+                credential=clusters.DoorLock.Structs.CredentialStruct(
+                    credentialType=pin_type,
+                    credentialIndex=idx + 1,
+                ),
+            ),
+        )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1844,6 +1868,17 @@ async def test_set_lock_credential_rfid_auto_find_slot(
 
     # 3 GetCredentialStatus calls + 1 SetCredential = 4 total
     assert matter_client.send_device_command.call_count == 4
+    # Verify SetCredential was called with kAdd for the empty slot at index 3
+    set_cred_cmd = matter_client.send_device_command.call_args_list[3]
+    assert (
+        set_cred_cmd.kwargs["command"].operationType
+        == clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
+    )
+    assert set_cred_cmd.kwargs["command"].credential.credentialIndex == 3
+    assert (
+        set_cred_cmd.kwargs["command"].credential.credentialType
+        == clusters.DoorLock.Enums.CredentialTypeEnum.kRfid
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1889,6 +1924,18 @@ async def test_set_lock_credential_rfid_no_available_slot(
     # Verify it iterated over NumberOfRFIDUsersSupported (3), not
     # NumberOfCredentialsSupportedPerUser (5)
     assert matter_client.send_device_command.call_count == 3
+    rfid_type = clusters.DoorLock.Enums.CredentialTypeEnum.kRfid
+    for idx in range(3):
+        assert matter_client.send_device_command.call_args_list[idx] == call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.DoorLock.Commands.GetCredentialStatus(
+                credential=clusters.DoorLock.Structs.CredentialStruct(
+                    credentialType=rfid_type,
+                    credentialIndex=idx + 1,
+                ),
+            ),
+        )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
