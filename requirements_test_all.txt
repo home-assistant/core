@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
-PySwitchbot==1.0.0
+PySwitchbot==1.1.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -225,9 +225,6 @@ aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
 aiodns==4.0.0
-
-# homeassistant.components.duke_energy
-aiodukeenergy==0.3.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -800,7 +797,7 @@ energyzero==4.0.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.12.4
+env-canada==0.13.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -995,7 +992,7 @@ goslide-api==0.7.0
 gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
-govee-ble==0.44.0
+govee-ble==1.2.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==2.3.0
@@ -1820,7 +1817,7 @@ pyhaversion==22.8.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.7
+pyhive-integration==1.0.8
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -2108,7 +2105,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.3
+pysmartthings==3.6.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2744,7 +2741,7 @@ webio-api==0.1.12
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2026.1.25
+weheat==2026.2.28
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==1.0.3
