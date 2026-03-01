@@ -75,6 +75,7 @@
       "battery_state": {
         "name": "Battery state",
         "state": {
+          "charging": "Charging",
           "fully_charged": "Fully Charged",
           "not_charging": "Not Charging",
           "unknown": "Unknown"
