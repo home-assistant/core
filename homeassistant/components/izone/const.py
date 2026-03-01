@@ -13,3 +13,8 @@ DISPATCH_ZONE_UPDATE = "izone_zone_update"
 
 TIMEOUT_DISCOVERY = 20
 TIMEOUT_CONNECT = 10
+
+# How often (seconds) to retry reconnecting static-IP controllers
+# that have become disconnected. This replaces the broadcast-based
+# reconnection that doesn't work across VLANs.
+STATIC_RECONNECT_INTERVAL = 30
