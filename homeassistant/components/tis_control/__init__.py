@@ -58,8 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             try:
                 device_id = event["device_id"]
                 hass.bus.async_fire(f"tis_device_{device_id}", event)
-            except KeyError:
-                _LOGGER.warning("Received event without device_id: %s", event)
             except Exception as e:  # noqa: BLE001
                 _LOGGER.error("Unexpected error while processing TIS event: %s", e)
 
