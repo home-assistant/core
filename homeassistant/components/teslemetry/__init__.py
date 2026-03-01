@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
@@ -106,7 +106,7 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
             translation_domain=DOMAIN,
             translation_key="not_ready_connection_error",
         ) from err
-    return str(oauth_session.token[CONF_ACCESS_TOKEN])
+    return cast(str, oauth_session.token[CONF_ACCESS_TOKEN])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
