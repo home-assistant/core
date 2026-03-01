@@ -230,13 +230,16 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            _LOGGER.debug("SSDP auth user input received: %s", user_input)
+            _LOGGER.debug(
+                "SSDP auth user input received: %s",
+                async_redact_data(user_input, TO_REDACT),
+            )
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
             }
             # Remove None values
             data = {k: v for k, v in data.items() if v is not None}
