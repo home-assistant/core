@@ -3,12 +3,8 @@
   "name": "TIS Control",
   "codeowners": ["@KarimTIS"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/tis_control",
-  "homekit": {},
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["TISApi==0.1.15"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["TISApi==0.1.15"]
 }
