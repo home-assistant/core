@@ -84,6 +84,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "name": "Reset HEPA filter"
+      },
       "reset_hood_filter": {
         "name": "Reset filter"
       },
