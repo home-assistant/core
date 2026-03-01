@@ -3,7 +3,7 @@
   "name": "Victron GX",
   "codeowners": ["@tomer-w"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/victron",
+  "documentation": "https://www.home-assistant.io/integrations/victron_gx_mqtt",
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "silver",

@@ -10,7 +10,7 @@ CONF_SERIAL = "serial"
 CONF_ROOT_TOPIC_PREFIX = "root_topic_prefix"
 CONF_UPDATE_FREQUENCY_SECONDS = "update_frequency"
 
-DEFAULT_HOST = "venus.local."
+DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
 DEFAULT_UPDATE_FREQUENCY_SECONDS = 30
 
