@@ -928,14 +928,6 @@ class PowerViewShadeDualOverlappedCombinedTilt(
     ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_supported_features |= (
-            CoverEntityFeature.OPEN_TILT
-            | CoverEntityFeature.CLOSE_TILT
-            | CoverEntityFeature.SET_TILT_POSITION
-        )
-        if self._shade.is_supported(MOTION_STOP):
-            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
-        self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
     def transition_steps(self) -> int:
