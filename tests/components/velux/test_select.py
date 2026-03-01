@@ -13,8 +13,6 @@ from homeassistant.const import ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import update_callback_entity
-
 from tests.common import (
     MockConfigEntry,
     SnapshotAssertion,
