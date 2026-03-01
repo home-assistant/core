@@ -4,22 +4,14 @@ from __future__ import annotations
 
 import logging
 
-from aioesphomeapi import (
-    APIConnectionError,
-    EntityInfo,
-    EntityState,
-    InfraredCapability,
-    InfraredInfo,
-)
+from aioesphomeapi import EntityInfo, EntityState, InfraredCapability, InfraredInfo
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .entity import EsphomeEntity, async_static_info_updated
+from .entity import EsphomeEntity, async_static_info_updated, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,9 +22,6 @@ PARALLEL_UPDATES = 0
 class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEntity):
     """ESPHome infrared entity using native API."""
 
-    _attr_has_entity_name = True
-    _attr_name = "Infrared Transmitter"
-
     @callback
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
@@ -41,12 +30,9 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
             # Infrared entities should go available as soon as the device comes online
             self.async_write_ha_state()
 
+    @convert_api_error_ha_error
     async def async_send_command(self, command: InfraredCommand) -> None:
-        """Send an IR command.
-
-        Raises:
-            HomeAssistantError: If transmission fails.
-        """
+        """Send an IR command."""
         timings = [
             interval
             for timing in command.get_raw_timings()
@@ -54,21 +40,12 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
         ]
         _LOGGER.debug("Sending command: %s", timings)
 
-        try:
-            self._client.infrared_rf_transmit_raw_timings(
-                self._static_info.key,
-                carrier_frequency=command.modulation,
-                timings=timings,
-            )
-        except APIConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="error_sending_ir_command",
-                translation_placeholders={
-                    "device_name": self._device_info.name,
-                    "error": str(err),
-                },
-            ) from err
+        self._client.infrared_rf_transmit_raw_timings(
+            self._static_info.key,
+            carrier_frequency=command.modulation,
+            timings=timings,
+            device_id=self._static_info.device_id,
+        )
 
 
 async def async_setup_entry(
