@@ -168,6 +168,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         if hvac_mode == HVACMode.HEAT:
             temperature = self._attr_target_temperature or self._attr_min_temp
             await self._adax_data_handler.set_target_temperature(temperature)
+            self._attr_target_temperature = temperature
             self._attr_icon = "mdi:radiator"
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
