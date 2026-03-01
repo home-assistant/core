@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -94,3 +94,39 @@ async def test_charge_energy_reset(
     state = hass.states.get(entity_id)
     assert state.state == "5.0"
     assert state.attributes.get("last_reset") is not None
+
+
+async def test_charge_energy_restore_last_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_get_state: AsyncMock,
+) -> None:
+    """Test that last_reset is restored after a reload."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    # Initial fixture has charge_energy_added = 18.47
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    entity_id = "sensor.test_charge_energy_added"
+
+    # Trigger a reset by dropping to 0
+    freezer.move_to("2024-01-01 01:00:00+00:00")
+    reset_data = deepcopy(TEST_VEHICLE_STATE_ONLINE)
+    reset_data["charge_state"]["charge_energy_added"] = 0
+    mock_get_state.return_value = reset_data
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    last_reset = state.attributes["last_reset"]
+    assert last_reset is not None
+
+    # Reload the entry
+    mock_get_state.return_value = TEST_VEHICLE_STATE_ONLINE
+    with patch("homeassistant.components.tessie.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+
+    # last_reset should be restored
+    state = hass.states.get(entity_id)
+    assert state.attributes["last_reset"] == last_reset
