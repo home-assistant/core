@@ -175,7 +175,7 @@ async def test_battery_state_sensor(
         mock_status.app_name = "Kiosker"
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 85
-        mock_status.battery_state = "discharging"
+        mock_status.battery_state = "charging"
         mock_status.last_interaction = "2025-01-01T12:00:00Z"
         mock_status.last_motion = "2025-01-01T11:55:00Z"
         mock_status.last_update = "2025-01-01T12:05:00Z"
@@ -211,7 +211,7 @@ async def test_battery_state_sensor(
     # Check battery state sensor
     state = hass.states.get("sensor.kiosker_a98be1ce_battery_state")
     assert state is not None
-    assert state.state == "discharging"
+    assert state.state == "charging"
 
 
 async def test_last_interaction_sensor(
