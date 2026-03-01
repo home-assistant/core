@@ -65,6 +65,10 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             serial_number=device_id,
         )
 
-        # Set unique ID if description is provided - use truncated ID to match device name
-        if description and hasattr(description, "translation_key"):
-            self._attr_unique_id = f"{device_id_short}_{description.translation_key}"
+        # Set unique ID if description is provided - use full device ID for uniqueness
+        if (
+            description
+            and hasattr(description, "translation_key")
+            and device_id != "unknown"
+        ):
+            self._attr_unique_id = f"{device_id}_{description.translation_key}"
