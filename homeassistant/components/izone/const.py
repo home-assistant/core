@@ -12,3 +12,4 @@ DISPATCH_CONTROLLER_UPDATE = "izone_controller_update"
 DISPATCH_ZONE_UPDATE = "izone_zone_update"
 
 TIMEOUT_DISCOVERY = 20
+TIMEOUT_CONNECT = 10

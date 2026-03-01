@@ -4,13 +4,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CONFIG, IZONE
-from .discovery import async_start_discovery_service, async_stop_discovery_service
+from .discovery import (
+    async_add_controller_by_ip,
+    async_start_discovery_service,
+    async_stop_discovery_service,
+)
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -55,6 +59,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    # If a host is configured, manually add the controller by IP
+    if host := entry.data.get(CONF_HOST):
+        try:
+            await async_add_controller_by_ip(hass, host)
+        except ConnectionError:
+            return False
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
