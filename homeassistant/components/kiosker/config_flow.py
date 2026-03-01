@@ -105,6 +105,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kiosker."""
 
+    VERSION = 1
+    MINOR_VERSION = 1
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
