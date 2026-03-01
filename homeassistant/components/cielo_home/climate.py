@@ -264,8 +264,20 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the climate device on."""
-        await self.async_set_hvac_mode(HVACMode.HEAT_COOL)
+        modes = self.hvac_modes or []
 
+        # Select the first supported non-off mode when turning on
+        for mode in modes:
+            if mode != HVACMode.OFF:
+                await self.async_set_hvac_mode(mode)
+                return
+
+        if not modes:
+            raise HomeAssistantError("No HVAC modes available to turn on device")
+
+        raise HomeAssistantError(
+            "No non-off HVAC modes available to turn on device"
+        )
     async def async_turn_off(self) -> None:
         """Turn the climate device off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
