@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.kiosker.const import DOMAIN
+from homeassistant.components.kiosker.coordinator import KioskerData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -16,7 +17,9 @@ async def test_async_setup_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test a successful setup entry and unload."""
-    with patch("homeassistant.components.kiosker.KioskerAPI") as mock_api_class:
+    with patch(
+        "homeassistant.components.kiosker.coordinator.KioskerAPI"
+    ) as mock_api_class:
         # Setup mock API
         mock_api = MagicMock()
         mock_api.host = "10.0.1.5"
@@ -35,7 +38,11 @@ async def test_async_setup_entry(
         with patch(
             "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
         ) as mock_update:
-            mock_update.return_value = {"status": mock_status}
+            mock_update.return_value = KioskerData(
+                status=mock_status,
+                screensaver=None,
+                blackout=None,
+            )
 
             await setup_integration(hass, mock_config_entry)
             assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -50,7 +57,9 @@ async def test_async_setup_entry_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test an unsuccessful setup entry."""
-    with patch("homeassistant.components.kiosker.KioskerAPI") as mock_api_class:
+    with patch(
+        "homeassistant.components.kiosker.coordinator.KioskerAPI"
+    ) as mock_api_class:
         # Setup mock API that fails
         mock_api = MagicMock()
         mock_api.host = "10.0.1.5"
@@ -70,7 +79,9 @@ async def test_device_info(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device registry integration."""
-    with patch("homeassistant.components.kiosker.KioskerAPI") as mock_api_class:
+    with patch(
+        "homeassistant.components.kiosker.coordinator.KioskerAPI"
+    ) as mock_api_class:
         # Setup mock API
         mock_api = MagicMock()
         mock_api.host = "10.0.1.5"
@@ -89,7 +100,11 @@ async def test_device_info(
         with patch(
             "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
         ) as mock_update:
-            mock_update.return_value = {"status": mock_status}
+            mock_update.return_value = KioskerData(
+                status=mock_status,
+                screensaver=None,
+                blackout=None,
+            )
 
             await setup_integration(hass, mock_config_entry)
 
@@ -112,7 +127,9 @@ async def test_device_identifiers_and_info(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device identifiers and device info are set correctly."""
-    with patch("homeassistant.components.kiosker.KioskerAPI") as mock_api_class:
+    with patch(
+        "homeassistant.components.kiosker.coordinator.KioskerAPI"
+    ) as mock_api_class:
         # Setup mock API
         mock_api = MagicMock()
         mock_api.host = "10.0.1.5"
@@ -131,7 +148,11 @@ async def test_device_identifiers_and_info(
         with patch(
             "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
         ) as mock_update:
-            mock_update.return_value = {"status": mock_status}
+            mock_update.return_value = KioskerData(
+                status=mock_status,
+                screensaver=None,
+                blackout=None,
+            )
 
             await setup_integration(hass, mock_config_entry)
 

@@ -43,8 +43,6 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             app_version = "Unknown"
             os_version = "Unknown"
 
-        # Use truncated device ID for consistency in unique IDs
-        device_id_short = device_id[:8].lower() if device_id != "unknown" else "unknown"
         # Use uppercased truncated device ID for display purposes (device name, titles)
         device_id_short_display = (
             device_id[:8].upper() if device_id != "unknown" else "unknown"

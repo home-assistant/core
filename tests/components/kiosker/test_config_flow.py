@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
+from kiosker import ConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -65,7 +66,10 @@ async def test_form(hass: HomeAssistant) -> None:
         mock_api.status.return_value = mock_status
         mock_api_class.return_value = mock_api
 
-        mock_validate.return_value = {"title": "Kiosker A98BE1CE"}
+        mock_validate.return_value = {
+            "title": "Kiosker A98BE1CE",
+            "device_id": "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
+        }
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -159,20 +163,13 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_no_uuid(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery without UUID."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO_NO_UUID,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-    # Check description placeholders instead of context
-    assert result["description_placeholders"] == {
-        "name": "Kiosker 192.168.1.39",
-        "host": "192.168.1.39",
-        "port": "8081",
-    }
+    """Test zeroconf discovery without UUID raises CannotConnect."""
+    with pytest.raises(CannotConnect):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DISCOVERY_INFO_NO_UUID,
+        )
 
 
 async def test_zeroconf_confirm(hass: HomeAssistant) -> None:
@@ -293,7 +290,10 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
         mock_api.status.return_value = mock_status
         mock_api_class.return_value = mock_api
 
-        mock_validate.return_value = {"title": "Kiosker A98BE1CE"}
+        mock_validate.return_value = {
+            "title": "Kiosker A98BE1CE",
+            "device_id": "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
+        }
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -330,16 +330,16 @@ async def test_zeroconf_abort_if_already_configured(hass: HomeAssistant) -> None
 
 
 async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None:
-    """Test manual setup falls back to host:port when device_id unavailable."""
+    """Test manual setup raises CannotConnect when device_id unavailable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with (
         patch(
-            "homeassistant.components.kiosker.config_flow.validate_input"
-        ) as mock_validate,
-        patch("homeassistant.components.kiosker.async_setup_entry", return_value=True),
+            "homeassistant.components.kiosker.config_flow.validate_input",
+            side_effect=CannotConnect,
+        ),
         patch(
             "homeassistant.components.kiosker.config_flow.KioskerAPI"
         ) as mock_api_class,
@@ -348,8 +348,6 @@ async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None
         mock_api = Mock()
         mock_api.status.side_effect = Exception("Connection failed")
         mock_api_class.return_value = mock_api
-
-        mock_validate.return_value = {"title": "Kiosker 192.168.1.100"}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -361,10 +359,9 @@ async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None
                 "ssl_verify": False,
             },
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Kiosker 192.168.1.100"
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_validate_input_success(
@@ -385,7 +382,10 @@ async def test_validate_input_success(
     }
 
     result = await validate_input(hass, data)
-    assert result == {"title": "Kiosker A98BE1CE"}
+    assert result == {
+        "title": "Kiosker A98BE1CE",
+        "device_id": "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
+    }
 
 
 async def test_validate_input_connection_error(
@@ -395,7 +395,7 @@ async def test_validate_input_connection_error(
 ) -> None:
     """Test validate_input with connection error."""
 
-    mock_kiosker_api.status.side_effect = Exception("Connection failed")
+    mock_kiosker_api.status.side_effect = ConnectionError("Connection failed")
     mock_kiosker_api_class.return_value = mock_kiosker_api
 
     data = {

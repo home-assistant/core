@@ -107,6 +107,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
