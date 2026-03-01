@@ -143,6 +143,8 @@ async def test_climate_local_initial_state_off_from_first_refresh(
         )
     finally:
         LOCAL_DEVICE_DATA["target_temperature"] = original_target
+
+
 async def test_climate_local_set_hvac_mode_updates_state_immediately(
     hass: HomeAssistant,
     mock_local_config_entry: MockConfigEntry,
