@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -82,7 +84,7 @@ class VerisureDoorWindowSensor(
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_LAST_TRIP_TIME: dt_util.parse_datetime(

@@ -111,7 +111,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_mqtt_sensor",
+            "sensor.mqtt_sensor",
             DEFAULT_SENSOR_NAME,
             None,
             True,
@@ -158,7 +158,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_humidity",
+            "sensor.humidity",
             "Humidity",
             None,
             True,
@@ -192,7 +192,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_mysensor",
+            "sensor.mysensor",
             "MySensor",
             None,
             True,
@@ -466,40 +466,6 @@ async def test_value_template_fails(
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
         in caplog.text
     )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_topic": "test-topic",
-                    "object_id": "test",
-                }
-            }
-        },
-    ],
-)
-async def test_deprecated_option_object_id_is_used_in_yaml(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test issue registry in case the deprecated option object_id was used in YAML."""
-    await mqtt_mock_entry()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test")
-    assert state is not None
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(mqtt.DOMAIN, "sensor.test")
-    assert issue is not None
-    assert issue.translation_placeholders == {
-        "entity_id": "sensor.test",
-        "object_id": "test",
-        "domain": "sensor",
-    }
 
 
 @pytest.mark.parametrize(

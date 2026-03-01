@@ -66,16 +66,28 @@ async def test_event_triggers(
         assert state.attributes[ATTR_EVENT_TYPE] == event_type
 
 
+@pytest.mark.parametrize(
+    ("profile"),
+    [
+        (20),
+        (24),
+        (25),
+        (26),
+        (41),
+    ],
+)
 async def test_event_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    profile: int,
 ) -> None:
     """Test the event entity snapshot."""
     with patch("homeassistant.components.homee.PLATFORMS", [Platform.EVENT]):
         mock_homee.nodes = [build_mock_node("events.json")]
+        mock_homee.nodes[0].profile = profile
         mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
         await setup_integration(hass, mock_config_entry)
 
