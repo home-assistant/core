@@ -55,8 +55,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     async def listen_for_events():
         # This will run forever, pulling data from the library.
         async for event in tis_api.consume_events():
-            device_id = event["device_id"]
-            hass.bus.async_fire(f"tis_device_{device_id}", event)
+            try:
+                device_id = event["device_id"]
+                hass.bus.async_fire(f"tis_device_{device_id}", event)
+            except KeyError:
+                _LOGGER.warning("Received event without device_id: %s", event)
+            except Exception as e:  # noqa: BLE001
+                _LOGGER.error("Unexpected error while processing TIS event: %s", e)
 
     # Add this listener to the HA loop as a background task.
     entry.async_create_background_task(hass, listen_for_events(), "tis_event_listener")
