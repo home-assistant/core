@@ -137,6 +137,27 @@ async def test_clear_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
+async def test_clear_zone_override_legacy(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test Evohome's clear_zone_override service with the legacy entity_id."""
+
+    # EvoZoneMode.FOLLOW_SCHEDULE
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_ZONE_OVERRIDE,
+            {
+                ATTR_ENTITY_ID: zone_id,
+            },
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
 async def test_set_zone_override(
     hass: HomeAssistant,
     zone_id: str,
