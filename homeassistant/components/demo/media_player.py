@@ -139,18 +139,6 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._attr_is_volume_muted = mute
         self.schedule_update_ha_state()
 
-    def volume_up(self) -> None:
-        """Increase volume."""
-        assert self.volume_level is not None
-        self._attr_volume_level = min(1.0, self.volume_level + 0.1)
-        self.schedule_update_ha_state()
-
-    def volume_down(self) -> None:
-        """Decrease volume."""
-        assert self.volume_level is not None
-        self._attr_volume_level = max(0.0, self.volume_level - 0.1)
-        self.schedule_update_ha_state()
-
     def set_volume_level(self, volume: float) -> None:
         """Set the volume level, range 0..1."""
         self._attr_volume_level = volume
