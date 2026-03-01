@@ -12,5 +12,10 @@
     "set_value": {
       "service": "mdi:counter"
     }
+  },
+  "triggers": {
+    "reset": {
+      "trigger": "mdi:refresh"
+    }
   }
 }
