@@ -917,18 +917,6 @@ class PowerViewShadeDualOverlappedCombinedTilt(
     Type 10 - Duolite with 180° Tilt
     """
 
-    # type
-    def __init__(
-        self,
-        coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: PowerviewDeviceInfo,
-        room_name: str,
-        shade: BaseShade,
-        name: str,
-    ) -> None:
-        """Initialize the shade."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-
     @property
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
