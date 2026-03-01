@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import IntEnum
@@ -10,8 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from opendisplay import (
-    BLEConnectionError,
-    BLETimeoutError,
     DitherMode,
     FitMode,
     OpenDisplayDevice,
@@ -40,8 +39,15 @@ if TYPE_CHECKING:
 
 from .const import DOMAIN
 
+ATTR_IMAGE = "image"
+ATTR_ROTATION = "rotation"
+ATTR_DITHER_MODE = "dither_mode"
+ATTR_REFRESH_MODE = "refresh_mode"
+ATTR_FIT_MODE = "fit_mode"
+ATTR_TONE_COMPRESSION = "tone_compression"
 
-def _str_to_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
+
+def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
     """Return a validator that converts a lowercase enum name string to an enum member."""
     members = {m.name.lower(): m for m in enum_class}
 
@@ -56,15 +62,17 @@ def _str_to_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
 SCHEMA_UPLOAD_IMAGE = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required("image"): MediaSelector(MediaSelectorConfig(accept=["image/*"])),
-        vol.Optional("rotation", default=Rotation.ROTATE_0): vol.All(
+        vol.Required(ATTR_IMAGE): MediaSelector(
+            MediaSelectorConfig(accept=["image/*"])
+        ),
+        vol.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): vol.All(
             vol.Coerce(int), vol.Coerce(Rotation)
         ),
-        vol.Optional("dither_mode", default="burkes"): _str_to_enum(DitherMode),
-        vol.Optional("refresh_mode", default="full"): _str_to_enum(RefreshMode),
-        vol.Optional("fit_mode", default="contain"): _str_to_enum(FitMode),
-        vol.Optional("tone_compression"): vol.All(
-            vol.Coerce(float), vol.Range(min=0.0, max=1.0)
+        vol.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(DitherMode),
+        vol.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(RefreshMode),
+        vol.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
+        vol.Optional(ATTR_TONE_COMPRESSION): vol.All(
+            vol.Coerce(float), vol.Range(min=0.0, max=100.0)
         ),
     }
 )
@@ -143,12 +151,15 @@ async def _async_upload_image(call: ServiceCall) -> None:
     address = entry.unique_id
     assert address is not None
 
-    image_data: dict[str, Any] = call.data["image"]
-    rotation: Rotation = call.data.get("rotation", Rotation.ROTATE_0)
-    dither_mode: DitherMode = call.data.get("dither_mode", DitherMode.BURKES)
-    refresh_mode: RefreshMode = call.data.get("refresh_mode", RefreshMode.FULL)
-    fit_mode: FitMode = call.data.get("fit_mode", FitMode.CONTAIN)
-    tone_compression: float | str = call.data.get("tone_compression", "auto")
+    image_data: dict[str, Any] = call.data[ATTR_IMAGE]
+    rotation: Rotation = call.data[ATTR_ROTATION]
+    dither_mode: DitherMode = call.data[ATTR_DITHER_MODE]
+    refresh_mode: RefreshMode = call.data[ATTR_REFRESH_MODE]
+    fit_mode: FitMode = call.data[ATTR_FIT_MODE]
+    tone_compression_pct: float = call.data[ATTR_TONE_COMPRESSION]
+    tone_compression: float | str = (
+        tone_compression_pct / 100.0 if tone_compression_pct is not None else "auto"
+    )
 
     ble_device = async_ble_device_from_address(call.hass, address, connectable=True)
     if ble_device is None:
@@ -165,6 +176,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
     else:
         pil_image = await _async_download_image(call.hass, media.url)
 
+    current = asyncio.current_task()
+    if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
+        prev.cancel()
+    entry.runtime_data.upload_task = current
+
     try:
         async with OpenDisplayDevice(
             mac_address=address,
@@ -179,12 +195,15 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 fit=fit_mode,
                 rotate=rotation,
             )
-    except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
+    except asyncio.CancelledError:
+        return
+    except OpenDisplayError as err:
         raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="upload_error",
-            translation_placeholders={"error": str(err)},
+            translation_domain=DOMAIN, translation_key="upload_error"
         ) from err
+    finally:
+        if entry.runtime_data.upload_task is current:
+            entry.runtime_data.upload_task = None
 
 
 @callback

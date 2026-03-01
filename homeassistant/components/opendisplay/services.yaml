@@ -64,6 +64,6 @@ upload_image:
           selector:
             number:
               min: 0
-              max: 1
-              step: 0.05
+              max: 100
+              step: 1
               mode: slider

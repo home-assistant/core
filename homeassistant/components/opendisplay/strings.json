@@ -36,7 +36,7 @@
       "message": "Failed to download media: {error}"
     },
     "upload_error": {
-      "message": "Failed to upload image: {error}"
+      "message": "Failed to upload image to the display."
     }
   },
   "selector": {

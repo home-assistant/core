@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -36,6 +37,7 @@ class OpenDisplayRuntimeData:
 
     firmware: FirmwareVersion
     device_config: GlobalConfig
+    upload_task: asyncio.Task | None = None
 
 
 type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]
