@@ -173,6 +173,10 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
             self._attr_icon = "mdi:radiator-off"
+        else:
+            # Ignore unsupported HVAC modes to avoid desynchronizing entity state
+            # from the physical device.
+            return
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
