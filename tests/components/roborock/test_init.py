@@ -100,7 +100,7 @@ async def test_reauth_started_when_stored_user_data_invalid(
     invalid_data = dict(mock_roborock_entry.data)
     invalid_data[CONF_USER_DATA] = dict(mock_roborock_entry.data[CONF_USER_DATA])
     del invalid_data[CONF_USER_DATA]["rriot"]
-    mock_roborock_entry.data = invalid_data
+    hass.config_entries.async_update_entry(mock_roborock_entry, data=invalid_data)
 
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
