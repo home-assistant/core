@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -540,29 +541,31 @@ async def test_temp_change_heater_on_outside_tolerance(hass: HomeAssistant) -> N
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_external_toggle_resets_min_cycle(hass: HomeAssistant) -> None:
+async def test_external_toggle_resets_min_cycle(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that an external toggle cancels the min_cycle scheduled check."""
     # Set up thermostat with min cycle duration and cooldown
     await _setup_thermostat_with_min_cycle_duration(hass, False, HVACMode.HEAT)
 
     fake_changed = datetime.datetime.now(dt_util.UTC)
     # Perform initial actions at the same frozen time so the cycle timer is recent
-    with freeze_time(fake_changed):
-        # Start with switch on and record service call registrations
-        calls = _setup_switch(hass, True)
+    freezer.move_to(fake_changed)
+    # Start with switch on and record service call registrations
+    calls = _setup_switch(hass, True)
 
-        # Cause condition to try to turn off (inside min cycle)
-        await common.async_set_temperature(hass, 25)
-        _setup_sensor(hass, 30)
-        await hass.async_block_till_done()
+    # Cause condition to try to turn off (inside min cycle)
+    await common.async_set_temperature(hass, 25)
+    _setup_sensor(hass, 30)
+    await hass.async_block_till_done()
 
-        # No service calls should have been made because we're within min_cycle
-        assert len(calls) == 0
+    # No service calls should have been made because we're within min_cycle
+    assert len(calls) == 0
 
     # Simulate an external toggle shortly after (resets internals)
-    with freeze_time(fake_changed + datetime.timedelta(minutes=1)):
-        hass.states.async_set(ENT_SWITCH, STATE_OFF)
-        await hass.async_block_till_done()
+    freezer.move_to(fake_changed + datetime.timedelta(minutes=1))
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    await hass.async_block_till_done()
 
     # Advance past the original min_cycle; since callbacks were cancelled by
     # the external toggle, no automatic turn_off should occur
@@ -1166,8 +1169,10 @@ async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
     assert calls[1].service == SERVICE_TURN_OFF
 
 
-async def test_external_toggle_resets_scheduled_callbacks(hass: HomeAssistant) -> None:
-    """Test that an external switch change cancels scheduled callbacks."""
+async def test_external_toggle_resets_max_cycle(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that an external toggle cancels the max_cycle scheduled check."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
@@ -1198,9 +1203,9 @@ async def test_external_toggle_resets_scheduled_callbacks(hass: HomeAssistant) -
     # Simulate an external toggle event shortly after (resets internals)
     test_time = datetime.datetime.now(dt_util.UTC)
     async_fire_time_changed(hass, test_time)
-    with freeze_time(test_time + datetime.timedelta(minutes=1)):
-        hass.states.async_set(ENT_SWITCH, STATE_ON)
-        await hass.async_block_till_done()
+    freezer.move_to(test_time + datetime.timedelta(minutes=1))
+    hass.states.async_set(ENT_SWITCH, STATE_ON)
+    await hass.async_block_till_done()
 
     # Advance past the original max duration; since callbacks were cancelled by
     # the external toggle, no automatic turn_off should occur
