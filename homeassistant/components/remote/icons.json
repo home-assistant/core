@@ -26,5 +26,13 @@
     "turn_on": {
       "service": "mdi:remote"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:remote-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:remote"
+    }
   }
 }
