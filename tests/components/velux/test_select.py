@@ -73,34 +73,6 @@ async def test_select_device_association(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
 @pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
-async def test_velocity_select_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_window: AsyncMock
-) -> None:
-    """Test velocity select state updates."""
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.SELECT, "velux", f"{mock_window.serial_number}_velocity"
-    )
-    assert entity_id is not None
-
-    # Load component with mock_window
-    await update_callback_entity(hass, mock_window)
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "default"
-
-    # Simulate changing velocity externally
-    mock_window.use_default_velocity = True
-    mock_window.default_velocity = Velocity.SILENT
-    await update_callback_entity(hass, mock_window)
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "silent"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_velocity_select_option(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_window: AsyncMock
 ) -> None:

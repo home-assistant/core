@@ -55,8 +55,6 @@ class VeluxVelocitySelect(VeluxEntity, SelectEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Restore state."""
-        # super() is required for RestoreEntity restoration and VeluxEntity availability callbacks
-        await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state and state.state in VELOCITY_MAP:
             self._update_velocity(state.state)
