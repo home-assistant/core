@@ -13,7 +13,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Final
 
 from aiohttp import ClientError
@@ -104,14 +104,14 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
 
         try:
             dev.apply_update(data)
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             await self.async_request_refresh()
             return
 
         new_parsed[device_id] = dev
         self.async_set_updated_data(CieloData(raw=self.data.raw, parsed=new_parsed))
 
-        def _refresh_later(_now: float) -> None:
+        async def _refresh_later(_now: datetime) -> None:
             """Schedule a refresh after the backend has had time to update."""
             self.hass.async_create_task(self.async_request_refresh())
 

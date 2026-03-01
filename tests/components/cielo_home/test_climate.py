@@ -1,9 +1,9 @@
 """Common tests for the Cielo Home climate."""
 
-from unittest.mock import ANY, AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.const import CONF_API_KEY, CONF_TOKEN
+from homeassistant.const import CONF_API_KEY, CONF_TOKEN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -62,6 +62,7 @@ async def test_climate_set_temperature_calls_library(
         )
 
         device_api.async_set_temperature.assert_awaited_once_with(
-            "°C",
+            UnitOfTemperature.CELSIUS,
+            entity_id=[state.entity_id],
             temperature=25.0,
         )
