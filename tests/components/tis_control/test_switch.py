@@ -37,7 +37,7 @@ MOCK_RAW_API_RESPONSE = [
 async def setup_mock_switch(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Set up the TIS integration with a single mock switch and return the mock API instance."""
 
-    # 1. Patch the class AS IT IS IMPORTED IN YOUR __init__.py.
+    # Patch the class AS IT IS IMPORTED IN YOUR __init__.py.
     with (
         patch("homeassistant.components.tis_control.TISApi") as mock_tis_api_cls,
         patch(
@@ -89,7 +89,7 @@ async def test_setup_and_properties(
     assert state is not None
     assert state.name == "Test Switch"
 
-    # Verify that during setup, the entity registers its callback and requests an update..
+    # Verify that during setup, the entity registers its callback and requests an update.
     setup_mock_switch.register_callback.assert_called_once()
     setup_mock_switch.request_update.assert_awaited_once()
 
@@ -130,7 +130,7 @@ async def test_turn_on_service(
     """Test the turn_on service call."""
     mock_wrapper = setup_mock_switch
 
-    # 1. Successful turn_on.
+    # Successful turn_on.
     mock_wrapper.turn_switch_on.return_value = True
 
     await hass.services.async_call(
@@ -141,7 +141,7 @@ async def test_turn_on_service(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
-    # 2. Failed turn_on (device offline/no ack).
+    # Failed turn_on (device offline/no ack).
     mock_wrapper.turn_switch_on.reset_mock()
     mock_wrapper.turn_switch_on.return_value = False
 
@@ -160,7 +160,7 @@ async def test_turn_off_service(
     """Test the turn_off service call."""
     mock_wrapper = setup_mock_switch
 
-    # 1. Successful turn_off.
+    # Successful turn_off.
     mock_wrapper.turn_switch_off.return_value = True
 
     await hass.services.async_call(
@@ -171,7 +171,7 @@ async def test_turn_off_service(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
 
-    # 2. Failed turn_off.
+    # Failed turn_off.
     mock_wrapper.turn_switch_off.reset_mock()
     mock_wrapper.turn_switch_off.return_value = False
 
@@ -194,21 +194,21 @@ async def test_state_updates_from_callback(
     # This will now work because setup_mock_switch completed successfully.
     callback = mock_wrapper.register_callback.call_args[0][0]
 
-    # 1. Device updates to ON.
+    # Device updates to ON.
     mock_wrapper.is_on = True
     mock_wrapper.available = True
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    # 2. Device updates to OFF.
+    # Device updates to OFF.
     mock_wrapper.is_on = False
     mock_wrapper.available = True
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    # 3. Device updates to Unavailable.
+    # Device updates to Unavailable.
     mock_wrapper.available = False
     callback()
     await hass.async_block_till_done()
@@ -261,7 +261,7 @@ async def test_setup_switch_no_name(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Dynamically get the entity ID because it won't be 'switch.test_switch'.
-        # when the name is None..
+        # when the name is None.
         entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
 
         # Assert that exactly one switch was created.
