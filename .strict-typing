@@ -545,6 +545,7 @@ homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
+homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*
