@@ -22,7 +22,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
@@ -114,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required("cleaning_area_id"): vol.All(cv.ensure_list, [str]),
         },
-        "async_internal_clean_area",
+        StateVacuumEntity.async_internal_clean_area,
         [VacuumEntityFeature.CLEAN_AREA],
     )
     component.async_register_entity_service(
@@ -422,27 +423,31 @@ class StateVacuumEntity(
         return [Segment(**segment) for segment in last_seen_segments]
 
     @final
+    @staticmethod
     async def async_internal_clean_area(
-        self, cleaning_area_id: list[str], **kwargs: Any
+        entity: StateVacuumEntity, call: ServiceCall
     ) -> None:
         """Perform an area clean.
 
         Calls async_clean_segments.
         """
-        if self.registry_entry is None:
+        if entity.registry_entry is None:
             raise RuntimeError(
                 "Cannot perform area clean, registry entry is not set for"
-                f" {self.entity_id}"
+                f" {entity.entity_id}"
             )
 
-        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        data = remove_entity_service_fields(call)
+        cleaning_area_id: list[str] = data.pop("cleaning_area_id")
+
+        options: Mapping[str, Any] = entity.registry_entry.options.get(DOMAIN, {})
         area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
 
         if area_mapping is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="area_mapping_not_configured",
-                translation_placeholders={"entity_id": self.entity_id},
+                translation_placeholders={"entity_id": entity.entity_id},
             )
 
         # We use a dict to preserve the order of segments.
@@ -455,11 +460,11 @@ class StateVacuumEntity(
             _LOGGER.debug(
                 "No segments found for cleaning_area_id %s on vacuum %s",
                 cleaning_area_id,
-                self.entity_id,
+                entity.entity_id,
             )
             return
 
-        await self.async_clean_segments(list(segment_ids), **kwargs)
+        await entity.async_clean_segments(list(segment_ids), **data)
 
     def clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
