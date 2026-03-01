@@ -19,19 +19,6 @@ async def _mock_consume_events():
 
 
 @pytest.fixture
-def mock_setup_entry():
-    """Override async_setup_entry for unload tests."""
-    with patch(
-        "homeassistant.components.tis_control.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        mock_setup_entry.data = {CONF_PORT: "6000"}
-        mock_setup_entry.domain = DOMAIN
-        mock_setup_entry.entry_id = "1234"
-        mock_setup_entry.runtime_data = MagicMock()
-        yield mock_setup_entry
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -134,23 +121,30 @@ async def test_async_setup_entry_event_listener(
 
 @pytest.mark.asyncio
 async def test_async_unload_entry_success(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful unload of entry."""
+    # We need to give the config entry some runtime_data because async_unload_entry
+    # likely tries to access it to close connections.
+    mock_config_entry.runtime_data = MagicMock()
+
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
-        result = await async_unload_entry(hass, mock_setup_entry)
+        result = await async_unload_entry(hass, mock_config_entry)
         assert result is True
 
 
 @pytest.mark.asyncio
 async def test_async_unload_entry_failure(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test unsuccessful unload of entry."""
+    mock_config_entry.runtime_data = MagicMock()
+
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=False
     ) as mock_unload_platforms:
-        result = await async_unload_entry(hass, mock_setup_entry)
+        # Pass the real MockConfigEntry here
+        result = await async_unload_entry(hass, mock_config_entry)
 
         assert result is False
         mock_unload_platforms.assert_called_once()
