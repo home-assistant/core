@@ -116,7 +116,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
 
     coordinator = CloudflareCoordinator(hass, entry, client, dns_zone)
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+
+    if isinstance(coordinator.last_exception, ConfigEntryAuthFailed):
+        raise coordinator.last_exception
 
     entry.runtime_data = CloudflareRuntimeData(
         client=client,

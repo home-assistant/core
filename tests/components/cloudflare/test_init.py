@@ -70,6 +70,18 @@ async def test_async_setup_raises_entry_auth_failed(
     assert flow["context"]["entry_id"] == entry.entry_id
 
 
+async def test_setup_loads_when_initial_refresh_fails(
+    hass: HomeAssistant, cfupdate: MagicMock
+) -> None:
+    """Test setup still loads entities when first refresh fails temporarily."""
+    with patch(LOCATION_PATCH_TARGET, return_value=None):
+        entry = await init_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.cloudflare_zone_mock_com_last_update")
+    assert hass.states.get("sensor.cloudflare_zone_mock_com_external_ip")
+
+
 @pytest.mark.usefixtures("location_info")
 async def test_unload_entry(hass: HomeAssistant, cfupdate: MagicMock) -> None:
     """Test successful unload of entry."""
