@@ -82,7 +82,7 @@ class SIAHub:
     async def async_start(self) -> None:
         """Start the underlying alarm server."""
         if self._oh_client:
-            await self._oh_client.async_start()
+            await self._oh_client.async_start(reuse_port=True)
         elif self.sia_client:
             await self.sia_client.async_start(reuse_port=True)
 
@@ -173,6 +173,7 @@ class SIAHub:
             port=self._port,
             accounts=oh_accounts,
             function=_oh_callback,
+            keystore_path=self._hass.config.path("osbornehoffman_keys.json"),
         )
 
     def _load_options(self) -> None:

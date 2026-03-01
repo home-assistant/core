@@ -254,36 +254,38 @@ class SIAOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create the options step for a account."""
+        is_oh = self.config_entry.data.get(CONF_PROTOCOL) == PROTOCOL_OH
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = validate_zones(user_input)
         if user_input is None or errors is not None:
             account = self.accounts_todo[0]
+            schema_fields: dict[vol.Optional, type] = {
+                vol.Optional(
+                    CONF_ZONES,
+                    default=self.options[CONF_ACCOUNTS][account][CONF_ZONES],
+                ): int,
+            }
+            if not is_oh:
+                schema_fields[vol.Optional(
+                    CONF_IGNORE_TIMESTAMPS,
+                    default=self.options[CONF_ACCOUNTS][account][
+                        CONF_IGNORE_TIMESTAMPS
+                    ],
+                )] = bool
             return self.async_show_form(
                 step_id="options",
                 description_placeholders={"account": account},
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_ZONES,
-                            default=self.options[CONF_ACCOUNTS][account][CONF_ZONES],
-                        ): int,
-                        vol.Optional(
-                            CONF_IGNORE_TIMESTAMPS,
-                            default=self.options[CONF_ACCOUNTS][account][
-                                CONF_IGNORE_TIMESTAMPS
-                            ],
-                        ): bool,
-                    }
-                ),
+                data_schema=vol.Schema(schema_fields),
                 errors=errors,
                 last_step=self.last_step,
             )
 
         account = self.accounts_todo.pop(0)
-        self.options[CONF_ACCOUNTS][account][CONF_IGNORE_TIMESTAMPS] = user_input[
-            CONF_IGNORE_TIMESTAMPS
-        ]
+        if not is_oh:
+            self.options[CONF_ACCOUNTS][account][CONF_IGNORE_TIMESTAMPS] = user_input[
+                CONF_IGNORE_TIMESTAMPS
+            ]
         self.options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
         if self.accounts_todo:
             return await self.async_step_options()
