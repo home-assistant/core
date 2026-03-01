@@ -119,8 +119,10 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
+@pytest.mark.usefixtures("mock_external_calls", "mock_polling_calls")
 async def test_polling_platform_init(
-    hass: HomeAssistant, mock_polling_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test initialization of the polling platform."""
     mock_polling_config_entry.add_to_hass(hass)

@@ -14,7 +14,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import MockESPHomeDeviceType
+from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
 
 ENTITY_ID = "infrared.test_ir"
 
@@ -23,7 +23,7 @@ async def _mock_ir_device(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_client: APIClient,
     capabilities: InfraredCapability = InfraredCapability.TRANSMITTER,
-) -> MockESPHomeDeviceType:
+) -> MockESPHomeDevice:
     entity_info = [
         InfraredInfo(object_id="ir", key=1, name="IR", capabilities=capabilities)
     ]
@@ -38,7 +38,7 @@ async def _mock_ir_device(
         (InfraredCapability.TRANSMITTER, True),
         (InfraredCapability.RECEIVER, False),
         (InfraredCapability.TRANSMITTER | InfraredCapability.RECEIVER, True),
-        (0, False),
+        (InfraredCapability(0), False),
     ],
 )
 async def test_infrared_entity_transmitter(
@@ -115,6 +115,7 @@ async def test_infrared_send_command_success(
     call_args = mock_client.infrared_rf_transmit_raw_timings.call_args
     assert call_args[0][0] == 1  # key
     assert call_args[1]["carrier_frequency"] == 38000
+    assert call_args[1]["device_id"] == 0
 
     # Verify timings (alternating positive/negative values)
     timings = call_args[1]["timings"]
@@ -142,7 +143,7 @@ async def test_infrared_send_command_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await infrared.async_send_command(hass, ENTITY_ID, command)
     assert exc_info.value.translation_domain == "esphome"
-    assert exc_info.value.translation_key == "error_sending_ir_command"
+    assert exc_info.value.translation_key == "error_communicating_with_device"
 
 
 async def test_infrared_entity_availability(
