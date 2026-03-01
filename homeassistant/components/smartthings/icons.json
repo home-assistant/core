@@ -24,6 +24,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "default": "mdi:air-filter"
+      },
       "reset_water_filter": {
         "default": "mdi:reload"
       },
@@ -92,6 +95,9 @@
           "run": "mdi:play",
           "stop": "mdi:stop"
         }
+      },
+      "robot_cleaner_driving_mode": {
+        "default": "mdi:car-cog"
       },
       "selected_zone": {
         "state": {
@@ -177,6 +183,12 @@
           "on": "mdi:lightbulb-on"
         }
       },
+      "do_not_disturb": {
+        "default": "mdi:minus-circle-off",
+        "state": {
+          "on": "mdi:minus-circle"
+        }
+      },
       "dry_plus": {
         "default": "mdi:heat-wave"
       },
@@ -212,6 +224,9 @@
       },
       "sanitizing_wash": {
         "default": "mdi:lotion"
+      },
+      "sound_detection": {
+        "default": "mdi:home-sound-in"
       },
       "sound_effect": {
         "default": "mdi:volume-high",
