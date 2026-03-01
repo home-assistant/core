@@ -52,6 +52,16 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             token = await self.client.get_or_refresh_token()
+
+            username = getattr(self.client, "username", None)
+            if not isinstance(username, str) or not username.strip():
+                return {"base": "no_username"}
+
+            devices = await self.client.get_devices_data()
+            parsed = getattr(devices, "parsed", None)
+            if not parsed:
+                return {"base": "no_devices"}
+
         except AuthenticationError:
             return {"base": "invalid_auth"}
         except ConnectionError:

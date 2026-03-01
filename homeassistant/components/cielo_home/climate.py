@@ -52,7 +52,7 @@ def async_handle_api_call(
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls to handle exceptions and update state."""
 
-    async def wrap_api_call(*args: Any, **kwargs: Any) -> dict[str, Any] | None:
+    async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
         """Wrap services for api calls."""
         entity: _T = args[0]
         res: Any = None
@@ -88,7 +88,6 @@ def async_handle_api_call(
             raise HomeAssistantError("API response contained no data payload")
 
         await entity.coordinator.async_apply_action_result(entity.device_id, data)
-        return data
 
     return wrap_api_call
 
