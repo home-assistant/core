@@ -1,4 +1,4 @@
-"""init file for Cielo integration."""
+"""Integration for Cielo Home."""
 
 from __future__ import annotations
 

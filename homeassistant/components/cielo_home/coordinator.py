@@ -111,10 +111,9 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         new_parsed[device_id] = dev
         self.async_set_updated_data(CieloData(raw=self.data.raw, parsed=new_parsed))
 
-        def _refresh_later(_now):
-            self.hass.loop.call_soon_threadsafe(
-                self.hass.loop.create_task, self.async_request_refresh()
-            )
+        def _refresh_later(_now: float) -> None:
+            """Schedule a refresh after the backend has had time to update."""
+            self.hass.async_create_task(self.async_request_refresh())
 
         async_call_later(self.hass, 2.0, _refresh_later)
 

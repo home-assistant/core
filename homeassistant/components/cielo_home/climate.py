@@ -79,13 +79,13 @@ def async_handle_api_call(
                 entity.entity_id,
                 type(res),
             )
-            return None
+            raise HomeAssistantError("Invalid API response format")
 
         data: dict[str, Any] | None = res.get("data")
 
         if not data:
             LOGGER.error("API call response contained no 'data' payload")
-            return None
+            raise HomeAssistantError("API response contained no data payload")
 
         await entity.coordinator.async_apply_action_result(entity.device_id, data)
         return data
