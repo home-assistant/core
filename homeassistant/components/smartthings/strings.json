@@ -226,6 +226,16 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "robot_cleaner_water_spray_level": {
+        "name": "Water level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "Medium",
+          "moderate_high": "Moderate high",
+          "moderate_low": "Moderate low"
+        }
+      },
       "selected_zone": {
         "name": "Selected zone",
         "state": {
