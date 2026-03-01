@@ -118,6 +118,31 @@ async def test_climate_local_initial_state_from_first_refresh(
     )
 
 
+async def test_climate_local_initial_state_off_from_first_refresh(
+    hass: HomeAssistant,
+    mock_local_config_entry: MockConfigEntry,
+    mock_adax_local: AsyncMock,
+) -> None:
+    """Test that local climate initializes correctly when first refresh reports off."""
+    original_target = LOCAL_DEVICE_DATA["target_temperature"]
+    try:
+        LOCAL_DEVICE_DATA["target_temperature"] = 0
+
+        await setup_integration(hass, mock_local_config_entry)
+
+        assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
+        entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == HVACMode.OFF
+        assert state.attributes[ATTR_TEMPERATURE] == 0
+        assert (
+            state.attributes[ATTR_CURRENT_TEMPERATURE]
+            == LOCAL_DEVICE_DATA["current_temperature"]
+        )
+    finally:
+        LOCAL_DEVICE_DATA["target_temperature"] = original_target
 async def test_climate_local_set_hvac_mode_updates_state_immediately(
     hass: HomeAssistant,
     mock_local_config_entry: MockConfigEntry,
