@@ -123,7 +123,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Successfully connected to Victron device: %s", installation_id
                 )
             except AuthenticationError:
-                _LOGGER.exception("Authentication failed during reauthentication")
+                _LOGGER.exception("Authentication failed during initial setup")
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
                 _LOGGER.exception("Cannot connect to Victron device")
