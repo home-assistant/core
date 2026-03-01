@@ -931,26 +931,6 @@ class PowerViewShadeDualOverlappedCombinedTilt(
         tilt = self.positions.tilt
         return ceil(primary + secondary + tilt)
 
-    @callback
-    def _get_shade_tilt(self, target_hass_tilt_position: int) -> ShadePosition:
-        """Return a ShadePosition."""
-        return ShadePosition(
-            tilt=target_hass_tilt_position,
-            velocity=self.positions.velocity,
-        )
-
-    @property
-    def open_tilt_position(self) -> ShadePosition:
-        """Return the open tilt position and required additional positions."""
-        return replace(self._shade.open_position_tilt, velocity=self.positions.velocity)
-
-    @property
-    def close_tilt_position(self) -> ShadePosition:
-        """Return the open tilt position and required additional positions."""
-        return replace(
-            self._shade.close_position_tilt, velocity=self.positions.velocity
-        )
-
 
 TYPE_TO_CLASSES = {
     0: (PowerViewShade,),
