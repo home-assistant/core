@@ -14,5 +14,7 @@
             - any
           translation_key: trigger_behavior
 
+incremented: *trigger_common
+decremented: *trigger_common
 maximum_reached: *trigger_common
 reset: *trigger_common

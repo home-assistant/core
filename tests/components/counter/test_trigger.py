@@ -4,7 +4,12 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.counter import CONF_INITIAL, CONF_MAXIMUM, DOMAIN
+from homeassistant.components.counter import (
+    ATTR_STEP,
+    CONF_INITIAL,
+    CONF_MAXIMUM,
+    DOMAIN,
+)
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
@@ -26,7 +31,12 @@ async def target_counters(hass: HomeAssistant) -> list[str]:
 
 @pytest.mark.parametrize(
     "trigger_key",
-    ["counter.reset", "counter.maximum_reached"],
+    [
+        "counter.decremented",
+        "counter.incremented",
+        "counter.maximum_reached",
+        "counter.reset",
+    ],
 )
 async def test_counter_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
@@ -50,9 +60,14 @@ async def test_counter_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="counter.reset",
-            target_states=[(2, {CONF_INITIAL: 2})],
-            other_states=[(3, {CONF_INITIAL: 2})],
+            trigger="counter.decremented",
+            target_states=[(1, {ATTR_STEP: 1})],
+            other_states=[(2, {ATTR_STEP: 1})],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.incremented",
+            target_states=[(2, {ATTR_STEP: 1})],
+            other_states=[(1, {ATTR_STEP: 1})],
         ),
         *parametrize_trigger_states(
             trigger="counter.maximum_reached",
@@ -67,6 +82,11 @@ async def test_counter_triggers_gated_by_labs_flag(
                 {"included": {"state": "1", "attributes": {}}, "count": 0},
                 {"included": {"state": None, "attributes": {}}, "count": 0},
             ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.reset",
+            target_states=[(2, {CONF_INITIAL: 2})],
+            other_states=[(3, {CONF_INITIAL: 2})],
         ),
     ],
 )
@@ -117,9 +137,14 @@ async def test_counter_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="counter.reset",
-            target_states=[(2, {CONF_INITIAL: 2})],
-            other_states=[(3, {CONF_INITIAL: 2})],
+            trigger="counter.decremented",
+            target_states=[(1, {ATTR_STEP: 1})],
+            other_states=[(2, {ATTR_STEP: 1})],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.incremented",
+            target_states=[(2, {ATTR_STEP: 1})],
+            other_states=[(1, {ATTR_STEP: 1})],
         ),
         *parametrize_trigger_states(
             trigger="counter.maximum_reached",
@@ -134,6 +159,11 @@ async def test_counter_state_trigger_behavior_any(
                 {"included": {"state": "1", "attributes": {}}, "count": 0},
                 {"included": {"state": None, "attributes": {}}, "count": 0},
             ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.reset",
+            target_states=[(2, {CONF_INITIAL: 2})],
+            other_states=[(3, {CONF_INITIAL: 2})],
         ),
     ],
 )
@@ -183,9 +213,14 @@ async def test_counter_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="counter.reset",
-            target_states=[(2, {CONF_INITIAL: 2})],
-            other_states=[(3, {CONF_INITIAL: 2})],
+            trigger="counter.decremented",
+            target_states=[(1, {ATTR_STEP: 1})],
+            other_states=[(2, {ATTR_STEP: 1})],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.incremented",
+            target_states=[(2, {ATTR_STEP: 1})],
+            other_states=[(1, {ATTR_STEP: 1})],
         ),
         *parametrize_trigger_states(
             trigger="counter.maximum_reached",
@@ -200,6 +235,11 @@ async def test_counter_state_trigger_behavior_first(
                 {"included": {"state": "1", "attributes": {}}, "count": 0},
                 {"included": {"state": None, "attributes": {}}, "count": 0},
             ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.reset",
+            target_states=[(2, {CONF_INITIAL: 2})],
+            other_states=[(3, {CONF_INITIAL: 2})],
         ),
     ],
 )
