@@ -201,6 +201,8 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
             if (target_temp := data["target_temperature"]) == 0:
                 self._attr_hvac_mode = HVACMode.OFF
                 self._attr_icon = "mdi:radiator-off"
+                if self._attr_target_temperature is None:
+                    self._attr_target_temperature = self._attr_min_temp
             else:
                 self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
