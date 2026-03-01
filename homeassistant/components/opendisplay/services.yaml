@@ -67,3 +67,4 @@ upload_image:
               max: 100
               step: 1
               mode: slider
+              unit_of_measurement: "%"
