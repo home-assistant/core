@@ -21,11 +21,9 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from tests.common import MockConfigEntry
 
+TEST_USERNAME: Final = "test-username"
 TEST_API_KEY: Final = "test-api-key"
 TEST_TOKEN: Final = "validated-auth-token"
-TEST_TITLE_MASKED: Final = (
-    f"Cielo Home ({TEST_API_KEY[:4]}*****************{TEST_API_KEY[-4:]})"
-)
 
 MOCK_AUTH_PATH: Final = (
     "homeassistant.components.cielo_home.config_flow.CieloClient.get_or_refresh_token"
@@ -60,7 +58,6 @@ async def test_full_config_flow_success(
         CONF_TOKEN: TEST_TOKEN,
     }
 
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -70,7 +67,7 @@ async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) ->
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: TEST_API_KEY, CONF_TOKEN: TEST_TOKEN},
-        unique_id=TEST_API_KEY,
+        unique_id=TEST_USERNAME,
     )
     entry.add_to_hass(hass)
 
