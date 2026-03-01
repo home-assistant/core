@@ -47,6 +47,13 @@ async def setup_mock_switch(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         # Configure the main API client mock.
         mock_api_instance = mock_tis_api_cls.return_value
 
+        # Mock the `consume_events` for consuming events (background task created in __init__.py).
+        async def _mock_consume_events() -> AsyncGenerator[None]:
+            for _ in ():
+                yield
+
+        mock_api_instance.consume_events = _mock_consume_events
+
         # Both connect and scan_devices are awaited in __init__.py.
         mock_api_instance.connect = AsyncMock()
         mock_api_instance.scan_devices = AsyncMock()
@@ -106,6 +113,11 @@ async def test_setup_no_switches(hass: HomeAssistant) -> None:
     # Patch the class in __init__.py specifically.
     with patch("homeassistant.components.tis_control.TISApi") as mock_tis_api_cls:
         mock_api_instance = mock_tis_api_cls.return_value
+
+        # Mock the `consume_events` for consuming events (background task created in __init__.py).
+        async def _mock_consume_events() -> AsyncGenerator[None]:
+            for _ in ():
+                yield
 
         # Ensure methods awaited in __init__ are AsyncMock.
         mock_api_instance.connect = AsyncMock()
@@ -242,6 +254,11 @@ async def test_setup_switch_no_name(hass: HomeAssistant) -> None:
         ) as mock_api_switch_cls,
     ):
         mock_api_instance = mock_tis_api_cls.return_value
+
+        # Mock the `consume_events` for consuming events (background task created in __init__.py).
+        async def _mock_consume_events() -> AsyncGenerator[None]:
+            for _ in ():
+                yield
 
         # Ensure methods awaited in __init__ are AsyncMock.
         mock_api_instance.connect = AsyncMock()
