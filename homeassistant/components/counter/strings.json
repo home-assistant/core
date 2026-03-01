@@ -1,8 +1,4 @@
 {
-  "common": {
-    "trigger_behavior_description": "The behavior of the targeted counters to trigger on.",
-    "trigger_behavior_name": "Behavior"
-  },
   "entity_component": {
     "_": {
       "name": "[%key:component::counter::title%]",
@@ -26,15 +22,6 @@
         "step": {
           "name": "Step"
         }
-      }
-    }
-  },
-  "selector": {
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },
@@ -66,42 +53,18 @@
   "triggers": {
     "decremented": {
       "description": "Triggers when a counter decrements.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        }
-      },
       "name": "Counter decremented"
     },
     "incremented": {
       "description": "Triggers when a counter increments.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        }
-      },
       "name": "Counter incremented"
     },
     "maximum_reached": {
       "description": "Triggers when a counter reaches its maximum value.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        }
-      },
       "name": "Counter reached maximum"
     },
     "reset": {
       "description": "Triggers when a counter is reset.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
-          "name": "[%key:component::counter::common::trigger_behavior_name%]"
-        }
-      },
       "name": "Counter reset"
     }
   }
