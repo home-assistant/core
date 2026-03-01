@@ -26,6 +26,10 @@ from homeassistant.core import callback
 from . import HiveConfigEntry
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hive config flow."""
@@ -67,11 +71,19 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             except HiveApiError:
                 errors["base"] = "no_internet_available"
 
+            if (auth_result := self.tokens.get("AuthenticationResult")) and auth_result.get("NewDeviceMetadata"):
+                _LOGGER.debug("Login successful, New device detected.")
+                self.device_registration = True
+                return await self.async_step_configuration()
+
+
             if self.tokens.get("ChallengeName") == "SMS_MFA":
+                _LOGGER.debug("Login successful, SMS 2FA required")
                 # Complete SMS 2FA.
                 return await self.async_step_2fa()
 
             if not errors:
+                _LOGGER.debug("Login successful, no new device detected, no 2FA required")
                 # Complete the entry.
                 try:
                     return await self.async_setup_hive_entry()
@@ -103,6 +115,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
+                _LOGGER.debug("2FA successful")
                 if self.source == SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
                 self.device_registration = True
@@ -119,10 +132,11 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             if self.device_registration:
+                _LOGGER.debug("Attempting to register device")
                 self.device_name = user_input["device_name"]
                 await self.hive_auth.device_registration(user_input["device_name"])
                 self.data["device_data"] = await self.hive_auth.get_device_data()
-
+                _LOGGER.debug("Device registration successful")
             try:
                 return await self.async_setup_hive_entry()
             except UnknownHiveError:
@@ -142,13 +156,14 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             raise UnknownHiveError
 
         # Setup the config entry
+        _LOGGER.debug("Setting up Hive entry")
         self.data["tokens"] = self.tokens
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
                 title=self.data["username"],
                 data=self.data,
-                reason="reauth_successful",
+                reason="reauth_successful", 
             )
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
@@ -160,6 +175,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: entry_data[CONF_USERNAME],
             CONF_PASSWORD: entry_data[CONF_PASSWORD],
         }
+        _LOGGER.debug("Reauthenticating user")
         return await self.async_step_user(data)
 
     @staticmethod
