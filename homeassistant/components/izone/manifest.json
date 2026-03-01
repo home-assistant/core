@@ -1,7 +1,6 @@
 {
   "domain": "izone",
   "name": "iZone",
-  "version": "1.0.0",
   "codeowners": ["@Swamp-Ig"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/izone",
