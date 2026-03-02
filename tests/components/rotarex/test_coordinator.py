@@ -3,10 +3,9 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from rotarex_dimes_srg_api import InvalidAuth
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from rotarex_dimes_srg_api import InvalidAuth
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +31,7 @@ async def test_auth_failure_on_setup(
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test config entry fails to load on auth error."""
+    """Test config entry requires reauth on auth error during setup."""
     mock_rotarex_api.login.side_effect = InvalidAuth("Invalid credentials")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

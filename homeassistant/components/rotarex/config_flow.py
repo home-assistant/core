@@ -3,8 +3,8 @@
 import logging
 from typing import Any
 
-from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 import voluptuous as vol
+from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -29,6 +29,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rotarex."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

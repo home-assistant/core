@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -116,9 +115,8 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
     @property
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
-        sync = self._get_latest_sync()
-        if TYPE_CHECKING:
-            assert sync is not None
+        if (sync := self._get_latest_sync()) is None:
+            return None
         return self.entity_description.value_fn(sync)
 
     def _get_latest_sync(self) -> RotarexSyncData | None:
@@ -127,13 +125,9 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         if not tank or not tank.synch_datas:
             return None
 
-        valid_syncs = [sync for sync in tank.synch_datas if sync.synch_date]
-        if not valid_syncs:
-            return None
-
         # Parse synchronization dates to ensure correct chronological ordering.
         parsed_syncs: list[tuple[RotarexSyncData, datetime]] = []
-        for sync in valid_syncs:
+        for sync in tank.synch_datas:
             parsed = dt_util.parse_datetime(sync.synch_date)
             if parsed is not None:
                 parsed_syncs.append((sync, parsed))

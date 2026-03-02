@@ -1,14 +1,14 @@
 """DataUpdateCoordinator for the Rotarex integration."""
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,7 +47,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         try:
             await self.api.login(self._email, self._password)
         except InvalidAuth as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
@@ -57,7 +57,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         try:
             tanks_data = await self.api.fetch_tanks()
         except InvalidAuth as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
