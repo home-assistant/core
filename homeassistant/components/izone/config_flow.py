@@ -14,7 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DISPATCH_CONTROLLER_DISCOVERED, IZONE, TIMEOUT_DISCOVERY
 from .discovery import (
-    async_add_controller_by_ip,
     async_get_device_uid,
     async_start_discovery_service,
     async_stop_discovery_service,
@@ -58,11 +57,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     """Handle a config flow for iZone."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._host: str | None = None
-        self._device_uid: str | None = None
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,7 +73,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             host = user_input.get(CONF_HOST, "").strip()
 
             if host:
-                # Manual IP entry - try to connect
+                # Manual IP entry - validate connectivity and get UID
                 try:
                     device_uid = await async_get_device_uid(self.hass, host)
                 except ConnectionError:
@@ -86,19 +81,11 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                 else:
                     await self.async_set_unique_id(device_uid)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                    self._host = host
-                    self._device_uid = device_uid
 
-                    # Initialize the controller
-                    try:
-                        await async_add_controller_by_ip(self.hass, host)
-                    except ConnectionError:
-                        errors[CONF_HOST] = "cannot_connect"
-                    else:
-                        return self.async_create_entry(
-                            title=f"iZone {device_uid}",
-                            data={CONF_HOST: host},
-                        )
+                    return self.async_create_entry(
+                        title=f"iZone {device_uid}",
+                        data={CONF_HOST: host},
+                    )
             else:
                 # Auto-discovery (blank host)
                 return await self.async_step_discover()
@@ -114,6 +101,12 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle auto-discovery of iZone controllers on local network."""
+        # Prevent multiple discovery entries
+        if any(
+            not entry.data.get(CONF_HOST) for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="single_instance_allowed")
+
         if user_input is not None:
             # User confirmed discovery
             return self.async_create_entry(

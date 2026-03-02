@@ -11,6 +11,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -68,8 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if host := entry.data.get(CONF_HOST):
         try:
             await async_add_controller_by_ip(hass, host)
-        except ConnectionError:
-            return False
+        except ConnectionError as err:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to iZone device at {host}"
+            ) from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -1,8 +1,7 @@
-"""Internal discovery service for  iZone AC."""
+"""Internal discovery service for iZone AC."""
 
-import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
 import pizone
@@ -145,6 +144,7 @@ async def async_get_device_uid(hass: HomeAssistant, host: str) -> str:
             f"http://{host}/SystemSettings",
             timeout=aiohttp.ClientTimeout(total=TIMEOUT_CONNECT),
         ) as response:
+            response.raise_for_status()
             data = await response.json(content_type=None)
             device_uid = data.get("AirStreamDeviceUId")
             if not device_uid:
@@ -152,7 +152,13 @@ async def async_get_device_uid(hass: HomeAssistant, host: str) -> str:
                     "Device did not return a valid AirStreamDeviceUId"
                 )
             return device_uid
-    except (aiohttp.ClientError, TimeoutError, KeyError, TypeError) as ex:
+    except (
+        aiohttp.ClientError,
+        TimeoutError,
+        KeyError,
+        TypeError,
+        ValueError,
+    ) as ex:
         raise ConnectionError(f"Unable to connect to iZone device at {host}") from ex
 
 
@@ -174,7 +180,7 @@ async def async_add_controller_by_ip(
         # Update IP in case it changed
         ctrl._refresh_address(host)  # noqa: SLF001
         # Track this as a static-IP controller and start keepalive
-        disco._static_hosts[device_uid] = host
+        disco._static_hosts[device_uid] = host  # noqa: SLF001
         disco.start_keepalive()
         return ctrl
 
@@ -193,7 +199,7 @@ async def async_add_controller_by_ip(
     disco.pi_disco.controller_discovered(controller)
 
     # Track this as a static-IP controller and start keepalive
-    disco._static_hosts[device_uid] = host
+    disco._static_hosts[device_uid] = host  # noqa: SLF001
     disco.start_keepalive()
 
     return controller

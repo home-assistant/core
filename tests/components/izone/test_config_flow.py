@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -12,6 +12,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -119,10 +121,6 @@ async def test_manual_ip_success(hass: HomeAssistant) -> None:
             return_value="000013170",
         ),
         patch(
-            "homeassistant.components.izone.config_flow.async_add_controller_by_ip",
-            return_value=mock_controller,
-        ),
-        patch(
             "homeassistant.components.izone.async_add_controller_by_ip",
             return_value=mock_controller,
         ),
@@ -175,8 +173,6 @@ async def test_manual_ip_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_manual_ip_already_configured(hass: HomeAssistant) -> None:
     """Test manually configuring an already-configured device."""
-    from tests.common import MockConfigEntry
-
     entry = MockConfigEntry(
         domain=IZONE,
         title="iZone 000013170",
@@ -205,3 +201,30 @@ async def test_manual_ip_already_configured(hass: HomeAssistant) -> None:
 
         # Verify the host was updated
         assert entry.data[CONF_HOST] == "192.168.2.100"
+
+
+async def test_single_instance_allowed_when_entry_exists(
+    hass: HomeAssistant,
+) -> None:
+    """Test that auto-discovery aborts when a discovery entry already exists."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        IZONE, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # User form should still show (allows adding manual IP)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Submit blank host to trigger auto-discovery
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should abort because a discovery entry already exists
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
