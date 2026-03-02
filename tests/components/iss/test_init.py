@@ -56,30 +56,10 @@ async def test_update_listener(
         mock_reload.assert_called_once_with(init_integration.entry_id)
 
 
-async def test_coordinator_successful_update(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
-) -> None:
-    """Test coordinator successfully fetches data."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    coordinator = hass.data[DOMAIN]
-    assert coordinator.data.number_of_people_in_space == 7
-    assert coordinator.data.current_location == {
-        "latitude": "40.271698",
-        "longitude": "15.619478",
-    }
-
-
 async def test_coordinator_single_failure_uses_cached_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator tolerates single API failure and uses cached data."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     coordinator = hass.data[DOMAIN]
     original_data = coordinator.data
 
@@ -95,13 +75,9 @@ async def test_coordinator_single_failure_uses_cached_data(
 
 
 async def test_coordinator_multiple_failures_uses_cached_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator tolerates multiple failures below threshold."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     coordinator = hass.data[DOMAIN]
     original_data = coordinator.data
 
@@ -120,13 +96,9 @@ async def test_coordinator_multiple_failures_uses_cached_data(
 
 
 async def test_coordinator_max_failures_raises_update_failed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator raises UpdateFailed after MAX_CONSECUTIVE_FAILURES."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     coordinator = hass.data[DOMAIN]
 
     # Simulate consecutive API failures reaching the threshold
@@ -141,13 +113,9 @@ async def test_coordinator_max_failures_raises_update_failed(
 
 
 async def test_coordinator_failure_counter_resets_on_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator resets failure counter after successful fetch."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     coordinator = hass.data[DOMAIN]
 
     # Simulate some failures
@@ -192,13 +160,9 @@ async def test_coordinator_initial_failure_no_cached_data(
 
 
 async def test_coordinator_handles_connection_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator handles ConnectionError exceptions."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     coordinator = hass.data[DOMAIN]
     original_data = coordinator.data
 

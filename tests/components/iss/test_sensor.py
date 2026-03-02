@@ -20,13 +20,9 @@ async def test_sensor_created(
 
 
 async def test_sensor_attributes_show_on_map_false(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test sensor attributes when show_on_map is False."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     state = hass.states.get("sensor.iss")
     assert state is not None
     assert state.state == "7"
