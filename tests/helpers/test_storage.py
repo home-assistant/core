@@ -669,7 +669,7 @@ async def test_loading_newer_major_version_raises(
         await store.async_load()
     assert exc_info.value.storage_key == MOCK_KEY
     assert exc_info.value.found_version == MOCK_VERSION_2
-    assert exc_info.value.expected_version == MOCK_VERSION
+    assert exc_info.value.max_supported_version == MOCK_VERSION
     # Verify on-disk data is not modified
     assert hass_storage[MOCK_KEY]["version"] == MOCK_VERSION_2
     assert hass_storage[MOCK_KEY]["minor_version"] == MOCK_MINOR_VERSION_1

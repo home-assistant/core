@@ -478,7 +478,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
             " is preserved; upgrade Home Assistant or restore from a backup",
             err.storage_key,
             err.found_version,
-            err.expected_version,
+            err.max_supported_version,
         )
         return False
 
