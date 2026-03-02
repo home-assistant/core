@@ -177,13 +177,12 @@ class SIAHub:
     def _load_options(self) -> None:
         """Store attributes to avoid property call overhead since they are called frequently."""
         options = dict(self._entry.options)
+        accounts_opts = options.get(CONF_ACCOUNTS, {})
         for acc in self._accounts:
             acc_id = acc[CONF_ACCOUNT]
-            if acc_id in options.get(CONF_ACCOUNTS, {}):
-                acc[CONF_IGNORE_TIMESTAMPS] = options[CONF_ACCOUNTS][acc_id].get(
-                    CONF_IGNORE_TIMESTAMPS, False
-                )
-                acc[CONF_ZONES] = options[CONF_ACCOUNTS][acc_id].get(CONF_ZONES)
+            acc_opts = accounts_opts.get(acc_id, {})
+            acc[CONF_IGNORE_TIMESTAMPS] = acc_opts.get(CONF_IGNORE_TIMESTAMPS, False)
+            acc[CONF_ZONES] = acc_opts.get(CONF_ZONES)
 
     @staticmethod
     async def async_config_entry_updated(
