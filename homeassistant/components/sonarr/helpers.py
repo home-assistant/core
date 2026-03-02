@@ -128,35 +128,6 @@ def format_queue(
     return shows
 
 
-def format_episode_item(
-    series: SonarrSeries, episode_data: dict[str, Any], base_url: str | None = None
-) -> dict[str, Any]:
-    """Format a single episode item."""
-    result: dict[str, Any] = {
-        "id": episode_data.get("id"),
-        "episode_number": episode_data.get("episodeNumber"),
-        "season_number": episode_data.get("seasonNumber"),
-        "title": episode_data.get("title"),
-        "air_date": str(episode_data.get("airDate", "")),
-        "overview": episode_data.get("overview"),
-        "has_file": episode_data.get("hasFile", False),
-        "monitored": episode_data.get("monitored", False),
-    }
-
-    # Add episode images if available
-    if images := episode_data.get("images"):
-        result["images"] = {}
-        for image in images:
-            cover_type = image.coverType
-            # Prefer remoteUrl (public TVDB URL) over local path
-            if remote_url := getattr(image, "remoteUrl", None):
-                result["images"][cover_type] = remote_url
-            elif base_url and (url := getattr(image, "url", None)):
-                result["images"][cover_type] = f"{base_url.rstrip('/')}{url}"
-
-    return result
-
-
 def format_series(
     series_list: list[SonarrSeries], base_url: str | None = None
 ) -> dict[str, dict[str, Any]]:
