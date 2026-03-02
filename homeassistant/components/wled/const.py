@@ -17,6 +17,8 @@ RELEASES_SCAN_INTERVAL = timedelta(hours=3)
 # Options
 CONF_KEEP_MAIN_LIGHT = "keep_master_light"
 DEFAULT_KEEP_MAIN_LIGHT = False
+CONF_EXCLUDE_NIGHTLY = "exclude_nightly"
+DEFAULT_EXCLUDE_NIGHTLY = True
 
 # Attributes
 ATTR_CCT = "cct"
