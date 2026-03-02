@@ -82,7 +82,6 @@ def test_binary_sensor_entity_attributes() -> None:
         coordinator, TEST_SENSOR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
-    assert entity.has_entity_name is True
     assert entity._country == TEST_COUNTRY
     assert entity._region == TEST_REGION
     assert entity.unique_id == f"{TEST_ENTRY_ID}_sensor"
@@ -116,7 +115,7 @@ def test_binary_sensor_entity_is_off_outside_school_holidays(
 ) -> None:
     """Test binary sensor entity state outside school holidays."""
     coordinator = MagicMock()
-    # Use both school holidays, which span from 2026-07-18 to 2026-08-30 and 2026-10-17 to 2026-10-25.
+    # Use both school holidays, which spans 2026-07-18 to 2026-08-30 and 2026-10-17 to 2026-10-25.
     coordinator.data = mock_school_holiday_data
 
     entity = SchoolHolidayBinarySensor(

@@ -9,25 +9,23 @@ from homeassistant.components.school_holiday.const import (
     CONF_CALENDAR_NAME,
     CONF_SENSOR_NAME,
     DOMAIN,
-    INTEGRATION_NAME,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_REGION
 
 from tests.common import MockConfigEntry
 
-TEST_SENSOR_NAME = "School Holiday Sensor"
-TEST_CALENDAR_NAME = "School Holiday Calendar"
 TEST_ENTRY_ID = "550e8400e29b41d4a716446655440000"
-
-TEST_COUNTRY = "The Netherlands"
-TEST_REGION = "Midden"
+TEST_SENSOR_NAME = "School Holiday Sensor"
+TEST_COUNTRY = "nl"
+TEST_REGION = "midden"
+TEST_CALENDAR_NAME = "School Holiday Calendar"
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=INTEGRATION_NAME,
+        entry_id=TEST_ENTRY_ID,
         domain=DOMAIN,
         data={
             CONF_SENSOR_NAME: TEST_SENSOR_NAME,

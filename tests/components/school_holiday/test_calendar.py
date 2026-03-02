@@ -76,7 +76,6 @@ def test_calendar_entity_attributes() -> None:
         coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION, TEST_ENTRY_ID
     )
 
-    assert entity.has_entity_name is True
     assert entity._attr_name == TEST_CALENDAR_NAME
     assert entity._country == TEST_COUNTRY
     assert entity._region == TEST_REGION

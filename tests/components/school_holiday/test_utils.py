@@ -57,3 +57,10 @@ def test_ensure_date() -> None:
     # Testing with None should raise a TypeError.
     with pytest.raises(TypeError):
         utils.ensure_date(None)
+
+
+def test_get_device_name() -> None:
+    """Test that device name is generated correctly from country and region codes."""
+    assert utils.get_device_name("nl", "midden") == "The Netherlands - Central"
+    assert utils.get_device_name("nl", "noord") == "The Netherlands - North"
+    assert utils.get_device_name("nl", "zuid") == "The Netherlands - South"
