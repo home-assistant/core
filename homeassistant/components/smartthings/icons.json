@@ -102,6 +102,9 @@
       "robot_cleaner_driving_mode": {
         "default": "mdi:car-cog"
       },
+      "robot_cleaner_water_spray_level": {
+        "default": "mdi:spray-bottle"
+      },
       "selected_zone": {
         "state": {
           "all": "mdi:card",
