@@ -107,9 +107,28 @@ async def async_migrate_entry(
                 },
                 unique_id=new[CONF_SERIAL],
                 version=1,
-                minor_version=2,
+                minor_version=3,
             )
-            LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
+            LOGGER.debug("Migration to 1.3 successful")
+
+        if config_entry.minor_version < 3:
+            # Migrate old option keys (cloud_read, cloud_control) to new keys
+            old_options = config_entry.options
+            new_options = {
+                CONF_READ_MODE: old_options.get(
+                    "cloud_read", old_options.get(CONF_READ_MODE, API_MODE_LOCAL)
+                ),
+                CONF_CONTROL_MODE: old_options.get(
+                    "cloud_control", old_options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+                ),
+            }
+            hass.config_entries.async_update_entry(
+                config_entry,
+                options=new_options,
+                version=1,
+                minor_version=3,
+            )
+            LOGGER.debug("Migration to 1.3 successful (options keys renamed)")
 
     return True
 
