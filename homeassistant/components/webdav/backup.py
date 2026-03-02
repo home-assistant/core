@@ -222,7 +222,7 @@ class WebDavBackupAgent(BackupAgent):
         async def _download_metadata(path: str) -> AgentBackup:
             """Download metadata file."""
             iterator = await self._client.download_iter(path)
-            metadata = await anext(iterator)
+            metadata = b"".join([chunk async for chunk in iterator]).decode()
             return AgentBackup.from_dict(json_loads_object(metadata))
 
         async def _list_metadata_files() -> dict[str, AgentBackup]:
