@@ -74,6 +74,8 @@ def mock_connector():
         MagicMock(
             code="__tempzadpozadomem", value=18.5
         ),  # Target temperature out of home
+        MagicMock(code="__aerowentylacjaon&off", value="on"),
+        MagicMock(code="__trybaero2", value="gear_2"),
     ]
     mock_device_2.definition.code = 223  # Nano Color 2
 
