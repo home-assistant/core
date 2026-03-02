@@ -83,7 +83,7 @@ async def test_async_join_players(hass: HomeAssistant, create_player) -> None:
 
 
 async def test_async_join_players_throws(hass: HomeAssistant, create_player) -> None:
-    """Test that joining throws if incompatible entity_ids are passed, yet updates group_member with successfully joined entities."""
+    """Test that joining throws if incompatible entity_ids are passed, yet updates group_members with successfully joined entities."""
     player_1 = await create_player("player_1")
     player_2 = await create_player("player_2")
 
