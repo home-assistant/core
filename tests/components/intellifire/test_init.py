@@ -245,12 +245,11 @@ async def test_update_options_no_change(
     mock_fp.set_control_mode.reset_mock()
     coordinator.async_request_refresh.reset_mock()
 
-    # Now change back to LOCAL/LOCAL. The mock fireplace still has read_mode=LOCAL
-    # and control_mode=LOCAL (mocks don't update internal state), so the listener
-    # sees no difference between new options and fireplace state.
+    # Now update the entry with the same CLOUD/CLOUD options again. Since the
+    # options already match the configured modes, this is a true no-op.
     hass.config_entries.async_update_entry(
         mock_config_entry_current,
-        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_LOCAL},
+        options={CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_CLOUD},
     )
     await hass.async_block_till_done()
 
