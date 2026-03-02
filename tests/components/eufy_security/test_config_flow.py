@@ -670,7 +670,8 @@ async def test_options_flow_no_cameras(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test options flow when no cameras are found."""
-    # Clear cameras from runtime_data
+    # Clear cameras from both API and runtime_data
+    init_integration.runtime_data.api.cameras = {}
     init_integration.runtime_data.devices["cameras"] = {}
 
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
