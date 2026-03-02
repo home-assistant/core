@@ -148,17 +148,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             # check if light supports color temperature, then choose color_mode depending on the light color
             if ColorMode.RGB in color_modes and ColorMode.COLOR_TEMP in color_modes:
                 if color := self.coordinator.data.state.segments[self._segment].color:
-                    color_primary = cast(tuple[int, int, int, int], color.primary)
-                    if (
-                        color_primary[0] == 0
-                        and color_primary[1] == 0
-                        and color_primary[2] == 0
-                        and color_primary[3] > 0
-                    ) or (
-                        color_primary[0] == color_primary[1]
-                        and color_primary[1] == color_primary[2]
-                        and color_primary[3] == 0
-                    ):
+                    primary = tuple(color.primary)
+                    r, g, b, w = (*primary, 0, 0, 0, 0)[:4]
+                    if (r == g == b == 0 and w > 0) or (r == g == b and w == 0):
                         self._attr_color_mode = ColorMode.COLOR_TEMP
 
             self._attr_color_mode = self._attr_color_mode or color_modes[0]
@@ -321,19 +313,21 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             data[ATTR_CCT] = cct
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if (
-                self._attr_supported_color_modes
-                and ColorMode.RGB in self._attr_supported_color_modes
-            ):
-                data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
-                # tell HA to display light CCT temperature color in the interface
-                self._attr_color_mode = ColorMode.COLOR_TEMP
+            if self._attr_supported_color_modes:
+                has_rgb = ColorMode.RGB in self._attr_supported_color_modes
+                has_rgbw = ColorMode.RGBW in self._attr_supported_color_modes
+                has_rgbww = ColorMode.RGBWW in self._attr_supported_color_modes
 
-            if self._attr_supported_color_modes and (
-                ColorMode.RGBW in self._attr_supported_color_modes
-                or ColorMode.RGBWW in self._attr_supported_color_modes
-            ):
-                data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
+                if has_rgb:
+                    data[ATTR_COLOR_PRIMARY] = (255, 255, 255)
+
+                if has_rgbw or has_rgbww:
+                    data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
+
+                # if light is rgbww don't change color mode as it messes the rgbww page
+                if has_rgb or has_rgbw:
+                    # tell HA to display light CCT temperature color in the interface
+                    self._attr_color_mode = ColorMode.COLOR_TEMP
 
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
