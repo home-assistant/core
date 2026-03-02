@@ -438,6 +438,7 @@ class StateVacuumEntity(
         cleaning_area_id: list[str] = data.pop("cleaning_area_id")
 
         entity_data: list[tuple[StateVacuumEntity, dict[str, Any]]] = []
+        handled_areas: set[str] = set()
         for entity in entities:
             if entity.registry_entry is None:
                 raise RuntimeError(
@@ -458,7 +459,10 @@ class StateVacuumEntity(
             # We use a dict to preserve the order of segments.
             segment_ids: dict[str, None] = {}
             for area_id in cleaning_area_id:
-                for segment_id in area_mapping.get(area_id, []):
+                if (segments := area_mapping.get(area_id)) is None:
+                    continue
+                handled_areas.add(area_id)
+                for segment_id in segments:
                     segment_ids[segment_id] = None
 
             if not segment_ids:
@@ -474,6 +478,14 @@ class StateVacuumEntity(
         if entity_data:
             await service_helper.async_handle_entity_calls(
                 "async_clean_segments", entity_data, context=call.context
+            )
+
+        unhandled_areas = set(cleaning_area_id) - handled_areas
+        if unhandled_areas:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="areas_not_mapped",
+                translation_placeholders={"areas": ", ".join(sorted(unhandled_areas))},
             )
 
     def clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
