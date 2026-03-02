@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+from pathlib import Path
 
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException
@@ -17,6 +18,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
+from .http import async_setup_recording_view
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +27,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.EVENT,
+    Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -37,6 +42,7 @@ PLATFORMS = [
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     async_setup_services(hass)
+    async_setup_recording_view(hass, Path(hass.config.path("media")) / "litterrobot")
     return True
 
 
@@ -97,6 +103,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: LitterRobotConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    await entry.runtime_data.async_shutdown()
     await entry.runtime_data.account.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

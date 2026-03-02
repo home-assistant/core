@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, Generic, TypeVar
 
-from pylitterbot import Pet, Robot
+from pylitterbot import LitterRobot5, Pet, Robot
 from pylitterbot.exceptions import LitterRobotException
 from pylitterbot.robot import EVENT_UPDATE
 
@@ -85,3 +85,36 @@ class LitterRobotEntity(
         """Set up a listener for the entity."""
         await super().async_added_to_hass()
         self.async_on_remove(self.robot.on(EVENT_UPDATE, self.async_write_ha_state))
+
+
+async def async_update_night_light_settings(
+    robot: LitterRobot5, **updates: Any
+) -> bool:
+    """Update night light settings atomically.
+
+    The LR5 API replaces the entire nightLightSettings object on PATCH,
+    so we must send all fields together to avoid losing values.
+    """
+    color = (robot.night_light_color or "").lstrip("#")
+    # Normalize short hex to 6-char — the API may return shorthand forms
+    # like "FFFF" (4-char RGBA) but requires 6-char hex for PATCH writes
+    if len(color) == 3:
+        color = "".join(c * 2 for c in color)
+    elif len(color) == 4:
+        color = "".join(c * 2 for c in color[:3])
+    elif len(color) == 8:
+        color = color[:6]
+    mode = robot.night_light_mode
+    settings = {
+        "brightness": robot.night_light_brightness,
+        "color": color,
+        "mode": mode.value.capitalize() if mode else "Auto",
+    }
+    settings.update(updates)
+    # Ensure mode is always capitalized to match the API format (On/Off/Auto)
+    if "mode" in updates:
+        settings["mode"] = str(settings["mode"]).capitalize()
+    return await robot._dispatch_command(  # noqa: SLF001
+        "nightLightSettings",
+        value=settings,
+    )
