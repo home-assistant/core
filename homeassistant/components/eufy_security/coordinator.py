@@ -74,10 +74,7 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         except EufySecurityError as err:
             if not self._unavailable_logged:
-                _LOGGER.warning(
-                    "API is unavailable: %s",
-                    err,
-                )
+                _LOGGER.info("Eufy Security API is unavailable")
                 self._unavailable_logged = True
             raise UpdateFailed(
                 translation_domain=DOMAIN,
