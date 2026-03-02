@@ -29,8 +29,12 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, set_trait_attributes
@@ -298,12 +302,12 @@ async def test_get_segments(
     assert msg["success"]
     assert msg["result"] == {
         "segments": [
-            {"id": "0:16", "name": "Example room 1", "group": "Upstairs"},
-            {"id": "0:17", "name": "Example room 2", "group": "Upstairs"},
-            {"id": "0:18", "name": "Example room 3", "group": "Upstairs"},
-            {"id": "1:16", "name": "Example room 1", "group": "Downstairs"},
-            {"id": "1:17", "name": "Example room 2", "group": "Downstairs"},
-            {"id": "1:18", "name": "Example room 3", "group": "Downstairs"},
+            {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+            {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+            {"id": "0_18", "name": "Example room 3", "group": "Upstairs"},
+            {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+            {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
+            {"id": "1_18", "name": "Example room 3", "group": "Downstairs"},
         ]
     }
 
@@ -338,14 +342,14 @@ async def test_clean_segments(
         ENTITY_ID,
         VACUUM_DOMAIN,
         {
-            "area_mapping": {"area_1": ["1:16", "1:17"]},
+            "area_mapping": {"area_1": ["1_16", "1_17"]},
             "last_seen_segments": [
-                {"id": "0:16", "name": "Example room 1", "group": "Upstairs"},
-                {"id": "0:17", "name": "Example room 2", "group": "Upstairs"},
-                {"id": "0:18", "name": "Example room 3", "group": "Upstairs"},
-                {"id": "1:16", "name": "Example room 1", "group": "Downstairs"},
-                {"id": "1:17", "name": "Example room 2", "group": "Downstairs"},
-                {"id": "1:18", "name": "Example room 3", "group": "Downstairs"},
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+                {"id": "0_18", "name": "Example room 3", "group": "Upstairs"},
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
+                {"id": "1_18", "name": "Example room 3", "group": "Downstairs"},
             ],
         },
     )
@@ -372,23 +376,18 @@ async def test_clean_segments_different_map(
     fake_vacuum: FakeDevice,
     vacuum_command: Mock,
 ) -> None:
-    """Test that clean_area service switches maps when needed."""
+    """Test that clean_area service silently ignores segments from a non-current map."""
     entity_registry.async_update_entity_options(
         ENTITY_ID,
         VACUUM_DOMAIN,
         {
-            "area_mapping": {
-                "area_1": ["0:16", "0:17"],
-                "area_2": ["0:18"],
-                "area_3": ["1:16"],
-            },
+            # Map 0 (Upstairs) is not the current map (current is map 1, Downstairs),
+            # so these segments should be silently ignored.
+            "area_mapping": {"area_1": ["0_16", "0_17"]},
             "last_seen_segments": [
-                {"id": "0:16", "name": "Example room 1", "group": "Upstairs"},
-                {"id": "0:17", "name": "Example room 2", "group": "Upstairs"},
-                {"id": "0:18", "name": "Example room 3", "group": "Upstairs"},
-                {"id": "1:16", "name": "Example room 1", "group": "Downstairs"},
-                {"id": "1:17", "name": "Example room 2", "group": "Downstairs"},
-                {"id": "1:18", "name": "Example room 3", "group": "Downstairs"},
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
             ],
         },
     )
@@ -400,132 +399,76 @@ async def test_clean_segments_different_map(
         blocking=True,
     )
 
-    assert fake_vacuum.v1_properties.maps.set_current_map.call_count == 1
-    assert fake_vacuum.v1_properties.maps.set_current_map.call_args == call(0)
-    assert vacuum_command.send.call_count == 1
-    assert vacuum_command.send.call_args == call(
-        RoborockCommand.APP_SEGMENT_CLEAN,
-        params=[{"segments": [16, 17]}],
-    )
+    assert fake_vacuum.v1_properties.maps.set_current_map.call_count == 0
+    assert vacuum_command.send.call_count == 0
 
 
-async def test_clean_segments_multiple_maps_error(
+async def test_clean_segments_mixed_maps(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    vacuum_command: Mock,
 ) -> None:
-    """Test that clean_area service raises error when segments from multiple maps."""
+    """Test that clean_area service cleans only current-map segments when given segments from multiple maps."""
     entity_registry.async_update_entity_options(
         ENTITY_ID,
         VACUUM_DOMAIN,
         {
-            "area_mapping": {"area_1": ["0:16", "1:17"]},
+            # area_1 maps to segments from both maps; only map 1 (Downstairs) is current.
+            "area_mapping": {"area_1": ["0_16", "1_17"]},
             "last_seen_segments": [
-                {"id": "0:16", "name": "Example room 1", "group": "Upstairs"},
-                {"id": "0:17", "name": "Example room 2", "group": "Upstairs"},
-                {"id": "0:18", "name": "Example room 3", "group": "Upstairs"},
-                {"id": "1:16", "name": "Example room 1", "group": "Downstairs"},
-                {"id": "1:17", "name": "Example room 2", "group": "Downstairs"},
-                {"id": "1:18", "name": "Example room 3", "group": "Downstairs"},
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
             ],
         },
     )
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="All segments must belong to the same map",
-    ):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
-            blocking=True,
-        )
-
-
-async def test_clean_segments_malformed_id_wrong_parts(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that clean_area raises ServiceValidationError for a segment ID missing the colon separator."""
-    entity_registry.async_update_entity_options(
-        ENTITY_ID,
+    await hass.services.async_call(
         VACUUM_DOMAIN,
-        {
-            "area_mapping": {"area_1": ["16"]},
-            "last_seen_segments": [],
-        },
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        blocking=True,
     )
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="Invalid segment ID format: 16",
-    ):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
-            blocking=True,
-        )
-
-
-async def test_clean_segments_malformed_id_non_integer(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that clean_area raises ServiceValidationError for a segment ID with non-integer parts."""
-    entity_registry.async_update_entity_options(
-        ENTITY_ID,
-        VACUUM_DOMAIN,
-        {
-            "area_mapping": {"area_1": ["abc:16"]},
-            "last_seen_segments": [],
-        },
+    # Only the segment from the current map (map 1) is cleaned; segment from map 0 is ignored.
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == call(
+        RoborockCommand.APP_SEGMENT_CLEAN,
+        params=[{"segments": [17]}],
     )
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="Invalid segment ID format: abc:16",
-    ):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
-            blocking=True,
-        )
 
-
-async def test_clean_segments_map_switch_fails(
+async def test_segments_changed_issue(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that clean_area raises ServiceValidationError when switching to the target map fails."""
-    fake_vacuum.v1_properties.maps.set_current_map.side_effect = RoborockException()
+    """Test that a repair issue is created when segments change after area mapping is configured."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
     entity_registry.async_update_entity_options(
         ENTITY_ID,
         VACUUM_DOMAIN,
         {
-            # Map flag 0 (Upstairs) differs from current map flag 1 (Downstairs),
-            # so a map switch will be attempted and will fail.
-            "area_mapping": {"area_1": ["0:16"]},
-            "last_seen_segments": [],
+            # The last-seen segments differ from what the vacuum currently reports,
+            # simulating a remap that added/removed rooms.
+            "last_seen_segments": [
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_99", "name": "Old room", "group": "Downstairs"},
+            ],
         },
     )
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="Error while calling load_multi_map",
-    ):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
-            blocking=True,
-        )
+    coordinator = setup_entry.runtime_data.v1[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    issue_id = f"segments_changed_{entity_entry.id}"
+    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_key == "segments_changed"
 
 
 # Tests for RoborockQ7Vacuum
@@ -609,7 +552,7 @@ async def test_q7_state_changing_commands(
     # Verify the entity state was updated
     assert fake_q7_vacuum.b01_q7_properties is not None
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
 
     await coordinator.async_refresh()
     await hass.async_block_till_done()
@@ -735,7 +678,7 @@ async def test_q7_activity_none_status(
     fake_q7_vacuum.b01_q7_properties._props_data.status = None
 
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
