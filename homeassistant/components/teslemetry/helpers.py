@@ -1,5 +1,6 @@
 """Teslemetry helper functions."""
 
+from collections.abc import Awaitable
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
@@ -11,20 +12,26 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, LOGGER
 
 
-def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+def flatten(
+    data: dict[str, Any],
+    parent: str | None = None,
+    *,
+    skip_keys: list[str] | None = None,
+) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
     for key, value in data.items():
+        skip = skip_keys and key in skip_keys
         if parent:
             key = f"{parent}_{key}"
-        if isinstance(value, dict):
-            result.update(flatten(value, key))
+        if isinstance(value, dict) and not skip:
+            result.update(flatten(value, key, skip_keys=skip_keys))
         else:
             result[key] = value
     return result
 
 
-async def handle_command(command) -> dict[str, Any]:
+async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     """Handle a command."""
     try:
         result = await command
@@ -38,7 +45,7 @@ async def handle_command(command) -> dict[str, Any]:
     return result
 
 
-async def handle_vehicle_command(command) -> Any:
+async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
     """Handle a vehicle command."""
     result = await handle_command(command)
     if (response := result.get("response")) is None:

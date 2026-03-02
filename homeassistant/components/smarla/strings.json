@@ -1,13 +1,24 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "malformed_token": "Malformed access token"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::smarla::config::step::user::data_description::access_token%]"
+        }
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"

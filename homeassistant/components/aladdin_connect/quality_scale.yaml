@@ -26,24 +26,26 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: Integration does not have an options flow.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable:
+    status: done
+    comment: Handled by the coordinator.
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator.
+  parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: Platform tests for cover and sensor need to be implemented to reach 95% coverage.
+  test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info:
     status: exempt
