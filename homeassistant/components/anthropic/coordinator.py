@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, TypeVar
 
 import anthropic
 
@@ -12,16 +12,14 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-    _DataT,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
 UPDATE_INTERVAL_CONNECTED = timedelta(hours=12)
 UPDATE_INTERVAL_DISCONNECTED = timedelta(minutes=1)
+
+_DataT = TypeVar("_DataT", default=dict[str, Any])
 
 type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 
