@@ -15,7 +15,8 @@ from tests.common import MockConfigEntry, async_capture_events
 
 # Helper function to mock the infinite async generator for events.
 async def _mock_consume_events():
-    yield None
+    for _ in ():
+        yield
 
 
 @pytest.fixture
