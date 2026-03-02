@@ -14,13 +14,15 @@ from .const import CONF_STATION_CODE, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type MeteoclimaticConfigEntry = ConfigEntry[MeteoclimaticUpdateCoordinator]
+
 
 class MeteoclimaticUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Meteoclimatic weather data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoclimaticConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: MeteoclimaticConfigEntry) -> None:
         """Initialize the coordinator."""
         self._station_code = entry.data[CONF_STATION_CODE]
         super().__init__(
