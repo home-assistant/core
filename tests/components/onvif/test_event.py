@@ -1,5 +1,7 @@
 """Test ONVIF event handling end-to-end."""
 
+from onvif_parsers.model import EventEntity
+
 from homeassistant.components.onvif.models import Capabilities, Event
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -82,3 +84,56 @@ async def test_diagnostic_event_entity_category(
     entry = entity_registry.async_get("binary_sensor.testcamera_image_too_blurry")
     assert entry is not None
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+LAST_RESET_UID = f"{MAC}_tns1:Monitoring/LastReset_0"
+
+
+async def test_timestamp_event_conversion(hass: HomeAssistant) -> None:
+    """Test that timestamp sensor events get string values converted to datetime."""
+    await setup_onvif_integration(
+        hass,
+        capabilities=Capabilities(events=True, imaging=True, ptz=True),
+        raw_events=[
+            (
+                "tns1:Monitoring/LastReset",
+                EventEntity(
+                    uid=LAST_RESET_UID,
+                    name="Last Reset",
+                    platform="sensor",
+                    device_class="timestamp",
+                    value="2023-10-01T12:00:00Z",
+                ),
+            ),
+        ],
+    )
+
+    state = hass.states.get("sensor.testcamera_last_reset")
+    assert state is not None
+    # Verify the string was converted to a datetime (raw string would end
+    # with "Z", converted datetime rendered by SensorEntity has "+00:00")
+    assert state.state == "2023-10-01T12:00:00+00:00"
+
+
+async def test_timestamp_event_invalid_value(hass: HomeAssistant) -> None:
+    """Test that invalid timestamp values result in unknown state."""
+    await setup_onvif_integration(
+        hass,
+        capabilities=Capabilities(events=True, imaging=True, ptz=True),
+        raw_events=[
+            (
+                "tns1:Monitoring/LastReset",
+                EventEntity(
+                    uid=LAST_RESET_UID,
+                    name="Last Reset",
+                    platform="sensor",
+                    device_class="timestamp",
+                    value="0000-00-00T00:00:00Z",
+                ),
+            ),
+        ],
+    )
+
+    state = hass.states.get("sensor.testcamera_last_reset")
+    assert state is not None
+    assert state.state == "unknown"

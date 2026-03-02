@@ -1,14 +1,18 @@
 """Tests for the ONVIF integration."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
+from onvif_parsers.model import EventEntity
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
+from homeassistant.components.onvif.event import EventManager
 from homeassistant.components.onvif.models import (
     Capabilities,
     DeviceInfo,
@@ -192,6 +196,7 @@ async def setup_onvif_integration(
     source=config_entries.SOURCE_USER,
     capabilities=None,
     events=None,
+    raw_events: list[tuple[str, EventEntity]] | None = None,
 ) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
@@ -228,6 +233,33 @@ async def setup_onvif_integration(
         mock_discovery.return_value = []
         setup_mock_device(mock_device, capabilities=capabilities, events=events)
         mock_device.device = mock_onvif_camera
+
+        if raw_events:
+            # Process raw library events through a real EventManager
+            # to test the full parsing pipeline including conversions
+            event_manager = EventManager(hass, mock_onvif_camera, config_entry, NAME)
+            mock_messages = []
+            event_by_topic: dict[str, EventEntity] = {}
+            for topic, raw_event in raw_events:
+                mock_msg = MagicMock()
+                mock_msg.Topic._value_1 = topic
+                mock_messages.append(mock_msg)
+                event_by_topic[topic] = raw_event
+
+            async def mock_parse(topic, unique_id, msg):
+                return event_by_topic.get(topic)
+
+            with patch(
+                "homeassistant.components.onvif.event.onvif_parsers"
+            ) as mock_parsers:
+                mock_parsers.parse = mock_parse
+                mock_parsers.errors.UnknownTopicError = type(
+                    "UnknownTopicError", (Exception,), {}
+                )
+                await event_manager.async_parse_messages(mock_messages)
+
+            mock_device.events = event_manager
+
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     return config_entry, mock_onvif_camera, mock_device
