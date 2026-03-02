@@ -112,7 +112,7 @@ def entity_ids_by_output_device_id(
     """Map pyatv output device IDs to MediaPlayer entity IDs.
 
     Return a dict with the keys being the output device ID, and the values being
-    the mapped entity ID or None, if not entity could be found.
+    the mapped entity ID or `None` if no entity could be found.
     """
     players = dict.fromkeys(output_device_ids, None)
 
