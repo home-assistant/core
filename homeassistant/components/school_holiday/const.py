@@ -11,7 +11,7 @@ CONF_CALENDAR_NAME = "calendar_name"
 CONF_SENSOR_NAME = "sensor_name"
 
 DOMAIN = "school_holiday"
-SCAN_INTERVAL = timedelta(hours=1)
+SCAN_INTERVAL = timedelta(hours=24)
 
 # Country and region codes.
 COUNTRIES = ["nl"]
