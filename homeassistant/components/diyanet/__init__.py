@@ -52,7 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiyanetConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: DiyanetConfigEntry) -> bool:
     """Unload a config entry."""
-    # Unload the coordinator's scheduled task
-    entry.runtime_data.shutdown()
-
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # Unload the coordinator's scheduled task
+        entry.runtime_data.shutdown()
+    return unload_ok
