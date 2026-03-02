@@ -594,8 +594,16 @@ ZEROCONF = {
             "name": "vrroom-*",
         },
         {
+            "domain": "homevolt",
+            "name": "homevolt*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
+        },
+        {
+            "domain": "liebherr",
+            "name": "liebherr*",
         },
         {
             "domain": "loqed",
@@ -617,6 +625,10 @@ ZEROCONF = {
         },
         {
             "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
+            "domain": "powerfox_local",
             "name": "powerfox*",
         },
         {
@@ -832,6 +844,11 @@ ZEROCONF = {
             "domain": "hunterdouglas_powerview",
         },
     ],
+    "_prana._tcp.local.": [
+        {
+            "domain": "prana",
+        },
+    ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
@@ -942,6 +959,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_systemnexa2._tcp.local.": [
+        {
+            "domain": "systemnexa2",
         },
     ],
     "_technove-stations._tcp.local.": [

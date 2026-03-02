@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -13,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     DeviceCategory.HXD: (

@@ -65,7 +65,7 @@ async def test_form_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_pyloadapi.login.side_effect = exception
+    mock_pyloadapi.get_status.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -75,7 +75,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    mock_pyloadapi.login.side_effect = None
+    mock_pyloadapi.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -159,7 +159,7 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_pyloadapi.login.side_effect = side_effect
+    mock_pyloadapi.get_status.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         REAUTH_INPUT,
@@ -168,7 +168,7 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_text}
 
-    mock_pyloadapi.login.side_effect = None
+    mock_pyloadapi.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         REAUTH_INPUT,
@@ -231,7 +231,7 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    mock_pyloadapi.login.side_effect = side_effect
+    mock_pyloadapi.get_status.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -240,7 +240,7 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_text}
 
-    mock_pyloadapi.login.side_effect = None
+    mock_pyloadapi.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -261,7 +261,7 @@ async def test_hassio_discovery(
 ) -> None:
     """Test flow started from Supervisor discovery."""
 
-    mock_pyloadapi.login.side_effect = InvalidAuth
+    mock_pyloadapi.get_status.side_effect = InvalidAuth
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -273,7 +273,7 @@ async def test_hassio_discovery(
     assert result["step_id"] == "hassio_confirm"
     assert result["errors"] is None
 
-    mock_pyloadapi.login.side_effect = None
+    mock_pyloadapi.get_status.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: "pyload", CONF_PASSWORD: "pyload"}
@@ -325,7 +325,7 @@ async def test_hassio_discovery_errors(
 ) -> None:
     """Test flow started from Supervisor discovery."""
 
-    mock_pyloadapi.login.side_effect = side_effect
+    mock_pyloadapi.get_status.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -344,7 +344,7 @@ async def test_hassio_discovery_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_text}
 
-    mock_pyloadapi.login.side_effect = None
+    mock_pyloadapi.get_status.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: "pyload", CONF_PASSWORD: "pyload"}
