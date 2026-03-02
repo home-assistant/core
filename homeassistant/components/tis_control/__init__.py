@@ -46,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         # If connection fails, raise ConfigEntryNotReady
         # to prompt Home Assistant to retry setup later.
         _LOGGER.error("Failed to connect: %s", e)
-        raise ConfigEntryNotReady(
-            f"Failed to connect to TIS API Gateway, error: {e}"
-        ) from e
+        raise ConfigEntryNotReady("Failed to connect to gateway") from e
 
     entry.runtime_data = TISData(tis_api=tis_api)
 
