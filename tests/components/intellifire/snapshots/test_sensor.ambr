@@ -54,7 +54,12 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'local',
+        'cloud',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -73,7 +78,7 @@
     'object_id_base': 'Control mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Control mode',
     'platform': 'intellifire',
@@ -89,7 +94,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'enum',
       'friendly_name': 'IntelliFire Control mode',
+      'options': list([
+        'local',
+        'cloud',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.intellifire_control_mode',
@@ -361,7 +371,12 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'local',
+        'cloud',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -380,7 +395,7 @@
     'object_id_base': 'Read mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Read mode',
     'platform': 'intellifire',
@@ -396,7 +411,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'enum',
       'friendly_name': 'IntelliFire Read mode',
+      'options': list([
+        'local',
+        'cloud',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.intellifire_read_mode',

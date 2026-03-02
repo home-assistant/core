@@ -69,12 +69,16 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="read_mode",
         translation_key="read_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["local", "cloud"],
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.fireplace.read_mode.value,
     ),
     IntellifireSensorEntityDescription(
         key="control_mode",
         translation_key="control_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["local", "cloud"],
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.fireplace.control_mode.value,
     ),

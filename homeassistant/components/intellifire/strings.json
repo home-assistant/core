@@ -148,8 +148,8 @@
     "step": {
       "init": {
         "data": {
-          "cloud_control": "Send commands to",
-          "cloud_read": "Read data from"
+          "control_mode": "Send commands to",
+          "read_mode": "Read data from"
         }
       }
     }

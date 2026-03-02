@@ -101,7 +101,10 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(
                 config_entry,
                 data=new,
-                options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
+                options={
+                    CONF_READ_MODE: API_MODE_LOCAL,
+                    CONF_CONTROL_MODE: API_MODE_LOCAL,
+                },
                 unique_id=new[CONF_SERIAL],
                 version=1,
                 minor_version=2,
