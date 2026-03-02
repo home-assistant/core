@@ -14,6 +14,8 @@ from homeassistant.components.tuya.const import (
     CONF_TOKEN_INFO,
     CONF_USER_CODE,
     DOMAIN,
+    OPTION_ENTRY_COVER_POSITION_REVERSED,
+    OPTION_ENTRY_DEVICE_OPTIONS,
 )
 from homeassistant.core import HomeAssistant
 
@@ -39,6 +41,11 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TERMINAL_ID: "test_terminal",
             CONF_TOKEN_INFO: "test_token",
             CONF_USER_CODE: "test_user_code",
+        },
+        options={
+            OPTION_ENTRY_DEVICE_OPTIONS: {
+                "jzpap0inhkykqtlwgklc": {OPTION_ENTRY_COVER_POSITION_REVERSED: False}
+            },
         },
         unique_id="12345",
     )
