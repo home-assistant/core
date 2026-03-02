@@ -54,7 +54,7 @@ async def async_setup_entry(
         device_id = device.get("_id")
         if not device_id:
             _LOGGER.warning(
-                "Skipping MyNeomitis device without _id: %s", device.get("name")
+                "Skipping device without _id: %s", device.get("name")
             )
             continue
 
