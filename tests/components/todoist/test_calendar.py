@@ -183,18 +183,21 @@ async def test_failed_coordinator_update(hass: HomeAssistant, api: AsyncMock) ->
     """Test a failed data coordinator update is handled correctly."""
     api.get_tasks.side_effect = Exception("API error")
 
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.todoist.calendar.TodoistAPIAsync", return_value=api
+    ):
+        assert await setup.async_setup_component(
+            hass,
+            "calendar",
+            {
+                "calendar": {
+                    "platform": DOMAIN,
+                    CONF_TOKEN: "token",
+                    "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     await async_update_entity(hass, "calendar.all_projects")
     state = hass.states.get("calendar.all_projects")

@@ -56,7 +56,7 @@ PyFlume==0.6.5
 PyFronius==0.8.0
 
 # homeassistant.components.pyload
-PyLoadAPI==1.4.2
+PyLoadAPI==2.0.0
 
 # homeassistant.components.met_eireann
 PyMetEireann==2024.11.0
@@ -181,7 +181,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==12.0.0
+aioamazondevices==12.0.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -226,9 +226,6 @@ aiodiscover==2.7.1
 # homeassistant.components.dnsip
 aiodns==4.0.0
 
-# homeassistant.components.duke_energy
-aiodukeenergy==0.3.0
-
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
@@ -258,7 +255,7 @@ aioflo==2021.11.0
 aioghost==0.4.0
 
 # homeassistant.components.github
-aiogithubapi==24.6.0
+aiogithubapi==26.0.0
 
 # homeassistant.components.guardian
 aioguardian==2026.01.1
@@ -404,7 +401,7 @@ aioswitcher==6.1.0
 aiosyncthing==0.7.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.4.2
+aiotankerkoenig==0.5.1
 
 # homeassistant.components.tedee
 aiotedee==0.2.25
@@ -431,7 +428,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.5.0
+aiowebdav2==0.6.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.5
@@ -737,7 +734,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
-dsmr-parser==1.4.3
+dsmr-parser==1.5.0
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
@@ -800,7 +797,7 @@ energyzero==4.0.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.12.4
+env-canada==0.13.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -995,7 +992,7 @@ goslide-api==0.7.0
 gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
-govee-ble==0.44.0
+govee-ble==1.2.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==2.3.0
@@ -1087,7 +1084,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260226.0
+home-assistant-frontend==20260302.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.2.13
@@ -1820,7 +1817,7 @@ pyhaversion==22.8.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.7
+pyhive-integration==1.0.8
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -2108,7 +2105,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.3
+pysmartthings==3.6.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2165,7 +2162,7 @@ python-bsblan==5.1.0
 python-ecobee-api==0.3.2
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.14
+python-fullykiosk==0.0.15
 
 # homeassistant.components.google_drive
 python-google-drive-api==0.1.0
@@ -2744,7 +2741,7 @@ webio-api==0.1.12
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2026.1.25
+weheat==2026.2.28
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==1.0.3
@@ -2789,7 +2786,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.2.4
+yalexs-ble==3.2.7
 
 # homeassistant.components.august
 # homeassistant.components.yale
