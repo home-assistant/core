@@ -474,13 +474,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
             updates[DATA_SUPERVISOR_STATS] = client.supervisor.stats()
 
-        results = await asyncio.gather(client.addons.list(), *updates.values())
         # Pull off addons.list results for further processing before caching
-        apps_list = results.pop(0)
-        # Zip the rest and cache in hass.data
-        for key, result in zip(
-            updates, cast(list[ResponseData], results), strict=False
-        ):
+        apps_list, *results = await asyncio.gather(
+            client.addons.list(), *updates.values()
+        )
+        for key, result in zip(updates, cast(list[ResponseData], results), strict=True):
             data[key] = result.to_dict()
 
         all_apps = {app.slug: app for app in apps_list}
