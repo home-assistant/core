@@ -47,7 +47,7 @@ class _AlarmChangedByWrapper(DPCodeRawWrapper):
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"
-            or (status := super().read_device_status(device)) is None
+            or (status := self._read_dpcode_value(device)) is None
         ):
             return None
         return status.decode("utf-16be")
@@ -84,7 +84,7 @@ class _AlarmStateWrapper(DPCodeEnumWrapper):
             ):
                 return AlarmControlPanelState.TRIGGERED
 
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return self._STATE_MAPPINGS.get(status)
 

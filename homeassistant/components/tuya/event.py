@@ -36,7 +36,7 @@ class _EventEnumWrapper(DPCodeEnumWrapper):
         self, device: CustomerDevice
     ) -> tuple[str, None] | None:
         """Return the event details."""
-        if (raw_value := super().read_device_status(device)) is None:
+        if (raw_value := self._read_dpcode_value(device)) is None:
             return None
         return (raw_value, None)
 
@@ -53,7 +53,7 @@ class _AlarmMessageWrapper(DPCodeStringWrapper):
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the alarm message."""
-        if (raw_value := super().read_device_status(device)) is None:
+        if (raw_value := self._read_dpcode_value(device)) is None:
             return None
         return ("triggered", {"message": b64decode(raw_value).decode("utf-8")})
 
@@ -73,7 +73,7 @@ class _DoorbellPicWrapper(DPCodeRawWrapper):
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the doorbell picture."""
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return ("triggered", {"message": status.decode("utf-8")})
 

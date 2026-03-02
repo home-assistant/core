@@ -59,7 +59,7 @@ class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Read and round the device status."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(value)
 
@@ -173,7 +173,7 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> HVACMode | None:
         """Read the device status."""
-        if (raw := super().read_device_status(device)) not in TUYA_HVAC_TO_HA:
+        if (raw := self._read_dpcode_value(device)) not in TUYA_HVAC_TO_HA:
             return None
         return TUYA_HVAC_TO_HA[raw]
 
@@ -205,7 +205,7 @@ class _PresetWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status."""
-        if (raw := super().read_device_status(device)) in TUYA_HVAC_TO_HA:
+        if (raw := self._read_dpcode_value(device)) in TUYA_HVAC_TO_HA:
             return None
         return raw
 

@@ -59,7 +59,7 @@ class _DirectionEnumWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status and return the direction string."""
-        if (value := super().read_device_status(device)) and value in {
+        if (value := self._read_dpcode_value(device)) and value in {
             DIRECTION_FORWARD,
             DIRECTION_REVERSE,
         }:
@@ -85,7 +85,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
         """Get the current speed as a percentage."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return ordered_list_item_to_percentage(self.options, value)
 
@@ -104,7 +104,7 @@ class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(self._remap_helper.remap_value_to(value))
 

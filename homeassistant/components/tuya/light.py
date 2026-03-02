@@ -178,7 +178,7 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
         self, device: CustomerDevice
     ) -> tuple[float, float, float] | None:
         """Return a tuple (H, S, V) from this color data."""
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return (
             self.h_type.remap_value_to(status["h"]),

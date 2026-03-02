@@ -118,7 +118,7 @@ class _IsClosedInvertedWrapper(DPCodeBooleanWrapper):
     """Boolean wrapper for checking if cover is closed (inverted)."""
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return not value
 
@@ -134,7 +134,7 @@ class _IsClosedEnumWrapper(DPCodeEnumWrapper):
     }
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:  # type: ignore[override]
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return self._MAPPINGS.get(value)
 
