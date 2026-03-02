@@ -95,6 +95,7 @@ ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
 
 ROBOT_CLEANER_MOVEMENT_MAP = {
     "powerOff": "off",
+    "washingMop": "washing_mop",
 }
 
 OVEN_MODE = {
@@ -161,6 +162,13 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
     component_translation_key: dict[str, str] | None = None
+    presentation_fn: (
+        Callable[
+            [str | None, str | float | int | datetime | None],
+            str | float | int | datetime | None,
+        ]
+        | None
+    ) = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -762,6 +770,13 @@ CAPABILITY_TO_SENSORS: dict[
                     (value := cast(dict | None, status.value)) is not None
                     and "power" in value
                 ),
+                presentation_fn=lambda presentation_id, value: (
+                    value * 1000
+                    if presentation_id is not None
+                    and "EHS" in presentation_id
+                    and isinstance(value, (int, float))
+                    else value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -880,6 +895,7 @@ CAPABILITY_TO_SENSORS: dict[
                     "after",
                     "cleaning",
                     "pause",
+                    "washing_mop",
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
@@ -1345,7 +1361,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         res = self.get_attribute_value(self.capability, self._attribute)
         if options_map := self.entity_description.options_map:
             return options_map.get(res)
-        return self.entity_description.value_fn(res)
+        value = self.entity_description.value_fn(res)
+        if self.entity_description.presentation_fn:
+            value = self.entity_description.presentation_fn(
+                self.device.device.presentation_id, value
+            )
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:

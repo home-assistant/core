@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EvoService
+from .const import DOMAIN
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,20 +47,10 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
             raise NotImplementedError
         if payload["unique_id"] != self._attr_unique_id:
             return
-        if payload["service"] in (
-            EvoService.SET_ZONE_OVERRIDE,
-            EvoService.CLEAR_ZONE_OVERRIDE,
-        ):
-            await self.async_zone_svc_request(payload["service"], payload["data"])
-            return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller."""
-        raise NotImplementedError
-
-    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
 
     @property
