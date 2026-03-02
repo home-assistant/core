@@ -255,3 +255,20 @@ async def test_climate_battery_sensor(
     prefix = "sensor.livingroom_"
 
     assert hass.states.get(f"{prefix}battery").state == "75"
+
+
+async def test_thermostat_room_temperature_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test thermostat room temperature sensor setup."""
+    with selected_platforms([Platform.CLIMATE, Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    # Livingroom has a NATherm1 thermostat with therm_measured_temperature = 19.8
+    state = hass.states.get("sensor.livingroom_temperature")
+    assert state is not None
+    assert state.state == "19.8"
+    assert state.attributes["device_class"] == "temperature"
+    assert state.attributes["unit_of_measurement"] == "°C"
