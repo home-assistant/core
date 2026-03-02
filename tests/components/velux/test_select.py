@@ -1,6 +1,6 @@
 """Test Velux select entities."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pyvlx.const import Velocity
@@ -28,12 +28,11 @@ def platform() -> Platform:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_select_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_pyvlx: AsyncMock,
+    mock_pyvlx: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Snapshot the entity and validate registry metadata for select entities."""
@@ -46,11 +45,11 @@ async def test_select_setup(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_select_device_association(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    mock_pyvlx: MagicMock,
     mock_window: AsyncMock,
 ) -> None:
     """Test select device association."""
@@ -70,9 +69,11 @@ async def test_select_device_association(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_velocity_select_option(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_window: AsyncMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_pyvlx: MagicMock,
+    mock_window: AsyncMock,
 ) -> None:
     """Test changing the velocity option."""
     entity_id = entity_registry.async_get_entity_id(
@@ -112,11 +113,10 @@ async def test_velocity_select_option(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_velocity_select_restore(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyvlx: AsyncMock,
+    mock_pyvlx: MagicMock,
     mock_window: AsyncMock,
     platform: Platform,
 ) -> None:
