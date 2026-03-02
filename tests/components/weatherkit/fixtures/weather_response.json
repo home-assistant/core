@@ -6340,5 +6340,47 @@
         "windSpeed": 7.91
       }
     ]
+  },
+  "forecastNextHour": {
+    "name": "NextHourForecast",
+    "metadata": {
+      "attributionURL": "https://developer.apple.com/weatherkit/data-source-attribution/",
+      "expireTime": "2023-09-08T23:03:04Z",
+      "latitude": 35.47,
+      "longitude": 135.749,
+      "readTime": "2023-09-08T22:03:04Z",
+      "reportedTime": "2023-09-08T21:02:40Z",
+      "units": "m",
+      "version": 1
+    },
+    "forecastStart": "2023-09-08T22:03:00Z",
+    "forecastEnd": "2023-09-08T23:03:00Z",
+    "minutes": [
+      {
+        "startTime": "2023-09-08T22:03:00Z",
+        "precipitationChance": 0.0,
+        "precipitationIntensity": 0.0
+      },
+      {
+        "startTime": "2023-09-08T22:04:00Z",
+        "precipitationChance": 0.0,
+        "precipitationIntensity": 0.0
+      },
+      {
+        "startTime": "2023-09-08T22:05:00Z",
+        "precipitationChance": 0.1,
+        "precipitationIntensity": 0.2
+      },
+      {
+        "startTime": "2023-09-08T22:06:00Z",
+        "precipitationChance": 0.2,
+        "precipitationIntensity": 0.5
+      },
+      {
+        "startTime": "2023-09-08T22:07:00Z",
+        "precipitationChance": 0.3,
+        "precipitationIntensity": 0.8
+      }
+    ]
   }
 }
