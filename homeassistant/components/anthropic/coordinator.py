@@ -107,7 +107,7 @@ class AnthropicCoordinator(
         exc = err
         if isinstance(err, anthropic.APITimeoutError):
             exc = TimeoutError(message)
-        if isinstance(err, anthropic.AuthenticationError):
+        elif isinstance(err, anthropic.AuthenticationError):
             exc = ConfigEntryAuthFailed(message)
         elif isinstance(err, anthropic.APIError):
             exc = UpdateFailed(message)
