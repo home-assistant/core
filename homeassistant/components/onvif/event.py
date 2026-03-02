@@ -197,6 +197,7 @@ class EventManager:
 
             try:
                 event = await onvif_parsers.parse(topic, unique_id, msg)
+                error = None
             except onvif_parsers.errors.UnknownTopicError:
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.warning(
@@ -207,21 +208,16 @@ class EventManager:
                     )
                     UNHANDLED_TOPICS.add(topic)
                 continue
-            except (AttributeError, KeyError) as err:
+            except (AttributeError, KeyError) as e:
+                event = None
+                error = e
+
+            if not event:
                 LOGGER.warning(
                     "%s: Unable to parse event from %s: %s: %s",
                     self.name,
                     unique_id,
-                    err,
-                    msg,
-                )
-                continue
-
-            if not event:
-                LOGGER.warning(
-                    "%s: Unable to parse event from %s: %s",
-                    self.name,
-                    unique_id,
+                    error,
                     msg,
                 )
                 continue
