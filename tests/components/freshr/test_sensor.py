@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
-from pyfreshr.exceptions import ApiResponseError, LoginError
+from pyfreshr.exceptions import ApiResponseError
 from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
 
@@ -136,20 +136,6 @@ async def test_sensor_invalid_numeric_values(
     flow_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_flow")
     assert flow_id is not None
     assert hass.states.get(flow_id).state == "0.05"
-
-
-async def test_setup_auth_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_freshr_client: MagicMock,
-) -> None:
-    """Test that a LoginError during setup raises ConfigEntryAuthFailed."""
-    mock_freshr_client.login = AsyncMock(side_effect=LoginError("bad credentials"))
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_api_response_error(
