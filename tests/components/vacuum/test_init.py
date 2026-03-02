@@ -430,10 +430,10 @@ async def test_last_seen_segments(
 
 
 @pytest.mark.usefixtures("config_flow_fixture")
-async def test_last_seen_segments_and_issue_creation(
+async def test_segments_changed_issue(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test last_seen_segments property and segments issue creation."""
+    """Test segments changed issue."""
     mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
 
     config_entry = MockConfigEntry(domain="test")
@@ -452,6 +452,17 @@ async def test_last_seen_segments_and_issue_creation(
     await hass.async_block_till_done()
 
     entity_entry = entity_registry.async_get(mock_vacuum.entity_id)
+
+    entity_registry.async_update_entity_options(
+        mock_vacuum.entity_id,
+        DOMAIN,
+        {
+            "area_mapping": {"area_1": ["seg_1"]},
+            "last_seen_segments": [asdict(segment) for segment in mock_vacuum.segments],
+        },
+    )
+    await hass.async_block_till_done()
+
     mock_vacuum.async_create_segments_issue()
 
     issue_id = f"segments_changed_{entity_entry.id}"
@@ -459,6 +470,21 @@ async def test_last_seen_segments_and_issue_creation(
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
+
+    entity_registry.async_update_entity_options(
+        mock_vacuum.entity_id,
+        DOMAIN,
+        {
+            "area_mapping": {"area_1": ["seg_1"], "area_2": ["seg_new"]},
+            "last_seen_segments": [
+                {"id": "seg_1", "name": "Kitchen"},
+                {"id": "seg_new", "name": "New Room"},
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])

@@ -214,6 +214,7 @@ DEFAULT_INTEGRATIONS = {
     "analytics",  # Needed for onboarding
     "application_credentials",
     "backup",
+    "brands",
     "frontend",
     "hardware",
     "labs",
