@@ -48,11 +48,11 @@ class LitterRobotRecordingView(HomeAssistantView):
         if _media_root is None:
             raise HTTPNotFound
 
-        # Prevent path traversal
-        if any(c in serial + filename for c in ("/", "\\", "..")):
+        # Prevent path traversal — resolve and verify under media root
+        file_path = (_media_root / serial / filename).resolve()
+        if not file_path.is_relative_to(_media_root.resolve()):
             raise HTTPForbidden
 
-        file_path = _media_root / serial / filename
         if not file_path.exists() or not file_path.is_file():
             raise HTTPNotFound
 

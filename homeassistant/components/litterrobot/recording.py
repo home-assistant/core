@@ -613,19 +613,24 @@ class RecordingManager:
         encoder_error: list[Exception],
     ) -> None:
         """Check encoder results and apply faststart post-processing."""
-        if encoder_error:
-            _LOGGER.warning(
-                "Encoding failed for %s: %s", robot_name, encoder_error[0]
-            )
-            if tmp_path.exists():
-                tmp_path.unlink()
-            return
 
-        if tmp_path.exists() and tmp_path.stat().st_size > 0:
+        def _finalize_sync() -> str | None:
+            """Run all file I/O in executor to avoid blocking the event loop.
+
+            Returns a status string for logging, or None on error.
+            """
+            if encoder_error:
+                if tmp_path.exists():
+                    tmp_path.unlink()
+                return None
+
+            if not tmp_path.exists() or tmp_path.stat().st_size == 0:
+                if tmp_path.exists():
+                    tmp_path.unlink()
+                return "empty"
+
             try:
-                await self._hass.async_add_executor_job(
-                    self._apply_faststart, tmp_path, filepath
-                )
+                RecordingManager._apply_faststart(tmp_path, filepath)
             except Exception:
                 _LOGGER.warning(
                     "faststart post-processing failed for %s, saving as-is",
@@ -633,9 +638,18 @@ class RecordingManager:
                     exc_info=True,
                 )
                 tmp_path.rename(filepath)
+            return "saved"
+
+        if encoder_error:
+            _LOGGER.warning(
+                "Encoding failed for %s: %s", robot_name, encoder_error[0]
+            )
+
+        result = await self._hass.async_add_executor_job(_finalize_sync)
+
+        if result == "saved":
             _LOGGER.info("Recording saved: %s", filepath.name)
-        elif tmp_path.exists():
-            tmp_path.unlink()
+        elif result == "empty":
             _LOGGER.warning(
                 "Recording empty for %s, removed temp file", robot_name
             )
@@ -721,11 +735,12 @@ class RecordingManager:
             ],
             capture_output=True,
         )
-        tmp_path.unlink()
         if result.returncode != 0:
+            # Keep temp file so caller can fall back to saving as-is
             raise RuntimeError(
                 f"ffmpeg faststart failed: {result.stderr.decode(errors='replace')[:300]}"
             )
+        tmp_path.unlink()
 
     async def async_cleanup_old_recordings(self) -> None:
         """Delete recordings older than the retention period."""

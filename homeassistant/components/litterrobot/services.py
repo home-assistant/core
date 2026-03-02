@@ -78,7 +78,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 continue
 
             # Reset cooldown so the manual trigger always works
-            coordinator.recording_manager._last_trigger_times.pop(robot.serial, None)
+            # Key format is (serial, event_type) — match trigger_recording()
+            coordinator.recording_manager._last_trigger_times.pop(
+                (robot.serial, "manual"), None
+            )
             coordinator.recording_manager.trigger_recording(
                 robot, {"type": "MANUAL", "messageId": "manual"}
             )
