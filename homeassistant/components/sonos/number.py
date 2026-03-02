@@ -287,6 +287,11 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             self.async_write_ha_state()
 
     @property
+    def available(self) -> bool:
+        """Return whether this entity is available."""
+        return self._is_coordinator() and self.speaker.available
+
+    @property
     def native_value(self) -> float | None:
         """Return the current group volume (0–100) or None if unknown."""
         return None if self._value is None else float(self._value)
