@@ -230,14 +230,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    _attr_preset_modes = [
-        PRESET_NONE,
-        PRESET_ECO,
-        PRESET_BOOST,
-        PRESET_COMFORT,
-        PRESET_HOME,
-        CLIMATE_PRESET_SCHEDULE,
-    ]
+    _attr_preset_modes = list(RADIATOR_PRESET_MODE_MAP)
 
     _attr_translation_key = "smart_radiator_thermostat"
 
