@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -156,11 +157,17 @@ def _get_attr(obj: Any, attr: str) -> Any:
     """Get attribute from object or dict.
 
     Matter SDK responses can be either dataclass objects or dicts depending on
-    the SDK version and serialization context.
+    the SDK version and serialization context. NullValue (a truthy,
+    non-iterable singleton) is normalized to None.
     """
     if isinstance(obj, dict):
-        return obj.get(attr)
-    return getattr(obj, attr, None)
+        value = obj.get(attr)
+    else:
+        value = getattr(obj, attr, None)
+    # The Matter SDK uses NullValue for nullable fields instead of None.
+    if value is NullValue:
+        return None
+    return value
 
 
 def _get_supported_credential_types(feature_map: int) -> list[str]:
@@ -598,6 +605,13 @@ _CREDENTIAL_TYPE_FEATURE_MAP: dict[str, int] = {
     CRED_TYPE_FACE: DoorLockFeature.kFaceCredentials,
 }
 
+# Map credential type strings to the capacity attribute for slot iteration.
+# Biometric types have no dedicated capacity attribute; fall back to total users.
+_CREDENTIAL_TYPE_CAPACITY_ATTR = {
+    CRED_TYPE_PIN: clusters.DoorLock.Attributes.NumberOfPINUsersSupported,
+    CRED_TYPE_RFID: clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported,
+}
+
 
 def _validate_credential_type_support(
     lock_endpoint: MatterEndpoint, credential_type: str
@@ -736,13 +750,15 @@ async def set_lock_credential(
     operation_type = clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
 
     if credential_index is None:
-        # Auto-find first available credential slot
+        # Auto-find first available credential slot.
+        # Use the credential-type-specific capacity as the upper bound.
+        max_creds_attr = _CREDENTIAL_TYPE_CAPACITY_ATTR.get(
+            credential_type,
+            clusters.DoorLock.Attributes.NumberOfTotalUsersSupported,
+        )
+        max_creds_raw = lock_endpoint.get_attribute_value(None, max_creds_attr)
         max_creds = (
-            lock_endpoint.get_attribute_value(
-                None,
-                clusters.DoorLock.Attributes.NumberOfCredentialsSupportedPerUser,
-            )
-            or 5
+            max_creds_raw if isinstance(max_creds_raw, int) and max_creds_raw > 0 else 5
         )
         for idx in range(1, max_creds + 1):
             status_response = await matter_client.send_device_command(
