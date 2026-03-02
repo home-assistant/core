@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import io
 from pathlib import Path
 from typing import Any
+import subprocess
 from unittest.mock import MagicMock, mock_open, patch
+import wave
 
 import pytest
 
@@ -14,11 +17,23 @@ from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
 from homeassistant.components.picotts.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.core_config import async_process_ha_core_config
 
 from tests.common import MockConfigEntry
 from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
+
+
+def get_empty_wav() -> bytes:
+    """Get bytes for empty WAV file."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(22050)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(22050 * 2))
+        return wav_io.getvalue()
 
 
 @pytest.fixture(autouse=True)
@@ -39,17 +54,18 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(name="setup")
-async def setup_fixture(
+@pytest.fixture
+async def setup_picotts(
     hass: HomeAssistant,
     config: dict[str, Any],
-    request: pytest.FixtureRequest,
 ) -> None:
-    """Set up the test environment."""
-    if request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, config)
-    else:
-        raise RuntimeError("Invalid setup fixture")
+    """Set up picotts integration via config entry."""
+    default_config = {tts.CONF_LANG: "en-US"}
+    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
+    config_entry.add_to_hass(hass)
+
+    with patch("shutil.which", return_value="/usr/local/bin/pico2wave"):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
 
@@ -60,40 +76,25 @@ def config_fixture() -> dict[str, Any]:
     return {}
 
 
-async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
-    """Mock config entry setup."""
-    default_config = {tts.CONF_LANG: "en-US"}
-    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
-    config_entry.add_to_hass(hass)
-
-    with patch("shutil.which", return_value="/usr/local/bin/pico2wave"):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-
 @pytest.mark.parametrize(
-    ("setup", "tts_service", "service_data"),
+    ("config", "entity_id", "extra_service_data"),
     [
-        (
-            "mock_config_entry_setup",
-            "speak",
-            {
-                ATTR_ENTITY_ID: "tts.pico_tts_en_us",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is a person at the front door.",
-            },
-        ),
+        ({}, "tts.pico_tts_en_us", {}),
+        ({tts.CONF_LANG: "de-DE"}, "tts.pico_tts_de_de", {}),
+        ({}, "tts.pico_tts_en_us", {tts.ATTR_LANGUAGE: "de-DE"}),
+        ({tts.CONF_LANG: "en-GB"}, "tts.pico_tts_en_gb", {}),
+        ({}, "tts.pico_tts_en_us", {tts.ATTR_LANGUAGE: "en-GB"}),
     ],
-    indirect=["setup"],
 )
 async def test_tts_service(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     service_calls: list[ServiceCall],
-    setup: str,
-    tts_service: str,
-    service_data: dict[str, Any],
+    setup_picotts: None,
+    entity_id: str,
+    extra_service_data: dict[str, Any],
 ) -> None:
-    """Test tts service."""
+    """Test tts speak service with various language configurations."""
     mock_result = MagicMock()
     mock_result.returncode = 0
     with (
@@ -101,13 +102,21 @@ async def test_tts_service(
             "homeassistant.components.picotts.tts.subprocess.run",
             return_value=mock_result,
         ),
-        patch("builtins.open", mock_open(read_data=b"fake-wav-data")),
+        patch(
+            "homeassistant.components.picotts.tts.open",
+            mock_open(read_data=get_empty_wav()),
+        ),
         patch("homeassistant.components.picotts.tts.os.remove"),
     ):
         await hass.services.async_call(
             tts.DOMAIN,
-            tts_service,
-            service_data,
+            "speak",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                **extra_service_data,
+            },
             blocking=True,
         )
 
@@ -120,207 +129,49 @@ async def test_tts_service(
         )
 
 
-@pytest.mark.parametrize("config", [{tts.CONF_LANG: "de-DE"}])
-@pytest.mark.parametrize(
-    ("setup", "tts_service", "service_data"),
-    [
-        (
-            "mock_config_entry_setup",
-            "speak",
-            {
-                ATTR_ENTITY_ID: "tts.pico_tts_de_de",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is a person at the front door.",
-            },
-        ),
-    ],
-    indirect=["setup"],
-)
-async def test_service_say_german_config(
+async def test_get_tts_audio_subprocess_error(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    service_calls: list[ServiceCall],
-    setup: str,
-    tts_service: str,
-    service_data: dict[str, Any],
+    setup_picotts: None,
 ) -> None:
-    """Test service call say with german code in the config."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
+    """Test get_tts_audio when subprocess returns non-zero exit code."""
     with (
         patch(
             "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
+            side_effect=subprocess.CalledProcessError(1, "pico2wave"),
         ),
-        patch("builtins.open", mock_open(read_data=b"fake-wav-data")),
-        patch("homeassistant.components.picotts.tts.os.remove"),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass, "Hello world", "tts.pico_tts_en_us", "en-US"
+            ),
         )
 
-        assert len(service_calls) == 2
-        # assert (
-        #     await retrieve_media(
-        #         hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
-        #     )
-        #     == HTTPStatus.OK
-        # )
+    assert exc_info.value.translation_key == "returncode_error"
+    assert exc_info.value.translation_placeholders == {"returncode": "1"}
 
 
-@pytest.mark.parametrize(
-    ("setup", "tts_service", "service_data"),
-    [
-        (
-            "mock_config_entry_setup",
-            "speak",
-            {
-                ATTR_ENTITY_ID: "tts.pico_tts_en_us",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_LANGUAGE: "de-DE",
-            },
-        ),
-    ],
-    indirect=["setup"],
-)
-async def test_service_say_german_service(
+async def test_get_tts_audio_file_read_error(
     hass: HomeAssistant,
-    # mock_gtts: MagicMock,
-    hass_client: ClientSessionGenerator,
-    service_calls: list[ServiceCall],
-    setup: str,
-    tts_service: str,
-    service_data: dict[str, Any],
+    setup_picotts: None,
 ) -> None:
-    """Test service call say with german code in the service."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
+    """Test get_tts_audio when reading the wav file fails."""
     with (
         patch(
             "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
         ),
-        patch("builtins.open", mock_open(read_data=b"fake-wav-data")),
-        patch("homeassistant.components.picotts.tts.os.remove"),
-    ):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
-        )
-
-        assert len(service_calls) == 2
-        # assert (
-        #     await retrieve_media(
-        #         hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
-        #     )
-        #     == HTTPStatus.OK
-        # )
-
-
-@pytest.mark.parametrize("config", [{tts.CONF_LANG: "en-GB"}])
-@pytest.mark.parametrize(
-    ("setup", "tts_service", "service_data"),
-    [
-        (
-            "mock_config_entry_setup",
-            "speak",
-            {
-                ATTR_ENTITY_ID: "tts.pico_tts_en_gb",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is a person at the front door.",
-            },
-        ),
-    ],
-    indirect=["setup"],
-)
-async def test_service_say_en_gb_config(
-    hass: HomeAssistant,
-    # mock_gtts: MagicMock,
-    hass_client: ClientSessionGenerator,
-    service_calls: list[ServiceCall],
-    setup: str,
-    tts_service: str,
-    service_data: dict[str, Any],
-) -> None:
-    """Test service call say with en-gb code in the config."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
-    with (
         patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
+            "homeassistant.components.picotts.tts.open",
+            side_effect=FileNotFoundError("No such file"),
         ),
-        patch("builtins.open", mock_open(read_data=b"fake-wav-data")),
-        patch("homeassistant.components.picotts.tts.os.remove"),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass, "Hello world", "tts.pico_tts_en_us", "en-US"
+            ),
         )
 
-        assert len(service_calls) == 2
-        # assert (
-        #     await retrieve_media(
-        #         hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
-        #     )
-        #     == HTTPStatus.OK
-        # )
-
-
-@pytest.mark.parametrize(
-    ("setup", "tts_service", "service_data"),
-    [
-        (
-            "mock_config_entry_setup",
-            "speak",
-            {
-                ATTR_ENTITY_ID: "tts.pico_tts_en_us",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is a person at the front door.",
-                tts.ATTR_LANGUAGE: "en-GB",
-            },
-        ),
-    ],
-    indirect=["setup"],
-)
-async def test_service_say_en_gb_service(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    service_calls: list[ServiceCall],
-    setup: str,
-    tts_service: str,
-    service_data: dict[str, Any],
-) -> None:
-    """Test service call say with en-gb code in the config."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
-        ),
-        patch("builtins.open", mock_open(read_data=b"fake-wav-data")),
-        patch("homeassistant.components.picotts.tts.os.remove"),
-    ):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
-        )
-
-        assert len(service_calls) == 2
-        # assert (
-        #     await retrieve_media(
-        #         hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
-        #     )
-        #     == HTTPStatus.OK
-        # )
+    assert exc_info.value.translation_key == "file_read_error"
