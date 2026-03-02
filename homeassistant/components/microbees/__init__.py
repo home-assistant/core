@@ -24,7 +24,7 @@ type MicroBeesConfigEntry = ConfigEntry[HomeAssistantMicroBeesData]
 
 @dataclass(frozen=True, kw_only=True)
 class HomeAssistantMicroBeesData:
-    """Microbees data stored in the Home Assistant data object."""
+    """Microbees data stored in the config entry runtime_data."""
 
     connector: MicroBees
     coordinator: MicroBeesUpdateCoordinator
