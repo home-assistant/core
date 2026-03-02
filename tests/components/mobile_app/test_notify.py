@@ -562,16 +562,19 @@ async def test_notify_multiple_targets_if_any_disconnected(
     sub_result = await client.receive_json()
     assert sub_result["success"]
 
-    caplog.clear()
-    await hass.services.async_call(
-        "notify",
-        "notify",
-        {
-            "message": "Hello world",
-            "target": target,
-        },
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match=r".*websocket-push-webhook-id.*not connected to local push notifications",
+    ):
+        await hass.services.async_call(
+            "notify",
+            "notify",
+            {
+                "message": "Hello world",
+                "target": target,
+            },
+            blocking=True,
+        )
 
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
@@ -591,13 +594,3 @@ async def test_notify_multiple_targets_if_any_disconnected(
     # Check that there are no more messages to receive (timeout expected)
     with pytest.raises(asyncio.TimeoutError):
         await asyncio.wait_for(client.receive_json(), timeout=0.1)
-
-    # Assert warning log for disconnected device
-    logs = [
-        record
-        for record in caplog.records
-        if record.levelname == "WARNING"
-        and record.pathname.endswith("homeassistant/components/mobile_app/notify.py")
-    ]
-    assert len(logs) == 1
-    assert "websocket-push-webhook-id" in logs[0].message

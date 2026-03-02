@@ -120,6 +120,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
         local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
+        failed_targets = []
         for target in targets:
             registration = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target].data
 
@@ -138,13 +139,15 @@ class MobileAppNotificationService(BaseNotificationService):
                     raise HomeAssistantError(
                         "Device not connected to local push notifications"
                     )
-                _LOGGER.warning(
-                    "Device with webhook id %s not connected to local push notifications, skipping",
-                    target,
-                )
+                failed_targets.append(target)
                 continue
 
             await self._async_send_remote_message_target(target, registration, data)
+
+        if failed_targets:
+            raise HomeAssistantError(
+                f"Device(s) with webhook id(s) {', '.join(failed_targets)} not connected to local push notifications"
+            )
 
     async def _async_send_remote_message_target(self, target, registration, data):
         """Send a message to a target."""
