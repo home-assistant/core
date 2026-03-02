@@ -256,7 +256,6 @@ class MyNeoClimate(ClimateEntity):
 
         ok = await self._set_device_temperature(temperature)
         if not ok:
-            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Failed to set temperature to {temperature} for {self.entity_id}"
             )
