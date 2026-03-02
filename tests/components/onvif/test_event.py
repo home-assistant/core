@@ -13,6 +13,7 @@ MOTION_ALARM_UID = f"{MAC}_tns1:VideoSource/MotionAlarm_VideoSourceToken"
 IMAGE_TOO_BLURRY_UID = (
     f"{MAC}_tns1:VideoSource/ImageTooBlurry/AnalyticsService_VideoSourceToken"
 )
+LAST_RESET_UID = f"{MAC}_tns1:Monitoring/LastReset_0"
 
 
 async def test_motion_alarm_event(hass: HomeAssistant) -> None:
@@ -84,9 +85,6 @@ async def test_diagnostic_event_entity_category(
     entry = entity_registry.async_get("binary_sensor.testcamera_image_too_blurry")
     assert entry is not None
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-
-LAST_RESET_UID = f"{MAC}_tns1:Monitoring/LastReset_0"
 
 
 async def test_timestamp_event_conversion(hass: HomeAssistant) -> None:
