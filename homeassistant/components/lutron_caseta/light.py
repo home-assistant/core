@@ -144,6 +144,11 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             # Any non-zero brightness (HA or physical) becomes the new last level
             self._prev_brightness = hass_brightness
 
+    async def async_update(self) -> None:
+        """Update when forcing a refresh of the device."""
+        await super().async_update()
+        self._sync_prev_brightness_from_device()
+
     def _handle_bridge_update(self) -> None:
         """Handle updated data from the bridge."""
         self._sync_prev_brightness_from_device()
@@ -182,6 +187,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         """Turn the light on."""
         # first check for "white mode" (WarmDim)
         if (white_color := kwargs.get(ATTR_WHITE)) is not None:
+            self._prev_brightness = white_color
             await self._async_set_warm_dim(white_color)
             return
 
@@ -195,9 +201,6 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         elif self._prev_brightness is None:
             # No history at all: default to full brightness
             brightness = 255
-        elif self._prev_brightness == 0:
-            # Last remembered level was 0: choose a reasonable mid-level
-            brightness = 128
         else:
             brightness = self._prev_brightness
 
