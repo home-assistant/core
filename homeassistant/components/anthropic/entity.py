@@ -869,10 +869,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
-            else:
-                coordinator.async_set_updated_data(coordinator.data)
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(coordinator.data)
                 break
 
 
