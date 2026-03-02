@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_ID, CONF_SERIAL, DOMAIN
@@ -36,7 +37,9 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Check if we can connect to the OpenEVSE charger."""
 
-        charger = OpenEVSE(host, user, password)
+        charger = OpenEVSE(
+            host, user, password, session=async_get_clientsession(self.hass)
+        )
         try:
             result = await charger.test_and_get()
         except TimeoutError:
