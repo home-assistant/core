@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import copy
-import logging
 from datetime import datetime
+import logging
 
 from osbornehoffman import MessageType, OHEvent
 from pysiaalarm import SIAEvent
-from pysiaalarm.utils import MessageTypes, SIA_CODES
+from pysiaalarm.utils import SIA_CODES, MessageTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,11 +73,11 @@ def oh_event_to_sia_event(oh_event: OHEvent) -> SIAEvent:
     event.sia_code = copy.copy(SIA_CODES.get(code)) if code else None
 
     # Parse flags (prevent re-parsing)
-    event._content_parsed = True
-    event._encrypted_content_decrypted = True
-    event._adm_parsed = True
-    event._sia_added = True
-    event._xdata_parsed = True
+    event._content_parsed = True  # noqa: SLF001
+    event._encrypted_content_decrypted = True  # noqa: SLF001
+    event._adm_parsed = True  # noqa: SLF001
+    event._sia_added = True  # noqa: SLF001
+    event._xdata_parsed = True  # noqa: SLF001
 
     return event
 

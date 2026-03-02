@@ -7,6 +7,13 @@ from copy import deepcopy
 import logging
 from typing import Any
 
+from osbornehoffman import (
+    InvalidAccountFormatError as OHInvalidAccountFormatError,
+    InvalidAccountLengthError as OHInvalidAccountLengthError,
+    InvalidPanelIDFormatError,
+    InvalidPanelIDLengthError,
+    OHAccount,
+)
 from pysiaalarm import (
     InvalidAccountFormatError,
     InvalidAccountLengthError,
@@ -104,14 +111,6 @@ def _validate_sia_input(data: dict[str, Any]) -> dict[str, str] | None:
 
 def _validate_oh_input(data: dict[str, Any]) -> dict[str, str] | None:
     """Validate OH protocol input."""
-    from osbornehoffman import (
-        InvalidAccountFormatError as OHInvalidAccountFormatError,
-        InvalidAccountLengthError as OHInvalidAccountLengthError,
-        InvalidPanelIDFormatError,
-        InvalidPanelIDLengthError,
-        OHAccount,
-    )
-
     try:
         OHAccount.validate_account(
             account_id=data[CONF_ACCOUNT],
@@ -219,7 +218,10 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ACCOUNT: account,
             CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
         }
-        if user_input.get(CONF_PROTOCOL) == PROTOCOL_OH or self._data.get(CONF_PROTOCOL) == PROTOCOL_OH:
+        if (
+            user_input.get(CONF_PROTOCOL) == PROTOCOL_OH
+            or self._data.get(CONF_PROTOCOL) == PROTOCOL_OH
+        ):
             panel_id_str = user_input.get(CONF_PANEL_ID, "0")
             account_data[CONF_PANEL_ID] = int(panel_id_str, 16) if panel_id_str else 0
             account_data[CONF_FORWARD_HEARTBEAT] = user_input.get(
@@ -267,12 +269,14 @@ class SIAOptionsFlowHandler(OptionsFlow):
                 ): int,
             }
             if not is_oh:
-                schema_fields[vol.Optional(
-                    CONF_IGNORE_TIMESTAMPS,
-                    default=self.options[CONF_ACCOUNTS][account][
-                        CONF_IGNORE_TIMESTAMPS
-                    ],
-                )] = bool
+                schema_fields[
+                    vol.Optional(
+                        CONF_IGNORE_TIMESTAMPS,
+                        default=self.options[CONF_ACCOUNTS][account][
+                            CONF_IGNORE_TIMESTAMPS
+                        ],
+                    )
+                ] = bool
             return self.async_show_form(
                 step_id="options",
                 description_placeholders={"account": account},
