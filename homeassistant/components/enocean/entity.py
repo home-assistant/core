@@ -6,7 +6,7 @@ from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 
 def combine_hex(dev_id: list[int]) -> int:
@@ -60,5 +60,7 @@ class EnOceanEntity(Entity):
         try:
             packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
             dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
-        except ValueError:
-            pass
+        except ValueError as err:
+            LOGGER.warning(
+                "Failed to send command: invalid data or optional bytes: %s", err
+            )
