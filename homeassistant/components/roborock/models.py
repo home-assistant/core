@@ -31,6 +31,7 @@ def get_device_info(device: RoborockDevice) -> DeviceInfo:
         identifiers={(DOMAIN, device.duid)},
         manufacturer="Roborock",
         model=device.product.model,
+        model_id=device.product.model,
         sw_version=device.device_info.fv,
     )
 

@@ -104,7 +104,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         self._device = device
         self.properties_api = properties_api
         self.device_info = get_device_info(device)
-        self.device_info["model_id"] = device.product.model
         if mac := properties_api.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
