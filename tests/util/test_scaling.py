@@ -5,10 +5,11 @@ import math
 import pytest
 
 from homeassistant.util.percentage import (
+    int_states_in_range,
     scale_ranged_value_to_int_range,
     scale_to_ranged_value,
+    states_in_range,
 )
-from homeassistant.util.scaling import int_states_in_range, states_in_range
 
 
 @pytest.mark.parametrize(
