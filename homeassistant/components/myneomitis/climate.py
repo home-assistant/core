@@ -318,6 +318,9 @@ class MyNeoClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
+        supported_modes = getattr(self, "hvac_modes", None)
+        if supported_modes is not None and hvac_mode not in supported_modes:
+            raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
         if hvac_mode == HVACMode.OFF:
             if self._attr_preset_mode and self._attr_preset_mode != "standby":
                 self._last_preset_mode = self._attr_preset_mode
