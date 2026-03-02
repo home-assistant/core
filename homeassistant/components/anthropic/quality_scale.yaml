@@ -10,15 +10,7 @@ rules:
       Integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      * Remove integration setup from the config flow init test
-      * Make `mock_setup_entry` a separate fixture
-      * Use the mock_config_entry fixture in `test_duplicate_entry`
-      * `test_duplicate_entry`: Patch `homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list`
-      * Fix docstring and name for `test_form_invalid_auth` (does not only test auth)
-      * In `test_form_invalid_auth`, make sure the test run until CREATE_ENTRY to test that the flow is able to recover
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -34,18 +26,12 @@ rules:
       Integration does not subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: todo
-    comment: |
-      To redesign deferred reloading.
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      Reevaluate exceptions for entity services.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -103,7 +89,7 @@ rules:
       No entities disabled by default.
   entity-translations: todo
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:

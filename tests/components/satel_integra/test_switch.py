@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,18 +15,25 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_CODE,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -144,3 +152,61 @@ async def test_switch_change_state(
 
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
     mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, False)
+
+
+async def test_switch_last_reported(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test switches update last_reported if same state is reported."""
+    events = async_capture_events(hass, "state_changed")
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    first_reported = hass.states.get("switch.switchable_output").last_reported
+    assert first_reported is not None
+    # Initial state change event
+    assert len(events) == 1
+
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+
+    # Run callbacks with same payload
+    _, _, output_update_method = get_monitor_callbacks(mock_satel)
+    output_update_method({"outputs": {1: 0}})
+
+    assert first_reported != hass.states.get("switch.switchable_output").last_reported
+    assert len(events) == 1  # last_reported shall not fire state_changed
+
+
+async def test_switch_actions_require_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test switch actions fail when access code is missing."""
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_subentries, options={CONF_CODE: None}
+    )
+    await hass.async_block_till_done()
+
+    # Turning the device on or off should raise ServiceValidationError.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )

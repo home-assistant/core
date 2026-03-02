@@ -3431,7 +3431,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-entry]
+# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3451,7 +3451,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3474,7 +3474,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-state]
+# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light Power-on behavior on startup',
@@ -3486,7 +3486,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3993,6 +3993,78 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
+  })
+# ---
+# name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Quiet, Vacuum Only',
+        'Auto, Vacuum Only',
+        'Deep Clean, Vacuum Only',
+        'Quiet, Mop Only',
+        'Auto, Mop Only',
+        'Deep Clean, Mop Only',
+        'Quiet, Vacuum and Mop',
+        'Auto, Vacuum and Mop',
+        'Deep Clean, Vacuum and Mop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.robotic_vacuum_cleaner_clean_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clean mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-00000000000000CA-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robotic Vacuum Cleaner Clean mode',
+      'options': list([
+        'Quiet, Vacuum Only',
+        'Auto, Vacuum Only',
+        'Deep Clean, Vacuum Only',
+        'Quiet, Mop Only',
+        'Auto, Mop Only',
+        'Deep Clean, Mop Only',
+        'Quiet, Vacuum and Mop',
+        'Auto, Vacuum and Mop',
+        'Deep Clean, Vacuum and Mop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robotic_vacuum_cleaner_clean_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto, Vacuum and Mop',
   })
 # ---
 # name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-entry]

@@ -26,6 +26,7 @@ from .coordinator import (
     SleepIQData,
     SleepIQDataUpdateCoordinator,
     SleepIQPauseUpdateCoordinator,
+    SleepIQSleepDataCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,14 +97,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
     pause_coordinator = SleepIQPauseUpdateCoordinator(hass, entry, gateway)
+    sleep_data_coordinator = SleepIQSleepDataCoordinator(hass, entry, gateway)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
     await pause_coordinator.async_config_entry_first_refresh()
+    await sleep_data_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
         data_coordinator=coordinator,
         pause_coordinator=pause_coordinator,
+        sleep_data_coordinator=sleep_data_coordinator,
         client=gateway,
     )
 

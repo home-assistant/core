@@ -22,5 +22,18 @@
         "description": "Authenticate against IntelliClima cloud"
       }
     }
+  },
+  "entity": {
+    "select": {
+      "fan_mode": {
+        "name": "Fan direction mode",
+        "state": {
+          "alternate": "Alternating",
+          "forward": "Forward",
+          "reverse": "Reverse",
+          "sensor": "Sensor"
+        }
+      }
+    }
   }
 }
