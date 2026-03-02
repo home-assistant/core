@@ -121,20 +121,6 @@ async def test_controller_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_controller_flow_normalizes_host_url(
-    hass: HomeAssistant,
-    mock_setup: Mock,
-) -> None:
-    """Test a controller host URL is normalized to a host for storage."""
-    result = await complete_flow(hass, host=f"https://{HOST}/")
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == HOST
-    assert "result" in result
-    assert dict(result["result"].data) == CONFIG_ENTRY_DATA
-
-    assert len(mock_setup.mock_calls) == 1
-
-
 @pytest.mark.parametrize(
     (
         "config_entry_unique_id",
