@@ -177,8 +177,8 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
