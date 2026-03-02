@@ -319,7 +319,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
                 has_rgbww = ColorMode.RGBWW in self._attr_supported_color_modes
 
                 if has_rgb:
-                    data[ATTR_COLOR_PRIMARY] = (255, 255, 255)
+                    data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
 
                 if has_rgbw or has_rgbww:
                     data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
