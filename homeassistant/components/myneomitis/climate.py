@@ -42,7 +42,7 @@ async def async_setup_entry(
     api = config_entry.runtime_data.api
     devices = config_entry.runtime_data.devices
 
-    def _create_entity(device: dict) -> MyNeoClimate:
+    def _create_entity(device: dict[str, Any]) -> MyNeoClimate:
         return MyNeoClimate(api, device)
 
     climate_entities: list[MyNeoClimate] = []
