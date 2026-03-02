@@ -1,5 +1,6 @@
 """Tests for the ONVIF integration."""
 
+from collections import defaultdict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
@@ -11,6 +12,7 @@ from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
 from homeassistant.components.onvif.models import (
     Capabilities,
     DeviceInfo,
+    Event,
     Profile,
     PullPointManagerState,
     Resolution,
@@ -123,7 +125,7 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.side_effect = mock_constructor
 
 
-def setup_mock_device(mock_device, capabilities=None, profiles=None):
+def setup_mock_device(mock_device, capabilities=None, profiles=None, events=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
     mock_device.port = 80
@@ -149,7 +151,11 @@ def setup_mock_device(mock_device, capabilities=None, profiles=None):
     mock_device.events = MagicMock(
         webhook_manager=MagicMock(state=WebHookManagerState.STARTED),
         pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
+        async_stop=AsyncMock(),
     )
+    mock_device.device.close = AsyncMock()
+    if events:
+        _setup_mock_events(mock_device.events, events)
 
     def mock_constructor(
         hass: HomeAssistant, config: config_entries.ConfigEntry
@@ -160,6 +166,23 @@ def setup_mock_device(mock_device, capabilities=None, profiles=None):
     mock_device.side_effect = mock_constructor
 
 
+def _setup_mock_events(mock_events: MagicMock, events: list[Event]) -> None:
+    """Configure mock events to return proper Event objects."""
+    events_by_platform: dict[str, list[Event]] = defaultdict(list)
+    events_by_uid: dict[str, Event] = {}
+    uids_by_platform: dict[str, set[str]] = defaultdict(set)
+    for event in events:
+        events_by_platform[event.platform].append(event)
+        events_by_uid[event.uid] = event
+        uids_by_platform[event.platform].add(event.uid)
+
+    mock_events.get_platform.side_effect = lambda p: list(events_by_platform.get(p, []))
+    mock_events.get_uid.side_effect = events_by_uid.get
+    mock_events.get_uids_by_platform.side_effect = lambda p: set(
+        uids_by_platform.get(p, set())
+    )
+
+
 async def setup_onvif_integration(
     hass: HomeAssistant,
     config=None,
@@ -168,6 +191,7 @@ async def setup_onvif_integration(
     entry_id="1",
     source=config_entries.SOURCE_USER,
     capabilities=None,
+    events=None,
 ) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
@@ -202,7 +226,7 @@ async def setup_onvif_integration(
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []
-        setup_mock_device(mock_device, capabilities=capabilities)
+        setup_mock_device(mock_device, capabilities=capabilities, events=events)
         mock_device.device = mock_onvif_camera
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
