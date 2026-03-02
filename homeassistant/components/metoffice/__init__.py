@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
-from datapoint.Forecast import Forecast
 from datapoint.Manager import Manager
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,10 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from .const import (
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
@@ -30,9 +26,7 @@ from .const import (
     METOFFICE_NAME,
     METOFFICE_TWICE_DAILY_COORDINATOR,
 )
-from .helpers import fetch_data
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import MetOfficeUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
@@ -49,46 +43,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     connection = Manager(api_key=api_key)
 
-    async def async_update_hourly() -> Forecast:
-        return await hass.async_add_executor_job(
-            fetch_data, connection, latitude, longitude, "hourly"
-        )
-
-    async def async_update_daily() -> Forecast:
-        return await hass.async_add_executor_job(
-            fetch_data, connection, latitude, longitude, "daily"
-        )
-
-    async def async_update_twice_daily() -> Forecast:
-        return await hass.async_add_executor_job(
-            fetch_data, connection, latitude, longitude, "twice-daily"
-        )
-
-    metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
+    metoffice_hourly_coordinator = MetOfficeUpdateCoordinator(
         hass,
-        _LOGGER,
-        config_entry=entry,
+        entry,
         name=f"MetOffice Hourly Coordinator for {site_name}",
-        update_method=async_update_hourly,
-        update_interval=DEFAULT_SCAN_INTERVAL,
+        connection=connection,
+        latitude=latitude,
+        longitude=longitude,
+        frequency="hourly",
     )
 
-    metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
+    metoffice_daily_coordinator = MetOfficeUpdateCoordinator(
         hass,
-        _LOGGER,
-        config_entry=entry,
+        entry,
         name=f"MetOffice Daily Coordinator for {site_name}",
-        update_method=async_update_daily,
-        update_interval=DEFAULT_SCAN_INTERVAL,
+        connection=connection,
+        latitude=latitude,
+        longitude=longitude,
+        frequency="daily",
     )
 
-    metoffice_twice_daily_coordinator = TimestampDataUpdateCoordinator(
+    metoffice_twice_daily_coordinator = MetOfficeUpdateCoordinator(
         hass,
-        _LOGGER,
-        config_entry=entry,
+        entry,
         name=f"MetOffice Twice Daily Coordinator for {site_name}",
-        update_method=async_update_twice_daily,
-        update_interval=DEFAULT_SCAN_INTERVAL,
+        connection=connection,
+        latitude=latitude,
+        longitude=longitude,
+        frequency="twice-daily",
     )
 
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
