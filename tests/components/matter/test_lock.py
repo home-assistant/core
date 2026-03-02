@@ -485,13 +485,7 @@ async def test_clear_lock_user_service(
     matter_node: MatterNode,
 ) -> None:
     """Test clear_lock_user entity service."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            # clear_user_credentials: GetUser returns user with no creds
-            {"userStatus": 1, "credentials": None},
-            None,  # ClearUser
-        ]
-    )
+    matter_client.send_device_command = AsyncMock(return_value=None)
 
     await hass.services.async_call(
         DOMAIN,
@@ -503,127 +497,9 @@ async def test_clear_lock_user_service(
         blocking=True,
     )
 
-    assert matter_client.send_device_command.call_count == 2
-    # Verify GetUser was called to check credentials
-    assert matter_client.send_device_command.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
-    )
-    # Verify ClearUser was called
-    assert matter_client.send_device_command.call_args_list[1] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearUser(userIndex=1),
-        timed_request_timeout_ms=10000,
-    )
-
-
-@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
-async def test_clear_lock_user_credentials_nullvalue(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test clear_lock_user handles NullValue credentials from Matter SDK."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            # GetUser returns NullValue for credentials (truthy but not iterable)
-            {"userStatus": 1, "credentials": NullValue},
-            None,  # ClearUser
-        ]
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        "clear_lock_user",
-        {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: 1,
-        },
-        blocking=True,
-    )
-
-    # GetUser + ClearUser (no ClearCredential since NullValue means no credentials)
-    assert matter_client.send_device_command.call_count == 2
-    assert matter_client.send_device_command.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
-    )
-    assert matter_client.send_device_command.call_args_list[1] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearUser(userIndex=1),
-        timed_request_timeout_ms=10000,
-    )
-
-
-@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
-async def test_clear_lock_user_clears_credentials_first(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test clear_lock_user clears credentials before clearing user."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            # clear_user_credentials: GetUser returns user with credentials
-            {
-                "userStatus": 1,
-                "credentials": [
-                    {"credentialType": 1, "credentialIndex": 1},
-                    {"credentialType": 1, "credentialIndex": 2},
-                ],
-            },
-            None,  # ClearCredential for first
-            None,  # ClearCredential for second
-            None,  # ClearUser
-        ]
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        "clear_lock_user",
-        {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: 1,
-        },
-        blocking=True,
-    )
-
-    # GetUser + 2 ClearCredential + ClearUser
-    assert matter_client.send_device_command.call_count == 4
-    assert matter_client.send_device_command.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
-    )
-    assert matter_client.send_device_command.call_args_list[1] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearCredential(
-            credential=clusters.DoorLock.Structs.CredentialStruct(
-                credentialType=1,
-                credentialIndex=1,
-            ),
-        ),
-        timed_request_timeout_ms=10000,
-    )
-    assert matter_client.send_device_command.call_args_list[2] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearCredential(
-            credential=clusters.DoorLock.Structs.CredentialStruct(
-                credentialType=1,
-                credentialIndex=2,
-            ),
-        ),
-        timed_request_timeout_ms=10000,
-    )
-    assert matter_client.send_device_command.call_args_list[3] == call(
+    # ClearUser handles credential cleanup per the Matter spec
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.ClearUser(userIndex=1),
@@ -2169,13 +2045,8 @@ async def test_clear_lock_user_clear_all(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test clear_lock_user with CLEAR_ALL_INDEX clears all credentials then users."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            None,  # ClearCredential(None) - clear all credentials
-            None,  # ClearUser(0xFFFE) - clear all users
-        ]
-    )
+    """Test clear_lock_user with CLEAR_ALL_INDEX clears all users."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
 
     await hass.services.async_call(
         DOMAIN,
@@ -2187,16 +2058,9 @@ async def test_clear_lock_user_clear_all(
         blocking=True,
     )
 
-    assert matter_client.send_device_command.call_count == 2
-    # First: ClearCredential with None (clear all)
-    assert matter_client.send_device_command.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearCredential(credential=None),
-        timed_request_timeout_ms=10000,
-    )
-    # Second: ClearUser with CLEAR_ALL_INDEX
-    assert matter_client.send_device_command.call_args_list[1] == call(
+    # ClearUser handles credential cleanup per the Matter spec
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.ClearUser(userIndex=CLEAR_ALL_INDEX),
@@ -2699,72 +2563,6 @@ async def test_set_lock_user_update_with_explicit_type_and_rule(
             userStatus=1,  # Preserved
             userType=clusters.DoorLock.Enums.UserTypeEnum.kProgrammingUser,
             credentialRule=clusters.DoorLock.Enums.CredentialRuleEnum.kTri,
-        ),
-        timed_request_timeout_ms=10000,
-    )
-
-
-# --- clear_lock_user with mixed credential types ---
-
-
-@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_clear_lock_user_mixed_credential_types(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test clear_lock_user clears mixed PIN and RFID credentials."""
-    pin_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
-    rfid_type = clusters.DoorLock.Enums.CredentialTypeEnum.kRfid
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            # GetUser returns user with PIN and RFID credentials
-            {
-                "userStatus": 1,
-                "credentials": [
-                    {"credentialType": pin_type, "credentialIndex": 1},
-                    {"credentialType": rfid_type, "credentialIndex": 2},
-                ],
-            },
-            None,  # ClearCredential for PIN
-            None,  # ClearCredential for RFID
-            None,  # ClearUser
-        ]
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        "clear_lock_user",
-        {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: 1,
-        },
-        blocking=True,
-    )
-
-    assert matter_client.send_device_command.call_count == 4
-    # Verify PIN credential was cleared
-    assert matter_client.send_device_command.call_args_list[1] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearCredential(
-            credential=clusters.DoorLock.Structs.CredentialStruct(
-                credentialType=pin_type,
-                credentialIndex=1,
-            ),
-        ),
-        timed_request_timeout_ms=10000,
-    )
-    # Verify RFID credential was cleared
-    assert matter_client.send_device_command.call_args_list[2] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearCredential(
-            credential=clusters.DoorLock.Structs.CredentialStruct(
-                credentialType=rfid_type,
-                credentialIndex=2,
-            ),
         ),
         timed_request_timeout_ms=10000,
     )
