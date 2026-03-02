@@ -75,7 +75,7 @@ async def async_setup_entry(
             await api.async_update_device_info()
             needs_auth = False
             _LOGGER.debug("Restored session is valid")
-        except (InvalidCredentialsError, CaptchaRequiredError, EufySecurityError):
+        except EufySecurityError:
             _LOGGER.debug("Restored session invalid, will re-authenticate")
 
     if needs_auth:
