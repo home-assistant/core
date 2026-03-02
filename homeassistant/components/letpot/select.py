@@ -121,6 +121,14 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
                 serial, LightMode[option.upper()]
             )
         ),
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
 )

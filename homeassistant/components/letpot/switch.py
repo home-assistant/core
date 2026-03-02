@@ -37,7 +37,15 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
             lambda device_client, serial, value: device_client.set_sound(serial, value)
         ),
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda coordinator: coordinator.data.system_sound is not None,
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+                and coordinator.data.system_sound is not None
+            )
+        ),
     ),
     LetPotSwitchEntityDescription(
         key="auto_mode",
@@ -59,6 +67,22 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         ),
     ),
     LetPotSwitchEntityDescription(
+        key="manual_watering",
+        translation_key="manual_watering",
+        value_fn=lambda status: status.pump_mode == 1,
+        set_value_fn=lambda device_client, serial, value: device_client.set_pump_mode(
+            serial, value
+        ),
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_WATERING_SYSTEM
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
+    ),
+    LetPotSwitchEntityDescription(
         key="power",
         translation_key="power",
         value_fn=lambda status: status.system_on,
@@ -66,6 +90,14 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
             serial, value
         ),
         entity_category=EntityCategory.CONFIG,
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
     ),
     LetPotSwitchEntityDescription(
         key="pump_cycling",
@@ -75,6 +107,14 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
             serial, value
         ),
         entity_category=EntityCategory.CONFIG,
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
     ),
 )
 

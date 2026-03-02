@@ -92,6 +92,9 @@
       "auto_mode": {
         "name": "Auto mode"
       },
+      "manual_watering": {
+        "name": "Manual watering"
+      },
       "power": {
         "name": "Power"
       },

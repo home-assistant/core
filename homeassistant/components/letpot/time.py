@@ -6,7 +6,7 @@ from datetime import time
 from typing import Any
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import LetPotDeviceStatus
+from letpot.models import DeviceFeature, LetPotDeviceStatus
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
-from .entity import LetPotEntity, exception_handler
+from .entity import LetPotEntity, LetPotEntityDescription, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
 # pending changes to avoid overwriting, but try to avoid a lot of parallelism.
@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotTimeEntityDescription(TimeEntityDescription):
+class LetPotTimeEntityDescription(LetPotEntityDescription, TimeEntityDescription):
     """Describes a LetPot time entity."""
 
     value_fn: Callable[[LetPotDeviceStatus], time | None]
@@ -40,6 +40,14 @@ TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
             )
         ),
         entity_category=EntityCategory.CONFIG,
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
     ),
     LetPotTimeEntityDescription(
         key="light_schedule_start",
@@ -51,6 +59,14 @@ TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
             )
         ),
         entity_category=EntityCategory.CONFIG,
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
     ),
 )
 
@@ -66,6 +82,7 @@ async def async_setup_entry(
         LetPotTimeEntity(coordinator, description)
         for description in TIME_SENSORS
         for coordinator in coordinators
+        if description.supported_fn(coordinator)
     )
 
 

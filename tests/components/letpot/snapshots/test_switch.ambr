@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[switch.garden_alarm_sound-entry]
+# name: test_all_entities[LPH63][switch.garden_alarm_sound-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.garden_alarm_sound-state]
+# name: test_all_entities[LPH63][switch.garden_alarm_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Alarm sound',
@@ -48,7 +48,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[switch.garden_auto_mode-entry]
+# name: test_all_entities[LPH63][switch.garden_auto_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -84,7 +84,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.garden_auto_mode-state]
+# name: test_all_entities[LPH63][switch.garden_auto_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Auto mode',
@@ -97,7 +97,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[switch.garden_power-entry]
+# name: test_all_entities[LPH63][switch.garden_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -133,7 +133,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.garden_power-state]
+# name: test_all_entities[LPH63][switch.garden_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Power',
@@ -146,7 +146,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[switch.garden_pump_cycling-entry]
+# name: test_all_entities[LPH63][switch.garden_pump_cycling-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -182,7 +182,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.garden_pump_cycling-state]
+# name: test_all_entities[LPH63][switch.garden_pump_cycling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Pump cycling',
@@ -193,5 +193,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[ISE06][switch.watering_system_manual_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.watering_system_manual_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Manual watering',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Manual watering',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'manual_watering',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_ISE06ABCD_manual_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ISE06][switch.watering_system_manual_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Watering System Manual watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.watering_system_manual_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

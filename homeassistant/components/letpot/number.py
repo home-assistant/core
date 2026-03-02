@@ -83,6 +83,14 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
                 serial, int(value)
             )
         ),
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
         native_min_value=float(0),
         max_value_fn=lambda _: float(999),
         native_step=PRECISION_WHOLE,

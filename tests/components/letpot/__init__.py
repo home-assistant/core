@@ -4,8 +4,10 @@ import datetime
 
 from letpot.models import (
     AuthenticationInfo,
+    CycleWateringMode,
     LetPotDeviceErrors,
-    LetPotDeviceStatus,
+    LetPotGardenStatus,
+    LetPotWateringSystemStatus,
     LightMode,
     TemperatureUnit,
 )
@@ -31,7 +33,7 @@ AUTHENTICATION = AuthenticationInfo(
     email="email@example.com",
 )
 
-MAX_STATUS = LetPotDeviceStatus(
+MAX_STATUS = LetPotGardenStatus(
     errors=LetPotDeviceErrors(low_water=True, low_nutrients=False, refill_error=False),
     light_brightness=750,
     light_mode=LightMode.VEGETABLE,
@@ -51,7 +53,7 @@ MAX_STATUS = LetPotDeviceStatus(
     water_level=100,
 )
 
-SE_STATUS = LetPotDeviceStatus(
+SE_STATUS = LetPotGardenStatus(
     errors=LetPotDeviceErrors(low_water=True, pump_malfunction=True),
     light_brightness=500,
     light_mode=LightMode.VEGETABLE,
@@ -65,4 +67,24 @@ SE_STATUS = LetPotDeviceStatus(
     raw=[],  # Not used by integration, and it requires a real device to get
     system_on=True,
     system_sound=False,
+)
+
+WATERING_STATUS = LetPotWateringSystemStatus(
+    errors=LetPotDeviceErrors(low_water=False),
+    raw=[],  # Not used by integration, and it requires a real device to get
+    pump_mode=0,
+    wifi_state=0,
+    pump_on=False,
+    pump_countdown=[0, 0, 0, 0],
+    pump_manual_duration=5,
+    pump_cycle_on=True,
+    pump_cycle_frequency=24,
+    pump_cycle_duration=10,
+    pump_cycle_mode=CycleWateringMode.CONTINUOUS,
+    pump_cycle_workinginterval=0,
+    pump_cycle_restinterval=0,
+    pump_cycle_skip_water=None,
+    pump_works_latest_reason=0,
+    pump_works_latest_time=[0, 0, 0, 0],
+    pump_works_next_time=[0, 0, 0, 0],
 )

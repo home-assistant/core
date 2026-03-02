@@ -21,6 +21,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.parametrize("device_type", ["LPH63", "ISE06"])
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -28,6 +29,7 @@ async def test_all_entities(
     mock_device_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_type: str,
 ) -> None:
     """Test switch entities."""
     with patch("homeassistant.components.letpot.PLATFORMS", [Platform.SWITCH]):
@@ -73,6 +75,38 @@ async def test_set_switch(
     )
 
     mock_device_client.set_power.assert_awaited_once_with(
+        f"{device_type}ABCD", parameter_value
+    )
+
+
+@pytest.mark.parametrize("device_type", ["ISE06"])
+@pytest.mark.parametrize(
+    ("service", "parameter_value"),
+    [
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
+    ],
+)
+async def test_set_manual_watering_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_device_client: MagicMock,
+    device_type: str,
+    service: str,
+    parameter_value: bool,
+) -> None:
+    """Test manual watering switch entity turned on/turned off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "switch",
+        service,
+        blocking=True,
+        target={"entity_id": "switch.watering_system_manual_watering"},
+    )
+
+    mock_device_client.set_pump_mode.assert_awaited_once_with(
         f"{device_type}ABCD", parameter_value
     )
 

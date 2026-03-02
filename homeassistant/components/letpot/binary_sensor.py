@@ -77,6 +77,20 @@ BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
         ),
     ),
     LetPotBinarySensorEntityDescription(
+        key="pump_watering",
+        translation_key="pump",
+        is_on_fn=lambda status: bool(getattr(status, "pump_on", False)),
+        device_class=BinarySensorDeviceClass.RUNNING,
+        supported_fn=(
+            lambda coordinator: (
+                DeviceFeature.CATEGORY_WATERING_SYSTEM
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
+        ),
+    ),
+    LetPotBinarySensorEntityDescription(
         key="refill_error",
         translation_key="refill_error",
         is_on_fn=lambda status: bool(status.errors.refill_error),

@@ -20,7 +20,7 @@ from homeassistant.components.letpot.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
-from . import AUTHENTICATION, MAX_STATUS, SE_STATUS
+from . import AUTHENTICATION, MAX_STATUS, SE_STATUS, WATERING_STATUS
 
 from tests.common import MockConfigEntry
 
@@ -33,10 +33,16 @@ def device_type() -> str:
 
 def _mock_device_info(device_type: str) -> LetPotDeviceInfo:
     """Return mock device info for the given type."""
+    if device_type == "ISE06":
+        model_name = "LetPot Automatic Watering System"
+        model_code = "DI"
+    else:
+        model_name = f"LetPot {device_type}"
+        model_code = device_type
     return LetPotDeviceInfo(
         model=device_type,
-        model_name=f"LetPot {device_type}",
-        model_code=device_type,
+        model_name=model_name,
+        model_code=model_code,
         features=_mock_device_features(device_type),
     )
 
@@ -69,6 +75,8 @@ def _mock_device_features(device_type: str) -> DeviceFeature:
             | DeviceFeature.TEMPERATURE
             | DeviceFeature.WATER_LEVEL
         )
+    if device_type == "ISE06":
+        return DeviceFeature.CATEGORY_WATERING_SYSTEM
     raise ValueError(f"No mock data for device type {device_type}")
 
 
@@ -78,6 +86,8 @@ def _mock_device_status(device_type: str) -> LetPotDeviceStatus:
         return SE_STATUS
     if device_type in {"LPH62", "LPH63"}:
         return MAX_STATUS
+    if device_type == "ISE06":
+        return WATERING_STATUS
     raise ValueError(f"No mock data for device type {device_type}")
 
 
@@ -87,6 +97,8 @@ def _mock_light_brightness_levels(device_type: str) -> list[int]:
         return [500, 1000]
     if device_type in {"LPH62", "LPH63"}:
         return [125, 250, 375, 500, 625, 750, 875, 1000]
+    if device_type == "ISE06":
+        return []
     raise ValueError(f"No mock data for device type {device_type}")
 
 
@@ -115,10 +127,15 @@ def mock_client(device_type: str) -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.login.return_value = AUTHENTICATION
         client.refresh_token.return_value = AUTHENTICATION
+        device_name = (
+            "Watering System"
+            if device_type.startswith("ISE")
+            else "Garden"
+        )
         client.get_devices.return_value = [
             LetPotDevice(
                 serial_number=f"{device_type}ABCD",
-                name="Garden",
+                name=device_name,
                 device_type=device_type,
                 is_online=True,
                 is_remote=False,
