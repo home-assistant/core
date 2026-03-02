@@ -33,6 +33,7 @@ class WeatherEntityFeature(IntFlag):
     FORECAST_DAILY = 1
     FORECAST_HOURLY = 2
     FORECAST_TWICE_DAILY = 4
+    FORECAST_MINUTELY = 8
 
 
 ATTR_WEATHER_HUMIDITY = "humidity"

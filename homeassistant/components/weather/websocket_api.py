@@ -17,6 +17,7 @@ FORECAST_TYPE_TO_FLAG = {
     "daily": WeatherEntityFeature.FORECAST_DAILY,
     "hourly": WeatherEntityFeature.FORECAST_HOURLY,
     "twice_daily": WeatherEntityFeature.FORECAST_TWICE_DAILY,
+    "minutely": WeatherEntityFeature.FORECAST_MINUTELY,
 }
 
 
@@ -47,7 +48,9 @@ def ws_convertible_units(
     {
         vol.Required("type"): "weather/subscribe_forecast",
         vol.Required("entity_id"): cv.entity_domain(DOMAIN),
-        vol.Required("forecast_type"): vol.In(["daily", "hourly", "twice_daily"]),
+        vol.Required("forecast_type"): vol.In(
+            ["daily", "hourly", "twice_daily", "minutely"]
+        ),
     }
 )
 @websocket_api.async_response
@@ -56,7 +59,9 @@ async def ws_subscribe_forecast(
 ) -> None:
     """Subscribe to weather forecasts."""
     entity_id: str = msg["entity_id"]
-    forecast_type: Literal["daily", "hourly", "twice_daily"] = msg["forecast_type"]
+    forecast_type: Literal["daily", "hourly", "twice_daily", "minutely"] = msg[
+        "forecast_type"
+    ]
 
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(
