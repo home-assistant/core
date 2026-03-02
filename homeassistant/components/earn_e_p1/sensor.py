@@ -4,17 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EarnEP1ConfigEntry
-from .const import DOMAIN, SENSOR_FIELDS, P1SensorFieldDescriptor
+from .const import SENSOR_FIELDS, P1SensorFieldDescriptor
 from .coordinator import EarnEP1Coordinator
 from .entity import EarnEP1Entity
 

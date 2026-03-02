@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
+from homeassistant.components.earn_e_p1.const import DOMAIN
+from homeassistant.components.earn_e_p1.coordinator import EarnEP1Coordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from homeassistant.components.earn_e_p1.const import DOMAIN
-from homeassistant.components.earn_e_p1.coordinator import EarnEP1Coordinator
-
-from .conftest import MOCK_HOST, MOCK_SERIAL
+from .conftest import MOCK_SERIAL
 
 
 async def _setup_integration(

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import json
 import logging
-from dataclasses import dataclass
 from typing import Any
 
 import voluptuous as vol

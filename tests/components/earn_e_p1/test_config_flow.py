@@ -4,19 +4,16 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries
+from homeassistant.components.earn_e_p1.config_flow import DeviceInfo
+from homeassistant.components.earn_e_p1.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from homeassistant.components.earn_e_p1.config_flow import DeviceInfo
-from homeassistant.components.earn_e_p1.const import DOMAIN
+from .conftest import MOCK_HOST, MOCK_SERIAL
 
 from tests.common import MockConfigEntry
-
-from .conftest import MOCK_HOST, MOCK_SERIAL
 
 LISTEN_PATH = (
     "homeassistant.components.earn_e_p1.config_flow.EarnEP1ConfigFlow"
