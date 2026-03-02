@@ -47,7 +47,7 @@ _exception_map = {
 }
 
 
-class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     _beolink_jid = ""
@@ -145,7 +145,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         async with self._client:
             try:
                 await self._client.get_beolink_self(_request_timeout=3)
-            except (ClientConnectorError, TimeoutError):
+            except ClientConnectorError, TimeoutError:
                 return self.async_abort(reason="invalid_address")
 
         self._model = discovery_info.hostname[:-16].replace("-", " ")

@@ -18,6 +18,7 @@ from pysmartthings.models import HealthStatus, InstalledApp
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -54,7 +55,7 @@ def mock_expires_at() -> int:
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -143,10 +144,13 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_rvc_normal_000001",
         "da_rvc_map_01011",
         "da_ks_microwave_0101x",
+        "da_ks_cooktop_000001",
         "da_ks_cooktop_31001",
         "da_ks_range_0101x",
         "da_ks_oven_01061",
         "da_ks_oven_0107x",
+        "da_ks_walloven_0107x",
+        "da_ks_hood_01001",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
         "c2c_shade",
@@ -160,6 +164,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_thermostat",
         "ecobee_thermostat_offline",
         "sensi_thermostat",
+        "siemens_washer",
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",

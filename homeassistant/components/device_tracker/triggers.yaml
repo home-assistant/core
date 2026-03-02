@@ -1,0 +1,18 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: device_tracker
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+entered_home: *trigger_common
+left_home: *trigger_common

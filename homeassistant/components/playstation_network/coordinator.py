@@ -251,13 +251,7 @@ class PlaystationNetworkFriendDataCoordinator(
     def _update_data(self) -> PlaystationNetworkData:
         """Update friend status data."""
         try:
-            return PlaystationNetworkData(
-                username=self.user.online_id,
-                account_id=self.user.account_id,
-                presence=self.user.get_presence(),
-                profile=self.profile,
-                trophy_summary=self.user.trophy_summary(),
-            )
+            presence = self.user.get_presence()
         except PSNAWPForbiddenError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -266,6 +260,19 @@ class PlaystationNetworkFriendDataCoordinator(
             ) from error
         except PSNAWPError:
             raise
+
+        try:
+            trophy_summary = self.user.trophy_summary()
+        except PSNAWPForbiddenError:
+            trophy_summary = None
+
+        return PlaystationNetworkData(
+            username=self.user.online_id,
+            account_id=self.user.account_id,
+            profile=self.profile,
+            presence=presence,
+            trophy_summary=trophy_summary,
+        )
 
     async def update_data(self) -> PlaystationNetworkData:
         """Update friend status data."""

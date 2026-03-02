@@ -1,16 +1,4 @@
 {
-  "common": {
-    "trigger_behavior_description_awning": "The behavior of the targeted awnings to trigger on.",
-    "trigger_behavior_description_blind": "The behavior of the targeted blinds to trigger on.",
-    "trigger_behavior_description_curtain": "The behavior of the targeted curtains to trigger on.",
-    "trigger_behavior_description_door": "The behavior of the targeted doors to trigger on.",
-    "trigger_behavior_description_garage": "The behavior of the targeted garage doors to trigger on.",
-    "trigger_behavior_description_gate": "The behavior of the targeted gates to trigger on.",
-    "trigger_behavior_description_shade": "The behavior of the targeted shades to trigger on.",
-    "trigger_behavior_description_shutter": "The behavior of the targeted shutters to trigger on.",
-    "trigger_behavior_description_window": "The behavior of the targeted windows to trigger on.",
-    "trigger_behavior_name": "Behavior"
-  },
   "device_automation": {
     "action_type": {
       "close": "Close {entity_name}",
@@ -94,15 +82,6 @@
       "name": "Window"
     }
   },
-  "selector": {
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
@@ -157,142 +136,5 @@
       "name": "Toggle tilt"
     }
   },
-  "title": "Cover",
-  "triggers": {
-    "awning_opened": {
-      "description": "Triggers when an awning opens.",
-      "description_configured": "[%key:component::cover::triggers::awning_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_awning%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the awnings to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When an awning opens"
-    },
-    "blind_opened": {
-      "description": "Triggers when a blind opens.",
-      "description_configured": "[%key:component::cover::triggers::blind_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_blind%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the blinds to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a blind opens"
-    },
-    "curtain_opened": {
-      "description": "Triggers when a curtain opens.",
-      "description_configured": "[%key:component::cover::triggers::curtain_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_curtain%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the curtains to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a curtain opens"
-    },
-    "door_opened": {
-      "description": "Triggers when a door opens.",
-      "description_configured": "[%key:component::cover::triggers::door_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_door%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the doors to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a door opens"
-    },
-    "garage_opened": {
-      "description": "Triggers when a garage door opens.",
-      "description_configured": "[%key:component::cover::triggers::garage_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_garage%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the garage doors to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a garage door opens"
-    },
-    "gate_opened": {
-      "description": "Triggers when a gate opens.",
-      "description_configured": "[%key:component::cover::triggers::gate_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_gate%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the gates to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a gate opens"
-    },
-    "shade_opened": {
-      "description": "Triggers when a shade opens.",
-      "description_configured": "[%key:component::cover::triggers::shade_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_shade%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the shades to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a shade opens"
-    },
-    "shutter_opened": {
-      "description": "Triggers when a shutter opens.",
-      "description_configured": "[%key:component::cover::triggers::shutter_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_shutter%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the shutters to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a shutter opens"
-    },
-    "window_opened": {
-      "description": "Triggers when a window opens.",
-      "description_configured": "[%key:component::cover::triggers::window_opened::description%]",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description_window%]",
-          "name": "[%key:component::cover::common::trigger_behavior_name%]"
-        },
-        "fully_opened": {
-          "description": "Require the windows to be fully opened before triggering.",
-          "name": "Fully opened"
-        }
-      },
-      "name": "When a window opens"
-    }
-  }
+  "title": "Cover"
 }

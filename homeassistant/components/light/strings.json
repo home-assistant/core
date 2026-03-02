@@ -12,10 +12,8 @@
     "field_brightness_step_pct_name": "Brightness step",
     "field_color_name_description": "A human-readable color name.",
     "field_color_name_name": "Color name",
-    "field_color_temp_description": "Color temperature in mireds.",
     "field_color_temp_kelvin_description": "Color temperature in Kelvin.",
     "field_color_temp_kelvin_name": "Color temperature",
-    "field_color_temp_name": "Color temperature",
     "field_effect_description": "Light effect.",
     "field_effect_name": "Effect",
     "field_flash_description": "Tell light to flash, can be either value short or long.",
@@ -42,26 +40,24 @@
   },
   "conditions": {
     "is_off": {
-      "description": "Test if a light is off.",
-      "description_configured": "[%key:component::light::conditions::is_off::description%]",
+      "description": "Tests if one or more lights are off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::condition_behavior_description%]",
           "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
-      "name": "If a light is off"
+      "name": "Light is off"
     },
     "is_on": {
-      "description": "Test if a light is on.",
-      "description_configured": "[%key:component::light::conditions::is_on::description%]",
+      "description": "Tests if one or more lights are on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::condition_behavior_description%]",
           "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
-      "name": "If a light is on"
+      "name": "Light is on"
     }
   },
   "device_automation": {
@@ -114,9 +110,6 @@
             "xy": "XY"
           }
         },
-        "color_temp": {
-          "name": "Color temperature (mireds)"
-        },
         "color_temp_kelvin": {
           "name": "Color temperature (Kelvin)"
         },
@@ -132,14 +125,8 @@
         "max_color_temp_kelvin": {
           "name": "Maximum color temperature (Kelvin)"
         },
-        "max_mireds": {
-          "name": "Maximum color temperature (mireds)"
-        },
         "min_color_temp_kelvin": {
           "name": "Minimum color temperature (Kelvin)"
-        },
-        "min_mireds": {
-          "name": "Minimum color temperature (mireds)"
         },
         "supported_color_modes": {
           "name": "Available color modes",
@@ -324,6 +311,12 @@
         "short": "Short"
       }
     },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
     "state": {
       "options": {
         "off": "[%key:common::state::off%]",
@@ -335,6 +328,14 @@
         "any": "Any",
         "first": "First",
         "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above a value",
+        "below": "Below a value",
+        "between": "In a range",
+        "outside": "Outside a range"
       }
     }
   },
@@ -353,10 +354,6 @@
         "color_name": {
           "description": "[%key:component::light::common::field_color_name_description%]",
           "name": "[%key:component::light::common::field_color_name_name%]"
-        },
-        "color_temp": {
-          "description": "[%key:component::light::common::field_color_temp_description%]",
-          "name": "[%key:component::light::common::field_color_temp_name%]"
         },
         "color_temp_kelvin": {
           "description": "[%key:component::light::common::field_color_temp_kelvin_description%]",
@@ -452,10 +449,6 @@
           "description": "[%key:component::light::common::field_color_name_description%]",
           "name": "[%key:component::light::common::field_color_name_name%]"
         },
-        "color_temp": {
-          "description": "[%key:component::light::common::field_color_temp_description%]",
-          "name": "[%key:component::light::common::field_color_temp_name%]"
-        },
         "color_temp_kelvin": {
           "description": "[%key:component::light::common::field_color_temp_kelvin_description%]",
           "name": "[%key:component::light::common::field_color_temp_kelvin_name%]"
@@ -511,27 +504,61 @@
   },
   "title": "Light",
   "triggers": {
+    "brightness_changed": {
+      "description": "Triggers after the brightness of one or more lights changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the target brightness is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the target brightness is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Light brightness changed"
+    },
+    "brightness_crossed_threshold": {
+      "description": "Triggers after the brightness of one or more lights crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Light brightness crossed threshold"
+    },
     "turned_off": {
-      "description": "Triggers when a light is turned off.",
-      "description_configured": "[%key:component::light::triggers::turned_off::description%]",
+      "description": "Triggers after one or more lights turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a light is turned off"
+      "name": "Light turned off"
     },
     "turned_on": {
-      "description": "Triggers when a light is turned on.",
-      "description_configured": "[%key:component::light::triggers::turned_on::description%]",
+      "description": "Triggers after one or more lights turn on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a light is turned on"
+      "name": "Light turned on"
     }
   }
 }

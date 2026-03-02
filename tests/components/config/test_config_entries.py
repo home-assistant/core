@@ -1028,7 +1028,7 @@ async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
             "test", context={"source": core_ce.SOURCE_IMPORT}, data={}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(subscription_mock.mock_calls) == 0
 
 

@@ -1,7 +1,61 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted climate-control devices.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted climates to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_cooling": {
+      "description": "Tests if one or more climate-control devices are cooling.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is cooling"
+    },
+    "is_drying": {
+      "description": "Tests if one or more climate-control devices are drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is drying"
+    },
+    "is_heating": {
+      "description": "Tests if one or more climate-control devices are heating.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is heating"
+    },
+    "is_off": {
+      "description": "Tests if one or more climate-control devices are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more climate-control devices are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -181,6 +235,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "hvac_mode": {
       "options": {
         "auto": "[%key:common::state::auto%]",
@@ -192,11 +252,25 @@
         "off": "[%key:common::state::off%]"
       }
     },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
         "first": "First",
         "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above a value",
+        "below": "Below a value",
+        "between": "In a range",
+        "outside": "Outside a range"
       }
     }
   },
@@ -298,60 +372,213 @@
   },
   "title": "Climate",
   "triggers": {
+    "current_humidity_changed": {
+      "description": "Triggers after the humidity measured by one or more climate-control devices changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the humidity is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the humidity is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Climate-control device current humidity changed"
+    },
+    "current_humidity_crossed_threshold": {
+      "description": "Triggers after the humidity measured by one or more climate-control devices crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Climate-control device current humidity crossed threshold"
+    },
+    "current_temperature_changed": {
+      "description": "Triggers after the temperature measured by one or more climate-control devices changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the temperature is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the temperature is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Climate-control device current temperature changed"
+    },
+    "current_temperature_crossed_threshold": {
+      "description": "Triggers after the temperature measured by one or more climate-control devices crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Climate-control device current temperature crossed threshold"
+    },
+    "hvac_mode_changed": {
+      "description": "Triggers after the mode of one or more climate-control devices changes.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "hvac_mode": {
+          "description": "The HVAC modes to trigger on.",
+          "name": "Modes"
+        }
+      },
+      "name": "Climate-control device mode changed"
+    },
     "started_cooling": {
-      "description": "Triggers when a climate started cooling.",
-      "description_configured": "[%key:component::climate::triggers::started_cooling::description%]",
+      "description": "Triggers after one or more climate-control devices start cooling.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a climate started cooling"
+      "name": "Climate-control device started cooling"
     },
     "started_drying": {
-      "description": "Triggers when a climate started drying.",
-      "description_configured": "[%key:component::climate::triggers::started_drying::description%]",
+      "description": "Triggers after one or more climate-control devices start drying.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a climate started drying"
+      "name": "Climate-control device started drying"
     },
     "started_heating": {
-      "description": "Triggers when a climate starts to heat.",
-      "description_configured": "[%key:component::climate::triggers::started_heating::description%]",
+      "description": "Triggers after one or more climate-control devices start heating.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a climate starts to heat"
+      "name": "Climate-control device started heating"
+    },
+    "target_humidity_changed": {
+      "description": "Triggers after the humidity setpoint of one or more climate-control devices changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the target humidity is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the target humidity is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Climate-control device target humidity changed"
+    },
+    "target_humidity_crossed_threshold": {
+      "description": "Triggers after the humidity setpoint of one or more climate-control devices crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Climate-control device target humidity crossed threshold"
+    },
+    "target_temperature_changed": {
+      "description": "Triggers after the temperature setpoint of one or more climate-control devices changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the target temperature is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the target temperature is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Climate-control device target temperature changed"
+    },
+    "target_temperature_crossed_threshold": {
+      "description": "Triggers after the temperature setpoint of one or more climate-control devices crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Climate-control device target temperature crossed threshold"
     },
     "turned_off": {
-      "description": "Triggers when a climate is turned off.",
-      "description_configured": "[%key:component::climate::triggers::turned_off::description%]",
+      "description": "Triggers after one or more climate-control devices turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a climate is turned off"
+      "name": "Climate-control device turned off"
     },
     "turned_on": {
-      "description": "Triggers when a climate is turned on.",
-      "description_configured": "[%key:component::climate::triggers::turned_on::description%]",
+      "description": "Triggers after one or more climate-control devices turn on, regardless of the mode.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a climate is turned on"
+      "name": "Climate-control device turned on"
     }
   }
 }

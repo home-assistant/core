@@ -637,9 +637,6 @@ async def test_rpc_sleeping_sensor(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000)
 
-    # Sensor should be created when device is online
-    assert hass.states.get(entity_id) is None
-
     # Make device online
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -669,9 +666,6 @@ async def test_rpc_sleeping_sensor_with_channel_name(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000)
 
-    # Sensor should be created when device is online
-    assert hass.states.get(entity_id) is None
-
     # Make device online
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -700,7 +694,7 @@ async def test_rpc_restored_sleeping_sensor(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
         device_id=device.id,
     )
@@ -747,7 +741,7 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
         device_id=device.id,
     )
@@ -824,9 +818,6 @@ async def test_rpc_sleeping_update_entity_service(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000)
 
-    # Entity should be created when device is online
-    assert hass.states.get(entity_id) is None
-
     # Make device online
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -846,7 +837,7 @@ async def test_rpc_sleeping_update_entity_service(
     assert state.state == "22.9"
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-temperature:0-temperature_0"
+    assert entry.unique_id == "123456789ABC-temperature:0-temperature_tc"
 
     assert (
         "Entity sensor.test_name_temperature comes from a sleeping device"
@@ -1217,6 +1208,54 @@ async def test_migrate_unique_id_virtual_components_roles(
     assert entity_entry.unique_id == new_unique_id
 
     assert "Migrating unique_id for sensor.test_name_test_sensor" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("old_unique_id", "new_unique_id", "entity_id"),
+    [
+        (
+            "123456789ABC-temperature:0-temperature_0",
+            "123456789ABC-temperature:0-temperature_tc",
+            "sensor.test_name_temperature",
+        ),
+        (
+            "123456789ABC-humidity:0-humidity_0",
+            "123456789ABC-humidity:0-humidity_rh",
+            "sensor.test_name_humidity",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
+async def test_migrate_unique_id_rpc_sensor_description_key_rename(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    old_unique_id: str,
+    new_unique_id: str,
+    entity_id: str,
+) -> None:
+    """Test migration of RPC sensor unique_id after description key rename."""
+    entry = await init_integration(hass, 2, skip_setup=True)
+
+    entity = entity_registry.async_get_or_create(
+        suggested_object_id=entity_id.split(".")[1],
+        disabled_by=None,
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+    assert entity.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
+
+    assert f"Migrating unique_id for {entity_id} entity" in caplog.text
 
 
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
@@ -2136,3 +2175,46 @@ async def test_shelly_irrigation_weather_sensors(
     for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
         assert hass.states.get(entity_id) is None
+
+
+async def test_rpc_rgbcct_sensors(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test sensors for RGBCCT light."""
+    config = deepcopy(mock_rpc_device.config)
+    config["rgbcct:0"] = {"id": 0}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["rgbcct:0"] = {
+        "aenergy": {"total": 45.141},
+        "apower": 12.2,
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = "sensor.test_name_power"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "12.2"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-rgbcct:0-power_rgbcct"
+    assert entry.name is None
+    assert entry.translation_key is None  # entity with device class and no channel name
+
+    entity_id = "sensor.test_name_energy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "0.045141"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
+    assert entry.name is None
+    assert entry.translation_key is None  # entity with device class and no channel name

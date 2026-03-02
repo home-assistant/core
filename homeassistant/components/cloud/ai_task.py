@@ -6,7 +6,6 @@ import io
 from json import JSONDecodeError
 import logging
 
-from hass_nabucasa import NabuCasaBaseError
 from hass_nabucasa.llm import (
     LLMAuthenticationError,
     LLMError,
@@ -20,7 +19,7 @@ from PIL import Image
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
@@ -32,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _convert_image_for_editing(data: bytes) -> tuple[bytes, str]:
     """Ensure the image data is in a format accepted by OpenAI image edits."""
+    img: Image.Image
     stream = io.BytesIO(data)
     with Image.open(stream) as img:
         mode = img.mode
@@ -94,17 +94,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud AI Task entity."""
-    if not (cloud := hass.data[DATA_CLOUD]).is_logged_in:
-        return
-    try:
-        await cloud.llm.async_ensure_token()
-    except (LLMError, NabuCasaBaseError):
-        return
-
-    async_add_entities([CloudLLMTaskEntity(cloud, config_entry)])
+    cloud = hass.data[DATA_CLOUD]
+    async_add_entities([CloudAITaskEntity(cloud, config_entry)])
 
 
-class CloudLLMTaskEntity(ai_task.AITaskEntity, BaseCloudLLMEntity):
+class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
     """Home Assistant Cloud AI Task entity."""
 
     _attr_has_entity_name = True
@@ -181,7 +175,7 @@ class CloudLLMTaskEntity(ai_task.AITaskEntity, BaseCloudLLMEntity):
                     attachments=attachments,
                 )
         except LLMAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
+            raise HomeAssistantError("Cloud LLM authentication failed") from err
         except LLMRateLimitError as err:
             raise HomeAssistantError("Cloud LLM is rate limited") from err
         except LLMResponseError as err:
