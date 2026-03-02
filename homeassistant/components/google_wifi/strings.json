@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Google/Nest Wifi",
+        "description": "Please enter the IP address of your Google/Nest Wifi Router/Point.",
+        "data": {
+          "name": "Device Name",
+          "ip_address": "IP Address"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Google Wifi",
+        "description": "Update the connection details for your router.",
+        "data": {
+          "name": "Device Name",
+          "ip_address": "IP Address"
+        }
+      }
+    },
+    "error": {
+      "invalid_ip": "The IP address entered is not valid.",
+      "unknown": "An unexpected error occurred."
+    }
+  }
+}

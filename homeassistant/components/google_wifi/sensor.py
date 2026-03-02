@@ -1,231 +1,144 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
-
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
+import async_timeout
 import requests
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorEntityDescription,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    UnitOfTime,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
+from homeassistant.util import dt as dt_util
+from homeassistant.helpers.entity import DeviceInfo
+
+from .const import DOMAIN, SENSOR_TYPES, ATTR_UPTIME, ATTR_LAST_RESTART, ATTR_NEW_VERSION, ATTR_STATUS, ATTR_LOCAL_IP, ATTR_MODEL, ATTR_GROUP_ROLE
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_VERSION = "current_version"
-ATTR_LAST_RESTART = "last_restart"
-ATTR_LOCAL_IP = "local_ip"
-ATTR_NEW_VERSION = "new_version"
-ATTR_STATUS = "status"
-ATTR_UPTIME = "uptime"
-
-DEFAULT_HOST = "testwifi.here"
-DEFAULT_NAME = "google_wifi"
-
-ENDPOINT = "/api/v1/status"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
-
-
-@dataclass(frozen=True, kw_only=True)
-class GoogleWifiSensorEntityDescription(SensorEntityDescription):
-    """Describes GoogleWifi sensor entity."""
-
-    primary_key: str
-    sensor_key: str
-
-
-SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_CURRENT_VERSION,
-        primary_key="software",
-        sensor_key="softwareVersion",
-        icon="mdi:checkbox-marked-circle-outline",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_NEW_VERSION,
-        primary_key="software",
-        sensor_key="updateNewVersion",
-        icon="mdi:update",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_UPTIME,
-        primary_key="system",
-        sensor_key="uptime",
-        native_unit_of_measurement=UnitOfTime.DAYS,
-        icon="mdi:timelapse",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_LAST_RESTART,
-        primary_key="system",
-        sensor_key="uptime",
-        icon="mdi:restart",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_LOCAL_IP,
-        primary_key="wan",
-        sensor_key="localIpAddress",
-        icon="mdi:access-point-network",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_STATUS,
-        primary_key="wan",
-        sensor_key="online",
-        icon="mdi:google",
-    ),
-)
-
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Google Wifi sensor."""
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    """Set up the Google Wifi sensor from a config entry."""
+    # Retrieve the data we stored in __init__.py
+    data = hass.data[DOMAIN][entry.entry_id]
+    ip_address = data["ip_address"]
+    device_name = data["name"]
 
-    api = GoogleWifiAPI(host, monitored_conditions)
-    entities = [
-        GoogleWifiSensor(api, name, description)
+    # Create the coordinator to manage data updates
+    coordinator = GoogleWifiUpdateCoordinator(hass, ip_address)
+    
+    # Fetch initial data so we don't have empty sensors on startup
+    await coordinator.async_config_entry_first_refresh()
+
+    # Add all sensors defined in SENSOR_TYPES
+    async_add_entities(
+        GoogleWifiSensor(coordinator, description, device_name)
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
-    ]
-    add_entities(entities, True)
+    )
 
 
-class GoogleWifiSensor(SensorEntity):
+class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching data from the Google Wifi API."""
+
+    def __init__(self, hass: HomeAssistant, host: str) -> None:
+        """Initialize the coordinator."""
+        self.host = host
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=30),
+        )
+
+    async def _async_update_data(self):
+        """Fetch data from the router via HTTP."""
+        url = f"http://{self.host}/api/v1/status"
+        try:
+            # We use hass.async_add_executor_job because 'requests' is synchronous
+            async with async_timeout.timeout(10):
+                response = await self.hass.async_add_executor_job(
+                    requests.get, url
+                )
+            return response.json()
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}")
+
+
+class GoogleWifiSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Google Wifi sensor."""
-
-    entity_description: GoogleWifiSensorEntityDescription
 
     def __init__(
         self,
-        api: GoogleWifiAPI,
-        name: str,
-        description: GoogleWifiSensorEntityDescription,
+        coordinator: GoogleWifiUpdateCoordinator,
+        description,
+        device_name
     ) -> None:
-        """Initialize a Google Wifi sensor."""
+        """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._api = api
-        self._attr_name = f"{name}_{description.key}"
+        self.device_name = device_name
+        # Create a unique ID so the user can rename/customize this in the UI
+        self._attr_unique_id = f"{coordinator.host}_{description.key}"
+        self._attr_name = f"Google Wifi {description.key.replace('_', ' ').title()}"
 
     @property
-    def available(self) -> bool:
-        """Return availability of Google Wifi API."""
-        return self._api.available
-
-    def update(self) -> None:
-        """Get the latest data from the Google Wifi API."""
-        self._api.update()
-        if self.available:
-            self._attr_native_value = self._api.data[self.entity_description.key]
-        else:
-            self._attr_native_value = None
-
-
-class GoogleWifiAPI:
-    """Get the latest data and update the states."""
-
-    def __init__(self, host, conditions):
-        """Initialize the data object."""
-        uri = "http://"
-        resource = f"{uri}{host}{ENDPOINT}"
-        self._request = requests.Request("GET", resource).prepare()
-        self.raw_data = None
-        self.conditions = conditions
-        self.data = {
-            ATTR_CURRENT_VERSION: None,
-            ATTR_NEW_VERSION: None,
-            ATTR_UPTIME: None,
-            ATTR_LAST_RESTART: None,
-            ATTR_LOCAL_IP: None,
-            ATTR_STATUS: None,
-        }
-        self.available = True
-        self.update()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from the router."""
-        try:
-            with requests.Session() as sess:
-                response = sess.send(self._request, timeout=10)
-            self.raw_data = response.json()
-            self.data_format()
-            self.available = True
-        except ValueError, requests.exceptions.ConnectionError:
-            _LOGGER.warning("Unable to fetch data from Google Wifi")
-            self.available = False
-            self.raw_data = None
-
-    def data_format(self):
-        """Format raw data into easily accessible dict."""
-        for description in SENSOR_TYPES:
-            if description.key not in self.conditions:
-                continue
-            attr_key = description.key
+    def device_info(self) -> DeviceInfo:
+        """Attach sensors to a device in HomeAssistant"""
+        # Pull the version and model name from the coordinator's data cache
+        version = None
+        if self.coordinator.data:
             try:
-                if description.primary_key in self.raw_data:
-                    sensor_value = self.raw_data[description.primary_key][
-                        description.sensor_key
-                    ]
-                    # Format sensor for better readability
-                    if attr_key == ATTR_NEW_VERSION and sensor_value == "0.0.0.0":
-                        sensor_value = "Latest"
-                    elif attr_key == ATTR_UPTIME:
-                        sensor_value = round(sensor_value / (3600 * 24), 2)
-                    elif attr_key == ATTR_LAST_RESTART:
-                        last_restart = dt_util.now() - timedelta(seconds=sensor_value)
-                        sensor_value = last_restart.strftime("%Y-%m-%d %H:%M:%S")
-                    elif attr_key == ATTR_STATUS:
-                        if sensor_value:
-                            sensor_value = "Online"
-                        else:
-                            sensor_value = "Offline"
-                    elif (
-                        attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
-                    ):
-                        sensor_value = None
-
-                    self.data[attr_key] = sensor_value
+                version = self.coordinator.data["software"]["softwareVersion"]
+                model_name = self.coordinator.data["system"]["modelId"]
             except KeyError:
-                _LOGGER.error(
-                    (
-                        "Router does not support %s field. "
-                        "Please remove %s from monitored_conditions"
-                    ),
-                    description.sensor_key,
-                    attr_key,
-                )
-                self.data[attr_key] = None
+                version = None
+                model_name = "Onhub/Wifi"
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.host)},
+            name=self.device_name,
+            manufacturer="Google",
+            model=model_name,
+            sw_version=version,
+            configuration_url=f"http://{self.coordinator.host}/api/v1/status",
+        )
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor based on the coordinator data."""
+        if not self.coordinator.data:
+            return None
+
+        raw_data = self.coordinator.data
+        desc = self.entity_description
+        
+        try:
+            val = raw_data[desc.primary_key][desc.sensor_key]
+            
+            # Formatting Logic
+            if desc.key == ATTR_NEW_VERSION and val == "0.0.0.0":
+                return "Latest"
+            if desc.key == ATTR_UPTIME:
+                return round(val / (3600 * 24), 2)
+            if desc.key == ATTR_LAST_RESTART:
+                last_restart = dt_util.now() - timedelta(seconds=val)
+                return last_restart.strftime("%Y-%m-%d %H:%M:%S")
+            if desc.key == ATTR_STATUS:
+                return "Online" if val else "Offline"
+            if desc.key == ATTR_LOCAL_IP and not raw_data["wan"]["online"]:
+                return None
+                
+            return val
+        except KeyError:
+            return None
