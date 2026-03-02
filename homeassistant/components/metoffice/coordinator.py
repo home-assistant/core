@@ -1,4 +1,4 @@
-"""The Met Office integration."""
+"""Data update coordinator for the Met Office integration."""
 
 from __future__ import annotations
 
