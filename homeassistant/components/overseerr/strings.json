@@ -114,7 +114,7 @@
       "message": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "connection_error": {
-      "message": "Error connecting to the Overseerr instance: {error}"
+      "message": "Error connecting to the Seerr instance: {error}"
     }
   },
   "selector": {
