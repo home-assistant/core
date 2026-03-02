@@ -34,10 +34,10 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Met Office entry."""
 
-    latitude = entry.data[CONF_LATITUDE]
-    longitude = entry.data[CONF_LONGITUDE]
-    api_key = entry.data[CONF_API_KEY]
-    site_name = entry.data[CONF_NAME]
+    latitude: float = entry.data[CONF_LATITUDE]
+    longitude: float = entry.data[CONF_LONGITUDE]
+    api_key: str = entry.data[CONF_API_KEY]
+    site_name: str = entry.data[CONF_NAME]
 
     coordinates = f"{latitude}_{longitude}"
 
