@@ -198,13 +198,18 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         cct = seg.cct
 
         if cct <= 127:
-            ww = (cct * w_brightness) // 127
-            cw = w_brightness
-        else:
+            # At low CCT values (warm end), keep warm white at full
+            # brightness and scale in cold white as CCT increases.
             ww = w_brightness
-            cw = ((255 - cct) * w_brightness) // 128
+            cw = (cct * w_brightness) // 127
+        else:
+            # At high CCT values (cold end), keep cold white at full
+            # brightness and scale out warm white as CCT increases.
+            cw = w_brightness
+            ww = ((255 - cct) * w_brightness) // 128
 
-        return (r, g, b, ww, cw)
+        # Home Assistant expects rgbww_color as (r, g, b, cold_white, warm_white).
+        return (r, g, b, cw, ww)
 
     @property
     def color_temp_kelvin(self) -> int | None:
