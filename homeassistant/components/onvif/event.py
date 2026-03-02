@@ -203,11 +203,13 @@ class EventManager:
                 )
                 return
 
+            category = None
             try:
                 if event.entity_category:
                     category = EntityCategory(event.entity_category)
             except ValueError:
-                category = None
+                # Keep category as None if the entity category is invalid
+                pass
 
             ha_event = Event(
                 uid=event.uid,
