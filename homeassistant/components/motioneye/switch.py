@@ -20,10 +20,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
+from .coordinator import MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 MOTIONEYE_SWITCHES = [
@@ -102,7 +102,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         config_entry_id: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MotionEyeUpdateCoordinator,
         options: Mapping[str, str],
         entity_description: SwitchEntityDescription,
     ) -> None:
