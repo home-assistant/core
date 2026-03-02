@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.earn_e_p1.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -13,8 +14,6 @@ from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_SERIAL = "E0012345678901234"
-
-DOMAIN = "earn_e_p1"
 
 
 @pytest.fixture

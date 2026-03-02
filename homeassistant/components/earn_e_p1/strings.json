@@ -12,7 +12,7 @@
         }
       },
       "discovery_confirm": {
-        "title": "EARN-E P1 Meter Discovered",
+        "title": "Discovered EARN-E P1 Meter",
         "description": "An EARN-E P1 Meter was found at **{host}**."
       },
       "reconfigure": {
