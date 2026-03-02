@@ -130,9 +130,9 @@ rules:
     comment: |
       This integration does not have entities.
   reconfiguration-flow:
-    status: exempt
+    status: todo
     comment: |
-      Nothing to reconfigure.
+      At least, the backup path should be covered by the flow.
   repair-issues: todo
   stale-devices:
     status: exempt
