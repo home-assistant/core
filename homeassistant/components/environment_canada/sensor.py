@@ -229,15 +229,10 @@ def _get_all_alerts(data: ECWeather) -> list[dict[str, Any]]:
     return all_alerts
 
 
-def _get_alerts_state(data: ECWeather) -> int:
-    """Return the total count of active alerts across all categories."""
-    return len(_get_all_alerts(data))
-
-
 ALERTS_SENSOR = ECSensorEntityDescription(
     key="alerts",
     translation_key="alerts",
-    value_fn=_get_alerts_state,
+    value_fn=lambda data: len(_get_all_alerts(data)),
 )
 
 
