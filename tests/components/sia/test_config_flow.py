@@ -538,7 +538,7 @@ async def test_unknown_oh_user(hass: HomeAssistant, flow_at_user_step) -> None:
     """Test unknown exceptions for OH validation."""
     flow_id = flow_at_user_step["flow_id"]
     with patch(
-        "osbornehoffman.OHAccount.validate_account",
+        "homeassistant.components.sia.config_flow.OHAccount.validate_account",
         side_effect=Exception,
     ):
         result_err = await hass.config_entries.flow.async_configure(
@@ -561,8 +561,8 @@ async def test_options_oh(hass: HomeAssistant) -> None:
         version=1,
     )
     with (
-        patch("osbornehoffman.OHReceiver", autospec=True),
-        patch("osbornehoffman.OHAccount", autospec=True),
+        patch("homeassistant.components.sia.hub.OHReceiver", autospec=True),
+        patch("homeassistant.components.sia.hub.OHAccount", autospec=True),
     ):
         await setup_sia(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
