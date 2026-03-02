@@ -29,6 +29,16 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "free_space": {
+        "name": "Free space"
+      },
+      "used_space": {
+        "name": "Used space"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Cannot connect to WebDAV server"
