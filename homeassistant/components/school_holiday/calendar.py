@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the School Holiday calendar."""
-    LOGGER.debug("Starting setup of School Holiday calendar")
+    LOGGER.debug("Starting calendar platform setup")
     coordinator = entry.runtime_data
     country = str(entry.data.get(CONF_COUNTRY))
     region = str(entry.data.get(CONF_REGION))
