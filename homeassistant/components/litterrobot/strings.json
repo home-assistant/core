@@ -1,4 +1,32 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "recording_enabled": "Enable event recording",
+          "recording_duration": "Recording duration (seconds)",
+          "recording_retention_days": "Retention period (days)",
+          "recording_event_types": "Event types to record"
+        },
+        "data_description": {
+          "recording_enabled": "Record video when camera events are detected. Requires a Litter-Robot 5 Pro with camera.",
+          "recording_duration": "How long to record after an event is detected (10-120 seconds).",
+          "recording_retention_days": "Automatically delete recordings older than this many days (1-30).",
+          "recording_event_types": "Select which camera event types will trigger a recording."
+        }
+      }
+    },
+    "selector": {
+      "recording_event_types": {
+        "options": {
+          "pet_visit": "Pet visit",
+          "cat_detect": "Cat detected",
+          "cycle_completed": "Cycle completed",
+          "cycle_interrupted": "Cycle interrupted"
+        }
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -43,9 +71,44 @@
     }
   },
   "entity": {
+    "camera": {
+      "camera": {
+        "name": "Camera"
+      }
+    },
+    "event": {
+      "camera_event": {
+        "name": "Camera event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "pet_visit": "Pet visit",
+              "cat_detect": "Cat detected",
+              "motion": "Motion",
+              "cycle_completed": "Cycle completed",
+              "cycle_interrupted": "Cycle interrupted",
+              "litter_low": "Litter low",
+              "offline": "Offline"
+            }
+          }
+        }
+      }
+    },
     "binary_sensor": {
+      "bonnet_removed": {
+        "name": "Bonnet removed"
+      },
+      "drawer_removed": {
+        "name": "Drawer removed"
+      },
       "hopper_connected": {
         "name": "Hopper connected"
+      },
+      "laser_dirty": {
+        "name": "Laser dirty"
+      },
+      "online": {
+        "name": "Online"
       },
       "power_status": {
         "name": "Power status"
@@ -58,6 +121,9 @@
       }
     },
     "button": {
+      "change_filter": {
+        "name": "Change filter"
+      },
       "give_snack": {
         "name": "Give snack"
       },
@@ -66,6 +132,14 @@
       },
       "reset_waste_drawer": {
         "name": "Reset waste drawer"
+      },
+      "unassign_visit": {
+        "name": "Unassign visit"
+      }
+    },
+    "light": {
+      "night_light": {
+        "name": "Night light"
       }
     },
     "select": {
@@ -98,6 +172,13 @@
       },
       "meal_insert_size": {
         "name": "Meal insert size"
+      },
+      "camera_view": {
+        "name": "Camera view",
+        "state": {
+          "front": "Front",
+          "globe": "Globe"
+        }
       }
     },
     "sensor": {
@@ -178,8 +259,34 @@
         "name": "Visits today",
         "unit_of_measurement": "visits"
       },
+      "visits_this_week": {
+        "name": "Visits this week",
+        "unit_of_measurement": "visits"
+      },
       "waste_drawer": {
         "name": "Waste drawer"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "setup_date": {
+        "name": "Setup date"
+      },
+      "scoops_saved_count": {
+        "name": "Scoops saved",
+        "unit_of_measurement": "scoops"
+      },
+      "next_filter_replacement": {
+        "name": "Next filter replacement"
+      },
+      "last_camera_event": {
+        "name": "Last camera event"
+      },
+      "last_visit": {
+        "name": "Last visit"
       }
     },
     "switch": {
@@ -191,11 +298,20 @@
       },
       "panel_lockout": {
         "name": "Panel lockout"
+      },
+      "camera_microphone": {
+        "name": "Camera microphone"
+      },
+      "camera": {
+        "name": "Camera"
       }
     },
     "time": {
       "sleep_mode_start_time": {
         "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
+      },
+      "sleep_mode_end_time": {
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_end_time::name%]"
       }
     },
     "vacuum": {
@@ -238,6 +354,28 @@
         }
       },
       "name": "Set sleep mode"
+    },
+    "reassign_visit": {
+      "description": "Reassign or unassign a pet visit to a different pet.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Litter-Robot config entry. Auto-detected if only one exists.",
+          "name": "Config entry"
+        },
+        "event_id": {
+          "description": "The event ID of the pet visit to reassign.",
+          "name": "Event ID"
+        },
+        "from_pet_id": {
+          "description": "The pet ID to remove from the visit. Required for reassign and unassign.",
+          "name": "From pet"
+        },
+        "to_pet_id": {
+          "description": "The pet ID to assign the visit to. Omit to unassign.",
+          "name": "To pet"
+        }
+      },
+      "name": "Reassign visit"
     }
   }
 }

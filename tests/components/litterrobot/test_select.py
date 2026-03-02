@@ -1,8 +1,8 @@
 """Test the Litter-Robot select entity."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylitterbot import LitterRobot3, LitterRobot4
+from pylitterbot import LitterRobot3, LitterRobot4, LitterRobot5
 import pytest
 
 from homeassistant.components.select import (
@@ -127,3 +127,86 @@ async def test_select_command_exception(
             {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "7"},
             blocking=True,
         )
+
+
+async def test_litterrobot_5_globe_light(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests the Litter-Robot 5 globe light (night light mode) select entity."""
+    entity_id = "select.test_globe_light"
+    await setup_integration(hass, mock_account_with_litterrobot_5, SELECT_DOMAIN)
+
+    select = hass.states.get(entity_id)
+    assert select
+    assert len(select.attributes[ATTR_OPTIONS]) == 3
+    assert select.state == "auto"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+
+    data = {ATTR_ENTITY_ID: entity_id}
+
+    robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
+
+    with patch(
+        "homeassistant.components.litterrobot.select.async_update_night_light_settings",
+        new_callable=AsyncMock,
+        return_value=True,
+    ) as mock_update:
+        for option in select.attributes[ATTR_OPTIONS]:
+            data[ATTR_OPTION] = option
+
+            await hass.services.async_call(
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                data,
+                blocking=True,
+            )
+
+        assert mock_update.call_count == 3
+        # Verify the mode value is capitalized to match API format (On/Off/Auto)
+        mock_update.assert_any_call(robot, mode="Off")
+        mock_update.assert_any_call(robot, mode="On")
+        mock_update.assert_any_call(robot, mode="Auto")
+
+
+async def test_litterrobot_5_panel_brightness(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests the Litter-Robot 5 panel brightness select entity."""
+    entity_id = "select.test_panel_brightness"
+    await setup_integration(hass, mock_account_with_litterrobot_5, SELECT_DOMAIN)
+
+    select = hass.states.get(entity_id)
+    assert select
+    assert len(select.attributes[ATTR_OPTIONS]) == 3
+    assert select.state == "medium"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+
+    data = {ATTR_ENTITY_ID: entity_id}
+
+    robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
+    setattr(robot, "set_panel_brightness", AsyncMock(return_value=True))
+
+    for count, option in enumerate(select.attributes[ATTR_OPTIONS]):
+        data[ATTR_OPTION] = option
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            data,
+            blocking=True,
+        )
+
+        assert robot.set_panel_brightness.call_count == count + 1
+
+    # Verify globe_brightness select is not created for LR5
+    assert hass.states.get("select.test_globe_brightness") is None

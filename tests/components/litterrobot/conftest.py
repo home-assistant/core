@@ -5,14 +5,29 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Pet, Robot
+from pylitterbot import (
+    Account,
+    FeederRobot,
+    LitterRobot3,
+    LitterRobot4,
+    LitterRobot5,
+    Pet,
+    Robot,
+)
 from pylitterbot.exceptions import InvalidCommandException
 from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
+from .common import (
+    ACCOUNT_USER_ID,
+    CONFIG,
+    DOMAIN,
+    PET_DATA,
+    ROBOT_5_DATA,
+    ROBOT_5_PRO_DATA,
+)
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -26,6 +41,8 @@ def create_mock_robot(
     robot_data: dict | None,
     account: Account,
     v4: bool,
+    v5: bool,
+    v5_pro: bool,
     feeder: bool,
     side_effect: Any | None = None,
 ) -> Robot:
@@ -33,7 +50,25 @@ def create_mock_robot(
     if not robot_data:
         robot_data = {}
 
-    if v4:
+    if v5_pro:
+        robot = LitterRobot5(data={**ROBOT_5_PRO_DATA, **robot_data}, account=account)
+        robot.reset = AsyncMock(side_effect=side_effect)
+        robot.change_filter = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
+        robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
+        robot.set_camera_view = AsyncMock(return_value=True, side_effect=side_effect)
+        robot.set_camera_audio = AsyncMock(return_value=True, side_effect=side_effect)
+        robot.get_camera_video_settings = AsyncMock(return_value=None)
+        robot.get_camera_client = MagicMock()
+    elif v5:
+        robot = LitterRobot5(data={**ROBOT_5_DATA, **robot_data}, account=account)
+        robot.reset = AsyncMock(side_effect=side_effect)
+        robot.change_filter = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
+        robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
+    elif v4:
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
     elif feeder:
         robot = FeederRobot(data={**FEEDER_ROBOT_DATA, **robot_data}, account=account)
@@ -70,6 +105,8 @@ def create_mock_account(
     side_effect: Any | None = None,
     skip_robots: bool = False,
     v4: bool = False,
+    v5: bool = False,
+    v5_pro: bool = False,
     feeder: bool = False,
     pet: bool = False,
 ) -> MagicMock:
@@ -81,7 +118,7 @@ def create_mock_account(
     account.robots = (
         []
         if skip_robots
-        else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
+        else [create_mock_robot(robot_data, account, v4, v5, v5_pro, feeder, side_effect)]
     )
     account.get_robots = lambda robot_class: [
         robot for robot in account.robots if isinstance(robot, robot_class)
@@ -100,6 +137,18 @@ def mock_account() -> MagicMock:
 def mock_account_with_litterrobot_4() -> MagicMock:
     """Mock account with Litter-Robot 4."""
     return create_mock_account(v4=True)
+
+
+@pytest.fixture
+def mock_account_with_litterrobot_5() -> MagicMock:
+    """Mock account with Litter-Robot 5."""
+    return create_mock_account(v5=True)
+
+
+@pytest.fixture
+def mock_account_with_litterrobot_5_pro() -> MagicMock:
+    """Mock account with Litter-Robot 5 Pro (with camera)."""
+    return create_mock_account(v5_pro=True)
 
 
 @pytest.fixture

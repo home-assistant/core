@@ -1,0 +1,392 @@
+# lovelace_gen
+#
+# Whisker Dashboard — Litter-Robot + Feeder-Robot + Pets
+#
+# A comprehensive Home Assistant dashboard for the Litter-Robot integration.
+# Uses lovelace_gen for Jinja2 templating and fold-entity-row for collapsible sections.
+#
+# ============================================================================
+# SETUP INSTRUCTIONS
+# ============================================================================
+#
+# 1. Install prerequisites from HACS:
+#    - lovelace_gen  (Jinja2 templating for YAML dashboards)
+#    - fold-entity-row  (collapsible entity rows)
+#
+# 2. Add to your configuration.yaml:
+#    lovelace_gen:
+#
+# 3. Configure this file as a dashboard in your Lovelace config.
+#
+# 4. Edit the three variables below to match YOUR devices and pets.
+#    To find your slugs, go to Settings > Devices & Services > Litter-Robot
+#    and look at the entity IDs. The slug is the part after the domain prefix.
+#
+#    Example: If your vacuum entity is "vacuum.my_litter_robot_litter_box"
+#             then your robot slug is "my_litter_robot"
+#
+#    Example: If your sensor entity is "sensor.my_feeder_food_level"
+#             then your feeder slug is "my_feeder"
+#
+#    Example: If your sensor entity is "sensor.fluffy_last_visit"
+#             then your pet slug is "fluffy"
+#
+# 5. Supports multiple devices and pets — just add more entries to each list.
+#
+# ============================================================================
+
+{% set robots = ["my_litter_robot"] %}
+{% set feeders = ["my_feeder"] %}
+{% set pets = ["fluffy", "mittens"] %}
+
+title: Whisker
+views:
+  - title: Litter-Robot
+    type: sections
+    sections:
+{% for robot in robots %}
+      - type: grid
+        cards:
+          - type: entities
+            title: "{{ robot | replace('_', ' ') | title }}"
+            show_header_toggle: false
+            entities:
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Status
+                entities:
+                  - entity: sensor.{{ robot }}_status_code
+                    name: Status
+                    icon: mdi:robot-vacuum
+                  - entity: sensor.{{ robot }}_waste_drawer
+                    name: Waste Drawer
+                  - entity: sensor.{{ robot }}_litter_level
+                    name: Litter Level
+                  - entity: sensor.{{ robot }}_pet_weight
+                    name: Pet Weight
+                  - entity: sensor.{{ robot }}_total_cycles
+                    name: Total Cycles
+                  - entity: sensor.{{ robot }}_scoops_saved
+                    name: Scoops Saved
+                  - entity: sensor.{{ robot }}_wi_fi_signal
+                    name: WiFi Signal
+                  - entity: binary_sensor.{{ robot }}_online
+                    name: Online
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Actions
+                entities:
+                  - type: button
+                    entity: vacuum.{{ robot }}_litter_box
+                    name: Clean Cycle
+                    icon: mdi:robot-vacuum
+                    action_name: Press
+                    tap_action:
+                      confirmation:
+                        text: Start clean cycle?
+                      action: perform-action
+                      perform_action: vacuum.start
+                      target:
+                        entity_id: vacuum.{{ robot }}_litter_box
+                  - type: button
+                    entity: button.{{ robot }}_reset
+                    name: Reset / Recalibrate
+                    icon: mdi:restart
+                    action_name: Press
+                    tap_action:
+                      confirmation:
+                        text: Reset and recalibrate the litter robot?
+                      action: perform-action
+                      perform_action: button.press
+                      target:
+                        entity_id: button.{{ robot }}_reset
+                  - type: button
+                    entity: button.{{ robot }}_change_filter
+                    name: Change Filter
+                    icon: mdi:filter-cog
+                    action_name: Press
+                    tap_action:
+                      confirmation:
+                        text: Mark filter as changed?
+                      action: perform-action
+                      perform_action: button.press
+                      target:
+                        entity_id: button.{{ robot }}_change_filter
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Controls
+                entities:
+                  - entity: select.{{ robot }}_clean_cycle_wait_time_minutes
+                    name: Cycle Wait Time
+                  - entity: switch.{{ robot }}_panel_lockout
+                    name: Panel Lockout
+                  - entity: select.{{ robot }}_panel_brightness
+                    name: Panel Brightness
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Night Light
+                entities:
+                  - entity: select.{{ robot }}_globe_light
+                    name: Mode
+                  - entity: light.{{ robot }}_night_light
+                    name: Night Light
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Camera
+                entities:
+                  - entity: switch.{{ robot }}_camera
+                    name: Camera
+                  - entity: switch.{{ robot }}_camera_microphone
+                    name: Microphone
+                  - entity: event.{{ robot }}_motion
+                    name: Camera Event
+                  - entity: sensor.{{ robot }}
+                    name: Last Camera Event
+                  - entity: select.{{ robot }}_camera_view
+                    name: View
+                  - type: button
+                    name: Browse Snapshots
+                    icon: mdi:image-multiple
+                    action_name: Open
+                    tap_action:
+                      action: navigate
+                      navigation_path: /media-browser/browser/media-source%3A%2F%2Flitterrobot
+          - type: picture-entity
+            entity: camera.{{ robot }}_camera
+            camera_view: live
+            show_name: false
+            show_state: false
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Sleep Schedule
+                entities:
+                  - entity: sensor.{{ robot }}_sleep_mode_start_time
+                    name: Sleep Start Time
+                  - entity: sensor.{{ robot }}_sleep_mode_end_time
+                    name: Sleep End Time
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Alerts
+                entities:
+                  - entity: binary_sensor.{{ robot }}_drawer_removed
+                    name: Drawer Removed
+                  - entity: binary_sensor.{{ robot }}_bonnet_removed
+                    name: Bonnet Removed
+                  - entity: binary_sensor.{{ robot }}_laser_dirty
+                    name: Laser Dirty
+                  - entity: binary_sensor.{{ robot }}_hopper_connected
+                    name: Hopper Connected
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Diagnostics
+                entities:
+                  - entity: sensor.{{ robot }}_firmware
+                    name: Firmware
+                  - entity: binary_sensor.{{ robot }}_power_status
+                    name: Power Status
+                  - entity: binary_sensor.{{ robot }}_sleeping
+                    name: Sleeping
+                  - entity: binary_sensor.{{ robot }}_sleep_mode
+                    name: Sleep Mode
+                  - entity: sensor.{{ robot }}_last_seen
+                    name: Last Seen
+                  - entity: sensor.{{ robot }}_setup_date
+                    name: Setup Date
+                  - entity: sensor.{{ robot }}_next_filter_replacement
+                    name: Next Filter Replacement
+{% endfor %}
+
+  - title: Feeder
+    type: sections
+    sections:
+{% for feeder in feeders %}
+      - type: grid
+        cards:
+          - type: entities
+            title: "{{ feeder | replace('_', ' ') | title }}"
+            show_header_toggle: false
+            entities:
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Status
+                entities:
+                  - entity: sensor.{{ feeder }}_food_level
+                    name: Food Level
+                  - entity: sensor.{{ feeder }}_food_dispensed_today
+                    name: Dispensed Today
+                  - entity: sensor.{{ feeder }}_last_feeding
+                    name: Last Feeding
+                  - entity: sensor.{{ feeder }}_next_feeding
+                    name: Next Feeding
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Actions
+                entities:
+                  - entity: button.{{ feeder }}_give_snack
+                    name: Give Snack
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Controls
+                entities:
+                  - entity: select.{{ feeder }}_meal_insert_size
+                    name: Meal Insert Size
+                  - entity: switch.{{ feeder }}_night_light_mode
+                    name: Night Light
+                  - entity: switch.{{ feeder }}_panel_lockout
+                    name: Panel Lockout
+                  - entity: switch.{{ feeder }}_gravity_mode
+                    name: Gravity Mode
+{% endfor %}
+
+  - title: Pets
+    type: sections
+    sections:
+{% for pet in pets %}
+      - type: grid
+        cards:
+          - type: entities
+            title: "{{ pet | replace('_', ' ') | title }}"
+            show_header_toggle: false
+            entities:
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Activity
+                entities:
+                  - entity: sensor.{{ pet }}_weight
+                    name: Weight
+                  - entity: sensor.{{ pet }}_visits_today
+                    name: Visits Today
+                  - entity: sensor.{{ pet }}_visits_this_week
+                    name: Visits This Week
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: urine_today
+                    name: Urine Today
+                    icon: mdi:water
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: urine_weight_today_oz
+                    name: Urine Weight Today (oz)
+                    icon: mdi:scale-balance
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: feces_today
+                    name: Feces Today
+                    icon: mdi:circle
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: feces_weight_today_oz
+                    name: Feces Weight Today (oz)
+                    icon: mdi:scale-balance
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: total_duration_today
+                    name: Total Duration Today
+                    icon: mdi:timer-outline
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Last Visit
+                entities:
+                  - entity: sensor.{{ pet }}_last_visit
+                    name: Event
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: duration
+                    name: Duration
+                    icon: mdi:timer-outline
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: pet_weight
+                    name: Weight (lbs)
+                    icon: mdi:scale
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: waste_type
+                    name: Waste Type
+                    icon: mdi:information-outline
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: waste_weight_oz
+                    name: Waste Weight (oz)
+                    icon: mdi:scale-balance
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: timestamp
+                    name: Time
+                    icon: mdi:clock-outline
+                  - type: attribute
+                    entity: sensor.{{ pet }}_last_visit
+                    attribute: is_reassigned
+                    name: Reassigned
+                    icon: mdi:swap-horizontal
+{% set other_pets = pets | reject("equalto", pet) | list %}
+{% for other in other_pets %}
+                  - entity: button.{{ pet }}_reassign_to_{{ other }}
+                    tap_action:
+                      confirmation:
+                        text: "Reassign {{ pet | replace('_', ' ') | title }}'s last visit to {{ other | replace('_', ' ') | title }}?"
+                      action: toggle
+{% endfor %}
+                  - entity: button.{{ pet }}_unassign_visit
+                    tap_action:
+                      confirmation:
+                        text: "Unassign {{ pet | replace('_', ' ') | title }}'s last visit?"
+                      action: toggle
+{% endfor %}
+{% for robot in robots %}
+      - type: grid
+        cards:
+          - type: entities
+            title: "Last Litter Box Visit"
+            show_header_toggle: false
+            entities:
+              - entity: sensor.{{ robot }}
+                name: Event Type
+                icon: mdi:motion-sensor
+              - type: attribute
+                entity: sensor.{{ robot }}
+                attribute: pet_name
+                name: Pet
+                icon: mdi:cat
+              - type: attribute
+                entity: sensor.{{ robot }}
+                attribute: waste_type
+                name: Waste Type
+                icon: mdi:information-outline
+              - type: attribute
+                entity: sensor.{{ robot }}
+                attribute: waste_weight_oz
+                name: Waste Weight (oz)
+                icon: mdi:scale-balance
+              - type: attribute
+                entity: sensor.{{ robot }}
+                attribute: duration
+                name: Duration (s)
+                icon: mdi:timer-outline
+              - type: attribute
+                entity: sensor.{{ robot }}
+                attribute: timestamp
+                name: Time
+                icon: mdi:clock-outline
+              - type: attribute
+                entity: sensor.{{ robot }}
+                attribute: is_reassigned
+                name: Reassigned
+                icon: mdi:swap-horizontal
+{% endfor %}
