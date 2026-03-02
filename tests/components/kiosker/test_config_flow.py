@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.kiosker.config_flow import CannotConnect, validate_input
-from homeassistant.components.kiosker.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -76,9 +76,9 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 8081,
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
         await hass.async_block_till_done()
@@ -88,9 +88,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 8081,
-        "api_token": "test-token",
-        "ssl": False,
-        "ssl_verify": False,
+        CONF_API_TOKEN: "test-token",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -110,9 +110,9 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 8081,
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
 
@@ -135,9 +135,9 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 8081,
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
 
@@ -163,13 +163,14 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_no_uuid(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery without UUID raises CannotConnect."""
-    with pytest.raises(CannotConnect):
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=DISCOVERY_INFO_NO_UUID,
-        )
+    """Test zeroconf discovery without UUID aborts with cannot_connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO_NO_UUID,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_confirm(hass: HomeAssistant) -> None:
@@ -187,7 +188,7 @@ async def test_zeroconf_confirm(hass: HomeAssistant) -> None:
     assert result_confirm["step_id"] == "zeroconf_confirm"
     # Check that the form includes API token field
     schema_keys = list(result_confirm["data_schema"].schema.keys())
-    assert any(key.schema == "api_token" for key in schema_keys)
+    assert any(key.schema == CONF_API_TOKEN for key in schema_keys)
 
 
 async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
@@ -215,9 +216,9 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
         await hass.async_block_till_done()
@@ -227,9 +228,9 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
     assert result3["data"] == {
         CONF_HOST: "192.168.1.39",
         CONF_PORT: 8081,
-        "api_token": "test-token",
-        "ssl": False,
-        "ssl_verify": False,
+        CONF_API_TOKEN: "test-token",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -253,21 +254,25 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
 
     assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {"api_token": "cannot_connect"}
+    assert result3["errors"] == {CONF_API_TOKEN: "cannot_connect"}
 
 
 async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_PORT: 8081, "api_token": "test_token"},
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 8081,
+            CONF_API_TOKEN: "test_token",
+        },
         unique_id="A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
     )
     entry.add_to_hass(hass)
@@ -300,9 +305,9 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.200",
                 CONF_PORT: 8081,
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
 
@@ -314,7 +319,11 @@ async def test_zeroconf_abort_if_already_configured(hass: HomeAssistant) -> None
     """Test we abort zeroconf discovery if already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_PORT: 8081, "api_token": "test_token"},
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 8081,
+            CONF_API_TOKEN: "test_token",
+        },
         unique_id="A98BE1CE-1234-1234-1234-123456789ABC",
     )
     entry.add_to_hass(hass)
@@ -354,9 +363,9 @@ async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 8081,
-                "api_token": "test-token",
-                "ssl": False,
-                "ssl_verify": False,
+                CONF_API_TOKEN: "test-token",
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: False,
             },
         )
 
@@ -376,9 +385,9 @@ async def test_validate_input_success(
     data = {
         CONF_HOST: "10.0.1.5",
         CONF_PORT: 8081,
-        "api_token": "test_token",
-        "ssl": False,
-        "ssl_verify": False,
+        CONF_API_TOKEN: "test_token",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
 
     result = await validate_input(hass, data)
@@ -401,9 +410,9 @@ async def test_validate_input_connection_error(
     data = {
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 8081,
-        "api_token": "test_token",
-        "ssl": False,
-        "ssl_verify": False,
+        CONF_API_TOKEN: "test_token",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
 
     with pytest.raises(CannotConnect):
