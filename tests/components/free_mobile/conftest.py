@@ -45,7 +45,7 @@ def mock_freesms() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_freesms_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_freesms_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to create a mocked ConfigEntry."""
     return MockConfigEntry(
         title=TEST_USERNAME,
@@ -57,7 +57,7 @@ async def mock_freesms_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 async def configure_free_mobile_through_yaml(
     hass: HomeAssistant, mock_freesms: Generator[AsyncMock]
-) -> Generator[None]:
+) -> None:
     """Configure the notify domain with YAML for the Free Mobile platform."""
     await async_setup_component(
         hass,
@@ -81,7 +81,7 @@ async def free_mobile_notification_entity(
     hass: HomeAssistant,
     mock_freesms: AsyncMock,
     mock_freesms_config_entry: MockConfigEntry,
-) -> Generator[MockConfigEntry]:
+) -> MockConfigEntry:
     """Configure a Free Mobile Notification Entity."""
     mock_freesms_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_freesms_config_entry.entry_id)
