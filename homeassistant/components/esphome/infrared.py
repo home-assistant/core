@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 
-from aioesphomeapi import EntityInfo, EntityState, InfraredCapability, InfraredInfo
+from aioesphomeapi import EntityState, InfraredCapability, InfraredInfo
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.core import callback
 
-from .entity import EsphomeEntity, async_static_info_updated, convert_api_error_ha_error
-from .entry_data import ESPHomeConfigEntry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    platform_async_setup_entry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,36 +50,10 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
         )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ESPHomeConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up ESPHome infrared entities, filtering out receiver-only devices."""
-    entry_data = entry.runtime_data
-    entry_data.info[InfraredInfo] = {}
-    platform = entity_platform.async_get_current_platform()
-
-    def filtered_static_info_update(infos: list[EntityInfo]) -> None:
-        transmitter_infos: list[EntityInfo] = [
-            info
-            for info in infos
-            if isinstance(info, InfraredInfo)
-            and info.capabilities & InfraredCapability.TRANSMITTER
-        ]
-        async_static_info_updated(
-            hass,
-            entry_data,
-            platform,
-            async_add_entities,
-            InfraredInfo,
-            EsphomeInfraredEntity,
-            EntityState,
-            transmitter_infos,
-        )
-
-    entry_data.cleanup_callbacks.append(
-        entry_data.async_register_static_info_callback(
-            InfraredInfo, filtered_static_info_update
-        )
-    )
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=InfraredInfo,
+    entity_type=EsphomeInfraredEntity,
+    state_type=EntityState,
+    info_filter=lambda info: bool(info.capabilities & InfraredCapability.TRANSMITTER),
+)
