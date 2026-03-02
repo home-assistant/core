@@ -1,5 +1,6 @@
 """Test the Eufy Security coordinator."""
 
+import logging
 from unittest.mock import MagicMock
 
 from eufy_security import (
@@ -64,7 +65,10 @@ async def test_coordinator_update_api_error_logs_once(
         "API error"
     )
 
-    with pytest.raises(UpdateFailed):
+    with (
+        caplog.at_level(logging.INFO, logger="homeassistant.components.eufy_security"),
+        pytest.raises(UpdateFailed),
+    ):
         await coordinator._async_update_data()
 
     assert "API is unavailable" in caplog.text
@@ -93,7 +97,10 @@ async def test_coordinator_recovery_logging(
     coordinator.api.cameras = {mock_camera.serial: mock_camera}
     coordinator.api.stations = {}
 
-    await coordinator._async_update_data()
+    with caplog.at_level(
+        logging.INFO, logger="homeassistant.components.eufy_security"
+    ):
+        await coordinator._async_update_data()
 
     assert "API connection restored" in caplog.text
     assert coordinator._unavailable_logged is False

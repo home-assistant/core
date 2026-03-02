@@ -113,7 +113,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -176,8 +176,8 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception: %s", err)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -237,7 +237,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -304,7 +304,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -357,7 +357,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -435,7 +435,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
