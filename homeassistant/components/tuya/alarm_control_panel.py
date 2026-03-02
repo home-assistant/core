@@ -43,7 +43,7 @@ class _AlarmChangedByWrapper(DPCodeRawWrapper):
     Decode base64 to utf-16be string, but only if alarm has been triggered.
     """
 
-    def read_device_status(self, device: CustomerDevice) -> str | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"

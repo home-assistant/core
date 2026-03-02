@@ -133,7 +133,7 @@ class _IsClosedEnumWrapper(DPCodeEnumWrapper):
         "fully_open": False,
     }
 
-    def read_device_status(self, device: CustomerDevice) -> bool | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
         if (value := self._read_dpcode_value(device)) is None:
             return None
         return self._MAPPINGS.get(value)
