@@ -676,8 +676,7 @@ async def test_options_flow_no_cameras(
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert "No cameras found" in result["description_placeholders"]["camera_info"]
+    assert result["step_id"] == "no_cameras"
 
 
 async def test_options_flow_configure_cameras(

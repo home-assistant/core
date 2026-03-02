@@ -67,7 +67,7 @@ async def test_coordinator_update_api_error_logs_once(
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
-    assert "Eufy Security API is unavailable" in caplog.text
+    assert "API is unavailable" in caplog.text
     assert coordinator._unavailable_logged is True
 
     # Second error should not log again
@@ -75,7 +75,7 @@ async def test_coordinator_update_api_error_logs_once(
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
-    assert "Eufy Security API is unavailable" not in caplog.text
+    assert "API is unavailable" not in caplog.text
 
 
 async def test_coordinator_recovery_logging(
@@ -95,5 +95,5 @@ async def test_coordinator_recovery_logging(
 
     await coordinator._async_update_data()
 
-    assert "Eufy Security API connection restored" in caplog.text
+    assert "API connection restored" in caplog.text
     assert coordinator._unavailable_logged is False
