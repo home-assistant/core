@@ -41,7 +41,7 @@ async def setup_mock_switch(
     with patch(
         "homeassistant.components.tis_control.switch.TISAPISwitch"
     ) as mock_api_switch_cls:
-        # Configure the Switch Device wrapper mock
+        # Configure the Switch Device wrapper mock.
         mock_switch_wrapper = mock_api_switch_cls.return_value
         mock_switch_wrapper.name = "Test Switch"
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
@@ -201,3 +201,80 @@ async def test_setup_switch_no_name(
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.state == STATE_OFF
+
+
+async def test_invalid_channel_data(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
+) -> None:
+    """Test switch setup ignores appliances with invalid channel data."""
+    mock_tis_api.get_entities.return_value = [
+        # Covers line 54: channels is not a list or is empty.
+        {
+            "name": "Invalid Channels Type",
+            "device_id": [1, 2, 3],
+            "channels": "not_a_list",
+        },
+        {
+            "name": "No Channels",
+            "device_id": [1, 2, 3],
+            "channels": [],
+        },
+        # Covers line 59: first channel is not a dict or is empty.
+        {
+            "name": "String Channel",
+            "device_id": [1, 2, 3],
+            "channels": ["not_a_dict"],
+        },
+        {
+            "name": "Empty Dict Channel",
+            "device_id": [1, 2, 3],
+            "channels": [{}],
+        },
+        # Covers line 64: first channel value is None.
+        {
+            "name": "None Value Channel",
+            "device_id": [1, 2, 3],
+            "channels": [{"Output": None}],
+        },
+        # Covers lines 68-70: ValueError (cannot cast string to int).
+        {
+            "name": "String Value Channel",
+            "device_id": [1, 2, 3],
+            "channels": [{"Output": "abc"}],
+        },
+        # Covers lines 68-70: TypeError (cannot cast list to int).
+        {
+            "name": "List Value Channel",
+            "device_id": [1, 2, 3],
+            "channels": [{"Output": [1]}],
+        },
+        # Valid channel to ensure the loop processes correctly.
+        {
+            "name": "Valid Switch",
+            "device_id": [1, 2, 3],
+            "channels": [{"Output": 1}],
+            "is_protected": False,
+            "gateway": "mock_gateway",
+        },
+    ]
+
+    with patch(
+        "homeassistant.components.tis_control.switch.TISAPISwitch"
+    ) as mock_api_switch_cls:
+        # Mock the wrapper so it doesn't fail on initialization.
+        mock_switch_wrapper = mock_api_switch_cls.return_value
+        mock_switch_wrapper.name = "Valid Switch"
+        mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
+        mock_switch_wrapper.is_on = False
+        mock_switch_wrapper.available = True
+        mock_switch_wrapper.request_update = AsyncMock()
+        mock_switch_wrapper.register_callback = MagicMock()
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify that only the single valid entity was created.
+    entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
+    assert len(entity_ids) == 1
+    assert hass.states.get(entity_ids[0]).name == "Valid Switch"
