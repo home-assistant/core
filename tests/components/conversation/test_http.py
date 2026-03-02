@@ -16,6 +16,7 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
 )
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
+from homeassistant.components.conversation.models import ConversationResult
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -185,7 +186,7 @@ async def test_http_processing_intent_with_device_satellite_ids(
 
     with patch(
         "homeassistant.components.conversation.http.async_converse",
-        return_value=mock_result,
+        return_value=ConversationResult(response=mock_result),
     ) as mock_converse:
         resp = await client.post(
             "/api/conversation/process",
@@ -263,7 +264,7 @@ async def test_ws_api_with_device_satellite_ids(
 
     with patch(
         "homeassistant.components.conversation.http.async_converse",
-        return_value=mock_result,
+        return_value=ConversationResult(response=mock_result),
     ) as mock_converse:
         await client.send_json_auto_id(
             {
