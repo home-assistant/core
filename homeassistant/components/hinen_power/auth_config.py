@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ATTR_AUTH_LANGUAGE, ATTR_REGION_CODE, DOMAIN, HOST, REGION_CODE
+from .const import ATTR_REGION_CODE, HOST, REGION_CODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +69,10 @@ class HinenImplementation(AuthImplementation):
         domain: str,
         client_credential: ClientCredential,
         authorization_server: AuthorizationServer,
+        language: str | None = None,
+        region_code: str | None = None,
     ) -> None:
-        """Set up Electric Kiwi oauth."""
+        """Set up Hinen OAuth2 implementation."""
         super().__init__(
             hass=hass,
             auth_domain=domain,
@@ -78,6 +80,8 @@ class HinenImplementation(AuthImplementation):
             authorization_server=authorization_server,
         )
 
+        self._language = language
+        self._region_code = region_code
         self._name = client_credential.name
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
@@ -87,16 +91,15 @@ class HinenImplementation(AuthImplementation):
 
         # Extract state from standard URL
         state = URL(standard_url).query.get("state")
-        return f"{self.authorize_url}?state={state}&language={self.hass.data.get(DOMAIN, {}).get(ATTR_AUTH_LANGUAGE)}&key={self.client_id}&redirectUrl={self.redirect_uri}"
+        return f"{self.authorize_url}?state={state}&language={self._language}&key={self.client_id}&redirectUrl={self.redirect_uri}"
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        _LOGGER.debug("Sending token request to %s", external_data)
         request_data: dict = {
             "clientSecret": self.client_secret,
             "grantType": "1",
             "authorizationCode": external_data["code"],
-            "regionCode": self.hass.data.get(DOMAIN, {}).get(ATTR_REGION_CODE),
+            "regionCode": self._region_code,
         }
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)

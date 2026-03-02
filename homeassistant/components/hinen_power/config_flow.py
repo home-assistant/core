@@ -51,6 +51,8 @@ class OAuth2FlowHandler(
         self._data: dict[str, Any] = {}
         self._title: str = ""
         self._hinen_open: HinenOpen | None = None
+        self._language: str | None = None
+        self._region_code: str | None = None
 
     @staticmethod
     @callback
@@ -68,19 +70,19 @@ class OAuth2FlowHandler(
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow start."""
         if user_input is not None:
-            self.hass.data.setdefault(DOMAIN, {})[ATTR_AUTH_LANGUAGE] = user_input[
-                ATTR_AUTH_LANGUAGE
-            ]
-            self.hass.data.setdefault(DOMAIN, {})[ATTR_REGION_CODE] = user_input[
-                ATTR_REGION_CODE
-            ]
+            self._language = user_input[ATTR_AUTH_LANGUAGE]
+            self._region_code = user_input[ATTR_REGION_CODE]
             credential: ClientCredential = ClientCredential(
                 user_input[CONF_CLIENT_ID], user_input[CONF_CLIENT_SECRET]
             )
 
             self.flow_impl = (
                 await application_credentials.async_get_auth_implementation(
-                    self.hass, DOMAIN, credential
+                    self.hass,
+                    DOMAIN,
+                    credential,
+                    language=self._language,
+                    region_code=self._region_code,
                 )
             )
             config_entry_oauth2_flow.async_register_implementation(
@@ -93,7 +95,7 @@ class OAuth2FlowHandler(
         try:
             country_codes = await self._get_country_list()
         except HinenAPIError as ex:
-            LOGGER.error("Failed to fetch country list: %s", ex.args)
+            LOGGER.error("Failed to fetch country list: %s", ex)
             return self.async_abort(reason="failed_to_fetch_countries")
 
         return self.async_show_form(
@@ -190,9 +192,14 @@ class OAuth2FlowHandler(
             step_id="devices",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DEVICES): SelectSelector(
-                        SelectSelectorConfig(options=selectable_devices, multiple=True)
-                    ),
+                    vol.Required(CONF_DEVICES): vol.All(
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=selectable_devices, multiple=True
+                            )
+                        ),
+                        vol.Length(min=1),
+                    )
                 }
             ),
         )

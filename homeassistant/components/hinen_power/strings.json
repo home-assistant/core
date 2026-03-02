@@ -65,7 +65,7 @@
         "name": "Cumulative Consumption"
       },
       "cumulative_grid_feed_in": {
-        "name": "Cumulative Grid Feedin"
+        "name": "Cumulative Grid Feed-in"
       },
       "cumulative_production_active": {
         "name": "Cumulative Production Active"
