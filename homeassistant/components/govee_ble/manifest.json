@@ -56,6 +56,10 @@
     },
     {
       "connectable": false,
+      "local_name": "GV5140*"
+    },
+    {
+      "connectable": false,
       "manufacturer_id": 1,
       "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb"
     },
