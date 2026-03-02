@@ -112,7 +112,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -236,7 +236,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -303,7 +303,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -356,7 +356,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -434,7 +434,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -517,6 +517,11 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
             username = user_input.get(CONF_RTSP_USERNAME, "").strip()
             password = user_input.get(CONF_RTSP_PASSWORD, "").strip()
 
+            # Preserve existing password if user left the field empty
+            if not password:
+                current_creds = self._rtsp_credentials.get(serial, {})
+                password = current_creds.get("password", "")
+
             if username or password:
                 self._rtsp_credentials[serial] = {
                     "username": username,
@@ -541,8 +546,10 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_RTSP_USERNAME, default=current_username): str,
-                vol.Optional(CONF_RTSP_PASSWORD, default=current_password): str,
+                vol.Optional(
+                    CONF_RTSP_USERNAME, default=current_username
+                ): str,
+                vol.Optional(CONF_RTSP_PASSWORD): str,
             }
         )
 
