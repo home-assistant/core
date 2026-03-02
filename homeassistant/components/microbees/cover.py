@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import MicroBeesConfigEntry
-from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
 COVER_IDS = {47: "roller_shutter"}
@@ -55,13 +54,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
         CoverEntityFeature.OPEN | CoverEntityFeature.STOP | CoverEntityFeature.CLOSE
     )
 
-    def __init__(
-        self,
-        coordinator: MicroBeesUpdateCoordinator,
-        bee_id: int,
-        actuator_up_id,
-        actuator_down_id,
-    ) -> None:
+    def __init__(self, coordinator, bee_id, actuator_up_id, actuator_down_id) -> None:
         """Initialize the microBees cover."""
         super().__init__(coordinator, bee_id)
         self.actuator_up_id = actuator_up_id
