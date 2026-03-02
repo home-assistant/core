@@ -27,7 +27,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            unique_id = f"tis_control:{user_input[CONF_PORT]}"
+            unique_id = f"{DOMAIN}:{user_input[CONF_PORT]}"
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
