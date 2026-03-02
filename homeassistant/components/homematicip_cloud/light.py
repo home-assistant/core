@@ -55,7 +55,7 @@ async def async_setup_entry(
     entities: list[HomematicipGenericEntity] = []
 
     entities.extend(
-        HomematicipLightHS(hap, d, ch.index)
+        HomematicipColorLight(hap, d, ch.index)
         for d in hap.home.devices
         for ch in d.functionalChannels
         if ch.functionalChannelType == FunctionalChannelType.UNIVERSAL_LIGHT_CHANNEL
@@ -136,15 +136,31 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
         await self._device.turn_off_async()
 
 
-class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
-    """Representation of the HomematicIP light with HS color mode."""
-
-    _attr_color_mode = ColorMode.HS
-    _attr_supported_color_modes = {ColorMode.HS}
+class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
+    """Representation of the HomematicIP color light."""
 
     def __init__(self, hap: HomematicipHAP, device: Device, channel_index: int) -> None:
         """Initialize the light entity."""
         super().__init__(hap, device, channel=channel_index, is_multi_channel=True)
+
+    def _supports_color(self) -> bool:
+        """Return true if device supports hue/saturation color control."""
+        channel = self.get_channel_or_raise()
+        return channel.hue is not None and channel.saturationLevel is not None
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._supports_color():
+            return ColorMode.HS
+        return ColorMode.BRIGHTNESS
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return the supported color modes."""
+        if self._supports_color():
+            return {ColorMode.HS}
+        return {ColorMode.BRIGHTNESS}
 
     @property
     def is_on(self) -> bool:
@@ -172,18 +188,26 @@ class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         channel = self.get_channel_or_raise()
-        hs_color = kwargs.get(ATTR_HS_COLOR, (0.0, 0.0))
-        hue = hs_color[0] % 360.0
-        saturation = hs_color[1] / 100.0
         dim_level = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 255.0, 2)
-
-        if ATTR_HS_COLOR not in kwargs:
-            hue = channel.hue
-            saturation = channel.saturationLevel
 
         if ATTR_BRIGHTNESS not in kwargs:
             # If no brightness is set, use the current brightness
             dim_level = channel.dimLevel or 1.0
+
+        # Use dim-only method for monochrome mode (hue/saturation not supported)
+        if not self._supports_color():
+            await channel.set_dim_level_async(dim_level=dim_level)
+            return
+
+        # Full color mode with hue/saturation
+        if ATTR_HS_COLOR in kwargs:
+            hs_color = kwargs[ATTR_HS_COLOR]
+            hue = hs_color[0] % 360.0
+            saturation = hs_color[1] / 100.0
+        else:
+            hue = channel.hue
+            saturation = channel.saturationLevel
+
         await channel.set_hue_saturation_dim_level_async(
             hue=hue, saturation_level=saturation, dim_level=dim_level
         )

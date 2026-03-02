@@ -4,6 +4,7 @@
   "codeowners": ["@Lash-L"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/snoo",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["snoo"],
   "quality_scale": "bronze",

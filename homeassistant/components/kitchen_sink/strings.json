@@ -32,6 +32,24 @@
           "description": "Reconfigure the sensor"
         }
       }
+    },
+    "infrared_fan": {
+      "abort": {
+        "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+      },
+      "entry_type": "Infrared fan",
+      "initiate_flow": {
+        "user": "Add infrared fan"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "infrared_entity_id": "Infrared transmitter",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "description": "Select an infrared transmitter to control the fan."
+        }
+      }
     }
   },
   "device": {
