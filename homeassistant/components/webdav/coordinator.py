@@ -67,4 +67,10 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
         except WebDavError as err:
             raise UpdateFailed(f"Failed to fetch quota data: {err}") from err
 
+        if quota.available_bytes is None and quota.used_bytes is None:
+            _LOGGER.debug("WebDAV server does not provide quota information")
+            self._supports_quota = False
+            self.update_interval = None
+            return WebDavData(quota=None)
+
         return WebDavData(quota=quota)

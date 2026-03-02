@@ -96,7 +96,7 @@ class WebDavSensor(CoordinatorEntity[WebDavCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name="WebDAV",
+            name=coordinator.config_entry.title,
         )
 
     @property
