@@ -16,8 +16,6 @@ from tests.common import MockConfigEntry
 TEST_USERNAME = "12345678"
 TEST_ACCESS_TOKEN = "test_token_123"
 CONF_INPUT = {CONF_USERNAME: TEST_USERNAME, CONF_ACCESS_TOKEN: TEST_ACCESS_TOKEN}
-CONF_INPUT_OTHER = {CONF_USERNAME: TEST_USERNAME, CONF_ACCESS_TOKEN: "other_token"}
-ENTITY_ID = f"{NOTIFY_DOMAIN}.free_mobile"
 
 
 @pytest.fixture
@@ -56,7 +54,7 @@ def mock_freesms_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture
 async def configure_free_mobile_through_yaml(
-    hass: HomeAssistant, mock_freesms: Generator[AsyncMock]
+    hass: HomeAssistant, mock_freesms: AsyncMock
 ) -> None:
     """Configure the notify domain with YAML for the Free Mobile platform."""
     await async_setup_component(
