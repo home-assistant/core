@@ -68,9 +68,12 @@ async def async_setup_entry(
             if token_exp_str:
                 with contextlib.suppress(ValueError):
                     token_exp = datetime.fromisoformat(token_exp_str)
+                    if token_exp.tzinfo is None:
+                        token_exp = token_exp.replace(tzinfo=datetime.UTC)
 
             # Check if token is still valid
-            if token_exp is None or datetime.now() < token_exp:
+            now = datetime.now(datetime.UTC)
+            if token_exp is None or now < token_exp:
                 api.set_token(token, token_exp, api_base)
                 _LOGGER.debug("Restored Eufy Security session from stored crypto state")
 
