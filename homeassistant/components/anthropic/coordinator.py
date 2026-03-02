@@ -105,13 +105,14 @@ class AnthropicCoordinator(
 
     def _map_exception(self, err: Exception) -> Exception:
         """Map Anthropic API exceptions to Home Assistant exceptions."""
+        message = getattr(err, "message", None) or str(err)
         exc = err
         if isinstance(err, anthropic.APITimeoutError):
-            exc = TimeoutError(err.message)
+            exc = TimeoutError(message)
         if isinstance(err, anthropic.AuthenticationError):
-            exc = ConfigEntryAuthFailed(err.message)
+            exc = ConfigEntryAuthFailed(message)
         elif isinstance(err, anthropic.APIError):
-            exc = UpdateFailed(err.message)
+            exc = UpdateFailed(message)
         if exc is not err:
             exc.__cause__ = err
             exc.__suppress_context__ = True
@@ -120,7 +121,7 @@ class AnthropicCoordinator(
     async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
         """Fetch data from the API."""
         try:
-            data = (await self.client.models.list()).data
+            data = (await self.client.models.list(timeout=10.0)).data
             if not self.last_update_success:
                 self.logger.info("Claude API is available")
         except anthropic.AnthropicError as err:
