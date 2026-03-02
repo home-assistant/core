@@ -138,9 +138,7 @@ async def async_setup_entry(
 
     def _update_devices_from_api() -> None:
         """Keep runtime devices snapshot in sync with API device lists."""
-        devices["cameras"] = {
-            camera.serial: camera for camera in api.cameras.values()
-        }
+        devices["cameras"] = {camera.serial: camera for camera in api.cameras.values()}
         devices["stations"] = {
             station.serial: station for station in api.stations.values()
         }
