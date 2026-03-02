@@ -256,6 +256,14 @@
           "off": "mdi:tumble-dryer-off"
         }
       }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "default": "mdi:bell-ring"
+      },
+      "do_not_disturb_start_time": {
+        "default": "mdi:bell-cancel"
+      }
     }
   }
 }
