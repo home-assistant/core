@@ -241,15 +241,19 @@ async def test_group_volume_exception(
 ) -> None:
     """Tests handling of SoCoException when reading group volume."""
     _force_grouped(soco)
-    type(soco.group).volume = PropertyMock(side_effect=SoCoException("Boom!"))
 
-    await _setup_numbers_only(async_setup_sonos)
+    with patch.object(
+        type(soco.group), "volume", new_callable=PropertyMock
+    ) as mock_volume:
+        mock_volume.side_effect = SoCoException("Boom!")
 
-    await _refresh_group_volume_entity(hass)
+        await _setup_numbers_only(async_setup_sonos)
 
-    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
+        await _refresh_group_volume_entity(hass)
+
+        state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_group_volume_refreshes_on_topology_change(
