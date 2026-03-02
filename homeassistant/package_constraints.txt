@@ -76,7 +76,7 @@ voluptuous-openapi==0.2.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.22.0
+yarl==1.23.0
 zeroconf==0.148.0
 
 # Constrain pycryptodome to avoid vulnerability
