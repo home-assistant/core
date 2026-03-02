@@ -76,6 +76,9 @@
       "remote_control": {
         "name": "Remote control"
       },
+      "robot_cleaner_dust_bag": {
+        "name": "Dust bag full"
+      },
       "sub_remote_control": {
         "name": "Upper washer remote control"
       },
