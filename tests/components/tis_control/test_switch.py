@@ -119,6 +119,8 @@ async def test_setup_no_switches(hass: HomeAssistant) -> None:
             for _ in ():
                 yield
 
+        mock_api_instance.consume_events = _mock_consume_events
+
         # Ensure methods awaited in __init__ are AsyncMock.
         mock_api_instance.connect = AsyncMock()
         mock_api_instance.scan_devices = AsyncMock()
@@ -259,6 +261,8 @@ async def test_setup_switch_no_name(hass: HomeAssistant) -> None:
         async def _mock_consume_events() -> AsyncGenerator[None]:
             for _ in ():
                 yield
+
+        mock_api_instance.consume_events = _mock_consume_events
 
         # Ensure methods awaited in __init__ are AsyncMock.
         mock_api_instance.connect = AsyncMock()
