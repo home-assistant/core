@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          show_on_map:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

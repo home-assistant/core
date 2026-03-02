@@ -1,0 +1,49 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          dsn:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          environment:
+            required: false
+            selector:
+              text: {}
+          event_custom_components:
+            required: false
+            selector:
+              boolean: {}
+          event_handled:
+            required: false
+            selector:
+              boolean: {}
+          event_third_party_packages:
+            required: false
+            selector:
+              boolean: {}
+          logging_event_level:
+            required: false
+            selector:
+              select:
+                options: []
+          logging_level:
+            required: false
+            selector:
+              select:
+                options: []
+          tracing:
+            required: false
+            selector:
+              boolean: {}
+          tracing_sample_rate:
+            required: false
+            selector:
+              number:
+                mode: box
+  subentries: {}

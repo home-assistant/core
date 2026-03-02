@@ -1,0 +1,20 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          giid:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          lock_code_digits:
+            required: false
+            selector:
+              number:
+                mode: box
+  subentries: {}

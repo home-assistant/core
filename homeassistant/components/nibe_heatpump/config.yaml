@@ -1,0 +1,45 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          listening_port:
+            required: true
+            selector:
+              number:
+                min: 1
+                step: 1
+                max: 65535
+            default: 9999
+          modbus_unit:
+            required: true
+            selector:
+              number:
+                min: 0
+                step: 1
+            default: 0
+          modbus_url:
+            required: true
+            selector:
+              text: {}
+          remote_read_port:
+            required: true
+            selector:
+              number:
+                min: 1
+                step: 1
+                max: 65535
+            default: 9999
+          remote_write_port:
+            required: true
+            selector:
+              number:
+                min: 1
+                step: 1
+                max: 65535
+            default: 10000
+      options:
+        fields: {}
+  subentries: {}

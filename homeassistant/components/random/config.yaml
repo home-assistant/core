@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          device_class:
+            required: false
+            selector:
+              text: {}
+          maximum:
+            required: false
+            selector:
+              text: {}
+          minimum:
+            required: false
+            selector:
+              text: {}
+          unit_of_measurement:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,24 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          stations:
+            required: true
+            selector:
+              select:
+                options: []
+                multiple: true
+      options:
+        fields:
+          show_on_map:
+            required: false
+            selector:
+              text: {}
+          stations:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

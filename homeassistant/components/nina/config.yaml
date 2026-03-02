@@ -1,0 +1,66 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          _a_to_d:
+            required: false
+            selector:
+              text: {}
+          _e_to_h:
+            required: false
+            selector:
+              text: {}
+          _i_to_l:
+            required: false
+            selector:
+              text: {}
+          _m_to_q:
+            required: false
+            selector:
+              text: {}
+          _r_to_u:
+            required: false
+            selector:
+              text: {}
+          _v_to_z:
+            required: false
+            selector:
+              text: {}
+          slots:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          _a_to_d:
+            required: false
+            selector:
+              text: {}
+          _e_to_h:
+            required: false
+            selector:
+              text: {}
+          _i_to_l:
+            required: false
+            selector:
+              text: {}
+          _m_to_q:
+            required: false
+            selector:
+              text: {}
+          _r_to_u:
+            required: false
+            selector:
+              text: {}
+          _v_to_z:
+            required: false
+            selector:
+              text: {}
+          slots:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

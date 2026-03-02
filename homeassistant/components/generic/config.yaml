@@ -1,0 +1,35 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          confirmed_ok:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          still_image_url:
+            required: false
+            selector:
+              text: {}
+          stream_source:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          confirmed_ok:
+            required: true
+            selector:
+              boolean: {}
+            default: false
+  subentries: {}

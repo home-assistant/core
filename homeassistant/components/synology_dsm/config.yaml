@@ -1,0 +1,32 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          backup_path:
+            required: true
+            selector:
+              text: {}
+          backup_share:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                options: []
+          otp_code:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          backup_path:
+            required: false
+            selector:
+              text: {}
+          backup_share:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,54 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          service_account_info:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          encoding:
+            required: false
+            selector:
+              text: {}
+          gain:
+            required: false
+            selector:
+              text: {}
+          gender:
+            required: false
+            selector:
+              text: {}
+          language:
+            required: false
+            selector:
+              text: {}
+          pitch:
+            required: false
+            selector:
+              text: {}
+          profiles:
+            required: false
+            selector:
+              text: {}
+          speed:
+            required: false
+            selector:
+              text: {}
+          stt_model:
+            required: false
+            selector:
+              text: {}
+          text_type:
+            required: false
+            selector:
+              text: {}
+          voice:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

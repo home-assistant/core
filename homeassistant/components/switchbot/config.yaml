@@ -1,0 +1,23 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          encryption_key:
+            required: true
+            selector:
+              text: {}
+          key_id:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          retry_count:
+            required: false
+            selector:
+              number:
+                mode: box
+  subentries: {}

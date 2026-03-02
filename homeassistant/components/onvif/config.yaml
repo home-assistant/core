@@ -1,0 +1,19 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          auto:
+            required: true
+            selector:
+              boolean: {}
+            default: true
+      options:
+        fields:
+          enable_webhooks:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

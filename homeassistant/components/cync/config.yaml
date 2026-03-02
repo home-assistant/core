@@ -1,0 +1,26 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          authorize_string:
+            required: true
+            selector:
+              text: {}
+          expires_at:
+            required: true
+            selector:
+              text: {}
+          refresh_token:
+            required: true
+            selector:
+              text: {}
+          user_id:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

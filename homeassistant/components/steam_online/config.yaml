@@ -1,0 +1,24 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          account:
+            required: true
+            selector:
+              text: {}
+          api_key:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          accounts:
+            required: true
+            selector:
+              select:
+                options: []
+                multiple: true
+  subentries: {}

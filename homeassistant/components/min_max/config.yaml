@@ -1,0 +1,26 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          entity_ids:
+            required: false
+            selector:
+              text: {}
+          round_digits:
+            required: false
+            selector:
+              text: {}
+          type:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,21 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          sip_port:
+            required: true
+            selector:
+              number:
+                mode: box
+                min: 1
+                max: 65535
+          sip_user:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

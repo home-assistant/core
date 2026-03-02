@@ -1,0 +1,36 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          gateway:
+            required: true
+            selector:
+              select:
+                options: []
+          knxkeys_file:
+            required: true
+            selector:
+              text: {}
+          tunneling_type:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          rate_limit:
+            required: false
+            selector:
+              text: {}
+          state_updater:
+            required: false
+            selector:
+              text: {}
+          telegram_log_size:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

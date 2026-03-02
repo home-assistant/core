@@ -1,0 +1,18 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          scan_interval:
+            required: true
+            selector:
+              text: {}
+          session:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

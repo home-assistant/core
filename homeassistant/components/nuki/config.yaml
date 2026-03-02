@@ -1,0 +1,15 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          encrypt_token:
+            required: false
+            selector:
+              boolean: {}
+            default: true
+      options:
+        fields: {}
+  subentries: {}

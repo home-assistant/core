@@ -1,0 +1,54 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          addr:
+            required: false
+            selector:
+              text: {}
+          led:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          number:
+            required: false
+            selector:
+              text: {}
+          rate:
+            required: false
+            selector:
+              text: {}
+          release_delay:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

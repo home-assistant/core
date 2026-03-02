@@ -1,0 +1,52 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          integration_created_addon:
+            required: true
+            selector:
+              text: {}
+          lr_s2_access_control_key:
+            required: false
+            selector:
+              text: {}
+          lr_s2_authenticated_key:
+            required: false
+            selector:
+              text: {}
+          s0_legacy_key:
+            required: false
+            selector:
+              text: {}
+          s2_access_control_key:
+            required: false
+            selector:
+              text: {}
+          s2_authenticated_key:
+            required: false
+            selector:
+              text: {}
+          s2_unauthenticated_key:
+            required: false
+            selector:
+              text: {}
+          socket_path:
+            required: false
+            selector:
+              text: {}
+          usb_path:
+            required: false
+            selector:
+              select:
+                options: []
+          use_addon:
+            required: false
+            selector:
+              boolean: {}
+            default: true
+      options:
+        fields: {}
+  subentries: {}

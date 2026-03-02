@@ -1,0 +1,18 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          station_id:
+            required: true
+            selector:
+              select:
+                multiple: false
+                sort: true
+                mode: dropdown
+                options: []
+      options:
+        fields: {}
+  subentries: {}

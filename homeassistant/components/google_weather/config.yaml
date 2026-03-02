@@ -1,0 +1,39 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          api_key:
+            required: false
+            selector:
+              text: {}
+          location:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries:
+    location:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              location:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}

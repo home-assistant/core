@@ -1,0 +1,19 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          integration_created_addon:
+            required: true
+            selector:
+              text: {}
+          use_addon:
+            required: false
+            selector:
+              boolean: {}
+            default: true
+      options:
+        fields: {}
+  subentries: {}

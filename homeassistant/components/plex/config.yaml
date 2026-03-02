@@ -1,0 +1,41 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          server_id:
+            required: true
+            selector:
+              select:
+                options: []
+          setup_method:
+            required: true
+            selector:
+              select:
+                options:
+                  - Obtain a new token from plex.tv
+                  - Configure Plex server manually
+            default: Obtain a new token from plex.tv
+      options:
+        fields:
+          ignore_new_shared_users:
+            required: true
+            selector:
+              boolean: {}
+          ignore_plex_web_clients:
+            required: true
+            selector:
+              boolean: {}
+          monitored_users:
+            required: false
+            selector:
+              select:
+                options: []
+                multiple: true
+          use_episode_art:
+            required: true
+            selector:
+              boolean: {}
+  subentries: {}

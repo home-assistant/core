@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          channels:
+            required: true
+            selector:
+              select:
+                multiple: true
+                options: []
+      options:
+        fields:
+          channels:
+            required: true
+            selector:
+              select:
+                multiple: true
+                options: []
+  subentries: {}

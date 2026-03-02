@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          gcid:
+            required: true
+            selector:
+              text: {}
+          refresh_token:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          read_only:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

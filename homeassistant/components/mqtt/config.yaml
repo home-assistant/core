@@ -1,0 +1,145 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          broker:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          advanced_options:
+            required: false
+            selector:
+              text: {}
+          birth_enable:
+            required: false
+            selector:
+              text: {}
+          birth_payload:
+            required: false
+            selector:
+              text: {}
+          birth_qos:
+            required: false
+            selector:
+              text: {}
+          birth_retain:
+            required: false
+            selector:
+              text: {}
+          birth_topic:
+            required: false
+            selector:
+              text: {}
+          broker:
+            required: false
+            selector:
+              text: {}
+          certificate:
+            required: false
+            selector:
+              text: {}
+          client_cert:
+            required: false
+            selector:
+              text: {}
+          client_id:
+            required: false
+            selector:
+              text: {}
+          client_key:
+            required: false
+            selector:
+              text: {}
+          discovery:
+            required: false
+            selector:
+              text: {}
+          discovery_prefix:
+            required: false
+            selector:
+              text: {}
+          keepalive:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              text: {}
+          protocol:
+            required: false
+            selector:
+              text: {}
+          set_ca_cert:
+            required: false
+            selector:
+              text: {}
+          set_client_cert:
+            required: false
+            selector:
+              text: {}
+          tls_insecure:
+            required: false
+            selector:
+              text: {}
+          transport:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+          will_enable:
+            required: false
+            selector:
+              text: {}
+          will_payload:
+            required: false
+            selector:
+              text: {}
+          will_qos:
+            required: false
+            selector:
+              text: {}
+          will_retain:
+            required: false
+            selector:
+              text: {}
+          will_topic:
+            required: false
+            selector:
+              text: {}
+          ws_headers:
+            required: false
+            selector:
+              text: {}
+          ws_path:
+            required: false
+            selector:
+              text: {}
+  subentries:
+    mqtt:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              component:
+                required: true
+                selector:
+                  select:
+                    mode: list
+                    options: []
+          options:
+            fields: {}

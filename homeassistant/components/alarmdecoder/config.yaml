@@ -1,0 +1,29 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device_baudrate:
+            required: true
+            selector:
+              number:
+                mode: box
+            default: 115200
+          device_path:
+            required: true
+            selector:
+              text: {}
+            default: /dev/ttyUSB0
+      options:
+        fields:
+          arm_options:
+            required: false
+            selector:
+              text: {}
+          zone_options:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

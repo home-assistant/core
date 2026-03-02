@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          address:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          ssid:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

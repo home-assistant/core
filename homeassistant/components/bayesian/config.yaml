@@ -1,0 +1,111 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          above:
+            required: false
+            selector:
+              text: {}
+          below:
+            required: false
+            selector:
+              text: {}
+          device_class:
+            required: false
+            selector:
+              text: {}
+          entity_id:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          prior:
+            required: false
+            selector:
+              text: {}
+          prob_given_false:
+            required: false
+            selector:
+              text: {}
+          prob_given_true:
+            required: false
+            selector:
+              text: {}
+          probability_threshold:
+            required: false
+            selector:
+              text: {}
+          to_state:
+            required: false
+            selector:
+              text: {}
+          value_template:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          device_class:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          prior:
+            required: false
+            selector:
+              text: {}
+          probability_threshold:
+            required: false
+            selector:
+              text: {}
+  subentries:
+    observation:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              above:
+                required: false
+                selector:
+                  text: {}
+              below:
+                required: false
+                selector:
+                  text: {}
+              entity_id:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+              prob_given_false:
+                required: false
+                selector:
+                  text: {}
+              prob_given_true:
+                required: false
+                selector:
+                  text: {}
+              to_state:
+                required: false
+                selector:
+                  text: {}
+              value_template:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}

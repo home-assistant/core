@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          id:
+            required: true
+            selector:
+              select:
+                options:
+                  - manual
+      options:
+        fields:
+          allow_hue_groups:
+            required: false
+            selector:
+              boolean: {}
+          allow_unreachable:
+            required: false
+            selector:
+              boolean: {}
+          ignore_availability:
+            required: false
+            selector:
+              select:
+                options: []
+                multiple: true
+  subentries: {}

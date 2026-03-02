@@ -1,0 +1,24 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          known_hosts:
+            required: false
+            selector:
+              select:
+                custom_value: true
+                options: []
+                multiple: true
+      options:
+        fields:
+          known_hosts:
+            required: false
+            selector:
+              select:
+                custom_value: true
+                options: []
+                multiple: true
+  subentries: {}

@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          zip_code:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

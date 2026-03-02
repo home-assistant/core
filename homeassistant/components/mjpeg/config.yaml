@@ -1,0 +1,58 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          mjpeg_url:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          still_image_url:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+          verify_ssl:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          mjpeg_url:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          still_image_url:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+          verify_ssl:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

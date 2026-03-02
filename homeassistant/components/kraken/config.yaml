@@ -1,0 +1,16 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          tracked_asset_pairs:
+            required: false
+            selector:
+              select:
+                options: []
+                multiple: true
+  subentries: {}

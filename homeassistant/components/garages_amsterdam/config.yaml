@@ -1,0 +1,15 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          garage_name:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields: {}
+  subentries: {}

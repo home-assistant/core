@@ -1,0 +1,15 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          unlock:
+            required: true
+            selector:
+              boolean: {}
+            default: false
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,26 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          expires:
+            required: true
+            selector:
+              text: {}
+          slid_token:
+            required: true
+            selector:
+              text: {}
+          slnet_token:
+            required: true
+            selector:
+              text: {}
+          user_id:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

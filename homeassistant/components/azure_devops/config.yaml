@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          organization:
+            required: true
+            selector:
+              text: {}
+          personal_access_token:
+            required: true
+            selector:
+              text: {}
+          project:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

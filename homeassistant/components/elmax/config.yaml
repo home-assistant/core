@@ -1,0 +1,26 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          panel_id:
+            required: true
+            selector:
+              text: {}
+          panel_pin:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+          username:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

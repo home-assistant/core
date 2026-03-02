@@ -1,0 +1,82 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          communication_delay:
+            required: true
+            selector:
+              text: {}
+          username:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+          pin:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          A:
+            required: false
+            selector:
+              text: {}
+          B:
+            required: false
+            selector:
+              text: {}
+          C:
+            required: false
+            selector:
+              text: {}
+          D:
+            required: false
+            selector:
+              text: {}
+          arm:
+            required: false
+            selector:
+              text: {}
+          armed_away:
+            required: false
+            selector:
+              text: {}
+          armed_custom_bypass:
+            required: false
+            selector:
+              text: {}
+          armed_home:
+            required: false
+            selector:
+              text: {}
+          armed_night:
+            required: false
+            selector:
+              text: {}
+          code_arm_required:
+            required: false
+            selector:
+              text: {}
+          code_disarm_required:
+            required: false
+            selector:
+              text: {}
+          concurrency:
+            required: false
+            selector:
+              text: {}
+          partial_arm:
+            required: false
+            selector:
+              text: {}
+          scan_interval:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

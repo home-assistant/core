@@ -1,0 +1,29 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          default_dimmer_level:
+            required: true
+            selector:
+              number:
+                min: 1
+                max: 255
+                mode: slider
+  subentries: {}

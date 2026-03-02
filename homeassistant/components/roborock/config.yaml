@@ -1,0 +1,90 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          base_url:
+            required: true
+            selector:
+              text: {}
+          user_data:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          charger:
+            required: false
+            selector:
+              text: {}
+          cleaned_area:
+            required: false
+            selector:
+              text: {}
+          goto_path:
+            required: false
+            selector:
+              text: {}
+          ignored_obstacles:
+            required: false
+            selector:
+              text: {}
+          ignored_obstacles_with_photo:
+            required: false
+            selector:
+              text: {}
+          mop_path:
+            required: false
+            selector:
+              text: {}
+          no_carpet_zones:
+            required: false
+            selector:
+              text: {}
+          no_go_zones:
+            required: false
+            selector:
+              text: {}
+          no_mopping_zones:
+            required: false
+            selector:
+              text: {}
+          obstacles:
+            required: false
+            selector:
+              text: {}
+          obstacles_with_photo:
+            required: false
+            selector:
+              text: {}
+          path:
+            required: false
+            selector:
+              text: {}
+          predicted_path:
+            required: false
+            selector:
+              text: {}
+          room_names:
+            required: false
+            selector:
+              text: {}
+          show_background:
+            required: false
+            selector:
+              text: {}
+          vacuum_position:
+            required: false
+            selector:
+              text: {}
+          virtual_walls:
+            required: false
+            selector:
+              text: {}
+          zones:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

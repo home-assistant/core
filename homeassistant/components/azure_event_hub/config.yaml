@@ -1,0 +1,39 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          event_hub_connection_string:
+            required: true
+            selector:
+              text: {}
+          event_hub_instance_name:
+            required: true
+            selector:
+              text: {}
+          event_hub_namespace:
+            required: true
+            selector:
+              text: {}
+          event_hub_sas_key:
+            required: true
+            selector:
+              text: {}
+          event_hub_sas_policy:
+            required: true
+            selector:
+              text: {}
+          use_connection_string:
+            required: false
+            selector:
+              boolean: {}
+            default: false
+      options:
+        fields:
+          send_interval:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

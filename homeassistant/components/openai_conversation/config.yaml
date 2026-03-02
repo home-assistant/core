@@ -1,0 +1,128 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 6
+      data:
+        fields:
+          api_key:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries:
+    ai_task_data:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+                default: gpt-4o-mini
+              max_tokens:
+                required: false
+                selector:
+                  number:
+                    mode: box
+                default: 3000
+              temperature:
+                required: false
+                selector:
+                  number:
+                    min: 0
+                    max: 2
+                    step: 0.05
+                default: 1.0
+              top_p:
+                required: false
+                selector:
+                  number:
+                    min: 0
+                    max: 1
+                    step: 0.05
+                default: 1.0
+          options:
+            fields: {}
+    conversation:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+                default: gpt-4o-mini
+              max_tokens:
+                required: false
+                selector:
+                  number:
+                    mode: box
+                default: 3000
+              temperature:
+                required: false
+                selector:
+                  number:
+                    min: 0
+                    max: 2
+                    step: 0.05
+                default: 1.0
+              top_p:
+                required: false
+                selector:
+                  number:
+                    min: 0
+                    max: 1
+                    step: 0.05
+                default: 1.0
+          options:
+            fields: {}
+    stt:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+              prompt:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}
+    tts:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              name:
+                required: false
+                selector:
+                  text: {}
+              prompt:
+                required: false
+                selector:
+                  text: {}
+              tts_speed:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}

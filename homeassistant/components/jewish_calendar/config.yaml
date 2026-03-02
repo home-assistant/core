@@ -1,0 +1,38 @@
+config_entry:
+  versions:
+    - version:
+        major: 3
+        minor: 1
+      data:
+        fields:
+          diaspora:
+            required: false
+            selector:
+              text: {}
+          elevation:
+            required: false
+            selector:
+              text: {}
+          language:
+            required: false
+            selector:
+              text: {}
+          location:
+            required: false
+            selector:
+              text: {}
+          time_zone:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          candle_lighting_minutes_before_sunset:
+            required: false
+            selector:
+              text: {}
+          havdalah_minutes_after_sunset:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

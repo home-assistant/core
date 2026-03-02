@@ -1,0 +1,42 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device_desc:
+            required: true
+            selector:
+              text: {}
+          device_id:
+            required: true
+            selector:
+              text: {}
+          device_type:
+            required: true
+            selector:
+              text: {}
+          drop_command_topic:
+            required: true
+            selector:
+              text: {}
+          drop_data_topic:
+            required: true
+            selector:
+              text: {}
+          drop_device_owner_id:
+            required: true
+            selector:
+              text: {}
+          drop_hub_id:
+            required: true
+            selector:
+              text: {}
+          name:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 3
+      data:
+        fields: {}
+      options:
+        fields:
+          invert:
+            required: false
+            selector:
+              text: {}
+          entity_id:
+            required: false
+            selector:
+              text: {}
+          target_domain:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

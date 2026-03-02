@@ -1,0 +1,20 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          listen_port:
+            required: true
+            selector:
+              number:
+                mode: box
+            default: 8060
+          name:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

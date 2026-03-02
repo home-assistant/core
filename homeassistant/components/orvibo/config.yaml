@@ -1,0 +1,23 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          switches:
+            required: true
+            selector:
+              select:
+                options: []
+          host:
+            required: true
+            selector:
+              text: {}
+          mac:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

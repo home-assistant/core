@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          counter_id:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

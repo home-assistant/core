@@ -1,0 +1,15 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          web_port:
+            required: false
+            selector:
+              number:
+                mode: box
+      options:
+        fields: {}
+  subentries: {}

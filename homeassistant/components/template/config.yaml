@@ -1,0 +1,290 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields: {}
+      options:
+        fields:
+          arm_away:
+            required: false
+            selector:
+              text: {}
+          arm_custom_bypass:
+            required: false
+            selector:
+              text: {}
+          arm_home:
+            required: false
+            selector:
+              text: {}
+          arm_night:
+            required: false
+            selector:
+              text: {}
+          arm_vacation:
+            required: false
+            selector:
+              text: {}
+          backup:
+            required: false
+            selector:
+              text: {}
+          clean_spot:
+            required: false
+            selector:
+              text: {}
+          close_cover:
+            required: false
+            selector:
+              text: {}
+          code_arm_required:
+            required: false
+            selector:
+              text: {}
+          code_format:
+            required: false
+            selector:
+              text: {}
+          condition:
+            required: false
+            selector:
+              text: {}
+          device_class:
+            required: false
+            selector:
+              text: {}
+          device_id:
+            required: false
+            selector:
+              text: {}
+          disarm:
+            required: false
+            selector:
+              text: {}
+          event_type:
+            required: false
+            selector:
+              text: {}
+          event_types:
+            required: false
+            selector:
+              text: {}
+          fan_speed:
+            required: false
+            selector:
+              text: {}
+          fan_speeds:
+            required: false
+            selector:
+              text: {}
+          forecast_daily:
+            required: false
+            selector:
+              text: {}
+          forecast_hourly:
+            required: false
+            selector:
+              text: {}
+          hs:
+            required: false
+            selector:
+              text: {}
+          humidity:
+            required: false
+            selector:
+              text: {}
+          in_progress:
+            required: false
+            selector:
+              text: {}
+          install:
+            required: false
+            selector:
+              text: {}
+          installed_version:
+            required: false
+            selector:
+              text: {}
+          latest_version:
+            required: false
+            selector:
+              text: {}
+          level:
+            required: false
+            selector:
+              text: {}
+          locate:
+            required: false
+            selector:
+              text: {}
+          lock:
+            required: false
+            selector:
+              text: {}
+          max:
+            required: false
+            selector:
+              text: {}
+          min:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          open:
+            required: false
+            selector:
+              text: {}
+          open_cover:
+            required: false
+            selector:
+              text: {}
+          options:
+            required: false
+            selector:
+              text: {}
+          pause:
+            required: false
+            selector:
+              text: {}
+          percentage:
+            required: false
+            selector:
+              text: {}
+          position:
+            required: false
+            selector:
+              text: {}
+          press:
+            required: false
+            selector:
+              text: {}
+          release_summary:
+            required: false
+            selector:
+              text: {}
+          release_url:
+            required: false
+            selector:
+              text: {}
+          return_to_base:
+            required: false
+            selector:
+              text: {}
+          select_option:
+            required: false
+            selector:
+              text: {}
+          set_cover_position:
+            required: false
+            selector:
+              text: {}
+          set_fan_speed:
+            required: false
+            selector:
+              text: {}
+          set_hs:
+            required: false
+            selector:
+              text: {}
+          set_level:
+            required: false
+            selector:
+              text: {}
+          set_percentage:
+            required: false
+            selector:
+              text: {}
+          set_temperature:
+            required: false
+            selector:
+              text: {}
+          set_value:
+            required: false
+            selector:
+              text: {}
+          specific_version:
+            required: false
+            selector:
+              text: {}
+          speed_count:
+            required: false
+            selector:
+              text: {}
+          start:
+            required: false
+            selector:
+              text: {}
+          state:
+            required: false
+            selector:
+              text: {}
+          state_class:
+            required: false
+            selector:
+              text: {}
+          step:
+            required: false
+            selector:
+              text: {}
+          stop:
+            required: false
+            selector:
+              text: {}
+          stop_cover:
+            required: false
+            selector:
+              text: {}
+          temperature:
+            required: false
+            selector:
+              text: {}
+          temperature_unit:
+            required: false
+            selector:
+              text: {}
+          title:
+            required: false
+            selector:
+              text: {}
+          trigger:
+            required: false
+            selector:
+              text: {}
+          turn_off:
+            required: false
+            selector:
+              text: {}
+          turn_on:
+            required: false
+            selector:
+              text: {}
+          unit_of_measurement:
+            required: false
+            selector:
+              text: {}
+          unlock:
+            required: false
+            selector:
+              text: {}
+          update_percentage:
+            required: false
+            selector:
+              text: {}
+          url:
+            required: false
+            selector:
+              text: {}
+          value_template:
+            required: false
+            selector:
+              text: {}
+          verify_ssl:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

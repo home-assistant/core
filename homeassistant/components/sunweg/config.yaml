@@ -1,0 +1,10 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields: {}
+  subentries: {}

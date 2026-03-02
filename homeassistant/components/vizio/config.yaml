@@ -1,0 +1,42 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          access_token:
+            required: false
+            selector:
+              text: {}
+          device_class:
+            required: false
+            selector:
+              text: {}
+          host:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          pin:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          apps_to_include_or_exclude:
+            required: false
+            selector:
+              text: {}
+          include_or_exclude:
+            required: false
+            selector:
+              text: {}
+          volume_step:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

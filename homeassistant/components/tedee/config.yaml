@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          local_access_token:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

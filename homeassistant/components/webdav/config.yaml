@@ -1,0 +1,31 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          backup_path:
+            required: false
+            selector:
+              text: {}
+            default: /
+          url:
+            required: true
+            selector:
+              text: {}
+          username:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+          verify_ssl:
+            required: false
+            selector:
+              boolean: {}
+      options:
+        fields: {}
+  subentries: {}

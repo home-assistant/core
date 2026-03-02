@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          hostname:
+            required: true
+            selector:
+              text: {}
+          ssl_certificate:
+            required: true
+            selector:
+              text: {}
+          ssl_key:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

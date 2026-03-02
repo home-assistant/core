@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          advanced_options:
+            required: true
+            selector:
+              text: {}
+          column:
+            required: true
+            selector:
+              text: {}
+          query:
+            required: true
+            selector:
+              template: {}
+      options:
+        fields:
+          column:
+            required: false
+            selector:
+              text: {}
+          query:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

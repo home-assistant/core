@@ -1,0 +1,23 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          contact_method:
+            required: true
+            selector:
+              select:
+                options: []
+          validation_code:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          update_enabled:
+            required: true
+            selector:
+              boolean: {}
+  subentries: {}

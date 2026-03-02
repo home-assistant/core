@@ -1,0 +1,54 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          api_key:
+            required: false
+            selector:
+              text: {}
+          distance:
+            required: false
+            selector:
+              text: {}
+          latitude:
+            required: false
+            selector:
+              text: {}
+          longitude:
+            required: false
+            selector:
+              text: {}
+          sensor_index:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          distance:
+            required: false
+            selector:
+              text: {}
+          latitude:
+            required: false
+            selector:
+              text: {}
+          longitude:
+            required: false
+            selector:
+              text: {}
+          sensor_device_id:
+            required: false
+            selector:
+              text: {}
+          sensor_index:
+            required: false
+            selector:
+              text: {}
+          show_on_map:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

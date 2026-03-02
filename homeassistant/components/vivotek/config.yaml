@@ -1,0 +1,55 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          security_level:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                translation_key: security_level
+                sort: true
+                options: []
+          stream_path:
+            required: true
+            selector:
+              text: {}
+          ip_address:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: true
+            selector:
+              text: {}
+          username:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+          authentication:
+            required: true
+            selector:
+              text: {}
+          ssl:
+            required: true
+            selector:
+              boolean: {}
+          verify_ssl:
+            required: true
+            selector:
+              boolean: {}
+      options:
+        fields:
+          framerate:
+            required: true
+            selector:
+              number:
+                min: 0
+  subentries: {}

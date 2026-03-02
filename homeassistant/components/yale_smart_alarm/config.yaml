@@ -1,0 +1,19 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 2
+      data:
+        fields:
+          area_id:
+            required: true
+            selector:
+              text: {}
+            default: "1"
+      options:
+        fields:
+          lock_code_digits:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

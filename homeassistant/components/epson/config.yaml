@@ -1,0 +1,27 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          connection_type:
+            required: true
+            selector:
+              select:
+                options:
+                  - http
+                  - serial
+                translation_key: connection_type
+            default: http
+          host:
+            required: true
+            selector:
+              text: {}
+          name:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

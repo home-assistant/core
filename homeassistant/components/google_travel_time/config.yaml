@@ -1,0 +1,54 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          destination:
+            required: true
+            selector:
+              text: {}
+          origin:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          avoid:
+            required: false
+            selector:
+              text: {}
+          time:
+            required: false
+            selector:
+              time: {}
+          time_type:
+            required: true
+            selector:
+              text: {}
+          traffic_model:
+            required: false
+            selector:
+              text: {}
+          transit_mode:
+            required: false
+            selector:
+              text: {}
+          transit_routing_preference:
+            required: false
+            selector:
+              text: {}
+          units:
+            required: true
+            selector:
+              text: {}
+          language:
+            required: false
+            selector:
+              text: {}
+          mode:
+            required: true
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          balancing_authority:
+            required: true
+            selector:
+              text: {}
+          balancing_authority_abbreviation:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          show_on_map:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,21 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          rate:
+            required: true
+            selector:
+              number:
+                mode: box
+            default: 1
+      options:
+        fields:
+          rate:
+            required: true
+            selector:
+              number:
+                mode: box
+  subentries: {}

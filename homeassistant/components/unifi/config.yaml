@@ -1,0 +1,66 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          site:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          allow_bandwidth_sensors:
+            required: false
+            selector:
+              boolean: {}
+          allow_uptime_sensors:
+            required: false
+            selector:
+              boolean: {}
+          block_client:
+            required: false
+            selector:
+              select:
+                options: []
+                multiple: true
+          client_source:
+            required: false
+            selector:
+              select:
+                options: []
+                multiple: true
+          detection_time:
+            required: false
+            selector:
+              number:
+                mode: box
+          dpi_restrictions:
+            required: false
+            selector:
+              boolean: {}
+          ignore_wired_bug:
+            required: false
+            selector:
+              boolean: {}
+          ssid_filter:
+            required: false
+            selector:
+              select:
+                options: []
+                multiple: true
+          track_clients:
+            required: false
+            selector:
+              boolean: {}
+          track_devices:
+            required: false
+            selector:
+              boolean: {}
+          track_wired_clients:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

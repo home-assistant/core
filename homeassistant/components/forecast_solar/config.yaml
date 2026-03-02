@@ -1,0 +1,39 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          azimuth:
+            required: true
+            selector:
+              number:
+                mode: box
+            default: 180
+          declination:
+            required: true
+            selector:
+              number:
+                mode: box
+            default: 25
+          modules_power:
+            required: true
+            selector:
+              number:
+                mode: box
+      options:
+        fields:
+          azimuth:
+            required: false
+            selector:
+              text: {}
+          declination:
+            required: false
+            selector:
+              text: {}
+          modules_power:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

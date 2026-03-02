@@ -1,0 +1,18 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          refresh_token:
+            required: true
+            selector:
+              text: {}
+          user_uuid:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

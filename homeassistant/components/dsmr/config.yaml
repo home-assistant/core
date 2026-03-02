@@ -1,0 +1,20 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          dsmr_version:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          time_between_update:
+            required: false
+            selector:
+              number:
+                mode: box
+  subentries: {}

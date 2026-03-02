@@ -1,0 +1,54 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device:
+            required: true
+            selector:
+              text: {}
+          firmware:
+            required: true
+            selector:
+              text: {}
+          firmware_version:
+            required: true
+            selector:
+              text: {}
+          manufacturer:
+            required: true
+            selector:
+              text: {}
+          pid:
+            required: true
+            selector:
+              text: {}
+          product:
+            required: true
+            selector:
+              text: {}
+          serial_number:
+            required: true
+            selector:
+              text: {}
+          vid:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          channel:
+            required: false
+            selector:
+              text: {}
+          disable_multi_pan:
+            required: false
+            selector:
+              text: {}
+          enable_multi_pan:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

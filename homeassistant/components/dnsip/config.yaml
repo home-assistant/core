@@ -1,0 +1,35 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          hostname:
+            required: true
+            selector:
+              text: {}
+            default: myip.opendns.com
+          ipv4:
+            required: true
+            selector:
+              text: {}
+          ipv6:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          port_ipv6:
+            required: false
+            selector:
+              text: {}
+          resolver:
+            required: false
+            selector:
+              text: {}
+          resolver_ipv6:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

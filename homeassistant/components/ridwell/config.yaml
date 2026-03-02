@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          password:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          conf_calendar_title:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

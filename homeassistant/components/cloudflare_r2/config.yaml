@@ -1,0 +1,31 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          access_key_id:
+            required: true
+            selector:
+              text: {}
+          bucket:
+            required: true
+            selector:
+              text: {}
+          endpoint_url:
+            required: true
+            selector:
+              text: {}
+          prefix:
+            required: false
+            selector:
+              text: {}
+            default: ""
+          secret_access_key:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,85 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: true
+            selector:
+              number:
+                mode: box
+                min: 1
+                max: 65535
+          infer_arming_state:
+            required: true
+            default: false
+            selector:
+              text: {}
+      options:
+        fields:
+          show_home_mode:
+            required: false
+            default: true
+            selector:
+              text: {}
+  subentries:
+    zone:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              zone_number:
+                required: true
+                selector:
+                  number:
+                    mode: box
+                    min: 1
+                    max: 32
+              type:
+                required: true
+                default: motion
+                selector:
+                  select:
+                    options:
+                      - battery
+                      - battery_charging
+                      - carbon_monoxide
+                      - cold
+                      - connectivity
+                      - door
+                      - garage_door
+                      - gas
+                      - heat
+                      - light
+                      - lock
+                      - moisture
+                      - motion
+                      - moving
+                      - occupancy
+                      - opening
+                      - plug
+                      - power
+                      - presence
+                      - problem
+                      - running
+                      - safety
+                      - smoke
+                      - sound
+                      - tamper
+                      - update
+                      - vibration
+                      - window
+              name:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}

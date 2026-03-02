@@ -1,0 +1,38 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields: {}
+      options:
+        fields:
+          max_sub_interval:
+            required: false
+            selector:
+              text: {}
+          method:
+            required: false
+            selector:
+              text: {}
+          round:
+            required: false
+            selector:
+              text: {}
+          source:
+            required: false
+            selector:
+              text: {}
+          unit_prefix:
+            required: false
+            selector:
+              text: {}
+          unit_time:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

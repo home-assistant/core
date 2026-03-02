@@ -1,0 +1,16 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          site_id:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                options: []
+      options:
+        fields: {}
+  subentries: {}

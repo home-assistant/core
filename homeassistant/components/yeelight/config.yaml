@@ -1,0 +1,38 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device:
+            required: false
+            selector:
+              text: {}
+          host:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          model:
+            required: false
+            selector:
+              text: {}
+          nightlight_switch:
+            required: false
+            selector:
+              text: {}
+          save_on_change:
+            required: false
+            selector:
+              text: {}
+          transition:
+            required: false
+            selector:
+              text: {}
+          use_music_mode:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

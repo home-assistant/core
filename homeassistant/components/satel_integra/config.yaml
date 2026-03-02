@@ -1,0 +1,231 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: true
+            default: 7094
+            selector:
+              number:
+                mode: box
+                min: 1
+                max: 65535
+      options:
+        fields:
+          code:
+            required: false
+            default: null
+            selector:
+              text:
+                type: password
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          host:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: true
+            default: 7094
+            selector:
+              number:
+                mode: box
+                min: 1
+                max: 65535
+      options:
+        fields:
+          code:
+            required: false
+            default: null
+            selector:
+              text:
+                type: password
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          host:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: true
+            default: 7094
+            selector:
+              number:
+                mode: box
+                min: 1
+                max: 65535
+      options:
+        fields:
+          code:
+            required: false
+            default: null
+            selector:
+              text:
+                type: password
+  subentries:
+    partition:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              partition_number:
+                required: true
+                selector:
+                  number:
+                    mode: box
+                    min: 1
+              name:
+                required: true
+                selector:
+                  text: {}
+              arm_home_mode:
+                required: true
+                default: 1
+                selector:
+                  number:
+                    mode: box
+                    min: 1
+                    max: 3
+                    step: 1
+          options:
+            fields: {}
+    zone:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              zone_number:
+                required: true
+                selector:
+                  number:
+                    mode: box
+                    min: 1
+              name:
+                required: true
+                selector:
+                  text: {}
+              type:
+                required: true
+                default: motion
+                selector:
+                  select:
+                    options:
+                      - battery
+                      - battery_charging
+                      - carbon_monoxide
+                      - cold
+                      - connectivity
+                      - door
+                      - garage_door
+                      - gas
+                      - heat
+                      - light
+                      - lock
+                      - moisture
+                      - motion
+                      - moving
+                      - occupancy
+                      - opening
+                      - plug
+                      - power
+                      - presence
+                      - problem
+                      - running
+                      - safety
+                      - smoke
+                      - sound
+                      - tamper
+                      - update
+                      - vibration
+                      - window
+          options:
+            fields: {}
+    output:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              output_number:
+                required: true
+                selector:
+                  number:
+                    mode: box
+                    min: 1
+              name:
+                required: true
+                selector:
+                  text: {}
+              type:
+                required: true
+                default: motion
+                selector:
+                  select:
+                    options:
+                      - battery
+                      - battery_charging
+                      - carbon_monoxide
+                      - cold
+                      - connectivity
+                      - door
+                      - garage_door
+                      - gas
+                      - heat
+                      - light
+                      - lock
+                      - moisture
+                      - motion
+                      - moving
+                      - occupancy
+                      - opening
+                      - plug
+                      - power
+                      - presence
+                      - problem
+                      - running
+                      - safety
+                      - smoke
+                      - sound
+                      - tamper
+                      - update
+                      - vibration
+                      - window
+          options:
+            fields: {}
+    switchable_output:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              switchable_output_number:
+                required: true
+                selector:
+                  number:
+                    mode: box
+                    min: 1
+              name:
+                required: true
+                selector:
+                  text: {}
+          options:
+            fields: {}

@@ -1,0 +1,34 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          blind_type:
+            required: true
+            selector:
+              select:
+                translation_key: blind_type
+                mode: dropdown
+                options: []
+          local_name:
+            required: true
+            selector:
+              text: {}
+          mac_code:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          disconnect_time:
+            required: false
+            selector:
+              number:
+                mode: box
+          permanent_connection:
+            required: true
+            selector:
+              boolean: {}
+  subentries: {}

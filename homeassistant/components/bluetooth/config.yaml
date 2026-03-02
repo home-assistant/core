@@ -1,0 +1,19 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          adapter:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          passive:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

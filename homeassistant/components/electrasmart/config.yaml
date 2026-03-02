@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          one_time_password:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

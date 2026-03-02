@@ -1,0 +1,27 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          key:
+            required: true
+            selector:
+              text: {}
+          local_name:
+            required: true
+            selector:
+              text: {}
+          slot:
+            required: true
+            selector:
+              number:
+                mode: box
+      options:
+        fields:
+          always_connected:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,26 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          from:
+            required: true
+            selector:
+              text: {}
+          time:
+            required: true
+            selector:
+              text: {}
+          to:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          filter_product:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

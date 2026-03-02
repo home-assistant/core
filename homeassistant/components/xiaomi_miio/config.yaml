@@ -1,0 +1,32 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          cloud_country:
+            required: false
+            selector:
+              select:
+                options: []
+            default: cn
+          cloud_password:
+            required: false
+            selector:
+              text: {}
+          cloud_username:
+            required: false
+            selector:
+              text: {}
+          config_flow_device:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          cloud_subdevices:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

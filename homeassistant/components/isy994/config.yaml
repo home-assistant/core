@@ -1,0 +1,42 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          tls:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          ignore_string:
+            required: false
+            selector:
+              text: {}
+          restore_light_state:
+            required: false
+            selector:
+              text: {}
+          sensor_string:
+            required: false
+            selector:
+              text: {}
+          variable_sensor_string:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,32 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          zone_run_time:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          allow_inactive_zones_to_run:
+            required: false
+            selector:
+              boolean: {}
+          use_app_run_times:
+            required: false
+            selector:
+              boolean: {}
+          zone_run_time:
+            required: false
+            selector:
+              number:
+                mode: box
+                min: 1
+          default_zone_run_time:
+            required: false
+            selector:
+              number: {}
+  subentries: {}

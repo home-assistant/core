@@ -1,0 +1,34 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          url:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          browse_unfiltered:
+            required: false
+            selector:
+              text: {}
+          callback_url_override:
+            required: false
+            selector:
+              text: {}
+          listen_port:
+            required: false
+            selector:
+              text: {}
+          poll_availability:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

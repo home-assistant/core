@@ -1,0 +1,20 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          gen:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          ble_scanner_mode:
+            required: true
+            selector:
+              select:
+                translation_key: ble_scanner_mode
+                options: []
+  subentries: {}

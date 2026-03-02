@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          id_or_passport:
+            required: false
+            selector:
+              text: {}
+          otp:
+            required: false
+            selector:
+              text: {}
+          phone_number:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

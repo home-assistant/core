@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          allow_clip_sensor:
+            required: false
+            selector:
+              text: {}
+          allow_deconz_groups:
+            required: false
+            selector:
+              text: {}
+          allow_new_devices:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,20 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          selected_gateway:
+            required: true
+            selector:
+              select:
+                options:
+                  - manual
+      options:
+        fields:
+          scan_interval:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

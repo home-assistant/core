@@ -1,0 +1,19 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          advanced_settings:
+            required: true
+            selector:
+              text: {}
+          mac_address:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields: {}
+  subentries: {}

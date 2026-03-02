@@ -1,0 +1,32 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          cloud_project_id:
+            required: true
+            selector:
+              text: {}
+          project_id:
+            required: true
+            selector:
+              text: {}
+          subscription_name:
+            required: false
+            selector:
+              select:
+                translation_key: subscription_name
+                mode: list
+                options: []
+          topic_name:
+            required: true
+            selector:
+              select:
+                translation_key: topic_name
+                mode: list
+                options: []
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,34 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          latitude:
+            required: true
+            selector:
+              number: {}
+          longitude:
+            required: true
+            selector:
+              number: {}
+      options:
+        fields:
+          calculation_method:
+            required: false
+            selector:
+              text: {}
+          latitude_adjustment_method:
+            required: false
+            selector:
+              text: {}
+          midnight_mode:
+            required: false
+            selector:
+              text: {}
+          school:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

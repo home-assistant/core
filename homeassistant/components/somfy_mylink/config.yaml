@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          system_id:
+            required: true
+            selector:
+              text: {}
+          host:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              number: {}
+      options:
+        fields:
+          reverse:
+            required: false
+            selector:
+              text: {}
+          target_id:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

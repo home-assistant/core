@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          is_new_style_scale:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

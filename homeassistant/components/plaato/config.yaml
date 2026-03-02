@@ -1,0 +1,27 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device_name:
+            required: true
+            selector:
+              text: {}
+          device_type:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          update_interval:
+            required: false
+            selector:
+              text: {}
+          scan_interval:
+            required: false
+            selector:
+              number: {}
+  subentries: {}

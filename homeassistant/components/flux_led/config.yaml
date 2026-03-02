@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          custom_effect_colors:
+            required: false
+            selector:
+              text: {}
+          custom_effect_speed_pct:
+            required: false
+            selector:
+              text: {}
+          custom_effect_transition:
+            required: false
+            selector:
+              text: {}
+          mode:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

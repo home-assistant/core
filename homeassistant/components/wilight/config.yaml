@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: true
+            selector:
+              text: {}
+          serial_number:
+            required: true
+            selector:
+              text: {}
+          model_name:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,48 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          api_key:
+            required: true
+            selector:
+              text:
+                type: password
+          station_number:
+            required: true
+            selector:
+              number:
+                mode: box
+                min: 0
+      options:
+        fields: {}
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          api_key:
+            required: true
+            selector:
+              text:
+                type: password
+      options:
+        fields: {}
+  subentries:
+    station:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              station_number:
+                required: true
+                selector:
+                  number:
+                    mode: box
+                    min: 0
+          options:
+            fields: {}

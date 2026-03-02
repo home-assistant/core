@@ -1,0 +1,45 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          destination:
+            required: true
+            selector:
+              location: {}
+          destination_entity_id:
+            required: true
+            selector:
+              entity: {}
+          origin:
+            required: true
+            selector:
+              location: {}
+          origin_entity_id:
+            required: true
+            selector:
+              entity: {}
+      options:
+        fields:
+          arrival_time:
+            required: true
+            selector:
+              time: {}
+            default: 00:00:00
+          departure_time:
+            required: true
+            selector:
+              time: {}
+            default: 00:00:00
+          route_mode:
+            required: false
+            selector:
+              select:
+                options: []
+          traffic_mode:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

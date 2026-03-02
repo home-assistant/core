@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          todo_list_name:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

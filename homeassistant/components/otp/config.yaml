@@ -1,0 +1,26 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          code:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          new_token:
+            required: false
+            selector:
+              text: {}
+          token:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

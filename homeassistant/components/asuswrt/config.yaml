@@ -1,0 +1,58 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          mode:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              text: {}
+          protocol:
+            required: false
+            selector:
+              text: {}
+          ssh_key:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          consider_home:
+            required: false
+            selector:
+              text: {}
+          dnsmasq:
+            required: false
+            selector:
+              text: {}
+          interface:
+            required: false
+            selector:
+              text: {}
+          require_ip:
+            required: false
+            selector:
+              text: {}
+          track_unknown:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

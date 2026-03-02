@@ -1,0 +1,19 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          nodes:
+            required: true
+            selector:
+              text: {}
+          realm:
+            required: false
+            selector:
+              text: {}
+            default: pam
+      options:
+        fields: {}
+  subentries: {}

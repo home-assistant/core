@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          broadcast_address:
+            required: false
+            selector:
+              text: {}
+          broadcast_port:
+            required: false
+            selector:
+              text: {}
+          mac:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

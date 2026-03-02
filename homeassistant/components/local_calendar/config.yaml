@@ -1,0 +1,27 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          calendar_name:
+            required: true
+            selector:
+              text: {}
+          ics_file:
+            required: true
+            selector:
+              text: {}
+          import:
+            required: false
+            selector:
+              select:
+                options:
+                  - create_empty
+                  - import_ics_file
+                translation_key: import
+            default: create_empty
+      options:
+        fields: {}
+  subentries: {}

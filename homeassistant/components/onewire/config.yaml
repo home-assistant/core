@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          clear_device_options:
+            required: false
+            selector:
+              text: {}
+          device_selection:
+            required: false
+            selector:
+              text: {}
+          precision:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

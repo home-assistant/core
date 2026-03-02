@@ -1,0 +1,42 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields: {}
+      options:
+        fields:
+          entity_id:
+            required: false
+            selector:
+              text: {}
+          keep_last_sample:
+            required: false
+            selector:
+              text: {}
+          max_age:
+            required: false
+            selector:
+              text: {}
+          percentile:
+            required: false
+            selector:
+              text: {}
+          precision:
+            required: false
+            selector:
+              text: {}
+          sampling_size:
+            required: false
+            selector:
+              text: {}
+          state_characteristic:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

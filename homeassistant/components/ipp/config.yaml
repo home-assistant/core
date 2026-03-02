@@ -1,0 +1,15 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          base_path:
+            required: true
+            selector:
+              text: {}
+            default: /ipp/print
+      options:
+        fields: {}
+  subentries: {}

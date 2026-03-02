@@ -1,0 +1,46 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          api_endpoint:
+            required: true
+            selector:
+              text: {}
+          proxy_url:
+            required: true
+            selector:
+              text: {}
+          trusted_networks:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          parse_mode:
+            required: true
+            selector:
+              select:
+                options:
+                  - markdown
+                  - markdownv2
+                  - html
+                  - plain_text
+                translation_key: parse_mode
+  subentries:
+    allowed_chat_ids:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_id:
+                required: true
+                selector:
+                  number:
+                    mode: box
+          options:
+            fields: {}

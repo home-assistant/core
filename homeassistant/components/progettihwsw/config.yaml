@@ -1,0 +1,20 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: true
+            selector:
+              text: {}
+          port:
+            required: true
+            selector:
+              number:
+                mode: box
+            default: 80
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,58 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          api_key:
+            required: false
+            default: null
+            selector:
+              text:
+                type: password
+      options:
+        fields: {}
+  subentries:
+    subway:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              line:
+                required: true
+                selector:
+                  text: {}
+              stop_id:
+                required: true
+                selector:
+                  text: {}
+              stop_name:
+                required: true
+                selector:
+                  text: {}
+          options:
+            fields: {}
+    bus:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              route:
+                required: true
+                selector:
+                  text: {}
+              stop_id:
+                required: true
+                selector:
+                  text: {}
+              stop_name:
+                required: true
+                selector:
+                  text: {}
+          options:
+            fields: {}

@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          service_code:
+            required: false
+            selector:
+              text: {}
+          host:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

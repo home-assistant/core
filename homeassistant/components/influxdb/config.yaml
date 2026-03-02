@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          bucket:
+            required: true
+            selector:
+              text:
+                type: text
+          database:
+            required: true
+            selector:
+              text:
+                type: text
+          organization:
+            required: true
+            selector:
+              text:
+                type: text
+          ssl_ca_cert:
+            required: false
+            selector:
+              file:
+                accept: .pem,.crt,.cer,.der
+      options:
+        fields: {}
+  subentries: {}

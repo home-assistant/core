@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          latitude:
+            required: false
+            selector:
+              text: {}
+          longitude:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          country_code:
+            required: false
+            selector:
+              text: {}
+          delta:
+            required: false
+            selector:
+              text: {}
+          timeframe:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 1
+      data:
+        fields:
+          place_id:
+            required: true
+            selector:
+              text: {}
+          service_id:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          friendly_name:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

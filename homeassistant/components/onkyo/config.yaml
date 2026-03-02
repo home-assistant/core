@@ -1,0 +1,36 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device:
+            required: true
+            selector:
+              select:
+                options: []
+          volume_resolution:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields:
+          input_sources:
+            required: false
+            selector:
+              text: {}
+          listening_modes:
+            required: false
+            selector:
+              text: {}
+          max_volume:
+            required: false
+            selector:
+              text: {}
+          volume_resolution:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          usercodes:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          auto_bypass_low_battery:
+            required: true
+            selector:
+              boolean: {}
+          code_required:
+            required: true
+            selector:
+              boolean: {}
+  subentries: {}

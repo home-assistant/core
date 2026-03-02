@@ -1,0 +1,16 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          mmi:
+            required: false
+            selector:
+              number:
+                mode: box
+            default: 3
+      options:
+        fields: {}
+  subentries: {}

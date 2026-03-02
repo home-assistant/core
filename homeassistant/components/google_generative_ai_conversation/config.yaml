@@ -1,0 +1,242 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 4
+      data:
+        fields:
+          api_key:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries:
+    ai_task_data:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+              dangerous_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              harassment_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              hate_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              max_tokens:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+              recommended:
+                required: false
+                selector:
+                  text: {}
+              sexual_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              temperature:
+                required: false
+                selector:
+                  text: {}
+              top_k:
+                required: false
+                selector:
+                  text: {}
+              top_p:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}
+    conversation:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+              dangerous_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              enable_google_search_tool:
+                required: false
+                selector:
+                  text: {}
+              harassment_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              hate_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              llm_hass_api:
+                required: false
+                selector:
+                  text: {}
+              max_tokens:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+              prompt:
+                required: false
+                selector:
+                  text: {}
+              recommended:
+                required: false
+                selector:
+                  text: {}
+              sexual_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              temperature:
+                required: false
+                selector:
+                  text: {}
+              top_k:
+                required: false
+                selector:
+                  text: {}
+              top_p:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}
+    stt:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+              dangerous_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              harassment_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              hate_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              max_tokens:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+              prompt:
+                required: false
+                selector:
+                  text: {}
+              recommended:
+                required: false
+                selector:
+                  text: {}
+              sexual_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              temperature:
+                required: false
+                selector:
+                  text: {}
+              top_k:
+                required: false
+                selector:
+                  text: {}
+              top_p:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}
+    tts:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  text: {}
+              dangerous_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              harassment_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              hate_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              max_tokens:
+                required: false
+                selector:
+                  text: {}
+              name:
+                required: false
+                selector:
+                  text: {}
+              recommended:
+                required: false
+                selector:
+                  text: {}
+              sexual_block_threshold:
+                required: false
+                selector:
+                  text: {}
+              temperature:
+                required: false
+                selector:
+                  text: {}
+              top_k:
+                required: false
+                selector:
+                  text: {}
+              top_p:
+                required: false
+                selector:
+                  text: {}
+          options:
+            fields: {}

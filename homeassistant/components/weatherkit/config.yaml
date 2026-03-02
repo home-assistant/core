@@ -1,0 +1,27 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          key_id:
+            required: true
+            selector:
+              text: {}
+          key_pem:
+            required: true
+            selector:
+              text:
+                multiline: true
+          service_id:
+            required: true
+            selector:
+              text: {}
+          team_id:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

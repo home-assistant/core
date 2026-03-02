@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 2
+      data:
+        fields:
+          session_id:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

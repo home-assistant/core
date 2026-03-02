@@ -1,0 +1,44 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          host:
+            required: false
+            selector:
+              text: {}
+          https:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          port:
+            required: false
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          browse_limit:
+            required: true
+            selector:
+              number:
+                min: 1
+                max: 65534
+                mode: box
+          volume_step:
+            required: true
+            selector:
+              number:
+                min: 1
+                max: 20
+                mode: slider
+  subentries: {}

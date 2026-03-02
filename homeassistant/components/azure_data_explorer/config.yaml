@@ -1,0 +1,39 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          authority_id:
+            required: true
+            selector:
+              text: {}
+          client_id:
+            required: true
+            selector:
+              text: {}
+          client_secret:
+            required: true
+            selector:
+              text: {}
+          cluster_ingest_uri:
+            required: true
+            selector:
+              text: {}
+          database:
+            required: true
+            selector:
+              text: {}
+          table:
+            required: true
+            selector:
+              text: {}
+          use_queued_ingestion:
+            required: true
+            selector:
+              boolean: {}
+            default: false
+      options:
+        fields: {}
+  subentries: {}

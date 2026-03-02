@@ -1,0 +1,18 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          connection_type:
+            required: true
+            selector:
+              select:
+                options:
+                  - Cloud
+                  - Local
+            default: Cloud
+      options:
+        fields: {}
+  subentries: {}

@@ -1,0 +1,68 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 3
+      data:
+        fields:
+          api_key:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries:
+    ai_task_data:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  select:
+                    custom_value: true
+                    options: []
+              max_tokens:
+                required: false
+                selector:
+                  number:
+                    mode: box
+              temperature:
+                required: false
+                selector:
+                  number:
+                    min: 0
+                    max: 1
+                    step: 0.05
+          options:
+            fields: {}
+    conversation:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              chat_model:
+                required: false
+                selector:
+                  select:
+                    custom_value: true
+                    options: []
+              max_tokens:
+                required: false
+                selector:
+                  number:
+                    mode: box
+              temperature:
+                required: false
+                selector:
+                  number:
+                    min: 0
+                    max: 1
+                    step: 0.05
+          options:
+            fields: {}

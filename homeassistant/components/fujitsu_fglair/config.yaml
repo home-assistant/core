@@ -1,0 +1,25 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 2
+      data:
+        fields:
+          region:
+            required: true
+            selector:
+              select:
+                translation_key: region
+                options: []
+            default: default
+          username:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

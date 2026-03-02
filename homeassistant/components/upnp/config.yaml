@@ -1,0 +1,18 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          udn:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          force_poll:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

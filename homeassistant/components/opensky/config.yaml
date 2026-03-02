@@ -1,0 +1,36 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          altitude:
+            required: false
+            selector:
+              number:
+                mode: box
+      options:
+        fields:
+          altitude:
+            required: false
+            selector:
+              number:
+                mode: box
+          radius:
+            required: true
+            selector:
+              text: {}
+          username:
+            required: false
+            selector:
+              text: {}
+          password:
+            required: false
+            selector:
+              text: {}
+          contributing_user:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

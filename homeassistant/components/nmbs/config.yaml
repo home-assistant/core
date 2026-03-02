@@ -1,0 +1,30 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          exclude_vias:
+            required: false
+            selector:
+              boolean: {}
+          show_on_map:
+            required: false
+            selector:
+              boolean: {}
+          station_from:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                options: []
+          station_to:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                options: []
+      options:
+        fields: {}
+  subentries: {}

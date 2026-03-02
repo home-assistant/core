@@ -1,0 +1,23 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          brand:
+            required: true
+            selector:
+              select:
+                options: []
+          refresh_token:
+            required: true
+            selector:
+              text: {}
+          refresh_token_creation_time:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

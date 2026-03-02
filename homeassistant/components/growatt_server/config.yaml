@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          plant_id:
+            required: true
+            selector:
+              select:
+                options: []
+          region:
+            required: true
+            selector:
+              select:
+                translation_key: region
+                options: []
+            default: other_regions
+      options:
+        fields: {}
+  subentries: {}

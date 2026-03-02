@@ -1,0 +1,28 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          api_user:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries:
+    party_member:
+      versions:
+        - version:
+            major: 1
+            minor: 1
+          data:
+            fields:
+              party_member:
+                required: true
+                selector:
+                  select:
+                    options: []
+          options:
+            fields: {}

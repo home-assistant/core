@@ -1,0 +1,14 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields: {}
+      options:
+        fields:
+          server_name:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

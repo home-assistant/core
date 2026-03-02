@@ -1,0 +1,76 @@
+config_entry:
+  versions:
+    - version:
+        major: 2
+        minor: 2
+      data:
+        fields:
+          destination:
+            required: true
+            selector:
+              text: {}
+          origin:
+            required: true
+            selector:
+              text: {}
+          name:
+            required: true
+            selector:
+              text: {}
+          region:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          avoid_ferries:
+            required: false
+            selector:
+              boolean: {}
+          avoid_subscription_roads:
+            required: false
+            selector:
+              boolean: {}
+          avoid_toll_roads:
+            required: false
+            selector:
+              boolean: {}
+          excl_filter:
+            required: false
+            selector:
+              text:
+                type: text
+                multiple: true
+          incl_filter:
+            required: false
+            selector:
+              text:
+                type: text
+                multiple: true
+          realtime:
+            required: false
+            selector:
+              boolean: {}
+          time_delta:
+            required: false
+            selector:
+              duration:
+                allow_negative: true
+                enable_second: false
+          units:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                translation_key: units
+                sort: true
+                options: []
+          vehicle_type:
+            required: true
+            selector:
+              select:
+                mode: dropdown
+                translation_key: vehicle_type
+                sort: true
+                options: []
+  subentries: {}

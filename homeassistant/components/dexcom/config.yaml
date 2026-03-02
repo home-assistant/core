@@ -1,0 +1,29 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          server:
+            required: true
+            selector:
+              select:
+                options:
+                  - US
+                  - EU
+          username:
+            required: true
+            selector:
+              text: {}
+          password:
+            required: true
+            selector:
+              text: {}
+      options:
+        fields:
+          unit_of_measurement:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

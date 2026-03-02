@@ -1,0 +1,82 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          add_holidays:
+            required: false
+            selector:
+              text: {}
+          category:
+            required: false
+            selector:
+              text: {}
+          country:
+            required: false
+            selector:
+              text: {}
+          days_offset:
+            required: false
+            selector:
+              text: {}
+          excludes:
+            required: false
+            selector:
+              text: {}
+          language:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+          province:
+            required: false
+            selector:
+              text: {}
+          remove_holidays:
+            required: false
+            selector:
+              text: {}
+          workdays:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          add_holidays:
+            required: false
+            selector:
+              text: {}
+          category:
+            required: false
+            selector:
+              text: {}
+          days_offset:
+            required: false
+            selector:
+              text: {}
+          excludes:
+            required: false
+            selector:
+              text: {}
+          language:
+            required: false
+            selector:
+              text: {}
+          province:
+            required: false
+            selector:
+              text: {}
+          remove_holidays:
+            required: false
+            selector:
+              text: {}
+          workdays:
+            required: false
+            selector:
+              text: {}
+  subentries: {}

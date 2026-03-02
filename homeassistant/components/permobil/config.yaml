@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          code:
+            required: false
+            selector:
+              text: {}
+          email:
+            required: false
+            selector:
+              text: {}
+          region:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields: {}
+  subentries: {}

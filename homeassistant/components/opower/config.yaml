@@ -1,0 +1,24 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          mfa_code:
+            required: true
+            selector:
+              text: {}
+          mfa_method:
+            required: true
+            selector:
+              select:
+                options: []
+          utility:
+            required: true
+            selector:
+              select:
+                options: []
+      options:
+        fields: {}
+  subentries: {}

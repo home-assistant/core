@@ -1,0 +1,16 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          sensor_id:
+            required: true
+            selector:
+              number:
+                mode: box
+                min: 1
+      options:
+        fields: {}
+  subentries: {}

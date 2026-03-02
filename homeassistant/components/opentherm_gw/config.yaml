@@ -1,0 +1,48 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          device:
+            required: false
+            selector:
+              text: {}
+          id:
+            required: false
+            selector:
+              text: {}
+          name:
+            required: false
+            selector:
+              text: {}
+      options:
+        fields:
+          floor_temperature:
+            required: false
+            selector:
+              boolean: {}
+          read_precision:
+            required: false
+            selector:
+              number:
+                mode: box
+          set_precision:
+            required: false
+            selector:
+              number:
+                mode: box
+          temporary_override_mode:
+            required: false
+            selector:
+              boolean: {}
+          temporary_ovrd_mode:
+            required: false
+            selector:
+              boolean: {}
+          floor_temp:
+            required: false
+            selector:
+              boolean: {}
+  subentries: {}

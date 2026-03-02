@@ -1,0 +1,16 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          llm_hass_api:
+            required: false
+            selector:
+              select:
+                multiple: true
+                options: []
+      options:
+        fields: {}
+  subentries: {}

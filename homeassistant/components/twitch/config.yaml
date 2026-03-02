@@ -1,0 +1,22 @@
+config_entry:
+  versions:
+    - version:
+        major: 1
+        minor: 1
+      data:
+        fields:
+          auth_implementation:
+            required: true
+            selector:
+              text: {}
+          token:
+            required: true
+            selector:
+              object: {}
+      options:
+        fields:
+          channels:
+            required: false
+            selector:
+              object: {}
+  subentries: {}
