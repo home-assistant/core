@@ -256,6 +256,14 @@
           "up": "Up"
         }
       },
+      "sound_detection_sensitivity": {
+        "name": "Sound detection sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
       "spin_level": {
         "name": "Spin level",
         "state": {
