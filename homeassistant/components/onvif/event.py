@@ -16,10 +16,12 @@ from onvif.client import (
 )
 from onvif.exceptions import ONVIFError
 from onvif.util import stringify_onvif_error
+import onvif_parsers
 from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
@@ -27,7 +29,6 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
-from .parsers import PARSERS
 
 # Topics in this list are ignored because we do not want to create
 # entities for them.
@@ -176,7 +177,9 @@ class EventManager:
             # tns1:RuleEngine/CellMotionDetector/Motion
             topic = msg.Topic._value_1.rstrip("/.")  # noqa: SLF001
 
-            if not (parser := PARSERS.get(topic)):
+            try:
+                event = await onvif_parsers.parse(topic, unique_id, msg)
+            except onvif_parsers.errors.UnknownTopicError:
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.warning(
                         "%s: No registered handler for event from %s: %s",
@@ -186,10 +189,6 @@ class EventManager:
                     )
                     UNHANDLED_TOPICS.add(topic)
                 continue
-
-            try:
-                event = await parser(unique_id, msg)
-                error = None
             except (AttributeError, KeyError) as e:
                 event = None
                 error = e
@@ -204,8 +203,24 @@ class EventManager:
                 )
                 return
 
-            self.get_uids_by_platform(event.platform).add(event.uid)
-            self._events[event.uid] = event
+            try:
+                if event.entity_category:
+                    category = EntityCategory(event.entity_category)
+            except ValueError:
+                category = None
+
+            ha_event = Event(
+                uid=event.uid,
+                name=event.name,
+                platform=event.platform,
+                device_class=event.device_class,
+                unit_of_measurement=event.unit_of_measurement,
+                value=event.value,
+                entity_category=category,
+                entity_enabled=event.entity_enabled,
+            )
+            self.get_uids_by_platform(ha_event.platform).add(ha_event.uid)
+            self._events[ha_event.uid] = ha_event
 
     def get_uid(self, uid: str) -> Event | None:
         """Retrieve event for given id."""
