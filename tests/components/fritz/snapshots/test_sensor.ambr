@@ -23,7 +23,7 @@
     'object_id_base': 'Connection uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Connection uptime',
     'platform': 'fritz',
@@ -38,7 +38,7 @@
 # name: test_sensor_setup[sensor.mock_title_connection_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Title Connection uptime',
     }),
     'context': <ANY>,
@@ -399,7 +399,7 @@
     'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Last restart',
     'platform': 'fritz',
@@ -414,7 +414,7 @@
 # name: test_sensor_setup[sensor.mock_title_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Title Last restart',
     }),
     'context': <ANY>,

@@ -65,8 +65,6 @@ SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
 
 BUTTON_TYPE_WOL = "WakeOnLan"
 
-UPTIME_DEVIATION = 5
-
 FRITZ_EXCEPTIONS = (
     FritzActionError,
     FritzActionFailedError,

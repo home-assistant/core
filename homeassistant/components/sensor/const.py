@@ -86,6 +86,7 @@ CONF_STATE_CLASS: Final = "state_class"
 ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
+UPTIME_DRIFT_TOLERANCE: Final = 60
 
 
 class SensorDeviceClass(StrEnum):
