@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from infrared_protocols import NECCommand
+from infrared_protocols.codes.lg import LGTVCode, make_tv_command as make_lg_tv_command
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.components.media_player import (
@@ -18,15 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import (
-    CONF_DEVICE_TYPE,
-    CONF_INFRARED_ENTITY_ID,
-    DOMAIN,
-    LG_ADDRESS,
-    MODULATION,
-    LGDeviceType,
-    LGTVCommand,
-)
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LGDeviceType
 
 
 async def async_setup_entry(
@@ -95,54 +87,51 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    async def _send_command(self, command_code: int, repeat_count: int = 1) -> None:
+    async def _send_command(self, code: LGTVCode) -> None:
         """Send an IR command using the LG protocol."""
-        command = NECCommand(
-            address=LG_ADDRESS,
-            command=command_code,
-            modulation=MODULATION,
-            repeat_count=repeat_count,
-        )
         await async_send_command(
-            self.hass, self._infrared_entity_id, command, context=self._context
+            self.hass,
+            self._infrared_entity_id,
+            make_lg_tv_command(code),
+            context=self._context,
         )
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
-        await self._send_command(LGTVCommand.POWER)
+        await self._send_command(LGTVCode.POWER)
 
     async def async_turn_off(self) -> None:
         """Turn off the TV."""
-        await self._send_command(LGTVCommand.POWER)
+        await self._send_command(LGTVCode.POWER)
 
     async def async_volume_up(self) -> None:
         """Send volume up command."""
-        await self._send_command(LGTVCommand.VOLUME_UP)
+        await self._send_command(LGTVCode.VOLUME_UP)
 
     async def async_volume_down(self) -> None:
         """Send volume down command."""
-        await self._send_command(LGTVCommand.VOLUME_DOWN)
+        await self._send_command(LGTVCode.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        await self._send_command(LGTVCommand.MUTE)
+        await self._send_command(LGTVCode.MUTE)
 
     async def async_media_next_track(self) -> None:
         """Send channel up command."""
-        await self._send_command(LGTVCommand.CHANNEL_UP)
+        await self._send_command(LGTVCode.CHANNEL_UP)
 
     async def async_media_previous_track(self) -> None:
         """Send channel down command."""
-        await self._send_command(LGTVCommand.CHANNEL_DOWN)
+        await self._send_command(LGTVCode.CHANNEL_DOWN)
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._send_command(LGTVCommand.PLAY)
+        await self._send_command(LGTVCode.PLAY)
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._send_command(LGTVCommand.PAUSE)
+        await self._send_command(LGTVCode.PAUSE)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._send_command(LGTVCommand.STOP)
+        await self._send_command(LGTVCode.STOP)
