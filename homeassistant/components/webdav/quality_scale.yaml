@@ -132,7 +132,7 @@ rules:
   reconfiguration-flow:
     status: todo
     comment: |
-      At least, the backup path should be covered by the flow.
+      The backup path should be configurable via a reconfiguration flow.
   repair-issues: todo
   stale-devices:
     status: exempt
