@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -48,11 +49,13 @@ def mock_tis_api() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         title="CN11A1A00001",
         domain=DOMAIN,
         data={CONF_PORT: 6000},
         unique_id="CN11A1A00001",
     )
+    entry.add_to_hass(hass)
+    return entry
