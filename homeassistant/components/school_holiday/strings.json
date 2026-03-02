@@ -57,11 +57,11 @@
         "nl": "The Netherlands"
       }
     },
-    "region": {
+    "region_nl": {
       "options": {
-        "nl_midden": "Central",
-        "nl_noord": "North",
-        "nl_zuid": "South"
+        "midden": "Central",
+        "noord": "North",
+        "zuid": "South"
       }
     }
   }

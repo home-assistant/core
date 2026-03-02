@@ -11,7 +11,6 @@ from homeassistant.const import CONF_COUNTRY, CONF_REGION
 from homeassistant.core import callback
 from homeassistant.helpers import translation
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -39,8 +38,8 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _get_default(self, entity_type: str, fallback: str) -> str:
         """Get translated default entity name."""
-        entity_key = f"component.{DOMAIN}.entity.{entity_type}"
-        return self._translations.get(entity_key, {}).get("name", fallback)
+        entity_key = f"component.{DOMAIN}.entity.{entity_type}.name"
+        return str(self._translations.get(entity_key, fallback))
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -48,13 +47,23 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Enter binary sensor name and select country."""
         errors: dict[str, str] = {}
 
-        # Load translations for the user's language.
         if not self._translations:
+            # Load config translations.
             self._translations = await translation.async_get_translations(
                 self.hass,
                 self.hass.config.language,
                 "config",
                 {DOMAIN},
+            )
+
+            # Load entity translations for default names.
+            self._translations.update(
+                await translation.async_get_translations(
+                    self.hass,
+                    self.hass.config.language,
+                    "entity",
+                    {DOMAIN},
+                )
             )
 
         if user_input is not None:
@@ -71,15 +80,6 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._country = str(country)
                 return await self.async_step_region()
 
-        # Create selector with translation keys.
-        country_options = [
-            SelectOptionDict(
-                value=country_code,
-                label=f"country.{country_code}",
-            )
-            for country_code in COUNTRIES
-        ]
-
         data_schema = vol.Schema(
             {
                 vol.Required(
@@ -90,7 +90,7 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): str,
                 vol.Required(CONF_COUNTRY): SelectSelector(
                     SelectSelectorConfig(
-                        options=country_options,
+                        options=COUNTRIES,
                         mode=SelectSelectorMode.DROPDOWN,
                         translation_key="country",
                     )
@@ -126,22 +126,13 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._region = region
                 return await self.async_step_calendar()
 
-        # Create selector with translation keys.
-        region_options = [
-            SelectOptionDict(
-                value=region_code,
-                label=f"region.{self._country}_{region_code}",
-            )
-            for region_code in regions
-        ]
-
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_REGION): SelectSelector(
                     SelectSelectorConfig(
-                        options=region_options,
+                        options=regions,
                         mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="region",
+                        translation_key=f"region_{self._country}",
                     )
                 ),
             }
