@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
             entry.title,
         )
 
-    coordinator = EarnEP1Coordinator(hass, host, serial=serial)
+    coordinator = EarnEP1Coordinator(hass, entry, host, serial=serial)
 
     try:
         await coordinator.async_start()

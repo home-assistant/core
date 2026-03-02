@@ -5,7 +5,7 @@
         "title": "Connect to EARN-E P1 Meter",
         "description": "No device was automatically discovered. Enter the IP address of your EARN-E energy monitor manually.",
         "data": {
-          "host": "IP Address"
+          "host": "IP address"
         },
         "data_description": {
           "host": "The local IP address of your EARN-E P1 Meter (e.g. 192.168.1.100)."
@@ -19,7 +19,7 @@
         "title": "Reconfigure EARN-E P1 Meter",
         "description": "Update the IP address of your EARN-E energy monitor.",
         "data": {
-          "host": "IP Address"
+          "host": "IP address"
         },
         "data_description": {
           "host": "The new local IP address of your EARN-E P1 Meter."

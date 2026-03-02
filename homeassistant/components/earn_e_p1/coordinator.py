@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -32,7 +33,7 @@ class EarnEP1UDPProtocol(asyncio.DatagramProtocol):
         try:
             payload = json.loads(data)
         except (json.JSONDecodeError, UnicodeDecodeError):
-            _LOGGER.warning("Failed to decode UDP packet from %s", source_ip)
+            _LOGGER.debug("Failed to decode UDP packet from %s", source_ip)
             return
 
         if not isinstance(payload, dict):
@@ -66,13 +67,18 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for the EARN-E P1 Meter."""
 
     def __init__(
-        self, hass: HomeAssistant, host: str, serial: str | None = None
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        host: str,
+        serial: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
         )
         self.host = host
         self.data = {}

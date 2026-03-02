@@ -62,6 +62,8 @@ class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if the sensor value is available."""
+        if not super().available:
+            return False
         if not self.coordinator.data:
             return False
         return self._field.json_key in self.coordinator.data
