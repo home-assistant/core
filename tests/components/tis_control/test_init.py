@@ -1,49 +1,19 @@
 """Tests for the TIS Control integration."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.tis_control import async_setup_entry, async_unload_entry
-from homeassistant.components.tis_control.const import DOMAIN
-from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry, async_capture_events
 
 
-# Helper function to mock the infinite async generator for events.
-async def _mock_consume_events():
-    for _ in ():
-        yield
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title="CN11A1A00001",
-        domain=DOMAIN,
-        data={CONF_PORT: 6000},
-        unique_id="CN11A1A00001",
-    )
-
-
-@pytest.fixture
-def mock_tis_api():
-    """Mock the TISApi class."""
-    with patch("homeassistant.components.tis_control.TISApi") as mock_cls:
-        instance = mock_cls.return_value
-        instance.connect = AsyncMock()
-        instance.scan_devices = AsyncMock()
-        instance.consume_events.side_effect = _mock_consume_events
-        yield instance
-
-
 @pytest.mark.asyncio
 async def test_async_setup_entry_success(
-    hass: HomeAssistant, mock_config_entry, mock_tis_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
     """Test successful setup of entry."""
     with patch.object(
@@ -60,7 +30,7 @@ async def test_async_setup_entry_success(
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_connect_failure(
-    hass: HomeAssistant, mock_config_entry, mock_tis_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
     """Test unsuccessful setup due to connection failure."""
     mock_tis_api.connect.side_effect = ConnectionError("Test error")
@@ -77,7 +47,7 @@ async def test_async_setup_entry_connect_failure(
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_scan_failure(
-    hass: HomeAssistant, mock_config_entry, mock_tis_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
     """Test setup proceeds even if scan_devices fails."""
     mock_tis_api.scan_devices.side_effect = ConnectionError("Scan failed")
@@ -94,28 +64,24 @@ async def test_async_setup_entry_scan_failure(
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_event_listener(
-    hass: HomeAssistant, mock_config_entry, mock_tis_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
     """Test that the background task consumes events and fires bus events."""
     fake_event = {"device_id": "test_device", "value": 1}
 
-    # Mock generator that yields one event.
+    # Yield one event then exit the generator
     async def _mock_event_generator():
         yield fake_event
 
     mock_tis_api.consume_events.side_effect = _mock_event_generator
 
-    # Capture events of the specific type we expect.
     event_type = "tis_device_test_device"
     captured_events = async_capture_events(hass, event_type)
 
     with patch.object(hass.config_entries, "async_forward_entry_setups"):
         await async_setup_entry(hass, mock_config_entry)
-
-        # Wait for background task to process.
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Assert event was fired.
     assert len(captured_events) == 1
     assert captured_events[0].data == fake_event
 
@@ -125,8 +91,6 @@ async def test_async_unload_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful unload of entry."""
-    # We need to give the config entry some runtime_data because async_unload_entry
-    # likely tries to access it to close connections.
     mock_config_entry.runtime_data = MagicMock()
 
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
@@ -144,7 +108,6 @@ async def test_async_unload_entry_failure(
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=False
     ) as mock_unload_platforms:
-        # Pass the real MockConfigEntry here
         result = await async_unload_entry(hass, mock_config_entry)
 
         assert result is False
