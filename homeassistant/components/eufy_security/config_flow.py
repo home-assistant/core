@@ -538,7 +538,6 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         # Get current credentials for this camera
         current_creds = self._rtsp_credentials.get(serial, {})
         current_username = current_creds.get("username", "")
-        current_password = current_creds.get("password", "")
 
         # Build camera info for display
         camera_name = camera.name if camera else serial
