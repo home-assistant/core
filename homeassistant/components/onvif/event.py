@@ -26,6 +26,7 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
@@ -33,6 +34,11 @@ from .models import Event, PullPointManagerState, WebHookManagerState
 # Topics in this list are ignored because we do not want to create
 # entities for them.
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
+
+ENTITY_CATEGORY_MAPPING: dict[str, EntityCategory] = {
+    "diagnostic": EntityCategory.DIAGNOSTIC,
+    "config": EntityCategory.CONFIG,
+}
 
 SUBSCRIPTION_ERRORS = (Fault, TimeoutError, TransportError)
 CREATE_ERRORS = (
@@ -80,6 +86,18 @@ SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR = 60
 PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
 PULLPOINT_COOLDOWN_TIME = 0.75
+
+
+def _local_datetime_or_none(value: str) -> dt.datetime | None:
+    """Convert strings to datetimes, if invalid, return None."""
+    # Handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. Hikvision)
+    try:
+        ret = dt_util.parse_datetime(value)
+    except ValueError:
+        return None
+    if ret is not None:
+        return dt_util.as_local(ret)
+    return None
 
 
 class EventManager:
@@ -189,27 +207,28 @@ class EventManager:
                     )
                     UNHANDLED_TOPICS.add(topic)
                 continue
-            except (AttributeError, KeyError) as e:
-                event = None
-                error = e
-
-            if not event:
+            except (AttributeError, KeyError) as err:
                 LOGGER.warning(
                     "%s: Unable to parse event from %s: %s: %s",
                     self.name,
                     unique_id,
-                    error,
+                    err,
                     msg,
                 )
-                return
+                continue
 
-            category = None
-            try:
-                if event.entity_category:
-                    category = EntityCategory(event.entity_category)
-            except ValueError:
-                # Keep category as None if the entity category is invalid
-                pass
+            if not event:
+                LOGGER.warning(
+                    "%s: Unable to parse event from %s: %s",
+                    self.name,
+                    unique_id,
+                    msg,
+                )
+                continue
+
+            value = event.value
+            if event.device_class == "timestamp" and isinstance(value, str):
+                value = _local_datetime_or_none(value)
 
             ha_event = Event(
                 uid=event.uid,
@@ -217,8 +236,10 @@ class EventManager:
                 platform=event.platform,
                 device_class=event.device_class,
                 unit_of_measurement=event.unit_of_measurement,
-                value=event.value,
-                entity_category=category,
+                value=value,
+                entity_category=ENTITY_CATEGORY_MAPPING.get(
+                    event.entity_category or ""
+                ),
                 entity_enabled=event.entity_enabled,
             )
             self.get_uids_by_platform(ha_event.platform).add(ha_event.uid)

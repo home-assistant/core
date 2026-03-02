@@ -15,8 +15,7 @@
   "loggers": ["onvif", "wsdiscovery", "zeep"],
   "requirements": [
     "onvif-zeep-async==4.0.4",
-    "WSDiscovery==2.1.2",
-
-    "onvif_parsers==1.2.2"
+    "onvif_parsers==1.2.2",
+    "WSDiscovery==2.1.2"
   ]
 }
