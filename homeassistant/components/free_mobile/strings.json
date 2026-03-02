@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
+      "authentication_failed": "Authentication failed. Check your username and access token.",
       "client_initialization_failed": "Failed to initialize Free Mobile client. Check your username and access token.",
       "test_sms_failed": "Failed to send test SMS. Check that your Free Mobile account allows notifications."
     },
