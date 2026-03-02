@@ -53,9 +53,7 @@ async def async_setup_entry(
 
         device_id = device.get("_id")
         if not device_id:
-            _LOGGER.warning(
-                "Skipping device without _id: %s", device.get("name")
-            )
+            _LOGGER.warning("Skipping device without _id: %s", device.get("name"))
             continue
 
         climate_entities.append(_create_entity(device))
@@ -239,42 +237,30 @@ class MyNeoClimate(ClimateEntity):
         if temperature is None:
             return
 
-        new_preset_mode = self._attr_preset_mode
-        new_hvac_mode = self._attr_hvac_mode
-
         if self._attr_preset_mode != "setpoint":
             ok = await self._set_device_mode("setpoint")
             if not ok:
                 raise HomeAssistantError(
                     f"Failed to set preset mode 'setpoint' for {self.entity_id}"
                 )
-            new_preset_mode = "setpoint"
-
+            self._attr_preset_mode = "setpoint"
             if self._attr_hvac_mode == HVACMode.OFF:
-                default_mode = HVACMode.HEAT
-                if (
-                    self._device.get("model") == "NTD"
-                    and self._device.get("state", {}).get("changeOverUser") == 1
-                ):
-                    default_mode = HVACMode.COOL
-                if getattr(self, "_attr_hvac_modes", None):
-                    new_hvac_mode = next(
-                        (
-                            mode
-                            for mode in self._attr_hvac_modes
-                            if mode is not HVACMode.OFF
-                        ),
-                        default_mode,
-                    )
+                self._attr_hvac_mode = next(
+                    (
+                        mode
+                        for mode in (self._attr_hvac_modes or [])
+                        if mode is not HVACMode.OFF
+                    ),
+                    HVACMode.HEAT,
+                )
 
         ok = await self._set_device_temperature(temperature)
         if not ok:
+            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Failed to set temperature to {temperature} for {self.entity_id}"
             )
 
-        self._attr_preset_mode = new_preset_mode
-        self._attr_hvac_mode = new_hvac_mode
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
 
@@ -288,21 +274,14 @@ class MyNeoClimate(ClimateEntity):
         if preset_mode == "standby":
             new_hvac_mode = HVACMode.OFF
         elif self._attr_hvac_mode == HVACMode.OFF:
-            default_mode = HVACMode.HEAT
-            if (
-                self._device.get("model") == "NTD"
-                and self._device.get("state", {}).get("changeOverUser") == 1
-            ):
-                default_mode = HVACMode.COOL
-            if getattr(self, "_attr_hvac_modes", None):
-                new_hvac_mode = next(
-                    (
-                        mode
-                        for mode in self._attr_hvac_modes
-                        if mode is not HVACMode.OFF
-                    ),
-                    default_mode,
-                )
+            new_hvac_mode = next(
+                (
+                    mode
+                    for mode in (self._attr_hvac_modes or [])
+                    if mode is not HVACMode.OFF
+                ),
+                HVACMode.HEAT,
+            )
 
         ok = await self._set_device_mode(preset_mode)
         if not ok:
