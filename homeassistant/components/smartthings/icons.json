@@ -21,6 +21,9 @@
         "state": {
           "on": "mdi:remote"
         }
+      },
+      "robot_cleaner_dust_bag": {
+        "default": "mdi:delete"
       }
     },
     "button": {
@@ -109,6 +112,9 @@
       },
       "soil_level": {
         "default": "mdi:liquid-spot"
+      },
+      "sound_detection_sensitivity": {
+        "default": "mdi:home-sound-in"
       },
       "spin_level": {
         "default": "mdi:rotate-right"
@@ -249,6 +255,14 @@
         "state": {
           "off": "mdi:tumble-dryer-off"
         }
+      }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "default": "mdi:bell-ring"
+      },
+      "do_not_disturb_start_time": {
+        "default": "mdi:bell-cancel"
       }
     }
   }
