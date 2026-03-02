@@ -273,8 +273,7 @@ class MyNeoClimate(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the climate entity."""
-        mode_value = PRESET_MODE_MAP.get(preset_mode)
-        if mode_value is None:
+        if preset_mode not in PRESET_MODE_MAP:
             _LOGGER.warning("Unknown preset mode: %s", preset_mode)
             return
 

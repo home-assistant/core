@@ -1,7 +1,7 @@
 """Tests for the MyNeomitis climate component."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -472,10 +472,11 @@ async def test_register_listener_unsubscribe_variants(
     mock_config_entry: MockConfigEntry,
     mock_pyaxenco_client: AsyncMock,
 ) -> None:
-    """register_listener returning object with unsubscribe/close should be handled."""
+    """Cleanup returned as .unsubscribe attribute must be called when entity is removed."""
+    cleanup_fn = Mock()
 
     def reg_listener(_device_id, _cb):
-        return SimpleNamespace(unsubscribe=lambda: None)
+        return SimpleNamespace(unsubscribe=cleanup_fn)
 
     mock_pyaxenco_client.register_listener = reg_listener
     mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
@@ -483,8 +484,14 @@ async def test_register_listener_unsubscribe_variants(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_pyaxenco_client.register_listener = reg_listener
-    assert mock_pyaxenco_client.register_listener is not None
+    # register_listener must have been invoked during entity setup
+    assert cleanup_fn.call_count == 0  # not yet removed
+
+    # Unloading the entry triggers entity removal and must call the cleanup
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    cleanup_fn.assert_called_once()
 
 
 async def test_register_listener_with_close(
