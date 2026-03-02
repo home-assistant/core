@@ -53,6 +53,9 @@ class EnOceanEntity(Entity):
         """Update the internal state of the device when a packet arrives."""
 
     def send_command(self, data, optional, packet_type: ESP3PacketType) -> None:
-        """Send a command via the EnOcean dongle."""
-        packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
-        dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
+        """Send a command via the EnOcean dongle, if data and optional are valid bytes; otherwise, ignore."""
+        try:
+            packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
+            dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
+        except ValueError:
+            pass
