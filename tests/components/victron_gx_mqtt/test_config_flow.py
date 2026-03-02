@@ -40,6 +40,16 @@ MOCK_FRIENDLY_NAME = "Venus GX"
 MOCK_HOST = "192.168.1.100"
 
 
+def assert_entry_title(
+    result: dict[str, object],
+    installation_id: str = MOCK_INSTALLATION_ID,
+    host: str = MOCK_HOST,
+    port: int = DEFAULT_PORT,
+) -> None:
+    """Assert the config entry title format."""
+    assert result["title"] == f"Victron OS {installation_id} ({host}:{port})"
+
+
 @pytest.fixture
 def mock_victron_hub():
     """Mock the Victron Hub."""
@@ -78,7 +88,7 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Victron OS {MOCK_INSTALLATION_ID}"
+    assert_entry_title(result)
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_PORT,
@@ -111,7 +121,7 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Victron OS {MOCK_INSTALLATION_ID}"
+    assert_entry_title(result)
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_PORT,
@@ -299,9 +309,10 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_FRIENDLY_NAME
+    assert_entry_title(result)
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
+        CONF_PORT: DEFAULT_PORT,
         CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         CONF_MODEL: MOCK_MODEL,
@@ -419,13 +430,15 @@ async def test_ssdp_flow_auth_required(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{MOCK_MODEL} ({MOCK_SERIAL})"
+    assert_entry_title(result)
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
+        CONF_PORT: DEFAULT_PORT,
         CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
+        CONF_SSL: False,
     }
 
 
@@ -489,13 +502,15 @@ async def test_ssdp_auth_invalid_credentials(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{MOCK_MODEL} ({MOCK_SERIAL})"
+    assert_entry_title(result)
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
+        CONF_PORT: DEFAULT_PORT,
         CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         CONF_USERNAME: "test-user",
         CONF_PASSWORD: "test-password",
+        CONF_SSL: False,
     }
 
 
@@ -571,12 +586,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "192.168.1.200",
-            CONF_PORT: 1883,
-            CONF_USERNAME: "new-user",
-            CONF_PASSWORD: "new-pass",
-            CONF_SSL: True,
-            CONF_ROOT_TOPIC_PREFIX: "N/updated",
             CONF_UPDATE_FREQUENCY_SECONDS: 45,
         },
     )
@@ -592,12 +601,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
         CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
     }
     assert mock_config_entry.options == {
-        CONF_HOST: "192.168.1.200",
-        CONF_PORT: 1883,
-        CONF_USERNAME: "new-user",
-        CONF_PASSWORD: "new-pass",
-        CONF_SSL: True,
-        CONF_ROOT_TOPIC_PREFIX: "N/updated",
         CONF_UPDATE_FREQUENCY_SECONDS: 45,
     }
 
@@ -626,9 +629,6 @@ async def test_options_flow_cannot_connect(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "192.168.1.200",
-            CONF_PORT: 1883,
-            CONF_SSL: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
@@ -669,6 +669,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
         user_input={
             CONF_USERNAME: "new-username",
             CONF_PASSWORD: "new-password",
+            CONF_SSL: True,
         },
     )
 
@@ -676,7 +677,51 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_USERNAME] == "new-username"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_SSL] is True
     assert mock_config_entry.data[CONF_UPDATE_FREQUENCY_SECONDS] == 42
+
+
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_reauth_flow_success_clears_credentials_from_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauth can clear credentials from data."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_INSTALLATION_ID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_USERNAME: "old-username",
+            CONF_PASSWORD: "old-password",
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+            CONF_SSL: False,
+            CONF_UPDATE_FREQUENCY_SECONDS: 42,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert CONF_USERNAME not in mock_config_entry.data
+    assert CONF_PASSWORD not in mock_config_entry.data
 
 
 async def test_reauth_flow_cannot_connect(
@@ -910,11 +955,6 @@ async def test_options_flow_invalid_auth(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "192.168.1.200",
-            CONF_PORT: 1883,
-            CONF_USERNAME: "wrong-user",
-            CONF_PASSWORD: "wrong-pass",
-            CONF_SSL: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )

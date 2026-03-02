@@ -56,6 +56,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_OPTIONS_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_UPDATE_FREQUENCY_SECONDS, default=DEFAULT_UPDATE_FREQUENCY_SECONDS
+        ): int,
+    }
+)
+
 
 async def validate_input(data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect.
@@ -102,6 +110,11 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name: str | None = None
         self.model_name: str | None = None
 
+    @staticmethod
+    def _build_entry_title(installation_id: str, host: str, port: int) -> str:
+        """Build a config entry title."""
+        return f"Victron OS {installation_id} ({host}:{port})"
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -138,7 +151,11 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self._abort_if_unique_id_configured()
 
-                title = self.friendly_name or f"Victron OS {unique_id}"
+                title = self._build_entry_title(
+                    installation_id,
+                    data[CONF_HOST],
+                    data.get(CONF_PORT, DEFAULT_PORT),
+                )
                 return self.async_create_entry(title=title, data=data)
 
         if len(errors) > 0:
@@ -173,8 +190,8 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 **reauth_entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
+                CONF_SSL: user_input.get(CONF_SSL) or None,
             }
-            # Remove None values
             data = {k: v for k, v in data.items() if v is not None}
 
             try:
@@ -192,18 +209,21 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates=data,
+                    data=data,
                     reason="reauth_successful",
                 )
 
         reauth_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_USERNAME, default=reauth_entry.data.get(CONF_USERNAME) or ""
+                    CONF_USERNAME, default=reauth_entry.data.get(CONF_USERNAME, "")
                 ): str,
                 vol.Optional(
-                    CONF_PASSWORD, default=reauth_entry.data.get(CONF_PASSWORD) or ""
+                    CONF_PASSWORD, default=reauth_entry.data.get(CONF_PASSWORD, "")
                 ): str,
+                vol.Optional(
+                    CONF_SSL, default=reauth_entry.data.get(CONF_SSL, False)
+                ): bool,
             }
         )
 
@@ -236,10 +256,12 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
+                CONF_PORT: DEFAULT_PORT,
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
-                CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                CONF_SSL: user_input.get(CONF_SSL),
             }
             # Remove None values
             data = {k: v for k, v in data.items() if v is not None}
@@ -258,7 +280,9 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=f"{self.model_name} ({self.serial})",
+                    title=self._build_entry_title(
+                        self.installation_id, self.hostname, DEFAULT_PORT
+                    ),
                     data=data,
                 )
 
@@ -266,6 +290,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Optional(CONF_USERNAME, default=""): str,
                 vol.Optional(CONF_PASSWORD, default=""): str,
+                vol.Optional(CONF_SSL, default=False): bool,
             }
         )
 
@@ -300,6 +325,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             ssdp_conf = {
                 CONF_HOST: self.hostname,
+                CONF_PORT: DEFAULT_PORT,
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
             }
@@ -310,10 +336,14 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnectError:
             return self.async_abort(reason="cannot_connect")
 
+        assert self.installation_id is not None
         return self.async_create_entry(
-            title=str(self.friendly_name),
+            title=self._build_entry_title(
+                self.installation_id, self.hostname, DEFAULT_PORT
+            ),
             data={
                 CONF_HOST: self.hostname,
+                CONF_PORT: DEFAULT_PORT,
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
                 CONF_MODEL: self.model_name,
@@ -326,10 +356,13 @@ class VictronMQTTOptionsFlow(OptionsFlowWithReload):
 
     def _get_effective_config(self) -> dict[str, Any]:
         """Get the effective config with options overriding data."""
-        return {
-            **self.config_entry.data,
-            **self.config_entry.options,
-        }
+        update_frequency = self.config_entry.options.get(
+            CONF_UPDATE_FREQUENCY_SECONDS,
+            self.config_entry.data.get(
+                CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
+            ),
+        )
+        return {CONF_UPDATE_FREQUENCY_SECONDS: update_frequency}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -345,7 +378,7 @@ class VictronMQTTOptionsFlow(OptionsFlowWithReload):
                 "User input received: %s", async_redact_data(user_input, TO_REDACT)
             )
             validate_data = {
-                **current_config,
+                **self.config_entry.data,
                 **user_input,
             }
             try:
@@ -375,5 +408,5 @@ class VictronMQTTOptionsFlow(OptionsFlowWithReload):
     def _get_options_schema(self) -> vol.Schema:
         """Get the options schema with current values as defaults."""
         return self.add_suggested_values_to_schema(
-            STEP_USER_DATA_SCHEMA, self._get_effective_config()
+            STEP_OPTIONS_DATA_SCHEMA, self._get_effective_config()
         )

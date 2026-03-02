@@ -47,10 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry called for entry: %s", entry.entry_id)
-    hub: Hub = entry.runtime_data
-    assert isinstance(hub, Hub)
+    hub: Hub | None = getattr(entry, "runtime_data", None)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok and hub is not None:
         await hub.stop()
         hub.unregister_all_new_metric_callbacks()
 
