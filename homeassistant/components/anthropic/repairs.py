@@ -58,7 +58,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         if entry.entry_id in self._model_list_cache:
             model_list = self._model_list_cache[entry.entry_id]
         else:
-            client = entry.runtime_data
+            client = entry.runtime_data.client
             model_list = [
                 model_option
                 for model_option in await get_model_list(client)
