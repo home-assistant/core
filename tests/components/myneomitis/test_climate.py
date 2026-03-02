@@ -166,7 +166,7 @@ async def test_direct_async_set_preset_mode_unknown_no_api_call() -> None:
     api = AsyncMock()
     device = dict(CLIMATE_DEVICE)
     ent = MyNeoClimate(api, device)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
 
     await ent.async_set_preset_mode("not-a-mode")
     api.set_device_mode.assert_not_awaited()
@@ -197,7 +197,7 @@ async def test_direct_async_set_preset_mode_calls_api() -> None:
     """Calling async_set_preset_mode directly will call API for a known preset and update attribute."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
 
     await ent.async_set_preset_mode("eco")
     api.set_device_mode.assert_awaited_with("climate1", 2)
@@ -419,7 +419,7 @@ async def test_handle_ws_update_empty_returns() -> None:
     """handle_ws_update should return early on empty state."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
     before = ent._attr_current_temperature
     ent.handle_ws_update({})
     assert ent._attr_current_temperature == before
@@ -429,12 +429,12 @@ async def test_override_and_target_temp_update() -> None:
     """OverrideTemp and targetTemp update target temperature correctly."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
     ent.handle_ws_update({"overrideTemp": 25})
     assert ent._attr_target_temperature == 25
 
     ent2 = MyNeoClimate(api, CLIMATE_SUB_DEVICE)
-    ent2.async_write_ha_state = lambda: None
+    ent2.async_write_ha_state = Mock()
     ent2.handle_ws_update({"targetTemp": 22})
     assert ent2._attr_target_temperature == 22
 
@@ -443,7 +443,7 @@ async def test_targetmode_standby_sets_off() -> None:
     """TargetMode of 4 (standby) sets HVAC mode to OFF."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
     ent.handle_ws_update({"targetMode": 4})
     assert ent._attr_hvac_mode == HVACMode.OFF
 
@@ -452,7 +452,7 @@ async def test_changeover_updates_hvac_when_not_off() -> None:
     """ChangeOverUser should change HVAC mode when entity not OFF."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_NTD_COOL)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
     ent._attr_hvac_mode = HVACMode.HEAT
     ent.handle_ws_update({"changeOverUser": 1})
     assert ent._attr_hvac_mode == HVACMode.COOL
@@ -462,7 +462,7 @@ async def test_async_set_preset_mode_standby_direct() -> None:
     """Setting preset mode to standby sets HVAC to OFF."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
     await ent.async_set_preset_mode("standby")
     assert ent._attr_hvac_mode == HVACMode.OFF
 
@@ -516,7 +516,7 @@ async def test_async_set_preset_mode_when_hvac_off_ntd_sets_cool() -> None:
     api = AsyncMock()
     device = dict(CLIMATE_NTD_COOL)
     ent = MyNeoClimate(api, device)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
 
     ent._attr_hvac_mode = HVACMode.OFF
     ent._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
@@ -530,7 +530,7 @@ async def test_async_set_hvac_mode_restore_fallback_raises() -> None:
     """When no known preset can be restored, a HomeAssistantError is raised."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = lambda: None
+    ent.async_write_ha_state = Mock()
 
     ent._last_preset_mode = None
     ent._attr_preset_modes = ["standby", "invalid_preset"]

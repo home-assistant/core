@@ -238,13 +238,17 @@ class MyNeoClimate(ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+
+        new_preset_mode = self._attr_preset_mode
+        new_hvac_mode = self._attr_hvac_mode
+
         if self._attr_preset_mode != "setpoint":
             ok = await self._set_device_mode("setpoint")
             if not ok:
                 raise HomeAssistantError(
                     f"Failed to set preset mode 'setpoint' for {self.entity_id}"
                 )
-            self._attr_preset_mode = "setpoint"
+            new_preset_mode = "setpoint"
 
             if self._attr_hvac_mode == HVACMode.OFF:
                 default_mode = HVACMode.HEAT
@@ -254,7 +258,7 @@ class MyNeoClimate(ClimateEntity):
                 ):
                     default_mode = HVACMode.COOL
                 if getattr(self, "_attr_hvac_modes", None):
-                    self._attr_hvac_mode = next(
+                    new_hvac_mode = next(
                         (
                             mode
                             for mode in self._attr_hvac_modes
@@ -262,12 +266,15 @@ class MyNeoClimate(ClimateEntity):
                         ),
                         default_mode,
                     )
+
         ok = await self._set_device_temperature(temperature)
         if not ok:
             raise HomeAssistantError(
                 f"Failed to set temperature to {temperature} for {self.entity_id}"
             )
 
+        self._attr_preset_mode = new_preset_mode
+        self._attr_hvac_mode = new_hvac_mode
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
 
@@ -277,8 +284,9 @@ class MyNeoClimate(ClimateEntity):
             _LOGGER.warning("Unknown preset mode: %s", preset_mode)
             return
 
+        new_hvac_mode = self._attr_hvac_mode
         if preset_mode == "standby":
-            self._attr_hvac_mode = HVACMode.OFF
+            new_hvac_mode = HVACMode.OFF
         elif self._attr_hvac_mode == HVACMode.OFF:
             default_mode = HVACMode.HEAT
             if (
@@ -287,7 +295,7 @@ class MyNeoClimate(ClimateEntity):
             ):
                 default_mode = HVACMode.COOL
             if getattr(self, "_attr_hvac_modes", None):
-                self._attr_hvac_mode = next(
+                new_hvac_mode = next(
                     (
                         mode
                         for mode in self._attr_hvac_modes
@@ -295,15 +303,16 @@ class MyNeoClimate(ClimateEntity):
                     ),
                     default_mode,
                 )
+
         ok = await self._set_device_mode(preset_mode)
         if not ok:
             raise HomeAssistantError(
                 f"Failed to set preset mode '{preset_mode}' for {self.entity_id}"
             )
 
+        self._attr_hvac_mode = new_hvac_mode
         if preset_mode != "standby":
             self._last_preset_mode = preset_mode
-
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
