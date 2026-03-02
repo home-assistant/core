@@ -96,3 +96,25 @@ async def test_duplicate_entry(
     # Verify that the second flow is aborted.
     assert result4["type"] == FlowResultType.ABORT
     assert result4["reason"] == "already_configured"
+
+
+async def test_unexpected_exception(
+    hass: HomeAssistant, mock_tis_api: MagicMock
+) -> None:
+    """Test handling of an unexpected exception during validation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Force a generic Exception that isn't caught by the specific ConnectionError handler
+    mock_tis_api.connect.side_effect = Exception("Unexpected")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PORT: 6000},
+    )
+    await hass.async_block_till_done()
+
+    # The flow should still show the form with the error because it returns False
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
