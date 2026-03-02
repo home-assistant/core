@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This {name} account is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -25,12 +25,6 @@
   },
   "entity": {
     "sensor": {
-      "battery": {
-        "name": "Battery"
-      },
-      "last_sync": {
-        "name": "Last synchronization"
-      },
       "level": {
         "name": "Level"
       }
@@ -39,6 +33,9 @@
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication failed. Please check your credentials and try again."
+    },
+    "update_failed": {
+      "message": "Error communicating with the Rotarex API."
     }
   }
 }

@@ -1,83 +1,65 @@
-"""Test the Rotarex coordinator."""
+"""Test the Rotarex coordinator effects on entities."""
 
 from unittest.mock import AsyncMock
 
 import pytest
 from rotarex_dimes_srg_api import InvalidAuth
 
-from homeassistant.components.rotarex.coordinator import RotarexDataUpdateCoordinator
-from homeassistant.components.rotarex.models import RotarexTank
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_rotarex_api")
 
-async def test_coordinator_data_structure(
+
+async def test_setup_loads_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test coordinator returns properly structured data."""
+    """Test integration loads and creates entities for all tanks."""
     mock_config_entry.add_to_hass(hass)
-    
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    
-    coordinator = mock_config_entry.runtime_data
 
-    # Verify data is a dict indexed by GUID
-    assert isinstance(coordinator.data, dict)
-    assert "tank1-guid" in coordinator.data
-    assert "tank2-guid" in coordinator.data
-
-    # Verify data is properly typed
-    tank1 = coordinator.data["tank1-guid"]
-    assert isinstance(tank1, RotarexTank)
-    assert tank1.guid == "tank1-guid"
-    assert tank1.name == "Tank 1"
-    assert len(tank1.synch_datas) == 2
-    assert tank1.synch_datas[0].level == 75.5
-    assert tank1.synch_datas[0].battery == 85.0
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.tank_1_level") is not None
+    assert hass.states.get("sensor.tank_2_level") is not None
 
 
-async def test_coordinator_auth_failure_on_setup(
+async def test_auth_failure_on_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test coordinator handles auth failure during setup."""
+    """Test config entry fails to load on auth error."""
     mock_rotarex_api.login.side_effect = InvalidAuth("Invalid credentials")
-    
     mock_config_entry.add_to_hass(hass)
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Config entry should be in setup_retry state due to auth failure
-    assert mock_config_entry.state.recoverable
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_coordinator_auth_failure_on_update(
+async def test_update_failure_marks_entities_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test coordinator handles auth failure during data update."""
+    """Test that an update failure marks entities as unavailable."""
     mock_config_entry.add_to_hass(hass)
-    
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    
-    coordinator = mock_config_entry.runtime_data
-    
-    # Initial state should be successful
-    assert coordinator.last_update_success is True
 
-    # Simulate auth failure on fetch
-    mock_rotarex_api.fetch_tanks.side_effect = InvalidAuth("Token expired")
+    level_state = hass.states.get("sensor.tank_1_level")
+    assert level_state is not None
+    assert level_state.state == "70.0"
 
-    await coordinator.async_refresh()
-    
-    # Coordinator should mark update as failed
-    assert coordinator.last_update_success is False
+    # Simulate connection failure
+    mock_rotarex_api.fetch_tanks.side_effect = Exception("Connection error")
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
+    level_state = hass.states.get("sensor.tank_1_level")
+    assert level_state
+    assert level_state.state == "unavailable"

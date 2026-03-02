@@ -31,9 +31,6 @@ def mock_rotarex_api() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.rotarex.config_flow.RotarexApi", new=rotarex_api
         ),
-        patch(
-            "homeassistant.components.rotarex.RotarexApi", new=rotarex_api
-        ),
     ):
         api = rotarex_api.return_value
         api.login = AsyncMock(return_value=None)

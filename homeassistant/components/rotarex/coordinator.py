@@ -9,7 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .models import RotarexTank
@@ -26,10 +27,10 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        api: RotarexApi,
     ) -> None:
         """Initialize the data update coordinator."""
-        self.api = api
+        session = async_get_clientsession(hass)
+        self.api = RotarexApi(session)
         self._email = config_entry.data[CONF_EMAIL]
         self._password = config_entry.data[CONF_PASSWORD]
         self.api.set_credentials(self._email, self._password)
@@ -59,6 +60,11 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
+            ) from err
+        except Exception as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
             ) from err
 
         # Convert to typed dataclasses and index by GUID

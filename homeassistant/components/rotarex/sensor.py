@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,7 +37,7 @@ def get_tank_name(tank: RotarexTank) -> str:
 class RotarexTankSensorEntityDescription(SensorEntityDescription):
     """Entity description for Rotarex tank sensors."""
 
-    value_fn: Callable[[RotarexSyncData | None], float | datetime | None]
+    value_fn: Callable[[RotarexSyncData], float | datetime | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
@@ -45,24 +46,20 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         translation_key="level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sync: sync.level if sync else None,
+        value_fn=lambda sync: sync.level,
     ),
     RotarexTankSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sync: sync.battery if sync else None,
+        value_fn=lambda sync: sync.battery,
     ),
     RotarexTankSensorEntityDescription(
         key="last_sync",
-        translation_key="last_sync",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sync: (
-            dt_util.parse_datetime(sync.synch_date)
-            if sync and sync.synch_date
-            else None
+            dt_util.parse_datetime(sync.synch_date) if sync.synch_date else None
         ),
     ),
 )
@@ -87,7 +84,6 @@ async def async_setup_entry(
 class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorEntity):
     """Representation of a Rotarex tank sensor."""
 
-    __slots__ = ("_tank_id", "entity_description")
     entity_description: RotarexTankSensorEntityDescription
     _attr_has_entity_name = True
 
@@ -102,7 +98,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         self.entity_description = description
         self._tank_id = tank_id
         self._attr_unique_id = f"{tank_id}_{description.key}"
-        
+
         # Get initial tank data for device info
         tank = coordinator.data[tank_id]
         self._attr_device_info = DeviceInfo(
@@ -111,13 +107,19 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             manufacturer="Rotarex",
             model="DIMES SRG",
         )
-        self._update_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle coordinated data updates."""
-        self._update_state()
-        self.async_write_ha_state()
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._get_latest_sync() is not None
+
+    @property
+    def native_value(self) -> float | datetime | None:
+        """Return the state of the sensor."""
+        sync = self._get_latest_sync()
+        if TYPE_CHECKING:
+            assert sync is not None
+        return self.entity_description.value_fn(sync)
 
     def _get_latest_sync(self) -> RotarexSyncData | None:
         """Return the most recent synchronization entry for the tank."""
@@ -141,8 +143,3 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
 
         latest_sync, _ = max(parsed_syncs, key=lambda item: item[1])
         return latest_sync
-
-    def _update_state(self) -> None:
-        """Update native value and attributes."""
-        latest_sync = self._get_latest_sync()
-        self._attr_native_value = self.entity_description.value_fn(latest_sync)

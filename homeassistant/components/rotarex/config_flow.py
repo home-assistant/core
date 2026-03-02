@@ -46,10 +46,10 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Email is used as the unique ID since users cannot change
+                # their account email address
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
-                self._abort_if_unique_id_configured(
-                    description_placeholders={"name": NAME}
-                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
