@@ -84,6 +84,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "name": "Reset HEPA filter"
+      },
       "reset_hood_filter": {
         "name": "Reset filter"
       },
@@ -221,6 +224,14 @@
           "pause": "[%key:common::state::paused%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "robot_cleaner_driving_mode": {
+        "name": "Driving mode",
+        "state": {
+          "area_then_walls": "Area then walls",
+          "quick_clean_zigzag_pattern": "Quick clean in a zigzag pattern",
+          "walls_first": "Walls first"
         }
       },
       "selected_zone": {
@@ -904,6 +915,9 @@
       "sanitizing_wash": {
         "name": "Sanitizing wash"
       },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
       "sound_effect": {
         "name": "Sound effect"
       },
@@ -918,6 +932,20 @@
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "maximum": "Maximum",
+              "normal": "Normal",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
       }
     }
   },
