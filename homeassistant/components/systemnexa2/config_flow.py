@@ -38,18 +38,6 @@ _SCHEMA = vol.Schema(
 )
 
 
-def _is_valid_host(ip_or_hostname: str) -> bool:
-    if not ip_or_hostname:
-        return False
-    if is_ip_address(ip_or_hostname):
-        return True
-    try:
-        socket.gethostbyname(ip_or_hostname)
-    except socket.gaierror:
-        return False
-    return True
-
-
 @dataclass(kw_only=True)
 class _DiscoveryInfo:
     name: str
@@ -76,7 +64,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            if not _is_valid_host(host):
+            if not await self._async_is_valid_host(host):
                 errors["base"] = "invalid_host"
             else:
                 try:
@@ -215,3 +203,16 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         return await self.async_step_user(user_input)
+
+    async def _async_is_valid_host(self, ip_or_hostname: str) -> bool:
+
+        if not ip_or_hostname:
+            return False
+        if is_ip_address(ip_or_hostname):
+            return True
+        try:
+            await self.hass.async_add_executor_job(socket.gethostbyname, ip_or_hostname)
+
+        except socket.gaierror:
+            return False
+        return True
