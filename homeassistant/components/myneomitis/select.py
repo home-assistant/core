@@ -82,7 +82,7 @@ async def async_setup_entry(
     api = config_entry.runtime_data.api
     devices = config_entry.runtime_data.devices
 
-    def _create_entity(device: dict) -> MyNeoSelect:
+    def _create_entity(device: dict[str, Any]) -> MyNeoSelect:
         """Create a select entity for a device."""
         if device["model"] == "EWS":
             if "relayMode" in device.get("state", {}):
