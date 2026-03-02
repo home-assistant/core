@@ -608,12 +608,7 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
     assert config_entry.data[CONF_HOST] == TEST_HOST
 
 
-async def test_dhcp_ip_update_aborted_if_no_host(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    reolink_host_class: MagicMock,
-    reolink_host: MagicMock,
-) -> None:
+async def test_dhcp_ip_update_aborted_if_no_host(hass: HomeAssistant) -> None:
     """Test dhcp discovery does not update the IP if the config entry has no host."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
