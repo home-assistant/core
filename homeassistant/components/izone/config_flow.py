@@ -36,13 +36,17 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     def dispatch_discovered(_):
         controller_ready.set()
 
-    async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, dispatch_discovered)
+    unsub = async_dispatcher_connect(
+        hass, DISPATCH_CONTROLLER_DISCOVERED, dispatch_discovered
+    )
 
     disco = await async_start_discovery_service(hass)
 
     with suppress(TimeoutError):
         async with asyncio.timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
+
+    unsub()
 
     if not disco.pi_disco.controllers:
         await async_stop_discovery_service(hass)

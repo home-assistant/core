@@ -96,6 +96,7 @@ async def mock_discovery(
         "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
     ) as mock_disco:
         mock_disco.return_value.start_discovery = AsyncMock()
+        mock_disco.return_value.close = AsyncMock()
         mock_disco.return_value.controllers = {
             mock_controller.device_uid: mock_controller
         }
