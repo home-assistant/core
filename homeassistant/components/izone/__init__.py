@@ -65,10 +65,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    # If a host is configured, manually add the controller by IP
+    # If a host is configured, manually add the controller by IP.
+    # Pass unique_id (device UID) to skip redundant HTTP lookup.
     if host := entry.data.get(CONF_HOST):
         try:
-            await async_add_controller_by_ip(hass, host)
+            await async_add_controller_by_ip(hass, host, entry.unique_id)
         except ConnectionError as err:
             raise ConfigEntryNotReady(
                 f"Unable to connect to iZone device at {host}"

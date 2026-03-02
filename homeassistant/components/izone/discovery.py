@@ -58,7 +58,52 @@ class DiscoveryService(pizone.Listener):
         """Zone update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
-    def start_keepalive(self) -> None:
+    def _track_static_controller(
+        self, device_uid: str, host: str, ctrl: pizone.Controller
+    ) -> None:
+        """Track a static-IP controller and refresh its address.
+
+        Updates the controller's address and starts the keepalive
+        mechanism if not already running.
+        """
+        ctrl._refresh_address(host)  # noqa: SLF001
+        self._static_hosts[device_uid] = host
+        self._start_keepalive()
+
+    async def async_register_controller(
+        self, host: str, device_uid: str
+    ) -> pizone.Controller:
+        """Register a controller by IP address.
+
+        If the controller is already known, updates its address.
+        Otherwise creates, initializes, and registers a new controller.
+        """
+        assert self.pi_disco is not None
+
+        # Check if controller is already discovered
+        if device_uid in self.pi_disco.controllers:
+            ctrl = self.pi_disco.controllers[device_uid]
+            self._track_static_controller(device_uid, host, ctrl)
+            return ctrl
+
+        # Create controller via the pizone library internals
+        controller = pizone.Controller(
+            self.pi_disco,
+            device_uid=device_uid,
+            device_ip=host,
+            is_v2=False,
+            is_ipower=False,
+        )
+        await controller._initialize()  # noqa: SLF001
+
+        # Register it in the discovery service
+        self.pi_disco.controllers[device_uid] = controller
+        self.pi_disco.controller_discovered(controller)
+
+        self._track_static_controller(device_uid, host, controller)
+        return controller
+
+    def _start_keepalive(self) -> None:
         """Start periodic keepalive for static-IP controllers.
 
         The pizone library relies on UDP broadcast responses to trigger
@@ -163,43 +208,16 @@ async def async_get_device_uid(hass: HomeAssistant, host: str) -> str:
 
 
 async def async_add_controller_by_ip(
-    hass: HomeAssistant, host: str
+    hass: HomeAssistant, host: str, device_uid: str | None = None
 ) -> pizone.Controller:
     """Manually add a controller by IP address.
 
-    This queries the device for its UID, creates a Controller instance,
-    initialises it, and registers it with the discovery service.
+    If device_uid is provided, skips the HTTP lookup to avoid a redundant
+    network call (the UID is already known from config flow validation).
     """
     disco = await async_start_discovery_service(hass)
 
-    device_uid = await async_get_device_uid(hass, host)
+    if device_uid is None:
+        device_uid = await async_get_device_uid(hass, host)
 
-    # Check if controller is already discovered
-    if device_uid in disco.pi_disco.controllers:
-        ctrl = disco.pi_disco.controllers[device_uid]
-        # Update IP in case it changed
-        ctrl._refresh_address(host)  # noqa: SLF001
-        # Track this as a static-IP controller and start keepalive
-        disco._static_hosts[device_uid] = host  # noqa: SLF001
-        disco.start_keepalive()
-        return ctrl
-
-    # Create controller via the pizone library internals
-    controller = pizone.Controller(
-        disco.pi_disco,
-        device_uid=device_uid,
-        device_ip=host,
-        is_v2=False,
-        is_ipower=False,
-    )
-    await controller._initialize()  # noqa: SLF001
-
-    # Register it in the discovery service
-    disco.pi_disco.controllers[device_uid] = controller
-    disco.pi_disco.controller_discovered(controller)
-
-    # Track this as a static-IP controller and start keepalive
-    disco._static_hosts[device_uid] = host  # noqa: SLF001
-    disco.start_keepalive()
-
-    return controller
+    return await disco.async_register_controller(host, device_uid)

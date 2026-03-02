@@ -348,7 +348,7 @@ async def test_setup_entry_with_host(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_add.assert_called_once_with(hass, "192.168.2.100")
+    mock_add.assert_called_once_with(hass, "192.168.2.100", "000013170")
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
