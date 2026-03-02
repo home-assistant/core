@@ -78,10 +78,9 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_captcha_img_tag(self, captcha_image: str | None) -> str:
         """Return an HTML img tag for the CAPTCHA image."""
-        if not captcha_image:
+        if not captcha_image or not captcha_image.startswith("data:image/"):
             return ""
-        # captcha_image is already a data URL like "data:image/png;base64,..."
-        return f'<img src="{captcha_image}"/>'
+        return f'![CAPTCHA]({captcha_image})'
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

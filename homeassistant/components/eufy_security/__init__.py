@@ -18,7 +18,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_RTSP_CREDENTIALS, CONF_SESSION_STATE, DOMAIN, PLATFORMS
+from .const import (
+    CONF_CONFIG_ENTRY_MINOR_VERSION,
+    CONF_RTSP_CREDENTIALS,
+    CONF_SESSION_STATE,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import (
     EufySecurityConfigEntry,
     EufySecurityCoordinator,
@@ -47,7 +53,9 @@ async def async_migrate_entry(
                 session_state[key] = data.pop(key)
         if session_state:
             data[CONF_SESSION_STATE] = session_state
-        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        hass.config_entries.async_update_entry(
+            config_entry, data=data, minor_version=CONF_CONFIG_ENTRY_MINOR_VERSION
+        )
         _LOGGER.debug("Migrated config entry to version 1.2")
 
     return True
