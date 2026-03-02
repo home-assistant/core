@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from aiohttp import ClientError
 from pyfreshr import FreshrClient
-from pyfreshr.exceptions import LoginError, ScrapeError
+from pyfreshr.exceptions import ApiResponseError, LoginError
 from pyfreshr.models import DeviceReadings, DeviceSummary
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,8 +25,8 @@ READINGS_SCAN_INTERVAL = timedelta(minutes=10)
 class FreshrData:
     """Runtime data stored on the config entry."""
 
-    devices: "FreshrDevicesCoordinator"
-    readings: "FreshrReadingsCoordinator"
+    devices: FreshrDevicesCoordinator
+    readings: FreshrReadingsCoordinator
 
 
 type FreshrConfigEntry = ConfigEntry[FreshrData]
@@ -68,7 +68,7 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[list[DeviceSummary]]):
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
             ) from err
-        except (ScrapeError, ClientError) as err:
+        except (ApiResponseError, ClientError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -105,19 +105,16 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[dict[str, DeviceReadings]]
         try:
             results: dict[str, DeviceReadings] = {}
             for device in devices:
-                if device.id:
-                    current = (
-                        await self._devices_coordinator.client.fetch_device_current(
-                            device
-                        )
-                    )
-                    results[device.id] = current
+                current = await self._devices_coordinator.client.fetch_device_current(
+                    device
+                )
+                results[device.id] = current
         except LoginError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
             ) from err
-        except (ScrapeError, ClientError) as err:
+        except (ApiResponseError, ClientError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",

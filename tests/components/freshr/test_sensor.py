@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
-from pyfreshr.exceptions import LoginError, ScrapeError
+from pyfreshr.exceptions import ApiResponseError, LoginError
 from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
 
@@ -152,13 +152,15 @@ async def test_setup_auth_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_scrape_error(
+async def test_setup_api_response_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_freshr_client: MagicMock,
 ) -> None:
-    """Test that a ScrapeError during setup triggers a retry."""
-    mock_freshr_client.fetch_devices = AsyncMock(side_effect=ScrapeError("parse error"))
+    """Test that an ApiResponseError during setup triggers a retry."""
+    mock_freshr_client.fetch_devices = AsyncMock(
+        side_effect=ApiResponseError("parse error")
+    )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -194,25 +196,6 @@ async def test_setup_no_devices(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_sensor_device_disappears(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sensors return unknown when a device is no longer in coordinator data."""
-    runtime_data = mock_config_entry.runtime_data
-    runtime_data.readings.data = {}
-    runtime_data.readings.async_update_listeners()
-    await hass.async_block_till_done()
-
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_t1")
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "unknown"
 
 
 @pytest.mark.usefixtures("init_integration")

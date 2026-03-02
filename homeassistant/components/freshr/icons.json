@@ -1,25 +1,16 @@
 {
   "entity": {
     "sensor": {
-      "co2": {
-        "default": "mdi:molecule-co2"
-      },
       "dew_point": {
         "default": "mdi:thermometer-water"
       },
       "flow": {
         "default": "mdi:fan"
       },
-      "humidity": {
-        "default": "mdi:water-percent"
-      },
       "inside_temperature": {
         "default": "mdi:home-thermometer"
       },
       "outside_temperature": {
-        "default": "mdi:thermometer"
-      },
-      "temperature": {
         "default": "mdi:thermometer"
       }
     }

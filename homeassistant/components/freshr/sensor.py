@@ -2,17 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from pyfreshr.models import DeviceReadings, DeviceType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfVolumeFlowRate
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,50 +30,70 @@ from .coordinator import FreshrConfigEntry, FreshrReadingsCoordinator
 
 PARALLEL_UPDATES = 0
 
-_T1 = SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class FreshrSensorEntityDescription(SensorEntityDescription):
+    """Describes a Fresh-r sensor."""
+
+    value_fn: Callable[[DeviceReadings], StateType]
+
+
+_T1 = FreshrSensorEntityDescription(
     key="t1",
     translation_key="inside_temperature",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda r: r.t1,
 )
-_T2 = SensorEntityDescription(
+_T2 = FreshrSensorEntityDescription(
     key="t2",
     translation_key="outside_temperature",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda r: r.t2,
 )
-_CO2 = SensorEntityDescription(
+_CO2 = FreshrSensorEntityDescription(
     key="co2",
-    translation_key="co2",
     device_class=SensorDeviceClass.CO2,
-    native_unit_of_measurement="ppm",
+    native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda r: r.co2,
 )
-_HUM = SensorEntityDescription(
+_HUM = FreshrSensorEntityDescription(
     key="hum",
-    translation_key="humidity",
     device_class=SensorDeviceClass.HUMIDITY,
     native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda r: r.hum,
 )
-_FLOW = SensorEntityDescription(
+_FLOW = FreshrSensorEntityDescription(
     key="flow",
     translation_key="flow",
+    device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
     native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda r: r.flow,
 )
-_DP = SensorEntityDescription(
+_DP = FreshrSensorEntityDescription(
     key="dp",
     translation_key="dew_point",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
     entity_registry_enabled_default=False,
+    value_fn=lambda r: r.dp,
 )
-_TEMP = SensorEntityDescription(
+_TEMP = FreshrSensorEntityDescription(
     key="temp",
-    translation_key="temperature",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda r: r.temp,
 )
 
-SENSOR_TYPES: dict[DeviceType, tuple[SensorEntityDescription, ...]] = {
+SENSOR_TYPES: dict[DeviceType, tuple[FreshrSensorEntityDescription, ...]] = {
     DeviceType.FRESH_R: (_T1, _T2, _CO2, _HUM, _FLOW, _DP),
     DeviceType.FORWARD: (_T1, _T2, _CO2, _HUM, _FLOW, _DP, _TEMP),
     DeviceType.MONITOR: (_CO2, _HUM, _DP, _TEMP),
@@ -83,46 +111,28 @@ async def async_setup_entry(
     known_device_ids: set[str] = set()
 
     def _async_add_new_devices() -> None:
-        """Add sensors for new devices and remove entries for stale devices."""
-        current_device_ids: set[str] = set()
-        if devices_coordinator.data:
-            device_map = {d.id: d for d in devices_coordinator.data if d.id}
-            current_device_ids = set(device_map)
-
-            new_device_ids = current_device_ids - known_device_ids
-            if new_device_ids:
-                known_device_ids.update(new_device_ids)
-                entities: list[FreshrSensor] = []
-                for device_id in new_device_ids:
-                    device_summary = device_map[device_id]
-                    descriptions = SENSOR_TYPES.get(
-                        device_summary.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
-                    )
-                    device_info = DeviceInfo(
-                        identifiers={(DOMAIN, device_id)},
-                        name=device_id,
-                        manufacturer="Fresh-r",
-                    )
-                    entities.extend(
-                        FreshrSensor(
-                            readings_coordinator, device_id, description, device_info
-                        )
-                        for description in descriptions
-                    )
-                async_add_entities(entities)
-
-        stale_device_ids = known_device_ids - current_device_ids
-        if stale_device_ids:
-            registry = dr.async_get(hass)
-            for device_id in stale_device_ids:
-                if device_entry := registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
-                ):
-                    registry.async_update_device(
-                        device_entry.id,
-                        remove_config_entry_id=config_entry.entry_id,
-                    )
-            known_device_ids.difference_update(stale_device_ids)
+        """Add sensors for any devices not yet registered."""
+        if not devices_coordinator.data:
+            return
+        entities: list[FreshrSensor] = []
+        for device in devices_coordinator.data:
+            if device.id in known_device_ids:
+                continue
+            known_device_ids.add(device.id)
+            descriptions = SENSOR_TYPES.get(
+                device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
+            )
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, device.id)},
+                name=device.id,
+                manufacturer="Fresh-r",
+            )
+            entities.extend(
+                FreshrSensor(readings_coordinator, device.id, description, device_info)
+                for description in descriptions
+            )
+        if entities:
+            async_add_entities(entities)
 
     config_entry.async_on_unload(
         devices_coordinator.async_add_listener(_async_add_new_devices)
@@ -133,14 +143,13 @@ async def async_setup_entry(
 class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
     """Representation of a Fresh-r sensor."""
 
-    _attr_has_entity_name = True
-    _attr_should_poll = False
+    entity_description: FreshrSensorEntityDescription
 
     def __init__(
         self,
         coordinator: FreshrReadingsCoordinator,
         device_id: str,
-        description: SensorEntityDescription,
+        description: FreshrSensorEntityDescription,
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
@@ -153,18 +162,7 @@ class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value from coordinator data."""
-        device_current: DeviceReadings | None = self.coordinator.data.get(
-            self._device_id
-        )
+        device_current = self.coordinator.data.get(self._device_id)
         if device_current is None:
             return None
-
-        value = getattr(device_current, self.entity_description.key, None)
-        if value is None:
-            return None
-
-        if self.entity_description.key in ("t1", "t2", "dp", "temp", "flow"):
-            return float(value)
-        if self.entity_description.key in ("co2", "hum"):
-            return int(value)
-        return None
+        return self.entity_description.value_fn(device_current)

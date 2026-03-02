@@ -45,26 +45,17 @@
   },
   "entity": {
     "sensor": {
-      "co2": {
-        "name": "CO2"
-      },
       "dew_point": {
         "name": "Dew point"
       },
       "flow": {
         "name": "Flow"
       },
-      "humidity": {
-        "name": "Humidity"
-      },
       "inside_temperature": {
         "name": "Inside temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
-      },
-      "temperature": {
-        "name": "Temperature"
       }
     }
   },

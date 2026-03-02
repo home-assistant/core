@@ -18,7 +18,7 @@ MOCK_DEVICE_CURRENT = DeviceReadings(
     t1=21.5,
     t2=5.3,
     co2=850,
-    hum=45.0,
+    hum=45,
     flow=0.12,
     dp=10.2,
 )
