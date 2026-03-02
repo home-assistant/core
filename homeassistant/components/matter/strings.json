@@ -642,7 +642,7 @@
   },
   "services": {
     "clear_lock_credential": {
-      "description": "Removes a credential from the lock.",
+      "description": "Removes a credential from a lock.",
       "fields": {
         "credential_index": {
           "description": "The credential slot index to clear.",
@@ -666,7 +666,7 @@
       "name": "Clear lock user"
     },
     "get_lock_credential_status": {
-      "description": "Returns the status of a credential slot on the lock.",
+      "description": "Returns the status of a credential slot on a lock.",
       "fields": {
         "credential_index": {
           "description": "The credential slot index to query.",
@@ -684,7 +684,7 @@
       "name": "Get lock info"
     },
     "get_lock_users": {
-      "description": "Returns all users configured on the lock with their credentials.",
+      "description": "Returns all users configured on a lock with their credentials.",
       "name": "Get lock users"
     },
     "open_commissioning_window": {
@@ -698,7 +698,7 @@
       "name": "Open commissioning window"
     },
     "set_lock_credential": {
-      "description": "Adds or updates a credential on the lock.",
+      "description": "Adds or updates a credential on a lock.",
       "fields": {
         "credential_data": {
           "description": "The credential data. For PIN: digits only. For RFID: hexadecimal string.",
