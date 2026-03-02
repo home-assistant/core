@@ -474,11 +474,7 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         cameras = self._get_live_cameras()
 
         if not cameras:
-            # No cameras found - show message from strings.json
-            return self.async_show_form(
-                step_id="no_cameras",
-                data_schema=vol.Schema({}),
-            )
+            return self.async_abort(reason="no_cameras")
 
         # Store camera list and existing credentials
         self._camera_serials = list(cameras.keys())

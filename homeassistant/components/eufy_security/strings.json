@@ -90,6 +90,9 @@
     }
   },
   "options": {
+    "abort": {
+      "no_cameras": "No cameras found. Reload the integration first."
+    },
     "step": {
       "camera": {
         "data": {
@@ -105,10 +108,6 @@
       },
       "init": {
         "title": "RTSP streaming settings"
-      },
-      "no_cameras": {
-        "description": "No cameras found. Reload the integration first.",
-        "title": "No cameras"
       }
     }
   }
