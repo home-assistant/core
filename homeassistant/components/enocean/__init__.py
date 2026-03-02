@@ -8,7 +8,10 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
@@ -47,7 +50,7 @@ async def async_setup_entry(
     gateway = Gateway(port=config_entry.data[CONF_DEVICE])
 
     gateway.add_erp1_received_callback(
-        lambda packet: dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
+        lambda packet: async_dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
     )
 
     try:
