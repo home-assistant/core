@@ -12,10 +12,13 @@ from homeassistant.components.sia.const import (
     CONF_ACCOUNTS,
     CONF_ADDITIONAL_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
+    CONF_FORWARD_HEARTBEAT,
     CONF_IGNORE_TIMESTAMPS,
+    CONF_PANEL_ID,
     CONF_PING_INTERVAL,
     CONF_ZONES,
     DOMAIN,
+    PROTOCOL_OH,
 )
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
@@ -103,6 +106,87 @@ ADDITIONAL_OPTIONS = {
         "ABCDEF": {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: 2},
         "ACC2": {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: 2},
     }
+}
+
+# --- OH Protocol test data ---
+
+OH_CONFIG_ENTRY_ID = 3
+OH_BASIC_CONFIG = {
+    CONF_PORT: 7778,
+    CONF_PROTOCOL: PROTOCOL_OH,
+    CONF_ACCOUNT: "ABCDEF",
+    CONF_PANEL_ID: "FF",
+    CONF_FORWARD_HEARTBEAT: True,
+    CONF_PING_INTERVAL: 10,
+    CONF_ZONES: 1,
+    CONF_ADDITIONAL_ACCOUNTS: False,
+}
+
+OH_BASE_OUT = {
+    "data": {
+        CONF_PORT: 7778,
+        CONF_PROTOCOL: PROTOCOL_OH,
+        CONF_ACCOUNTS: [
+            {
+                CONF_ACCOUNT: "ABCDEF",
+                CONF_PANEL_ID: 255,
+                CONF_FORWARD_HEARTBEAT: True,
+                CONF_PING_INTERVAL: 10,
+            },
+        ],
+    },
+    "options": {
+        CONF_ACCOUNTS: {"ABCDEF": {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: 1}}
+    },
+}
+
+OH_BASIC_OPTIONS = {CONF_ZONES: 2}
+
+OH_BASIC_CONFIG_ADDITIONAL = {
+    CONF_PORT: 7778,
+    CONF_PROTOCOL: PROTOCOL_OH,
+    CONF_ACCOUNT: "ABCDEF",
+    CONF_PANEL_ID: "FF",
+    CONF_FORWARD_HEARTBEAT: True,
+    CONF_PING_INTERVAL: 10,
+    CONF_ZONES: 1,
+    CONF_ADDITIONAL_ACCOUNTS: True,
+}
+
+OH_ADDITIONAL_ACCOUNT = {
+    CONF_ACCOUNT: "ACC2",
+    CONF_PANEL_ID: "A0",
+    CONF_FORWARD_HEARTBEAT: False,
+    CONF_PING_INTERVAL: 2,
+    CONF_ZONES: 2,
+    CONF_ADDITIONAL_ACCOUNTS: False,
+}
+
+OH_ADDITIONAL_OUT = {
+    "data": {
+        CONF_PORT: 7778,
+        CONF_PROTOCOL: PROTOCOL_OH,
+        CONF_ACCOUNTS: [
+            {
+                CONF_ACCOUNT: "ABCDEF",
+                CONF_PANEL_ID: 255,
+                CONF_FORWARD_HEARTBEAT: True,
+                CONF_PING_INTERVAL: 10,
+            },
+            {
+                CONF_ACCOUNT: "ACC2",
+                CONF_PANEL_ID: 160,
+                CONF_FORWARD_HEARTBEAT: False,
+                CONF_PING_INTERVAL: 2,
+            },
+        ],
+    },
+    "options": {
+        CONF_ACCOUNTS: {
+            "ABCDEF": {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: 1},
+            "ACC2": {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: 2},
+        }
+    },
 }
 
 
@@ -360,3 +444,149 @@ async def test_options_additional(hass: HomeAssistant) -> None:
     assert updated["type"] is FlowResultType.FORM
     assert updated["step_id"] == "options"
     assert updated["last_step"]
+
+
+# --- OH Protocol tests ---
+
+
+async def test_create_oh(hass: HomeAssistant, flow_at_user_step) -> None:
+    """Test we create an OH config entry with panel_id as int and forward_heartbeat."""
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            flow_at_user_step["flow_id"], OH_BASIC_CONFIG
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"SIA Alarm on port {OH_BASIC_CONFIG[CONF_PORT]}"
+    assert result["data"] == OH_BASE_OUT["data"]
+    assert result["options"] == OH_BASE_OUT["options"]
+
+
+async def test_create_oh_additional_account(
+    hass: HomeAssistant, flow_at_user_step
+) -> None:
+    """Test we create an OH config with two accounts."""
+    flow_at_add = await hass.config_entries.flow.async_configure(
+        flow_at_user_step["flow_id"], OH_BASIC_CONFIG_ADDITIONAL
+    )
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            flow_at_add["flow_id"], OH_ADDITIONAL_ACCOUNT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == OH_ADDITIONAL_OUT["data"]
+    assert result["options"] == OH_ADDITIONAL_OUT["options"]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("panel_id", "ZZZ", "invalid_panel_id_format"),
+        ("panel_id", "AAAAAAAAAAAAAAAAAA", "invalid_panel_id_length"),
+        ("account", "ZZZ", "invalid_account_format"),
+        ("account", "A", "invalid_account_length"),
+        ("ping_interval", 1500, "invalid_ping"),
+        ("zones", 0, "invalid_zones"),
+    ],
+)
+async def test_validation_errors_oh_user(
+    hass: HomeAssistant,
+    flow_at_user_step,
+    field,
+    value,
+    error,
+) -> None:
+    """Test we handle invalid OH inputs in the user flow."""
+    config = OH_BASIC_CONFIG.copy()
+    flow_id = flow_at_user_step["flow_id"]
+    config[field] = value
+    result_err = await hass.config_entries.flow.async_configure(flow_id, config)
+    assert result_err["type"] is FlowResultType.FORM
+    assert result_err["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("panel_id", "ZZZ", "invalid_panel_id_format"),
+        ("panel_id", "AAAAAAAAAAAAAAAAAA", "invalid_panel_id_length"),
+        ("account", "ZZZ", "invalid_account_format"),
+        ("account", "A", "invalid_account_length"),
+        ("ping_interval", 1500, "invalid_ping"),
+        ("zones", 0, "invalid_zones"),
+    ],
+)
+async def test_validation_errors_oh_account(
+    hass: HomeAssistant,
+    flow_at_user_step,
+    field,
+    value,
+    error,
+) -> None:
+    """Test we handle invalid OH inputs in the add_account flow."""
+    flow_at_add = await hass.config_entries.flow.async_configure(
+        flow_at_user_step["flow_id"], OH_BASIC_CONFIG_ADDITIONAL
+    )
+    config = OH_ADDITIONAL_ACCOUNT.copy()
+    flow_id = flow_at_add["flow_id"]
+    config[field] = value
+    result_err = await hass.config_entries.flow.async_configure(flow_id, config)
+    assert result_err["type"] is FlowResultType.FORM
+    assert result_err["errors"] == {"base": error}
+
+
+async def test_unknown_oh_user(hass: HomeAssistant, flow_at_user_step) -> None:
+    """Test unknown exceptions for OH validation."""
+    flow_id = flow_at_user_step["flow_id"]
+    with patch(
+        "osbornehoffman.OHAccount.validate_account",
+        side_effect=Exception,
+    ):
+        result_err = await hass.config_entries.flow.async_configure(
+            flow_id, OH_BASIC_CONFIG
+        )
+        assert result_err
+        assert result_err["step_id"] == "user"
+        assert result_err["errors"] == {"base": "unknown"}
+        assert result_err["data_schema"] == HUB_SCHEMA
+
+
+async def test_options_oh(hass: HomeAssistant) -> None:
+    """Test options flow for OH account only shows zones, not ignore_timestamps."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=OH_BASE_OUT["data"],
+        options=OH_BASE_OUT["options"],
+        title="SIA Alarm on port 7778",
+        entry_id=OH_CONFIG_ENTRY_ID,
+        version=1,
+    )
+    with (
+        patch("osbornehoffman.OHReceiver", autospec=True),
+        patch("osbornehoffman.OHAccount", autospec=True),
+    ):
+        await setup_sia(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+    assert result["last_step"]
+
+    # Verify ignore_timestamps is NOT in the schema
+    schema_keys = [str(k) for k in result["data_schema"].schema]
+    assert CONF_ZONES in schema_keys
+    assert CONF_IGNORE_TIMESTAMPS not in schema_keys
+
+    # Submit only zones (no ignore_timestamps)
+    updated = await hass.config_entries.options.async_configure(
+        result["flow_id"], OH_BASIC_OPTIONS
+    )
+    await hass.async_block_till_done()
+    assert updated["type"] is FlowResultType.CREATE_ENTRY
+    # ignore_timestamps retains its default value, zones updated
+    assert updated["data"] == {
+        CONF_ACCOUNTS: {
+            OH_BASIC_CONFIG[CONF_ACCOUNT]: {
+                CONF_IGNORE_TIMESTAMPS: False,
+                CONF_ZONES: 2,
+            }
+        }
+    }
