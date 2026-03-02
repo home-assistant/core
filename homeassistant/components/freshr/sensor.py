@@ -93,6 +93,12 @@ _TEMP = FreshrSensorEntityDescription(
     value_fn=lambda r: r.temp,
 )
 
+_DEVICE_TYPE_NAMES: dict[DeviceType, str] = {
+    DeviceType.FRESH_R: "Fresh-r",
+    DeviceType.FORWARD: "Fresh-r Forward",
+    DeviceType.MONITOR: "Fresh-r Monitor",
+}
+
 SENSOR_TYPES: dict[DeviceType, tuple[FreshrSensorEntityDescription, ...]] = {
     DeviceType.FRESH_R: (_T1, _T2, _CO2, _HUM, _FLOW, _DP),
     DeviceType.FORWARD: (_T1, _T2, _CO2, _HUM, _FLOW, _DP, _TEMP),
@@ -124,7 +130,8 @@ async def async_setup_entry(
             )
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, device.id)},
-                name=device.id,
+                name=_DEVICE_TYPE_NAMES.get(device.device_type, "Fresh-r"),
+                serial_number=device.id,
                 manufacturer="Fresh-r",
             )
             entities.extend(
@@ -143,6 +150,7 @@ async def async_setup_entry(
 class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
     """Representation of a Fresh-r sensor."""
 
+    _attr_has_entity_name = True
     entity_description: FreshrSensorEntityDescription
 
     def __init__(
