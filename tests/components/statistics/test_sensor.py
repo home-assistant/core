@@ -48,7 +48,12 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_restore_state_shutdown_restart,
+    get_fixture_path,
+)
 from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
@@ -265,6 +270,7 @@ async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
 )
 async def test_sensor_state_updated_reported(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     values: list[float],
     attributes: list[dict[str, Any]],
     force_update: bool,
@@ -277,22 +283,29 @@ async def test_sensor_state_updated_reported(
     This fixes problems with time based averages and some other functions that behave
     differently when repeating values are reported.
     """
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "statistics",
-                    "name": "test_normal",
-                    "entity_id": "sensor.test_monitored",
-                    "state_characteristic": "mean",
-                    "sampling_size": 20,
-                },
-            ]
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "test_normal",
+            "entity_id": "sensor.test_monitored",
+            "state_characteristic": "mean",
+            "sampling_size": 20.0,
+            "keep_last_sample": False,
+            "percentile": 50.0,
+            "precision": 2.0,
         },
     )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    def verify_state(expected: list[float]) -> None:
+        state = hass.states.get("sensor.test_normal")
+        assert state
+        assert state.state == str(round(sum(expected) / len(expected), 2))
+        assert state.attributes.get("buffer_usage_ratio") == round(
+            len(expected) / 20, 2
+        )
 
     for value, attribute in zip(values, attributes, strict=True):
         hass.states.async_set(
@@ -302,11 +315,27 @@ async def test_sensor_state_updated_reported(
             force_update=force_update,
         )
     await hass.async_block_till_done()
+    verify_state(values)
 
-    state = hass.states.get("sensor.test_normal")
-    assert state
-    assert state.state == str(round(sum(values) / 9, 2))
-    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+    # Remove and re-add the sensor to test the restore process.
+    await async_mock_restore_state_shutdown_restart(hass)
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    verify_state(values)
+
+    # Add a new value to verify that the internal state has been restored correctly.
+    NEW_VALUE = 42
+    hass.states.async_set(
+        "sensor.test_monitored",
+        str(NEW_VALUE),
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        force_update=force_update,
+    )
+    await hass.async_block_till_done()
+    verify_state([*values, NEW_VALUE])
 
 
 async def test_sampling_boundaries_given(hass: HomeAssistant) -> None:
