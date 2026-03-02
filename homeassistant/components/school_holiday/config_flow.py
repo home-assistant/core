@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_COUNTRY, CONF_REGION
 from homeassistant.core import callback
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.helpers import translation
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -41,30 +42,50 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entity_key = f"component.{DOMAIN}.entity.{entity_type}.name"
         return str(self._translations.get(entity_key, fallback))
 
+    @callback
+    def _get_translation_language(self) -> str:
+        """Return normalized language code for translation files."""
+        language = self.hass.config.language
+
+        if language in LANGUAGES:
+            return language
+
+        parts = language.split("-")
+        primary = parts[0]
+        if primary in LANGUAGES:
+            return primary
+
+        secondary = parts[-1]
+        if secondary in LANGUAGES:
+            return secondary
+
+        return primary
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Enter binary sensor name and select country."""
         errors: dict[str, str] = {}
 
-        if not self._translations:
-            # Load config translations.
-            self._translations = await translation.async_get_translations(
+        language = self._get_translation_language()
+
+        # Load config translations.
+        self._translations = await translation.async_get_translations(
+            self.hass,
+            language,
+            "config",
+            {DOMAIN},
+        )
+
+        # Load entity translations for default names.
+        self._translations.update(
+            await translation.async_get_translations(
                 self.hass,
-                self.hass.config.language,
-                "config",
+                language,
+                "entity",
                 {DOMAIN},
             )
-
-            # Load entity translations for default names.
-            self._translations.update(
-                await translation.async_get_translations(
-                    self.hass,
-                    self.hass.config.language,
-                    "entity",
-                    {DOMAIN},
-                )
-            )
+        )
 
         if user_input is not None:
             sensor_name = user_input.get(CONF_SENSOR_NAME, "").strip()

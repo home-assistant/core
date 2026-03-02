@@ -111,3 +111,124 @@ async def test_calendar_flow_empty_calendar_name(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "calendar"
     assert "required" in result["errors"].get(CONF_CALENDAR_NAME, "")
+
+
+@pytest.mark.asyncio
+async def test_defaults_are_localized_for_locale_variant(
+    hass: HomeAssistant,
+) -> None:
+    """Test defaults are localized for a language with region suffix."""
+    hass.config.language = "nl-NL"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    sensor_name_key = next(
+        schema_key
+        for schema_key in result["data_schema"].schema
+        if schema_key == CONF_SENSOR_NAME
+    )
+
+    assert sensor_name_key.default() == "Schoolvakantie Sensor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SENSOR_NAME: TEST_SENSOR_NAME,
+            CONF_COUNTRY: TEST_COUNTRY,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "region"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REGION: TEST_REGION}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "calendar"
+
+    calendar_name_key = next(
+        schema_key
+        for schema_key in result["data_schema"].schema
+        if schema_key == CONF_CALENDAR_NAME
+    )
+
+    assert calendar_name_key.default() == "Schoolvakantie Kalender"
+
+
+@pytest.mark.asyncio
+async def test_defaults_are_localized_for_country_language_variant(
+    hass: HomeAssistant,
+) -> None:
+    """Test defaults are localized when locale is formatted as country-language."""
+    hass.config.language = "be-nl"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    sensor_name_key = next(
+        schema_key
+        for schema_key in result["data_schema"].schema
+        if schema_key == CONF_SENSOR_NAME
+    )
+
+    assert sensor_name_key.default() == "Schoolvakantie Sensor"
+
+
+@pytest.mark.asyncio
+async def test_defaults_fallback_to_english_for_other_languages(
+    hass: HomeAssistant,
+) -> None:
+    """Test defaults fall back to English when no translation exists."""
+    hass.config.language = "fr"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    sensor_name_key = next(
+        schema_key
+        for schema_key in result["data_schema"].schema
+        if schema_key == CONF_SENSOR_NAME
+    )
+
+    assert sensor_name_key.default() == "School Holiday Sensor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SENSOR_NAME: TEST_SENSOR_NAME,
+            CONF_COUNTRY: TEST_COUNTRY,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "region"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REGION: TEST_REGION}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "calendar"
+
+    calendar_name_key = next(
+        schema_key
+        for schema_key in result["data_schema"].schema
+        if schema_key == CONF_CALENDAR_NAME
+    )
+
+    assert calendar_name_key.default() == "School Holiday Calendar"
