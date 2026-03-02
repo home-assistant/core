@@ -17,20 +17,12 @@ from kiosker import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as HAConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    CONF_API_TOKEN,
-    CONF_SSL,
-    CONF_SSL_VERIFY,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DEFAULT_SSL_VERIFY,
-    DOMAIN,
-)
+from .const import CONF_API_TOKEN, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,14 +32,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_API_TOKEN): str,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
 STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_TOKEN): str,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        vol.Optional(CONF_SSL_VERIFY, default=DEFAULT_SSL_VERIFY): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
 
@@ -63,32 +55,35 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         port=data[CONF_PORT],
         token=data[CONF_API_TOKEN],
         ssl=data[CONF_SSL],
-        verify=data[CONF_SSL_VERIFY],
+        verify=data[CONF_VERIFY_SSL],
     )
 
     try:
         # Test connection by getting status
         status = await hass.async_add_executor_job(api.status)
     except ConnectionError as exc:
-        _LOGGER.error("Failed to connect to Kiosker: %s", exc)
+        _LOGGER.debug("Failed to connect", exc_info=True)
         raise CannotConnect from exc
     except (AuthenticationError, IPAuthenticationError) as exc:
-        _LOGGER.error("Authentication failed: %s", exc)
+        _LOGGER.debug("Authentication failed", exc_info=True)
         raise InvalidAuth from exc
     except TLSVerificationError as exc:
-        _LOGGER.error("TLS verification failed: %s", exc)
+        _LOGGER.debug("TLS verification failed", exc_info=True)
         raise TLSError from exc
     except BadRequestError as exc:
-        _LOGGER.error("Bad request: %s", exc)
+        _LOGGER.debug("Bad request", exc_info=True)
         raise BadRequest from exc
     except PingError as exc:
-        _LOGGER.error("Ping failed: %s", exc)
+        _LOGGER.debug("Ping failed", exc_info=True)
         raise CannotConnect from exc
     except (OSError, TimeoutError) as exc:
-        _LOGGER.error("Failed to connect to Kiosker: %s", exc)
+        _LOGGER.debug("Failed to connect", exc_info=True)
         raise CannotConnect from exc
     except (ValueError, TypeError) as exc:
-        _LOGGER.error("Invalid configuration data: %s", exc)
+        _LOGGER.debug("Invalid configuration data", exc_info=True)
+        raise CannotConnect from exc
+    except Exception as exc:
+        _LOGGER.exception("Unexpected exception while connecting to Kiosker")
         raise CannotConnect from exc
 
     # Ensure we have a device_id from the status response
@@ -171,8 +166,8 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
             device_name = f"{app_name} ({uuid[:8].upper()})"
             unique_id = uuid
         else:
-            _LOGGER.error("Device did not return a valid device_id")
-            raise CannotConnect
+            _LOGGER.warning("Device did not return a valid device_id")
+            return self.async_abort(reason="cannot_connect")
 
         # Set unique ID and check for duplicates
         await self.async_set_unique_id(unique_id)
@@ -214,7 +209,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
                 CONF_PORT: port,
                 CONF_API_TOKEN: user_input[CONF_API_TOKEN],
                 CONF_SSL: user_input.get(CONF_SSL, DEFAULT_SSL),
-                CONF_SSL_VERIFY: user_input.get(CONF_SSL_VERIFY, DEFAULT_SSL_VERIFY),
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
             }
 
             try:

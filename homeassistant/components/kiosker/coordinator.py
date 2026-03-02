@@ -20,12 +20,12 @@ from kiosker import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_TOKEN, CONF_SSL, CONF_SSL_VERIFY, DOMAIN, POLL_INTERVAL
+from .const import CONF_API_TOKEN, DOMAIN, POLL_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
             port=config_entry.data[CONF_PORT],
             token=config_entry.data[CONF_API_TOKEN],
             ssl=config_entry.data.get(CONF_SSL, False),
-            verify=config_entry.data.get(CONF_SSL_VERIFY, False),
+            verify=config_entry.data.get(CONF_VERIFY_SSL, False),
         )
         super().__init__(
             hass,
@@ -74,22 +74,17 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
                 self.api.screensaver_get_state
             )
         except (AuthenticationError, IPAuthenticationError) as exc:
-            _LOGGER.error("Authentication failed: %s", exc)
             raise ConfigEntryAuthFailed("Authentication failed") from exc
         except (ConnectionError, PingError) as exc:
-            _LOGGER.debug("Connection failed: %s", exc)
             raise UpdateFailed(f"Connection failed: {exc}") from exc
         except TLSVerificationError as exc:
-            _LOGGER.debug("TLS verification failed: %s", exc)
             raise UpdateFailed(f"TLS verification failed: {exc}") from exc
         except BadRequestError as exc:
-            _LOGGER.warning("Bad request to Kiosker API: %s", exc)
             raise UpdateFailed(f"Bad request: {exc}") from exc
         except (OSError, TimeoutError) as exc:
-            _LOGGER.debug("Connection timeout or OS error: %s", exc)
             raise UpdateFailed(f"Connection timeout: {exc}") from exc
         except Exception as exc:
-            _LOGGER.exception("Unexpected error updating Kiosker data")
+            _LOGGER.debug("Unexpected error updating Kiosker data")
             raise UpdateFailed(f"Unexpected error: {exc}") from exc
 
         return KioskerData(
