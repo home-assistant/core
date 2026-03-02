@@ -15,15 +15,10 @@ SCAN_INTERVAL: Final = timedelta(minutes=5)
 
 ATTRIBUTION: Final = "Data provided by Eufy Security"
 
-CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 1
+CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 2
 
-# Config entry data keys for token storage
-CONF_TOKEN: Final = "token"
-CONF_TOKEN_EXPIRATION: Final = "token_expiration"
-CONF_API_BASE: Final = "api_base"
-# ECDH crypto state for session restoration
-CONF_PRIVATE_KEY: Final = "private_key"
-CONF_SERVER_PUBLIC_KEY: Final = "server_public_key"
+# Session state (opaque dict managed by the library)
+CONF_SESSION_STATE: Final = "session_state"
 
 # RTSP streaming credentials (configured via options flow)
 CONF_RTSP_CREDENTIALS: Final = "rtsp_credentials"

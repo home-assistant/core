@@ -22,15 +22,11 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_API_BASE,
     CONF_CONFIG_ENTRY_MINOR_VERSION,
-    CONF_PRIVATE_KEY,
     CONF_RTSP_CREDENTIALS,
     CONF_RTSP_PASSWORD,
     CONF_RTSP_USERNAME,
-    CONF_SERVER_PUBLIC_KEY,
-    CONF_TOKEN,
-    CONF_TOKEN_EXPIRATION,
+    CONF_SESSION_STATE,
     DOMAIN,
 )
 from .coordinator import EufySecurityConfigEntry
@@ -121,21 +117,12 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Store token data and crypto state from successful login
-                token_exp = api.token_expiration
-                crypto_state = api.get_crypto_state()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_TOKEN: api.token,
-                        CONF_TOKEN_EXPIRATION: (
-                            token_exp.isoformat() if token_exp else None
-                        ),
-                        CONF_API_BASE: api.api_base,
-                        CONF_PRIVATE_KEY: crypto_state["private_key"],
-                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                        CONF_SESSION_STATE: api.get_session_state(),
                     },
                 )
 
@@ -194,21 +181,12 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Store token data and crypto state from successful login
-                token_exp = api.token_expiration
-                crypto_state = api.get_crypto_state()
                 return self.async_create_entry(
                     title=self._pending_credentials[CONF_EMAIL],
                     data={
                         CONF_EMAIL: self._pending_credentials[CONF_EMAIL],
                         CONF_PASSWORD: self._pending_credentials[CONF_PASSWORD],
-                        CONF_TOKEN: api.token,
-                        CONF_TOKEN_EXPIRATION: (
-                            token_exp.isoformat() if token_exp else None
-                        ),
-                        CONF_API_BASE: api.api_base,
-                        CONF_PRIVATE_KEY: crypto_state["private_key"],
-                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                        CONF_SESSION_STATE: api.get_session_state(),
                     },
                 )
 
@@ -263,20 +241,11 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Include token and crypto state in update
-                token_exp = api.token_expiration
-                crypto_state = api.get_crypto_state()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
                         **credentials,
-                        CONF_TOKEN: api.token,
-                        CONF_TOKEN_EXPIRATION: (
-                            token_exp.isoformat() if token_exp else None
-                        ),
-                        CONF_API_BASE: api.api_base,
-                        CONF_PRIVATE_KEY: crypto_state["private_key"],
-                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                        CONF_SESSION_STATE: api.get_session_state(),
                     },
                 )
 
@@ -339,20 +308,11 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Include token and crypto state in update
-                token_exp = api.token_expiration
-                crypto_state = api.get_crypto_state()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
                         **self._pending_credentials,
-                        CONF_TOKEN: api.token,
-                        CONF_TOKEN_EXPIRATION: (
-                            token_exp.isoformat() if token_exp else None
-                        ),
-                        CONF_API_BASE: api.api_base,
-                        CONF_PRIVATE_KEY: crypto_state["private_key"],
-                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                        CONF_SESSION_STATE: api.get_session_state(),
                     },
                 )
 
@@ -373,6 +333,10 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            # Check unique ID before attempting login to abort early
+            await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+            self._abort_if_unique_id_mismatch()
+
             session = async_get_clientsession(self.hass)
             try:
                 api = await async_login(
@@ -397,25 +361,12 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Update unique ID if email changed
-                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
-                self._abort_if_unique_id_mismatch()
-
-                # Include token and crypto state in update
-                token_exp = api.token_expiration
-                crypto_state = api.get_crypto_state()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data={
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_TOKEN: api.token,
-                        CONF_TOKEN_EXPIRATION: (
-                            token_exp.isoformat() if token_exp else None
-                        ),
-                        CONF_API_BASE: api.api_base,
-                        CONF_PRIVATE_KEY: crypto_state["private_key"],
-                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                        CONF_SESSION_STATE: api.get_session_state(),
                     },
                 )
 
@@ -440,6 +391,12 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            # Check unique ID before attempting login to abort early
+            await self.async_set_unique_id(
+                self._pending_credentials[CONF_EMAIL].lower()
+            )
+            self._abort_if_unique_id_mismatch()
+
             session = async_get_clientsession(self.hass)
             try:
                 # Reuse the stored API instance to maintain the same ECDH keys
@@ -482,27 +439,12 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Update unique ID if email changed
-                await self.async_set_unique_id(
-                    self._pending_credentials[CONF_EMAIL].lower()
-                )
-                self._abort_if_unique_id_mismatch()
-
-                # Include token and crypto state in update
-                token_exp = api.token_expiration
-                crypto_state = api.get_crypto_state()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data={
                         CONF_EMAIL: self._pending_credentials[CONF_EMAIL],
                         CONF_PASSWORD: self._pending_credentials[CONF_PASSWORD],
-                        CONF_TOKEN: api.token,
-                        CONF_TOKEN_EXPIRATION: (
-                            token_exp.isoformat() if token_exp else None
-                        ),
-                        CONF_API_BASE: api.api_base,
-                        CONF_PRIVATE_KEY: crypto_state["private_key"],
-                        CONF_SERVER_PUBLIC_KEY: crypto_state["server_public_key"],
+                        CONF_SESSION_STATE: api.get_session_state(),
                     },
                 )
 

@@ -6,18 +6,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.eufy_security.const import (
-    CONF_API_BASE,
-    CONF_PRIVATE_KEY,
-    CONF_SERVER_PUBLIC_KEY,
-    CONF_TOKEN,
-    CONF_TOKEN_EXPIRATION,
-    DOMAIN,
-)
+from homeassistant.components.eufy_security.const import CONF_SESSION_STATE, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+MOCK_SESSION_STATE: dict[str, str | None] = {
+    "token": "stored-token",
+    "token_expiration": (datetime.now() + timedelta(days=1)).isoformat(),
+    "api_base": "https://mysecurity.eufylife.com",
+    "private_key": "0" * 64,
+    "server_public_key": "0" * 64,
+}
 
 
 @pytest.fixture
@@ -74,14 +75,8 @@ def mock_eufy_api(
         api.token = "test-token"
         api.token_expiration = datetime.now() + timedelta(days=1)
         api.api_base = "https://mysecurity.eufylife.com"
-        api.get_crypto_state = MagicMock(
-            return_value={
-                "private_key": "0" * 64,
-                "server_public_key": "0" * 64,
-            }
-        )
-        api.restore_crypto_state = MagicMock(return_value=False)
-        api.set_token = MagicMock()
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
+        api.restore_session = MagicMock(return_value=False)
 
         mock_api_class.return_value = api
         yield api
@@ -101,12 +96,7 @@ def mock_config_flow_api(
         api.token = "test-token"
         api.token_expiration = datetime.now() + timedelta(days=1)
         api.api_base = "https://mysecurity.eufylife.com"
-        api.get_crypto_state = MagicMock(
-            return_value={
-                "private_key": "0" * 64,
-                "server_public_key": "0" * 64,
-            }
-        )
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
 
         mock_login.return_value = api
         yield api
@@ -121,15 +111,11 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
-            CONF_TOKEN: "stored-token",
-            CONF_TOKEN_EXPIRATION: (datetime.now() + timedelta(days=1)).isoformat(),
-            CONF_API_BASE: "https://mysecurity.eufylife.com",
-            CONF_PRIVATE_KEY: "0" * 64,
-            CONF_SERVER_PUBLIC_KEY: "0" * 64,
+            CONF_SESSION_STATE: dict(MOCK_SESSION_STATE),
         },
         unique_id="test@example.com",
         version=1,
-        minor_version=1,
+        minor_version=2,
     )
 
 

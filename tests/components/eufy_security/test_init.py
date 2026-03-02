@@ -1,6 +1,5 @@
 """Test the Eufy Security integration setup."""
 
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eufy_security import (
@@ -11,18 +10,13 @@ from eufy_security import (
 )
 
 from homeassistant.components.eufy_security import async_remove_config_entry_device
-from homeassistant.components.eufy_security.const import (
-    CONF_API_BASE,
-    CONF_PRIVATE_KEY,
-    CONF_SERVER_PUBLIC_KEY,
-    CONF_TOKEN,
-    CONF_TOKEN_EXPIRATION,
-    DOMAIN,
-)
+from homeassistant.components.eufy_security.const import CONF_SESSION_STATE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from .conftest import MOCK_SESSION_STATE
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +43,7 @@ async def test_setup_entry_auth_failed(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock(
             side_effect=InvalidCredentialsError("Invalid credentials")
         )
@@ -71,7 +65,7 @@ async def test_setup_entry_cannot_connect(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock(
             side_effect=CannotConnectError("Connection failed")
         )
@@ -93,7 +87,7 @@ async def test_setup_entry_api_error(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock(side_effect=EufySecurityError("API error"))
         mock_api_class.return_value = api
 
@@ -113,7 +107,7 @@ async def test_setup_entry_captcha_required(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock(
             side_effect=CaptchaRequiredError(
                 "CAPTCHA required",
@@ -136,20 +130,18 @@ async def test_setup_entry_session_restore_success(
     mock_camera: MagicMock,
     mock_station: MagicMock,
 ) -> None:
-    """Test setup restores session from stored crypto state."""
+    """Test setup restores session from stored state."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="test@example.com",
         data={
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
-            CONF_TOKEN: "stored-token",
-            CONF_TOKEN_EXPIRATION: (datetime.now() + timedelta(days=1)).isoformat(),
-            CONF_API_BASE: "https://mysecurity.eufylife.com",
-            CONF_PRIVATE_KEY: "0" * 64,
-            CONF_SERVER_PUBLIC_KEY: "0" * 64,
+            CONF_SESSION_STATE: dict(MOCK_SESSION_STATE),
         },
         unique_id="test@example.com",
+        version=1,
+        minor_version=2,
     )
 
     with patch(
@@ -158,8 +150,7 @@ async def test_setup_entry_session_restore_success(
         api = MagicMock()
         api.cameras = {mock_camera.serial: mock_camera}
         api.stations = {mock_station.serial: mock_station}
-        api.restore_crypto_state = MagicMock(return_value=True)
-        api.set_token = MagicMock()
+        api.restore_session = MagicMock(return_value=True)
         api.async_update_device_info = AsyncMock()
         api.async_authenticate = AsyncMock()
         mock_api_class.return_value = api
@@ -169,51 +160,10 @@ async def test_setup_entry_session_restore_success(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    # Should have called set_token to restore session
-    api.set_token.assert_called_once()
+    # Should have called restore_session
+    api.restore_session.assert_called_once()
     # Should NOT have called async_authenticate since session was restored
     api.async_authenticate.assert_not_called()
-
-
-async def test_setup_entry_session_restore_expired_token(
-    hass: HomeAssistant,
-    mock_camera: MagicMock,
-    mock_station: MagicMock,
-) -> None:
-    """Test setup re-authenticates when token is expired."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={
-            CONF_EMAIL: "test@example.com",
-            CONF_PASSWORD: "test-password",
-            CONF_TOKEN: "expired-token",
-            CONF_TOKEN_EXPIRATION: (datetime.now() - timedelta(days=1)).isoformat(),
-            CONF_API_BASE: "https://mysecurity.eufylife.com",
-            CONF_PRIVATE_KEY: "0" * 64,
-            CONF_SERVER_PUBLIC_KEY: "0" * 64,
-        },
-        unique_id="test@example.com",
-    )
-
-    with patch(
-        "homeassistant.components.eufy_security.EufySecurityAPI"
-    ) as mock_api_class:
-        api = MagicMock()
-        api.cameras = {mock_camera.serial: mock_camera}
-        api.stations = {mock_station.serial: mock_station}
-        api.restore_crypto_state = MagicMock(return_value=True)
-        api.async_authenticate = AsyncMock()
-        api.async_update_device_info = AsyncMock()
-        mock_api_class.return_value = api
-
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    # Should have called async_authenticate since token was expired
-    api.async_authenticate.assert_called_once()
 
 
 async def test_setup_entry_session_restore_failed(
@@ -228,13 +178,15 @@ async def test_setup_entry_session_restore_failed(
         data={
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
-            CONF_TOKEN: "stored-token",
-            CONF_TOKEN_EXPIRATION: (datetime.now() + timedelta(days=1)).isoformat(),
-            CONF_API_BASE: "https://mysecurity.eufylife.com",
-            CONF_PRIVATE_KEY: "invalid",
-            CONF_SERVER_PUBLIC_KEY: "invalid",
+            CONF_SESSION_STATE: {
+                "token": "stored-token",
+                "private_key": "invalid",
+                "server_public_key": "invalid",
+            },
         },
         unique_id="test@example.com",
+        version=1,
+        minor_version=2,
     )
 
     with patch(
@@ -243,7 +195,7 @@ async def test_setup_entry_session_restore_failed(
         api = MagicMock()
         api.cameras = {mock_camera.serial: mock_camera}
         api.stations = {mock_station.serial: mock_station}
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock()
         mock_api_class.return_value = api
@@ -269,13 +221,11 @@ async def test_setup_entry_session_restore_invalid_session(
         data={
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "test-password",
-            CONF_TOKEN: "stored-token",
-            CONF_TOKEN_EXPIRATION: (datetime.now() + timedelta(days=1)).isoformat(),
-            CONF_API_BASE: "https://mysecurity.eufylife.com",
-            CONF_PRIVATE_KEY: "0" * 64,
-            CONF_SERVER_PUBLIC_KEY: "0" * 64,
+            CONF_SESSION_STATE: dict(MOCK_SESSION_STATE),
         },
         unique_id="test@example.com",
+        version=1,
+        minor_version=2,
     )
 
     with patch(
@@ -284,8 +234,7 @@ async def test_setup_entry_session_restore_invalid_session(
         api = MagicMock()
         api.cameras = {mock_camera.serial: mock_camera}
         api.stations = {mock_station.serial: mock_station}
-        api.restore_crypto_state = MagicMock(return_value=True)
-        api.set_token = MagicMock()
+        api.restore_session = MagicMock(return_value=True)
         # First update_device_info fails (session invalid), second succeeds,
         # third is from coordinator refresh
         api.async_update_device_info = AsyncMock(
@@ -312,7 +261,7 @@ async def test_setup_entry_device_info_auth_failed(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock(
             side_effect=InvalidCredentialsError("Auth failed")
@@ -335,7 +284,7 @@ async def test_setup_entry_device_info_captcha_required(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock(
             side_effect=CaptchaRequiredError(
@@ -360,7 +309,7 @@ async def test_setup_entry_device_info_cannot_connect(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock(
             side_effect=CannotConnectError("Connection failed")
@@ -383,7 +332,7 @@ async def test_setup_entry_device_info_api_error(
         "homeassistant.components.eufy_security.EufySecurityAPI"
     ) as mock_api_class:
         api = MagicMock()
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock(
             side_effect=EufySecurityError("API error")
@@ -424,7 +373,7 @@ async def test_setup_entry_with_rtsp_credentials(
         api = MagicMock()
         api.cameras = {mock_camera.serial: mock_camera}
         api.stations = {mock_station.serial: mock_station}
-        api.restore_crypto_state = MagicMock(return_value=False)
+        api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock()
         mock_api_class.return_value = api
@@ -437,6 +386,53 @@ async def test_setup_entry_with_rtsp_credentials(
     # Check RTSP credentials were applied
     assert mock_camera.rtsp_username == "rtsp_user"
     assert mock_camera.rtsp_password == "rtsp_pass"
+
+
+async def test_setup_entry_migrates_v1_to_v1_2(
+    hass: HomeAssistant,
+    mock_camera: MagicMock,
+    mock_station: MagicMock,
+) -> None:
+    """Test that old v1.1 config entries are migrated to v1.2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test@example.com",
+        data={
+            CONF_EMAIL: "test@example.com",
+            CONF_PASSWORD: "test-password",
+            "token": "stored-token",
+            "token_expiration": "2027-01-01T00:00:00+00:00",
+            "api_base": "https://mysecurity.eufylife.com",
+            "private_key": "0" * 64,
+            "server_public_key": "0" * 64,
+        },
+        unique_id="test@example.com",
+        version=1,
+        minor_version=1,
+    )
+
+    with patch(
+        "homeassistant.components.eufy_security.EufySecurityAPI"
+    ) as mock_api_class:
+        api = MagicMock()
+        api.cameras = {mock_camera.serial: mock_camera}
+        api.stations = {mock_station.serial: mock_station}
+        api.restore_session = MagicMock(return_value=False)
+        api.async_authenticate = AsyncMock()
+        api.async_update_device_info = AsyncMock()
+        mock_api_class.return_value = api
+
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    # Old keys should be moved into session_state
+    assert CONF_SESSION_STATE in entry.data
+    assert "token" not in entry.data
+    assert "private_key" not in entry.data
+    assert entry.data[CONF_SESSION_STATE]["token"] == "stored-token"
 
 
 async def test_unload_entry(

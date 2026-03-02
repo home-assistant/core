@@ -191,7 +191,7 @@ async def test_form_captcha_required(
     mock_api.token = "test-token"
     mock_api.token_expiration = datetime.now() + timedelta(days=1)
     mock_api.api_base = "https://mysecurity.eufylife.com"
-    mock_api.get_crypto_state = MagicMock(
+    mock_api.get_session_state = MagicMock(
         return_value={"private_key": "0" * 64, "server_public_key": "0" * 64}
     )
 
@@ -244,7 +244,7 @@ async def test_form_captcha_invalid(
     mock_api.token = "test-token"
     mock_api.token_expiration = datetime.now() + timedelta(days=1)
     mock_api.api_base = "https://mysecurity.eufylife.com"
-    mock_api.get_crypto_state = MagicMock(
+    mock_api.get_session_state = MagicMock(
         return_value={"private_key": "0" * 64, "server_public_key": "0" * 64}
     )
 
@@ -486,7 +486,7 @@ async def test_reauth_flow_captcha_required(
     mock_api.token = "new-token"
     mock_api.token_expiration = datetime.now() + timedelta(days=1)
     mock_api.api_base = "https://mysecurity.eufylife.com"
-    mock_api.get_crypto_state = MagicMock(
+    mock_api.get_session_state = MagicMock(
         return_value={"private_key": "1" * 64, "server_public_key": "1" * 64}
     )
 
@@ -1214,7 +1214,7 @@ async def test_reconfigure_flow_captcha_required(
     mock_api.token = "new-token"
     mock_api.token_expiration = datetime.now() + timedelta(days=1)
     mock_api.api_base = "https://mysecurity.eufylife.com"
-    mock_api.get_crypto_state = MagicMock(
+    mock_api.get_session_state = MagicMock(
         return_value={"private_key": "1" * 64, "server_public_key": "1" * 64}
     )
 

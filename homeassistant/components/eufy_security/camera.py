@@ -117,8 +117,7 @@ class EufySecurityCamera(EufySecurityEntity, CameraEntity):
             ATTR_HARDWARE_VERSION: self._camera.hardware_version,
             ATTR_SOFTWARE_VERSION: self._camera.software_version,
         }
-        if self._camera.ip_address:
-            attrs[ATTR_IP_ADDRESS] = self._camera.ip_address
+        attrs[ATTR_IP_ADDRESS] = self._camera.ip_address
         return attrs
 
     def _get_rtsp_url(self) -> str | None:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
-from datetime import datetime
 import logging
 
 from eufy_security import (
@@ -20,16 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_API_BASE,
-    CONF_PRIVATE_KEY,
-    CONF_RTSP_CREDENTIALS,
-    CONF_SERVER_PUBLIC_KEY,
-    CONF_TOKEN,
-    CONF_TOKEN_EXPIRATION,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_RTSP_CREDENTIALS, CONF_SESSION_STATE, DOMAIN, PLATFORMS
 from .coordinator import (
     EufySecurityConfigEntry,
     EufySecurityCoordinator,
@@ -37,6 +26,31 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: EufySecurityConfigEntry
+) -> bool:
+    """Migrate old config entry data to new format."""
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        # Migrate from individual keys to session_state dict
+        data = dict(config_entry.data)
+        session_state: dict[str, str | None] = {}
+        for key in (
+            "token",
+            "token_expiration",
+            "api_base",
+            "private_key",
+            "server_public_key",
+        ):
+            if key in data:
+                session_state[key] = data.pop(key)
+        if session_state:
+            data[CONF_SESSION_STATE] = session_state
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        _LOGGER.debug("Migrated config entry to version 1.2")
+
+    return True
 
 
 async def async_setup_entry(
@@ -52,46 +66,17 @@ async def async_setup_entry(
         session,
     )
 
-    # Try to restore crypto state from config entry to avoid re-authentication
+    # Try to restore previous session from config entry data
     needs_auth = True
-    private_key = entry.data.get(CONF_PRIVATE_KEY)
-    server_public_key = entry.data.get(CONF_SERVER_PUBLIC_KEY)
-    token = entry.data.get(CONF_TOKEN)
-    token_exp_str = entry.data.get(CONF_TOKEN_EXPIRATION)
-    api_base = entry.data.get(CONF_API_BASE)
-
-    if private_key and server_public_key and token:
-        # Try to restore the crypto state
-        if api.restore_crypto_state(private_key, server_public_key):
-            # Parse token expiration
-            token_exp = None
-            if token_exp_str:
-                with contextlib.suppress(ValueError):
-                    token_exp = datetime.fromisoformat(token_exp_str)
-                    if token_exp.tzinfo is None:
-                        token_exp = token_exp.replace(tzinfo=datetime.UTC)
-
-            # Check if token is still valid
-            now = datetime.now(datetime.UTC)
-            if token_exp is None or now < token_exp:
-                api.set_token(token, token_exp, api_base)
-                _LOGGER.debug("Restored session from stored crypto state")
-
-                # Test if the restored session works
-                try:
-                    await api.async_update_device_info()
-                    needs_auth = False
-                    _LOGGER.debug("Restored session is valid")
-                except (
-                    InvalidCredentialsError,
-                    CaptchaRequiredError,
-                    EufySecurityError,
-                ):
-                    _LOGGER.debug("Restored session invalid, will re-authenticate")
-            else:
-                _LOGGER.debug("Token expired, will re-authenticate")
-        else:
-            _LOGGER.debug("Could not restore crypto state, will re-authenticate")
+    session_state = entry.data.get(CONF_SESSION_STATE, {})
+    if session_state and api.restore_session(session_state):
+        # Test if the restored session still works
+        try:
+            await api.async_update_device_info()
+            needs_auth = False
+            _LOGGER.debug("Restored session is valid")
+        except (InvalidCredentialsError, CaptchaRequiredError, EufySecurityError):
+            _LOGGER.debug("Restored session invalid, will re-authenticate")
 
     if needs_auth:
         # Authenticate and get device info in one try/catch block
@@ -101,9 +86,7 @@ async def async_setup_entry(
             await api.async_update_device_info()
         except CaptchaRequiredError as err:
             # CAPTCHA required - trigger reauth flow so user can solve it
-            _LOGGER.warning(
-                "CAPTCHA required, triggering reauthentication"
-            )
+            _LOGGER.warning("CAPTCHA required, triggering reauthentication")
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
@@ -159,14 +142,10 @@ async def async_setup_entry(
         stations = devices.setdefault("stations", {})
 
         cameras.clear()
-        cameras.update(
-            {camera.serial: camera for camera in api.cameras.values()}
-        )
+        cameras.update({camera.serial: camera for camera in api.cameras.values()})
 
         stations.clear()
-        stations.update(
-            {station.serial: station for station in api.stations.values()}
-        )
+        stations.update({station.serial: station for station in api.stations.values()})
 
     # Keep runtime device mapping in sync whenever the coordinator refreshes
     remove_listener = coordinator.async_add_listener(_update_devices_from_api)
