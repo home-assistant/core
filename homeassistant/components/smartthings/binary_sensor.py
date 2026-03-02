@@ -36,6 +36,7 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
         | None
     ) = None
     component_translation_key: dict[str, str] | None = None
+    supported_states_attributes: Attribute | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -188,6 +189,17 @@ CAPABILITY_TO_SENSORS: dict[
             },
         )
     },
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_DUST_BAG: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            is_on_key="full",
+            component_translation_key={
+                "station": "robot_cleaner_dust_bag",
+            },
+            exists_fn=lambda component, _: component == "station",
+            supported_states_attributes=Attribute.SUPPORTED_STATUS,
+        )
+    },
 }
 
 
@@ -236,6 +248,18 @@ async def async_setup_entry(
             and (
                 not description.category
                 or get_main_component_category(device) in description.category
+            )
+            and (
+                not description.supported_states_attributes
+                or (
+                    isinstance(
+                        options := device.status[component][capability][
+                            description.supported_states_attributes
+                        ].value,
+                        list,
+                    )
+                    and len(options) == 2
+                )
             )
         )
     )

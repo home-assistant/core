@@ -21,6 +21,9 @@
         "state": {
           "on": "mdi:remote"
         }
+      },
+      "robot_cleaner_dust_bag": {
+        "default": "mdi:delete"
       }
     },
     "button": {
