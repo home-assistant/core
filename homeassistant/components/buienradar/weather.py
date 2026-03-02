@@ -15,6 +15,7 @@ from buienradar.constants import (
 )
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -53,6 +54,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import sun
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BuienRadarConfigEntry
@@ -171,9 +173,14 @@ class BrWeather(WeatherEntity):
 
     def _calc_condition(self, data: BrData):
         """Return the current condition."""
+        condition = None
         if data.condition and (ccode := data.condition.get(CONDCODE)):
-            return CONDITION_MAP.get(ccode)
-        return None
+            condition = CONDITION_MAP.get(ccode)
+
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
+            condition = ATTR_CONDITION_CLEAR_NIGHT
+
+        return condition
 
     def _calc_forecast(self, data: BrData):
         """Return the forecast array."""
@@ -183,12 +190,19 @@ class BrWeather(WeatherEntity):
             return None
 
         for data_in in data.forecast:
+            fctime = data_in.get(DATETIME)
+
             # remap keys from external library to
             # keys understood by the weather component:
-            condcode = data_in.get(CONDITION, {}).get(CONDCODE)
+            ccode = data_in.get(CONDITION, {}).get(CONDCODE)
+            condition = CONDITION_MAP.get(ccode)
+
+            if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass, fctime):
+                condition = ATTR_CONDITION_CLEAR_NIGHT
+
             data_out = {
-                ATTR_FORECAST_TIME: data_in.get(DATETIME).isoformat(),
-                ATTR_FORECAST_CONDITION: CONDITION_MAP.get(condcode),
+                ATTR_FORECAST_TIME: fctime.isoformat(),
+                ATTR_FORECAST_CONDITION: condition,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.get(MIN_TEMP),
                 ATTR_FORECAST_NATIVE_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_NATIVE_PRECIPITATION: data_in.get(RAIN),
