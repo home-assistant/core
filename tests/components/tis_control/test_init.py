@@ -112,3 +112,27 @@ async def test_async_unload_entry_failure(
 
         assert result is False
         mock_unload_platforms.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_event_listener_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tis_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the background task handles exceptions when processing events."""
+    # Yield an event missing 'device_id' to raise a KeyError.
+    fake_event = {"value": 1}
+
+    async def _mock_event_generator():
+        yield fake_event
+
+    mock_tis_api.consume_events.side_effect = _mock_event_generator
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups"):
+        await async_setup_entry(hass, mock_config_entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify that the exception was caught and logged.
+    assert "Unexpected error while processing TIS event" in caplog.text
