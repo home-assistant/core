@@ -477,7 +477,7 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
         CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
     }

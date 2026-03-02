@@ -241,7 +241,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
             # Do not use kelvin_to_mired here to prevent precision loss
-            data["color_temperature"] = 1000000.0 / color_temp_k
+            data["color_temperature"] = 1_000_000.0 / color_temp_k
             if color_temp_modes := _filter_color_modes(
                 color_modes, LightColorCapability.COLOR_TEMPERATURE
             ):
