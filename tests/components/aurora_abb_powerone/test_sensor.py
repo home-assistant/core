@@ -122,7 +122,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
         sensors = [
             ("sensor.mydevicename_grid_voltage", "235.9"),
             ("sensor.mydevicename_grid_current", "2.8"),
-            ("sensor.mydevicename_frequency", "50.8"),
+            ("sensor.mydevicename_grid_frequency", "50.8"),
             ("sensor.mydevicename_dc_dc_leak_current", "1.2345"),
             ("sensor.mydevicename_inverter_leak_current", "2.3456"),
             ("sensor.mydevicename_string_1_power", "12.3"),
