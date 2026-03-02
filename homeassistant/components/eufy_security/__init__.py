@@ -96,7 +96,7 @@ async def async_setup_entry(
     if needs_auth:
         # Authenticate and get device info in one try/catch block
         try:
-            _LOGGER.debug("Authenticating with Eufy Security API")
+            _LOGGER.debug("Authenticating with API")
             await api.async_authenticate()
             await api.async_update_device_info()
         except CaptchaRequiredError as err:

@@ -104,8 +104,11 @@
         "title": "Configure {camera_name}"
       },
       "init": {
-        "description": "{camera_info}",
         "title": "RTSP streaming settings"
+      },
+      "no_cameras": {
+        "description": "No cameras found. Reload the integration first.",
+        "title": "No cameras"
       }
     }
   }

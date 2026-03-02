@@ -188,7 +188,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnectError:
                 errors["base"] = "cannot_connect"
             except EufySecurityError as err:
-                _LOGGER.warning("Eufy API error: %s", err)
+                _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -333,7 +333,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnectError:
                 errors["base"] = "cannot_connect"
             except EufySecurityError as err:
-                _LOGGER.warning("Eufy API error: %s", err)
+                _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -476,7 +476,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnectError:
                 errors["base"] = "cannot_connect"
             except EufySecurityError as err:
-                _LOGGER.warning("Eufy API error: %s", err)
+                _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -529,34 +529,13 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Initialize the options flow and start camera configuration."""
-        # Get cameras from live runtime_data sources
-        cameras: dict[str, Any] = {}
-        runtime_data = self.config_entry.runtime_data
-        if runtime_data is not None:
-            # Prefer the API cameras if available
-            api = getattr(runtime_data, "api", None)
-            if api is not None and getattr(api, "cameras", None) is not None:
-                cameras = api.cameras
-            else:
-                # Fall back to coordinator data if it exposes cameras
-                coordinator = getattr(runtime_data, "coordinator", None)
-                coordinator_data = getattr(coordinator, "data", None)
-                if isinstance(coordinator_data, dict) and "cameras" in coordinator_data:
-                    cameras = coordinator_data["cameras"]
-                else:
-                    # Final fallback to any cached devices mapping
-                    devices = getattr(runtime_data, "devices", None)
-                    if isinstance(devices, dict):
-                        cameras = devices.get("cameras", {})
+        cameras = self._get_live_cameras()
 
         if not cameras:
-            # No cameras found - show simple message
+            # No cameras found - show message from strings.json
             return self.async_show_form(
-                step_id="init",
+                step_id="no_cameras",
                 data_schema=vol.Schema({}),
-                description_placeholders={
-                    "camera_info": "No cameras found. Reload the integration first."
-                },
             )
 
         # Store camera list and existing credentials
@@ -569,13 +548,21 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         # Start configuring the first camera
         return await self.async_step_camera()
 
+    def _get_live_cameras(self) -> dict[str, Any]:
+        """Get cameras from live runtime data sources."""
+        runtime_data = self.config_entry.runtime_data
+        if runtime_data is None:
+            return {}
+        api = getattr(runtime_data, "api", None)
+        if api is not None and getattr(api, "cameras", None) is not None:
+            return api.cameras
+        return runtime_data.devices.get("cameras", {})
+
     async def async_step_camera(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure RTSP credentials for a single camera."""
-        cameras: dict[str, Any] = {}
-        if self.config_entry.runtime_data:
-            cameras = self.config_entry.runtime_data.devices.get("cameras", {})
+        cameras = self._get_live_cameras()
 
         if self._camera_index >= len(self._camera_serials):
             # All cameras configured, save and exit

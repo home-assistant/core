@@ -75,7 +75,7 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except EufySecurityError as err:
             if not self._unavailable_logged:
                 _LOGGER.warning(
-                    "Eufy Security API is unavailable: %s",
+                    "API is unavailable: %s",
                     err,
                 )
                 self._unavailable_logged = True
@@ -86,7 +86,7 @@ class EufySecurityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Log recovery if we were previously unavailable
         if self._unavailable_logged:
-            _LOGGER.info("Eufy Security API connection restored")
+            _LOGGER.info("API connection restored")
             self._unavailable_logged = False
 
         return {
