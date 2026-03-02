@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_stop_id": "No valid stop IDs provided. Stop IDs must contain 'StopPlace' or 'Quay'.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_stop_id": "No valid stop IDs provided. Stop IDs must contain 'StopPlace' or 'Quay'.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "line_whitelist": "Line whitelist",
+          "number_of_departures": "Number of departures",
+          "omit_non_boarding": "Omit non-boarding departures",
+          "show_on_map": "Show on map",
+          "stop_ids": "Stop IDs"
+        },
+        "data_description": {
+          "line_whitelist": "Only show departures for these specific line IDs (leave empty for all lines)",
+          "number_of_departures": "Number of upcoming departures to include in attributes",
+          "omit_non_boarding": "Hide departures where boarding is not allowed (e.g., last stop)",
+          "show_on_map": "Include GPS coordinates in entity attributes for map display",
+          "stop_ids": "Enter one or more stop place IDs (e.g., NSR:StopPlace:337 or NSR:Quay:7203)"
+        },
+        "description": "Set up a stop place or quay to monitor departures from. You can find your stop ID on [Entur's travel planner]({entur_url})."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Your Entur public transport YAML configuration could not be imported because Home Assistant was unable to connect to the Entur API. This may be a temporary issue.\n\nTo fix this:\n\n1. Restart Home Assistant to retry the import\n2. If the issue persists, remove the `entur_public_transport` sensor platform section from `configuration.yaml`\n3. Go to **Settings** > **Devices & Services** > **Add Integration**\n4. Search for \"Entur public transport\" and configure it through the UI",
+      "title": "YAML import failed: cannot connect"
+    },
+    "deprecated_yaml_import_issue_invalid_stop_id": {
+      "description": "Your Entur public transport YAML configuration could not be imported because it contains no valid stop IDs. Stop IDs must contain `StopPlace` or `Quay` (e.g., `NSR:StopPlace:337` or `NSR:Quay:7203`).\n\nTo fix this:\n\n1. Open your `configuration.yaml` file\n2. Remove the `entur_public_transport` sensor platform section\n3. Restart Home Assistant\n4. Go to **Settings** > **Devices & Services** > **Add Integration**\n5. Search for \"Entur public transport\" and add it with valid stop IDs",
+      "title": "YAML import failed: invalid stop ID"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Your Entur public transport YAML configuration could not be imported due to an unexpected error.\n\nTo fix this:\n\n1. Open your `configuration.yaml` file\n2. Remove the `entur_public_transport` sensor platform section\n3. Restart Home Assistant\n4. Go to **Settings** > **Devices & Services** > **Add Integration**\n5. Search for \"Entur public transport\" and configure it through the UI",
+      "title": "YAML import failed: unknown error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "line_whitelist": "[%key:component::entur_public_transport::config::step::user::data::line_whitelist%]",
+          "number_of_departures": "[%key:component::entur_public_transport::config::step::user::data::number_of_departures%]",
+          "omit_non_boarding": "[%key:component::entur_public_transport::config::step::user::data::omit_non_boarding%]",
+          "show_on_map": "[%key:component::entur_public_transport::config::step::user::data::show_on_map%]"
+        },
+        "data_description": {
+          "line_whitelist": "[%key:component::entur_public_transport::config::step::user::data_description::line_whitelist%]",
+          "number_of_departures": "[%key:component::entur_public_transport::config::step::user::data_description::number_of_departures%]",
+          "omit_non_boarding": "[%key:component::entur_public_transport::config::step::user::data_description::omit_non_boarding%]",
+          "show_on_map": "[%key:component::entur_public_transport::config::step::user::data_description::show_on_map%]"
+        }
+      }
+    }
+  }
+}
