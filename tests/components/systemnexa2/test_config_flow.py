@@ -315,6 +315,9 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "10.0.0.132"
+    assert mock_config_entry.data[CONF_DEVICE_ID] == "aabbccddee02"
+    assert mock_config_entry.data[CONF_MODEL] == "WPO-01"
+    assert mock_config_entry.data[CONF_NAME] == "Outdoor Smart Plug"
 
 
 async def test_reconfigure_flow_invalid_host(

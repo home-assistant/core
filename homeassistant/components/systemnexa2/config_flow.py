@@ -59,7 +59,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
+        """Handle user-initiated configuration and reconfiguration."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -105,7 +105,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
-                            data={CONF_HOST: host},
+                            data_updates={CONF_HOST: host},
                         )
                     self._discovered_device = _DiscoveryInfo(
                         name=info.information.name,
@@ -199,7 +199,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
         return await self.async_step_user(user_input)
