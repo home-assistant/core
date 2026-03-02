@@ -847,65 +847,6 @@ def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
 
 
 @callback
-def async_get_setup_timings_breakdown(
-    hass: core.HomeAssistant,
-) -> dict[str, DomainSetupBreakdown]:
-    """Return elapsed setup timing breakdown for each integration.
-
-    total: same semantics as async_get_setup_timings()
-    setup: elapsed time attributed to non-wait phases
-    wait: elapsed time attributed to WAIT_* phases (absolute value)
-    """
-    setup_time = _setup_times(hass)
-    domain_breakdowns: dict[str, DomainSetupBreakdown] = {}
-
-    def _split(phases: Mapping[SetupPhases, float]) -> tuple[float, float]:
-        """Return (setup, wait) elapsed seconds for a phase mapping."""
-        setup_secs = 0.0
-        wait_secs = 0.0
-
-        for phase, value in phases.items():
-            if phase in _WAIT_PHASES:
-                wait_secs += abs(value)
-            elif value > 0:
-                setup_secs += value
-
-        return setup_secs, wait_secs
-
-    for domain, timings in setup_time.items():
-        # top-level (__init__.py) timings
-        top_level: Mapping[SetupPhases, float] = timings.get(None, {})
-        tl_setup, tl_wait = _split(top_level)
-
-        # groups (config entries/platforms) run in parallel
-        max_group_setup = 0.0
-        max_group_wait = 0.0
-        max_group_total = 0.0
-
-        for group, group_timings in timings.items():
-            if group is None:
-                continue
-
-            g_setup, g_wait = _split(group_timings)
-            g_total = g_setup + g_wait
-
-            if g_total > max_group_total:
-                max_group_total = g_total
-                max_group_setup = g_setup
-                max_group_wait = g_wait
-
-        domain_setup = tl_setup + max_group_setup
-        domain_wait = tl_wait + max_group_wait
-
-        domain_breakdowns[domain] = DomainSetupBreakdown(
-            setup=domain_setup,
-            wait=domain_wait,
-        )
-
-    return domain_breakdowns
-
-
-@callback
 def async_get_domain_setup_times(
     hass: core.HomeAssistant, domain: str
 ) -> Mapping[str | None, dict[SetupPhases, float]]:

@@ -103,7 +103,6 @@ from .setup import (
     # which integrations are being set up.
     _setup_started,
     async_get_setup_timings,
-    async_get_setup_timings_breakdown,
     async_notify_setup_error,
     async_set_domains_to_be_loaded,
     async_setup_component,
@@ -982,12 +981,6 @@ async def _async_set_up_integrations(
         rendered = " ".join(parts)
         if parts:
             _LOGGER.debug("Bootstrap phase timing (elapsed): %s", rendered)
-
-        breakdown = async_get_setup_timings_breakdown(hass)
-        _LOGGER.debug(
-            "Domains with longest setup times (elapsed): %s",
-            _format_top_domain_breakdown(breakdown),
-        )
         setup_time = async_get_setup_timings(hass)
         _LOGGER.debug(
             "Integration setup times: %s",
