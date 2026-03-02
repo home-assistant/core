@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from datapoint.Forecast import Forecast
-
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     EntityCategory,
@@ -29,10 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
 from .const import (
@@ -43,6 +38,7 @@ from .const import (
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
 )
+from .coordinator import MetOfficeUpdateCoordinator
 from .helpers import get_attribute
 
 ATTR_LAST_UPDATE = "last_update"
@@ -220,7 +216,7 @@ async def async_setup_entry(
 
 
 class MetOfficeCurrentSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Forecast]], SensorEntity
+    CoordinatorEntity[MetOfficeUpdateCoordinator], SensorEntity
 ):
     """Implementation of a Met Office current weather condition sensor."""
 
@@ -231,7 +227,7 @@ class MetOfficeCurrentSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Forecast],
+        coordinator: MetOfficeUpdateCoordinator,
         hass_data: dict[str, Any],
         description: MetOfficeSensorEntityDescription,
     ) -> None:
