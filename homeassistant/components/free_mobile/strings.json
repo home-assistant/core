@@ -21,19 +21,5 @@
         "description": "Enter your Free Mobile credentials to enable notifications. You can find your username and access token in your Free Mobile account settings.\n\nA test SMS will be sent to verify your credentials."
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "description": "Configuring Free Mobile using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `free_mobile` notify configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
-      "title": "Free Mobile YAML configuration is being removed"
-    },
-    "deprecated_yaml_import_issue_client_initialization_failed": {
-      "description": "Configuring Free Mobile using YAML is being removed.\n\nWhile importing your configuration, the Free Mobile client could not be initialized. Please check your username and access token, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "Free Mobile YAML configuration import failed"
-    },
-    "deprecated_yaml_import_issue_test_sms_failed": {
-      "description": "Configuring Free Mobile using YAML is being removed.\n\nWhile importing your configuration, the test SMS could not be sent. Please check that your Free Mobile account allows notifications, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "Free Mobile YAML configuration import failed"
-    }
   }
 }
