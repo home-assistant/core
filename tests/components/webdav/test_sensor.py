@@ -50,6 +50,7 @@ async def test_sensor_quota_not_supported(
 async def test_sensor_quota_none_values(
     hass: HomeAssistant,
     webdav_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test missing sensors when quota returns None values."""
@@ -59,8 +60,9 @@ async def test_sensor_quota_none_values(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.webdav_free_space")
-    assert state is None
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
-    state = hass.states.get("sensor.webdav_used_space")
-    assert state is None
+    # No sensor entities should be created
+    assert len(entity_entries) == 0

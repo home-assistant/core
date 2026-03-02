@@ -68,11 +68,12 @@ async def async_setup_entry(
     """Set up WebDAV sensors from a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        WebDavSensor(coordinator, description)
-        for description in SENSORS
-        if description.available_fn(coordinator.data)
-    )
+    if coordinator.data is not None:
+        async_add_entities(
+            WebDavSensor(coordinator, description)
+            for description in SENSORS
+            if description.available_fn(coordinator.data)
+        )
 
 
 class WebDavSensor(CoordinatorEntity[WebDavCoordinator], SensorEntity):
