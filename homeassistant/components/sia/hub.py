@@ -6,6 +6,7 @@ from copy import deepcopy
 import logging
 from typing import Any
 
+from osbornehoffman import OHAccount, OHEvent, OHReceiver
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,6 +28,7 @@ from .const import (
     PROTOCOL_OH,
     SIA_EVENT,
 )
+from .oh_adapter import oh_event_to_sia_event
 from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +53,7 @@ class SIAHub:
         self._protocol: str = entry.data[CONF_PROTOCOL]
         self.sia_accounts: list[SIAAccount] | None = None
         self.sia_client: SIAClient | None = None
-        self._oh_client: Any | None = None
+        self._oh_receiver: Any | None = None
 
     @property
     def account_ids(self) -> list[str]:
@@ -81,15 +83,15 @@ class SIAHub:
 
     async def async_start(self) -> None:
         """Start the underlying alarm server."""
-        if self._oh_client:
-            await self._oh_client.async_start(reuse_port=True)
+        if self._oh_receiver:
+            await self._oh_receiver.async_start(reuse_port=True)
         elif self.sia_client:
             await self.sia_client.async_start(reuse_port=True)
 
     async def async_shutdown(self, _: Event | None = None) -> None:
         """Shutdown the SIA server."""
-        if self._oh_client:
-            await self._oh_client.async_stop()
+        if self._oh_receiver:
+            await self._oh_receiver.async_stop()
         if self.sia_client:
             await self.sia_client.async_stop()
 
@@ -146,10 +148,6 @@ class SIAHub:
 
     def _update_oh_accounts(self) -> None:
         """Update accounts for OH protocol."""
-        from osbornehoffman import OHAccount, OHClient, OHEvent
-
-        from .oh_adapter import oh_event_to_sia_event
-
         oh_accounts = [
             OHAccount(
                 account_id=a[CONF_ACCOUNT],
@@ -159,8 +157,8 @@ class SIAHub:
             for a in self._accounts
         ]
 
-        if self._oh_client is not None:
-            self._oh_client.accounts = oh_accounts
+        if self._oh_receiver is not None:
+            self._oh_receiver.accounts = oh_accounts
             return
 
         async def _oh_callback(event: OHEvent) -> None:
@@ -168,7 +166,7 @@ class SIAHub:
             sia_event = oh_event_to_sia_event(event)
             await self.async_create_and_fire_event(sia_event)
 
-        self._oh_client = OHClient(
+        self._oh_receiver = OHReceiver(
             host="",
             port=self._port,
             accounts=oh_accounts,
