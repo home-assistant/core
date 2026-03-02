@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, listen_for_new_cameras
-from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
+from .const import DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
 from .coordinator import MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
@@ -82,8 +82,8 @@ async def async_setup_entry(
                 MotionEyeSwitch(
                     entry.entry_id,
                     camera,
-                    entry_data[CONF_CLIENT],
-                    entry_data[CONF_COORDINATOR],
+                    entry_data.client,
+                    entry_data,
                     entry.options,
                     entity_description,
                 )

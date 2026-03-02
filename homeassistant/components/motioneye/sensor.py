@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import get_camera_from_cameras, listen_for_new_cameras
-from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
+from .const import DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
 from .coordinator import MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
@@ -36,8 +36,8 @@ async def async_setup_entry(
                 MotionEyeActionSensor(
                     entry.entry_id,
                     camera,
-                    entry_data[CONF_CLIENT],
-                    entry_data[CONF_COORDINATOR],
+                    entry_data.client,
+                    entry_data,
                     entry.options,
                 )
             ]
