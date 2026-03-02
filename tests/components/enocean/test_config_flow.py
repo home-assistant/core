@@ -15,11 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
+from . import MOCK_USB_DEVICE, MODULE
+
 from tests.common import MockConfigEntry
 
-DONGLE_VALIDATE_PATH_METHOD = "homeassistant.components.enocean.dongle.validate_path"
-DONGLE_DETECT_METHOD = "homeassistant.components.enocean.dongle.detect"
-SETUP_ENTRY_METHOD = "homeassistant.components.enocean.async_setup_entry"
+DONGLE_VALIDATE_PATH_METHOD = f"{MODULE}.dongle.validate_path"
+DONGLE_DETECT_METHOD = f"{MODULE}.dongle.detect"
+SETUP_ENTRY_METHOD = f"{MODULE}.async_setup_entry"
 
 
 async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -> None:
@@ -40,18 +42,20 @@ async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -
 
 async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
     """Test the user flow with a detected EnOcean dongle."""
-    FAKE_DONGLE_PATH = "/fake/dongle"
-
-    with patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])):
+    with patch(
+        f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[MOCK_USB_DEVICE])
+    ) as mock_scan_serial_ports:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "detect"
-    devices = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
-    assert FAKE_DONGLE_PATH in devices
-    assert EnOceanFlowHandler.MANUAL_PATH_VALUE in devices
+    assert mock_scan_serial_ports.call_count == 1
+    options = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
+    assert len(options) == 2
+    assert options[0].get("value") == "/dev/ttyUSB1234"
+    assert options[1].get("value") == "manual"
 
 
 async def test_user_flow_with_no_detected_dongle(hass: HomeAssistant) -> None:
