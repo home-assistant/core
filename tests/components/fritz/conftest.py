@@ -70,7 +70,7 @@ class FritzConnectionMock:
         """Mock clear_cache method."""
         return FritzConnectionCached.clear_cache(self)
 
-    def call_action(self, service: str, action: str, **kwargs: Any) -> dict[str, Any]:
+    def call_action(self, service: str, action: str, **kwargs: Any) -> Any:
         """Simulate TR-064 call with service name normalization."""
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
@@ -103,7 +103,7 @@ class FritzConnectionMock:
             if isinstance(action_data, dict) and index in action_data:
                 return action_data[index]
 
-        return action_data if isinstance(action_data, dict) else {}
+        return action_data
 
 
 @pytest.fixture(name="fc_data")
@@ -113,7 +113,7 @@ def fc_data_mock() -> dict[str, dict[str, Any]]:
 
 
 @pytest.fixture
-def fc_class_mock(fc_data: dict[str, dict[str, Any]]) -> Generator[FritzConnectionMock]:
+def fc_class_mock(fc_data: dict[str, dict[str, Any]]) -> Generator[MagicMock]:
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
         "homeassistant.components.fritz.coordinator.FritzConnectionCached",
