@@ -1678,9 +1678,8 @@ class EntityRegistry(BaseRegistry):
             new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
-    async def async_load(self, *, load_empty: bool = False) -> None:
+    async def _async_load(self) -> None:
         """Load the entity registry."""
-        await super().async_load(load_empty=load_empty)
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
 

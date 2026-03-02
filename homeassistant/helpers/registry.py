@@ -84,6 +84,11 @@ class BaseRegistry[_StoreDataT: Mapping[str, Any] | Sequence[Any]](ABC):
         """
         if load_empty:
             self._store.set_load_empty()
+        await self._async_load()
+
+    @abstractmethod
+    async def _async_load(self) -> None:
+        """Load the registry."""
 
     @abstractmethod
     def _data_to_save(self) -> _StoreDataT:

@@ -1461,9 +1461,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         self.async_schedule_save()
 
-    async def async_load(self, *, load_empty: bool = False) -> None:
+    async def _async_load(self) -> None:
         """Load the device registry."""
-        await super().async_load(load_empty=load_empty)
         async_setup_cleanup(self.hass, self)
 
         data = await self._store.async_load()

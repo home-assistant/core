@@ -447,9 +447,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             EventAreaRegistryUpdatedData(action="reorder", area_id=None),
         )
 
-    async def async_load(self, *, load_empty: bool = False) -> None:
+    async def _async_load(self) -> None:
         """Load the area registry."""
-        await super().async_load(load_empty=load_empty)
         self._async_setup_cleanup()
 
         data = await self._store.async_load()

@@ -224,9 +224,8 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         return new
 
-    async def async_load(self, *, load_empty: bool = False) -> None:
+    async def _async_load(self) -> None:
         """Load the label registry."""
-        await super().async_load(load_empty=load_empty)
         data = await self._store.async_load()
         labels = NormalizedNameBaseRegistryItems[LabelEntry]()
 
