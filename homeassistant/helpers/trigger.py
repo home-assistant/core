@@ -386,7 +386,7 @@ class EntityTriggerBase(Trigger):
         )
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
+        """Filter entities of these domains."""
         return {
             entity_id
             for entity_id in entities
