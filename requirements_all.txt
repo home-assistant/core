@@ -56,7 +56,7 @@ PyFlume==0.6.5
 PyFronius==0.8.0
 
 # homeassistant.components.pyload
-PyLoadAPI==1.4.2
+PyLoadAPI==2.0.0
 
 # homeassistant.components.met_eireann
 PyMetEireann==2024.11.0
@@ -267,7 +267,7 @@ aioftp==0.21.3
 aioghost==0.4.0
 
 # homeassistant.components.github
-aiogithubapi==24.6.0
+aiogithubapi==26.0.0
 
 # homeassistant.components.guardian
 aioguardian==2026.01.1
