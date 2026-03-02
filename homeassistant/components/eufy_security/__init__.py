@@ -133,12 +133,10 @@ async def async_setup_entry(
         camera.rtsp_username = camera_creds.get("username")
         camera.rtsp_password = camera_creds.get("password")
         _LOGGER.debug(
-            "Camera %s (%s): IP=%s, RTSP user=%s, RTSP pass=%s",
+            "Camera %s (%s): RTSP credentials configured: %s",
             camera.name,
             serial,
-            camera.ip_address,
-            camera.rtsp_username or "NOT SET",
-            "SET" if camera.rtsp_password else "NOT SET",
+            "yes" if camera.rtsp_username or camera.rtsp_password else "no",
         )
 
     entry.runtime_data = EufySecurityData(
