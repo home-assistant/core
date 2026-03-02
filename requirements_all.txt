@@ -2551,7 +2551,7 @@ python-etherscan-api==0.0.3
 python-family-hub-local==0.0.2
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.14
+python-fullykiosk==0.0.15
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0

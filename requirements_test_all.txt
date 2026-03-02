@@ -2162,7 +2162,7 @@ python-bsblan==5.1.0
 python-ecobee-api==0.3.2
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.14
+python-fullykiosk==0.0.15
 
 # homeassistant.components.google_drive
 python-google-drive-api==0.1.0
