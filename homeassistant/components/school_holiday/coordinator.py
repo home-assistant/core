@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import INTEGRATION_NAME, LOGGER, SCAN_INTERVAL
+from .const import COUNTRY_NAMES, DOMAIN, LOGGER, SCAN_INTERVAL
 from .utils import clean_string, create_calendar_event, ensure_date
 
 
@@ -25,22 +25,25 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Initialize the data update coordinator."""
         self.country = country
         self.region = region
+
+        # Get the full country name for API calls.
+        self.country_name = COUNTRY_NAMES.get(country, country)
         super().__init__(
             hass,
             logger=LOGGER,
-            name=INTEGRATION_NAME,
+            name=DOMAIN,
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         country_methods = {
-            "The Netherlands": self._get_school_holidays_nl,
+            "nl": self._get_school_holidays_nl,
         }
 
         country_method = country_methods.get(self.country)
         if country_method:
-            LOGGER.debug("Retrieving school holidays for %s", self.country)
+            LOGGER.debug("Retrieving school holidays for %s", self.country_name)
             return await country_method()
 
         LOGGER.error("Country '%s' is invalid", self.country)

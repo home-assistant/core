@@ -29,7 +29,8 @@ rules:
   entity-unique-id:
     status: done
   has-entity-name:
-    status: done
+    status: exempt
+    comment: Entities use user-provided names from the config flow.
   runtime-data:
     status: done
   test-before-configure:
@@ -57,8 +58,7 @@ rules:
     status: exempt
     comment: Handled by coordinator's last_update_success tracking.
   parallel-updates:
-    status: exempt
-    comment: Coordinator-based updates are serialized.
+    status: done
   reauthentication-flow:
     status: exempt
     comment: Integration does not require authentication.
@@ -100,7 +100,8 @@ rules:
   entity-disabled-by-default:
     status: todo
   entity-translations:
-    status: done
+    status: exempt
+    comment: Entity names are user-configured in the config flow.
   exception-translations:
     status: todo
   icon-translations:

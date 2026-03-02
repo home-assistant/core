@@ -50,5 +50,19 @@
         "name": "School Holiday Calendar"
       }
     }
+  },
+  "selector": {
+    "country": {
+      "options": {
+        "nl": "The Netherlands"
+      }
+    },
+    "region": {
+      "options": {
+        "nl_midden": "Central",
+        "nl_noord": "North",
+        "nl_zuid": "South"
+      }
+    }
   }
 }

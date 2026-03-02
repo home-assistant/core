@@ -4,7 +4,7 @@ from datetime import date, datetime
 import re
 from typing import Any
 
-from .const import LOGGER
+from .const import COUNTRY_NAMES, LOGGER, REGION_NAMES
 
 
 def clean_string(value: str | None) -> str | None:
@@ -53,3 +53,13 @@ def ensure_date(value: str | date) -> date:
             # Fallback to date string.
             return date.fromisoformat(value)
     raise TypeError(f"Value {value} must be a string or date, but got {type(value)}")
+
+
+def get_device_name(country_code: str, region_code: str) -> str:
+    """Get the device name from country and region codes.
+
+    Device names should remain consistent across languages for proper device grouping.
+    """
+    country_name = COUNTRY_NAMES.get(country_code, country_code)
+    region_name = REGION_NAMES.get(country_code, {}).get(region_code, region_code)
+    return f"{country_name} - {region_name}"

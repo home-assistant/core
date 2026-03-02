@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import SchoolHolidayConfigEntry
 from .const import CONF_SENSOR_NAME, DOMAIN, LOGGER
 from .coordinator import SchoolHolidayCoordinator
+from .utils import get_device_name
 
 PARALLEL_UPDATES = 0
 
@@ -49,8 +50,6 @@ class SchoolHolidayBinarySensor(
 ):
     """Representation of the School Holiday binary sensor."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "school_holiday_sensor"
     _attr_icon = "mdi:school"
 
     def __init__(
@@ -71,7 +70,7 @@ class SchoolHolidayBinarySensor(
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
-            name=sensor_name,
+            name=get_device_name(country, region),
         )
 
     @property

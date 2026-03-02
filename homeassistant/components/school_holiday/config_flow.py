@@ -8,17 +8,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_COUNTRY, CONF_REGION
-
-from .const import (
-    CONF_CALENDAR_NAME,
-    CONF_SENSOR_NAME,
-    COUNTRIES,
-    DEFAULT_CALENDAR_NAME,
-    DEFAULT_SENSOR_NAME,
-    DOMAIN,
-    INTEGRATION_NAME,
-    REGIONS,
+from homeassistant.core import callback
+from homeassistant.helpers import translation
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
+
+from .const import CONF_CALENDAR_NAME, CONF_SENSOR_NAME, COUNTRIES, DOMAIN, REGIONS
+from .utils import get_device_name
 
 
 class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,12 +34,28 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._country: str = ""
         self._region: str = ""
         self._calendar_name: str = ""
+        self._translations: dict[str, Any] = {}
+
+    @callback
+    def _get_default(self, entity_type: str, fallback: str) -> str:
+        """Get translated default entity name."""
+        entity_key = f"component.{DOMAIN}.entity.{entity_type}"
+        return self._translations.get(entity_key, {}).get("name", fallback)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Enter binary sensor name and select country."""
         errors: dict[str, str] = {}
+
+        # Load translations for the user's language.
+        if not self._translations:
+            self._translations = await translation.async_get_translations(
+                self.hass,
+                self.hass.config.language,
+                "config",
+                {DOMAIN},
+            )
 
         if user_input is not None:
             sensor_name = user_input.get(CONF_SENSOR_NAME, "").strip()
@@ -55,10 +71,30 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._country = str(country)
                 return await self.async_step_region()
 
+        # Create selector with translation keys.
+        country_options = [
+            SelectOptionDict(
+                value=country_code,
+                label=f"country.{country_code}",
+            )
+            for country_code in COUNTRIES
+        ]
+
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_SENSOR_NAME, default=DEFAULT_SENSOR_NAME): str,
-                vol.Required(CONF_COUNTRY): vol.In(COUNTRIES),
+                vol.Required(
+                    CONF_SENSOR_NAME,
+                    default=self._get_default(
+                        "binary_sensor.school_holiday_sensor", "School Holiday Sensor"
+                    ),
+                ): str,
+                vol.Required(CONF_COUNTRY): SelectSelector(
+                    SelectSelectorConfig(
+                        options=country_options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="country",
+                    )
+                ),
             }
         )
 
@@ -80,19 +116,8 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             region = user_input.get(CONF_REGION)
             if not region:
                 errors[CONF_REGION] = "required"
-            else:
-                # Perform case-insensitive region matching.
-                region_lower = region.lower()
-                matched_region = None
-                for valid_region in regions:
-                    if valid_region.lower() == region_lower:
-                        matched_region = valid_region
-                        break
-
-                if matched_region is None:
-                    errors[CONF_REGION] = "invalid"
-                else:
-                    region = matched_region
+            elif region not in regions:
+                errors[CONF_REGION] = "invalid"
 
             if not errors:
                 # Assert that region is a string for type safety.
@@ -101,9 +126,24 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._region = region
                 return await self.async_step_calendar()
 
+        # Create selector with translation keys.
+        region_options = [
+            SelectOptionDict(
+                value=region_code,
+                label=f"region.{self._country}_{region_code}",
+            )
+            for region_code in regions
+        ]
+
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_REGION): vol.In(regions),
+                vol.Required(CONF_REGION): SelectSelector(
+                    SelectSelectorConfig(
+                        options=region_options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="region",
+                    )
+                ),
             }
         )
 
@@ -137,7 +177,7 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._calendar_name = calendar_name
 
                 return self.async_create_entry(
-                    title=INTEGRATION_NAME,
+                    title=get_device_name(self._country, self._region),
                     data={
                         CONF_SENSOR_NAME: self._sensor_name,
                         CONF_COUNTRY: self._country,
@@ -148,7 +188,12 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_CALENDAR_NAME, default=DEFAULT_CALENDAR_NAME): str,
+                vol.Required(
+                    CONF_CALENDAR_NAME,
+                    default=self._get_default(
+                        "calendar.school_holiday_calendar", "School Holiday Calendar"
+                    ),
+                ): str,
             }
         )
 
