@@ -34,7 +34,6 @@ class MetOfficeRuntimeData:
     hourly_coordinator: MetOfficeUpdateCoordinator
     daily_coordinator: MetOfficeUpdateCoordinator
     twice_daily_coordinator: MetOfficeUpdateCoordinator
-    METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
     name: str
 
 
