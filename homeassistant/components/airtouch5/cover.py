@@ -67,13 +67,27 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
         super().__init__(client)
         self._zone_name = zone_name
 
-        self._attr_unique_id = f"zone_{zone_name.zone_number}_open_percentage"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"zone_{zone_name.zone_number}")},
-            name=zone_name.zone_name,
-            manufacturer="Polyaire",
-            model="AirTouch 5",
-        )
+        # so we check for the old ID system and then set the ID appropriately for the Old ID or the new ID.
+        if client.device.system_id == 0:
+            self._attr_unique_id = f"zone_{zone_name.zone_number}_open_percentage"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"zone_{zone_name.zone_number}")},
+                name=zone_name.zone_name,
+                manufacturer="Polyaire",
+                model="AirTouch 5",
+            )
+        else:  # new way
+            self._attr_unique_id = (
+                f"{client.device.system_id}_{zone_name.zone_number}_open_percentage"
+            )
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{client.device.system_id}_{zone_name.zone_number}")
+                },
+                name=zone_name.zone_name,
+                manufacturer="Polyaire",
+                model="AirTouch 5",
+            )
 
     @callback
     def _async_update_attrs(self, data: dict[int, ZoneStatusZone]) -> None:
