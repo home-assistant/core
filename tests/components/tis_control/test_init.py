@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="CN11A1A00001",
         domain=DOMAIN,
-        data={CONF_PORT: "6000"},
+        data={CONF_PORT: 6000},
         unique_id="CN11A1A00001",
     )
 
