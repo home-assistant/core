@@ -138,14 +138,12 @@ async def async_setup_entry(
 
     def _update_devices_from_api() -> None:
         """Keep runtime devices snapshot in sync with API device lists."""
-        cameras = devices.setdefault("cameras", {})
-        stations = devices.setdefault("stations", {})
-
-        cameras.clear()
-        cameras.update({camera.serial: camera for camera in api.cameras.values()})
-
-        stations.clear()
-        stations.update({station.serial: station for station in api.stations.values()})
+        devices["cameras"] = {
+            camera.serial: camera for camera in api.cameras.values()
+        }
+        devices["stations"] = {
+            station.serial: station for station in api.stations.values()
+        }
 
     # Keep runtime device mapping in sync whenever the coordinator refreshes
     remove_listener = coordinator.async_add_listener(_update_devices_from_api)

@@ -497,8 +497,10 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
             return {}
         api = getattr(runtime_data, "api", None)
         if api is not None and getattr(api, "cameras", None) is not None:
-            return api.cameras
-        return runtime_data.devices.get("cameras", {})
+            cameras: dict[str, Any] = api.cameras
+            return cameras
+        result: dict[str, Any] = runtime_data.devices.get("cameras", {})
+        return result
 
     async def async_step_camera(
         self, user_input: dict[str, Any] | None = None
