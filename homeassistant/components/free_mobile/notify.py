@@ -52,6 +52,28 @@ async def async_get_service(
 
     if (
         result.get("type") is FlowResultType.ABORT
+        and result.get("reason") == "already_configured"
+    ):
+        # Config entry already exists - create issue and return None to prevent
+        # duplicate notification services (entity via config entry + legacy via YAML)
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2026.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            translation_key="deprecated_yaml",
+            severity=ir.IssueSeverity.WARNING,
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Free Mobile",
+            },
+        )
+        return None
+
+    if (
+        result.get("type") is FlowResultType.ABORT
         and result.get("reason") != "already_configured"
     ):
         ir.async_create_issue(
