@@ -86,14 +86,14 @@ class SwitchbotLightSensitiveSwitch(SwitchbotSwitchedEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light sensitive on."""
         _LOGGER.debug("Turn light sensitive on for %s", self._address)
-        await self._device.open_light_sensitive()
+        await self._device.open_light_sensitive_switch()
         self.async_write_ha_state()
 
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light sensitive off."""
         _LOGGER.debug("Turn light sensitive off for %s", self._address)
-        await self._device.close_light_sensitive()
+        await self._device.close_light_sensitive_switch()
         self.async_write_ha_state()
 
 
