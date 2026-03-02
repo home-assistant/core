@@ -1,20 +1,16 @@
 """Test the Diyanet config flow (multi-step country/state/city)."""
 
-import sys
 from unittest.mock import AsyncMock, patch
 
 from pydiyanet import DiyanetAuthError, DiyanetConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.diyanet import config_flow as diyanet_config_flow
 from homeassistant.components.diyanet.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-sys.modules.setdefault("homeassistant.components.diyanet.api", diyanet_config_flow)
 
 
 async def test_full_flow_success(
@@ -29,11 +25,11 @@ async def test_full_flow_success(
     # Submit credentials; entering select_country builds schema from API
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+            "pydiyanet.DiyanetApiClient.authenticate",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_countries",
+            "pydiyanet.DiyanetApiClient.get_countries",
             return_value=[
                 {"id": 2, "code": "TURKIYE", "name": "Türkiye"},
                 {"id": 4, "code": "NETHERLANDS", "name": "Hollanda"},
@@ -53,25 +49,25 @@ async def test_full_flow_success(
     # Select country (patch lists while submitting to avoid auth)
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_countries",
+            "pydiyanet.DiyanetApiClient.get_countries",
             return_value=[
                 {"id": 2, "code": "TURKIYE", "name": "Türkiye"},
                 {"id": 4, "code": "NETHERLANDS", "name": "Hollanda"},
             ],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+            "pydiyanet.DiyanetApiClient.get_states",
             return_value=[
                 {"id": 34, "code": "ISTANBUL", "name": "İstanbul"},
                 {"id": 35, "code": "IZMIR", "name": "İzmir"},
             ],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[
                 {"id": 13975, "code": "ISTANBUL", "name": "İstanbul"},
                 {"id": 14000, "code": "KADIKOY", "name": "Kadıköy"},
@@ -88,18 +84,18 @@ async def test_full_flow_success(
     # Enter select_state (schema built now)
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+            "pydiyanet.DiyanetApiClient.get_states",
             return_value=[
                 {"id": 34, "code": "ISTANBUL", "name": "İstanbul"},
                 {"id": 35, "code": "IZMIR", "name": "İzmir"},
             ],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[
                 {"id": 13975, "code": "ISTANBUL", "name": "İstanbul"},
                 {"id": 14000, "code": "KADIKOY", "name": "Kadıköy"},
@@ -112,18 +108,18 @@ async def test_full_flow_success(
         # Submit selected state (patch cities during submit)
         with (
             patch(
-                "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+                "pydiyanet.DiyanetApiClient._ensure_authenticated",
                 return_value=None,
             ),
             patch(
-                "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+                "pydiyanet.DiyanetApiClient.get_states",
                 return_value=[
                     {"id": 34, "code": "ISTANBUL", "name": "İstanbul"},
                     {"id": 35, "code": "IZMIR", "name": "İzmir"},
                 ],
             ),
             patch(
-                "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+                "pydiyanet.DiyanetApiClient.get_cities",
                 return_value=[
                     {"id": 13975, "code": "ISTANBUL", "name": "İstanbul"},
                     {"id": 14000, "code": "KADIKOY", "name": "Kadıköy"},
@@ -139,11 +135,11 @@ async def test_full_flow_success(
     # Enter select_city (schema built now) and finish
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[
                 {"id": 13975, "code": "ISTANBUL", "name": "İstanbul"},
                 {"id": 14000, "code": "KADIKOY", "name": "Kadıköy"},
@@ -153,7 +149,7 @@ async def test_full_flow_success(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_city"
         with patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_prayer_times",
+            "pydiyanet.DiyanetApiClient.get_prayer_times",
             return_value={"gregorianDateLong": "01 January 2025"},
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -187,7 +183,7 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
 
     # Authenticate ok; we abort on unique_id
     with patch(
-        "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+        "pydiyanet.DiyanetApiClient.authenticate",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -207,7 +203,7 @@ async def test_form_invalid_auth(
     )
 
     with patch(
-        "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+        "pydiyanet.DiyanetApiClient.authenticate",
         side_effect=DiyanetAuthError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -223,11 +219,11 @@ async def test_form_invalid_auth(
     # Recover: go through full flow
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+            "pydiyanet.DiyanetApiClient.authenticate",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_countries",
+            "pydiyanet.DiyanetApiClient.get_countries",
             return_value=[{"id": 2, "code": "TURKIYE", "name": "Türkiye"}],
         ),
     ):
@@ -236,15 +232,15 @@ async def test_form_invalid_auth(
         )
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_countries",
+            "pydiyanet.DiyanetApiClient.get_countries",
             return_value=[{"id": 2, "code": "TURKIYE", "name": "Türkiye"}],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+            "pydiyanet.DiyanetApiClient.get_states",
             return_value=[{"id": 34, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
     ):
@@ -253,15 +249,15 @@ async def test_form_invalid_auth(
         )
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+            "pydiyanet.DiyanetApiClient.get_states",
             return_value=[{"id": 34, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[{"id": 13975, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
     ):
@@ -272,15 +268,15 @@ async def test_form_invalid_auth(
         )
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[{"id": 13975, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_prayer_times",
+            "pydiyanet.DiyanetApiClient.get_prayer_times",
             return_value={"gregorianDateLong": "01 January 2025"},
         ),
     ):
@@ -309,7 +305,7 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+        "pydiyanet.DiyanetApiClient.authenticate",
         side_effect=DiyanetConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -326,11 +322,11 @@ async def test_form_cannot_connect(
     # Recover: proceed through country/state/city
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.authenticate",
+            "pydiyanet.DiyanetApiClient.authenticate",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_countries",
+            "pydiyanet.DiyanetApiClient.get_countries",
             return_value=[{"id": 2, "code": "TURKIYE", "name": "Türkiye"}],
         ),
     ):
@@ -339,15 +335,15 @@ async def test_form_cannot_connect(
         )
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_countries",
+            "pydiyanet.DiyanetApiClient.get_countries",
             return_value=[{"id": 2, "code": "TURKIYE", "name": "Türkiye"}],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+            "pydiyanet.DiyanetApiClient.get_states",
             return_value=[{"id": 34, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
     ):
@@ -356,15 +352,15 @@ async def test_form_cannot_connect(
         )
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_states",
+            "pydiyanet.DiyanetApiClient.get_states",
             return_value=[{"id": 34, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[{"id": 13975, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
     ):
@@ -375,15 +371,15 @@ async def test_form_cannot_connect(
         )
     with (
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient._ensure_authenticated",
+            "pydiyanet.DiyanetApiClient._ensure_authenticated",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_cities",
+            "pydiyanet.DiyanetApiClient.get_cities",
             return_value=[{"id": 13975, "code": "ISTANBUL", "name": "İstanbul"}],
         ),
         patch(
-            "homeassistant.components.diyanet.api.DiyanetApiClient.get_prayer_times",
+            "pydiyanet.DiyanetApiClient.get_prayer_times",
             return_value={"gregorianDateLong": "01 January 2025"},
         ),
     ):
