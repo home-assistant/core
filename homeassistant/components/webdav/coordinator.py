@@ -27,7 +27,7 @@ type WebDavConfigEntry = ConfigEntry[WebDavCoordinator]
 class WebDavData:
     """Data class for WebDAV coordinator."""
 
-    quota: QuotaInfo | None
+    quota: QuotaInfo
 
 
 class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
@@ -50,27 +50,25 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
             config_entry=config_entry,
         )
         self.client = client
-        self._supports_quota = True
 
-    async def _async_update_data(self) -> WebDavData:
-        """Fetch data from WebDAV server."""
-        if not self._supports_quota:
-            return WebDavData(quota=None)
-
+    async def _async_setup(self) -> None:
+        """Set up the WebDAV coordinator."""
         try:
             quota = await self.client.quota()
         except MethodNotSupportedError:
             _LOGGER.debug("WebDAV server does not support quota")
-            self._supports_quota = False
-            self.update_interval = None
-            return WebDavData(quota=None)
-        except WebDavError as err:
-            raise UpdateFailed(f"Failed to fetch quota data: {err}") from err
+            await self.async_shutdown()
+            return
 
         if quota.available_bytes is None and quota.used_bytes is None:
             _LOGGER.debug("WebDAV server does not provide quota information")
-            self._supports_quota = False
-            self.update_interval = None
-            return WebDavData(quota=None)
+            await self.async_shutdown()
+
+    async def _async_update_data(self) -> WebDavData:
+        """Fetch data from WebDAV server."""
+        try:
+            quota = await self.client.quota()
+        except WebDavError as err:
+            raise UpdateFailed(f"Failed to fetch quota data: {err}") from err
 
         return WebDavData(quota=quota)

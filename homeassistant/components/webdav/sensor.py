@@ -39,9 +39,7 @@ SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: (
-            data.quota.available_bytes if data.quota is not None else None
-        ),
+        value_fn=lambda data: data.quota.available_bytes,
         available_fn=lambda data: (
             data.quota is not None and data.quota.available_bytes is not None
         ),
@@ -54,7 +52,7 @@ SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.quota.used_bytes if data.quota is not None else None,
+        value_fn=lambda data: data.quota.used_bytes,
         available_fn=lambda data: (
             data.quota is not None and data.quota.used_bytes is not None
         ),
