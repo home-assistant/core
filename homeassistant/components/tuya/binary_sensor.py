@@ -376,7 +376,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
 }
 
 
-class _CustomDPCodeWrapper(DPCodeWrapper):
+class _CustomDPCodeWrapper(DPCodeWrapper[bool]):
     """Custom DPCode Wrapper to check for values in a set."""
 
     _valid_values: set[bool | float | int | str]

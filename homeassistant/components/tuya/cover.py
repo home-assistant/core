@@ -35,7 +35,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
+class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for DPCode position values mapping to 0-100 range."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -47,7 +47,7 @@ class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
         """Check if the position and direction should be reversed."""
         return False
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         if (value := device.status.get(self.dpcode)) is None:
             return None
 
@@ -123,7 +123,7 @@ class _IsClosedInvertedWrapper(DPCodeBooleanWrapper):
         return not value
 
 
-class _IsClosedEnumWrapper(DPCodeEnumWrapper):
+class _IsClosedEnumWrapper(DPCodeEnumWrapper[bool]):
     """Enum wrapper for checking if state is closed."""
 
     _MAPPINGS = {

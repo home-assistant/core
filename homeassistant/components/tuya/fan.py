@@ -80,7 +80,7 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
     return any(get_dpcode(device, code) for code in properties_to_check)
 
 
-class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
+class _FanSpeedEnumWrapper(DPCodeEnumWrapper[int]):
     """Wrapper for fan speed DP code (from an enum)."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
@@ -94,7 +94,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
         return percentage_to_ordered_list_item(self.options, value)
 
 
-class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
+class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for fan speed DP code (from an integer)."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:

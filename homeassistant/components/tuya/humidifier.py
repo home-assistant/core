@@ -29,7 +29,7 @@ from .entity import TuyaEntity
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """An integer that always rounds its value."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:

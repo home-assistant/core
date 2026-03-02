@@ -25,7 +25,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _VacuumActivityWrapper(DeviceWrapper):
+class _VacuumActivityWrapper(DeviceWrapper[VacuumActivity]):
     """Wrapper for the state of a device."""
 
     _TUYA_STATUS_TO_HA = {

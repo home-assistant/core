@@ -54,7 +54,7 @@ TUYA_HVAC_TO_HA = {
 }
 
 
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """An integer that always rounds its value."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
@@ -65,7 +65,7 @@ class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
 
 
 @dataclass(kw_only=True)
-class _SwingModeWrapper(DeviceWrapper):
+class _SwingModeWrapper(DeviceWrapper[str]):
     """Wrapper for managing climate swing mode operations across multiple DPCodes."""
 
     on_off: DPCodeBooleanWrapper | None = None
@@ -158,7 +158,7 @@ def _filter_hvac_mode_mappings(tuya_range: list[str]) -> dict[str, HVACMode | No
     return modes_in_range
 
 
-class _HvacModeWrapper(DPCodeEnumWrapper):
+class _HvacModeWrapper(DPCodeEnumWrapper[HVACMode]):
     """Wrapper for managing climate HVACMode."""
 
     # Modes that do not map to HVAC modes are ignored (they are handled by PresetWrapper)

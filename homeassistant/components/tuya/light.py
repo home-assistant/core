@@ -41,7 +41,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
 
 
-class _BrightnessWrapper(DPCodeIntegerWrapper):
+class _BrightnessWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for brightness DP code.
 
     Handles brightness value conversion between device scale and Home Assistant's
@@ -123,7 +123,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
         return round(self._remap_helper.remap_value_from(value))
 
 
-class _ColorTempWrapper(DPCodeIntegerWrapper):
+class _ColorTempWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for color temperature DP code."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -167,7 +167,7 @@ DEFAULT_V_TYPE_V2 = RemapHelper(
 )
 
 
-class _ColorDataWrapper(DPCodeJsonWrapper):
+class _ColorDataWrapper(DPCodeJsonWrapper[tuple[float, float, float]]):
     """Wrapper for color data DP code."""
 
     h_type = DEFAULT_H_TYPE

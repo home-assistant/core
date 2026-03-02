@@ -37,7 +37,7 @@ ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
 }
 
 
-class _AlarmChangedByWrapper(DPCodeRawWrapper):
+class _AlarmChangedByWrapper(DPCodeRawWrapper[str]):
     """Wrapper for changed_by.
 
     Decode base64 to utf-16be string, but only if alarm has been triggered.
@@ -53,7 +53,7 @@ class _AlarmChangedByWrapper(DPCodeRawWrapper):
         return status.decode("utf-16be")
 
 
-class _AlarmStateWrapper(DPCodeEnumWrapper):
+class _AlarmStateWrapper(DPCodeEnumWrapper[AlarmControlPanelState]):
     """Wrapper for the alarm state of a device.
 
     Handles alarm mode enum values and determines the alarm state,
