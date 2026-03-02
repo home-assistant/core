@@ -26,6 +26,12 @@ LAMP_TO_HA = {
     "off": "off",
 }
 
+DRIVING_MODE_TO_HA = {
+    "areaThenWalls": "area_then_walls",
+    "wallFirst": "walls_first",
+    "quickCleaningZigzagPattern": "quick_clean_zigzag_pattern",
+}
+
 WASHER_SOIL_LEVEL_TO_HA = {
     "none": "none",
     "heavy": "heavy",
@@ -159,6 +165,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         extra_components=["hood"],
         capability_ignore_list=[Capability.SAMSUNG_CE_CONNECTION_STATE],
     ),
+    Capability.SAMSUNG_CE_SOUND_DETECTION_SENSITIVITY: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_SOUND_DETECTION_SENSITIVITY,
+        translation_key="sound_detection_sensitivity",
+        options_attribute=Attribute.SUPPORTED_LEVELS,
+        status_attribute=Attribute.LEVEL,
+        command=Command.SET_LEVEL,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
     Capability.CUSTOM_WASHER_SPIN_LEVEL: SmartThingsSelectDescription(
         key=Capability.CUSTOM_WASHER_SPIN_LEVEL,
         translation_key="spin_level",
@@ -185,6 +200,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.WASHER_WATER_TEMPERATURE,
         command=Command.SET_WASHER_WATER_TEMPERATURE,
         options_map=WASHER_WATER_TEMPERATURE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_DRIVING_MODE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_DRIVING_MODE,
+        translation_key="robot_cleaner_driving_mode",
+        options_attribute=Attribute.SUPPORTED_DRIVING_MODES,
+        status_attribute=Attribute.DRIVING_MODE,
+        command=Command.SET_DRIVING_MODE,
+        options_map=DRIVING_MODE_TO_HA,
         entity_category=EntityCategory.CONFIG,
     ),
     Capability.SAMSUNG_CE_DUST_FILTER_ALARM: SmartThingsSelectDescription(
