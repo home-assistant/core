@@ -529,10 +529,25 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Initialize the options flow and start camera configuration."""
-        # Get cameras from runtime_data
+        # Get cameras from live runtime_data sources
         cameras: dict[str, Any] = {}
-        if self.config_entry.runtime_data:
-            cameras = self.config_entry.runtime_data.devices.get("cameras", {})
+        runtime_data = self.config_entry.runtime_data
+        if runtime_data is not None:
+            # Prefer the API cameras if available
+            api = getattr(runtime_data, "api", None)
+            if api is not None and getattr(api, "cameras", None) is not None:
+                cameras = api.cameras
+            else:
+                # Fall back to coordinator data if it exposes cameras
+                coordinator = getattr(runtime_data, "coordinator", None)
+                coordinator_data = getattr(coordinator, "data", None)
+                if isinstance(coordinator_data, dict) and "cameras" in coordinator_data:
+                    cameras = coordinator_data["cameras"]
+                else:
+                    # Final fallback to any cached devices mapping
+                    devices = getattr(runtime_data, "devices", None)
+                    if isinstance(devices, dict):
+                        cameras = devices.get("cameras", {})
 
         if not cameras:
             # No cameras found - show simple message
