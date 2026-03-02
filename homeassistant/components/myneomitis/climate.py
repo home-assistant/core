@@ -246,6 +246,22 @@ class MyNeoClimate(ClimateEntity):
                 )
             self._attr_preset_mode = "setpoint"
 
+            if self._attr_hvac_mode == HVACMode.OFF:
+                default_mode = HVACMode.HEAT
+                if (
+                    self._device.get("model") == "NTD"
+                    and self._device.get("state", {}).get("changeOverUser") == 1
+                ):
+                    default_mode = HVACMode.COOL
+                if getattr(self, "_attr_hvac_modes", None):
+                    self._attr_hvac_mode = next(
+                        (
+                            mode
+                            for mode in self._attr_hvac_modes
+                            if mode is not HVACMode.OFF
+                        ),
+                        default_mode,
+                    )
         ok = await self._set_device_temperature(temperature)
         if not ok:
             raise HomeAssistantError(
