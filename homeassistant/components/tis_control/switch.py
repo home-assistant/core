@@ -47,7 +47,27 @@ async def async_get_switches(tis_api: TISApi) -> list[dict]:
         # 1. appliance["channels"][0]: Get the first dictionary in the list -> {"Output": 1}.
         # 2. .values(): Get the dictionary's values -> dict_values([1]).
         # 3. list(...)[0]: Convert to a list and get the first element -> 1.
-        channel_number = int(list(appliance["channels"][0].values())[0])
+
+        # Validate that channels is a non-empty list.
+        channels = appliance.get("channels")
+        if not isinstance(channels, list) or not channels:
+            continue
+
+        # Validate that the first channel entry is a non-empty dict.
+        first_channel = channels[0]
+        if not isinstance(first_channel, dict) or not first_channel:
+            continue
+
+        # Safely get the first value from the channel dict.
+        channel_value = next(iter(first_channel.values()), None)
+        if channel_value is None:
+            continue
+
+        try:
+            channel_number = int(channel_value)
+        except TypeError, ValueError:
+            # Skip appliances with non-numeric channel values.
+            continue
 
         # Create a new, clean dictionary with a standardized format.
         result.append(
