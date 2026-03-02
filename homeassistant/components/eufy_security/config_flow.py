@@ -80,7 +80,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return an HTML img tag for the CAPTCHA image."""
         if not captcha_image or not captcha_image.startswith("data:image/"):
             return ""
-        return f'![CAPTCHA]({captcha_image})'
+        return f"![CAPTCHA]({captcha_image})"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -112,7 +112,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
@@ -176,7 +176,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
@@ -236,7 +236,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
@@ -303,7 +303,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
@@ -356,7 +356,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except EufySecurityError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:
@@ -434,7 +434,7 @@ class EufySecurityConfigFlow(ConfigFlow, domain=DOMAIN):
             except EufySecurityError as err:
                 _LOGGER.warning("API error: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception during config flow")
                 errors["base"] = "unknown"
             else:

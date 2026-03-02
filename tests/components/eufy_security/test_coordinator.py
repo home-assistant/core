@@ -97,9 +97,7 @@ async def test_coordinator_recovery_logging(
     coordinator.api.cameras = {mock_camera.serial: mock_camera}
     coordinator.api.stations = {}
 
-    with caplog.at_level(
-        logging.INFO, logger="homeassistant.components.eufy_security"
-    ):
+    with caplog.at_level(logging.INFO, logger="homeassistant.components.eufy_security"):
         await coordinator._async_update_data()
 
     assert "API connection restored" in caplog.text
