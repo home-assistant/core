@@ -60,7 +60,7 @@ def override_platforms() -> Generator[None]:
 
 @pytest.mark.parametrize(
     "device_fixture",
-    ["cct", "rgb_single_segment", "rgb", "rgb_websocket", "rgbw", "rgbww"],
+    ["cct", "rgb_cct", "rgb_single_segment", "rgb", "rgb_websocket", "rgbw", "rgbww"],
 )
 async def test_snapshots(
     hass: HomeAssistant,
@@ -414,6 +414,38 @@ async def test_rgbww_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     mock_wled.segment.assert_called_with(
         color_primary=(255, 255, 255, 255),
         cct=127,
+        on=True,
+        segment_id=0,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_cct"])
+async def test_rgb_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
+    """Test RGB CCT support for WLED."""
+    assert (state := hass.states.get("light.wled_rgb_cct_light"))
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGB,
+    ]
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGB
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgb_cct_light",
+            ATTR_COLOR_TEMP_KELVIN: 4321,
+        },
+        blocking=True,
+    )
+    assert (state := hass.states.get("light.wled_rgb_cct_light"))
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
+    assert mock_wled.segment.call_count == 1
+    mock_wled.segment.assert_called_with(
+        color_primary=(255, 255, 255, 0),
+        cct=130,
         on=True,
         segment_id=0,
     )

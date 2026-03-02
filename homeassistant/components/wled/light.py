@@ -187,7 +187,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
-        """WLED Plateau Logic: drop_point = 0.5 * blend_factor."""
+        """Return rgbww color value from WLED rgb+cct color value."""
         state = self.coordinator.data.state
         seg = state.segments[self._segment]
         if not (color := seg.color) or not color.primary:
