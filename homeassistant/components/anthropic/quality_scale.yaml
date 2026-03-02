@@ -41,7 +41,7 @@ rules:
     status: exempt
     comment: |
       The logging is handled by DataUpdateCoordinator,
-      however the logging level might be not INFO.
+      however the logging level might not be INFO.
   parallel-updates:
     status: exempt
     comment: |
