@@ -94,3 +94,64 @@ async def test_user_flow_exceptions(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_type"),
+    [
+        (UhooError("asd"), "cannot_connect"),
+        (UnauthorizedError("Invalid credentials"), "invalid_auth"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_user_flow_reauth(
+    hass: HomeAssistant,
+    mock_uhoo_client: AsyncMock,
+    exception: Exception,
+    error_type: str,
+) -> None:
+    """Test reauth flow with various exceptions."""
+    # Create a mock config entry that will be reauthenticated
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "old-key-12345"},
+        unique_id="some_unique_id",  # reauth flows require a unique_id
+    )
+    entry.add_to_hass(hass)
+
+    # Initiate the reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reauth",
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result.get("errors")
+
+    # --- Test exception handling ---
+    mock_uhoo_client.login.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "invalid-key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error_type}
+    mock_uhoo_client.login.assert_called_once()
+    mock_uhoo_client.login.side_effect = None
+
+    # --- Test successful reauthentication ---
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-valid-key-67890"}
+    )
+    # After successful reauth, the flow should abort with "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # Verify the existing entry was updated with the new API key
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data[CONF_API_KEY] == "new-valid-key-67890"

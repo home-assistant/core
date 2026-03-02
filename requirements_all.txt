@@ -3103,7 +3103,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.uhoo
-uhooapi==1.2.6
+uhooapi==1.2.7
 
 # homeassistant.components.unifiprotect
 uiprotect==10.1.0
