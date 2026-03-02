@@ -31,7 +31,7 @@
           "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
           "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
           "hosts": "[%key:component::nmap_tracker::config::step::user::data::hosts%]",
-          "hours_to_prune": "Hours not seen to prune",
+          "hours_to_prune": "[%key:component::nmap_tracker::config::step::user::data::hours_to_prune%]",
           "interval_seconds": "Scan interval",
           "mac_exclude": "[%key:component::nmap_tracker::config::step::user::data::mac_exclude%]",
           "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]"

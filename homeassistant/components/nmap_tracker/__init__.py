@@ -1,13 +1,13 @@
 """The Nmap Tracker integration."""
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import asyncio
+import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
-import logging
-import os
 from typing import Final
 
 import aiooui
@@ -46,7 +46,6 @@ from .const import (
 # Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
 MAX_SCAN_ATTEMPTS: Final = 16
-DEBUG_FAKE_MAC_ENV: Final = "HASS_NMAP_TRACKER_DEBUG_FAKE_MAC"
 
 
 def short_hostname(hostname: str) -> str:
@@ -64,13 +63,15 @@ def human_readable_name(hostname: str, vendor: str, mac_address: str) -> str:
 
 
 def _debug_fake_mac_from_ipv4(ipv4: str) -> str | None:
-    """Generate a deterministic locally administered MAC from an IPv4 address."""
-    known_devices = {
-        "192.168.178.154": "B8:F8:62:37:5E:C4",
-        "192.168.178.104": "A4:F0:0F:68:B6:AC",
-    }
-    if known_mac := known_devices.get(ipv4):
-        return known_mac
+    """Generate a deterministic locally administered MAC from an IPv4."""
+    """address if MAC is not available."""
+    # uncomment this section to test known device not pruned
+    # known_devices = {
+    #    "192.168.178.154": "B8:F8:62:37:5E:C4",
+    #    "192.168.178.104": "A4:F0:0F:68:B6:AC",
+    # }
+    # if known_mac := known_devices.get(ipv4):
+    #    return known_mac
 
     try:
         octets = [int(part) for part in ipv4.split(".")]
@@ -88,9 +89,9 @@ class NmapDevice:
     """Class for keeping track of an nmap tracked device."""
 
     mac_address: str
-    hostname: str
+    hostname: str | None
     name: str
-    ipv4: str
+    ipv4: str | None
     manufacturer: str
     reason: str
     last_update: datetime
@@ -178,7 +179,8 @@ def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     ]
     for mac_address in remove_mac_addresses:
         if device := devices.tracked.pop(mac_address, None):
-            devices.ipv4_last_mac.pop(device.ipv4, None)
+            if device.ipv4 is not None:
+                devices.ipv4_last_mac.pop(device.ipv4, None)
         del devices.config_entry_owner[mac_address]
 
 
@@ -212,7 +214,7 @@ class NmapDeviceScanner:
         self._mac_exclude = None
         self._scan_interval = None
         self._hours_to_prune = DEFAULT_HOURS_TO_PRUNE
-        self._debug_fake_mac = False
+        self._debug_fake_mac = False  # set True to test syntetic MAC
         self._excluded_hosts_this_scan: set[str] = set()
 
         self._known_mac_addresses: dict[str, str] = {}
@@ -239,17 +241,8 @@ class NmapDeviceScanner:
         self._hours_to_prune = cv.positive_int(
             config.get(CONF_HOURS_TO_PRUNE, DEFAULT_HOURS_TO_PRUNE)
         )
-        self._debug_fake_mac = os.environ.get(DEBUG_FAKE_MAC_ENV, "").lower() in {
-            "1",
-            "true",
-            "yes",
-            "on",
-        }
         if self._debug_fake_mac:
-            _LOGGER.warning(
-                "Debug synthetic MAC mode is enabled via %s",
-                DEBUG_FAKE_MAC_ENV,
-            )
+            _LOGGER.warning("Debug synthetic MAC mode is enabled ")
         self._scan_lock = asyncio.Lock()
         if self._hass.state is CoreState.running:
             await self._async_start_scanner()
@@ -306,7 +299,9 @@ class NmapDeviceScanner:
                 device for device in self._last_results if device.last_update > boundary
             ]
             if last_results:
-                exclude_hosts = self._exclude + [device.ipv4 for device in last_results]
+                exclude_hosts = self._exclude + [
+                    device.ipv4 for device in last_results if device.ipv4 is not None
+                ]
             else:
                 exclude_hosts = self._exclude
         else:
@@ -396,6 +391,14 @@ class NmapDeviceScanner:
     def _async_device_offline(self, ipv4: str, reason: str, now: datetime) -> None:
         """Mark an IP offline."""
         formatted_mac = self.devices.ipv4_last_mac.get(ipv4)
+        if formatted_mac is not None:
+            mapped_device = self.devices.tracked.get(formatted_mac)
+            if (
+                mapped_device is None
+                or mapped_device.ipv4 != ipv4
+                or self.devices.config_entry_owner.get(formatted_mac) != self._entry_id
+            ):
+                formatted_mac = None
         if formatted_mac is None:
             for candidate_mac, tracked_device in self.devices.tracked.items():
                 if tracked_device.ipv4 != ipv4:
@@ -465,7 +468,8 @@ class NmapDeviceScanner:
             DOMAIN,
             formatted_mac,
         )
-        if entity_id and (entity_entry := registry.async_get(entity_id)):
+        entity_entry = registry.async_get(entity_id) if entity_id else None
+        if entity_entry is not None:
             if entity_entry.device_id:
                 _LOGGER.debug(
                     "Not pruning %s because it is linked to device %s",
@@ -473,7 +477,30 @@ class NmapDeviceScanner:
                     entity_entry.device_id,
                 )
                 return False
+            if entity_entry.config_entry_id != self._entry_id:
+                _LOGGER.debug(
+                    "Not pruning %s because it belongs to config entry %s",
+                    entity_id,
+                    entity_entry.config_entry_id,
+                )
+                return False
 
+        owner_entry_id = self.devices.config_entry_owner.get(formatted_mac)
+        if (
+            owner_entry_id is not None
+            and entity_entry is not None
+            and entity_entry.config_entry_id is not None
+            and entity_entry.config_entry_id != owner_entry_id
+        ):
+            _LOGGER.debug(
+                "Not pruning %s because its owner changed from %s to %s",
+                entity_id,
+                owner_entry_id,
+                entity_entry.config_entry_id,
+            )
+            return False
+
+        if entity_id and entity_entry is not None:
             _LOGGER.debug(
                 "Pruning stale entity %s after %s hours",
                 entity_id,
@@ -498,11 +525,16 @@ class NmapDeviceScanner:
         now = dt_util.now()
         scan_result = result["scan"]
         seen_ipv4 = set(scan_result)
-        for ipv4, info in scan_result.items():
+        for (
+            ipv4,
+            info,
+        ) in scan_result.items():  # principal loop on ip found in the network
             status = info["status"]
             reason = status["reason"]
             if status["state"] != "up":
-                self._async_device_offline(ipv4, reason, now)
+                self._async_device_offline(
+                    ipv4, reason, now
+                )  # device is not up, mark offline and skip
                 continue
             # Mac address only returned if nmap ran as root
             mac = info["addresses"].get(
@@ -511,7 +543,7 @@ class NmapDeviceScanner:
                 partial(get_mac_address, ip=ipv4)
             )
             if mac is None and self._debug_fake_mac:
-                mac = _debug_fake_mac_from_ipv4(ipv4)
+                mac = _debug_fake_mac_from_ipv4(ipv4)  # docker can't get mac
                 if mac is not None:
                     _LOGGER.warning(
                         "Using synthetic debug MAC for %s because no real MAC was found",
@@ -542,6 +574,11 @@ class NmapDeviceScanner:
             )
 
             new = formatted_mac not in devices.tracked
+            if (
+                not new
+                and (previous_ipv4 := devices.tracked[formatted_mac].ipv4) != ipv4
+            ):
+                devices.ipv4_last_mac.pop(previous_ipv4, None)
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac
             self._last_results.append(device)
@@ -553,6 +590,7 @@ class NmapDeviceScanner:
                     self._hass, signal_device_update(formatted_mac), True
                 )
 
+        # search device non found in nmap scan to perform prune and offline
         for formatted_mac, device in list(devices.tracked.items()):
             if devices.config_entry_owner.get(formatted_mac) != entry_id:
                 continue

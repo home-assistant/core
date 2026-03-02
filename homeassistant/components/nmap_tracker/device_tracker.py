@@ -81,7 +81,7 @@ class NmapTrackerEntity(ScannerEntity):
         return self._mac_address
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ipv4
 

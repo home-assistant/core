@@ -201,6 +201,42 @@ async def test_do_not_prune_stale_entity_linked_to_device(hass: HomeAssistant) -
     assert mac in scanner.devices.tracked
 
 
+async def test_do_not_prune_stale_entity_owned_by_other_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale entity is not pruned if owned by another config entry."""
+    scanner, entry = _build_scanner(hass)
+    now = dt_util.now()
+    mac = "00:00:00:00:00:22"
+    ipv4 = "192.168.1.22"
+
+    scanner.devices.tracked[mac] = NmapDevice(
+        mac,
+        "host",
+        "host",
+        ipv4,
+        "vendor",
+        "arp-response",
+        now - timedelta(hours=4),
+        now - timedelta(hours=3),
+    )
+    scanner.devices.ipv4_last_mac[ipv4] = mac
+    scanner.devices.config_entry_owner[mac] = entry.entry_id
+
+    other_entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    other_entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "device_tracker", DOMAIN, mac, config_entry=other_entry
+    )
+
+    scanner._async_device_offline(ipv4, "host-timeout", now)
+
+    assert entity_registry.async_get(entity_entry.entity_id) is not None
+    assert mac in scanner.devices.tracked
+
+
 async def test_do_not_prune_when_disabled(hass: HomeAssistant) -> None:
     """Test stale entity is not pruned if hours_to_prune is 0."""
     scanner, entry = _build_scanner(hass)
@@ -315,6 +351,47 @@ async def test_prune_tracked_entity_without_ipv4_last_mac_mapping(
     assert entity_registry.async_get(entity_entry.entity_id) is None
     assert mac not in scanner.devices.tracked
     assert mac not in scanner.devices.config_entry_owner
+
+
+async def test_device_offline_ignores_stale_ipv4_last_mac_mapping(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale ipv4_last_mac mapping falls back to tracked device lookup."""
+    scanner, entry = _build_scanner(hass)
+    now = dt_util.now()
+    ipv4 = "192.168.1.15"
+    stale_mac = "00:00:00:00:00:15"
+    matching_mac = "00:00:00:00:00:16"
+
+    scanner.devices.tracked[stale_mac] = NmapDevice(
+        stale_mac,
+        "stale-host",
+        "stale-host",
+        "192.168.1.200",
+        "vendor",
+        "arp-response",
+        now - timedelta(hours=4),
+        now - timedelta(hours=3),
+    )
+    scanner.devices.tracked[matching_mac] = NmapDevice(
+        matching_mac,
+        "matching-host",
+        "matching-host",
+        ipv4,
+        "vendor",
+        "arp-response",
+        now - timedelta(hours=4),
+        now - timedelta(hours=3),
+    )
+    scanner.devices.config_entry_owner[stale_mac] = entry.entry_id
+    scanner.devices.config_entry_owner[matching_mac] = entry.entry_id
+    scanner.devices.ipv4_last_mac[ipv4] = stale_mac
+
+    scanner._async_device_offline(ipv4, "host-timeout", now)
+
+    assert stale_mac in scanner.devices.tracked
+    assert matching_mac not in scanner.devices.tracked
+    assert ipv4 not in scanner.devices.ipv4_last_mac
 
 
 async def test_prune_ungrouped_entity_missing_ipv4_after_timeout(
