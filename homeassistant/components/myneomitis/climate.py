@@ -78,6 +78,7 @@ class MyNeoClimate(ClimateEntity):
         device_id = device.get("_id")
         if not device_id:
             raise ValueError("Device is missing required _id")
+        self._device_id: str = device_id
         model = device.get("model", "")
         name = device.get("name") or device_id or "MyNeomitis device"
         connected = bool(device.get("connected", False))
@@ -146,16 +147,15 @@ class MyNeoClimate(ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
-        device_id = self._device.get("_id")
         register_listener = getattr(self._api, "register_listener", None)
         if not callable(register_listener):
             _LOGGER.debug(
                 "API has no callable register_listener, skipping ws listener for %s",
-                device_id,
+                self._device_id,
             )
             return
 
-        unsubscribe = register_listener(device_id, self.handle_ws_update)
+        unsubscribe = register_listener(self._device_id, self.handle_ws_update)
 
         if callable(unsubscribe):
             self.async_on_remove(unsubscribe)
@@ -169,7 +169,7 @@ class MyNeoClimate(ClimateEntity):
             _LOGGER.debug(
                 "register_listener returned unsupported type %s for %s",
                 type(unsubscribe),
-                device_id,
+                self._device_id,
             )
 
     @callback
@@ -374,15 +374,9 @@ class MyNeoClimate(ClimateEntity):
                     return False
                 await self._api.set_sub_device_mode(gateway, str(rfid), mode_value)
             else:
-                device_id = self._device.get("_id")
-                if not device_id:
-                    _LOGGER.error("Missing device id for device, cannot set mode")
-                    return False
-                await self._api.set_device_mode(device_id, mode_value)
+                await self._api.set_device_mode(self._device_id, mode_value)
         except (TimeoutError, ConnectionError) as err:
-            _LOGGER.error(
-                "Error setting device mode for %s: %s", self._device.get("_id"), err
-            )
+            _LOGGER.error("Error setting device mode for %s: %s", self._device_id, err)
             return False
 
         return True
@@ -403,17 +397,11 @@ class MyNeoClimate(ClimateEntity):
                     gateway, str(rfid), temperature
                 )
             else:
-                device_id = self._device.get("_id")
-                if not device_id:
-                    _LOGGER.error(
-                        "Missing device id for device, cannot set temperature"
-                    )
-                    return False
-                await self._api.set_device_temperature(device_id, temperature)
+                await self._api.set_device_temperature(self._device_id, temperature)
         except (TimeoutError, ConnectionError) as err:
             _LOGGER.error(
                 "Error setting device temperature for %s: %s",
-                self._device.get("_id"),
+                self._device_id,
                 err,
             )
             return False
