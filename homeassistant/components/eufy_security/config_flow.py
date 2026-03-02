@@ -546,9 +546,7 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
 
         schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_RTSP_USERNAME, default=current_username
-                ): str,
+                vol.Optional(CONF_RTSP_USERNAME, default=current_username): str,
                 vol.Optional(CONF_RTSP_PASSWORD): str,
             }
         )
