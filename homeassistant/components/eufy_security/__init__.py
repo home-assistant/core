@@ -75,7 +75,7 @@ async def async_setup_entry(
             now = datetime.now(datetime.UTC)
             if token_exp is None or now < token_exp:
                 api.set_token(token, token_exp, api_base)
-                _LOGGER.debug("Restored Eufy Security session from stored crypto state")
+                _LOGGER.debug("Restored session from stored crypto state")
 
                 # Test if the restored session works
                 try:
@@ -102,7 +102,7 @@ async def async_setup_entry(
         except CaptchaRequiredError as err:
             # CAPTCHA required - trigger reauth flow so user can solve it
             _LOGGER.warning(
-                "CAPTCHA required for Eufy Security, triggering reauthentication"
+                "CAPTCHA required, triggering reauthentication"
             )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -119,7 +119,7 @@ async def async_setup_entry(
                 translation_key="cannot_connect",
             ) from err
         except EufySecurityError as err:
-            _LOGGER.warning("Eufy Security API error during auth: %s", err)
+            _LOGGER.warning("API error during auth: %s", err)
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -142,15 +142,38 @@ async def async_setup_entry(
             "yes" if camera.rtsp_username or camera.rtsp_password else "no",
         )
 
+    devices = {
+        "cameras": {camera.serial: camera for camera in api.cameras.values()},
+        "stations": {station.serial: station for station in api.stations.values()},
+    }
+
     entry.runtime_data = EufySecurityData(
         api=api,
-        devices={
-            "cameras": {camera.serial: camera for camera in api.cameras.values()},
-            "stations": {station.serial: station for station in api.stations.values()},
-        },
+        devices=devices,
         coordinator=coordinator,
     )
 
+    def _update_devices_from_api() -> None:
+        """Keep runtime devices snapshot in sync with API device lists."""
+        cameras = devices.setdefault("cameras", {})
+        stations = devices.setdefault("stations", {})
+
+        cameras.clear()
+        cameras.update(
+            {camera.serial: camera for camera in api.cameras.values()}
+        )
+
+        stations.clear()
+        stations.update(
+            {station.serial: station for station in api.stations.values()}
+        )
+
+    # Keep runtime device mapping in sync whenever the coordinator refreshes
+    remove_listener = coordinator.async_add_listener(_update_devices_from_api)
+    entry.async_on_unload(remove_listener)
+
+    # Ensure the snapshot is up to date after initial refresh
+    _update_devices_from_api()
     # Reload entry when options change (RTSP credentials)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
