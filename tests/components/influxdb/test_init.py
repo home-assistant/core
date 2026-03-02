@@ -2227,6 +2227,4 @@ async def test_setup_import_already_exists(
         assert "deprecated_yaml_import_issue" not in issue.issue_id
 
     # Deprecation warning should still be shown
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_yaml"
-    )
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
