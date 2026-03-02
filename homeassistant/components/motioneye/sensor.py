@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
@@ -36,8 +36,8 @@ async def async_setup_entry(
                 MotionEyeActionSensor(
                     entry.entry_id,
                     camera,
-                    entry_data.client,
-                    entry_data,
+                    coordinator.client,
+                    coordinator,
                     entry.options,
                 )
             ]
