@@ -5,8 +5,8 @@ from __future__ import annotations
 from http import HTTPStatus
 import io
 from pathlib import Path
-from typing import Any
 import subprocess
+from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 import wave
 
@@ -17,8 +17,8 @@ from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
 from homeassistant.components.picotts.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 from tests.components.tts.common import retrieve_media
