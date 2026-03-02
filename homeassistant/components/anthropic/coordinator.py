@@ -119,26 +119,11 @@ class AnthropicCoordinator(
     async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
         """Fetch data from the API."""
         try:
-            data = (await self.client.models.list(timeout=10.0)).data
-            if not self.last_update_success:
-                self.logger.info("Claude API is available")
+            return (await self.client.models.list(timeout=10.0)).data
         except anthropic.AnthropicError as err:
-            if self.last_update_success:
-                self.logger.info("Claude API is unavailable")
             raise self._map_exception(err)  # noqa: B904
-
-        return data
-
-    @callback
-    def async_set_updated_data(self, data: list[anthropic.types.ModelInfo]) -> None:
-        """Manually update data, log if needed."""
-        if not self.last_update_success:
-            self.logger.info("Claude API is available")
-        super().async_set_updated_data(data)
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:
         """Manually set an error."""
-        if self.last_update_success:
-            self.logger.info("Claude API is unavailable")
         super().async_set_update_error(self._map_exception(err))
