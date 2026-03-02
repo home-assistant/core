@@ -104,7 +104,7 @@ class TISSwitch(SwitchEntity):
 
         self._attr_unique_id = self.device_api.unique_id
         self._attr_should_poll = False
-        self._attr_available = True
+        self._attr_available = self.device_api.available
 
         self._attr_is_on = self.device_api.is_on
 
