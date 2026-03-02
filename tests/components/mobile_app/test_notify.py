@@ -184,9 +184,8 @@ async def test_notify_ws_works(
     """Test notify works."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
@@ -196,9 +195,8 @@ async def test_notify_ws_works(
     assert sub_result["success"]
 
     # Subscribe twice, it should forward all messages to 2nd subscription
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
@@ -206,6 +204,7 @@ async def test_notify_ws_works(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    new_sub_id = sub_result["id"]
 
     await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
@@ -215,14 +214,13 @@ async def test_notify_ws_works(
 
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
-    assert msg_result["id"] == 6  # This is the new subscription
+    assert msg_result["id"] == new_sub_id  # This is the new subscription
 
     # Unsubscribe, now it should go over http
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 7,
             "type": "unsubscribe_events",
-            "subscription": 6,
+            "subscription": new_sub_id,
         }
     )
     sub_result = await client.receive_json()
@@ -235,9 +233,8 @@ async def test_notify_ws_works(
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test non-existing webhook ID
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "non-existing",
         }
@@ -250,9 +247,8 @@ async def test_notify_ws_works(
     }
 
     # Test webhook ID linked to other user
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 9,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "webhook_id_2",
         }
@@ -274,9 +270,8 @@ async def test_notify_ws_confirming_works(
     """Test notify confirming works."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
             "support_confirm": True,
@@ -285,6 +280,7 @@ async def test_notify_ws_confirming_works(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
 
     # Sent a message that will be delivered locally
     await hass.services.async_call(
@@ -297,9 +293,8 @@ async def test_notify_ws_confirming_works(
     assert msg_result["event"] == {"message": "Hello world"}
 
     # Try to confirm with incorrect confirm ID
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "mobile_app/push_notification_confirm",
             "webhook_id": "mock-webhook_id",
             "confirm_id": "incorrect-confirm-id",
@@ -314,9 +309,8 @@ async def test_notify_ws_confirming_works(
     }
 
     # Confirm with correct confirm ID
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 7,
             "type": "mobile_app/push_notification_confirm",
             "webhook_id": "mock-webhook_id",
             "confirm_id": confirm_id,
@@ -327,19 +321,17 @@ async def test_notify_ws_confirming_works(
     assert result["success"]
 
     # Drop local push channel and try to confirm another message
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "unsubscribe_events",
-            "subscription": 5,
+            "subscription": sub_id,
         }
     )
     sub_result = await client.receive_json()
     assert sub_result["success"]
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 9,
             "type": "mobile_app/push_notification_confirm",
             "webhook_id": "mock-webhook_id",
             "confirm_id": confirm_id,
@@ -363,9 +355,8 @@ async def test_notify_ws_not_confirming(
     """Test we go via cloud when failed to confirm."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
             "support_confirm": True,
@@ -405,7 +396,9 @@ async def test_local_push_only(
     setup_websocket_channel_only_push,
 ) -> None:
     """Test a local only push registration."""
-    with pytest.raises(HomeAssistantError) as e_info:
+    with pytest.raises(
+        HomeAssistantError, match="Device not connected to local push notifications"
+    ):
         await hass.services.async_call(
             "notify",
             "mobile_app_websocket_push_name",
@@ -413,13 +406,10 @@ async def test_local_push_only(
             blocking=True,
         )
 
-    assert str(e_info.value) == "Device not connected to local push notifications"
-
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "websocket-push-webhook-id",
         }
@@ -427,6 +417,7 @@ async def test_local_push_only(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
 
     await hass.services.async_call(
         "notify",
@@ -436,7 +427,9 @@ async def test_local_push_only(
     )
 
     msg = await client.receive_json()
-    assert msg == {"id": 5, "type": "event", "event": {"message": "Hello world 1"}}
+    assert msg["id"] == sub_id
+    assert msg["type"] == "event"
+    assert msg["event"] == {"message": "Hello world 1"}
 
 
 @pytest.mark.parametrize(
@@ -470,9 +463,8 @@ async def test_notify_multiple_targets(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
@@ -481,9 +473,8 @@ async def test_notify_multiple_targets(
     sub_result = await client.receive_json()
     assert sub_result["success"]
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "websocket-push-webhook-id",
         }
@@ -513,10 +504,13 @@ async def test_notify_multiple_targets(
     assert call_json["registration_info"]["app_version"] == "1.0"
     assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
 
-    for i in range(5, 7):
+    msg_ids = set()
+    for _ in range(2):
         msg_result = await client.receive_json()
         assert msg_result["event"] == {"message": "Hello world"}
-        assert msg_result["id"] == i
+        msg_id = msg_result["id"]
+        assert msg_id not in msg_ids
+        msg_ids.add(msg_id)
 
 
 @pytest.mark.parametrize(
@@ -551,9 +545,8 @@ async def test_notify_multiple_targets_if_any_disconnected(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
@@ -561,6 +554,7 @@ async def test_notify_multiple_targets_if_any_disconnected(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
 
     with pytest.raises(
         HomeAssistantError,
@@ -589,7 +583,7 @@ async def test_notify_multiple_targets_if_any_disconnected(
 
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
-    assert msg_result["id"] == 5
+    assert msg_result["id"] == sub_id
 
     # Check that there are no more messages to receive (timeout expected)
     with pytest.raises(asyncio.TimeoutError):
