@@ -11504,7 +11504,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.015',
+    'state': '15.0',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_power_energy-entry]
@@ -11850,7 +11850,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.015',
+    'state': '15.0',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_power_energy-entry]
@@ -12196,7 +12196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.015',
+    'state': '15.0',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_power_energy-entry]
