@@ -58,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             try:
                 device_id = event["device_id"]
                 hass.bus.async_fire(f"tis_device_{device_id}", event)
-            except Exception as e:  # noqa: BLE001
-                _LOGGER.error("Unexpected error while processing TIS event: %s", e)
+            except Exception:  # noqa: BLE001
+                _LOGGER.error("Unexpected error while processing TIS event")
 
     # Add this listener to the HA loop as a background task.
     entry.async_create_background_task(hass, listen_for_events(), "tis_event_listener")
@@ -68,8 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         await tis_api.scan_devices()
     except ConnectionError as e:
         _LOGGER.error(
-            "Connection Error happened while scanning the network for devices: %s",
-            str(e),
+            "Connection error occurred while scanning the network for devices: %s",
+            e,
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
