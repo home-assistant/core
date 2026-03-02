@@ -1,5 +1,7 @@
 """Common stuff for Fritz!Tools tests."""
 
+from typing import Any
+
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 
 from homeassistant.components.fritz.const import DOMAIN
@@ -54,7 +56,7 @@ MOCK_MESH_MASTER_WIFI1_MAC = "1C:ED:6F:12:34:12"
 MOCK_MESH_SLAVE_MAC = "1C:ED:6F:12:34:21"
 MOCK_MESH_SLAVE_WIFI1_MAC = "1C:ED:6F:12:34:22"
 
-MOCK_FB_SERVICES: dict[str, dict] = {
+MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
     "DeviceInfo1": {
         "GetInfo": {
             "NewSerialNumber": MOCK_MESH_MASTER_MAC,

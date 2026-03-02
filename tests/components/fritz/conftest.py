@@ -102,7 +102,7 @@ class FritzConnectionMock:
 
         action_data = self._fc_data.get(normalized, {}).get(action, {})
         if kwargs:
-            if (index := kwargs.get("NewIndex")) is None and kwargs:
+            if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
             if isinstance(action_data, dict) and index in action_data:
                 return action_data[index]
@@ -111,13 +111,13 @@ class FritzConnectionMock:
 
 
 @pytest.fixture(name="fc_data")
-def fc_data_mock() -> dict[str, dict]:
+def fc_data_mock() -> dict[str, dict[str, Any]]:
     """Fixture for default fc_data."""
     return deepcopy(MOCK_FB_SERVICES)
 
 
 @pytest.fixture
-def fc_class_mock(fc_data: dict[str, dict]) -> Generator[FritzConnectionMock]:
+def fc_class_mock(fc_data: dict[str, dict[str, Any]]) -> Generator[FritzConnectionMock]:
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
         "homeassistant.components.fritz.coordinator.FritzConnectionCached",
