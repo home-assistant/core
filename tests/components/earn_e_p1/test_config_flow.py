@@ -182,10 +182,10 @@ async def test_manual_entry_no_serial_uses_host_as_unique_id(
     assert result["result"].unique_id == MOCK_HOST
 
 
-async def test_duplicate_serial_abort_user_flow(
+async def test_single_config_entry_abort(
     hass: HomeAssistant, mock_setup_entry
 ) -> None:
-    """Test that duplicate serial aborts in user flow (manual entry)."""
+    """Test that a second config entry is blocked (single_config_entry)."""
     existing = MockConfigEntry(
         domain=DOMAIN,
         title="Existing",
@@ -194,48 +194,12 @@ async def test_duplicate_serial_abort_user_flow(
     )
     existing.add_to_hass(hass)
 
-    with patch(LISTEN_PATH, return_value=None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    with patch(
-        LISTEN_PATH, return_value=DeviceInfo(host=MOCK_HOST, serial=MOCK_SERIAL)
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_duplicate_serial_abort_discovery_flow(
-    hass: HomeAssistant, mock_setup_entry
-) -> None:
-    """Test that duplicate serial aborts during discovery confirm."""
-    existing = MockConfigEntry(
-        domain=DOMAIN,
-        title="Existing",
-        data={CONF_HOST: "192.168.1.50", "serial": MOCK_SERIAL},
-        unique_id=MOCK_SERIAL,
-    )
-    existing.add_to_hass(hass)
-
-    with patch(LISTEN_PATH, return_value=DeviceInfo(host=MOCK_HOST, serial=MOCK_SERIAL)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_reconfigure_succeeds(

@@ -83,7 +83,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.host = host
         self.data = {}
         self.serial: str | None = serial
-        self.identifier: str = serial or host
+        self.identifier: str = serial or entry.entry_id
         self.model: str | None = None
         self.sw_version: str | None = None
         self._transport: asyncio.DatagramTransport | None = None
