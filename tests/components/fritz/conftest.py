@@ -25,13 +25,21 @@ from .const import (
 LOGGER = logging.getLogger(__name__)
 
 
+class FritzServiceMock:
+    """Service mocking."""
+
+    def __init__(self, actions: list[str]) -> None:
+        """Init Service mock."""
+        self.actions = actions
+
+
 class FritzConnectionMock:
     """FritzConnection mocking."""
 
     def __init__(self, fc_data: dict[str, dict[str, Any]]) -> None:
         """Init Mocking class."""
         self._fc_data: dict[str, dict[str, Any]]
-        self.services: dict[str, FritzConnectionMock._Service]
+        self.services: dict[str, FritzServiceMock]
 
         self._call_cache: dict[str, dict[str, Any]] = {}
         self.modelname = MOCK_MODELNAME
@@ -46,25 +54,13 @@ class FritzConnectionMock:
         """Normalize service name."""
         self._fc_data = deepcopy(fc_data)
         self.services = {
-            service.replace(":", ""): FritzConnectionMock._Service(list(actions.keys()))
+            service.replace(":", ""): FritzServiceMock(list(actions.keys()))
             for service, actions in fc_data.items()
         }
 
     def call_action_side_effect(self, side_effect: Exception | None) -> None:
         """Set or unset a side_effect for call_action."""
         self._side_effect = side_effect
-
-    class _Service:
-        """Minimal service object with actions."""
-
-        def __init__(self, actions: list[str]) -> None:
-            self.actions = actions
-
-    class _HttpResponse:
-        """Minimal HTTP response object for FritzStatus helper calls."""
-
-        def json(self) -> dict[str, str]:
-            return {"CPUTEMP": "42,41,40"}
 
     def override_services(self, fc_data: dict[str, dict[str, Any]]) -> None:
         """Override services data."""

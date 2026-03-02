@@ -39,7 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import FritzConnectionMock
+from .conftest import FritzConnectionMock, FritzServiceMock
 from .const import MOCK_MESH_MASTER_MAC, MOCK_STATUS_DEVICE_INFO_DATA, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
@@ -515,7 +515,7 @@ async def test_avmwrapper_service_call_branches(
 
     wrapper.connection.services.pop("Hosts1", None)
     assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
-    wrapper.connection.services["Hosts1"] = FritzConnectionMock._Service(["GetInfo"])
+    wrapper.connection.services["Hosts1"] = FritzServiceMock(["GetInfo"])
 
     wrapper.connection.call_action = MagicMock(side_effect=FritzSecurityError("boom"))
     assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
