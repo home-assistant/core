@@ -43,7 +43,7 @@ class MutesyncUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Get data from Meteo-France forecast."""
+        """Get data from the mütesync client."""
         async with asyncio.timeout(2.5):
             state = await self._client.get_state()
 
