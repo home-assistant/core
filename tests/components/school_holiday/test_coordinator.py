@@ -1,4 +1,4 @@
-"""Test __init__.py for School Holiday integration."""
+"""Test coordinator for School Holiday integration."""
 
 from datetime import date
 from unittest.mock import patch
