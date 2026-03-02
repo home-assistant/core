@@ -138,6 +138,11 @@ class AbstractConfig(ABC):
         """Return entity config."""
 
     @property
+    @abstractmethod
+    def presence_entity(self):
+        """Return presence entity ID."""
+
+    @property
     def is_reporting_state(self):
         """Return if we're actively reporting states."""
         return self._unsub_report_state is not None

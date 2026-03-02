@@ -19,9 +19,11 @@ from .const import (  # noqa: F401
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_PRESENCE_ENTITY,
     CONF_PRIVATE_KEY,
     CONF_PROJECT_ID,
     CONF_REPORT_STATE,
+    CONF_REQUIRE_PRESENCE,
     CONF_ROOM_HINT,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
@@ -49,6 +51,8 @@ ENTITY_SCHEMA = vol.Schema(
         vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
+        vol.Optional(CONF_REQUIRE_PRESENCE, default=False): cv.boolean,
+        vol.Optional(CONF_PRESENCE_ENTITY): cv.entity_id,
     }
 )
 
@@ -80,6 +84,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
+            vol.Optional(CONF_PRESENCE_ENTITY): cv.entity_id,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options

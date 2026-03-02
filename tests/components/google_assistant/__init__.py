@@ -26,6 +26,7 @@ class MockConfig(http.GoogleConfig):
         enabled=True,
         entity_config=None,
         hass: HomeAssistant | None = None,
+        presence_entity=None,
         secure_devices_pin=None,
         should_2fa=None,
         should_expose=None,
@@ -35,6 +36,7 @@ class MockConfig(http.GoogleConfig):
         super().__init__(hass, None)
         self._enabled = enabled
         self._entity_config = entity_config or {}
+        self._presence_entity = presence_entity
         self._secure_devices_pin = secure_devices_pin
         self._should_2fa = should_2fa
         self._should_expose = should_expose
@@ -50,6 +52,11 @@ class MockConfig(http.GoogleConfig):
     def secure_devices_pin(self):
         """Return secure devices pin."""
         return self._secure_devices_pin
+
+    @property
+    def presence_entity(self):
+        """Return presence entity."""
+        return self._presence_entity
 
     @property
     def entity_config(self):
