@@ -36,11 +36,11 @@ case "$#" in
 esac
 
 echo "Installing development dependencies..."
-echo uv pip install \
+uv pip install \
   -e . \
   -r requirements_test$MODE.txt \
   colorlog \
   --upgrade \
   --config-settings editable_mode=compat
 
-echo python3 -m script.translations develop --all
+python3 -m script.translations develop --all
