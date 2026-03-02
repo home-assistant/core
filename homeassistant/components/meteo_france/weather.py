@@ -3,8 +3,6 @@
 import logging
 import time
 
-from meteofrance_api.model.forecast import Forecast as MeteoFranceForecast
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -31,10 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -47,6 +42,7 @@ from .const import (
     MANUFACTURER,
     MODEL,
 )
+from .coordinator import MeteoFranceForecastUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +62,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator: DataUpdateCoordinator[MeteoFranceForecast] = hass.data[DOMAIN][
+    coordinator: MeteoFranceForecastUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ][COORDINATOR_FORECAST]
 
@@ -87,7 +83,7 @@ async def async_setup_entry(
 
 
 class MeteoFranceWeather(
-    CoordinatorEntity[DataUpdateCoordinator[MeteoFranceForecast]], WeatherEntity
+    CoordinatorEntity[MeteoFranceForecastUpdateCoordinator], WeatherEntity
 ):
     """Representation of a weather condition."""
 
@@ -101,7 +97,7 @@ class MeteoFranceWeather(
     )
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[MeteoFranceForecast], mode: str
+        self, coordinator: MeteoFranceForecastUpdateCoordinator, mode: str
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
