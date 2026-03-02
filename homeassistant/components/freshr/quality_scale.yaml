@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Brand assets pending PR to home-assistant/brands repository.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
