@@ -66,10 +66,7 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
-    """Unload EnOcean config entry."""
+    """Unload EnOcean config entry: stop the gateway."""
 
-    gateway = config_entry.runtime_data
-    if gateway:
-        gateway.stop()
-
+    config_entry.runtime_data.stop()
     return True
