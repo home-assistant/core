@@ -62,9 +62,7 @@ async def test_flow_duplicate_username(
 async def test_flow_user_with_403_response(
     hass: HomeAssistant, mock_freesms: AsyncMock
 ) -> None:
-    """Test user flow with 403 response - still creates entry (API behavior)."""
-    # The freesms library doesn't raise exceptions for 403, it returns response with status_code
-    # So the flow will still succeed
+    """Test user flow with 403 response - returns error for invalid credentials."""
     mock_freesms.send_sms.return_value.status_code = 403
     mock_freesms.send_sms.return_value.ok = False
 
@@ -77,8 +75,8 @@ async def test_flow_user_with_403_response(
         user_input=CONF_INPUT,
     )
 
-    # The flow succeeds because no exception is raised (API behavior)
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "authentication_failed"}
 
 
 async def test_flow_import(hass: HomeAssistant, mock_freesms: AsyncMock) -> None:

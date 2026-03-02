@@ -1,7 +1,7 @@
 """Test fixtures for Free Mobile."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -23,7 +23,7 @@ ENTITY_ID = f"{NOTIFY_DOMAIN}.free_mobile"
 @pytest.fixture
 def mock_freesms() -> Generator[AsyncMock]:
     """Mock the freesms library."""
-    mock_instance = AsyncMock()
+    mock_instance = MagicMock()
     mock_instance.send_sms.return_value.status_code = 200
     mock_instance.send_sms.return_value.ok = True
 
