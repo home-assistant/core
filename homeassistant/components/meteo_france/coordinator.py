@@ -90,21 +90,21 @@ class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons
         hass: HomeAssistant,
         entry: ConfigEntry,
         client: MeteoFranceClient,
-        departement: str,
+        department: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"Météo-France alert for department {departement}",
+            name=f"Météo-France alert for department {department}",
             config_entry=entry,
             update_interval=SCAN_INTERVAL,
         )
         self._client = client
-        self._departement = departement
+        self._department = department
 
     async def _async_update_data(self) -> CurrentPhenomenons:
         """Get data from Meteo-France alert."""
         return await self.hass.async_add_executor_job(
-            self._client.get_warning_current_phenomenons, self._departement, 0, True
+            self._client.get_warning_current_phenomenons, self._department, 0, True
         )
