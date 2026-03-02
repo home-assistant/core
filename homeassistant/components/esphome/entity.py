@@ -214,7 +214,7 @@ async def platform_async_setup_entry(
 
         def on_filtered_update(infos: list[EntityInfo]) -> None:
             on_static_info_update(
-                [info for info in infos if info_filter(info)]  # type: ignore[arg-type]
+                [info for info in infos if info_filter(cast(_InfoT, info))]
             )
 
         info_callback = on_filtered_update
