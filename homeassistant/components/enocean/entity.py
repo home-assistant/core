@@ -14,7 +14,10 @@ def combine_hex(dev_id: list[int]) -> int:
 
     This function replaces the previously used function from the enocean library and is considered tech debt that will have to be replaced.
     """
-    return Address.from_bytelist(dev_id).to_number()
+    value = 0
+    for byte in dev_id:
+        value = (value << 8) | (byte & 0xFF)
+    return value
 
 
 class EnOceanEntity(Entity):
