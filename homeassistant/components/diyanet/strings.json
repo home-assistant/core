@@ -80,17 +80,5 @@
         "name": "Sunrise"
       }
     }
-  },
-  "services": {
-    "refresh": {
-      "description": "Fetch the latest prayer times now. If a config entry ID is provided, only that entry is refreshed.",
-      "fields": {
-        "config_entry_id": {
-          "description": "Optional: refresh only this specific Diyanet configuration entry",
-          "name": "Config entry ID"
-        }
-      },
-      "name": "Refresh prayer times"
-    }
   }
 }
