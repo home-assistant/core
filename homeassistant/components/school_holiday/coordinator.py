@@ -89,7 +89,17 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
             school_holidays = []
             for vacation, content in all_vacations:
-                summary = vacation.get("type").strip()
+                vacation_type = vacation.get("type")
+                if not isinstance(vacation_type, str):
+                    LOGGER.debug(
+                        "Skipping vacation with invalid type: %s", vacation_type
+                    )
+                    continue
+
+                summary = vacation_type.strip()
+                if not summary:
+                    LOGGER.debug("Skipping vacation with empty type")
+                    continue
                 regions = vacation.get("regions", [])
                 compulsory_dates = vacation.get("compulsorydates")
                 use_notice = compulsory_dates is False or (
@@ -98,7 +108,21 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 )
 
                 for region_data in regions or []:
-                    region = region_data.get("region").lower()
+                    if not isinstance(region_data, dict):
+                        LOGGER.debug(
+                            "Skipping vacation with invalid region data: %s",
+                            region_data,
+                        )
+                        continue
+
+                    region_value = region_data.get("region")
+                    if not isinstance(region_value, str):
+                        LOGGER.debug(
+                            "Skipping vacation with invalid region: %s", region_value
+                        )
+                        continue
+
+                    region = region_value.lower()
                     if region not in (self.region.lower(), "heel nederland"):
                         continue
 
