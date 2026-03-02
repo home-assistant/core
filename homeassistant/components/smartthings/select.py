@@ -43,6 +43,14 @@ WASHER_SOIL_LEVEL_TO_HA = {
     "down": "down",
 }
 
+WATER_SPRAY_LEVEL_TO_HA = {
+    "high": "high",
+    "mediumHigh": "moderate_high",
+    "medium": "medium",
+    "mediumLow": "moderate_low",
+    "low": "low",
+}
+
 WASHER_SPIN_LEVEL_TO_HA = {
     "none": "none",
     "rinseHold": "rinse_hold",
@@ -200,6 +208,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.WASHER_WATER_TEMPERATURE,
         command=Command.SET_WASHER_WATER_TEMPERATURE,
         options_map=WASHER_WATER_TEMPERATURE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_WATER_SPRAY_LEVEL: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_WATER_SPRAY_LEVEL,
+        translation_key="robot_cleaner_water_spray_level",
+        options_attribute=Attribute.SUPPORTED_WATER_SPRAY_LEVELS,
+        status_attribute=Attribute.WATER_SPRAY_LEVEL,
+        command=Command.SET_WATER_SPRAY_LEVEL,
+        options_map=WATER_SPRAY_LEVEL_TO_HA,
         entity_category=EntityCategory.CONFIG,
     ),
     Capability.SAMSUNG_CE_ROBOT_CLEANER_DRIVING_MODE: SmartThingsSelectDescription(
