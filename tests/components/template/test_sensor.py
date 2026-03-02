@@ -684,7 +684,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
     def _record_async_render(self, *args, **kwargs):
         """Catch async_render."""
         async_render_calls.append(self.template)
-        return "75"
+        return 75
 
     later = dt_util.utcnow()
 
@@ -692,7 +692,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
         hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.solar_angle").state == "75.0"
+    assert hass.states.get("sensor.solar_angle").state == "75"
     assert hass.states.get("sensor.sunrise").state == "75"
 
     assert len(async_render_calls) == 2
@@ -1524,7 +1524,7 @@ async def test_last_reset(hass: HomeAssistant, expected: str) -> None:
 
     state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
-    assert state.state == "0.0"
+    assert state.state == "0"
     assert state.attributes["state_class"] == "total"
     assert state.attributes["last_reset"] == expected
 
@@ -1553,7 +1553,7 @@ async def test_invalid_last_reset(
 
     state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
-    assert state.state == "0.0"
+    assert state.state == "0"
     assert state.attributes.get("last_reset") is None
 
     err = "Received invalid sensor last_reset: not a datetime for entity"
@@ -1993,3 +1993,47 @@ async def test_numeric_sensor_recovers_from_exception(hass: HomeAssistant) -> No
     ):
         await async_trigger(hass, TEST_STATE_SENSOR, set_state)
         assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "device_class": "temperature",
+                "state_class": "measurement",
+                "unit_of_measurement": "°C",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("{{ '1.0' }}", "1.0"),
+        ("{{ '1' }}", "1"),
+        ("{{ 1.0 }}", "1.0"),
+        ("{{ 1 }}", "1"),
+        ("{{ '0.0' }}", "0.0"),
+        ("{{ '0' }}", "0"),
+        ("{{ 0.0 }}", "0.0"),
+        ("{{ 0 }}", "0"),
+        ("{{ '10021452' }}", "10021452"),
+        ("{{ 10021452 }}", "10021452"),
+        ("{{ '1002.1452' }}", "1002.1452"),
+        ("{{ 1002.1452 }}", "1002.1452"),
+        ("{{ True }}", STATE_UNKNOWN),
+        ("{{ False }}", STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+async def test_numeric_sensor_int_float(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Test sensor properly stores int or float for state."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
+    assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state
