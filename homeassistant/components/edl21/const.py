@@ -13,3 +13,6 @@ SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 DEFAULT_TITLE = "Smart Meter"
 
 DEFAULT_DEVICE_NAME = "Smart Meter"
+
+CONF_UPDATE_INTERVAL = "update_interval_seconds"
+DEFAULT_UPDATE_INTERVAL = 10
