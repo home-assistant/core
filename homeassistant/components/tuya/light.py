@@ -59,7 +59,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
         super().__init__(dpcode, type_information)
         self._remap_helper = RemapHelper.from_type_information(type_information, 0, 255)
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Return the brightness of this light between 0..255."""
         if (brightness := device.status.get(self.dpcode)) is None:
             return None
@@ -133,7 +133,7 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
             type_information, MIN_MIREDS, MAX_MIREDS
         )
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Return the color temperature value in Kelvin."""
         if (temperature := device.status.get(self.dpcode)) is None:
             return None
