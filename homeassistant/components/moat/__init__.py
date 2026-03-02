@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MoatConfigEntry) -> bool
     address = entry.unique_id
     assert address is not None
     data = MoatBluetoothDeviceData()
-    entry.runtime_data = coordinator = PassiveBluetoothProcessorCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
