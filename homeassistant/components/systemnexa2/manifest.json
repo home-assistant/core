@@ -1,7 +1,7 @@
 {
   "domain": "systemnexa2",
   "name": "System Nexa 2",
-  "codeowners": ["@konsulten", "@slangstrom"],
+  "codeowners": ["@konsulten"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/systemnexa2",
   "integration_type": "device",
