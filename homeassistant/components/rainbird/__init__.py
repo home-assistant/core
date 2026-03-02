@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -27,7 +28,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 
 from .api import async_create_controller
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN, TIMEOUT_SECONDS
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
     RainbirdUpdateCoordinator,
@@ -79,11 +80,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
     try:
-        controller = await async_create_controller(
-            clientsession,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PASSWORD],
-        )
+        async with asyncio.timeout(TIMEOUT_SECONDS):
+            controller = await async_create_controller(
+                clientsession,
+                entry.data[CONF_HOST],
+                entry.data[CONF_PASSWORD],
+            )
+    except TimeoutError as err:
+        raise ConfigEntryNotReady from err
     except RainbirdAuthException as err:
         raise ConfigEntryAuthFailed from err
     except RainbirdApiException as err:

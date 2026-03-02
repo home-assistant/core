@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -42,6 +44,27 @@ async def test_init_success(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_init_controller_timeout(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test controller creation timeout triggers a setup retry."""
+
+    async def _slow_controller(*_: Any) -> None:
+        await asyncio.sleep(1)
+
+    with (
+        patch("homeassistant.components.rainbird.TIMEOUT_SECONDS", 0.01),
+        patch(
+            "homeassistant.components.rainbird.async_create_controller",
+            AsyncMock(side_effect=_slow_controller),
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
