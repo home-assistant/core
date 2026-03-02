@@ -517,8 +517,8 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
             username = user_input.get(CONF_RTSP_USERNAME, "").strip()
             password = user_input.get(CONF_RTSP_PASSWORD, "").strip()
 
-            # Preserve existing password if user left the field empty
-            if not password:
+            # Preserve existing password if user provided a username but left password empty
+            if username and not password:
                 current_creds = self._rtsp_credentials.get(serial, {})
                 password = current_creds.get("password", "")
 

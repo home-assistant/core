@@ -153,6 +153,7 @@ async def test_setup_entry_session_restore_success(
         api.restore_session = MagicMock(return_value=True)
         api.async_update_device_info = AsyncMock()
         api.async_authenticate = AsyncMock()
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
         mock_api_class.return_value = api
 
         entry.add_to_hass(hass)
@@ -198,6 +199,7 @@ async def test_setup_entry_session_restore_failed(
         api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock()
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
         mock_api_class.return_value = api
 
         entry.add_to_hass(hass)
@@ -241,6 +243,7 @@ async def test_setup_entry_session_restore_invalid_session(
             side_effect=[InvalidCredentialsError("Invalid session"), None, None]
         )
         api.async_authenticate = AsyncMock()
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
         mock_api_class.return_value = api
 
         entry.add_to_hass(hass)
@@ -376,6 +379,7 @@ async def test_setup_entry_with_rtsp_credentials(
         api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock()
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
         mock_api_class.return_value = api
 
         entry.add_to_hass(hass)
@@ -420,6 +424,7 @@ async def test_setup_entry_migrates_v1_to_v1_2(
         api.restore_session = MagicMock(return_value=False)
         api.async_authenticate = AsyncMock()
         api.async_update_device_info = AsyncMock()
+        api.get_session_state = MagicMock(return_value=dict(MOCK_SESSION_STATE))
         mock_api_class.return_value = api
 
         entry.add_to_hass(hass)
@@ -428,7 +433,7 @@ async def test_setup_entry_migrates_v1_to_v1_2(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 2
-    # Old keys should be moved into session_state
+    # Old keys should be moved into session_state (then overwritten by fresh state from API)
     assert CONF_SESSION_STATE in entry.data
     assert "token" not in entry.data
     assert "private_key" not in entry.data
