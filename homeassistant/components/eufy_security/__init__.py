@@ -108,6 +108,10 @@ async def async_setup_entry(
                 translation_key="cannot_connect",
             ) from err
 
+    # Persist the latest session state so refreshed tokens/keys survive restarts
+    new_data = dict(entry.data)
+    new_data[CONF_SESSION_STATE] = api.get_session_state()
+    hass.config_entries.async_update_entry(entry, data=new_data)
     coordinator = EufySecurityCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
