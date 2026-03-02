@@ -17,8 +17,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
@@ -35,7 +35,7 @@ from . import (
     WOSTRIP_SERVICE_INFO,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 COMMON_PARAMETERS = (
@@ -512,16 +512,17 @@ async def test_air_purifier_light_services(
         mocked_instance.assert_awaited_once_with(*expected_args)
 
 
-async def test_air_purifier_light_state(
+async def test_air_purifier_light_restore_state(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
 ) -> None:
-    """Test all SwitchBot air purifier light states."""
+    """Test restoring state of SwitchBot air purifier light."""
     inject_bluetooth_service_info(hass, AIR_PURIFIER_JP_SERVICE_INFO)
 
     entry = mock_entry_encrypted_factory(sensor_type="air_purifier_jp")
     entry.add_to_hass(hass)
     entity_id = "light.test_name"
+    mock_restore_cache(hass, [State(entity_id, "on")])
 
     mocked_info = AsyncMock(
         return_value=[
@@ -541,6 +542,7 @@ async def test_air_purifier_light_state(
         await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
-        assert state.state == "on"
+        assert state.state == STATE_ON
+
         assert state.attributes.get(ATTR_BRIGHTNESS) == 13
         assert state.attributes.get(ATTR_RGB_COLOR) == (2, 3, 4)

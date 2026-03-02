@@ -17,8 +17,10 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry
 from .entity import SwitchbotEntity, exception_handler
@@ -45,11 +47,19 @@ async def async_setup_entry(
     async_add_entities([SwitchbotLightEntity(coordinator)])
 
 
-class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity):
+class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntity):
     """Representation of a Switchbot air purifier light."""
 
     _device: switchbot.SwitchbotAirPurifier
     _attr_translation_key = "light"
+    _attr_is_on: bool | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self._attr_is_on = last_state.state == STATE_ON
 
     @property
     def supported_color_modes(self) -> set[ColorMode]:
@@ -74,9 +84,9 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity):
         return self._device.rgb
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the light is on."""
-        return self._device.is_led_on
+        return self._attr_is_on
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -93,12 +103,16 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity):
             await self._device.set_brightness(brightness)
             return
         await self._device.turn_led_on()
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
         await self._device.turn_led_off()
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
 
 class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
