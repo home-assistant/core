@@ -17,13 +17,11 @@ from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
-    PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
-    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -40,7 +38,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN, SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH
+from .const import (
+    CLIMATE_PRESET_SCHEDULE,
+    DOMAIN,
+    SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH,
+)
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)
@@ -206,6 +208,7 @@ RADIATOR_PRESET_MODE_MAP: dict[str, SmartRadiatorThermostatMode] = {
     PRESET_BOOST: SmartRadiatorThermostatMode.FAST_HEATING,
     PRESET_COMFORT: SmartRadiatorThermostatMode.COMFORT,
     PRESET_HOME: SmartRadiatorThermostatMode.MANUAL,
+    CLIMATE_PRESET_SCHEDULE: SmartRadiatorThermostatMode.SCHEDULE,
 }
 
 RADIATOR_HA_PRESET_MODE_MAP = {
@@ -227,15 +230,10 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    _attr_preset_modes = [
-        PRESET_NONE,
-        PRESET_ECO,
-        PRESET_AWAY,
-        PRESET_BOOST,
-        PRESET_COMFORT,
-        PRESET_HOME,
-        PRESET_SLEEP,
-    ]
+    _attr_preset_modes = list(RADIATOR_PRESET_MODE_MAP)
+
+    _attr_translation_key = "smart_radiator_thermostat"
+
     _attr_preset_mode = PRESET_HOME
 
     _attr_hvac_modes = [
@@ -300,7 +298,7 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
             SmartRadiatorThermostatMode(mode)
         ]
 
-        if self.preset_mode in [PRESET_NONE, PRESET_AWAY]:
+        if self.preset_mode == PRESET_NONE:
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = HVACMode.HEAT
