@@ -108,7 +108,7 @@ def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager
 
 @callback
 def get_z2m_addon_manager(hass: HomeAssistant, slug: str) -> WaitingAddonManager:
-    """Get the Z2M add-on manager.."""
+    """Get the Z2M add-on manager."""
     return WaitingAddonManager(
         hass,
         _LOGGER,
