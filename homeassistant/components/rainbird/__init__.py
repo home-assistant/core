@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 import aiohttp
-from pyrainbird.async_client import AsyncRainbirdController
+from pyrainbird.async_client import AsyncRainbirdController, create_controller
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.const import (
@@ -27,8 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 
-from .api import async_create_controller
-from .const import CONF_SERIAL_NUMBER, DOMAIN, TIMEOUT_SECONDS
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
     RainbirdUpdateCoordinator,
@@ -80,14 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
     try:
-        async with asyncio.timeout(TIMEOUT_SECONDS):
-            controller = await async_create_controller(
-                clientsession,
-                entry.data[CONF_HOST],
-                entry.data[CONF_PASSWORD],
-            )
-    except TimeoutError as err:
-        raise ConfigEntryNotReady from err
+        controller = await create_controller(
+            clientsession,
+            entry.data[CONF_HOST],
+            entry.data[CONF_PASSWORD],
+        )
     except RainbirdAuthException as err:
         raise ConfigEntryAuthFailed from err
     except RainbirdApiException as err:
@@ -138,8 +133,6 @@ async def _async_fix_unique_id(
     if not (mac_address := entry.data.get(CONF_MAC)):
         try:
             wifi_params = await controller.get_wifi_params()
-        except RainbirdAuthException as err:
-            raise ConfigEntryAuthFailed from err
         except RainbirdApiException as err:
             _LOGGER.warning("Unable to fix missing unique id: %s", err)
             return True

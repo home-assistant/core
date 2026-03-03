@@ -61,9 +61,7 @@ async def mock_setup() -> AsyncGenerator[AsyncMock]:
         yield mock_setup
 
 
-async def complete_flow(
-    hass: HomeAssistant, host: str = HOST, password: str = PASSWORD
-) -> FlowResult:
+async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowResult:
     """Start the config flow and enter the host and password."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -75,7 +73,7 @@ async def complete_flow(
 
     return await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: host, CONF_PASSWORD: password},
+        {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
     )
 
 

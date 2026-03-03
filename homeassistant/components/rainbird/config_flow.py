@@ -7,6 +7,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 import voluptuous as vol
@@ -18,7 +19,6 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
 from . import RainbirdConfigEntry
-from .api import async_create_controller
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -105,10 +105,9 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Configure the Rain Bird device."""
         error_code: str | None = None
         if user_input:
-            host = user_input[CONF_HOST]
             try:
                 serial_number, wifi_params = await self._test_connection(
-                    host, user_input[CONF_PASSWORD]
+                    user_input[CONF_HOST], user_input[CONF_PASSWORD]
                 )
             except ConfigFlowError as err:
                 _LOGGER.error("Error during config flow: %s", err)
@@ -116,7 +115,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_finish(
                     data={
-                        CONF_HOST: host,
+                        CONF_HOST: user_input[CONF_HOST],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_SERIAL_NUMBER: serial_number,
                         CONF_MAC: wifi_params.mac_address,
@@ -140,9 +139,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         clientsession = async_create_clientsession()
         try:
             async with asyncio.timeout(TIMEOUT_SECONDS):
-                controller = await async_create_controller(
-                    clientsession, host, password
-                )
+                controller = await create_controller(clientsession, host, password)
                 return await asyncio.gather(
                     controller.get_serial_number(),
                     controller.get_wifi_params(),
