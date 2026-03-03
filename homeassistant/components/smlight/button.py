@@ -74,7 +74,7 @@ async def async_setup_entry(
     radios = coordinator.data.info.radios
 
     async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
-    entity_created = [False, False]
+    entity_created = [False] * len(radios)
 
     @callback
     def _check_router(startup: bool = False) -> None:
