@@ -161,7 +161,7 @@
     },
     "light": {
       "light": {
-        "name": "Light"
+        "name": "[%key:component::light::title%]"
       }
     },
     "number": {
