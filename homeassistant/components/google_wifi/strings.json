@@ -3,18 +3,18 @@
     "step": {
       "user": {
         "title": "Set up Google/Nest Wifi",
-        "description": "Please enter the IP address of your Google/Nest Wifi Router/Point.",
+        "description": "Please enter the IP address of your Google/Nest Wifi router/point.",
         "data": {
           "name": "Device Name",
           "ip_address": "IP Address"
         }
       },
       "reconfigure": {
-        "title": "Reconfigure Google Wifi",
+        "title": "Reconfigure Google/Nest Wifi",
         "description": "Update the connection details for your router.",
         "data": {
-          "name": "Device Name",
-          "ip_address": "IP Address"
+          "name": "[%key:component::google_wifi::config::step::user::data::name%]",
+          "ip_address": "[%key:component::google_wifi::config::step::user::data::ip_address%]"
         }
       }
     },
