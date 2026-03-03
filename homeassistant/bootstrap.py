@@ -471,15 +471,11 @@ async def async_from_config_dict(
     This method is a coroutine.
     """
     start = monotonic()
-    started_state = {"logged": False}
 
     @core.callback
     def _log_started(_: core.HomeAssistant) -> None:
         if not _LOGGER.isEnabledFor(logging.DEBUG):
             return
-        if started_state["logged"]:  # make sure this only runs once
-            return
-        started_state["logged"] = True
         _LOGGER.debug(
             "Home Assistant started in %.2fs",
             monotonic() - start,
