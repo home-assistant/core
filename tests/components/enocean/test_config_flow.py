@@ -92,6 +92,7 @@ async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
     assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == MOCK_USB_DEVICE.device
+    assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
 
 
 async def test_user_flow_with_invalid_manual_path(hass: HomeAssistant) -> None:
@@ -148,6 +149,32 @@ async def test_user_flow_with_manual_path(hass: HomeAssistant) -> None:
     assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+
+
+async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
+    """Test we can't start a flow for the same device twice."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=MOCK_USB_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    with (
+        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(
+            f"{MODULE}.config_flow.scan_serial_ports",
+            Mock(return_value=[MOCK_USB_DEVICE]),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_DEVICE: MOCK_USB_DEVICE.device},
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
 
 
 async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
