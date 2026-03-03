@@ -209,4 +209,4 @@ jobs:
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txt"
+          requirements: "requirements_all_wheels_${{ matrix.arch }}.txt"
