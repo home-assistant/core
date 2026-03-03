@@ -4,9 +4,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Unable to reach the Cosa service. Please check your internet connection and try again.",
+      "invalid_auth": "The username or password you entered is incorrect. Please verify your Cosa account credentials and try again.",
+      "unknown": "An unexpected error occurred while connecting to the Cosa service. Please try again later."
     },
     "step": {
       "user": {
@@ -23,13 +23,13 @@
   },
   "exceptions": {
     "set_mode_failed": {
-      "message": "Failed to set the thermostat mode"
+      "message": "Failed to set the thermostat mode. The Cosa service did not accept the request. Please try again later."
     },
     "set_temperature_failed": {
-      "message": "Failed to set the target temperature"
+      "message": "Failed to set the target temperature. The Cosa service did not accept the request. Please try again later."
     },
     "unsupported_hvac_mode": {
-      "message": "The selected HVAC mode is not supported"
+      "message": "The selected HVAC mode is not supported by this Cosa thermostat."
     }
   }
 }
