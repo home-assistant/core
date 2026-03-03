@@ -15,8 +15,9 @@ from tuya_sharing import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ENDPOINT,
@@ -30,6 +31,9 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # Suppress logs from the library, it logs unneeded on error
 logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
@@ -54,6 +58,13 @@ def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Ma
         entry.data[CONF_TOKEN_INFO],
         token_listener,
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Tuya Services."""
+    await async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:

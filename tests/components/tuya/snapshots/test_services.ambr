@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: test_get_feeder_meal_plan[cwwsq_wfkzyy0evslzsmoi]
+  list([
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 0,
+      'portion': 2,
+      'time': '04:00',
+    }),
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 0,
+      'portion': 1,
+      'time': '06:00',
+    }),
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 1,
+      'portion': 2,
+      'time': '09:00',
+    }),
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 0,
+      'portion': 1,
+      'time': '12:00',
+    }),
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 1,
+      'portion': 2,
+      'time': '15:00',
+    }),
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 1,
+      'portion': 2,
+      'time': '21:00',
+    }),
+    dict({
+      'days': list([
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ]),
+      'enabled': 0,
+      'portion': 1,
+      'time': '23:00',
+    }),
+    dict({
+      'days': list([
+        'thursday',
+      ]),
+      'enabled': 1,
+      'portion': 1,
+      'time': '18:00',
+    }),
+  ])
+# ---
