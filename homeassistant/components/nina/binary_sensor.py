@@ -1,4 +1,4 @@
-"""NINA sensor platform."""
+"""NINA binary sensor platform."""
 
 from __future__ import annotations
 
@@ -8,11 +8,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_AFFECTED_AREAS,
@@ -28,13 +25,13 @@ from .const import (
     ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
-    DOMAIN,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
+from .entity import NinaEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: NinaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -46,7 +43,7 @@ async def async_setup_entry(
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
 
     async_add_entities(
-        NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
+        NINAMessage(coordinator, ent, regions[ent], i + 1)
         for ent in coordinator.data
         for i in range(message_slots)
     )
@@ -55,7 +52,7 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
-class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
+class NINAMessage(NinaEntity, BinarySensorEntity):
     """Representation of an NINA warning."""
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
@@ -67,31 +64,20 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         region: str,
         region_name: str,
         slot_id: int,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, region, region_name, slot_id)
 
-        self._region = region
-        self._warning_index = slot_id - 1
-
-        self._attr_name = f"Warning: {region_name} {slot_id}"
+        self._attr_translation_key = "warning"
         self._attr_unique_id = f"{region}-{slot_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="NINA",
-            entry_type=DeviceEntryType.SERVICE,
-        )
 
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        if len(self.coordinator.data[self._region]) <= self._warning_index:
+        if self._active_warning_count <= self._warning_index:
             return False
 
-        data = self.coordinator.data[self._region][self._warning_index]
-
-        return data.is_valid
+        return self._get_warning_data().is_valid
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -99,18 +85,39 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         if not self.is_on:
             return {}
 
-        data = self.coordinator.data[self._region][self._warning_index]
+        data = self._get_warning_data()
 
         return {
-            ATTR_HEADLINE: data.headline,
-            ATTR_DESCRIPTION: data.description,
-            ATTR_SENDER: data.sender,
-            ATTR_SEVERITY: data.severity,
-            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
-            ATTR_AFFECTED_AREAS: data.affected_areas,
-            ATTR_WEB: data.web,
+            ATTR_HEADLINE: data.headline,  # Deprecated, remove in 2026.08
+            ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.08
+            ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.08
+            ATTR_SEVERITY: data.severity,  # Deprecated, remove in 2026.08
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,  # Deprecated, remove in 2026.08
+            ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.08
+            ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.08
             ATTR_ID: data.id,
             ATTR_SENT: data.sent,
             ATTR_START: data.start,
             ATTR_EXPIRES: data.expires,
         }
+
+    def get_description(self) -> str | None:
+        """Return the description."""
+        if not self.is_on:
+            return None
+
+        return self._get_warning_data().description
+
+    def get_full_affected_areas(self) -> str | None:
+        """Return full affected areas."""
+        if not self.is_on:
+            return None
+
+        return self._get_warning_data().affected_areas
+
+    def get_recommended_actions(self) -> str | None:
+        """Return the recommended actions."""
+        if not self.is_on:
+            return None
+
+        return self._get_warning_data().recommended_actions

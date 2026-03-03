@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[binary_sensor.nina_warning_aach_1-entry]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30,12 +30,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'warning',
     'unique_id': '095760000000-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_1-state]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'affected_areas': 'Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere.',
@@ -45,10 +45,10 @@
       'friendly_name': 'NINA Warning: Aach 1',
       'headline': 'Ausfall Notruf 112',
       'id': 'mow.DE-NW-BN-SE030-20201014-30-000',
-      'recommended_actions': '',
+      'recommended_actions': 'ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achte besonders auf herabfallende Gegenstände.',
       'sender': 'Deutscher Wetterdienst',
       'sent': '2021-10-11T05:20:00+01:00',
-      'severity': 'Minor',
+      'severity': 'minor',
       'start': '2021-11-01T05:20:00+01:00',
       'web': 'https://www.wettergefahren.de',
     }),
@@ -60,7 +60,7 @@
     'state': 'on',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_2-entry]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -91,12 +91,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'warning',
     'unique_id': '095760000000-2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_2-state]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
@@ -110,7 +110,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_3-entry]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -141,12 +141,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'warning',
     'unique_id': '095760000000-3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_3-state]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
@@ -160,7 +160,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_4-entry]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -191,12 +191,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'warning',
     'unique_id': '095760000000-4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_4-state]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
@@ -210,7 +210,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_5-entry]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -241,12 +241,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'warning',
     'unique_id': '095760000000-5',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_5-state]
+# name: test_binary_sensors[binary_sensor.nina_warning_aach_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',

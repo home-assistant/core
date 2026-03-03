@@ -12,6 +12,7 @@ from pynina import ApiError, Nina
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -37,8 +38,9 @@ class NinaWarningData:
     sender: str
     severity: str
     recommended_actions: str
+    affected_areas_shorted: str
     affected_areas: str
-    web: str
+    more_info_url: str
     sent: str
     start: str
     expires: str
@@ -74,6 +76,15 @@ class NINADataUpdateCoordinator(
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for nina entries."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            manufacturer="NINA",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
@@ -139,13 +150,20 @@ class NINADataUpdateCoordinator(
                     )
                     continue
 
+                shorted_affected_areas: str = (
+                    affected_areas_string[0:250] + "..."
+                    if len(affected_areas_string) > 250
+                    else affected_areas_string
+                )
+
                 warning_data: NinaWarningData = NinaWarningData(
                     raw_warn.id,
                     raw_warn.headline,
                     raw_warn.description,
                     raw_warn.sender,
-                    raw_warn.severity,
+                    raw_warn.severity.lower(),
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
+                    shorted_affected_areas,
                     affected_areas_string,
                     raw_warn.web or "",
                     raw_warn.sent or "",
