@@ -1,4 +1,4 @@
-"""Tests for initialisation."""
+"""Tests for initialization."""
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
