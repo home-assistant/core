@@ -7,8 +7,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
+    ATTR_INPUT_SOURCE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_JOIN,
+    SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaPlayerState,
 )
@@ -205,6 +207,32 @@ async def test_attributes_group_is_none(
     assert "media_position" not in state.attributes
 
 
+async def test_select_source_group_is_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_client_1: AsyncMock,
+    mock_group_1: AsyncMock,
+) -> None:
+    """Test the select source action doesn't throw when a client has no group."""
+
+    # Setup and verify the integration is loaded
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+            ATTR_INPUT_SOURCE: "fake_source",
+        },
+        blocking=True,
+    )
+    mock_group_1.set_stream.assert_not_awaited()
+
+
 async def test_join_group_is_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -212,7 +240,7 @@ async def test_join_group_is_none(
     mock_group_1: AsyncMock,
     mock_client_1: AsyncMock,
 ) -> None:
-    """Test join service doesn't throw when a client has no group."""
+    """Test join action doesn't throw when a client has no group."""
     # Force nonexistent group
     mock_client_1.group = None
 
@@ -228,6 +256,31 @@ async def test_join_group_is_none(
         {
             ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
             ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+        },
+        blocking=True,
+    )
+    mock_group_1.add_client.assert_not_awaited()
+
+
+async def test_unjoin_group_is_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_client_1: AsyncMock,
+    mock_group_1: AsyncMock,
+) -> None:
+    """Test the unjoin action doesn't throw when a client has no group."""
+
+    # Setup and verify the integration is loaded
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
         },
         blocking=True,
     )
