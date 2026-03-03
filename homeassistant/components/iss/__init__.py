@@ -35,7 +35,9 @@ class IssData:
 class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
     """ISS coordinator that tolerates transient API failures."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: IssConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: IssConfigEntry) -> None:
         """Initialize the ISS coordinator."""
         super().__init__(
             hass,
@@ -47,15 +49,17 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
         self._consecutive_failures = 0
         self.iss = pyiss.ISS()
 
+    def _fetch_iss_data(self) -> IssData:
+        """Fetch data from ISS API (blocking)."""
+        return IssData(
+            number_of_people_in_space=self.iss.number_of_people_in_space(),
+            current_location=self.iss.current_location(),
+        )
+
     async def _async_update_data(self) -> IssData:
         """Fetch data from the ISS API, tolerating transient failures."""
         try:
-            data = await self.hass.async_add_executor_job(
-                lambda: IssData(
-                    number_of_people_in_space=self.iss.number_of_people_in_space(),
-                    current_location=self.iss.current_location(),
-                )
-            )
+            data = await self.hass.async_add_executor_job(self._fetch_iss_data)
         except (HTTPError, requests.exceptions.ConnectionError) as err:
             self._consecutive_failures += 1
             if (
