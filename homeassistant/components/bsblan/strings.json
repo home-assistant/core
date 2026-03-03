@@ -27,6 +27,26 @@
         "description": "A BSB-LAN device was discovered at {host}. Please provide credentials if required.",
         "title": "BSB-LAN device discovered"
       },
+      "heating_circuits": {
+        "data": {
+          "heating_circuits": "Heating circuits"
+        },
+        "data_description": {
+          "heating_circuits": "Select which heating circuits to enable."
+        },
+        "description": "Your BSB-LAN device has {count} heating circuits available. Select which circuits you want to control.",
+        "title": "Select heating circuits"
+      },
+      "heating_circuits_reconfigure": {
+        "data": {
+          "heating_circuits": "[%key:component::bsblan::config::step::heating_circuits::data::heating_circuits%]"
+        },
+        "data_description": {
+          "heating_circuits": "[%key:component::bsblan::config::step::heating_circuits::data_description::heating_circuits%]"
+        },
+        "description": "[%key:component::bsblan::config::step::heating_circuits::description%]",
+        "title": "[%key:component::bsblan::config::step::heating_circuits::title%]"
+      },
       "reauth_confirm": {
         "data": {
           "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
@@ -79,10 +99,35 @@
       }
     }
   },
+  "device": {
+    "heating_circuit_1": {
+      "name": "Heating circuit 1"
+    },
+    "heating_circuit_2": {
+      "name": "Heating circuit 2"
+    },
+    "heating_circuit_3": {
+      "name": "Heating circuit 3"
+    },
+    "water_heater": {
+      "name": "Water heater"
+    }
+  },
   "entity": {
     "button": {
       "sync_time": {
         "name": "Sync time"
+      }
+    },
+    "climate": {
+      "heating_circuit_1": {
+        "name": "Heating circuit 1"
+      },
+      "heating_circuit_2": {
+        "name": "Heating circuit 2"
+      },
+      "heating_circuit_3": {
+        "name": "Heating circuit 3"
       }
     },
     "sensor": {

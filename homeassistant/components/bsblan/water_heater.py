@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import DOMAIN
-from .entity import BSBLanDualCoordinatorEntity
+from .entity import BSBLanWaterHeaterDeviceEntity
 
 PARALLEL_UPDATES = 1
 
@@ -59,7 +59,7 @@ async def async_setup_entry(
     async_add_entities([BSBLANWaterHeater(data)])
 
 
-class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
+class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
     _attr_name = None
