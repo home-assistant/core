@@ -12,7 +12,6 @@ from .const import CONF_CLIENT_DEVICE_ID, DEFAULT_NAME, DOMAIN, PLATFORMS
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .services import async_setup_services
 
-
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
