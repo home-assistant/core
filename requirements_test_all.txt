@@ -2204,7 +2204,7 @@ python-open-router==0.3.3
 python-opendata-transport==0.5.0
 
 # homeassistant.components.openevse
-python-openevse-http==0.2.1
+python-openevse-http==0.2.5
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
