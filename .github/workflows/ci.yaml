@@ -40,6 +40,8 @@ env:
   CACHE_VERSION: 3
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
+  PYTEST_DURATIONS_CACHE_VERSION: 1
+  PYTEST_DURATIONS_FILE: .ci/pytest_durations.json
   HA_SHORT_VERSION: "2026.4"
   DEFAULT_PYTHON: "3.14.2"
   ALL_PYTHON_VERSIONS: "['3.14.2']"
@@ -894,12 +896,27 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
+      - name: Restore pytest durations cache
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ${{ env.PYTEST_DURATIONS_FILE }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-${{
+            github.base_ref || github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-${{ github.base_ref || github.ref_name }}-
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-dev
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
+          PYTEST_DURATIONS_FILE: ${{ env.PYTEST_DURATIONS_FILE }}
         run: |
           . venv/bin/activate
-          python -m script.split_tests ${TEST_GROUP_COUNT} tests
+          split_args=("${TEST_GROUP_COUNT}" tests)
+          if [[ -f "${PYTEST_DURATIONS_FILE}" ]]; then
+            split_args+=(--durations-file "${PYTEST_DURATIONS_FILE}")
+          fi
+          python -m script.split_tests "${split_args[@]}"
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -997,11 +1014,10 @@ jobs:
           . venv/bin/activate
           python --version
           set -o pipefail
-          cov_params=()
+          params=(--junitxml=junit.xml -o junit_family=legacy)
           if [[ "${SKIP_COVERAGE}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant")
-            cov_params+=(--cov-report=xml)
-            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
+            params+=(--cov="homeassistant")
+            params+=(--cov-report=xml)
           fi
 
           echo "Test group ${TEST_GROUP}: $(sed -n "${TEST_GROUP},1p" pytest_buckets.txt)"
@@ -1012,7 +1028,7 @@ jobs:
             --numprocesses auto \
             --snapshot-details \
             --dist=loadfile \
-            ${cov_params[@]} \
+            ${params[@]} \
             -o console_output_style=count \
             -p no:sugar \
             --exclude-warning-annotations \
@@ -1032,6 +1048,25 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Collect pytest durations
+        env:
+          TEST_GROUP: ${{ matrix.group }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          . venv/bin/activate
+          output="pytest-durations-${PYTHON_VERSION}-${TEST_GROUP}.json"
+          if [[ -f junit.xml ]]; then
+            python -m script.collect_test_durations --output "${output}" junit.xml
+          else
+            echo "::error::Missing junit.xml, cannot collect pytest durations"
+            exit 1
+          fi
+      - name: Upload pytest durations
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: pytest-durations-${{ matrix.python-version }}-${{ matrix.group }}
+          path: pytest-durations-*.json
+          overwrite: true
       - name: Beautify test results
         # For easier identification of parsing errors
         if: needs.info.outputs.skip_coverage != 'true'
@@ -1049,6 +1084,68 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+
+  update-pytest-duration-cache:
+    name: Update pytest durations cache
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    needs:
+      - info
+      - prepare-pytest-full
+      - pytest-full
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
+    steps:
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore pytest durations cache
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ${{ env.PYTEST_DURATIONS_FILE }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-${{
+            github.base_ref || github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-${{ github.base_ref || github.ref_name }}-
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-dev
+      - name: Download pytest durations artifacts
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          pattern: pytest-durations-*
+          merge-multiple: true
+          path: .ci/pytest-durations
+      - name: Merge pytest durations
+        run: |
+          input_files=()
+          for file in .ci/pytest-durations/*.json; do
+            [[ -f "${file}" ]] || continue
+            input_files+=("${file}")
+          done
+
+          if [[ ${#input_files[@]} -eq 0 ]]; then
+            mkdir -p "$(dirname "${PYTEST_DURATIONS_FILE}")"
+            if [[ ! -f "${PYTEST_DURATIONS_FILE}" ]]; then
+              echo "{}" > "${PYTEST_DURATIONS_FILE}"
+            fi
+            exit 0
+          fi
+
+          python -m script.collect_test_durations \
+            --existing "${PYTEST_DURATIONS_FILE}" \
+            --output "${PYTEST_DURATIONS_FILE}" \
+            "${input_files[@]}"
+      - name: Save pytest durations cache
+        uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ${{ env.PYTEST_DURATIONS_FILE }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-pytest-durations-${{ env.PYTEST_DURATIONS_CACHE_VERSION }}-${{
+            github.base_ref || github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
   pytest-mariadb:
     name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}

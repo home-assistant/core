@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, field
-from math import ceil
+import json
 from pathlib import Path
+from statistics import fmean
 import subprocess
 import sys
 from typing import Final
@@ -20,12 +21,14 @@ class Bucket:
     ):
         """Initialize bucket."""
         self.total_tests = 0
+        self.total_duration = 0.0
         self._paths: list[str] = []
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         part.add_to_bucket()
         self.total_tests += part.total_tests
+        self.total_duration += part.total_duration
         self._paths.append(str(part.path))
 
     def get_paths_line(self) -> str:
@@ -36,9 +39,9 @@ class Bucket:
 class BucketHolder:
     """Class to hold buckets."""
 
-    def __init__(self, tests_per_bucket: int, bucket_count: int) -> None:
+    def __init__(self, duration_per_bucket: float, bucket_count: int) -> None:
         """Initialize bucket holder."""
-        self._tests_per_bucket = tests_per_bucket
+        self._duration_per_bucket = duration_per_bucket
         self._bucket_count = bucket_count
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
@@ -46,18 +49,26 @@ class BucketHolder:
         """Split tests into buckets."""
         digits = len(str(test_folder.total_tests))
         sorted_tests = sorted(
-            test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
+            test_folder.get_all_flatten(),
+            reverse=True,
+            key=lambda test: (test.total_duration, test.total_tests),
         )
         for tests in sorted_tests:
             if tests.added_to_bucket:
                 # Already added to bucket
                 continue
 
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
-            smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+            print(
+                f"{tests.total_tests:>{digits}} tests in {tests.path} "
+                f"(~{tests.total_duration:.2f}s)"
+            )
+            smallest_bucket = min(
+                self._buckets, key=lambda bucket: bucket.total_duration
+            )
             is_file = isinstance(tests, TestFile)
             if (
-                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
+                smallest_bucket.total_duration + tests.total_duration
+                < self._duration_per_bucket
             ) or is_file:
                 smallest_bucket.add(tests)
                 # Ensure all files from the same folder are in the same bucket
@@ -67,7 +78,9 @@ class BucketHolder:
                         if other_test is tests or isinstance(other_test, TestFolder):
                             continue
                         print(
-                            f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
+                            f"{other_test.total_tests:>{digits}} tests in "
+                            f"{other_test.path} (same bucket, "
+                            f"~{other_test.total_duration:.2f}s)"
                         )
                         smallest_bucket.add(other_test)
 
@@ -79,7 +92,10 @@ class BucketHolder:
         """Create output file."""
         with Path("pytest_buckets.txt").open("w") as file:
             for idx, bucket in enumerate(self._buckets):
-                print(f"Bucket {idx + 1} has {bucket.total_tests} tests")
+                print(
+                    f"Bucket {idx + 1} has {bucket.total_tests} tests "
+                    f"(~{bucket.total_duration:.2f}s)"
+                )
                 file.write(bucket.get_paths_line())
 
 
@@ -88,6 +104,7 @@ class TestFile:
     """Class represents a single test file and the number of tests it has."""
 
     total_tests: int
+    total_duration: float
     path: Path
     added_to_bucket: bool = field(default=False, init=False)
     parent: TestFolder | None = field(default=None, init=False)
@@ -100,7 +117,7 @@ class TestFile:
 
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
-        return self.total_tests > other.total_tests
+        return self.total_duration > other.total_duration
 
 
 class TestFolder:
@@ -115,6 +132,11 @@ class TestFolder:
     def total_tests(self) -> int:
         """Return total tests."""
         return sum([test.total_tests for test in self.children.values()])
+
+    @property
+    def total_duration(self) -> float:
+        """Return total estimated duration in seconds."""
+        return sum(test.total_duration for test in self.children.values())
 
     @property
     def added_to_bucket(self) -> bool:
@@ -189,10 +211,64 @@ def collect_tests(path: Path) -> TestFolder:
             print(f"Unexpected line: {line}")
             sys.exit(1)
 
-        file = TestFile(int(total_tests), Path(file_path))
+        file = TestFile(int(total_tests), 0.0, Path(file_path))
         folder.add_test_file(file)
 
     return folder
+
+
+def load_test_durations(path: Path | None) -> dict[str, float]:
+    """Load known test durations keyed by file path."""
+    if path is None or not path.exists():
+        return {}
+
+    with path.open("r", encoding="utf-8") as file:
+        raw_data = json.load(file)
+
+    if not isinstance(raw_data, dict):
+        raise TypeError("Durations file should contain a JSON object")
+
+    durations: dict[str, float] = {}
+    for file_path, duration in raw_data.items():
+        if not isinstance(file_path, str) or not isinstance(duration, int | float):
+            continue
+        if duration <= 0:
+            continue
+        durations[file_path] = float(duration)
+
+    return durations
+
+
+def assign_estimated_durations(
+    tests: TestFolder, known_durations: dict[str, float]
+) -> tuple[float, int, int]:
+    """Assign estimated durations to all test files.
+
+    Files with known timings use those values. New files (without timings)
+    receive an estimate based on average seconds per collected test.
+    """
+    all_files = [file for file in tests.get_all_flatten() if isinstance(file, TestFile)]
+
+    known_seconds_per_test: list[float] = []
+    files_without_durations = []
+    for test_file in all_files:
+        if test_file.total_tests <= 0:
+            continue
+        duration = known_durations.get(str(test_file.path))
+        if duration is None:
+            files_without_durations.append(test_file)
+            continue
+        known_seconds_per_test.append(duration / test_file.total_tests)
+        test_file.total_duration = duration
+
+    default_seconds_per_test = (
+        fmean(known_seconds_per_test) if known_seconds_per_test else 0.1
+    )
+
+    for test_file in files_without_durations:
+        test_file.total_duration = test_file.total_tests * default_seconds_per_test
+
+    return default_seconds_per_test, len(files_without_durations), len(all_files)
 
 
 def main() -> None:
@@ -217,19 +293,33 @@ def main() -> None:
         help="Path to the test files to split into buckets",
         type=Path,
     )
+    parser.add_argument(
+        "--durations-file",
+        help="JSON file with per-test-file durations in seconds",
+        type=Path,
+    )
 
     arguments = parser.parse_args()
 
     print("Collecting tests...")
     tests = collect_tests(arguments.path)
-    tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
+    known_durations = load_test_durations(arguments.durations_file)
+    default_seconds_per_test, files_missing_durations, total_files = (
+        assign_estimated_durations(tests, known_durations)
+    )
 
-    bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
+    duration_per_bucket = tests.total_duration / arguments.bucket_count
+
+    bucket_holder = BucketHolder(duration_per_bucket, arguments.bucket_count)
     print("Splitting tests...")
     bucket_holder.split_tests(tests)
 
     print(f"Total tests: {tests.total_tests}")
-    print(f"Estimated tests per bucket: {tests_per_bucket}")
+    print(f"Files missing durations: {files_missing_durations}")
+    print(f"Total files: {total_files}")
+    print(f"Fallback seconds per test: {default_seconds_per_test:.4f}")
+    print(f"Estimated total duration: {tests.total_duration:.2f}s")
+    print(f"Estimated duration per bucket: {duration_per_bucket:.2f}s")
 
     bucket_holder.create_ouput_file()
 
