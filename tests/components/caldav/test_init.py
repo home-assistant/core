@@ -87,9 +87,7 @@ async def test_connection_pool_size(
 
     # Verify mount was called for both https:// and http://
     assert mock_session.mount.call_count >= 2
-    mounted = {
-        call[0][0]: call[0][1] for call in mock_session.mount.call_args_list
-    }
+    mounted = {call[0][0]: call[0][1] for call in mock_session.mount.call_args_list}
     assert "https://" in mounted
     assert "http://" in mounted
 
