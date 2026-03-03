@@ -99,7 +99,6 @@ async def test_user_flow_with_invalid_manual_path(hass: HomeAssistant) -> None:
     """Test the user flow with custom path selected."""
     with (
         patch(
-            # "enocean.communicators.SerialCommunicator",
             f"{MODULE}.dongle.SerialCommunicator",
             side_effect=SerialException(),
         ),
