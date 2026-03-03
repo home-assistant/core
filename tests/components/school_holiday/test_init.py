@@ -12,14 +12,15 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_school_holiday_data
 ) -> None:
     """Test setting up a config entry."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator.async_config_entry_first_refresh",
-        return_value=AsyncMock(),
+        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator._async_update_data",
+        new_callable=AsyncMock,
+        return_value=mock_school_holiday_data,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -29,14 +30,15 @@ async def test_async_setup_entry(
 
 @pytest.mark.asyncio
 async def test_async_unload_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_school_holiday_data
 ) -> None:
     """Test unloading a config entry."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator.async_config_entry_first_refresh",
-        return_value=AsyncMock(),
+        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator._async_update_data",
+        new_callable=AsyncMock,
+        return_value=mock_school_holiday_data,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
