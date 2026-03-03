@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import slugify
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
@@ -74,6 +75,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     """Define a SmartThings media player."""
 
     _attr_name = None
+    _attr_translation_key = "media_player"
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the media_player class."""
@@ -89,6 +91,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.MEDIA_PLAYBACK_REPEAT,
                 Capability.MEDIA_PLAYBACK_SHUFFLE,
                 Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
                 Capability.SWITCH,
             },
         )
@@ -97,6 +100,39 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             device.device.components[MAIN].user_category
             or device.device.components[MAIN].manufacturer_category,
         )
+        self._source_to_smartthings_id: dict[str, str] = {}
+        self._build_source_map()
+
+    def _build_source_map(self) -> None:
+        """Build the source mapping from slugified HA ID to SmartThings ID."""
+        raw_sources = self._get_raw_source_list()
+        if not raw_sources:
+            self._source_to_smartthings_id = {}
+            return
+        self._source_to_smartthings_id = {
+            slugify(source_id): source_id for source_id in raw_sources
+        }
+
+    def _get_raw_source_list(self) -> list[str] | None:
+        """Get the raw source list from the device."""
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            sources_map = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES_MAP,
+            )
+            if not sources_map:
+                return None
+            return [source["id"] for source in sources_map]
+        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            return self.get_attribute_value(
+                Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
+            )
+        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            return self.get_attribute_value(
+                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES,
+            )
+        return None
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (
@@ -122,7 +158,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             flags |= (
                 MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
             )
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+        if self.supports_capability(
+            Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE
+        ) or self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             flags |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
@@ -211,11 +249,19 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
-        await self.execute_device_command(
-            Capability.MEDIA_INPUT_SOURCE,
-            Command.SET_INPUT_SOURCE,
-            argument=source,
-        )
+        smartthings_source = self._source_to_smartthings_id.get(source, source)
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            await self.execute_device_command(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=smartthings_source,
+            )
+        else:
+            await self.execute_device_command(
+                Capability.MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=smartthings_source,
+            )
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
@@ -311,29 +357,31 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Input source."""
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
-            return self.get_attribute_value(
+        if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
+            raw = self.get_attribute_value(
+                Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
+        elif self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            raw = self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
             )
-        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
-            return self.get_attribute_value(
+        elif self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            raw = self.get_attribute_value(
                 Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE, Attribute.INPUT_SOURCE
             )
-        return None
+        else:
+            raw = None
+        if raw is None:
+            return None
+        return slugify(raw)
 
     @property
     def source_list(self) -> list[str] | None:
         """List of input sources."""
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
-            return self.get_attribute_value(
-                Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
-            )
-        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
-            return self.get_attribute_value(
-                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
-                Attribute.SUPPORTED_INPUT_SOURCES,
-            )
-        return None
+        self._build_source_map()
+        if not self._source_to_smartthings_id:
+            return None
+        return list(self._source_to_smartthings_id)
 
     @property
     def shuffle(self) -> bool | None:
