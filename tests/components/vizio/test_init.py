@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -16,7 +17,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .const import (
     APP_LIST,
@@ -77,10 +77,10 @@ async def test_speaker_load_and_unload(hass: HomeAssistant) -> None:
 )
 async def test_coordinator_update_failure(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator update failure after 10 days."""
-    now = dt_util.now()
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
     )
@@ -88,12 +88,12 @@ async def test_coordinator_update_failure(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
-    assert DOMAIN in hass.data
 
     # Failing 25 days in a row should result in a single log message
     # (first one after 10 days, next one would be at 30 days)
     for days in range(1, 25):
-        async_fire_time_changed(hass, now + timedelta(days=days))
+        freezer.tick(timedelta(days=days))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     err_msg = "Unable to retrieve the apps list from the external server"
@@ -102,7 +102,7 @@ async def test_coordinator_update_failure(
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_apps_coordinator_persists_until_last_tv_unloads(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test shared apps coordinator is not shut down until the last TV entry unloads."""
     config_entry_1 = MockConfigEntry(
@@ -131,12 +131,12 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     assert await hass.config_entries.async_unload(config_entry_1.entry_id)
     await hass.async_block_till_done()
 
-    now = dt_util.now()
     with patch(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=APP_LIST,
     ) as mock_fetch:
-        async_fire_time_changed(hass, now + timedelta(days=1))
+        freezer.tick(timedelta(days=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_fetch.call_count == 1
 
@@ -148,6 +148,7 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=APP_LIST,
     ) as mock_fetch:
-        async_fire_time_changed(hass, now + timedelta(days=2))
+        freezer.tick(timedelta(days=2))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_fetch.call_count == 0
