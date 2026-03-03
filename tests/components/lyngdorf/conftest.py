@@ -8,11 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from lyngdorf.const import LyngdorfModel
 import pytest
 
-from homeassistant.components.lyngdorf.const import (
-    CONF_MANUFACTURER,
-    CONF_SERIAL_NUMBER,
-    DOMAIN,
-)
+from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
@@ -28,7 +24,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "127.0.0.1",
             CONF_MODEL: "MP-60",
-            CONF_MANUFACTURER: "Lyngdorf",
             CONF_SERIAL_NUMBER: "123456",
         },
         unique_id="123456",

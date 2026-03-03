@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -36,7 +37,7 @@ async def test_entities_created(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test that both main zone and zone B entities are created."""
-    assert init_integration.state.value == "loaded"
+    assert init_integration.state is ConfigEntryState.LOADED
 
     # Check main zone entity exists
     main_zone = hass.states.get("media_player.mock_lyngdorf_main_zone")

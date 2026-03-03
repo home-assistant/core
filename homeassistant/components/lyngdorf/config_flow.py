@@ -26,7 +26,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import (
-    CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
@@ -40,7 +39,6 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._location: str | None = None
-        self._device_manufacturer: str | None = None
         self._device_model: str | None = None
         self._device_serial_number: str | None = None
         self._name: str | None = None
@@ -75,7 +73,6 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_model"
 
             if not errors and model:
-                self._device_manufacturer = model.manufacturer
                 self._device_model = model.model_name
                 self._name = model.model_name
 
@@ -158,7 +155,6 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         data: dict[str, Any] = {
             CONF_MODEL: self._device_model,
-            CONF_MANUFACTURER: self._device_manufacturer,
             CONF_HOST: self._host,
         }
         if self._device_serial_number:
@@ -187,10 +183,6 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_serial_number = (
             discovery_info.upnp.get(ATTR_UPNP_SERIAL) or ""
         ).lower() or None
-        self._device_manufacturer = (
-            discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) or ""
-        )
-
         self._name = (
             discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
