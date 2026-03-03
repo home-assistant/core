@@ -1,16 +1,23 @@
 """Tests for the WebDAV sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aiowebdav2.exceptions import MethodNotSupportedError
+from aiowebdav2.exceptions import (
+    ConnectionExceptionError,
+    MethodNotSupportedError,
+    UnauthorizedError,
+)
 from aiowebdav2.models import QuotaInfo
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -66,3 +73,51 @@ async def test_sensor_quota_none_values(
 
     # No sensor entities should be created
     assert len(entity_entries) == 0
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        UnauthorizedError(
+            path="/",
+        ),
+        ConnectionExceptionError("Connection failed"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_update_fail(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    webdav_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Test that an auth error marks the config entry as having an auth error."""
+    webdav_client.quota.side_effect = error
+
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Sensors should be unavailable
+    assert (
+        hass.states.get("sensor.user_webdav_demo_free_space").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.user_webdav_demo_used_space").state == STATE_UNAVAILABLE
+    )
+
+    webdav_client.quota.side_effect = None
+    webdav_client.quota.return_value = QuotaInfo(available_bytes=1000, used_bytes=500)
+
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Sensors should be available again
+    assert (
+        hass.states.get("sensor.user_webdav_demo_free_space").state != STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.user_webdav_demo_used_space").state != STATE_UNAVAILABLE
+    )

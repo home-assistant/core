@@ -40,9 +40,7 @@ SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.quota.available_bytes,
-        available_fn=lambda data: (
-            data.quota is not None and data.quota.available_bytes is not None
-        ),
+        available_fn=lambda data: data.quota.available_bytes is not None,
     ),
     WebDavSensorEntityDescription(
         key="used_space",
@@ -53,9 +51,7 @@ SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.quota.used_bytes,
-        available_fn=lambda data: (
-            data.quota is not None and data.quota.used_bytes is not None
-        ),
+        available_fn=lambda data: data.quota.used_bytes is not None,
     ),
 )
 

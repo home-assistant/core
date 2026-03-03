@@ -61,7 +61,7 @@ rules:
     status: exempt
     comment: |
       This integration is a cloud service and does not support discovery.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples:
     status: exempt
     comment: |
@@ -74,7 +74,7 @@ rules:
     status: exempt
     comment: |
       This integration is a cloud service.
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting:
     status: exempt
     comment: |
