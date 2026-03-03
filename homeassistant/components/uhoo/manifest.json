@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["uhooapi==1.2.6"]
+  "requirements": ["uhooapi==1.2.8"]
 }
