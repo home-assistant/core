@@ -452,8 +452,8 @@ async def test_subentry_flow(
     assert result["step_id"] == "user"
     assert result["description_placeholders"] == {
         **DESCRIPTION_PLACEHOLDERS,
-        "bot_username": "@Testbot",
-        "bot_url": "https://t.me/mock username",
+        "bot_username": "@mock_bot",
+        "bot_url": "https://t.me/mock_bot",
     }
 
     result = await hass.config_entries.subentries.async_configure(

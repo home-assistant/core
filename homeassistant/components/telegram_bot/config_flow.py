@@ -62,7 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
     "botfather_username": "@BotFather",
     "botfather_url": "https://t.me/botfather",
-    "id_bot_username": "@IDbot",
+    "id_bot_username": "@id_bot",
     "id_bot_url": "https://t.me/id_bot",
     "socks_url": "socks5://username:password@proxy_ip:proxy_port",
     # used in advanced settings section
@@ -612,13 +612,14 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             errors["base"] = "chat_not_found"
 
         service: TelegramNotificationService = self._get_entry().runtime_data
-        DESCRIPTION_PLACEHOLDERS["bot_username"] = f"@{service.bot.first_name}"
-        DESCRIPTION_PLACEHOLDERS["bot_url"] = f"https://t.me/{service.bot.username}"
+        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
+        description_placeholders["bot_username"] = f"@{service.bot.username}"
+        description_placeholders["bot_url"] = f"https://t.me/{service.bot.username}"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
-            description_placeholders=DESCRIPTION_PLACEHOLDERS,
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
