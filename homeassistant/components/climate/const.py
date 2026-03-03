@@ -31,11 +31,8 @@ class HVACMode(StrEnum):
 
 HVAC_MODES = [cls.value for cls in HVACMode]
 
-# No preset is active
-PRESET_NONE = "none"
-
-# Device is running an energy-saving mode
-PRESET_ECO = "eco"
+# Device is reacting to activity (e.g. movement sensors)
+PRESET_ACTIVITY = "activity"
 
 # Device is in away mode
 PRESET_AWAY = "away"
@@ -46,14 +43,26 @@ PRESET_BOOST = "boost"
 # Device is in comfort mode
 PRESET_COMFORT = "comfort"
 
+# Device is running an energy-saving mode
+PRESET_ECO = "eco"
+
+# Device is preparing to sleep (pre-sleep routine)
+PRESET_GOING_TO_SLEEP = "going_to_sleep"
+
 # Device is in home mode
 PRESET_HOME = "home"
+
+# No preset is active
+PRESET_NONE = "none"
 
 # Device is prepared for sleep
 PRESET_SLEEP = "sleep"
 
-# Device is reacting to activity (e.g. movement sensors)
-PRESET_ACTIVITY = "activity"
+# Device is in vacation mode (extended away)
+PRESET_VACATION = "vacation"
+
+# Device is in wake mode (morning)
+PRESET_WAKE = "wake"
 
 # Possible fan state
 FAN_ON = "on"
