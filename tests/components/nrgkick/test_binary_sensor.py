@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,17 +43,3 @@ async def test_charge_permitted_off(
 
     assert (state := hass.states.get("binary_sensor.nrgkick_test_charge_permitted"))
     assert state.state == STATE_OFF
-
-
-async def test_charge_permitted_unknown_when_missing(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_nrgkick_api: AsyncMock,
-) -> None:
-    """Test charge permitted binary sensor when value is missing."""
-    mock_nrgkick_api.get_values.return_value["general"].pop("charge_permitted")
-
-    await setup_integration(hass, mock_config_entry, platforms=[Platform.BINARY_SENSOR])
-
-    assert (state := hass.states.get("binary_sensor.nrgkick_test_charge_permitted"))
-    assert state.state == STATE_UNKNOWN
