@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast
 
+from nrgkick_api import ChargingStatus
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -88,7 +90,7 @@ def _seconds_to_stable_timestamp(value: StateType) -> datetime | None:
 
     try:
         return _seconds_to_stable_datetime(cast(int, value))
-    except (TypeError, OverflowError):
+    except TypeError, OverflowError:
         return None
 
 
@@ -632,11 +634,18 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         key="vehicle_connected_since",
         translation_key="vehicle_connected_since",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: _seconds_to_stable_timestamp(
-            cast(
-                StateType,
-                _get_nested_dict_value(data.values, "general", "vehicle_connect_time"),
+        value_fn=lambda data: (
+            _seconds_to_stable_timestamp(
+                cast(
+                    StateType,
+                    _get_nested_dict_value(
+                        data.values, "general", "vehicle_connect_time"
+                    ),
+                )
             )
+            if _get_nested_dict_value(data.values, "general", "status")
+            != ChargingStatus.STANDBY
+            else None
         ),
     ),
     NRGkickSensorEntityDescription(

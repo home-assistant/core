@@ -12,6 +12,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/toon",
+  "integration_type": "device",
   "iot_class": "cloud_push",
   "loggers": ["toonapi"],
   "requirements": ["toonapi==0.3.0"]

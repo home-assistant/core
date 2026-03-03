@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -38,8 +36,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -48,7 +46,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 284,
       'color_temp_kelvin': 3521,
       'friendly_name': 'Mock Color Temperature Light',
       'hs_color': tuple(
@@ -56,9 +53,7 @@
         44.32,
       ),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         193,
@@ -81,124 +76,6 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[dimmable_light][light.mock_dimmable_light-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.mock_dimmable_light',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lights[dimmable_light][light.mock_dimmable_light-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'brightness': 51,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Mock Dimmable Light',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.mock_dimmable_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_lights[dimmable_plugin_unit][light.dimmable_plugin_unit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.dimmable_plugin_unit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterLight-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lights[dimmable_plugin_unit][light.dimmable_plugin_unit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Dimmable Plugin Unit',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.dimmable_plugin_unit',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_lights[extended_color_light][light.mock_extended_color_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -206,9 +83,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -240,8 +115,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -250,7 +125,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Mock Extended Color Light',
       'hs_color': tuple(
@@ -258,9 +132,7 @@
         20.079,
       ),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         247,
@@ -292,9 +164,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 1000000,
-      'max_mireds': 66666,
       'min_color_temp_kelvin': 15,
-      'min_mireds': 1,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -336,14 +206,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'White Series OnOff Switch Light (RGB Indicator)',
       'hs_color': None,
       'max_color_temp_kelvin': 1000000,
-      'max_mireds': 66666,
       'min_color_temp_kelvin': 15,
-      'min_mireds': 1,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -361,64 +228,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.mock_mounted_dimmable_load_control',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterLight-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lights[mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Mounted dimmable load control',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.mock_mounted_dimmable_load_control',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_1-entry]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -458,7 +268,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_1-state]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -477,16 +287,14 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_6-entry]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -523,19 +331,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_6-state]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Inovelli Light (6)',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -553,7 +358,182 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[onoff_light][light.mock_onoff_light-entry]
+# name: test_lights[mock_dimmable_light][light.mock_dimmable_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.mock_dimmable_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[mock_dimmable_light][light.mock_dimmable_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 51,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Mock Dimmable Light',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.mock_dimmable_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.dimmable_plugin_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 255,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Dimmable Plugin Unit',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.dimmable_plugin_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.mock_mounted_dimmable_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Mounted dimmable load control',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.mock_mounted_dimmable_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_lights[mock_onoff_light][light.mock_onoff_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -588,12 +568,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light][light.mock_onoff_light-state]
+# name: test_lights[mock_onoff_light][light.mock_onoff_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': <ColorMode.ONOFF: 'onoff'>,
@@ -611,16 +591,14 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[onoff_light_alt_name][light.mock_onoff_light-entry]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -634,7 +612,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_onoff_light',
+    'entity_id': 'light.mock_onoff_light_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -652,24 +630,21 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light_alt_name][light.mock_onoff_light-state]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Mock OnOff Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -680,23 +655,21 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_onoff_light',
+    'entity_id': 'light.mock_onoff_light_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_lights[onoff_light_no_name][light.mock_light-entry]
+# name: test_lights[mock_onoff_light_no_name][light.mock_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -728,24 +701,21 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light_no_name][light.mock_light-state]
+# name: test_lights[mock_onoff_light_no_name][light.mock_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Mock Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -798,8 +768,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---

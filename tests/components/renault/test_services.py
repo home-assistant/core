@@ -16,10 +16,6 @@ from homeassistant.components.renault.services import (
     ATTR_TEMPERATURE,
     ATTR_VEHICLE,
     ATTR_WHEN,
-    SERVICE_AC_CANCEL,
-    SERVICE_AC_SET_SCHEDULES,
-    SERVICE_AC_START,
-    SERVICE_CHARGE_SET_SCHEDULES,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -72,7 +68,7 @@ async def test_service_set_ac_cancel(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+            DOMAIN, "ac_cancel", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
@@ -100,7 +96,7 @@ async def test_service_set_ac_start_simple(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_START, service_data=data, blocking=True
+            DOMAIN, "ac_start", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (temperature, None)
@@ -130,7 +126,7 @@ async def test_service_set_ac_start_with_date(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_START, service_data=data, blocking=True
+            DOMAIN, "ac_start", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (temperature, when)
@@ -169,7 +165,7 @@ async def test_service_set_charge_schedule(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_CHARGE_SET_SCHEDULES, service_data=data, blocking=True
+            DOMAIN, "charge_set_schedules", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
@@ -221,7 +217,7 @@ async def test_service_set_charge_schedule_multi(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_CHARGE_SET_SCHEDULES, service_data=data, blocking=True
+            DOMAIN, "charge_set_schedules", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
@@ -269,7 +265,7 @@ async def test_service_set_ac_schedule(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_SET_SCHEDULES, service_data=data, blocking=True
+            DOMAIN, "ac_set_schedules", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
@@ -320,7 +316,7 @@ async def test_service_set_ac_schedule_multi(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_SET_SCHEDULES, service_data=data, blocking=True
+            DOMAIN, "ac_set_schedules", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[HvacSchedule] = mock_action.mock_calls[0][1][0]
@@ -347,7 +343,7 @@ async def test_service_invalid_device_id(
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+            DOMAIN, "ac_cancel", service_data=data, blocking=True
         )
     assert err.value.translation_key == "invalid_device_id"
     assert err.value.translation_placeholders == {"device_id": "some_random_id"}
@@ -375,7 +371,7 @@ async def test_service_invalid_device_id2(
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+            DOMAIN, "ac_cancel", service_data=data, blocking=True
         )
     assert err.value.translation_key == "no_config_entry_for_device"
     assert err.value.translation_placeholders == {"device_id": "REG-NUMBER"}
@@ -400,7 +396,7 @@ async def test_service_exception(
         pytest.raises(HomeAssistantError, match="Didn't work"),
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+            DOMAIN, "ac_cancel", service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()

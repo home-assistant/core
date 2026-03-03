@@ -115,8 +115,10 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
             hayward_state = None
             state = None
 
-        self._attrs["hayward_temperature"] = hayward_state
-        self._attrs["hayward_unit_of_measure"] = hayward_unit_of_measure
+        self._attr_extra_state_attributes["hayward_temperature"] = hayward_state
+        self._attr_extra_state_attributes["hayward_unit_of_measure"] = (
+            hayward_unit_of_measure
+        )
 
         self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
 
@@ -153,7 +155,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             ):
                 state = "high"
 
-        self._attrs["pump_type"] = pump_type
+        self._attr_extra_state_attributes["pump_type"] = pump_type
 
         return state
 
