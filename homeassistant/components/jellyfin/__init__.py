@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
@@ -12,6 +12,8 @@ from .const import CONF_CLIENT_DEVICE_ID, DEFAULT_NAME, DOMAIN, PLATFORMS
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .services import async_setup_services
 
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jellyfin component."""
