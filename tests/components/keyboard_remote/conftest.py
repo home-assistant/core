@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -22,6 +23,10 @@ from homeassistant.components.keyboard_remote.const import (
 )
 
 from tests.common import MockConfigEntry
+
+# Ensure evdev module is mockable in CI where it's not installed
+if "evdev" not in sys.modules:
+    sys.modules["evdev"] = MagicMock()
 
 FAKE_DEVICE_PATH = "/dev/input/by-id/usb-Test_Keyboard-event-kbd"
 FAKE_DEVICE_NAME = "Test Keyboard"
