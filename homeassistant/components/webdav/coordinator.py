@@ -39,6 +39,7 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
     """The WebDAV coordinator."""
 
     config_entry: WebDavConfigEntry
+    _initial_quota: QuotaInfo | None
 
     def __init__(
         self,
@@ -55,6 +56,7 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
             config_entry=config_entry,
         )
         self.client = client
+        self._initial_quota: QuotaInfo | None = None
 
     async def _async_setup(self) -> None:
         """Set up the WebDAV coordinator."""
@@ -68,9 +70,16 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
         if quota.available_bytes is None and quota.used_bytes is None:
             _LOGGER.debug("WebDAV server does not provide quota information")
             await self.async_shutdown()
+            return
+
+        self._initial_quota = quota
 
     async def _async_update_data(self) -> WebDavData:
         """Fetch data from WebDAV server."""
+        if (initial_quota := self._initial_quota) is not None:
+            self._initial_quota = None
+            return WebDavData(quota=initial_quota)
+
         try:
             quota = await self.client.quota()
         except UnauthorizedError as err:

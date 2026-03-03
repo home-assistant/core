@@ -31,11 +31,18 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "sensor",
+    [
+        "sensor.user_webdav_demo_free_space",
+        "sensor.user_webdav_demo_used_space",
+    ],
+)
 async def test_sensor_quota_not_supported(
     hass: HomeAssistant,
     webdav_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    sensor: str,
 ) -> None:
     """Test that sensors are not created when quota is not supported."""
     webdav_client.quota.side_effect = MethodNotSupportedError(
@@ -46,19 +53,22 @@ async def test_sensor_quota_not_supported(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # No sensor entities should be created
-    assert len(entity_entries) == 0
+    state = hass.states.get(sensor)
+    assert state is None
 
 
+@pytest.mark.parametrize(
+    "sensor",
+    [
+        "sensor.user_webdav_demo_free_space",
+        "sensor.user_webdav_demo_used_space",
+    ],
+)
 async def test_sensor_quota_none_values(
     hass: HomeAssistant,
     webdav_client: AsyncMock,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    sensor: str,
 ) -> None:
     """Test missing sensors when quota returns None values."""
     webdav_client.quota.return_value = QuotaInfo(available_bytes=None, used_bytes=None)
@@ -67,12 +77,8 @@ async def test_sensor_quota_none_values(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # No sensor entities should be created
-    assert len(entity_entries) == 0
+    state = hass.states.get(sensor)
+    assert state is None
 
 
 @pytest.mark.parametrize(
