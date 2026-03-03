@@ -106,7 +106,7 @@ def mock_external_calls() -> Generator[None]:
         accent_color_id=0,
         accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
     )
-    test_user = User(123456, "Testbot", True, "mock last name", "mock username")
+    test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(
         message_id=12345,
         date=datetime.now(),
