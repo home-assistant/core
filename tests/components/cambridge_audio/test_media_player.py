@@ -62,6 +62,7 @@ async def test_entity_supported_features(
 ) -> None:
     """Test entity attributes."""
     await setup_integration(hass, mock_config_entry)
+    mock_stream_magic_client.state.pre_amp_mode = False
     await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
