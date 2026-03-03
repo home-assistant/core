@@ -85,8 +85,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         self._model_fetched = False
         self._version_fetched = False
 
-    def _update_device_registry(self, model: str | None, version: str | None) -> None:
-        """Update device registry with model and version info."""
+    def _update_device_registry(
+        self, *, model: str | None = None, version: str | None = None
+    ) -> None:
+        """Update device registry with model and/or version info."""
         if not self.config_entry.unique_id:
             return
         device_registry = dr.async_get(self.hass)
@@ -111,16 +113,14 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
                 f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
             )
 
-        # Device info - fetch each field independently until we get a value
-        if not self._model_fetched or not self._version_fetched:
-            model = None
-            version = None
-            if not self._model_fetched:
-                model = await self.device.get_model_name(log_api_exception=False)
-            if not self._version_fetched:
-                version = await self.device.get_version(log_api_exception=False)
-            if model or version:
-                self._update_device_registry(model, version)
+        if not self._model_fetched and (
+            model := await self.device.get_model_name(log_api_exception=False)
+        ):
+            self._update_device_registry(model=model)
+        if not self._version_fetched and (
+            version := await self.device.get_version(log_api_exception=False)
+        ):
+            self._update_device_registry(version=version)
 
         # Handle device off - return minimal data
         if not is_on:
