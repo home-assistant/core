@@ -121,6 +121,7 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
+        self._attr_unique_id = f"part_{partition_number}_alarm"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

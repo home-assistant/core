@@ -69,6 +69,7 @@ class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
+        self._attr_unique_id = f"part_{partition_number}_keypad"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
