@@ -235,8 +235,14 @@
     'name': None,
     'object_id_base': 'Total swing time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total swing time',
     'platform': 'smarla',
@@ -245,21 +251,22 @@
     'supported_features': 0,
     'translation_key': 'total_swing_time',
     'unique_id': 'ABCD-total_swing_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_entities[sensor.smarla_total_swing_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Smarla Total swing time',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smarla_total_swing_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
