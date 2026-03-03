@@ -2,12 +2,9 @@
 
 import logging
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .client import SatelClient
