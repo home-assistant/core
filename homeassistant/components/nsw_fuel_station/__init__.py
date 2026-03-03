@@ -1,72 +1,87 @@
-"""The nsw_fuel_station component."""
+"""The NSW Fuel Check component."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import datetime
 import logging
+from typing import TYPE_CHECKING, Any, cast
 
-from nsw_fuel import FuelCheckClient, FuelCheckError, Station
+from nsw_tas_fuel import NSWFuelApiClient
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_NSW_FUEL_STATION
+from .const import DOMAIN
+from .coordinator import NSWFuelCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from .data import NSWFuelConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "nsw_fuel_station"
-SCAN_INTERVAL = datetime.timedelta(hours=1)
+PLATFORMS = [Platform.SENSOR]
+# Stations appear to update at random, it could be days between price changes
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=720)
 
-CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
+async def async_setup_entry(hass: HomeAssistant, entry: NSWFuelConfigEntry) -> bool:
+    """Set up NSW Fuel Check integration from the config entry."""
+    client_id = cast("str", entry.data.get(CONF_CLIENT_ID))
+    client_secret = cast("str", entry.data.get(CONF_CLIENT_SECRET))
+    nicknames: dict[str, dict[str, Any]] = entry.data.get("nicknames", {})
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the NSW Fuel Station platform."""
-    client = FuelCheckClient()
+    session = async_get_clientsession(hass)
 
-    async def async_update_data():
-        return await hass.async_add_executor_job(fetch_station_price_data, client)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name="sensor",
-        update_interval=SCAN_INTERVAL,
-        update_method=async_update_data,
+    api = NSWFuelApiClient(
+        session=session,
+        client_id=client_id,
+        client_secret=client_secret,
     )
-    hass.data[DATA_NSW_FUEL_STATION] = coordinator
 
-    await coordinator.async_refresh()
+    coordinator = NSWFuelCoordinator(
+        hass=hass,
+        api=api,
+        nicknames=nicknames,
+        scan_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        _LOGGER.warning("Initial data fetch failed: %s", err)
+        raise
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
 
-@dataclass
-class StationPriceData:
-    """Data structure for O(1) price and name lookups."""
-
-    stations: dict[int, Station]
-    prices: dict[tuple[int, str], float]
+async def async_reload_entry(hass: HomeAssistant, entry: NSWFuelConfigEntry) -> None:
+    """Reload after new entity added to existing service/location/nickname."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-def fetch_station_price_data(client: FuelCheckClient) -> StationPriceData | None:
-    """Fetch fuel price and station data."""
-    try:
-        raw_price_data = client.get_fuel_prices()
-        # Restructure prices and station details to be indexed by station code
-        # for O(1) lookup
-        return StationPriceData(
-            stations={s.code: s for s in raw_price_data.stations},
-            prices={
-                (p.station_code, p.fuel_type): p.price for p in raw_price_data.prices
-            },
-        )
+async def async_unload_entry(hass: HomeAssistant, entry: NSWFuelConfigEntry) -> bool:
+    """Temporarily remove config entry e.g. disable integration etc."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
-    except FuelCheckError as exc:
-        raise UpdateFailed(
-            f"Failed to fetch NSW Fuel station price data: {exc}"
-        ) from exc
+
+async def async_remove_entry(hass: HomeAssistant, entry: NSWFuelConfigEntry) -> None:
+    """Permanently remove config entry and clean up orphan entities."""
+    entity_registry = er.async_get(hass)
+
+    for entity_entry in list(entity_registry.entities.values()):
+        if entity_entry.config_entry_id == entry.entry_id:
+            entity_registry.async_remove(entity_entry.entity_id)
+
+    hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
