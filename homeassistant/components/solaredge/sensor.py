@@ -213,7 +213,7 @@ SENSOR_TYPES = [
         json_key="battery_charge_today",
         translation_key="battery_charge_today",
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -222,7 +222,7 @@ SENSOR_TYPES = [
         json_key="battery_discharge_today",
         translation_key="battery_discharge_today",
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -254,23 +254,27 @@ async def async_setup_entry(
         # If storage is not yet set up (e.g. inventory failed or reported no
         # batteries), listen for inventory updates so storage can be set up
         # once battery data becomes available.
+        async def _async_setup_storage_entities() -> None:
+            """Refresh storage data and add storage-related entities."""
+            assert sensor_factory.storage_service is not None
+            await sensor_factory.storage_service.coordinator.async_refresh()
+            new_entities: list[SolarEdgeSensorEntity] = []
+            for desc in SENSOR_TYPES:
+                if desc.key in (
+                    "battery_charge_today",
+                    "battery_discharge_today",
+                ):
+                    entity = sensor_factory.create_sensor(desc)
+                    if entity is not None:
+                        new_entities.append(entity)
+            if new_entities:
+                async_add_entities(new_entities)
+
         @callback
         def _inventory_updated() -> None:
             if sensor_factory.setup_storage_service():
                 unsub()
-                assert sensor_factory.storage_service is not None
-                sensor_factory.storage_service.coordinator.async_refresh()
-                new_entities = []
-                for desc in SENSOR_TYPES:
-                    if desc.key in (
-                        "battery_charge_today",
-                        "battery_discharge_today",
-                    ):
-                        entity = sensor_factory.create_sensor(desc)
-                        if entity is not None:
-                            new_entities.append(entity)
-                if new_entities:
-                    async_add_entities(new_entities)
+                hass.async_create_task(_async_setup_storage_entities())
 
         unsub = sensor_factory.inventory_service.coordinator.async_add_listener(
             _inventory_updated
