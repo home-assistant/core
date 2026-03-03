@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 import sys
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -24,9 +25,18 @@ from homeassistant.components.keyboard_remote.const import (
 
 from tests.common import MockConfigEntry
 
-# Ensure evdev module is mockable in CI where it's not installed
+# Stable evdev constants for tests (must be the same objects used in event mocks
+# because production code uses `is` comparison: `event.type is ecodes.EV_KEY`)
+EV_KEY = 1
+
+# Build a mock evdev module with stable constants before any integration import
+_mock_ecodes = SimpleNamespace(EV_KEY=EV_KEY)
+_mock_evdev = MagicMock()
+_mock_evdev.ecodes = _mock_ecodes
+_mock_evdev.categorize = MagicMock(side_effect=lambda e: f"key event {e.code}")
+
 if "evdev" not in sys.modules:
-    sys.modules["evdev"] = MagicMock()
+    sys.modules["evdev"] = _mock_evdev
 
 FAKE_DEVICE_PATH = "/dev/input/by-id/usb-Test_Keyboard-event-kbd"
 FAKE_DEVICE_NAME = "Test Keyboard"
@@ -35,6 +45,36 @@ FAKE_BY_ID_BASENAME = "usb-Test_Keyboard-event-kbd"
 
 FAKE_DEVICE_PATH_2 = "/dev/input/by-id/usb-Test_Remote-event-kbd"
 FAKE_DEVICE_NAME_2 = "Test Remote"
+
+
+class MockAsyncIterator:
+    """Reusable async iterator that yields items from a list then stops."""
+
+    def __init__(self, items: list | None = None) -> None:
+        """Initialize with a list of items to yield."""
+        self._items = list(items) if items else []
+
+    def __aiter__(self) -> MockAsyncIterator:
+        """Return self as the async iterator."""
+        return self
+
+    async def __anext__(self):
+        """Yield next item or stop."""
+        if self._items:
+            return self._items.pop(0)
+        raise StopAsyncIteration
+
+
+def make_key_event(
+    event_type: int = EV_KEY, code: int = 30, value: int = 0
+) -> SimpleNamespace:
+    """Create a mock evdev key event."""
+    return SimpleNamespace(type=event_type, code=code, value=value)
+
+
+def make_inotify_event(name: str, mask: int) -> SimpleNamespace:
+    """Create a mock inotify event."""
+    return SimpleNamespace(name=name, mask=mask)
 
 
 @pytest.fixture
@@ -77,4 +117,5 @@ def mock_input_device() -> MagicMock:
     dev.grab = MagicMock()
     dev.ungrab = MagicMock()
     dev.close = MagicMock()
+    dev.async_read_loop = MagicMock(return_value=MockAsyncIterator())
     return dev

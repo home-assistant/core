@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+import os
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.keyboard_remote.config_flow import (
+    _get_device_name,
+    _resolve_yaml_device,
+    _scan_input_devices_sync,
+)
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
@@ -411,3 +417,291 @@ async def test_options_flow_shows_device_path(
 
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"]["device_path"] == FAKE_DEVICE_PATH
+
+
+# --- _get_device_name tests ---
+
+
+def test_get_device_name_success() -> None:
+    """Test _get_device_name returns device name and closes device."""
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+    ):
+        result = _get_device_name(FAKE_DEVICE_PATH)
+
+    assert result == FAKE_DEVICE_NAME
+    mock_dev.close.assert_called_once()
+
+
+def test_get_device_name_oserror() -> None:
+    """Test _get_device_name returns None on OSError."""
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", side_effect=OSError("No such device")),
+    ):
+        result = _get_device_name(FAKE_DEVICE_PATH)
+
+    assert result is None
+
+
+# --- _scan_input_devices_sync tests ---
+
+
+def test_scan_input_devices_no_dir() -> None:
+    """Test scan returns empty list when /dev/input/by-id does not exist."""
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+        return_value=False,
+    ):
+        result = _scan_input_devices_sync()
+
+    assert result == []
+
+
+def test_scan_input_devices_with_devices() -> None:
+    """Test scan returns device options for symlinked entries."""
+    entry_symlink = MagicMock(spec_set=os.DirEntry)
+    entry_symlink.is_symlink.return_value = True
+    entry_symlink.path = FAKE_DEVICE_PATH
+    entry_symlink.name = FAKE_BY_ID_BASENAME
+
+    entry_not_symlink = MagicMock(spec_set=os.DirEntry)
+    entry_not_symlink.is_symlink.return_value = False
+    entry_not_symlink.name = "not-a-symlink"
+
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+            return_value=[entry_not_symlink, entry_symlink],
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+    ):
+        result = _scan_input_devices_sync()
+
+    assert len(result) == 1
+    assert result[0]["value"] == FAKE_DEVICE_PATH
+    assert FAKE_DEVICE_NAME in result[0]["label"]
+    assert FAKE_BY_ID_BASENAME in result[0]["label"]
+    mock_dev.close.assert_called_once()
+
+
+def test_scan_input_devices_oserror_on_device() -> None:
+    """Test scan skips devices that raise OSError."""
+    entry_symlink = MagicMock(spec_set=os.DirEntry)
+    entry_symlink.is_symlink.return_value = True
+    entry_symlink.path = FAKE_DEVICE_PATH
+    entry_symlink.name = FAKE_BY_ID_BASENAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+            return_value=[entry_symlink],
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", side_effect=OSError("Permission denied")),
+    ):
+        result = _scan_input_devices_sync()
+
+    assert result == []
+
+
+# --- _resolve_yaml_device tests ---
+
+
+def test_resolve_yaml_descriptor_with_by_id() -> None:
+    """Test resolve with descriptor that has a by-id symlink."""
+    by_id_entry = MagicMock(spec_set=os.DirEntry)
+    by_id_entry.is_symlink.return_value = True
+    by_id_entry.path = FAKE_DEVICE_PATH
+
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+            return_value=[by_id_entry],
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.basename",
+            return_value=FAKE_BY_ID_BASENAME,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+    ):
+        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
+
+    assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)
+    mock_dev.close.assert_called_once()
+
+
+def test_resolve_yaml_descriptor_no_by_id() -> None:
+    """Test resolve with descriptor but no by-id symlink."""
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+    ):
+        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
+
+    assert result == (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None)
+
+
+def test_resolve_yaml_descriptor_oserror() -> None:
+    """Test resolve with descriptor when InputDevice raises OSError."""
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", side_effect=OSError("No device")),
+    ):
+        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
+
+    # Returns descriptor with None name and None unique_id
+    assert result == (FAKE_DEVICE_REAL_PATH, None, None)
+
+
+def test_resolve_yaml_name_with_by_id() -> None:
+    """Test resolve with device name that matches a device with by-id symlink."""
+    by_id_entry = MagicMock(spec_set=os.DirEntry)
+    by_id_entry.is_symlink.return_value = True
+    by_id_entry.path = FAKE_DEVICE_PATH
+
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+            return_value=[by_id_entry],
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.basename",
+            return_value=FAKE_BY_ID_BASENAME,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
+    ):
+        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
+
+    assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)
+
+
+def test_resolve_yaml_name_no_by_id() -> None:
+    """Test resolve with device name match but no by-id symlink."""
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
+    ):
+        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
+
+    assert result == (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None)
+
+
+def test_resolve_yaml_no_match() -> None:
+    """Test resolve returns (None, None, None) when nothing matches."""
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=False,
+        ),
+        patch("evdev.list_devices", return_value=[]),
+    ):
+        result = _resolve_yaml_device({"device_name": "Nonexistent Device"})
+
+    assert result == (None, None, None)
+
+
+def test_resolve_yaml_name_oserror_on_device() -> None:
+    """Test resolve with name skips devices that raise OSError."""
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=False,
+        ),
+        patch("evdev.InputDevice", side_effect=OSError("No device")),
+        patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
+    ):
+        result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
+
+    # OSError causes continue, falls through to (None, None, None)
+    assert result == (None, None, None)
+
+
+def test_resolve_yaml_empty_data() -> None:
+    """Test resolve with empty data returns (None, None, None)."""
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+        return_value=False,
+    ):
+        result = _resolve_yaml_device({})
+
+    assert result == (None, None, None)
