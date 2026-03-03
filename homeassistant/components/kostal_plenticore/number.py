@@ -69,6 +69,7 @@ NUMBER_SETTINGS_DATA = [
     ),
     PlenticoreNumberEntityDescription(
         key="active_power_limitation",
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
