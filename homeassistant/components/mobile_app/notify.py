@@ -135,10 +135,6 @@ class MobileAppNotificationService(BaseNotificationService):
 
             # Test if local push only.
             if ATTR_PUSH_URL not in registration[ATTR_APP_DATA]:
-                if len(targets) == 1:
-                    raise HomeAssistantError(
-                        "Device not connected to local push notifications"
-                    )
                 failed_targets.append(target)
                 continue
 

@@ -397,7 +397,8 @@ async def test_local_push_only(
 ) -> None:
     """Test a local only push registration."""
     with pytest.raises(
-        HomeAssistantError, match="Device not connected to local push notifications"
+        HomeAssistantError,
+        match=r"Device.*websocket-push-webhook-id.*not connected to local push notifications",
     ):
         await hass.services.async_call(
             "notify",
