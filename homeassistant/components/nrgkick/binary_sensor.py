@@ -25,17 +25,20 @@ class NRGkickBinarySensorEntityDescription(BinarySensorEntityDescription):
     is_on_fn: Callable[[NRGkickData], bool | None]
 
 
-def _is_charge_permitted(data: NRGkickData) -> bool | None:
-    """Return if charging is currently permitted."""
-    value = get_nested_dict_value(data.values, "general", "charge_permitted")
-    return bool(value) if value is not None else None
-
-
 BINARY_SENSORS: tuple[NRGkickBinarySensorEntityDescription, ...] = (
     NRGkickBinarySensorEntityDescription(
         key="charge_permitted",
         translation_key="charge_permitted",
-        is_on_fn=_is_charge_permitted,
+        is_on_fn=lambda data: (
+            bool(value)
+            if (
+                value := get_nested_dict_value(
+                    data.values, "general", "charge_permitted"
+                )
+            )
+            is not None
+            else None
+        ),
     ),
 )
 
