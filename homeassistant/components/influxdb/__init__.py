@@ -505,7 +505,7 @@ async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
         return
 
     # If we are here, the entry already exists (single instance allowed)
-    if config.keys() & set(COMPONENT_CONFIG_SCHEMA_CONNECTION):
+    if config.keys() & (set(COMPONENT_CONFIG_SCHEMA_CONNECTION) - {CONF_PRECISION}):
         async_create_deprecated_yaml_issue(hass)
 
 
