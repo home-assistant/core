@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN
+from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
 from .coordinator import (
     SolarEdgeDataService,
     SolarEdgeDetailsDataService,
@@ -250,12 +250,14 @@ async def async_setup_entry(
     if sensor_factory.setup_storage_service():
         await sensor_factory.storage_service.coordinator.async_refresh()
     else:
-        # If inventory failed initially, listen for successful refreshes
-        # to set up the storage service once battery data becomes available.
+        # If storage is not yet set up (e.g. inventory failed or reported no
+        # batteries), listen for inventory updates so storage can be set up
+        # once battery data becomes available.
         @callback
         def _inventory_updated() -> None:
             if sensor_factory.setup_storage_service():
                 unsub()
+                sensor_factory.storage_service.coordinator.async_refresh()
                 new_entities = []
                 for desc in SENSOR_TYPES:
                     if desc.key in (
@@ -376,6 +378,9 @@ class SolarEdgeSensorFactory:
     ) -> SolarEdgeSensorEntity | None:
         """Create and return a sensor based on the sensor_key."""
         if sensor_type.key not in self.services:
+            LOGGER.debug(
+                "No service registered for sensor key %s, skipping", sensor_type.key
+            )
             return None
         sensor_class, service = self.services[sensor_type.key]
 
