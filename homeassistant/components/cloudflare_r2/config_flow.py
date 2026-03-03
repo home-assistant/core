@@ -91,7 +91,7 @@ class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     session = AioSession()
-                    api_version = await self.hass.async_add_executor_job(
+                    await self.hass.async_add_executor_job(
                         _preload_botocore_data, session
                     )
                     async with session.create_client(
@@ -99,7 +99,7 @@ class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
                         endpoint_url=user_input.get(CONF_ENDPOINT_URL),
                         aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
                         aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
-                        api_version=api_version,
+                        api_version=S3_API_VERSION,
                     ) as client:
                         await client.head_bucket(Bucket=user_input[CONF_BUCKET])
                 except ClientError:
