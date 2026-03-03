@@ -15,6 +15,7 @@ from homeassistant.components.solaredge.const import (
     DATA_MODULES_COORDINATOR,
     DEFAULT_NAME,
     DOMAIN,
+    INVENTORY_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
@@ -669,3 +670,156 @@ async def test_storage_data_service_api_error(
     state = hass.states.get(discharge_entry)
     assert state is not None
     assert state.state == "unavailable"
+
+
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_data_missing_keys_in_response(
+    mock_solaredge,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test storage service raises UpdateFailed when response is missing required keys."""
+    # API returns a response but without the storageData key
+    mock_solaredge_api.get_storage_data = AsyncMock(return_value={"unexpected": {}})
+    mock_solaredge.return_value = mock_solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+    )
+    assert charge_entry is not None
+    assert discharge_entry is not None
+
+    # Sensors should be unavailable due to UpdateFailed from missing key
+    state = hass.states.get(charge_entry)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    state = hass.states.get(discharge_entry)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_data_missing_batteries_key(
+    mock_solaredge,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test storage service raises UpdateFailed when batteries key is missing."""
+    # API returns storageData but without batteries key
+    mock_solaredge_api.get_storage_data = AsyncMock(
+        return_value={"storageData": {"otherField": "value"}}
+    )
+    mock_solaredge.return_value = mock_solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    assert charge_entry is not None
+
+    state = hass.states.get(charge_entry)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_service_deferred_after_inventory_failure(
+    mock_solaredge,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test storage service is created after inventory recovers from failure."""
+    # Initial inventory fetch fails
+    mock_solaredge_api.get_inventory = AsyncMock(side_effect=KeyError("Inventory"))
+    mock_solaredge.return_value = mock_solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Storage sensors should not exist yet
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    assert charge_entry is None
+
+    # Now inventory recovers and reports batteries
+    mock_solaredge_api.get_inventory = AsyncMock(
+        return_value={"Inventory": {"batteries": [{"SN": "BAT001"}]}}
+    )
+    mock_solaredge_api.get_storage_data = AsyncMock(
+        return_value=STORAGE_DATA_SINGLE_BATTERY
+    )
+
+    # Trigger inventory coordinator refresh
+    freezer.tick(INVENTORY_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Storage sensors should now exist
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+    )
+    assert charge_entry is not None
+    assert discharge_entry is not None
+
+
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_service_not_created_when_inventory_has_no_batteries(
+    mock_solaredge,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test storage service is not retried when inventory succeeds with no batteries."""
+    # Initial inventory fails
+    mock_solaredge_api.get_inventory = AsyncMock(side_effect=KeyError("Inventory"))
+    mock_solaredge.return_value = mock_solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Inventory recovers but reports zero batteries
+    mock_solaredge_api.get_inventory = AsyncMock(
+        return_value={"Inventory": {"batteries": []}}
+    )
+
+    freezer.tick(INVENTORY_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Storage sensors should still not exist
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    assert charge_entry is None
