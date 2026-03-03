@@ -72,6 +72,18 @@
       "title": "Detected wrong custom domain configuration"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "prompt": "[%key:common::config_flow::data::prompt%]"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template."
+        }
+      }
+    }
+  },
   "services": {
     "remote_connect": {
       "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection.",

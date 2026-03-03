@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.const import CONF_PROMPT, DOMAIN
 from homeassistant.components.cloud.conversation import CloudConversationEntity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent, llm
@@ -22,7 +22,7 @@ def cloud_conversation_entity(hass: HomeAssistant) -> CloudConversationEntity:
     cloud.llm = MagicMock()
     cloud.is_logged_in = True
     cloud.valid_subscription = True
-    entry = MockConfigEntry(domain=DOMAIN)
+    entry = MockConfigEntry(domain=DOMAIN, options={CONF_PROMPT: "Custom prompt"})
     entry.add_to_hass(hass)
     entity = CloudConversationEntity(cloud, entry)
     entity.entity_id = "conversation.home_assistant_cloud"
@@ -87,7 +87,7 @@ async def test_async_handle_message(
     chat_log.async_provide_llm_data.assert_awaited_once_with(
         user_input.as_llm_context(DOMAIN),
         llm.LLM_API_ASSIST,
-        None,
+        "Custom prompt",
         user_input.extra_system_prompt,
     )
     handle_chat_log.assert_awaited_once_with("conversation", chat_log)
