@@ -1,216 +1,186 @@
-"""The API client for interacting with the Cosa service."""
+"""API client for the Cosa smart thermostat service."""
 
 from datetime import UTC, datetime, timedelta
-import json
+import logging
 
 import aiohttp
 
+_LOGGER = logging.getLogger(__name__)
 
-class Api:
-    """The API client for interacting with the Cosa service."""
+API_HOST = "kiwi.cosa.com.tr"
+LOGIN_TIMEOUT = timedelta(minutes=60)
 
-    __apiUri = "kiwi.cosa.com.tr"
-    __username = None
-    __password = None
-    __authToken = None
 
-    __lastSuccessfulCall = None
-    __LOGIN_TIMEOUT_DELTA = timedelta(minutes=60)
+class CosaApiError(Exception):
+    """Base exception for Cosa API errors."""
 
-    def __init__(self, username: str, password: str) -> None:
-        """Initialize the API client with username and password."""
-        self.__username = username
-        self.__password = password
 
-    async def async_connection_status(self) -> bool:
-        """Check the status of the API client."""
-        if self.__is_login_timed_out() and not await self.__async_login():
-            return False
+class CosaAuthError(CosaApiError):
+    """Exception for authentication failures."""
 
+
+class CosaConnectionError(CosaApiError):
+    """Exception for connection failures."""
+
+
+class CosaApi:
+    """API client for interacting with the Cosa service."""
+
+    def __init__(
+        self, username: str, password: str, session: aiohttp.ClientSession
+    ) -> None:
+        """Initialize the API client."""
+        self._username = username
+        self._password = password
+        self._session = session
+        self._auth_token: str | None = None
+        self._last_successful_call: datetime | None = None
+
+    async def async_check_connection(self) -> bool:
+        """Check the connection status by attempting login.
+
+        Raises CosaAuthError on invalid credentials.
+        Raises CosaConnectionError on network issues.
+        """
+        await self._async_login()
         return True
 
-    async def async_get_endpoints(self) -> dict | None:
+    async def async_get_endpoints(self) -> list[dict]:
         """Retrieve the list of endpoints from the Cosa service."""
-        data = await self.__async_get("/api/endpoints/getEndpoints")
-
+        data = await self._async_get("/api/endpoints/getEndpoints")
         if data is not None and "endpoints" in data:
             return data["endpoints"]
+        return []
 
-        return None
-
-    async def async_get_endpoint(self, endpointId: str) -> dict | None:
-        """Retrieve details of a specific endpoint from the Cosa service."""
-        payload = {"endpoint": endpointId}
-
-        data = await self.__async_post("/api/endpoints/getEndpoint", payload)
-
+    async def async_get_endpoint(self, endpoint_id: str) -> dict | None:
+        """Retrieve details of a specific endpoint."""
+        payload = {"endpoint": endpoint_id}
+        data = await self._async_post("/api/endpoints/getEndpoint", payload)
         if data is not None and "endpoint" in data:
             return data["endpoint"]
-
         return None
 
     async def async_set_target_temperatures(
         self,
-        endpointId: str,
-        homeTemp: int,
-        awayTemp: int,
-        sleepTemp: int,
-        customTemp: int,
+        endpoint_id: str,
+        home_temp: int,
+        away_temp: int,
+        sleep_temp: int,
+        custom_temp: int,
     ) -> bool:
         """Set the target temperatures for a specific endpoint."""
         payload = {
-            "endpoint": endpointId,
+            "endpoint": endpoint_id,
             "targetTemperatures": {
-                "home": homeTemp,
-                "away": awayTemp,
-                "sleep": sleepTemp,
-                "custom": customTemp,
+                "home": home_temp,
+                "away": away_temp,
+                "sleep": sleep_temp,
+                "custom": custom_temp,
             },
         }
+        data = await self._async_post("/api/endpoints/setTargetTemperatures", payload)
+        return data is not None
 
-        data = await self.__async_post("/api/endpoints/setTargetTemperatures", payload)
+    async def async_disable(self, endpoint_id: str) -> bool:
+        """Disable the specified endpoint (set to frozen mode)."""
+        payload = {
+            "endpoint": endpoint_id,
+            "mode": "manual",
+            "option": "frozen",
+        }
+        data = await self._async_post("/api/endpoints/setMode", payload)
+        return data is not None
 
-        if data is not None:
-            return True
-
-        return False
-
-    async def async_disable(self, endpointId: str) -> bool:
-        """Disable the specified endpoint."""
-        payload = {"endpoint": endpointId, "mode": "manual", "option": "frozen"}
-
-        data = await self.__async_post("/api/endpoints/setMode", payload)
-
-        if data is not None:
-            return True
-
-        return False
-
-    async def async_enable_schedule(self, endpointId: str) -> bool:
+    async def async_enable_schedule(self, endpoint_id: str) -> bool:
         """Enable the schedule mode for the specified endpoint."""
-        payload = {"endpoint": endpointId, "mode": "schedule"}
+        payload = {"endpoint": endpoint_id, "mode": "schedule"}
+        data = await self._async_post("/api/endpoints/setMode", payload)
+        return data is not None
 
-        data = await self.__async_post("/api/endpoints/setMode", payload)
+    async def async_enable_custom_mode(self, endpoint_id: str) -> bool:
+        """Enable the custom (manual heating) mode for the specified endpoint."""
+        payload = {
+            "endpoint": endpoint_id,
+            "mode": "manual",
+            "option": "custom",
+        }
+        data = await self._async_post("/api/endpoints/setMode", payload)
+        return data is not None
 
-        if data is not None:
-            return True
+    async def _async_login(self) -> None:
+        """Log in to the Cosa service and obtain an authentication token.
 
-        return False
-
-    async def async_enable_custom_mode(self, endpointId: str) -> bool:
-        """Enable the custom mode for the specified endpoint."""
-        payload = {"endpoint": endpointId, "mode": "manual", "option": "custom"}
-
-        data = await self.__async_post("/api/endpoints/setMode", payload)
-
-        if data is not None:
-            return True
-
-        return False
-
-    # region Login
-
-    async def __async_login(self) -> bool:
-        """Log in to the Cosa service and obtain an authentication token."""
-        payload = {"email": self.__username, "password": self.__password}
-
-        data = await self.__async_post_without_auth("/api/users/login", payload)
-
-        if data is not None and "authToken" in data:
-            self.__authToken = data["authToken"]
-            return True
-
-        self.__authToken = None
-        return False
-
-    def __has_auth(self):
-        """Check if the API client has an authentication token."""
-        return self.__authToken is not None
-
-    def __is_login_timed_out(self) -> bool:
-        """Check if the login has timed out."""
-        if (
-            self.__lastSuccessfulCall is None
-            or datetime.now(UTC) - self.__lastSuccessfulCall
-            > self.__LOGIN_TIMEOUT_DELTA
-        ):
-            return True
-
-        return False
-
-    # endregion
-
-    # region Private Call Implementations
-
-    async def __async_post(
-        self, endpoint: str, payload: dict, allowRetry: bool = True
-    ) -> dict | None:
-        if not self.__has_auth() and not await self.__async_login():
-            return None
-
-        return await self.__async_post_without_auth(endpoint, payload, allowRetry)
-
-    async def __async_post_without_auth(
-        self, endpoint: str, payload: dict, allowRetry: bool = True
-    ) -> dict | None:
-        payload = json.dumps(payload)
-        headers = self.__getHeaders()
-        url = f"https://{self.__apiUri}{endpoint}"
-
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(url, data=payload, headers=headers) as res:
-                    return await self.__async_get_response_if_success(res)
-            except (aiohttp.ClientError, json.JSONDecodeError):
-                if allowRetry:
-                    return await self.__async_post_without_auth(
-                        endpoint, payload, False
-                    )
-                return None
-
-    async def __async_get(self, endpoint: str, allowRetry: bool = True) -> dict | None:
-        if not self.__has_auth() and not await self.__async_login():
-            return None
-
-        return self.__async_get_without_auth(endpoint, allowRetry)
-
-    async def __async_get_without_auth(
-        self, endpoint: str, allowRetry: bool = True
-    ) -> dict | None:
-        headers = self.__getHeaders()
-        url = f"https://{self.__apiUri}{endpoint}"
-
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(url, headers=headers) as res:
-                    return await self.__async_get_response_if_success(res)
-            except (aiohttp.ClientError, json.JSONDecodeError):
-                if allowRetry:
-                    return await self.__async_get_without_auth(endpoint, False)
-                return None
-
-    def __getHeaders(self):
-        """Get the headers for the API request."""
+        Raises CosaAuthError on invalid credentials.
+        Raises CosaConnectionError on network issues.
+        """
+        payload = {"email": self._username, "password": self._password}
+        url = f"https://{API_HOST}/api/users/login"
         headers = {"Content-Type": "application/json"}
+        try:
+            async with self._session.post(url, json=payload, headers=headers) as res:
+                if res.status != 200:
+                    raise CosaAuthError(f"Login failed with status {res.status}")
+                data = await res.json()
+        except aiohttp.ClientError as err:
+            raise CosaConnectionError(f"Connection error during login: {err}") from err
 
-        if self.__has_auth():
-            headers["authToken"] = self.__authToken
+        if not isinstance(data, dict) or data.get("ok") != 1 or "authToken" not in data:
+            raise CosaAuthError("Invalid credentials")
 
+        self._auth_token = data["authToken"]
+        self._last_successful_call = datetime.now(UTC)
+
+    def _is_login_timed_out(self) -> bool:
+        """Check if the login has timed out."""
+        return (
+            self._last_successful_call is None
+            or datetime.now(UTC) - self._last_successful_call > LOGIN_TIMEOUT
+        )
+
+    async def _async_ensure_logged_in(self) -> None:
+        """Ensure we have a valid auth token."""
+        if self._is_login_timed_out():
+            await self._async_login()
+
+    async def _async_post(self, endpoint: str, payload: dict) -> dict | None:
+        """Make an authenticated POST request."""
+        await self._async_ensure_logged_in()
+        headers = self._get_headers()
+        url = f"https://{API_HOST}{endpoint}"
+        try:
+            async with self._session.post(url, json=payload, headers=headers) as res:
+                return await self._async_parse_response(res)
+        except aiohttp.ClientError:
+            _LOGGER.debug("POST request to %s failed", endpoint)
+            return None
+
+    async def _async_get(self, endpoint: str) -> dict | None:
+        """Make an authenticated GET request."""
+        await self._async_ensure_logged_in()
+        headers = self._get_headers()
+        url = f"https://{API_HOST}{endpoint}"
+        try:
+            async with self._session.get(url, headers=headers) as res:
+                return await self._async_parse_response(res)
+        except aiohttp.ClientError:
+            _LOGGER.debug("GET request to %s failed", endpoint)
+            return None
+
+    def _get_headers(self) -> dict[str, str]:
+        """Get the headers for an API request."""
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        if self._auth_token is not None:
+            headers["authToken"] = self._auth_token
         return headers
 
-    async def __async_get_response_if_success(
+    async def _async_parse_response(
         self, response: aiohttp.ClientResponse
     ) -> dict | None:
+        """Parse and validate an API response."""
         if response.status != 200:
             return None
-
         data = await response.json()
-
-        if "ok" in data and data["ok"] == 1:
-            self.__lastSuccessfulCall = datetime.now(UTC)
+        if isinstance(data, dict) and data.get("ok") == 1:
+            self._last_successful_call = datetime.now(UTC)
             return data
-
         return None
-
-
-# endregion

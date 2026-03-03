@@ -1,41 +1,53 @@
 rules:
   # Bronze
-  action-setup: todo
-  appropriate-polling: todo
-  brands: todo
-  common-modules: todo
-  config-flow-test-coverage: todo
-  config-flow: todo
-  dependency-transparency: todo
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
-  entity-event-setup: todo
-  entity-unique-id: todo
-  has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
+  entity-unavailable: done
+  integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: Cloud-based service, no local discovery.
+  discovery:
+    status: exempt
+    comment: Cloud-based service, no local discovery.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -44,17 +56,31 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-category:
+    status: exempt
+    comment: Single climate entity does not need categorization.
+  entity-device-class:
+    status: exempt
+    comment: Climate entities do not have device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Only one entity per device, no noisy entities to disable.
+  entity-translations:
+    status: exempt
+    comment: Entity uses device name via has_entity_name with name=None.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Climate entities use default platform icons.
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: No repair issues needed at this time.
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency:
+    status: exempt
+    comment: No external PyPI dependencies.
+  inject-websession: done
   strict-typing: todo

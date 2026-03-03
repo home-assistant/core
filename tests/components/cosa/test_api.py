@@ -1,157 +1,149 @@
-"""Test the Api."""
+"""Test the Cosa API client."""
 
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 
-from homeassistant.components.cosa.api import Api
+from homeassistant.components.cosa.api import (
+    CosaApi,
+    CosaAuthError,
+    CosaConnectionError,
+)
 
 
 @pytest.fixture
-def api():
-    """Fixture for initializing the Api."""
-    return Api("test-username", "test-password")
+def mock_session() -> MagicMock:
+    """Return a mocked aiohttp.ClientSession."""
+    return MagicMock(spec=aiohttp.ClientSession)
 
 
-def test_api_initialization(api) -> None:
-    """Test the initialization of the Api."""
-    assert api._Api__username == "test-username"
-    assert api._Api__password == "test-password"
-    assert api._Api__authToken is None
+@pytest.fixture
+def api(mock_session: MagicMock) -> CosaApi:
+    """Return a CosaApi instance with mocked session."""
+    return CosaApi("test-user", "test-pass", mock_session)
 
 
-@pytest.mark.asyncio
-async def test__async_login_success(api) -> None:
-    """Test successful login."""
-    with patch.object(
-        api,
-        "_Api__async_post_without_auth",
-        new=AsyncMock(return_value={"authToken": "test-token", "ok": 1}),
+async def test_check_connection_success(api: CosaApi) -> None:
+    """Test successful connection check."""
+    with patch.object(api, "_async_login", new=AsyncMock(return_value=None)):
+        assert await api.async_check_connection() is True
+
+
+async def test_check_connection_auth_failure(api: CosaApi) -> None:
+    """Test connection check with invalid credentials."""
+    with (
+        patch.object(
+            api,
+            "_async_login",
+            new=AsyncMock(side_effect=CosaAuthError("Invalid credentials")),
+        ),
+        pytest.raises(CosaAuthError),
     ):
-        assert await api._Api__async_login() is True
-        assert api._Api__authToken == "test-token"
+        await api.async_check_connection()
 
 
-@pytest.mark.asyncio
-async def test__async_login_failure(api) -> None:
-    """Test failed login."""
-    with patch.object(
-        api,
-        "_Api__async_post_without_auth",
-        new=AsyncMock(return_value={"ok": 0}),
+async def test_check_connection_network_failure(api: CosaApi) -> None:
+    """Test connection check with network failure."""
+    with (
+        patch.object(
+            api,
+            "_async_login",
+            new=AsyncMock(side_effect=CosaConnectionError("Connection refused")),
+        ),
+        pytest.raises(CosaConnectionError),
     ):
-        assert await api._Api__async_login() is False
-        assert api._Api__authToken is None
+        await api.async_check_connection()
 
 
-@pytest.mark.asyncio
-async def test_async_connection_status(api) -> None:
-    """Test the async connection status."""
-    with patch.object(api, "_Api__async_login", new=AsyncMock(return_value=True)):
-        assert await api.async_connection_status() is True
-
-    with patch.object(api, "_Api__async_login", new=AsyncMock(return_value=False)):
-        assert await api.async_connection_status() is False
-
-
-@pytest.mark.asyncio
-async def test_async_get_endpoints_success(api) -> None:
+async def test_get_endpoints_success(api: CosaApi) -> None:
     """Test successful retrieval of endpoints."""
     with patch.object(
         api,
-        "_Api__async_get",
-        new=AsyncMock(return_value={"endpoints": ["endpoint1", "endpoint2"]}),
+        "_async_get",
+        new=AsyncMock(return_value={"endpoints": [{"id": "ep1"}, {"id": "ep2"}]}),
     ):
         endpoints = await api.async_get_endpoints()
-        assert endpoints == ["endpoint1", "endpoint2"]
+        assert endpoints == [{"id": "ep1"}, {"id": "ep2"}]
 
 
-@pytest.mark.asyncio
-async def test_async_get_endpoints_failure(api) -> None:
-    """Test failed retrieval of endpoints."""
-    with patch.object(api, "_Api__async_get", new=AsyncMock(return_value=None)):
+async def test_get_endpoints_empty(api: CosaApi) -> None:
+    """Test retrieval of endpoints when none exist."""
+    with patch.object(api, "_async_get", new=AsyncMock(return_value=None)):
         endpoints = await api.async_get_endpoints()
-        assert endpoints is None
+        assert endpoints == []
 
 
-@pytest.mark.asyncio
-async def test_async_set_target_temperatures_success(api) -> None:
+async def test_get_endpoint_success(api: CosaApi) -> None:
+    """Test successful retrieval of a single endpoint."""
+    endpoint_data = {"id": "ep1", "mode": "manual", "option": "custom"}
+    with patch.object(
+        api,
+        "_async_post",
+        new=AsyncMock(return_value={"endpoint": endpoint_data}),
+    ):
+        result = await api.async_get_endpoint("ep1")
+        assert result == endpoint_data
+
+
+async def test_get_endpoint_failure(api: CosaApi) -> None:
+    """Test failed retrieval of a single endpoint."""
+    with patch.object(api, "_async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_get_endpoint("ep1")
+        assert result is None
+
+
+async def test_set_target_temperatures_success(api: CosaApi) -> None:
     """Test successful setting of target temperatures."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
-        result = await api.async_set_target_temperatures("endpoint1", 20, 18, 16, 22)
+    with patch.object(api, "_async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_set_target_temperatures("ep1", 22, 18, 19, 25)
         assert result is True
 
 
-@pytest.mark.asyncio
-async def test_async_set_target_temperatures_failure(api) -> None:
+async def test_set_target_temperatures_failure(api: CosaApi) -> None:
     """Test failed setting of target temperatures."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
-        result = await api.async_set_target_temperatures("endpoint1", 20, 18, 16, 22)
+    with patch.object(api, "_async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_set_target_temperatures("ep1", 22, 18, 19, 25)
         assert result is False
 
 
-@pytest.mark.asyncio
-async def test_async_disable_success(api) -> None:
+async def test_disable_success(api: CosaApi) -> None:
     """Test successful disabling of an endpoint."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
-        result = await api.async_disable("endpoint1")
+    with patch.object(api, "_async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_disable("ep1")
         assert result is True
 
 
-@pytest.mark.asyncio
-async def test_async_disable_failure(api) -> None:
+async def test_disable_failure(api: CosaApi) -> None:
     """Test failed disabling of an endpoint."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
-        result = await api.async_disable("endpoint1")
+    with patch.object(api, "_async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_disable("ep1")
         assert result is False
 
 
-@pytest.mark.asyncio
-async def test_async_enable_schedule_success(api) -> None:
+async def test_enable_schedule_success(api: CosaApi) -> None:
     """Test successful enabling of schedule mode."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
-        result = await api.async_enable_schedule("endpoint1")
+    with patch.object(api, "_async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_enable_schedule("ep1")
         assert result is True
 
 
-@pytest.mark.asyncio
-async def test_async_enable_schedule_failure(api) -> None:
+async def test_enable_schedule_failure(api: CosaApi) -> None:
     """Test failed enabling of schedule mode."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
-        result = await api.async_enable_schedule("endpoint1")
+    with patch.object(api, "_async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_enable_schedule("ep1")
         assert result is False
 
 
-@pytest.mark.asyncio
-async def test_async_enable_custom_mode_success(api) -> None:
+async def test_enable_custom_mode_success(api: CosaApi) -> None:
     """Test successful enabling of custom mode."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
-        result = await api.async_enable_custom_mode("endpoint1")
+    with patch.object(api, "_async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_enable_custom_mode("ep1")
         assert result is True
 
 
-@pytest.mark.asyncio
-async def test_async_enable_custom_mode_failure(api) -> None:
+async def test_enable_custom_mode_failure(api: CosaApi) -> None:
     """Test failed enabling of custom mode."""
-    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
-        result = await api.async_enable_custom_mode("endpoint1")
+    with patch.object(api, "_async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_enable_custom_mode("ep1")
         assert result is False
-
-
-async def test_is_login_timed_out(api) -> None:
-    """Test the __is_login_timed_out method."""
-
-    assert (
-        api._Api__is_login_timed_out() is True
-    ), "Test when __lastSuccessfulCall is None"
-
-    api._Api__lastSuccessfulCall = datetime.now(UTC)
-    assert (
-        api._Api__is_login_timed_out() is False
-    ), "Test when __lastSuccessfulCall is within the timeout delta"
-
-    api._Api__lastSuccessfulCall = datetime.now(UTC) - timedelta(minutes=100)
-    assert (
-        api._Api__is_login_timed_out() is True
-    ), "Test when __lastSuccessfulCall is outside the timeout delta"

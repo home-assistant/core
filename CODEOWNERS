@@ -321,6 +321,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
 /homeassistant/components/cosa/ @onexey
+/tests/components/cosa/ @onexey
 /homeassistant/components/counter/ @fabaff
 /tests/components/counter/ @fabaff
 /homeassistant/components/cover/ @home-assistant/core
