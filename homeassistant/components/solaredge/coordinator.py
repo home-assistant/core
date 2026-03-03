@@ -350,11 +350,10 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
 
         try:
             data = await self.api.get_storage_data(self.site_id, midnight, now)
+            storage_data = data["storageData"]
+            batteries = storage_data["batteries"]
         except KeyError as ex:
             raise UpdateFailed("Missing storage data, skipping update") from ex
-
-        storage_data = data.get("storageData", {})
-        batteries = storage_data.get("batteries", [])
 
         self.data = {}
         self.attributes = {}
