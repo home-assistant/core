@@ -27,6 +27,7 @@ from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
@@ -271,3 +272,68 @@ async def test_dynamic_device_discovery(
     # Runtime data should have both coordinators
     assert "new_device_id" in mock_config_entry.runtime_data.coordinators
     assert "test_device_id" in mock_config_entry.runtime_data.coordinators
+
+
+async def test_stale_device_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_liebherr_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test stale devices are removed when no longer returned by the API."""
+    mock_config_entry.add_to_hass(hass)
+
+    all_platforms = [
+        Platform.SENSOR,
+        Platform.NUMBER,
+        Platform.SWITCH,
+        Platform.SELECT,
+    ]
+
+    # Start with two devices
+    mock_liebherr_client.get_devices.return_value = [MOCK_DEVICE, NEW_DEVICE]
+    mock_liebherr_client.get_device_state.side_effect = lambda device_id, **kw: (
+        copy.deepcopy(
+            NEW_DEVICE_STATE if device_id == "new_device_id" else MOCK_DEVICE_STATE
+        )
+    )
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", all_platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Both devices should exist
+    assert "test_device_id" in mock_config_entry.runtime_data.coordinators
+    assert "new_device_id" in mock_config_entry.runtime_data.coordinators
+    assert hass.states.get("sensor.test_fridge_top_zone") is not None
+    assert hass.states.get("sensor.new_fridge") is not None
+
+    # Verify both devices are in the device registry
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    new_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "new_device_id")}
+    )
+    assert new_device_entry
+
+    # Simulate the new device being removed from the account
+    mock_liebherr_client.get_devices.return_value = [MOCK_DEVICE]
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        MOCK_DEVICE_STATE
+    )
+
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Stale device should be removed from coordinators
+    assert "test_device_id" in mock_config_entry.runtime_data.coordinators
+    assert "new_device_id" not in mock_config_entry.runtime_data.coordinators
+
+    # Stale device should be removed from device registry
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
+
+    # Original device should still work
+    assert hass.states.get("sensor.test_fridge_top_zone") is not None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
