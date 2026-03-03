@@ -4,9 +4,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.components.usb import (
     USBDevice,
+    get_serial_by_id,
     human_readable_device_name,
     scan_serial_ports,
     usb_service_info_from_device,
@@ -63,7 +63,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle usb discovery."""
         # normalize device path
         discovery_info.device = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
+            get_serial_by_id, discovery_info.device
         )
         # set unique id
         unique_id = usb_unique_id_from_service_info(discovery_info)

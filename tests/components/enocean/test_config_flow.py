@@ -215,11 +215,15 @@ async def test_usb_discovery(
 ) -> None:
     """Test usb discovery success path."""
     # test discovery step
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USB},
-        data=MOCK_USB_SERVICE_INFO,
-    )
+    with patch(
+        f"{MODULE}.config_flow.get_serial_by_id",
+        side_effect=lambda x: x,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=MOCK_USB_SERVICE_INFO,
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
@@ -229,10 +233,6 @@ async def test_usb_discovery(
     with (
         patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
         patch(f"{MODULE}.async_setup_entry", AsyncMock(return_value=True)),
-        patch(
-            "homeassistant.components.usb.get_serial_by_id",
-            side_effect=lambda x: x,
-        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
