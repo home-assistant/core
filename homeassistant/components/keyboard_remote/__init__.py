@@ -270,9 +270,13 @@ class KeyboardRemoteManager:
         await handler.async_device_stop_monitoring()
 
     def _get_handler_for_device(
-        self, descriptor: str
+        self, descriptor: str, handlers: list[DeviceHandler]
     ) -> tuple[InputDevice | None, DeviceHandler | None]:
-        """Find the matching handler for a device descriptor (path)."""
+        """Find the matching handler for a device descriptor (path).
+
+        The handlers list must be a snapshot taken on the event loop thread
+        to avoid race conditions with register/unregister.
+        """
         from evdev import InputDevice  # noqa: PLC0415
 
         # Devices are often added and then correct permissions set after
@@ -281,21 +285,23 @@ class KeyboardRemoteManager:
         except OSError:
             return (None, None)
 
-        for handler in self._handlers.values():
+        for handler in handlers:
             if handler.matches_device(descriptor, dev):
                 return (dev, handler)
 
-        return (dev, None)
+        dev.close()
+        return (None, None)
 
     async def _async_scan_initial_devices(self) -> None:
         """Scan all current /dev/input/ devices and start matching handlers."""
         from evdev import list_devices  # noqa: PLC0415
 
         start_tasks: set[asyncio.Task] = set()
+        handlers = list(self._handlers.values())
         descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
         for descriptor in descriptors:
             dev, handler = await self.hass.async_add_executor_job(
-                self._get_handler_for_device, descriptor
+                self._get_handler_for_device, descriptor, handlers
             )
 
             if handler is None or dev is None:
@@ -313,12 +319,13 @@ class KeyboardRemoteManager:
         """Check if a newly registered handler's device is currently connected."""
         from evdev import list_devices  # noqa: PLC0415
 
+        handlers = list(self._handlers.values())
         descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
         for descriptor in descriptors:
             if descriptor in self._active_handlers_by_descriptor:
                 continue
             dev, matched = await self.hass.async_add_executor_job(
-                self._get_handler_for_device, descriptor
+                self._get_handler_for_device, descriptor, handlers
             )
             if matched is handler and dev is not None:
                 self._active_handlers_by_descriptor[descriptor] = handler
@@ -350,8 +357,9 @@ class KeyboardRemoteManager:
                     (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
                 ) and not descriptor_active:
                     _LOGGER.debug("checking new: %s", descriptor)
+                    handlers = list(self._handlers.values())
                     result = await self.hass.async_add_executor_job(
-                        self._get_handler_for_device, descriptor
+                        self._get_handler_for_device, descriptor, handlers
                     )
                     if result[0] is None or result[1] is None:
                         continue
@@ -475,7 +483,7 @@ class DeviceHandler:
             await self.hass.async_add_executor_job(dev.ungrab)
         # Remove reader and close device before cancelling the task to avoid
         # triggering unhandled exceptions inside evdev coroutines
-        asyncio.get_event_loop().remove_reader(dev.fileno())
+        self.hass.loop.remove_reader(dev.fileno())
         dev.close()
         if not self._monitor_task.done():
             self._monitor_task.cancel()

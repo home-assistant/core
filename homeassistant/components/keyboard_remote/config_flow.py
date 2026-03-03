@@ -45,7 +45,10 @@ def _get_device_name(device_path: str) -> str | None:
         dev = InputDevice(os.path.realpath(device_path))
     except OSError:
         return None
-    return dev.name
+    try:
+        return dev.name
+    finally:
+        dev.close()
 
 
 def _scan_input_devices_sync() -> list[selector.SelectOptionDict]:
@@ -65,7 +68,10 @@ def _scan_input_devices_sync() -> list[selector.SelectOptionDict]:
             dev = InputDevice(real_path)
         except OSError:
             continue
-        label = f"{dev.name} ({entry.name})"
+        try:
+            label = f"{dev.name} ({entry.name})"
+        finally:
+            dev.close()
         options.append(selector.SelectOptionDict(value=entry.path, label=label))
 
     return options
@@ -103,9 +109,13 @@ def _resolve_yaml_device(
         real_path = os.path.realpath(descriptor)
         try:
             dev = InputDevice(real_path)
-            dev_name = dev.name
         except OSError:
             dev_name = None
+        else:
+            try:
+                dev_name = dev.name
+            finally:
+                dev.close()
 
         if real_path in by_id_map:
             by_id_path = by_id_map[real_path]
@@ -119,7 +129,11 @@ def _resolve_yaml_device(
                 dev = InputDevice(dev_path)
             except OSError:
                 continue
-            if dev.name == name:
+            try:
+                dev_name = dev.name
+            finally:
+                dev.close()
+            if dev_name == name:
                 real_path = os.path.realpath(dev_path)
                 if real_path in by_id_map:
                     by_id_path = by_id_map[real_path]
@@ -133,6 +147,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Keyboard Remote."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback

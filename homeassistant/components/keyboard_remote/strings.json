@@ -24,11 +24,11 @@
   },
   "issues": {
     "deprecated_yaml_import_issue_cannot_identify_device": {
-      "description": "Configuring Keyboard Remote using YAML is being removed but there was an error importing one of your device configurations: the device could not be identified.\n\nEnsure the device is connected, correct your YAML configuration, and restart Home Assistant to try again. Or remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
+      "description": "Configuring Keyboard Remote using YAML is being removed but there was an error importing one of your device configurations: the device could not be identified.\n\nTo fix this issue:\n\n1. Ensure the device is connected\n2. Correct your YAML configuration\n3. Restart Home Assistant to try the import again\n\nAlternatively, remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
       "title": "Keyboard Remote YAML import failed"
     },
     "deprecated_yaml_import_issue_unknown": {
-      "description": "Configuring Keyboard Remote using YAML is being removed but an unknown error occurred while importing your configuration.\n\nPlease correct your YAML configuration and restart Home Assistant to try again, or remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
+      "description": "Configuring Keyboard Remote using YAML is being removed but an unknown error occurred while importing your configuration.\n\nTo fix this issue:\n\n1. Review and correct your YAML configuration\n2. Restart Home Assistant to try the import again\n\nAlternatively, remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
       "title": "Keyboard Remote YAML import failed"
     }
   },
