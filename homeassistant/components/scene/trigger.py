@@ -14,7 +14,7 @@ from . import DOMAIN
 class SceneActivatedTrigger(EntityTriggerBase):
     """Trigger for scene entity activations."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
