@@ -7338,6 +7338,12 @@
         }
       }
     },
+    "ubisys": {
+      "name": "Ubisys",
+      "iot_standards": [
+        "zigbee"
+      ]
+    },
     "ubiwizz": {
       "name": "Ubiwizz",
       "integration_type": "virtual",
