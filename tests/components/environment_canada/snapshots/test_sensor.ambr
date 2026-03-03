@@ -5,7 +5,6 @@
       dict({
         'alert_code': 'frost_advisory',
         'area': 'Ottawa (Kanata - Orléans)',
-        'category': 'advisories',
         'color': 'yellow',
         'confidence': 'High',
         'expiry': '2022-10-04T08:00:00+00:00',
@@ -14,6 +13,7 @@
         'status': 'active',
         'text': 'Frost advisory in effect. Near zero temperatures expected.',
         'title': 'Frost Advisory',
+        'type': 'advisory',
         'url': 'https://weather.gc.ca/warnings/report_e.html?on61',
       }),
     ]),

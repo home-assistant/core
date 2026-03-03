@@ -215,16 +215,22 @@ AQHI_SENSOR = ECSensorEntityDescription(
     value_fn=_get_aqhi_value,
 )
 
-ALERT_CATEGORIES = ("advisories", "endings", "statements", "warnings", "watches")
+ALERT_TYPES: dict[str, str] = {
+    "advisories": "advisory",
+    "endings": "ending",
+    "statements": "statement",
+    "warnings": "warning",
+    "watches": "watch",
+}
 
 
 def _get_all_alerts(data: ECWeather) -> list[dict[str, Any]]:
-    """Collect all alerts from all categories into a flat list."""
+    """Collect all alerts from all alert types into a flat list."""
     all_alerts: list[dict[str, Any]] = []
-    for category in ALERT_CATEGORIES:
+    for key, alert_type in ALERT_TYPES.items():
         all_alerts.extend(
-            {**alert, "category": category}
-            for alert in data.alerts.get(category, {}).get("value") or []
+            {**alert, "type": alert_type}
+            for alert in data.alerts.get(key, {}).get("value") or []
         )
     return all_alerts
 
@@ -324,7 +330,7 @@ class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
                 "confidence": alert.get("confidence"),
                 "impact": alert.get("impact"),
                 "alert_code": alert.get("alert_code"),
-                "category": alert.get("category"),
+                "type": alert.get("type"),
             }
             alerts.append({k: v for k, v in alert_attrs.items() if v is not None})
 

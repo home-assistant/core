@@ -92,7 +92,7 @@ async def test_alert_sensor_xml_fallback_fields(
     assert alert["color"] == "red"
     assert alert["expiry"] == "20250226060000"
     assert alert["url"] == "https://weather.gc.ca/warnings/report_e.html?on61"
-    assert alert["category"] == "warnings"
+    assert alert["type"] == "warning"
     # WFS-only fields should be absent (not just None)
     assert "text" not in alert
     assert "area" not in alert
