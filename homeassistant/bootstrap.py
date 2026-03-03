@@ -96,7 +96,6 @@ from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .loader import Integration
 from .setup import (
-    DomainSetupBreakdown,
     # _setup_started is marked as protected to make it clear
     # that it is not part of the public API and should not be used
     # by integrations. It is only used for internal tracking of
@@ -479,6 +478,8 @@ async def async_from_config_dict(
     def _log_started(_: core.HomeAssistant) -> None:
         if not _LOGGER.isEnabledFor(logging.DEBUG):
             return
+        if started_state["logged"]:  # make sure this only runs once
+            return
         started_state["logged"] = True
         _LOGGER.debug(
             "Home Assistant started in %.2fs",
@@ -832,28 +833,6 @@ async def _async_resolve_domains_and_preload(
     )
 
     return integrations_to_setup, all_integrations_to_setup
-
-
-def _format_top_domain_breakdown(
-    breakdown: dict[str, DomainSetupBreakdown],
-    top_n: int = _DIAG_TOP_N_DOMAINS,
-) -> str:
-    """Render top-N domains by elapsed total setup time.
-
-    Format:
-        domain=TOTALs (setup=SETUPs wait=WAITs)
-    """
-    if not breakdown:
-        return "{}"
-
-    # Sort by total elapsed time (largest first)
-    items = sorted(breakdown.items(), key=lambda kv: kv[1].total, reverse=True)
-    top = items[:top_n]
-
-    return ", ".join(
-        f"{domain}={b.total:.2f}s (setup={b.setup:.2f}s wait={b.wait:.2f}s)"
-        for domain, b in top
-    )
 
 
 async def _async_set_up_integrations(

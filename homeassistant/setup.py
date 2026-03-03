@@ -7,7 +7,6 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
-from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
 import logging.handlers
@@ -687,26 +686,6 @@ class SetupPhases(StrEnum):
     """Wait time for the platforms to import."""
     WAIT_IMPORT_PACKAGES = "wait_import_packages"
     """Wait time for the packages to import."""
-
-
-_WAIT_PHASES: set[SetupPhases] = {
-    SetupPhases.WAIT_BASE_PLATFORM_SETUP,
-    SetupPhases.WAIT_IMPORT_PLATFORMS,
-    SetupPhases.WAIT_IMPORT_PACKAGES,
-}
-
-
-@dataclass(frozen=True, slots=True)
-class DomainSetupBreakdown:
-    """Elapsed setup time breakdown for a domain."""
-
-    setup: float
-    wait: float
-
-    @property
-    def total(self) -> float:
-        """Return the total per-domain setup time."""
-        return self.setup + self.wait
 
 
 @singleton.singleton(_DATA_SETUP_STARTED)
