@@ -85,7 +85,12 @@ async def test_http_handle_intent(
         },
         "language": hass.config.language,
         "response_type": intent.IntentResponseType.ACTION_DONE.value,
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {
+            "targets": [],
+            "success": [],
+            "failed": [],
+            "query": {"matched": [], "unmatched": []},
+        },
     }
 
 
@@ -149,7 +154,12 @@ async def test_http_language_device_satellite_id(
         },
         "language": language,
         "response_type": "action_done",
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {
+            "targets": [],
+            "success": [],
+            "failed": [],
+            "query": {"matched": [], "unmatched": []},
+        },
     }
 
 
@@ -160,6 +170,7 @@ async def test_http_handle_intent_match_failure(
 
     assert await async_setup_component(hass, "intent", {})
 
+    # Duplicate names
     hass.states.async_set(
         "cover.garage_door_1", "closed", {ATTR_FRIENDLY_NAME: "Garage Door"}
     )
@@ -176,7 +187,12 @@ async def test_http_handle_intent_match_failure(
     assert resp.status == 200
     data = await resp.json()
 
-    assert "DUPLICATE_NAME" in data["speech"]["plain"]["speech"]
+    assert data["response_type"] == intent.IntentResponseType.ERROR.value
+    assert data["data"]["code"] == intent.IntentResponseErrorCode.NO_VALID_TARGETS.value
+    assert (
+        data["data"]["match_error"]["no_match_reason"]
+        == intent.MatchFailedReason.DUPLICATE_NAME.name
+    )
 
 
 async def test_http_assistant(
@@ -221,7 +237,7 @@ async def test_http_assistant(
     assert resp.status == 200
     data = await resp.json()
     assert data["response_type"] == intent.IntentResponseType.ERROR.value
-    assert data["data"]["code"] == intent.IntentResponseErrorCode.FAILED_TO_HANDLE.value
+    assert data["data"]["code"] == intent.IntentResponseErrorCode.NO_VALID_TARGETS.value
 
     # No assistant (exposure is irrelevant)
     resp = await client.post(
