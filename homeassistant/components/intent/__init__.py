@@ -627,10 +627,10 @@ class IntentHandleView(http.HomeAssistantView):
             {
                 vol.Required("name"): cv.string,
                 vol.Optional("data"): vol.Schema({cv.string: object}),
-                vol.Optional("language"): str,
-                vol.Optional("assistant"): vol.Any(str, None),
-                vol.Optional("device_id"): vol.Any(str, None),
-                vol.Optional("satellite_id"): vol.Any(str, None),
+                vol.Optional("language"): cv.string,
+                vol.Optional("assistant"): vol.Any(cv.string, None),
+                vol.Optional("device_id"): vol.Any(cv.string, None),
+                vol.Optional("satellite_id"): vol.Any(cv.string, None),
             }
         )
     )
