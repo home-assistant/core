@@ -19,7 +19,7 @@
         "default": "mdi:counter"
       },
       "total_swing_time": {
-        "default": "mdi:counter"
+        "default": "mdi:history"
       }
     },
     "switch": {
