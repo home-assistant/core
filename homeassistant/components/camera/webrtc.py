@@ -346,6 +346,22 @@ def async_register_ws(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_candidate)
 
 
+@callback
+def async_get_supported_provider_for_stream_source(
+    hass: HomeAssistant, stream_source: str
+) -> CameraWebRTCProvider | None:
+    """Return the first supported provider for a stream source."""
+    providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
+    if not providers:
+        return None
+
+    for provider in providers:
+        if provider.async_is_supported(stream_source):
+            return provider
+
+    return None
+
+
 async def async_get_supported_provider(
     hass: HomeAssistant, camera: Camera
 ) -> CameraWebRTCProvider | None:
