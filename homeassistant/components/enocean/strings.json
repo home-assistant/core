@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "invalid_dongle_path": "Invalid dongle path"
+      "invalid_dongle_path": "Invalid dongle path",
+      "unknown_device": "Selected device was not found"
     },
     "error": {
       "invalid_dongle_path": "No valid dongle found for this path"

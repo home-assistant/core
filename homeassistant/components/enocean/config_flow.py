@@ -134,7 +134,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if selected_device is None:
-                raise ValueError("Selected device not found in detected ports")
+                return self.async_abort(reason="unknown_device")
             # set unique id
             unique_id = usb_unique_id_from_service_info(
                 usb_service_info_from_device(selected_device)
