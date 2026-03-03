@@ -6,9 +6,9 @@ import json
 from pathlib import Path
 
 from .const import INTEGRATIONS_DIR
-from .develop import InvalidSubstitutionKey, substitute_reference
+from .error import MissingReference
 from .upload import generate_upload_data
-from .util import extract_placeholders, flatten_translations
+from .util import extract_placeholders, flatten_translations, substitute_reference
 
 
 def validate_integration_placeholders(
@@ -45,7 +45,7 @@ def validate_integration_placeholders(
                     flattened_english[full_key], flattened_english
                 )
                 localized_value = substitute_reference(localized_value, localized_flat)
-            except InvalidSubstitutionKey as err:
+            except MissingReference as err:
                 errors.append(f"  [{locale}] {full_key} - {err}")
                 continue
 
