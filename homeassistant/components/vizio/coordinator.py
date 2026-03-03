@@ -174,7 +174,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=config_entry,
+            config_entry=None,
             name=DOMAIN,
             update_interval=timedelta(days=1),
         )
@@ -182,8 +182,9 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         self.fail_threshold = 10
         self.store = store
 
-    async def _async_setup(self) -> None:
-        """Refresh data for the first time when a config entry is setup."""
+    async def async_setup(self) -> None:
+        """Load initial data from storage and register shutdown."""
+        await self.async_register_shutdown()
         self.data = await self.store.async_load() or APPS
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
