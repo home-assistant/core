@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.humidifier import (
@@ -20,7 +26,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
@@ -136,10 +141,10 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device_manager: Manager,
         description: TuyaHumidifierEntityDescription,
         *,
-        current_humidity_wrapper: _RoundedIntegerWrapper | None = None,
-        mode_wrapper: DPCodeEnumWrapper | None = None,
-        switch_wrapper: DPCodeBooleanWrapper | None = None,
-        target_humidity_wrapper: _RoundedIntegerWrapper | None = None,
+        current_humidity_wrapper: DeviceWrapper[int] | None = None,
+        mode_wrapper: DeviceWrapper[str] | None = None,
+        switch_wrapper: DeviceWrapper[bool] | None = None,
+        target_humidity_wrapper: DeviceWrapper[int] | None = None,
     ) -> None:
         """Init Tuya (de)humidifier."""
         super().__init__(device, device_manager)
@@ -153,17 +158,13 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Determine humidity parameters
         if target_humidity_wrapper:
-            self._attr_min_humidity = round(
-                target_humidity_wrapper.type_information.min_scaled
-            )
-            self._attr_max_humidity = round(
-                target_humidity_wrapper.type_information.max_scaled
-            )
+            self._attr_min_humidity = round(target_humidity_wrapper.min_value)
+            self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 
         # Determine mode support and provided modes
         if mode_wrapper:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
-            self._attr_available_modes = mode_wrapper.type_information.range
+            self._attr_available_modes = mode_wrapper.options
 
     @property
     def is_on(self) -> bool | None:

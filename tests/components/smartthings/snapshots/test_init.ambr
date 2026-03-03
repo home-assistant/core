@@ -613,11 +613,11 @@
     }),
     'manufacturer': None,
     'model': None,
-    'model_id': None,
+    'model_id': 'NZ64B5046GK',
     'name': 'Induction Hob',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'B8C878DX900290H',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -947,19 +947,19 @@
     'identifiers': set({
       tuple(
         'smartthings',
-        '05accb39-2017-c98b-a5ab-04a81f4d3d9a',
+        '01b28624-5907-c8bc-0325-8ad23f03a637',
       ),
     }),
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'JETBOT_COMBO_9X00_24K',
+    'model': 'JETBOT_COMBOT_9X00_24K',
     'model_id': None,
-    'name': 'Robot vacuum',
+    'name': 'Robot Vacuum',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'sw_version': '20250123.105306',
+    'sw_version': '20260120.215157',
     'via_device_id': None,
   })
 # ---
@@ -2107,6 +2107,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'SKY40147',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[siemens_washer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '42a6aa8d-9bce-4f80-bc29-d9f8b8dc1af1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Siemens',
+    'model': 'WM14T6H6NL',
+    'model_id': None,
+    'name': 'Wasmachine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
     'via_device_id': None,
   })
 # ---

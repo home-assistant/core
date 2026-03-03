@@ -130,8 +130,16 @@ async def test_async_enable_logging(
     cleanup_log_files()
 
 
+@pytest.mark.parametrize(
+    ("extra_env", "log_file_count", "old_log_file_count"),
+    [({}, 0, 1), ({"HA_DUPLICATE_LOG_FILE": "1"}, 1, 0)],
+)
 async def test_async_enable_logging_supervisor(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    extra_env: dict[str, str],
+    log_file_count: int,
+    old_log_file_count: int,
 ) -> None:
     """Test to ensure the default log file is not created on Supervisor installations."""
 
@@ -141,14 +149,14 @@ async def test_async_enable_logging_supervisor(
     assert len(glob.glob(ARG_LOG_FILE)) == 0
 
     with (
-        patch.dict(os.environ, {"SUPERVISOR": "1"}),
+        patch.dict(os.environ, {"SUPERVISOR": "1", **extra_env}),
         patch(
             "homeassistant.bootstrap.async_activate_log_queue_handler"
         ) as mock_async_activate_log_queue_handler,
         patch("logging.getLogger"),
     ):
         await bootstrap.async_enable_logging(hass)
-        assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+        assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -162,9 +170,10 @@ async def test_async_enable_logging_supervisor(
         await hass.async_add_executor_job(write_log_file)
         assert len(glob.glob(CONFIG_LOG_FILE)) == 1
         assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 0
+
         await bootstrap.async_enable_logging(hass)
-        assert len(glob.glob(CONFIG_LOG_FILE)) == 0
-        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 1
+        assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
+        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == old_log_file_count
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -954,6 +963,46 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
     assert "recovery_mode" in hass.config.components
     assert "Starting in recovery mode" in caplog.text
     assert "Starting in safe mode" not in caplog.text
+
+
+@pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_storage_version_too_new_triggers_recovery_mode(
+    hass_storage: dict[str, Any],
+    mock_enable_logging: AsyncMock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a storage file with a newer major version triggers recovery mode."""
+    hass_storage["core.entity_registry"] = {
+        "version": 99,
+        "minor_version": 1,
+        "key": "core.entity_registry",
+        "data": {},
+    }
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=False,
+            log_rotate_days=10,
+            log_file="",
+            log_no_color=False,
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass is not None
+    assert hass.config.recovery_mode is True
+    assert "recovery_mode" in hass.config.components
+    assert (
+        "Storage file core.entity_registry was created"
+        " by a newer version of Home Assistant" in caplog.text
+    )
 
 
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])

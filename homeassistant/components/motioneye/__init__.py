@@ -56,7 +56,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -69,7 +68,6 @@ from .const import (
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
     CONF_WEBHOOK_SET_OVERWRITE,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_WEBHOOK_SET,
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
@@ -84,6 +82,7 @@ from .const import (
     WEB_HOOK_SENTINEL_KEY,
     WEB_HOOK_SENTINEL_VALUE,
 )
+from .coordinator import MotionEyeUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
@@ -308,20 +307,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    async def async_update_data() -> dict[str, Any] | None:
-        try:
-            return await client.async_get_cameras()
-        except MotionEyeClientError as exc:
-            raise UpdateFailed("Error communicating with API") from exc
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+    coordinator = MotionEyeUpdateCoordinator(hass, entry, client)
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_CLIENT: client,
         CONF_COORDINATOR: coordinator,
@@ -400,7 +386,7 @@ async def handle_webhook(
 
     try:
         data = await request.json()
-    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+    except json.decoder.JSONDecodeError, UnicodeDecodeError:
         return Response(
             text="Could not decode request",
             status=HTTPStatus.BAD_REQUEST,

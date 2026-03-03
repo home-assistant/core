@@ -1,5 +1,7 @@
 """BleBox sensor entities."""
 
+from datetime import datetime
+
 import blebox_uniapi.sensor
 
 from homeassistant.components.sensor import (
@@ -146,7 +148,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         return self._feature.native_value
 
     @property
-    def last_reset(self):
+    def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
         native_implementation = getattr(self._feature, "last_reset", None)
 

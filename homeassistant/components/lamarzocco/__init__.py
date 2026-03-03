@@ -33,7 +33,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
     LaMarzoccoBluetoothUpdateCoordinator,
     LaMarzoccoConfigEntry,
@@ -118,44 +118,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                 _LOGGER.info(
                     "Bluetooth device not found during lamarzocco setup, continuing with cloud only"
                 )
-    try:
-        settings = await cloud_client.get_thing_settings(serial)
-    except AuthFail as ex:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from ex
-    except (RequestNotSuccessful, TimeoutError) as ex:
-        _LOGGER.debug(ex, exc_info=True)
-        if not bluetooth_client:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN, translation_key="api_error"
-            ) from ex
-        _LOGGER.debug("Cloud failed, continuing with Bluetooth only", exc_info=True)
-    else:
-        gateway_version = version.parse(
-            settings.firmwares[FirmwareType.GATEWAY].build_version
-        )
 
-        if gateway_version < version.parse("v5.0.9"):
-            # incompatible gateway firmware, create an issue
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "unsupported_gateway_firmware",
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="unsupported_gateway_firmware",
-                translation_placeholders={"gateway_version": str(gateway_version)},
+    async def _get_thing_settings() -> None:
+        """Get thing settings from cloud to verify details and get BLE token."""
+        try:
+            settings = await cloud_client.get_thing_settings(serial)
+        except AuthFail as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
+        except (RequestNotSuccessful, TimeoutError) as ex:
+            _LOGGER.debug(ex, exc_info=True)
+            if not bluetooth_client:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN, translation_key="api_error"
+                ) from ex
+            _LOGGER.debug("Cloud failed, continuing with Bluetooth only", exc_info=True)
+        else:
+            gateway_version = version.parse(
+                settings.firmwares[FirmwareType.GATEWAY].build_version
             )
-        # Update BLE Token if exists
-        if settings.ble_auth_token:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    CONF_TOKEN: settings.ble_auth_token,
-                },
-            )
+
+            if gateway_version < version.parse("v5.0.9"):
+                # incompatible gateway firmware, create an issue
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "unsupported_gateway_firmware",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="unsupported_gateway_firmware",
+                    translation_placeholders={"gateway_version": str(gateway_version)},
+                )
+            # Update BLE Token if exists
+            if settings.ble_auth_token:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_TOKEN: settings.ble_auth_token,
+                    },
+                )
+
+    if not (local_mode := entry.options.get(CONF_OFFLINE_MODE, False)):
+        await _get_thing_settings()
 
     device = LaMarzoccoMachine(
         serial_number=entry.unique_id,
@@ -170,12 +176,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
-    await asyncio.gather(
-        coordinators.config_coordinator.async_config_entry_first_refresh(),
-        coordinators.settings_coordinator.async_config_entry_first_refresh(),
-        coordinators.schedule_coordinator.async_config_entry_first_refresh(),
-        coordinators.statistics_coordinator.async_config_entry_first_refresh(),
-    )
+    if not local_mode:
+        await asyncio.gather(
+            coordinators.config_coordinator.async_config_entry_first_refresh(),
+            coordinators.settings_coordinator.async_config_entry_first_refresh(),
+            coordinators.schedule_coordinator.async_config_entry_first_refresh(),
+            coordinators.statistics_coordinator.async_config_entry_first_refresh(),
+        )
+
+    if local_mode and not bluetooth_client:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="bluetooth_required_offline"
+        )
 
     # bt coordinator only if bluetooth client is available
     # and after the initial refresh of the config coordinator

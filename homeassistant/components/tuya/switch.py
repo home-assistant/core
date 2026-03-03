@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.switch import (
@@ -27,7 +29,6 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1027,7 +1028,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)
@@ -1039,6 +1040,20 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

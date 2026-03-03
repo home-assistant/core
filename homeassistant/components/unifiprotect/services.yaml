@@ -29,8 +29,6 @@ set_chime_paired_doorbells:
       selector:
         device:
           integration: unifiprotect
-          entity:
-            device_class: unifiprotect__chime_button
     doorbells:
       example: "binary_sensor.front_doorbell_doorbell"
       required: false
@@ -60,3 +58,17 @@ get_user_keyring_info:
       selector:
         device:
           integration: unifiprotect
+
+ptz_goto_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            domain: camera
+    preset:
+      required: true
+      selector:
+        text:

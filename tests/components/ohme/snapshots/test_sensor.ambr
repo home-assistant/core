@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge slots',
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,7 +53,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -90,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'Ohme Home Pro Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -123,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -164,7 +170,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -180,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -205,6 +214,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Ohme Home Pro Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -245,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -286,7 +297,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -302,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -324,6 +338,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Ohme Home Pro Vehicle battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -357,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

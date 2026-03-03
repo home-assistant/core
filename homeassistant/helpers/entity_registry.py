@@ -58,6 +58,7 @@ from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
 )
+from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
@@ -79,7 +80,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 19
+STORAGE_VERSION_MINOR = 20
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -204,6 +205,7 @@ class RegistryEntry:
     labels: set[str] = attr.ib(factory=set)
     modified_at: datetime = attr.ib(factory=utcnow)
     name: str | None = attr.ib(default=None)
+    object_id_base: str | None = attr.ib()
     options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
     # As set by integration
     original_device_class: str | None = attr.ib()
@@ -269,7 +271,7 @@ class RegistryEntry:
         try:
             dict_repr = self._as_display_dict
             json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -331,7 +333,7 @@ class RegistryEntry:
         try:
             dict_repr = self.as_partial_dict
             return json_bytes(dict_repr)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -366,6 +368,7 @@ class RegistryEntry:
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
                     "name": self.name,
+                    "object_id_base": self.object_id_base,
                     "options": self.options,
                     "original_device_class": self.original_device_class,
                     "original_icon": self.original_icon,
@@ -408,6 +411,70 @@ class RegistryEntry:
             attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
+
+
+@callback
+def _async_get_full_entity_name_generic(
+    hass: HomeAssistant,
+    *,
+    device_id: str | None,
+    fallback: str,
+    has_entity_name: bool,
+    name: str | None,
+    original_name: str | None,
+    overridden_name: str | None = None,
+) -> str:
+    """Get full name for an entity.
+
+    This includes the device name if appropriate.
+    Used for both full entity name and entity ID.
+    """
+    use_device = False
+    if name is None:
+        if overridden_name is not None:
+            name = overridden_name
+        else:
+            name = original_name
+            if has_entity_name:
+                use_device = True
+
+    device = (
+        dr.async_get(hass).async_get(device_id)
+        if use_device and device_id is not None
+        else None
+    )
+
+    if device is not None:
+        device_name = device.name_by_user or device.name
+        if not name:
+            name = device_name
+        elif device_name:
+            name = f"{device_name} {name}"
+
+    if not name:
+        return fallback
+
+    return name
+
+
+@callback
+def async_get_full_entity_name(
+    hass: HomeAssistant,
+    entry: RegistryEntry,
+    original_name: str | None | UndefinedType = UNDEFINED,
+) -> str:
+    """Get full entity name for an entry."""
+    original_name = (
+        original_name if original_name is not UNDEFINED else entry.original_name
+    )
+    return _async_get_full_entity_name_generic(
+        hass,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        original_name=original_name,
+    )
 
 
 @attr.s(frozen=True, slots=True)
@@ -618,6 +685,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["disabled_by_undefined"] = set_to_undefined
                     entity["hidden_by_undefined"] = set_to_undefined
                     entity["options_undefined"] = set_to_undefined
+
+            if old_minor_version < 20:
+                # Version 1.20 adds object_id_base to entities
+                for entity in data["entities"]:
+                    entity["object_id_base"] = entity["original_name"]
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -882,9 +954,41 @@ class EntityRegistry(BaseRegistry):
         current_entity_id: str | None = None,
         reserved_entity_ids: set[str] | None = None,
     ) -> str:
-        """Generate an entity ID that does not conflict.
+        """Get available entity ID.
 
-        Conflicts checked against registered and currently existing entities.
+        This function is deprecated. Use `async_get_available_entity_id` instead.
+
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
+        """
+        report_usage(
+            "calls `entity_registry.async_generate_entity_id`, "
+            "which is deprecated and will be removed in Home Assistant 2027.2; "
+            "use `entity_registry.async_get_available_entity_id` instead",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2027.2.0",
+        )
+
+        return self.async_get_available_entity_id(
+            domain,
+            suggested_object_id,
+            current_entity_id=current_entity_id,
+            reserved_entity_ids=reserved_entity_ids,
+        )
+
+    @callback
+    def async_get_available_entity_id(
+        self,
+        domain: str,
+        suggested_object_id: str,
+        *,
+        current_entity_id: str | None = None,
+        reserved_entity_ids: set[str] | None = None,
+    ) -> str:
+        """Get next available entity ID.
+
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
         """
         preferred_string = f"{domain}.{slugify(suggested_object_id)}"
 
@@ -906,6 +1010,72 @@ class EntityRegistry(BaseRegistry):
 
         return test_string
 
+    def _async_generate_entity_id(
+        self,
+        *,
+        current_entity_id: str | None,
+        device_id: str | None,
+        domain: str,
+        has_entity_name: bool,
+        name: str | None,
+        object_id_base: str | None,
+        platform: str,
+        reserved_entity_ids: set[str] | None = None,
+        suggested_object_id: str | None,
+        unique_id: str,
+    ) -> str:
+        """Generate an entity ID, based on all the provided parameters.
+
+        `name` is the name set by the user, not the original name from the integration.
+        `name` has priority over `suggested_object_id`, which has priority
+        over `object_id_base`.
+        `name` and `suggested_object_id` will never be prefixed with the device name,
+        `object_id_base` will be if `has_entity_name` is True.
+
+        Entity ID conflicts are checked against registered and currently
+        existing entities, as well as provided `reserved_entity_ids`.
+        """
+        object_id = _async_get_full_entity_name_generic(
+            self.hass,
+            device_id=device_id,
+            fallback=f"{platform}_{unique_id}",
+            has_entity_name=has_entity_name,
+            name=name,
+            original_name=object_id_base,
+            overridden_name=suggested_object_id,
+        )
+        return self.async_get_available_entity_id(
+            domain,
+            object_id,
+            current_entity_id=current_entity_id,
+            reserved_entity_ids=reserved_entity_ids,
+        )
+
+    @callback
+    def async_regenerate_entity_id(
+        self,
+        entry: RegistryEntry,
+        *,
+        reserved_entity_ids: set[str] | None = None,
+    ) -> str:
+        """Regenerate an entity ID for an entry.
+
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
+        """
+        return self._async_generate_entity_id(
+            current_entity_id=entry.entity_id,
+            device_id=entry.device_id,
+            domain=entry.domain,
+            has_entity_name=entry.has_entity_name,
+            name=entry.name,
+            object_id_base=entry.object_id_base,
+            platform=entry.platform,
+            reserved_entity_ids=reserved_entity_ids,
+            suggested_object_id=entry.suggested_object_id,
+            unique_id=entry.unique_id,
+        )
+
     @callback
     def async_get_or_create(
         self,
@@ -913,9 +1083,10 @@ class EntityRegistry(BaseRegistry):
         platform: str,
         unique_id: str,
         *,
-        # To influence entity ID generation
-        calculated_object_id: str | None = None,
-        suggested_object_id: str | None = None,
+        # Used for entity ID generation, if entity gets created.
+        # `suggested_object_id` has priority over `object_id_base`.
+        object_id_base: str | None | UndefinedType = UNDEFINED,
+        suggested_object_id: str | None | UndefinedType = UNDEFINED,
         # To disable or hide an entity if it gets created, does not affect
         # existing entities
         disabled_by: RegistryEntryDisabler | None = None,
@@ -948,7 +1119,7 @@ class EntityRegistry(BaseRegistry):
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self.async_update_entity(
+            return self._async_update_entity(
                 entity_id,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
@@ -956,9 +1127,11 @@ class EntityRegistry(BaseRegistry):
                 device_id=device_id,
                 entity_category=entity_category,
                 has_entity_name=has_entity_name,
+                object_id_base=object_id_base,
                 original_device_class=original_device_class,
                 original_icon=original_icon,
                 original_name=original_name,
+                suggested_object_id=suggested_object_id,
                 supported_features=supported_features,
                 translation_key=translation_key,
                 unit_of_measurement=unit_of_measurement,
@@ -1022,12 +1195,26 @@ class EntityRegistry(BaseRegistry):
             name = None
             options = get_initial_options() if get_initial_options else None
 
-        if not entity_id:
-            entity_id = self.async_generate_entity_id(
-                domain,
-                suggested_object_id
-                or calculated_object_id
-                or f"{platform}_{unique_id}",
+        def none_if_undefined[_T](value: _T | UndefinedType) -> _T | None:
+            """Return None if value is UNDEFINED, otherwise return value."""
+            return None if value is UNDEFINED else value
+
+        device_id = none_if_undefined(device_id)
+        has_entity_name_bool = none_if_undefined(has_entity_name) or False
+        object_id_base = none_if_undefined(object_id_base)
+        suggested_object_id = none_if_undefined(suggested_object_id)
+
+        if entity_id is None:
+            entity_id = self._async_generate_entity_id(
+                current_entity_id=None,
+                device_id=device_id,
+                domain=domain,
+                has_entity_name=has_entity_name_bool,
+                name=name,
+                object_id_base=object_id_base,
+                platform=platform,
+                suggested_object_id=suggested_object_id,
+                unique_id=unique_id,
             )
 
         if (
@@ -1038,10 +1225,6 @@ class EntityRegistry(BaseRegistry):
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        def none_if_undefined[_T](value: _T | UndefinedType) -> _T | None:
-            """Return None if value is UNDEFINED, otherwise return value."""
-            return None if value is UNDEFINED else value
-
         entry = RegistryEntry(
             aliases=aliases,
             area_id=area_id,
@@ -1051,16 +1234,17 @@ class EntityRegistry(BaseRegistry):
             config_subentry_id=none_if_undefined(config_subentry_id),
             created_at=created_at,
             device_class=device_class,
-            device_id=none_if_undefined(device_id),
+            device_id=device_id,
             disabled_by=disabled_by,
             entity_category=none_if_undefined(entity_category),
             entity_id=entity_id,
             hidden_by=hidden_by,
-            has_entity_name=none_if_undefined(has_entity_name) or False,
+            has_entity_name=has_entity_name_bool,
             icon=icon,
             id=entity_registry_id,
             labels=labels,
             name=name,
+            object_id_base=object_id_base,
             options=options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
@@ -1255,11 +1439,13 @@ class EntityRegistry(BaseRegistry):
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        object_id_base: str | None | UndefinedType = UNDEFINED,
         options: EntityOptionsType | UndefinedType = UNDEFINED,
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         platform: str | None | UndefinedType = UNDEFINED,
+        suggested_object_id: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
         translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
@@ -1286,11 +1472,13 @@ class EntityRegistry(BaseRegistry):
             ("has_entity_name", has_entity_name),
             ("labels", labels),
             ("name", name),
+            ("object_id_base", object_id_base),
             ("options", options),
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
             ("platform", platform),
+            ("suggested_object_id", suggested_object_id),
             ("supported_features", supported_features),
             ("translation_key", translation_key),
             ("unit_of_measurement", unit_of_measurement),
@@ -1490,7 +1678,7 @@ class EntityRegistry(BaseRegistry):
             new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the entity registry."""
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
@@ -1552,6 +1740,7 @@ class EntityRegistry(BaseRegistry):
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
+                    object_id_base=entity.get("object_id_base"),
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
@@ -1588,7 +1777,7 @@ class EntityRegistry(BaseRegistry):
                         report_non_string_unique_id=False,
                         unique_id=entity["unique_id"],
                     )
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     continue
                 key = (
                     split_entity_id(entity["entity_id"])[0],
@@ -1756,10 +1945,10 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
     return EntityRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

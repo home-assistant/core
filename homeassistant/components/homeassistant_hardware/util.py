@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import AsyncIterator, Callable, Sequence
+from collections.abc import AsyncGenerator, Callable, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
@@ -125,7 +125,7 @@ class OwningAddon:
             return addon_info.state == AddonState.RUNNING
 
     @asynccontextmanager
-    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncIterator[None]:
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
         """Temporarily stop the add-on, restarting it after completion."""
         addon_manager = self._get_addon_manager(hass)
 
@@ -165,7 +165,7 @@ class OwningIntegration:
         )
 
     @asynccontextmanager
-    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncIterator[None]:
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
         """Temporarily stop the integration, restarting it after completion."""
         if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
             yield
@@ -368,7 +368,7 @@ async def probe_silabs_firmware_type(
 @asynccontextmanager
 async def async_firmware_flashing_context(
     hass: HomeAssistant, device: str, source_domain: str
-) -> AsyncIterator[None]:
+) -> AsyncGenerator[None]:
     """Register a device as having its firmware being actively interacted with."""
     async with async_firmware_update_context(hass, device, source_domain):
         firmware_info = await guess_firmware_info(hass, device)

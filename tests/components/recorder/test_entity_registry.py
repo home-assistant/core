@@ -224,6 +224,7 @@ async def test_rename_entity_collision(
     hass.states.async_remove("sensor.test99")
 
     await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     # Rename entity sensor.test1 to sensor.test99
     entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
