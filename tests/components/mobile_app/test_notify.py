@@ -446,8 +446,9 @@ async def test_notify_multiple_targets(
 ) -> None:
     """Test notify to multiple targets.
 
-    This test checks that when `notify.notify` is used and there are multiple targets
-    that use non-local and local push notifications, all messages are sent correctly
+    Messages will be sent to three targerts, one (with webhook id `webhook_id_2`) will be remote target
+    and will send the notification via HTTP request, the other two (`mock-webhook_id` and`websocket-push-webhook-id`)
+    will be local push only and will be sent via websocket.
     """
 
     # Setup mock for non-local push notification target
