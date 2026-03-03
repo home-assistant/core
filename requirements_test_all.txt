@@ -1084,7 +1084,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260226.0
+home-assistant-frontend==20260302.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.2.13
@@ -1466,6 +1466,9 @@ onedrive-personal-sdk==0.1.4
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
+
+# homeassistant.components.onvif
+onvif_parsers==1.2.2
 
 # homeassistant.components.opengarage
 open-garage==0.2.0

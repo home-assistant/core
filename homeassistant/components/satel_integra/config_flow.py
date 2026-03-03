@@ -13,7 +13,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
@@ -24,15 +23,11 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
-    CONF_DEVICE_PARTITIONS,
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
-    CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
     DEFAULT_PORT,
     DOMAIN,
@@ -52,6 +47,7 @@ CONNECTION_SCHEMA = vol.Schema(
         vol.Optional(CONF_CODE): cv.string,
     }
 )
+
 
 CODE_SCHEMA = vol.Schema(
     {
@@ -142,97 +138,6 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=CONNECTION_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by import."""
-
-        valid = await self.test_connection(
-            import_config[CONF_HOST], import_config.get(CONF_PORT, DEFAULT_PORT)
-        )
-
-        if valid:
-            subentries: list[ConfigSubentryData] = []
-
-            for partition_number, partition_data in import_config.get(
-                CONF_DEVICE_PARTITIONS, {}
-            ).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_PARTITION,
-                        "title": f"{partition_data[CONF_NAME]} ({partition_number})",
-                        "unique_id": f"{SUBENTRY_TYPE_PARTITION}_{partition_number}",
-                        "data": {
-                            CONF_NAME: partition_data[CONF_NAME],
-                            CONF_ARM_HOME_MODE: partition_data.get(
-                                CONF_ARM_HOME_MODE, DEFAULT_CONF_ARM_HOME_MODE
-                            ),
-                            CONF_PARTITION_NUMBER: partition_number,
-                        },
-                    }
-                )
-
-            for zone_number, zone_data in import_config.get(CONF_ZONES, {}).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_ZONE,
-                        "title": f"{zone_data[CONF_NAME]} ({zone_number})",
-                        "unique_id": f"{SUBENTRY_TYPE_ZONE}_{zone_number}",
-                        "data": {
-                            CONF_NAME: zone_data[CONF_NAME],
-                            CONF_ZONE_NUMBER: zone_number,
-                            CONF_ZONE_TYPE: zone_data.get(
-                                CONF_ZONE_TYPE, BinarySensorDeviceClass.MOTION
-                            ),
-                        },
-                    }
-                )
-
-            for output_number, output_data in import_config.get(
-                CONF_OUTPUTS, {}
-            ).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_OUTPUT,
-                        "title": f"{output_data[CONF_NAME]} ({output_number})",
-                        "unique_id": f"{SUBENTRY_TYPE_OUTPUT}_{output_number}",
-                        "data": {
-                            CONF_NAME: output_data[CONF_NAME],
-                            CONF_OUTPUT_NUMBER: output_number,
-                            CONF_ZONE_TYPE: output_data.get(
-                                CONF_ZONE_TYPE, BinarySensorDeviceClass.MOTION
-                            ),
-                        },
-                    }
-                )
-
-            for switchable_output_number, switchable_output_data in import_config.get(
-                CONF_SWITCHABLE_OUTPUTS, {}
-            ).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-                        "title": f"{switchable_output_data[CONF_NAME]} ({switchable_output_number})",
-                        "unique_id": f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{switchable_output_number}",
-                        "data": {
-                            CONF_NAME: switchable_output_data[CONF_NAME],
-                            CONF_SWITCHABLE_OUTPUT_NUMBER: switchable_output_number,
-                        },
-                    }
-                )
-
-            return self.async_create_entry(
-                title=import_config[CONF_HOST],
-                data={
-                    CONF_HOST: import_config[CONF_HOST],
-                    CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-                },
-                options={CONF_CODE: import_config.get(CONF_CODE)},
-                subentries=subentries,
-            )
-
-        return self.async_abort(reason="cannot_connect")
 
     async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
