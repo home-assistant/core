@@ -129,7 +129,7 @@ def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
     return as_utc(original_dt)
 
 
-def _get_charging_settings_mode_fomatted(entity: RenaultSensor[T]) -> str | None:
+def _get_charging_settings_mode_formatted(entity: RenaultSensor[T]) -> str | None:
     """Return the charge_settings mode of this entity."""
     data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
     charging_mode = data.mode if data else None
@@ -359,7 +359,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "delayed",
             "scheduled",
         ],
-        value_lambda=_get_charging_settings_mode_fomatted,
+        value_lambda=_get_charging_settings_mode_formatted,
     ),
     RenaultSensorEntityDescription(
         key="front_left_pressure",
