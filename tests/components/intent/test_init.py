@@ -105,10 +105,9 @@ async def test_http_language_device_satellite_id(
         async def async_handle(self, intent_obj: intent.Intent):
             """Handle the intent."""
             assert intent_obj.context.user_id == hass_admin_user.id
-            # Verify language, device id, and satellite id were passed through.
-            assert intent_obj.language == language
             assert intent_obj.device_id == device_id
             assert intent_obj.satellite_id == satellite_id
+            assert intent_obj.language == language
 
             response = intent_obj.create_response()
             response.async_set_speech("Test response")
@@ -201,7 +200,8 @@ async def test_http_assistant(
         "/api/intent/handle",
         json={
             "name": "HassTurnOn",
-            "data": {"name": "Garage Door 1", "assistant": conversation.DOMAIN},
+            "data": {"name": "Garage Door 1"},
+            "assistant": conversation.DOMAIN,
         },
     )
     assert resp.status == 200
