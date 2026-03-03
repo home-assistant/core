@@ -3,8 +3,6 @@
   dict({
     'info': dict({
       'MAC': 'AA:BB:CC:DD:EE:FF',
-      'addons': dict({
-      }),
       'coord_mode': 0,
       'device_ip': '192.168.1.161',
       'fs_total': 3456,
