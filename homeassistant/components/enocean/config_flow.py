@@ -109,12 +109,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle an EnOcean config flow start."""
-        return await self.async_step_detect()
-
-    async def async_step_detect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Propose a list of detected dongles."""
         if self._ports is None:
             self._ports = []
             self._ports.extend(
@@ -163,7 +157,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="detect",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE): SelectSelector(

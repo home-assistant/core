@@ -50,7 +50,7 @@ async def test_user_flow_with_detected_usb_device(hass: HomeAssistant) -> None:
 
     assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "detect"
+    assert result["step_id"] == SOURCE_USER
     options = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
     assert len(options) == 2
     assert options[0].get("value") == "/dev/enocean0"
@@ -85,7 +85,7 @@ async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "detect"},
+            context={"source": SOURCE_USER},
             data={CONF_DEVICE: MOCK_USB_DEVICE.device},
         )
 
@@ -122,7 +122,7 @@ async def test_user_flow_with_invalid_option(hass: HomeAssistant) -> None:
     ) as mock_scan_serial_ports:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "detect"},
+            context={"source": SOURCE_USER},
             data={CONF_DEVICE: "invalid/detected/path"},
         )
 
@@ -142,7 +142,7 @@ async def test_user_flow_with_manual_path(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "detect"},
+            context={"source": SOURCE_USER},
             data={CONF_DEVICE: EnOceanFlowHandler.MANUAL_PATH_VALUE},
         )
 
