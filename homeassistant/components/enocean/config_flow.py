@@ -51,20 +51,6 @@ def _detect_usb_dongle() -> list[str]:
     return found_paths
 
 
-async def _validate_usb_dongle_path(path: str) -> bool:
-    """Return True if the provided path points to a valid serial port, False otherwise."""
-    try:
-        # Starting the gateway will raise an exception
-        # if it cannot connect
-        gateway = Gateway(port=path)
-        await gateway.start()
-        gateway.stop()
-    except ConnectionError as exception:
-        _LOGGER.warning("Dongle path %s is invalid: %s", path, str(exception))
-        return False
-    return True
-
-
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
@@ -182,7 +168,17 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def validate_enocean_conf(self, user_input) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
-        return await _validate_usb_dongle_path(dongle_path)
+        try:
+            # Starting the gateway will raise an exception if it can't connect
+            gateway = Gateway(port=dongle_path)
+            await gateway.start()
+            gateway.stop()
+        except ConnectionError as exception:
+            _LOGGER.warning(
+                "Dongle path %s is invalid: %s", dongle_path, str(exception)
+            )
+            return False
+        return True
 
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
