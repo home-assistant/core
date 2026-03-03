@@ -3,9 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import Any, cast
 
-from pysmartthings import Attribute, Capability, Command, DeviceEvent, SmartThings
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Category,
+    Command,
+    ComponentStatus,
+    DeviceEvent,
+    SmartThings,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -36,6 +45,22 @@ CAPABILITIES = (
     Capability.COLOR_TEMPERATURE,
 )
 
+LAMP_CAPABILITY_EXISTS: dict[str, Callable[[FullDevice, ComponentStatus], bool]] = {
+    "lamp": lambda _, __: True,
+    "hood": lambda device, component: (
+        Capability.SAMSUNG_CE_CONNECTION_STATE not in component
+        or component[Capability.SAMSUNG_CE_CONNECTION_STATE][
+            Attribute.CONNECTION_STATE
+        ].value
+        != "disconnected"
+    ),
+    "cavity-02": lambda _, __: True,
+    "main": lambda device, component: (
+        device.device.components[MAIN].manufacturer_category
+        in {Category.MICROWAVE, Category.OVEN, Category.RANGE}
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,8 +82,10 @@ async def async_setup_entry(
     entities.extend(
         SmartThingsLamp(entry_data.client, device, component)
         for device in entry_data.devices.values()
-        for component in device.status
-        if Capability.SAMSUNG_CE_LAMP in device.status[component]
+        for component, exists_fn in LAMP_CAPABILITY_EXISTS.items()
+        if component in device.status
+        and Capability.SAMSUNG_CE_LAMP in device.status[component]
+        and exists_fn(device, device.status[component])
     )
     async_add_entities(entities)
 
@@ -256,10 +283,10 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         return state == "on"
 
 
-class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
+class SmartThingsLamp(SmartThingsEntity, LightEntity):
     """Define a SmartThings lamp component as a light entity."""
 
-    translation_key = "light"
+    _attr_translation_key = "light"
 
     def __init__(
         self, client: SmartThings, device: FullDevice, component: str = MAIN
@@ -289,25 +316,13 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
         """Turn the lamp on."""
         # Switch/brightness/transition
         if ATTR_BRIGHTNESS in kwargs:
-            await self.async_set_level(
-                kwargs[ATTR_BRIGHTNESS], kwargs.get(ATTR_TRANSITION, 0)
-            )
+            await self.async_set_level(kwargs[ATTR_BRIGHTNESS])
             return
         if self.supports_capability(Capability.SWITCH):
             await self.execute_device_command(Capability.SWITCH, Command.ON)
         # if no switch, turn on via brightness level
-        elif supported_levels := (
-            self.get_attribute_value(
-                Capability.SAMSUNG_CE_LAMP, Attribute.SUPPORTED_BRIGHTNESS_LEVEL
-            )
-            or []
-        ):
-            level = percentage_to_ordered_list_item(supported_levels, 100)
-            await self.execute_device_command(
-                Capability.SAMSUNG_CE_LAMP,
-                Command.SET_BRIGHTNESS_LEVEL,
-                argument=level,
-            )
+        else:
+            await self.async_set_level(255)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the lamp off."""
@@ -320,29 +335,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
             argument="off",
         )
 
-    def _update_attr(self) -> None:
-        """Update lamp-specific attributes."""
-        levels = (
-            self.get_attribute_value(
-                Capability.SAMSUNG_CE_LAMP, Attribute.SUPPORTED_BRIGHTNESS_LEVEL
-            )
-            or []
-        )
-        level = self.get_attribute_value(
-            Capability.SAMSUNG_CE_LAMP, Attribute.BRIGHTNESS_LEVEL
-        )
-        if level is None:
-            self._attr_brightness = None
-            return
-        if "off" in levels:
-            if level == "off":
-                self._attr_brightness = 0
-                return
-            levels = [level for level in levels if level != "off"]
-        percent = ordered_list_item_to_percentage(levels, level)
-        self._attr_brightness = int(convert_scale(percent, 100, 255))
-
-    async def async_set_level(self, brightness: int, transition: int) -> None:
+    async def async_set_level(self, brightness: int) -> None:
         """Set lamp brightness via supported levels."""
         levels = (
             self.get_attribute_value(
@@ -350,19 +343,6 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
             )
             or []
         )
-        if brightness == 0:
-            if "off" in levels:
-                await self.execute_device_command(
-                    Capability.SAMSUNG_CE_LAMP,
-                    Command.SET_BRIGHTNESS_LEVEL,
-                    argument="off",
-                )
-            else:
-                await self.execute_device_command(
-                    Capability.SWITCH,
-                    Command.OFF,
-                )
-            return
         # remove 'off' for brightness mapping
         if "off" in levels:
             levels = [level for level in levels if level != "off"]
@@ -382,6 +362,28 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
         ):
             await self.execute_device_command(Capability.SWITCH, Command.ON)
 
+    def _update_attr(self) -> None:
+        """Update lamp-specific attributes."""
+        level = self.get_attribute_value(
+            Capability.SAMSUNG_CE_LAMP, Attribute.BRIGHTNESS_LEVEL
+        )
+        if level is None:
+            self._attr_brightness = None
+            return
+        levels = (
+            self.get_attribute_value(
+                Capability.SAMSUNG_CE_LAMP, Attribute.SUPPORTED_BRIGHTNESS_LEVEL
+            )
+            or []
+        )
+        if "off" in levels:
+            if level == "off":
+                self._attr_brightness = 0
+                return
+            levels = [level for level in levels if level != "off"]
+        percent = ordered_list_item_to_percentage(levels, level)
+        self._attr_brightness = int(convert_scale(percent, 100, 255))
+
     @property
     def is_on(self) -> bool | None:
         """Return true if lamp is on."""
@@ -390,9 +392,6 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
             if state is None:
                 return None
             return state == "on"
-        brightness = self.get_attribute_value(
-            Capability.SAMSUNG_CE_LAMP, Attribute.BRIGHTNESS_LEVEL
-        )
-        if brightness is None:
-            return None
-        return brightness != "off"
+        if (brightness := self.brightness) is not None:
+            return brightness > 0
+        return None
