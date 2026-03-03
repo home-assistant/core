@@ -26,11 +26,13 @@
       "user": {
         "data": {
           "id_or_passport": "ID or passport number",
-          "phone_number": "Mobile phone number"
+          "phone_number": "Mobile phone number",
+          "mobile_id": "Mobile ID (Password)"
         },
         "data_description": {
           "id_or_passport": "The government ID or passport number provided when registering with Ituran.",
-          "phone_number": "The mobile phone number provided when registering with Ituran. A one-time password will be sent to this mobile number."
+          "phone_number": "The mobile phone number provided when registering with Ituran. A one-time password will be sent to this mobile number.",
+          "mobile_id": "Optional. The mobile ID from your Ituran mobile app. Does not require a one-time password and allows using both this integration and the mobile app simultaneously."
         }
       }
     }

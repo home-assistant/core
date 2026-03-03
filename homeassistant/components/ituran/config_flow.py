@@ -45,17 +45,27 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+
+        data_schema = STEP_USER_DATA_SCHEMA
+        if self.show_advanced_options:
+            data_schema = data_schema.extend({vol.Optional(CONF_MOBILE_ID): str})
+
         errors: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_ID_OR_PASSPORT])
             if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
-            ituran = Ituran(
+            args = [
                 user_input[CONF_ID_OR_PASSPORT],
                 user_input[CONF_PHONE_NUMBER],
-            )
-            user_input[CONF_MOBILE_ID] = ituran.mobile_id
+            ]
+            if user_input.get(CONF_MOBILE_ID):
+                args.append(user_input[CONF_MOBILE_ID])
+
+            ituran = Ituran(*args)
+            if not user_input.get(CONF_MOBILE_ID):
+                user_input[CONF_MOBILE_ID] = ituran.mobile_id
             try:
                 authenticated = await ituran.is_authenticated()
                 if not authenticated:
@@ -77,7 +87,7 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_otp()
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_otp(

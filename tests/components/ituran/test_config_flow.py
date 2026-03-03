@@ -79,6 +79,34 @@ async def test_full_user_flow(
     await __do_successful_otp_step(hass, result, mock_ituran)
 
 
+async def test_full_user_flow_with_mobile_id(
+    hass: HomeAssistant, mock_ituran: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the full user configuration flow with mobile_id provided."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": True},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ID_OR_PASSPORT: MOCK_CONFIG_DATA[CONF_ID_OR_PASSPORT],
+            CONF_PHONE_NUMBER: MOCK_CONFIG_DATA[CONF_PHONE_NUMBER],
+            CONF_MOBILE_ID: MOCK_CONFIG_DATA[CONF_MOBILE_ID],
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+    assert result["errors"] == {}
+
+    await __do_successful_otp_step(hass, result, mock_ituran)
+
+
 async def test_invalid_auth(
     hass: HomeAssistant, mock_ituran: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
