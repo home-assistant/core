@@ -58,17 +58,94 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
+    def _get_sibling_devices(self) -> list[Device]:
+        """Return sibling devices sharing the same base device URL."""
+        prefix = f"{self.base_device_url}#"
+        return [
+            device
+            for device in self.coordinator.data.values()
+            if device.device_url != self.device_url
+            and device.device_url.startswith(prefix)
+        ]
+
+    def _has_siblings_with_different_place_oid(self) -> bool:
+        """Check if sibling devices have different placeOIDs.
+
+        Returns True if siblings have different place_oid values, indicating
+        devices should be grouped by placeOID rather than by base URL.
+        """
+        my_place_oid = self.device.place_oid
+        if not my_place_oid:
+            return False
+
+        return any(
+            sibling.place_oid and sibling.place_oid != my_place_oid
+            for sibling in self._get_sibling_devices()
+        )
+
+    def _get_device_index(self, device_url: str) -> int | None:
+        """Extract numeric index from device URL (e.g., 'io://gw/123#4' -> 4)."""
+        suffix = device_url.split("#")[-1]
+        return int(suffix) if suffix.isdigit() else None
+
+    def _is_main_device_for_place_oid(self) -> bool:
+        """Check if this device is the main device for its placeOID group.
+
+        The device with the lowest URL index among siblings sharing the same
+        placeOID is considered the main device and provides full device info.
+        """
+        my_place_oid = self.device.place_oid
+        if not my_place_oid:
+            return True
+
+        my_index = self._get_device_index(self.device_url)
+        if my_index is None:
+            return True
+
+        return not any(
+            (sibling_index := self._get_device_index(sibling.device_url)) is not None
+            and sibling_index < my_index
+            for sibling in self._get_sibling_devices()
+            if sibling.place_oid == my_place_oid
+        )
+
+    def _get_via_device_id(self, use_place_oid_grouping: bool) -> str:
+        """Return the via_device identifier for device registry hierarchy.
+
+        Sub-devices link to the main actuator (#1 device) when using placeOID
+        grouping, otherwise they link directly to the gateway.
+        """
+        gateway_id = self.executor.get_gateway_id()
+
+        if not use_place_oid_grouping or self.device_url.endswith("#1"):
+            return gateway_id
+
+        main_device = self.coordinator.data.get(f"{self.base_device_url}#1")
+        if main_device and main_device.place_oid:
+            return f"{self.base_device_url}#{main_device.place_oid}"
+
+        return gateway_id
+
     def generate_device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        # Some devices, such as the Smart Thermostat have several devices
-        # in one physical device, with same device url, terminated by '#' and a number.
-        # In this case, we use the base device url as the device identifier.
-        if self.is_sub_device:
-            # Only return the url of the base device, to inherit device name
-            # and model from parent device.
+        # Some devices, such as the Smart Thermostat, have several sub-devices
+        # sharing the same base URL (terminated by '#' and a number).
+        use_place_oid_grouping = self._has_siblings_with_different_place_oid()
+
+        # Sub-devices without placeOID grouping inherit info from parent device
+        if self.is_sub_device and not use_place_oid_grouping:
             return DeviceInfo(
                 identifiers={(DOMAIN, self.executor.base_device_url)},
             )
+
+        # Determine identifier based on grouping strategy
+        if use_place_oid_grouping:
+            identifier = f"{self.base_device_url}#{self.device.place_oid}"
+            # Non-main devices only reference the identifier
+            if not self._is_main_device_for_place_oid():
+                return DeviceInfo(identifiers={(DOMAIN, identifier)})
+        else:
+            identifier = self.executor.base_device_url
 
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
@@ -92,7 +169,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         )
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self.executor.base_device_url)},
+            identifiers={(DOMAIN, identifier)},
             name=self.device.label,
             manufacturer=str(manufacturer),
             model=str(model),
@@ -103,7 +180,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.executor.get_gateway_id()),
+            via_device=(DOMAIN, self._get_via_device_id(use_place_oid_grouping)),
             configuration_url=self.coordinator.client.server.configuration_url,
         )
 
