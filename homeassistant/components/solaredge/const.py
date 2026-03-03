@@ -24,5 +24,6 @@ POWER_FLOW_UPDATE_DELAY = timedelta(minutes=15)
 ENERGY_DETAILS_DELAY = timedelta(minutes=15)
 STORAGE_DATA_UPDATE_DELAY = timedelta(hours=4)
 MODULE_STATISTICS_UPDATE_DELAY = timedelta(hours=12)
+STORAGE_DATA_UPDATE_DELAY = timedelta(hours=4)
 
 SCAN_INTERVAL = timedelta(minutes=15)
