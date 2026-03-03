@@ -46,7 +46,6 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, .
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account.balance,
         picture_fn=lambda account: account.logo_url,
-        native_unit_of_measurement="USD",
     ),
 )
 
@@ -59,7 +58,6 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account.balance,
         picture_fn=lambda account: account.logo_url,
-        native_unit_of_measurement="USD",
     ),
 )
 
@@ -80,7 +78,6 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.income,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement="USD",
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="sum_expense",
@@ -88,7 +85,6 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.expenses,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement="USD",
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="savings",
@@ -96,7 +92,6 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.savings,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement="USD",
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="savings_rate",
@@ -165,6 +160,13 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
         """Return the state."""
         return self.entity_description.summary_fn(self.summary_data)
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the currency for monetary sensors."""
+        if self.entity_description.device_class == SensorDeviceClass.MONETARY:
+            return self.hass.config.currency
+        return self.entity_description.native_unit_of_measurement
+
 
 class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     """Define a monarch money sensor."""
@@ -176,6 +178,14 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.account_data)
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the currency for monetary sensors."""
+        if self.entity_description.device_class == SensorDeviceClass.MONETARY:
+            return self.hass.config.currency
+        return self.entity_description.native_unit_of_measurement
 
     @property
     @override
