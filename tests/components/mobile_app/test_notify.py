@@ -444,7 +444,14 @@ async def test_notify_multiple_targets(
     setup_websocket_channel_only_push,
     target: list[str] | None,
 ) -> None:
-    """Test notify to multiple targets."""
+    """Test notify to multiple targets.
+
+    This test checks that when `notify.notify` is used and there are multiple targets
+    that use non-local and local push notifications, all messages are sent correctly
+    """
+
+    # Setup mock for non-local push notification target
+    # with webhook_id "webhook_id_2"
     aioclient_mock.post(
         "https://mobile-push.home-assistant.dev/push2",
         json={
@@ -464,25 +471,18 @@ async def test_notify_multiple_targets(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "mobile_app/push_notification_channel",
-            "webhook_id": "mock-webhook_id",
-        }
-    )
-
-    sub_result = await client.receive_json()
-    assert sub_result["success"]
-
-    await client.send_json_auto_id(
-        {
-            "type": "mobile_app/push_notification_channel",
-            "webhook_id": "websocket-push-webhook-id",
-        }
-    )
-
-    sub_result = await client.receive_json()
-    assert sub_result["success"]
+    # Setup local push notification channels
+    local_push_sub_ids = []
+    for webhook_id in ("mock-webhook_id", "websocket-push-webhook-id"):
+        await client.send_json_auto_id(
+            {
+                "type": "mobile_app/push_notification_channel",
+                "webhook_id": webhook_id,
+            }
+        )
+        sub_result = await client.receive_json()
+        assert sub_result["success"]
+        local_push_sub_ids.append(sub_result["id"])
 
     await hass.services.async_call(
         "notify",
@@ -494,24 +494,22 @@ async def test_notify_multiple_targets(
         blocking=True,
     )
 
+    # Assert that the notification has been sent to the non-local push notification target
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
-
     call_json = call[0][2]
-
     assert call_json["push_token"] == "PUSH_TOKEN2"
     assert call_json["message"] == "Hello world"
     assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"
     assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
 
-    msg_ids = set()
-    for _ in range(2):
+    # Assert that the notification has been sent to the two local push notification targets
+    for sub_id in local_push_sub_ids:
         msg_result = await client.receive_json()
         assert msg_result["event"] == {"message": "Hello world"}
         msg_id = msg_result["id"]
-        assert msg_id not in msg_ids
-        msg_ids.add(msg_id)
+        assert msg_id == sub_id
 
 
 @pytest.mark.parametrize(
@@ -530,6 +528,8 @@ async def test_notify_multiple_targets_if_any_disconnected(
     Test that although one target is disconnected,
     notify still works to other targets and the exception is still raised.
     """
+    # Setup mock for non-local push notification target
+    # with webhook_id "webhook_id_2"
     aioclient_mock.post(
         "https://mobile-push.home-assistant.dev/push2",
         json={
@@ -549,13 +549,13 @@ async def test_notify_multiple_targets_if_any_disconnected(
 
     client = await hass_ws_client(hass)
 
+    # Setup the local push notification channel
     await client.send_json_auto_id(
         {
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
     )
-
     sub_result = await client.receive_json()
     assert sub_result["success"]
     sub_id = sub_result["id"]
@@ -574,17 +574,18 @@ async def test_notify_multiple_targets_if_any_disconnected(
             blocking=True,
         )
 
+    # Assert that the notification has been sent to the non-local push notification target
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
-
     call_json = call[0][2]
-
     assert call_json["push_token"] == "PUSH_TOKEN2"
     assert call_json["message"] == "Hello world"
     assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"
     assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
 
+    # Assert that the notification has been sent to the local
+    # push notification target that has been setup
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
     assert msg_result["id"] == sub_id
