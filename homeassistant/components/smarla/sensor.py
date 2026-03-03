@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
 from homeassistant.const import UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -27,7 +28,7 @@ PARALLEL_UPDATES = 0
 class SmarlaSensorEntityDescription(SmarlaEntityDescription, SensorEntityDescription):
     """Class describing Swing2Sleep Smarla sensor entities."""
 
-    value_fn: Callable[[Any], Any] = lambda value: value
+    value_fn: Callable[[Any], StateType] = lambda value: value
     multiple: bool = False
     value_pos: int = 0
 
@@ -86,7 +87,9 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         property="spring_status",
         device_class=SensorDeviceClass.ENUM,
         options=[status.name.lower() for status in SpringStatus],
-        value_fn=lambda value: SpringStatus(value).name.lower() if value else None,
+        value_fn=lambda value: (
+            SpringStatus(value).name.lower() if value is not None else None
+        ),
     ),
 ]
 
@@ -116,7 +119,7 @@ class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
     _property: Property[int]
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the entity value to represent the entity state."""
         value = self._property.get()
         return self.entity_description.value_fn(value)
@@ -130,7 +133,7 @@ class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
     _property: Property[list[int]]
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the entity value to represent the entity state."""
         raw = self._property.get()
         value = raw[self.entity_description.value_pos] if raw is not None else None
