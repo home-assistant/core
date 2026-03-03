@@ -3352,7 +3352,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'always',
+    'state': 'delayed',
   })
 # ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-entry]
