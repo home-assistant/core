@@ -155,7 +155,7 @@ class MeteoclimaticSensor(
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return (
             getattr(self.coordinator.data.weather, self.entity_description.key)
