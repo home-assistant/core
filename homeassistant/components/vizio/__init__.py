@@ -94,6 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bo
         for e in hass.config_entries.async_loaded_entries(DOMAIN)
         if e.entry_id != entry.entry_id
     ):
-        hass.data.pop(DATA_APPS, None)
+        if apps_coordinator := hass.data.pop(DATA_APPS, None):
+            await apps_coordinator.async_shutdown()
 
     return unload_ok
