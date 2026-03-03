@@ -592,7 +592,7 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
                     burner_id = int(component.split("-")[-1])
                     component = f"burner-0{burner_id}"
                 # Don't delete 'lamp' component even when disabled
-                if (component in status) and ("lamp" not in component):
+                if (component in status) and (component != "lamp"):
                     del status[component]
     for component_status in status.values():
         process_component_status(component_status)
