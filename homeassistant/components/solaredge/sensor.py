@@ -248,6 +248,7 @@ async def async_setup_entry(
     # After inventory is refreshed, conditionally set up the storage service
     # only if the site has batteries, to avoid unnecessary API polling.
     if sensor_factory.setup_storage_service():
+        assert sensor_factory.storage_service is not None
         await sensor_factory.storage_service.coordinator.async_refresh()
     else:
         # If storage is not yet set up (e.g. inventory failed or reported no
@@ -257,6 +258,7 @@ async def async_setup_entry(
         def _inventory_updated() -> None:
             if sensor_factory.setup_storage_service():
                 unsub()
+                assert sensor_factory.storage_service is not None
                 sensor_factory.storage_service.coordinator.async_refresh()
                 new_entities = []
                 for desc in SENSOR_TYPES:
