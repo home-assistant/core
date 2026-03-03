@@ -2544,7 +2544,7 @@ subarulink==0.7.15
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.10.0
+switchbot-api==2.11.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==5.4.3
@@ -2627,7 +2627,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.10
+tuya-device-handlers==0.0.11
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
