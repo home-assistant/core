@@ -351,9 +351,7 @@ async def test_setup_minimal_config_no_connection_keys(
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data == BASE_V1_CONFIG
 
-    assert not issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_yaml"
-    )
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
 
 
 @pytest.mark.parametrize(
