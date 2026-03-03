@@ -16,7 +16,7 @@ from aiowebdav2.models import QuotaInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -83,7 +83,7 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
         try:
             quota = await self.client.quota()
         except UnauthorizedError as err:
-            raise ConfigEntryNotReady("Authentication error") from err
+            raise ConfigEntryError("Authentication error") from err
         except WebDavError as err:
             raise UpdateFailed(f"Failed to fetch quota data: {err}") from err
 
