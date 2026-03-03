@@ -556,3 +556,61 @@ async def test_lamp_without_switch(
         command_data["component"],
         argument=command_data["argument"],
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_range_0101x"])
+async def test_lamp_brightness_zero_turns_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting brightness=0 should turn the lamp off for samsungce.lamp."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = next(iter(hass.states.async_entity_ids(LIGHT_DOMAIN)))
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 0},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18",
+        Capability.SAMSUNG_CE_LAMP,
+        Command.SET_BRIGHTNESS_LEVEL,
+        MAIN,
+        argument="off",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_lamp_lowest_discrete_level_not_zero(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The lowest discrete brightness level must not surface as 0 when the lamp is on."""
+    # Ensure the switch component is reported as on for this lamp
+    set_attribute_value(
+        devices, Capability.SWITCH, Attribute.SWITCH, "on", component="lamp"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    # Simulate the lamp reporting the lowest discrete level ('low')
+    await trigger_update(
+        hass,
+        devices,
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SAMSUNG_CE_LAMP,
+        Attribute.BRIGHTNESS_LEVEL,
+        "low",
+        component="lamp",
+    )
+
+    entity_id = next(iter(hass.states.async_entity_ids(LIGHT_DOMAIN)))
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    # brightness should be a positive integer (not zero)
+    assert state.attributes[ATTR_BRIGHTNESS] is not None
+    assert state.attributes[ATTR_BRIGHTNESS] > 0

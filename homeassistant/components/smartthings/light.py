@@ -49,10 +49,8 @@ async def async_setup_entry(
         for device in entry_data.devices.values()
         for component in device.status
         if (
-            Capability.SWITCH in device.status[component]
-            and any(
-                capability in device.status[component] for capability in CAPABILITIES
-            )
+            Capability.SWITCH in device.status[MAIN]
+            and any(capability in device.status[MAIN] for capability in CAPABILITIES)
             and Capability.SAMSUNG_CE_LAMP not in device.status[component]
         )
     ]
@@ -261,8 +259,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
 class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
     """Define a SmartThings lamp component as a light entity."""
 
-    _attr_name = None
-    _attr_supported_color_modes: set[ColorMode]
+    translation_key = "light"
 
     def __init__(
         self, client: SmartThings, device: FullDevice, component: str = MAIN
@@ -285,13 +282,8 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
             color_modes.add(ColorMode.BRIGHTNESS)
         if not color_modes:
             color_modes.add(ColorMode.ONOFF)
-        if len(color_modes) == 1:
-            self._attr_color_mode = list(color_modes)[0]
+        self._attr_color_mode = list(color_modes)[0]
         self._attr_supported_color_modes = color_modes
-        features = LightEntityFeature(0)
-        if self.supports_capability(Capability.SWITCH_LEVEL):
-            features |= LightEntityFeature.TRANSITION
-        self._attr_supported_features = features
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the lamp on."""
@@ -319,9 +311,6 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the lamp off."""
-        if ATTR_TRANSITION in kwargs:
-            await self.async_set_level(0, int(kwargs[ATTR_TRANSITION]))
-            return
         if self.supports_capability(Capability.SWITCH):
             await self.execute_device_command(Capability.SWITCH, Command.OFF)
             return
@@ -339,16 +328,18 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
             )
             or []
         )
-        value = self.get_attribute_value(
+        level = self.get_attribute_value(
             Capability.SAMSUNG_CE_LAMP, Attribute.BRIGHTNESS_LEVEL
         )
-        if value is None:
+        if level is None:
             self._attr_brightness = None
             return
-        try:
-            percent = ordered_list_item_to_percentage(levels, value)
-        except ValueError:
-            percent = 0 if str(value).lower() == "off" else 100
+        if "off" in levels:
+            if level == "off":
+                self._attr_brightness = 0
+                return
+            levels = [level for level in levels if level != "off"]
+        percent = ordered_list_item_to_percentage(levels, level)
         self._attr_brightness = int(convert_scale(percent, 100, 255))
 
     async def async_set_level(self, brightness: int, transition: int) -> None:
@@ -359,6 +350,19 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
             )
             or []
         )
+        if brightness == 0:
+            if "off" in levels:
+                await self.execute_device_command(
+                    Capability.SAMSUNG_CE_LAMP,
+                    Command.SET_BRIGHTNESS_LEVEL,
+                    argument="off",
+                )
+            else:
+                await self.execute_device_command(
+                    Capability.SWITCH,
+                    Command.OFF,
+                )
+            return
         # remove 'off' for brightness mapping
         if "off" in levels:
             levels = [level for level in levels if level != "off"]
@@ -391,4 +395,4 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity, RestoreEntity):
         )
         if brightness is None:
             return None
-        return str(brightness).lower() != "off"
+        return brightness != "off"

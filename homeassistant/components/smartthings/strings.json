@@ -159,6 +159,11 @@
         }
       }
     },
+    "light": {
+      "light": {
+        "name": "light"
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
