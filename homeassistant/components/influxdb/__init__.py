@@ -81,10 +81,12 @@ from .const import (
     CONF_TAGS_ATTRIBUTES,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
-    DEFAULT_HOST,
+    DEFAULT_BUCKET,
+    DEFAULT_DATABASE,
     DEFAULT_HOST_V2,
     DEFAULT_MEASUREMENT_ATTR,
     DEFAULT_SSL_V2,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     EVENT_NEW_STATE,
     INFLUX_CONF_FIELDS,
@@ -140,7 +142,7 @@ def create_influx_url(conf: dict) -> dict:
 
 def validate_version_specific_config(conf: dict) -> dict:
     """Ensure correct config fields are provided based on API version used."""
-    if conf[CONF_API_VERSION] == API_VERSION_2:
+    if conf.get(CONF_API_VERSION, DEFAULT_API_VERSION) == API_VERSION_2:
         if CONF_TOKEN not in conf:
             raise vol.Invalid(
                 f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
@@ -202,7 +204,7 @@ INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend(
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: INFLUX_SCHEMA},
+    {DOMAIN: vol.All(INFLUX_SCHEMA, validate_version_specific_config)},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -493,26 +495,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Import YAML configuration into a config entry."""
-    try:
-        validated = vol.All(
-            vol.Schema(COMPONENT_CONFIG_SCHEMA_CONNECTION, extra=vol.ALLOW_EXTRA),
-            validate_version_specific_config,
-            create_influx_url,
-        )(config)
-    except vol.Invalid:
-        async_create_deprecated_yaml_issue(hass, error="invalid_config")
-        return
-
-    if (
-        CONF_HOST not in validated
-        and validated[CONF_API_VERSION] == DEFAULT_API_VERSION
-    ):
-        validated[CONF_HOST] = DEFAULT_HOST
+    data = {**config}
+    data.setdefault(CONF_API_VERSION, DEFAULT_API_VERSION)
+    data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    data.setdefault(CONF_DB_NAME, DEFAULT_DATABASE)
+    data.setdefault(CONF_BUCKET, DEFAULT_BUCKET)
+    create_influx_url(data)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=validated,
+        data=data,
     )
     if (
         result.get("type") is FlowResultType.ABORT

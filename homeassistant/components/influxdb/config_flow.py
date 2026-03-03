@@ -248,6 +248,8 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
         ssl = import_data.get(CONF_SSL)
 
         if api_version == DEFAULT_API_VERSION:
+            if host is None:
+                host = DEFAULT_HOST
             title = f"{database} ({host})"
             data = {
                 CONF_API_VERSION: api_version,

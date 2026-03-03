@@ -404,6 +404,15 @@ async def test_setup_minimal_config_with_connection_keys(
     [
         {"username": "user"},
         {"api_version": influxdb.API_VERSION_2, "organization": "organization"},
+        {"token": "token", "organization": "organization"},
+        {"api_version": influxdb.API_VERSION_2},
+        {
+            "api_version": influxdb.API_VERSION_2,
+            "token": "token",
+            "organization": "organization",
+            "username": "user",
+            "password": "pass",
+        },
     ],
 )
 async def test_invalid_config_schema(
@@ -415,52 +424,6 @@ async def test_invalid_config_schema(
     config["influxdb"].update(config_ext)
 
     assert not await async_setup_component(hass, influxdb.DOMAIN, config)
-
-
-@pytest.mark.parametrize(
-    ("mock_client", "config_ext", "get_write_api"),
-    [
-        (
-            influxdb.DEFAULT_API_VERSION,
-            {"token": "token", "organization": "organization"},
-            _get_write_api_mock_v1,
-        ),
-        (
-            influxdb.API_VERSION_2,
-            {"api_version": influxdb.API_VERSION_2},
-            _get_write_api_mock_v2,
-        ),
-        (
-            influxdb.API_VERSION_2,
-            {
-                "api_version": influxdb.API_VERSION_2,
-                "token": "token",
-                "organization": "organization",
-                "username": "user",
-                "password": "pass",
-            },
-            _get_write_api_mock_v2,
-        ),
-    ],
-    indirect=["mock_client"],
-)
-async def test_invalid_config(
-    hass: HomeAssistant,
-    mock_client,
-    config_ext,
-    get_write_api,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the setup with invalid config options specified for wrong version."""
-    config = {"influxdb": {}}
-    config["influxdb"].update(config_ext)
-
-    assert await async_setup_component(hass, influxdb.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_yaml_import_issue_invalid_config"
-    )
 
 
 @pytest.mark.parametrize(
