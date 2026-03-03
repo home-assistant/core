@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_JOIN,
     SERVICE_UNJOIN,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
@@ -175,3 +176,59 @@ async def test_state_stream_not_found(
 
     state = hass.states.get("media_player.test_client_1_snapcast_client")
     assert state.state == "off"
+
+
+async def test_attributes_group_is_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_client_1: AsyncMock,
+) -> None:
+    """Test exceptions are not thrown when a client has no group."""
+    # Force nonexistent group
+    mock_client_1.group = None
+
+    # Setup and verify the integration is loaded
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("media_player.test_client_1_snapcast_client")
+
+    # Assert accessing state and attributes doesn't throw
+    assert state.state == MediaPlayerState.IDLE
+
+    assert state.attributes["group_members"] is None
+    assert "source" not in state.attributes
+    assert "source_list" not in state.attributes
+    assert "metadata" not in state.attributes
+    assert "media_position" not in state.attributes
+
+
+async def test_join_group_is_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_group_1: AsyncMock,
+    mock_client_1: AsyncMock,
+) -> None:
+    """Test join service doesn't throw when a client has no group."""
+    # Force nonexistent group
+    mock_client_1.group = None
+
+    # Setup and verify the integration is loaded
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Attempt to join players to client
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+            ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+        },
+        blocking=True,
+    )
+    mock_group_1.add_client.assert_not_awaited()
