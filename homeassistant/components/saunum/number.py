@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pysaunum import (
-    DEFAULT_DURATION,
-    DEFAULT_FAN_DURATION,
     MAX_DURATION,
     MAX_FAN_DURATION,
     MIN_DURATION,
@@ -37,6 +35,10 @@ if TYPE_CHECKING:
 
 PARALLEL_UPDATES = 0
 
+# Default values when device returns None or invalid data
+DEFAULT_DURATION_MIN = 120
+DEFAULT_FAN_DURATION_MIN = 15
+
 
 @dataclass(frozen=True, kw_only=True)
 class LeilSaunaNumberEntityDescription(NumberEntityDescription):
@@ -57,8 +59,8 @@ NUMBERS: tuple[LeilSaunaNumberEntityDescription, ...] = (
         native_step=1,
         value_fn=lambda data: (
             duration
-            if (duration := data.sauna_duration) > MIN_DURATION
-            else DEFAULT_DURATION
+            if (duration := data.sauna_duration) is not None and duration > MIN_DURATION
+            else DEFAULT_DURATION_MIN
         ),
         set_value_fn=lambda client, value: client.async_set_sauna_duration(int(value)),
     ),
@@ -72,8 +74,8 @@ NUMBERS: tuple[LeilSaunaNumberEntityDescription, ...] = (
         native_step=1,
         value_fn=lambda data: (
             fan_dur
-            if (fan_dur := data.fan_duration) > MIN_FAN_DURATION
-            else DEFAULT_FAN_DURATION
+            if (fan_dur := data.fan_duration) is not None and fan_dur > MIN_FAN_DURATION
+            else DEFAULT_FAN_DURATION_MIN
         ),
         set_value_fn=lambda client, value: client.async_set_fan_duration(int(value)),
     ),

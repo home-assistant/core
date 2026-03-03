@@ -151,13 +151,13 @@ async def test_number_with_default_duration(
     mock_config_entry: MockConfigEntry,
     mock_saunum_client: MagicMock,
 ) -> None:
-    """Test number entities use default when device returns 0."""
-    # Set duration to 0 (device hasn't set it yet / sauna type default)
+    """Test number entities use default when device returns None."""
+    # Set duration to None (device hasn't set it yet)
     base_data = mock_saunum_client.async_get_data.return_value
     mock_saunum_client.async_get_data.return_value = replace(
         base_data,
-        sauna_duration=0,
-        fan_duration=0,
+        sauna_duration=None,
+        fan_duration=None,
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -167,11 +167,11 @@ async def test_number_with_default_duration(
     # Should show default values
     sauna_duration_state = hass.states.get("number.saunum_leil_sauna_duration")
     assert sauna_duration_state is not None
-    assert sauna_duration_state.state == "120"  # DEFAULT_DURATION
+    assert sauna_duration_state.state == "120"  # DEFAULT_DURATION_MIN
 
     fan_duration_state = hass.states.get("number.saunum_leil_fan_duration")
     assert fan_duration_state is not None
-    assert fan_duration_state.state == "10"  # DEFAULT_FAN_DURATION
+    assert fan_duration_state.state == "15"  # DEFAULT_FAN_DURATION_MIN
 
 
 async def test_number_with_valid_duration_from_device(
