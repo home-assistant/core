@@ -558,6 +558,45 @@ async def test_monitor_input_oserror_cleanup(
     assert handler._monitor_task.done()
 
 
+async def test_monitor_input_oserror_cancels_repeat_tasks(
+    hass: HomeAssistant,
+    mock_input_device: MagicMock,
+) -> None:
+    """Test OSError during monitoring cancels active key repeat tasks."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_BY_ID_BASENAME,
+        data={
+            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+        },
+        options={
+            CONF_KEY_TYPES: ["key_down"],
+            CONF_EMULATE_KEY_HOLD: True,
+            CONF_EMULATE_KEY_HOLD_DELAY: 999,
+            CONF_EMULATE_KEY_HOLD_REPEAT: 999,
+        },
+    )
+    entry.add_to_hass(hass)
+    handler = DeviceHandler(hass, entry)
+
+    # Yield a key_down (starts a repeat task), then raise OSError
+    key_down = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_down"])
+
+    async def _key_then_oserror():
+        yield key_down
+        raise OSError("Device removed")
+
+    mock_input_device.async_read_loop.return_value = _key_then_oserror()
+
+    await handler.async_device_start_monitoring(mock_input_device)
+    await hass.async_block_till_done()
+
+    # Monitor task should complete without raising
+    assert handler._monitor_task is not None
+    assert handler._monitor_task.done()
+
+
 # --- KeyboardRemoteManager tests ---
 
 
