@@ -27,7 +27,7 @@ class WebDavSensorEntityDescription(SensorEntityDescription):
     """Describes a WebDAV sensor entity."""
 
     value_fn: Callable[[WebDavData], int | None]
-    available_fn: Callable[[WebDavData], bool] = lambda data: True
+    available_fn: Callable[[WebDavData], bool]
 
 
 SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
@@ -98,11 +98,3 @@ class WebDavSensor(CoordinatorEntity[WebDavCoordinator], SensorEntity):
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def available(self) -> bool:
-        """Return True if the sensor is available."""
-        return (
-            self.entity_description.available_fn(self.coordinator.data)
-            and super().available
-        )

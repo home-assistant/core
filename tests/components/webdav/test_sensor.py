@@ -98,7 +98,7 @@ async def test_sensor_update_fail(
     mock_config_entry: MockConfigEntry,
     error: Exception,
 ) -> None:
-    """Test that an auth error marks the config entry as having an auth error."""
+    """Test sensors become unavailable and recover after update failure."""
     webdav_client.quota.side_effect = error
 
     freezer.tick(timedelta(minutes=15))
