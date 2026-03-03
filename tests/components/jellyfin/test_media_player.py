@@ -540,7 +540,7 @@ async def test_supports_media_control_fallback(
     assert features & MediaPlayerEntityFeature.SEEK
     assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
     assert features & MediaPlayerEntityFeature.PLAY_MEDIA
-    assert features & MediaPlayerEntityFeature.ENQUEUE
+    assert features & MediaPlayerEntityFeature.MEDIA_ENQUEUE
 
     # Should also have volume controls since it has VolumeSet, Mute, and Unmute
     assert features & MediaPlayerEntityFeature.VOLUME_SET
