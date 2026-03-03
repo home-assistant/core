@@ -13,7 +13,13 @@ from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -21,9 +27,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    API_MODE_CLOUD,
     API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
@@ -260,3 +269,84 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_intellifire_device")
 
         return await self.async_step_cloud_api()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return IntelliFireOptionsFlowHandler()
+
+
+class IntelliFireOptionsFlowHandler(OptionsFlow):
+    """Options flow for IntelliFire component."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Validate connectivity for requested modes
+            coordinator = self.config_entry.runtime_data
+            fireplace = coordinator.fireplace
+
+            # Refresh connectivity status before validating
+            await fireplace.async_validate_connectivity()
+
+            if (
+                user_input[CONF_READ_MODE] == API_MODE_LOCAL
+                and not fireplace.local_connectivity
+            ):
+                errors[CONF_READ_MODE] = "local_disabled"
+            if (
+                user_input[CONF_READ_MODE] == API_MODE_CLOUD
+                and not fireplace.cloud_connectivity
+            ):
+                errors[CONF_READ_MODE] = "cloud_disabled"
+            if (
+                user_input[CONF_CONTROL_MODE] == API_MODE_LOCAL
+                and not fireplace.local_connectivity
+            ):
+                errors[CONF_CONTROL_MODE] = "local_disabled"
+            if (
+                user_input[CONF_CONTROL_MODE] == API_MODE_CLOUD
+                and not fireplace.cloud_connectivity
+            ):
+                errors[CONF_CONTROL_MODE] = "cloud_disabled"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
+
+        existing_read = self.config_entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)
+        existing_control = self.config_entry.options.get(
+            CONF_CONTROL_MODE, API_MODE_LOCAL
+        )
+
+        cloud_local_options = selector.SelectSelectorConfig(
+            options=[
+                selector.SelectOptionDict(value=API_MODE_LOCAL, label="Local"),
+                selector.SelectOptionDict(value=API_MODE_CLOUD, label="Cloud"),
+            ]
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_READ_MODE,
+                        default=user_input.get(CONF_READ_MODE, existing_read)
+                        if user_input
+                        else existing_read,
+                    ): selector.SelectSelector(cloud_local_options),
+                    vol.Required(
+                        CONF_CONTROL_MODE,
+                        default=user_input.get(CONF_CONTROL_MODE, existing_control)
+                        if user_input
+                        else existing_control,
+                    ): selector.SelectSelector(cloud_local_options),
+                }
+            ),
+            errors=errors,
+        )
