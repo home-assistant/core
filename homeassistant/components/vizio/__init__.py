@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_NAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
     device = VizioAsync(
         DEVICE_ID,
         host,
-        "",
+        entry.data[CONF_NAME],
         auth_token=token,
         device_type=VIZIO_DEVICE_CLASSES[device_class],
         session=async_get_clientsession(hass, False),
