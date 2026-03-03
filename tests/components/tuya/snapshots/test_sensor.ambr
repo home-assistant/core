@@ -3929,13 +3929,13 @@
     'state': '80.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.cat_feeder_last_amount-entry]
+# name: test_platform_setup_and_discovery[sensor.cat_feeder-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3944,7 +3944,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cat_feeder_last_amount',
+    'entity_id': 'sensor.cat_feeder',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3952,30 +3952,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Last amount',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Last amount',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'last_amount',
+    'translation_key': 'feed_report',
     'unique_id': 'tuya.igkrtodqg14xvfxlqswwcfeed_report',
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.cat_feeder_last_amount-state]
+# name: test_platform_setup_and_discovery[sensor.cat_feeder-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cat Feeder Last amount',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Cat Feeder',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cat_feeder_last_amount',
+    'entity_id': 'sensor.cat_feeder',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4606,6 +4606,59 @@
     'state': '0.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.cleverio_pf100-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cleverio_pf100',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feed_report',
+    'unique_id': 'tuya.iomszlsve0yyzkfwqswwcfeed_report',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.cleverio_pf100-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cleverio PF100',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cleverio_pf100',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.cleverio_pf100_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4658,59 +4711,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.cleverio_pf100_last_amount-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cleverio_pf100_last_amount',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last amount',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Last amount',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_amount',
-    'unique_id': 'tuya.iomszlsve0yyzkfwqswwcfeed_report',
-    'unit_of_measurement': '',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.cleverio_pf100_last_amount-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Cleverio PF100 Last amount',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cleverio_pf100_last_amount',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.consommation_current-entry]
