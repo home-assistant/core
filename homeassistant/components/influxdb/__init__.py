@@ -81,12 +81,9 @@ from .const import (
     CONF_TAGS_ATTRIBUTES,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
-    DEFAULT_BUCKET,
-    DEFAULT_DATABASE,
     DEFAULT_HOST_V2,
     DEFAULT_MEASUREMENT_ATTR,
     DEFAULT_SSL_V2,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     EVENT_NEW_STATE,
     INFLUX_CONF_FIELDS,
@@ -495,17 +492,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Import YAML configuration into a config entry."""
-    data = {**config}
-    data.setdefault(CONF_API_VERSION, DEFAULT_API_VERSION)
-    data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-    data.setdefault(CONF_DB_NAME, DEFAULT_DATABASE)
-    data.setdefault(CONF_BUCKET, DEFAULT_BUCKET)
-    create_influx_url(data)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=data,
+        data=config,
     )
     if (
         result.get("type") is FlowResultType.ABORT
