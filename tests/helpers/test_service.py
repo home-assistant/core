@@ -18,6 +18,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN, Group
+from homeassistant.components.http import DOMAIN as HTTP_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.shell_command import DOMAIN as SHELL_COMMAND_DOMAIN
@@ -868,13 +869,15 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, GROUP_DOMAIN),
+            await async_get_integration(hass, HTTP_DOMAIN),
         ]
     )
 
-    assert len(descriptions) == 1
+    assert len(descriptions) == 2
     assert GROUP_DOMAIN in descriptions
     assert "description" not in descriptions[GROUP_DOMAIN]["reload"]
     assert "fields" in descriptions[GROUP_DOMAIN]["reload"]
+    assert HTTP_DOMAIN in descriptions
 
     # Does not have services
     assert SYSTEM_HEALTH_DOMAIN not in descriptions
@@ -918,7 +921,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, LOGGER_DOMAIN, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
+    assert len(descriptions) == 3
     assert LOGGER_DOMAIN in descriptions
     assert descriptions[LOGGER_DOMAIN]["set_default_level"]["name"] == "Translated name"
     assert (
@@ -1532,8 +1535,7 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
     test_service_mock.reset_mock()
     with pytest.raises(
         exceptions.ServiceNotSupported,
-        match="Entity light.living_room does not "
-        "support action test_domain.test_service",
+        match="Entity light.living_room does not support action test_domain.test_service",
     ):
         await service.entity_service_call(
             hass,
@@ -1635,8 +1637,7 @@ async def test_call_with_device_class(
     test_service_mock.reset_mock()
     with pytest.raises(
         exceptions.ServiceNotSupported,
-        match=f"Entity {unsupported_entity} does not "
-        "support action test_domain.test_service",
+        match=f"Entity {unsupported_entity} does not support action test_domain.test_service",
     ):
         await service.entity_service_call(
             hass,
@@ -2238,7 +2239,10 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
     assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call_1))
-    ] == ["test_domain.test_1", "test_domain.test_3"]
+    ] == [
+        "test_domain.test_1",
+        "test_domain.test_3",
+    ]
 
     call_2 = ServiceCall(
         hass,
