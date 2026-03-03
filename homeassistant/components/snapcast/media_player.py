@@ -89,8 +89,7 @@ async def async_setup_entry(
             if entity_id := entity_registry.async_get_entity_id(
                 MEDIA_PLAYER_DOMAIN,
                 DOMAIN,
-                SnapcastClientDevice.get_unique_id(
-                    coordinator.host_id, snapcast_id),
+                SnapcastClientDevice.get_unique_id(coordinator.host_id, snapcast_id),
             ):
                 entity_registry.async_remove(entity_id)
 
@@ -159,7 +158,11 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._device.connected:
-            if self.is_volume_muted or self._current_group is None or self._current_group.muted:
+            if (
+                self.is_volume_muted
+                or self._current_group is None
+                or self._current_group.muted
+            ):
                 return MediaPlayerState.IDLE
             try:
                 return STREAM_STATUS.get(self._current_group.stream_status)
@@ -184,17 +187,15 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        if group := self._current_group:
-            return group.stream
+        if self._current_group is None:
+            return None
 
-        return None
+        return self._current_group.stream
 
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to get source list.", self._device.friendly_name)
             return []
 
         return list(self._current_group.streams_by_name().keys())
@@ -203,7 +204,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Set input source."""
         if self._current_group is None:
             _LOGGER.warning(
-                "Client '%s' has no group. Unable to select source.", self._device.friendly_name)
+                "Client '%s' has no group. Unable to select source",
+                self._device.friendly_name,
+            )
             return
 
         streams = self._current_group.streams_by_name()
@@ -249,8 +252,6 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def group_members(self) -> list[str] | None:
         """List of player entities which are currently grouped together for synchronous playback."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to get group members.", self._device.friendly_name)
             return None
 
         entity_registry = er.async_get(self.hass)
@@ -270,7 +271,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Add `group_members` to this client's current group."""
         if self._current_group is None:
             _LOGGER.warning(
-                "Client '%s' has no group. Unable to join players.", self._device.friendly_name)
+                "Client '%s' has no group. Unable to join players",
+                self._device.friendly_name,
+            )
             return
 
         # Get the client entity for each group member excluding self
@@ -299,7 +302,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Remove this client from it's current group."""
         if self._current_group is None:
             _LOGGER.warning(
-                "Client '%s' has no group. Unable to unjoin player.", self._device.friendly_name)
+                "Client '%s' has no group. Unable to unjoin player",
+                self._device.friendly_name,
+            )
             return
 
         await self._current_group.remove_client(self._device.identifier)
@@ -309,8 +314,6 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to get metadata.", self._device.friendly_name)
             return {}
 
         try:
@@ -377,8 +380,6 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to get media position.", self._device.friendly_name)
             return None
 
         try:
