@@ -29,6 +29,12 @@
       "early_update": {
         "default": "mdi:update"
       },
+      "equalizer": {
+        "default": "mdi:equalizer",
+        "state": {
+          "off": "mdi:equalizer-outline"
+        }
+      },
       "pre_amp": {
         "default": "mdi:volume-high",
         "state": {
