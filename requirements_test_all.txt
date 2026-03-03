@@ -1087,7 +1087,7 @@ holidays==0.84
 home-assistant-frontend==20260302.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.2.13
+home-assistant-intents==2026.3.3
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
@@ -2159,7 +2159,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.5
 
 # homeassistant.components.bsblan
-python-bsblan==5.1.0
+python-bsblan==5.1.1
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2377,7 +2377,7 @@ reolink-aio==0.19.0
 rflink==0.0.67
 
 # homeassistant.components.ring
-ring-doorbell==0.9.13
+ring-doorbell==0.9.14
 
 # homeassistant.components.roku
 rokuecp==0.19.5
@@ -2544,7 +2544,7 @@ subarulink==0.7.15
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.10.0
+switchbot-api==2.11.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==5.4.3
@@ -2627,7 +2627,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.10
+tuya-device-handlers==0.0.11
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
