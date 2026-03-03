@@ -17,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, MAX_CONSECUTIVE_FAILURES
 
+type IssConfigEntry = ConfigEntry[IssDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
@@ -43,15 +45,15 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             update_interval=timedelta(seconds=60),
         )
         self._consecutive_failures = 0
+        self.iss = pyiss.ISS()
 
     async def _async_update_data(self) -> IssData:
         """Fetch data from the ISS API, tolerating transient failures."""
-        iss = pyiss.ISS()
         try:
             data = await self.hass.async_add_executor_job(
                 lambda: IssData(
-                    number_of_people_in_space=iss.number_of_people_in_space(),
-                    current_location=iss.current_location(),
+                    number_of_people_in_space=self.iss.number_of_people_in_space(),
+                    current_location=self.iss.current_location(),
                 )
             )
         except (HTTPError, requests.exceptions.ConnectionError) as err:
@@ -61,7 +63,7 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
                 or self.data is None
             ):
                 raise UpdateFailed(
-                    f"Unable to retrieve data after {self._consecutive_failures} attempts"
+                    f"Unable to retrieve data after {self._consecutive_failures} consecutive update failures"
                 ) from err
             _LOGGER.debug(
                 "Transient API error (%s/%s), using cached data: %s",
@@ -74,15 +76,13 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
         return data
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IssConfigEntry) -> bool:
     """Set up this integration using UI."""
-    hass.data.setdefault(DOMAIN, {})
-
     coordinator = IssDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN] = coordinator
+    entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -91,13 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IssConfigEntry) -> bool:
     """Handle removal of an entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: IssConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

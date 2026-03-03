@@ -88,7 +88,7 @@ async def test_sensor_updates_with_coordinator(
     }
 
     # Trigger coordinator refresh
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

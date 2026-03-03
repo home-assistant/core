@@ -18,8 +18,7 @@ async def test_setup_entry(
 ) -> None:
     """Test successful setup of config entry."""
     assert init_integration.state is ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
     assert coordinator.data is not None
     assert coordinator.data.number_of_people_in_space == 7
     assert coordinator.data.current_location == {
@@ -33,13 +32,11 @@ async def test_unload_entry(
 ) -> None:
     """Test unload of config entry."""
     assert init_integration.state is ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
 
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
 
 
 async def test_update_listener(
@@ -71,7 +68,7 @@ async def test_coordinator_single_failure_uses_cached_data(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator tolerates single API failure and uses cached data."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
     original_data = coordinator.data
 
     # Simulate API failure
@@ -89,7 +86,7 @@ async def test_coordinator_multiple_failures_uses_cached_data(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator tolerates multiple failures below threshold."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
     original_data = coordinator.data
 
     # Simulate multiple API failures (below MAX_CONSECUTIVE_FAILURES)
@@ -110,7 +107,7 @@ async def test_coordinator_max_failures_marks_unavailable(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator marks update failed after MAX_CONSECUTIVE_FAILURES."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
 
     # Simulate consecutive API failures reaching the threshold
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
@@ -128,7 +125,7 @@ async def test_coordinator_failure_counter_resets_on_success(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator resets failure counter after successful fetch."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
 
     # Simulate some failures
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
@@ -175,7 +172,7 @@ async def test_coordinator_handles_connection_error(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
     """Test coordinator handles ConnectionError exceptions."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = init_integration.runtime_data
     original_data = coordinator.data
 
     # Simulate ConnectionError
