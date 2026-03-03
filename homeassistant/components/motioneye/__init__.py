@@ -62,8 +62,6 @@ from .const import (
     ATTR_WEBHOOK_ID,
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
-    CONF_CLIENT,
-    CONF_COORDINATOR,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
@@ -308,10 +306,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = MotionEyeUpdateCoordinator(hass, entry, client)
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_CLIENT: client,
-        CONF_COORDINATOR: coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     current_cameras: set[tuple[str, str]] = set()
     device_registry = dr.async_get(hass)
@@ -373,8 +368,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.entry_id)
-        await config_data[CONF_CLIENT].async_client_close()
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.client.async_client_close()
 
     return unload_ok
 
@@ -446,9 +441,8 @@ def _get_media_event_data(
     if not config_entry_id or config_entry_id not in hass.data[DOMAIN]:
         return {}
 
-    config_entry_data = hass.data[DOMAIN][config_entry_id]
-    client = config_entry_data[CONF_CLIENT]
-    coordinator = config_entry_data[CONF_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry_id]
+    client = coordinator.client
 
     for identifier in device.identifiers:
         data = split_motioneye_device_identifier(identifier)
