@@ -400,9 +400,26 @@ async def test_setup_minimal_config_with_connection_keys(
 
 
 @pytest.mark.parametrize(
+    "config_ext",
+    [
+        {"username": "user"},
+        {"api_version": influxdb.API_VERSION_2, "organization": "organization"},
+    ],
+)
+async def test_invalid_config_schema(
+    hass: HomeAssistant,
+    config_ext,
+) -> None:
+    """Test that invalid schema configs are rejected at setup."""
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    assert not await async_setup_component(hass, influxdb.DOMAIN, config)
+
+
+@pytest.mark.parametrize(
     ("mock_client", "config_ext", "get_write_api"),
     [
-        (influxdb.DEFAULT_API_VERSION, {"username": "user"}, _get_write_api_mock_v1),
         (
             influxdb.DEFAULT_API_VERSION,
             {"token": "token", "organization": "organization"},
@@ -411,11 +428,6 @@ async def test_setup_minimal_config_with_connection_keys(
         (
             influxdb.API_VERSION_2,
             {"api_version": influxdb.API_VERSION_2},
-            _get_write_api_mock_v2,
-        ),
-        (
-            influxdb.API_VERSION_2,
-            {"api_version": influxdb.API_VERSION_2, "organization": "organization"},
             _get_write_api_mock_v2,
         ),
         (
@@ -439,7 +451,7 @@ async def test_invalid_config(
     get_write_api,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the setup with invalid config or config options specified for wrong version."""
+    """Test the setup with invalid config options specified for wrong version."""
     config = {"influxdb": {}}
     config["influxdb"].update(config_ext)
 
