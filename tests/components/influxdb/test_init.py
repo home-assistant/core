@@ -322,9 +322,10 @@ async def test_setup_config_ssl(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "get_write_api"),
+    ("mock_client", "get_write_api", "config_ext"),
     [
-        (influxdb.DEFAULT_API_VERSION, _get_write_api_mock_v1),
+        (influxdb.DEFAULT_API_VERSION, _get_write_api_mock_v1, {}),
+        (influxdb.DEFAULT_API_VERSION, _get_write_api_mock_v1, {"precision": "s"}),
     ],
     indirect=["mock_client"],
 )
@@ -332,10 +333,12 @@ async def test_setup_minimal_config_no_connection_keys(
     hass: HomeAssistant,
     mock_client,
     get_write_api,
+    config_ext,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the setup with minimal configuration creates no deprecation issue."""
+    """Test the setup with non-connection YAML keys creates no deprecation issue."""
     config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
 
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
