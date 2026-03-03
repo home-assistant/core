@@ -608,6 +608,33 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
     assert config_entry.data[CONF_HOST] == TEST_HOST
 
 
+async def test_dhcp_ip_update_aborted_if_no_host(hass: HomeAssistant) -> None:
+    """Test dhcp discovery does not update the IP if the config entry has no host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={},
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    dhcp_data = DhcpServiceInfo(
+        ip=TEST_HOST2,
+        hostname="Reolink",
+        macaddress=DHCP_FORMATTED_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("attr", "value", "expected", "host_call_list"),
     [
