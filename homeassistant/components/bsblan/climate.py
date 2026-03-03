@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from bsblan import BSBLANError, get_hvac_action_category
+from bsblan import BSBLANError, State, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
-from .entity import BSBLanEntity
+from .entity import BSBLanCircuitEntity
 
 PARALLEL_UPDATES = 1
 
@@ -63,10 +63,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
     data = entry.runtime_data
-    async_add_entities([BSBLANClimate(data)])
+    async_add_entities(
+        BSBLANClimate(data, circuit) for circuit in data.available_circuits
+    )
 
 
-class BSBLANClimate(BSBLanEntity, ClimateEntity):
+class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
     _attr_name = None
@@ -84,36 +86,51 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     def __init__(
         self,
         data: BSBLanData,
+        circuit: int,
     ) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(data.fast_coordinator, data)
-        self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
+        super().__init__(data.fast_coordinator, data, circuit)
+        self._circuit = circuit
+        mac = format_mac(data.device.MAC)
 
-        # Set temperature range if available, otherwise use Home Assistant defaults
-        if data.static.min_temp is not None and data.static.min_temp.value is not None:
-            self._attr_min_temp = data.static.min_temp.value
-        if data.static.max_temp is not None and data.static.max_temp.value is not None:
-            self._attr_max_temp = data.static.max_temp.value
+        # Backward compatible unique ID: circuit 1 keeps old format
+        if circuit == 1:
+            self._attr_unique_id = f"{mac}-climate"
+        else:
+            self._attr_unique_id = f"{mac}-climate-{circuit}"
+
+        # Set temperature range from per-circuit static data
+        static = data.static.get(circuit)
+        if static is not None:
+            if static.min_temp is not None and static.min_temp.value is not None:
+                self._attr_min_temp = static.min_temp.value
+            if static.max_temp is not None and static.max_temp.value is not None:
+                self._attr_max_temp = static.max_temp.value
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
+
+    @property
+    def _circuit_state(self) -> State:
+        """Return the state for this circuit."""
+        return self.coordinator.data.states[self._circuit]
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if (current_temp := self.coordinator.data.state.current_temperature) is None:
+        if (current_temp := self._circuit_state.current_temperature) is None:
             return None
         return current_temp.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if (target_temp := self.coordinator.data.state.target_temperature) is None:
+        if (target_temp := self._circuit_state.target_temperature) is None:
             return None
         return target_temp.value
 
     @property
     def _hvac_mode_value(self) -> int | None:
         """Return the raw hvac_mode value from the coordinator."""
-        if (hvac_mode := self.coordinator.data.state.hvac_mode) is None:
+        if (hvac_mode := self._circuit_state.hvac_mode) is None:
             return None
         return hvac_mode.value
 
@@ -127,9 +144,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac action."""
-        if (
-            action := self.coordinator.data.state.hvac_action
-        ) is None or action.value is None:
+        if (action := self._circuit_state.hvac_action) is None or action.value is None:
             return None
         category = get_hvac_action_category(action.value)
         return HVACAction(category.name.lower())
@@ -169,7 +184,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
                 data[ATTR_HVAC_MODE] = 1
 
         try:
-            await self.coordinator.client.thermostat(**data)
+            await self.coordinator.client.thermostat(**data, circuit=self._circuit)
         except BSBLANError as err:
             raise HomeAssistantError(
                 "An error occurred while updating the BSBLAN device",
