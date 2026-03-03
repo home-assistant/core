@@ -93,7 +93,7 @@ def oh_event_to_sia_event(oh_event: OHEvent) -> SIAEvent:
 
 
 def _parse_timestamp(ts: datetime | str | None) -> datetime | str | None:
-    """Ensure timestamp is a datetime or None."""
+    """Parse timestamp to datetime, passing through unparseable strings as-is."""
     if isinstance(ts, datetime):
         return ts
     if isinstance(ts, str):
