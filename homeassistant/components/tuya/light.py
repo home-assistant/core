@@ -633,17 +633,17 @@ async def async_setup_entry(
                         manager,
                         description,
                         brightness_wrapper=(
-                            brightness_wrapper := _get_brightness_wrapper(
+                            brightness_wrapper := _get_brightness_wrapper(  # type: ignore[arg-type]
                                 device, description
                             )
                         ),
-                        color_data_wrapper=_get_color_data_wrapper(
+                        color_data_wrapper=_get_color_data_wrapper(  # type: ignore[arg-type]
                             device, description, brightness_wrapper
                         ),
                         color_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, description.color_mode, prefer_function=True
                         ),
-                        color_temp_wrapper=_ColorTempWrapper.find_dpcode(
+                        color_temp_wrapper=_ColorTempWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, description.color_temp, prefer_function=True
                         ),
                         switch_wrapper=switch_wrapper,
