@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from satel_integra.satel_integra import AsyncSatel
@@ -37,8 +36,6 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
 )
 from .coordinator import SatelConfigEntry
-
-_LOGGER = logging.getLogger(__package__)
 
 CONNECTION_SCHEMA = vol.Schema(
     {
