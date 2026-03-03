@@ -245,6 +245,30 @@ async def get_otbr_addon_firmware_info(
     )
 
 
+async def get_z2m_addon_firmware_info(
+    hass: HomeAssistant, z2m_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from a Z2M add-on."""
+    try:
+        z2m_addon_info = await z2m_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if z2m_addon_info.state == AddonState.NOT_INSTALLED:
+        return None
+
+    if (z2m_port := z2m_addon_info.options.get("serial", {}).get("port")) is None:
+        return None
+
+    return FirmwareInfo(
+        device=z2m_port,
+        firmware_type=ApplicationType.EZSP,
+        firmware_version=None,
+        source=f"zigbee2mqtt ({z2m_addon_manager.addon_slug})",
+        owners=[OwningAddon(slug=z2m_addon_manager.addon_slug)],
+    )
+
+
 async def guess_hardware_owners(
     hass: HomeAssistant, device_path: str
 ) -> list[FirmwareInfo]:
@@ -300,25 +324,10 @@ async def guess_hardware_owners(
             continue
 
         z2m_addon_manager = get_z2m_addon_manager(hass, slug)
+        z2m_fw_info = await get_z2m_addon_firmware_info(hass, z2m_addon_manager)
 
-        try:
-            z2m_addon_info = await z2m_addon_manager.async_get_addon_info()
-        except AddonError:
-            continue
-
-        if z2m_addon_info.state != AddonState.NOT_INSTALLED:
-            z2m_port = z2m_addon_info.options.get("serial", {}).get("port")
-
-            if z2m_port is not None:
-                device_guesses[z2m_port].append(
-                    FirmwareInfo(
-                        device=z2m_port,
-                        firmware_type=ApplicationType.EZSP,
-                        firmware_version=None,
-                        source=f"zigbee2mqtt ({slug})",
-                        owners=[OwningAddon(slug=slug)],
-                    )
-                )
+        if z2m_fw_info is not None:
+            device_guesses[z2m_fw_info.device].append(z2m_fw_info)
 
     return device_guesses.get(device_path, [])
 
