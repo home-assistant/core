@@ -8,7 +8,7 @@ import socket
 from typing import Any
 
 from pyvizio import VizioAsync, async_guess_device_type
-from pyvizio.const import APP_HOME
+from pyvizio.const import APP_HOME, APPS
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -107,6 +107,12 @@ def _host_is_same(host1: str, host2: str) -> bool:
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
 
+    def _get_app_list(self) -> list[dict[str, Any]]:
+        """Return the current apps list, falling back to defaults."""
+        if apps_coordinator := self.hass.data.get(DATA_APPS):
+            return apps_coordinator.data
+        return APPS
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,7 +164,7 @@ class VizioOptionsConfigFlow(OptionsFlow):
                     ): cv.multi_select(
                         [
                             APP_HOME["name"],
-                            *(app["name"] for app in self.hass.data[DATA_APPS].data),
+                            *(app["name"] for app in self._get_app_list()),
                         ]
                     ),
                 }

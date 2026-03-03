@@ -82,7 +82,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        self._device_info_fetched = False
+        self._model_fetched = False
+        self._version_fetched = False
 
     def _update_device_registry(self, model: str | None, version: str | None) -> None:
         """Update device registry with model and version info."""
@@ -99,8 +100,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             model=model,
             sw_version=version,
         )
-        if model and version:
-            self._device_info_fetched = True
+        if model:
+            self._model_fetched = True
+        if version:
+            self._version_fetched = True
 
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
@@ -111,10 +114,14 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
                 f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
             )
 
-        # Device info - fetch until both model and version are written to registry
-        if not self._device_info_fetched:
-            model = await self.device.get_model_name(log_api_exception=False)
-            version = await self.device.get_version(log_api_exception=False)
+        # Device info - fetch each field independently until we get a value
+        if not self._model_fetched or not self._version_fetched:
+            model = None
+            version = None
+            if not self._model_fetched:
+                model = await self.device.get_model_name(log_api_exception=False)
+            if not self._version_fetched:
+                version = await self.device.get_version(log_api_exception=False)
             if model or version:
                 self._update_device_registry(model, version)
 
