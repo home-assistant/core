@@ -38,18 +38,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_school_holiday_data() -> list[dict]:
-    """Return mock school holiday data."""
+    """Return mock school holiday data.
+
+    Note: End dates use exclusive bounds (day after last holiday day).
+    The coordinator adds 1 day to API end dates to make them inclusive.
+    """
     return [
         {
             "summary": "Summer Holiday",
             "start": date(2026, 7, 18),
-            "end": date(2026, 8, 30),
+            "end": date(2026, 8, 31),  # Last day of holiday is 2026-08-30
             "description": None,
         },
         {
             "summary": "Autumn Holiday",
             "start": date(2026, 10, 17),
-            "end": date(2026, 10, 25),
+            "end": date(2026, 10, 26),  # Last day of holiday is 2026-10-25
             "description": "A week's holiday for school and college students in the autumn.",
         },
     ]

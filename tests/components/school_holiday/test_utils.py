@@ -47,7 +47,7 @@ def test_ensure_date() -> None:
     test_date = date(2026, 1, 1)
 
     assert utils.ensure_date("2026-01-01") == test_date
-    assert utils.ensure_date("2026-01-01T22:59:00Z") == test_date
+    assert utils.ensure_date("2026-01-01T23:59:00Z") == test_date
     assert utils.ensure_date(test_date) == test_date
 
     # Testing with an invalid date string should raise a ValueError.
