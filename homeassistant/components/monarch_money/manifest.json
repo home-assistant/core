@@ -1,6 +1,7 @@
 {
   "domain": "monarch_money",
   "name": "Monarch Money",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@jeeftor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/monarchmoney",
