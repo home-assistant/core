@@ -977,6 +977,7 @@ class StartStopTrait(_Trait):
                 }
                 area_ids = [area_id_map[zone] for zone in zones]
                 service_data["cleaning_area_id"] = area_ids
+                service = vacuum.SERVICE_CLEAN_AREA
         elif command == COMMAND_PAUSE_UNPAUSE:
             service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
         if service:
