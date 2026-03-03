@@ -130,7 +130,7 @@ def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
 
 
 def _get_charging_settings_mode_formatted(entity: RenaultSensor[T]) -> str | None:
-    """Return the charge_settings mode of this entity."""
+    """Return the charging_settings mode of this entity."""
     data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
     charging_mode = data.mode if data else None
     return charging_mode.lower() if charging_mode else None
