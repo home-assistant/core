@@ -1,12 +1,14 @@
 """Test the ISS integration setup and coordinator."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
 from homeassistant.components.iss.const import DOMAIN, MAX_CONSECUTIVE_FAILURES
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -43,17 +45,26 @@ async def test_unload_entry(
 async def test_update_listener(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
-    """Test options update triggers reload."""
-    assert init_integration.state is ConfigEntryState.LOADED
+    """Test options update triggers reload and applies new options."""
+    state = hass.states.get("sensor.iss")
+    assert state is not None
+    assert "lat" in state.attributes
+    assert "long" in state.attributes
+    assert ATTR_LATITUDE not in state.attributes
+    assert ATTR_LONGITUDE not in state.attributes
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_reload:
-        hass.config_entries.async_update_entry(
-            init_integration, options={"show_on_map": True}
-        )
-        await hass.async_block_till_done()
-        mock_reload.assert_called_once_with(init_integration.entry_id)
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_SHOW_ON_MAP: True}
+    )
+    await hass.async_block_till_done()
+
+    # After reload with show_on_map=True, attributes should switch
+    state = hass.states.get("sensor.iss")
+    assert state is not None
+    assert ATTR_LATITUDE in state.attributes
+    assert ATTR_LONGITUDE in state.attributes
+    assert "lat" not in state.attributes
+    assert "long" not in state.attributes
 
 
 async def test_coordinator_single_failure_uses_cached_data(
@@ -95,10 +106,10 @@ async def test_coordinator_multiple_failures_uses_cached_data(
     assert coordinator.last_update_success is True
 
 
-async def test_coordinator_max_failures_raises_update_failed(
+async def test_coordinator_max_failures_marks_unavailable(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
 ) -> None:
-    """Test coordinator raises UpdateFailed after MAX_CONSECUTIVE_FAILURES."""
+    """Test coordinator marks update failed after MAX_CONSECUTIVE_FAILURES."""
     coordinator = hass.data[DOMAIN]
 
     # Simulate consecutive API failures reaching the threshold
@@ -108,8 +119,9 @@ async def test_coordinator_max_failures_raises_update_failed(
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
-    # After MAX_CONSECUTIVE_FAILURES, should fail
+    # After MAX_CONSECUTIVE_FAILURES, update should be marked as failed
     assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
 async def test_coordinator_failure_counter_resets_on_success(
