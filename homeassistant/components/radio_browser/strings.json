@@ -11,7 +11,7 @@
       "message": "Radio Browser integration is not ready"
     },
     "radio_browser_error": {
-      "message": "Error occurred while communicating with the Radio Browser API"
+      "message": "Error occurred while communicating with Radio Browser"
     }
   }
 }
