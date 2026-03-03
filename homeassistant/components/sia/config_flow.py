@@ -54,20 +54,22 @@ HUB_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PORT): int,
         vol.Optional(CONF_PROTOCOL, default="TCP"): vol.In(["TCP", "UDP", "OH"]),
+    }
+)
+
+SIA_ACCOUNT_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_ACCOUNT): str,
         vol.Optional(CONF_ENCRYPTION_KEY): str,
-        vol.Optional(CONF_PANEL_ID): str,
-        vol.Optional(CONF_FORWARD_HEARTBEAT, default=True): bool,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
 
-ACCOUNT_SCHEMA = vol.Schema(
+OH_ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCOUNT): str,
-        vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Optional(CONF_PANEL_ID): str,
         vol.Optional(CONF_FORWARD_HEARTBEAT, default=True): bool,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
@@ -158,17 +160,38 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         self._options: Mapping[str, Any] = {CONF_ACCOUNTS: {}}
         self._protocol: str = "TCP"
 
+    def _get_account_schema(self) -> vol.Schema:
+        """Return the account schema for the selected protocol."""
+        if self._protocol == PROTOCOL_OH:
+            return OH_ACCOUNT_SCHEMA
+        return SIA_ACCOUNT_SCHEMA
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial user step."""
-        errors: dict[str, str] | None = None
+        """Handle the initial step: select port and protocol."""
         if user_input is not None:
             self._protocol = user_input.get(CONF_PROTOCOL, "TCP")
+            self._data = {
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_PROTOCOL: self._protocol,
+                CONF_ACCOUNTS: [],
+            }
+            return await self.async_step_account()
+        return self.async_show_form(step_id="user", data_schema=HUB_SCHEMA)
+
+    async def async_step_account(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the account configuration step with protocol-specific fields."""
+        errors: dict[str, str] | None = None
+        if user_input is not None:
             errors = validate_input(user_input, self._protocol)
         if user_input is None or errors is not None:
             return self.async_show_form(
-                step_id="user", data_schema=HUB_SCHEMA, errors=errors
+                step_id="account",
+                data_schema=self._get_account_schema(),
+                errors=errors,
             )
         return await self.async_handle_data_and_route(user_input)
 
@@ -181,7 +204,9 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = validate_input(user_input, self._protocol)
         if user_input is None or errors is not None:
             return self.async_show_form(
-                step_id="add_account", data_schema=ACCOUNT_SCHEMA, errors=errors
+                step_id="add_account",
+                data_schema=self._get_account_schema(),
+                errors=errors,
             )
         return await self.async_handle_data_and_route(user_input)
 
@@ -202,26 +227,13 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _update_data(self, user_input: dict[str, Any]) -> None:
-        """Parse the user_input and store in data and options attributes.
-
-        If there is a port in the input or no data, assume it is fully new and overwrite.
-        Add the default options and overwrite the zones in options.
-        """
-        if not self._data or user_input.get(CONF_PORT):
-            self._data = {
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_PROTOCOL: user_input[CONF_PROTOCOL],
-                CONF_ACCOUNTS: [],
-            }
+        """Parse account input and append to data and options."""
         account = user_input[CONF_ACCOUNT]
         account_data: dict[str, Any] = {
             CONF_ACCOUNT: account,
             CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
         }
-        if (
-            user_input.get(CONF_PROTOCOL) == PROTOCOL_OH
-            or self._data.get(CONF_PROTOCOL) == PROTOCOL_OH
-        ):
+        if self._protocol == PROTOCOL_OH:
             panel_id_str = user_input.get(CONF_PANEL_ID, "0")
             account_data[CONF_PANEL_ID] = int(panel_id_str, 16) if panel_id_str else 0
             account_data[CONF_FORWARD_HEARTBEAT] = user_input.get(

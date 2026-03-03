@@ -53,7 +53,7 @@ class SIAHub:
         self._protocol: str = entry.data[CONF_PROTOCOL]
         self.sia_accounts: list[SIAAccount] | None = None
         self.sia_client: SIAClient | None = None
-        self._oh_receiver: Any | None = None
+        self._oh_receiver: OHReceiver | None = None
 
     @property
     def account_ids(self) -> list[str]:
@@ -116,7 +116,7 @@ class SIAHub:
         )
 
     def update_accounts(self) -> None:
-        """Update the SIA_Accounts variable."""
+        """Update accounts for the configured protocol (SIA or OH)."""
         self._load_options()
         if self._protocol == PROTOCOL_OH:
             self._update_oh_accounts()

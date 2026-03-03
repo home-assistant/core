@@ -34,7 +34,17 @@ def oh_event_to_sia_event(oh_event: OHEvent) -> SIAEvent:
         case _:
             sia_msg_type = MessageTypes.OH
 
-    # Build the SIAEvent using __new__ to skip __post_init__ parsing
+    # Build the SIAEvent using __new__ to bypass __post_init__ parsing.
+    #
+    # pysiaalarm compatibility notes (tested against pysiaalarm 3.2.2):
+    # - SIAEvent is a @dataclass; we set all public fields and five private
+    #   parse-guard flags (_content_parsed, _encrypted_content_decrypted,
+    #   _adm_parsed, _sia_added, _xdata_parsed) to prevent __post_init__
+    #   from re-parsing already-decoded OH data.
+    # - msg_crc == calc_crc ensures the valid_message property returns True.
+    # - SIA_CODES dict and MessageTypes enum must remain compatible.
+    # - If pysiaalarm adds/removes SIAEvent fields or renames parse flags,
+    #   this adapter will need updating.
     event = SIAEvent.__new__(SIAEvent)
 
     # Main frame fields
