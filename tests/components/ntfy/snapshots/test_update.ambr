@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_setup[update.ntfy_example_ntfy_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'update.ntfy_example_ntfy_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ntfy version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ntfy version',
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 16>,
+    'translation_key': <NtfyUpdate.UPDATE: 'update'>,
+    'unique_id': '123456789_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[update.ntfy_example_ntfy_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': '/api/brands/integration/ntfy/icon.png',
+      'friendly_name': 'ntfy.example ntfy version',
+      'in_progress': False,
+      'installed_version': '2.17.0',
+      'latest_version': '2.17.0',
+      'release_summary': None,
+      'release_url': 'https://github.com/binwiederhier/ntfy/releases/tag/v2.17.0',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 16>,
+      'title': 'ntfy v2.17.0',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.ntfy_example_ntfy_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

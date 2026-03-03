@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from meteoclimatic import Condition
 
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -13,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONDITION_MAP, DOMAIN, MANUFACTURER, MODEL
-from .coordinator import MeteoclimaticUpdateCoordinator
+from .coordinator import MeteoclimaticConfigEntry, MeteoclimaticUpdateCoordinator
 
 
 def format_condition(condition):
@@ -27,11 +26,11 @@ def format_condition(condition):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeteoclimaticConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteoclimatic weather platform."""
-    coordinator: MeteoclimaticUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities([MeteoclimaticWeather(coordinator)], False)
 
@@ -49,49 +48,44 @@ class MeteoclimaticWeather(
     def __init__(self, coordinator: MeteoclimaticUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
-        self._attr_unique_id = self.coordinator.data["station"].code
-        self._attr_name = self.coordinator.data["station"].name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        unique_id = self.coordinator.config_entry.unique_id
+        self._attr_unique_id = coordinator.data.station.code
+        self._attr_name = coordinator.data.station.name
         if TYPE_CHECKING:
-            assert unique_id is not None
-        return DeviceInfo(
+            assert coordinator.config_entry.unique_id is not None
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=self.coordinator.name,
+            name=coordinator.name,
         )
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return format_condition(self.coordinator.data["weather"].condition)
+        return format_condition(self.coordinator.data.weather.condition)
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return self.coordinator.data["weather"].temp_current
+        return self.coordinator.data.weather.temp_current
 
     @property
     def humidity(self) -> float | None:
         """Return the humidity."""
-        return self.coordinator.data["weather"].humidity_current
+        return self.coordinator.data.weather.humidity_current
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.coordinator.data["weather"].pressure_current
+        return self.coordinator.data.weather.pressure_current
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self.coordinator.data["weather"].wind_current
+        return self.coordinator.data.weather.wind_current
 
     @property
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
-        return self.coordinator.data["weather"].wind_bearing
+        return self.coordinator.data.weather.wind_bearing
