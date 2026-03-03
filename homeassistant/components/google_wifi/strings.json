@@ -5,8 +5,8 @@
         "title": "Set up Google/Nest Wifi",
         "description": "Please enter the IP address of your Google/Nest Wifi router/point.",
         "data": {
-          "name": "Device Name",
-          "ip_address": "IP Address"
+          "name": "Device name",
+          "ip_address": "IP address"
         }
       },
       "reconfigure": {
