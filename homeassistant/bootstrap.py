@@ -144,8 +144,6 @@ STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
 
-_DIAG_TOP_N_DOMAINS = 10
-
 # Core integrations are unconditionally loaded
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
