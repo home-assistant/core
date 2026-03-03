@@ -35,9 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
         store: Store[list[dict[str, Any]]] = Store(hass, 1, DOMAIN)
-        coordinator = VizioAppsDataUpdateCoordinator(hass, entry, store)
-        await coordinator.async_config_entry_first_refresh()
+        coordinator = VizioAppsDataUpdateCoordinator(hass, store)
+        await coordinator.async_setup()
         hass.data[DOMAIN][CONF_APPS] = coordinator
+        await coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -53,7 +54,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
         for entry in hass.config_entries.async_loaded_entries(DOMAIN)
     ):
-        hass.data[DOMAIN].pop(CONF_APPS, None)
+        if coordinator := hass.data[DOMAIN].pop(CONF_APPS, None):
+            await coordinator.async_shutdown()
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
