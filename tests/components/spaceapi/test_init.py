@@ -1,13 +1,13 @@
 """The tests for the Home Assistant SpaceAPI component."""
 
 from http import HTTPStatus
-from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.spaceapi import (
     ATTR_SENSOR_LOCATION,
+    CONF_REQUIRES_AUTH,
     DOMAIN,
     SPACEAPI_VERSION,
     URL_API_SPACEAPI,
@@ -98,8 +98,7 @@ async def mock_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component."""
-    with patch("homeassistant.components.spaceapi", return_value=True):
-        await async_setup_component(hass, "spaceapi", CONFIG)
+    await async_setup_component(hass, "spaceapi", CONFIG)
 
     hass.states.async_set(
         "test.temp1",
@@ -195,3 +194,49 @@ async def test_spaceapi_sensors_get(
 
     data = await resp.json()
     assert data["sensors"] == SENSOR_OUTPUT
+
+
+async def test_spaceapi_auth_required_default(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test SpaceAPI requires authentication by default."""
+    await async_setup_component(hass, "spaceapi", CONFIG)
+
+    hass.states.async_set("test.test_door", "on")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_spaceapi_no_auth_required(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test SpaceAPI with requires_auth set to False allows unauthenticated access."""
+    config = {DOMAIN: {**CONFIG[DOMAIN], CONF_REQUIRES_AUTH: False}}
+    await async_setup_component(hass, "spaceapi", config)
+
+    hass.states.async_set("test.test_door", "on")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+
+    data = await resp.json()
+    assert data["space"] == "Home"
+
+
+async def test_spaceapi_auth_required_with_auth(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test SpaceAPI succeeds with authentication (default behavior)."""
+    await async_setup_component(hass, "spaceapi", CONFIG)
+
+    hass.states.async_set("test.test_door", "on")
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+
+    data = await resp.json()
+    assert data["space"] == "Home"
