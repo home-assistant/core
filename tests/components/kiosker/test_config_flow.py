@@ -182,7 +182,7 @@ async def test_zeroconf_confirm(hass: HomeAssistant) -> None:
     )
 
     result_confirm = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"], user_input=None
     )
     assert result_confirm["type"] is FlowResultType.FORM
     assert result_confirm["step_id"] == "zeroconf_confirm"
@@ -199,10 +199,6 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         data=DISCOVERY_INFO,
     )
 
-    _result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
     with (
         patch(
             "homeassistant.components.kiosker.config_flow.validate_input"
@@ -213,7 +209,7 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
     ):
         mock_validate.return_value = {"title": "Kiosker Device"}
 
-        result3 = await hass.config_entries.flow.async_configure(
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-token",
@@ -223,9 +219,9 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Kiosker Device"
-    assert result3["data"] == {
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Kiosker Device"
+    assert result2["data"] == {
         CONF_HOST: "192.168.1.39",
         CONF_PORT: 8081,
         CONF_API_TOKEN: "test-token",
@@ -243,15 +239,11 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
         data=DISCOVERY_INFO,
     )
 
-    _result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
     with patch(
         "homeassistant.components.kiosker.config_flow.validate_input",
         side_effect=CannotConnect,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-token",
@@ -259,9 +251,8 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
                 CONF_VERIFY_SSL: False,
             },
         )
-
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {CONF_API_TOKEN: "cannot_connect"}
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_API_TOKEN: "cannot_connect"}
 
 
 async def test_abort_if_already_configured(hass: HomeAssistant) -> None:

@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.kiosker.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 
 from tests.common import MockConfigEntry
 
@@ -31,9 +31,9 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "10.0.1.5",
             CONF_PORT: 8081,
-            "api_token": "test_token",
-            "ssl": False,
-            "ssl_verify": False,
+            CONF_API_TOKEN: "test_token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
         },
         unique_id="A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
     )

@@ -166,7 +166,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
             device_name = f"{app_name} ({uuid[:8].upper()})"
             unique_id = uuid
         else:
-            _LOGGER.warning("Device did not return a valid device_id")
+            _LOGGER.debug("Zeroconf properties did not include a valid device_id")
             return self.async_abort(reason="cannot_connect")
 
         # Set unique ID and check for duplicates
@@ -187,10 +187,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
         self._discovered_version = version
 
         # Show confirmation dialog
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders=self.context["title_placeholders"],
-        )
+        return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
