@@ -236,7 +236,7 @@ async def test_dynamic_scan_interval(
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_50", 1, 300),  # (8-1) coordinators => 5 minutes interval
+        ("zoe_50", 1, 300),  # (6-1) coordinators => 5 minutes interval
         ("captur_fuel", 1, 180),  # (4-1) coordinators => 3 minutes interval
         ("multi", 2, 420),  # (9-2) coordinators => 7 minutes interval
     ],
