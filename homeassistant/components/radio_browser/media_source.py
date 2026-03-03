@@ -16,6 +16,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.location import vincenty
 
@@ -56,13 +57,13 @@ class RadioMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
-        try:
-            radios = self.radios
-        except AttributeError as e:
+
+        if self.entry.state != ConfigEntryState.LOADED:
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
-            ) from e
+            )
+        radios = self.radios
         try:
             station = await radios.station(uuid=item.identifier)
         except (DNSError, RadioBrowserError) as e:
@@ -86,13 +87,13 @@ class RadioMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        try:
-            radios = self.radios
-        except AttributeError as e:
+
+        if self.entry.state != ConfigEntryState.LOADED:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
-            ) from e
+            )
+        radios = self.radios
 
         try:
             return BrowseMediaSource(
