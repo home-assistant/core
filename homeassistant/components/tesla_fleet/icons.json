@@ -187,6 +187,9 @@
           "stopped": "mdi:stop-circle"
         }
       },
+      "charge_state_energy_remaining": {
+        "default": "mdi:battery-medium"
+      },
       "consumer_energy_imported_from_battery": {
         "default": "mdi:home-battery"
       },
