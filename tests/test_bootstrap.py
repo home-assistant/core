@@ -965,6 +965,46 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
     assert "Starting in safe mode" not in caplog.text
 
 
+@pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_storage_version_too_new_triggers_recovery_mode(
+    hass_storage: dict[str, Any],
+    mock_enable_logging: AsyncMock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a storage file with a newer major version triggers recovery mode."""
+    hass_storage["core.entity_registry"] = {
+        "version": 99,
+        "minor_version": 1,
+        "key": "core.entity_registry",
+        "data": {},
+    }
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=False,
+            log_rotate_days=10,
+            log_file="",
+            log_no_color=False,
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass is not None
+    assert hass.config.recovery_mode is True
+    assert "recovery_mode" in hass.config.components
+    assert (
+        "Storage file core.entity_registry was created"
+        " by a newer version of Home Assistant" in caplog.text
+    )
+
+
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
