@@ -12,14 +12,7 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
-from PyViCare.PyViCareUtils import (
-    PyViCareDeviceCommunicationError,
-    PyViCareInternalServerError,
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -1556,26 +1549,11 @@ class ViCareSensor(ViCareEntity, SensorEntity):
     def update(self) -> None:
         """Update state of sensor."""
         vicare_unit = None
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_native_value = self.entity_description.value_getter(
-                    self._api
-                )
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self._attr_native_value = self.entity_description.value_getter(self._api)
 
-                if self.entity_description.unit_getter:
-                    vicare_unit = self.entity_description.unit_getter(self._api)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-        except PyViCareDeviceCommunicationError as comm_exception:
-            _LOGGER.warning("Device communication error: %s", comm_exception)
-        except PyViCareInternalServerError as server_exception:
-            _LOGGER.warning("Vicare server error: %s", server_exception)
+            if self.entity_description.unit_getter:
+                vicare_unit = self.entity_description.unit_getter(self._api)
 
         if vicare_unit is not None:
             if (

@@ -102,7 +102,19 @@
           'unit': '&deg;C',
           'value': 6.1,
         }),
-        'total_energy': None,
+        'total_energy': dict({
+          'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
+          'desc': '',
+          'error': 0,
+          'name': 'Total energy',
+          'precision': None,
+          'readonly': 1,
+          'readwrite': 0,
+          'unit': 'kWh',
+          'value': 7968,
+        }),
       }),
       'state': dict({
         'current_temperature': dict({
