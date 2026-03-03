@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError
+from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -19,6 +19,7 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    CONF_PLANES,
     DOMAIN,
     LOGGER,
 )
@@ -43,6 +44,19 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         ) is not None and inverter_size > 0:
             inverter_size = inverter_size / 1000
 
+        # Build the list of planes
+        planes: list[Plane] = []
+
+        # Add additional planes if configured
+        additional_planes = entry.options.get(CONF_PLANES, [])
+        for plane_config in additional_planes:
+            plane = Plane(
+                declination=plane_config[CONF_DECLINATION],
+                azimuth=(plane_config[CONF_AZIMUTH] - 180),
+                kwp=(plane_config[CONF_MODULES_POWER] / 1000),
+            )
+            planes.append(plane)
+
         self.forecast = ForecastSolar(
             api_key=api_key,
             session=async_get_clientsession(hass),
@@ -54,6 +68,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             damping_morning=entry.options.get(CONF_DAMPING_MORNING, 0.0),
             damping_evening=entry.options.get(CONF_DAMPING_EVENING, 0.0),
             inverter=inverter_size,
+            planes=planes,
         )
 
         # Free account have a resolution of 1 hour, using that as the default
