@@ -1,6 +1,7 @@
 """Tests for the AdGuard Home config flow."""
 
 import aiohttp
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.adguard.const import DOMAIN
@@ -57,6 +58,37 @@ async def test_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "ftp://adguard.local",
+        "http://user:pass@adguard.local",
+        "http://adguard.local?query=1",
+        "http://adguard.local#fragment",
+        "http://",
+    ],
+)
+async def test_invalid_user_address(
+    hass: HomeAssistant,
+    address: str,
+) -> None:
+    """Test invalid address formats are rejected before connecting."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: address,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_url"}
 
 
 async def test_full_flow_implementation(

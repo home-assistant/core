@@ -272,7 +272,7 @@ async def test_update_templates(
     # ensure that the entity picture exists when not provided.
     assert (
         state.attributes["entity_picture"]
-        == "https://brands.home-assistant.io/_/template/icon.png"
+        == "/api/brands/integration/template/icon.png"
     )
 
 
@@ -524,7 +524,7 @@ async def test_entity_picture_uses_default(hass: HomeAssistant) -> None:
 
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/_/template/icon.png"
+        == "/api/brands/integration/template/icon.png"
     )
 
 

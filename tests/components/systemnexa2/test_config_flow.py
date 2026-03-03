@@ -30,14 +30,14 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
+    assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
-        CONF_NAME: "Test Device",
-        CONF_DEVICE_ID: "test_device_id",
-        CONF_MODEL: "Test Model",
+        CONF_NAME: "Outdoor Smart Plug",
+        CONF_DEVICE_ID: "aabbccddee02",
+        CONF_MODEL: "WPO-01",
     }
-    assert result["result"].unique_id == "test_device_id"
+    assert result["result"].unique_id == "aabbccddee02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -98,7 +98,7 @@ async def test_connection_error_and_recovery(
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
+    assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -164,12 +164,12 @@ async def test_valid_hostname(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         result["flow_id"], {CONF_HOST: "valid-hostname.local"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
+    assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert result["data"] == {
         CONF_HOST: "valid-hostname.local",
-        CONF_NAME: "Test Device",
-        CONF_DEVICE_ID: "test_device_id",
-        CONF_MODEL: "Test Model",
+        CONF_NAME: "Outdoor Smart Plug",
+        CONF_DEVICE_ID: "aabbccddee02",
+        CONF_MODEL: "WPO-01",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -192,7 +192,7 @@ async def test_unsupported_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
     assert result["description_placeholders"] == {
-        "model": "Test Model",
+        "model": "WPO-01",
         "sw_version": "Test Model Version",
     }
 
@@ -215,12 +215,12 @@ async def test_zeroconf_discovery(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "systemnexa2_test (Test Model)"
+    assert result["title"] == "systemnexa2_test (WPO-01)"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
         CONF_NAME: "systemnexa2_test",
-        CONF_DEVICE_ID: "test_device_id",
-        CONF_MODEL: "Test Model",
+        CONF_DEVICE_ID: "aabbccddee02",
+        CONF_MODEL: "WPO-01",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -249,8 +249,8 @@ async def test_device_with_none_values(
     device = mock_system_nexa_2_device.return_value
     # Create new InformationData with None unique_id
     device.info_data = InformationData(
-        name="Test Device",
-        model="Test Model",
+        name="Outdoor Smart Plug",
+        model="WPO-01",
         unique_id=None,
         sw_version="Test Model Version",
         hw_version="Test HW Version",
@@ -281,7 +281,7 @@ async def test_zeroconf_discovery_none_values(hass: HomeAssistant) -> None:
         type="_systemnexa2._tcp.local.",
         properties={
             "id": None,
-            "model": "Test Model",
+            "model": "WPO-01",
             "version": "1.0.0",
         },
     )

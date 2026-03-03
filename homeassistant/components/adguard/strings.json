@@ -9,7 +9,8 @@
       "existing_instance_updated": "Updated existing configuration."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Invalid URL"
     },
     "step": {
       "hassio_confirm": {
