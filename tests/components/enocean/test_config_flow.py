@@ -15,9 +15,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from . import MOCK_USB_DEVICE, MODULE
+from . import MOCK_USB_DEVICE, MOCK_USB_SERVICE_INFO, MODULE
 
 from tests.common import MockConfigEntry
 
@@ -54,7 +53,7 @@ async def test_user_flow_with_detected_usb_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "detect"
     options = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
     assert len(options) == 2
-    assert options[0].get("value") == "/dev/ttyUSB1234"
+    assert options[0].get("value") == "/dev/enocean0"
     assert options[1].get("value") == "manual"
 
 
@@ -188,20 +187,11 @@ async def test_usb_discovery(
     hass: HomeAssistant,
 ) -> None:
     """Test usb discovery success path."""
-    usb_discovery_info = UsbServiceInfo(
-        device="/dev/enocean0",
-        pid="6001",
-        vid="0403",
-        serial_number="1234",
-        description="USB 300",
-        manufacturer="EnOcean GmbH",
-    )
-    device = "/dev/enocean0"
     # test discovery step
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USB},
-        data=usb_discovery_info,
+        data=MOCK_USB_SERVICE_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -221,7 +211,7 @@ async def test_usb_discovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
-    assert result["data"] == {"device": device}
+    assert result["data"] == {"device": MOCK_USB_SERVICE_INFO.device}
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
     assert result["context"]["title_placeholders"] == {
         "name": "USB 300 - /dev/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
@@ -242,20 +232,30 @@ async def test_usb_discovery_already_configured_updates_path(
     existing_entry.add_to_hass(hass)
 
     # New USB discovery for the same dongle but with an updated device path
-    usb_discovery_info = UsbServiceInfo(
-        device="/dev/enocean-new",
-        pid="6001",
-        vid="0403",
-        serial_number="1234",
-        description="USB 300",
-        manufacturer="EnOcean GmbH",
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USB},
-        data=usb_discovery_info,
+        data=MOCK_USB_SERVICE_INFO,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
+    """Test we can't start a flow for the same device twice."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=MOCK_USB_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=MOCK_USB_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"

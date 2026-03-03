@@ -1,14 +1,17 @@
 """Tests of the EnOcean integration."""
 
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import USBDevice, usb_service_info_from_device
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 MODULE = "homeassistant.components.enocean"
 
 MOCK_USB_DEVICE: USBDevice = USBDevice(
-    device="/dev/ttyUSB1234",
+    device="/dev/enocean0",
     vid="0403",
     pid="6001",
-    serial_number="12345678",
-    manufacturer="EnOcean",
-    description="usb 300",
+    serial_number="1234",
+    description="USB 300",
+    manufacturer="EnOcean GmbH",
 )
+
+MOCK_USB_SERVICE_INFO: UsbServiceInfo = usb_service_info_from_device(MOCK_USB_DEVICE)
