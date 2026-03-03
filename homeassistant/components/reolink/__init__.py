@@ -556,6 +556,7 @@ def migrate_entity_ids(
                     entity.unique_id,
                 )
                 entity_reg.async_remove(entity.entity_id)
+                continue
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
