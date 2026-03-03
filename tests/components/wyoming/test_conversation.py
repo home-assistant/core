@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
 from wyoming.handle import Handled, NotHandled
@@ -251,37 +252,43 @@ async def test_oserror(
     assert result.response.speech.get("plain", {}).get("speech") == snapshot
 
 
-async def test_intent_all_languages(
-    hass: HomeAssistant, intent_config_entry: ConfigEntry
+@pytest.mark.parametrize(
+    ("config_entry_fixture", "info_obj", "info_kwargs", "agent_id"),
+    [
+        (
+            "intent_config_entry",
+            INTENT_INFO.intent[0].models[0],
+            {"intent": INTENT_INFO.intent},
+            "conversation.test_intent",
+        ),
+        (
+            "handle_config_entry",
+            HANDLE_INFO.handle[0].models[0],
+            {"handle": HANDLE_INFO.handle},
+            "conversation.test_handle",
+        ),
+    ],
+)
+async def test_supported_languages_empty_means_all(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    config_entry_fixture: str,
+    info_obj,
+    info_kwargs: dict,
+    agent_id: str,
 ) -> None:
-    """Tests that an empty list of supported languages means the intent recognizer supports all languages."""
+    """Test that an empty list of supported languages means the agent supports all languages."""
+    config_entry: ConfigEntry = request.getfixturevalue(config_entry_fixture)
+
     with (
-        patch.object(INTENT_INFO.intent[0].models[0], "languages", []),
+        patch.object(info_obj, "languages", []),
         patch(
             "homeassistant.components.wyoming.data.load_wyoming_info",
-            return_value=Info(intent=INTENT_INFO.intent),
+            return_value=Info(**info_kwargs),
         ),
     ):
-        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
-    agent = conversation.async_get_agent(hass, "conversation.test_intent")
-    assert agent is not None
-    assert agent.supported_languages == MATCH_ALL
-
-
-async def test_handle_all_languages(
-    hass: HomeAssistant, handle_config_entry: ConfigEntry
-) -> None:
-    """Tests that an empty list of supported languages means the intent handler supports all languages."""
-    with (
-        patch.object(HANDLE_INFO.handle[0].models[0], "languages", []),
-        patch(
-            "homeassistant.components.wyoming.data.load_wyoming_info",
-            return_value=Info(handle=HANDLE_INFO.handle),
-        ),
-    ):
-        await hass.config_entries.async_setup(handle_config_entry.entry_id)
-
-    agent = conversation.async_get_agent(hass, "conversation.test_handle")
+    agent = conversation.async_get_agent(hass, agent_id)
     assert agent is not None
     assert agent.supported_languages == MATCH_ALL
