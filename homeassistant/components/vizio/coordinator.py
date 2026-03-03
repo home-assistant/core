@@ -95,14 +95,11 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         )
         if not device:
             return
-        device_registry.async_update_device(
-            device.id,
-            model=model,
-            sw_version=version,
-        )
         if model:
+            device_registry.async_update_device(device.id, model=model)
             self._model_fetched = True
         if version:
+            device_registry.async_update_device(device.id, sw_version=version)
             self._version_fetched = True
 
     async def _async_update_data(self) -> VizioDeviceData:
