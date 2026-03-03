@@ -22,8 +22,6 @@ from . import MOCK_USB_DEVICE, MODULE
 from tests.common import MockConfigEntry
 
 DONGLE_VALIDATE_PATH_METHOD = f"{MODULE}.dongle.validate_path"
-DONGLE_DETECT_METHOD = f"{MODULE}.dongle.detect"
-SETUP_ENTRY_METHOD = f"{MODULE}.async_setup_entry"
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
@@ -213,7 +211,7 @@ async def test_usb_discovery(
     # test device path
     with (
         patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+        patch(f"{MODULE}.async_setup_entry", AsyncMock(return_value=True)),
         patch(
             "homeassistant.components.usb.get_serial_by_id",
             side_effect=lambda x: x,
