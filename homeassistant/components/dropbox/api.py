@@ -85,8 +85,9 @@ class DropboxClient:
         file_stream = await open_stream()
         await self._api.upload_file(backup_path, file_stream)
 
+        metadata_stream = _async_string_iterator(json.dumps(backup.as_dict()))
+
         try:
-            metadata_stream = _async_string_iterator(json.dumps(backup.as_dict()))
             await self._api.upload_file(metadata_path, metadata_stream)
         except (
             DropboxAuthException,
