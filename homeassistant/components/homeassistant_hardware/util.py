@@ -10,10 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
-from universal_silabs_flasher.const import (
-    ApplicationType as FlasherApplicationType,
-    ResetTarget as FlasherResetTarget,
-)
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
 
@@ -61,18 +58,6 @@ class ApplicationType(StrEnum):
     def as_flasher_application_type(self) -> FlasherApplicationType:
         """Convert the application type enum into one compatible with USF."""
         return FlasherApplicationType(self.value)
-
-
-class ResetTarget(StrEnum):
-    """Methods to reset a device into bootloader mode."""
-
-    RTS_DTR = "rts_dtr"
-    BAUDRATE = "baudrate"
-    YELLOW = "yellow"
-
-    def as_flasher_reset_target(self) -> FlasherResetTarget:
-        """Convert the reset target enum into one compatible with USF."""
-        return FlasherResetTarget(self.value)
 
 
 @singleton(OTBR_ADDON_MANAGER_DATA)
