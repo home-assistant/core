@@ -5,12 +5,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from powerfox import Powerfox, PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import (
+    Powerfox,
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    PowerfoxLocal,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -133,3 +139,23 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        device_id = discovery_info.properties["id"]
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured()
+
+        local_client = PowerfoxLocal(
+            host=discovery_info.host,
+            api_key=device_id,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            await local_client.value()
+        except PowerfoxAuthenticationError, PowerfoxConnectionError:
+            return await self.async_step_user()
+
+        return self.async_abort(reason="local_available")
