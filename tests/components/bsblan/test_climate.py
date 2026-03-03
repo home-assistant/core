@@ -387,3 +387,22 @@ async def test_async_set_data(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
+
+
+async def test_dual_circuit_climate_entities(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry_dual_circuit: MockConfigEntry,
+) -> None:
+    """Test that dual-circuit config creates two climate entities with correct IDs."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry_dual_circuit, [Platform.CLIMATE]
+    )
+
+    # Circuit 1 entity should exist
+    state1 = hass.states.get("climate.heating_circuit_1")
+    assert state1 is not None
+
+    # Circuit 2 entity should exist
+    state2 = hass.states.get("climate.heating_circuit_2")
+    assert state2 is not None

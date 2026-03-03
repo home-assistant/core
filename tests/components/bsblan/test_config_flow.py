@@ -7,6 +7,7 @@ from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.bsblan.config_flow import BSBLANFlowHandler
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
     CONF_PASSKEY,
@@ -1198,3 +1199,190 @@ async def test_reconfigure_flow_unique_id_mismatch(
     )
 
     _assert_abort_result(result, "unique_id_mismatch")
+
+
+async def test_user_flow_multi_circuit_discovery(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow discovers multiple circuits and shows selection step."""
+    mock_bsblan.get_available_circuits.return_value = [1, 2]
+
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    # Should show the heating circuits selection step
+    _assert_form_result(result, "heating_circuits")
+
+    # Select only circuit 2
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {CONF_HEATING_CIRCUITS: ["2"]},
+    )
+
+    _assert_create_entry_result(
+        result,
+        format_mac("00:80:41:19:69:90"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [2],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+
+async def test_circuit_discovery_error_falls_back_to_single(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that circuit discovery error falls back to single circuit."""
+    mock_bsblan.get_available_circuits.side_effect = BSBLANError
+
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    # Should create entry directly with single circuit fallback
+    _assert_create_entry_result(
+        result,
+        format_mac("00:80:41:19:69:90"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+
+async def test_reconfigure_flow_multi_circuit(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow with multi-circuit discovery and selection."""
+    mock_config_entry.add_to_hass(hass)
+    mock_bsblan.get_available_circuits.return_value = [1, 2, 3]
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    # Should show the heating circuits reconfigure step
+    _assert_form_result(result, "heating_circuits_reconfigure")
+
+    # Select circuits 1 and 3
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {CONF_HEATING_CIRCUITS: ["1", "3"]},
+    )
+
+    _assert_abort_result(result, "reconfigure_successful")
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_PORT] == 8080
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1, 3]
+
+
+async def test_circuit_discovery_skipped_without_client(
+    hass: HomeAssistant,
+) -> None:
+    """Test that circuit discovery is skipped when bsblan client is not set."""
+    flow = BSBLANFlowHandler()
+    flow._bsblan_client = None
+    flow._available_circuits = [1]
+    await flow._discover_circuits()
+    # Should remain unchanged since client is None
+    assert flow._available_circuits == [1]
+
+
+async def test_zeroconf_discovery_multi_circuit(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
+) -> None:
+    """Test zeroconf discovery with multiple circuits shows selection step."""
+    mock_bsblan.get_available_circuits.return_value = [1, 2]
+
+    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
+    _assert_form_result(result, "discovery_confirm")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    # Should show the heating circuits selection step
+    _assert_form_result(result, "heating_circuits")
+
+    # Select both circuits
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {CONF_HEATING_CIRCUITS: ["1", "2"]},
+    )
+
+    _assert_create_entry_result(
+        result,
+        format_mac("00:80:41:19:69:90"),
+        {
+            CONF_HOST: "10.0.2.60",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1, 2],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
