@@ -43,7 +43,7 @@ HVAC_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend
 class HVACModeChangedTrigger(EntityTargetStateTriggerBase):
     """Trigger for entity state changes."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
     _schema = HVAC_MODE_CHANGED_TRIGGER_SCHEMA
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
