@@ -789,17 +789,17 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._attr_extra_state_attributes["intraday_price_ranking"] = home_data.get(
             "intraday_price_ranking"
         )
-        if attrs := home_data.get("attributes"):
-            self._attr_extra_state_attributes.update(attrs)
-        self._attr_native_unit_of_measurement = home_data.get("price_unit", "")
-        if (app_nickname := home_data.get("app_nickname")) is not None:
-            self._attr_extra_state_attributes["app_nickname"] = app_nickname
-        if (grid_company := home_data.get("grid_company")) is not None:
-            self._attr_extra_state_attributes["grid_company"] = grid_company
-        if (est_annual := home_data.get("estimated_annual_consumption")) is not None:
-            self._attr_extra_state_attributes["estimated_annual_consumption"] = (
-                est_annual
-            )
+        self._attr_extra_state_attributes["max_price"] = home_data["max_price"]
+        self._attr_extra_state_attributes["avg_price"] = home_data["avg_price"]
+        self._attr_extra_state_attributes["min_price"] = home_data["min_price"]
+        self._attr_extra_state_attributes["off_peak_1"] = home_data["off_peak_1"]
+        self._attr_extra_state_attributes["peak"] = home_data["peak"]
+        self._attr_extra_state_attributes["off_peak_2"] = home_data["off_peak_2"]
+        self._attr_extra_state_attributes["app_nickname"] = home_data["app_nickname"]
+        self._attr_extra_state_attributes["grid_company"] = home_data["grid_company"]
+        self._attr_extra_state_attributes["estimated_annual_consumption"] = home_data[
+            "estimated_annual_consumption"
+        ]
         self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
 
