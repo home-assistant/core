@@ -1,5 +1,7 @@
 """Support for Meteoclimatic sensor."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -139,26 +141,24 @@ class MeteoclimaticSensor(
         """Initialize the Meteoclimatic sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        station = self.coordinator.data["station"]
+        station = coordinator.data.station
         self._attr_name = f"{station.name} {description.name}"
         self._attr_unique_id = f"{station.code}_{description.key}"
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return DeviceInfo(
+        if TYPE_CHECKING:
+            assert coordinator.config_entry.unique_id is not None
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=self.coordinator.name,
+            name=coordinator.name,
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return (
-            getattr(self.coordinator.data["weather"], self.entity_description.key)
+            getattr(self.coordinator.data.weather, self.entity_description.key)
             if self.coordinator.data
             else None
         )

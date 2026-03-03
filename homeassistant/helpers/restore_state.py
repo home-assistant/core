@@ -9,7 +9,7 @@ from typing import Any, Self, cast
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
@@ -95,9 +95,12 @@ class StoredState:
         )
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load the restore state task."""
-    await async_get(hass).async_setup()
+    data = async_get(hass)
+    if load_empty:
+        data.set_load_empty()
+    await data.async_setup()
 
 
 @callback
@@ -124,6 +127,10 @@ class RestoreStateData:
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
 
+    def set_load_empty(self) -> None:
+        """Set the store to load empty and become read-only."""
+        self.store.set_load_empty()
+
     async def async_setup(self) -> None:
         """Set up up the instance of this data helper."""
         await self.async_load()
@@ -139,6 +146,8 @@ class RestoreStateData:
         """Load the instance of this data helper."""
         try:
             stored_states = await self.store.async_load()
+        except UnsupportedStorageVersionError:
+            raise
         except HomeAssistantError as exc:
             _LOGGER.error("Error loading last states", exc_info=exc)
             stored_states = None
