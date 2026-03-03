@@ -2388,7 +2388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'always',
   })
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_remaining_time-entry]
@@ -4202,7 +4202,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'always',
   })
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_remaining_time-entry]
@@ -5852,7 +5852,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'scheduled',
   })
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_remaining_time-entry]
