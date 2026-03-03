@@ -3722,8 +3722,8 @@ async def test_upload_progress_event(
     async def upload_with_progress(**kwargs: Any) -> None:
         """Upload and report progress."""
         if on_progress := kwargs.get("on_progress"):
-            on_progress(500)
-            on_progress(1000)
+            on_progress(bytes_uploaded=500)
+            on_progress(bytes_uploaded=1000)
         await original_side_effect(**kwargs)
 
     remote_agent.async_upload_backup.side_effect = upload_with_progress
