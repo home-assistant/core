@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from yarl import URL
@@ -31,6 +31,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_dropbox_client,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating a new config entry through the OAuth flow."""
 
@@ -74,17 +75,14 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.dropbox.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ACCOUNT_EMAIL
     assert result["data"]["token"]["access_token"] == "mock-access-token"
     assert result["context"]["unique_id"] == ACCOUNT_ID
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -155,6 +153,7 @@ async def test_reauth_flow(
     aioclient_mock: AiohttpClientMocker,
     config_entry,
     mock_dropbox_client,
+    mock_setup_entry: AsyncMock,
     new_account_info: SimpleNamespace,
     expected_reason: str,
     expected_setup_calls: int,
@@ -193,15 +192,12 @@ async def test_reauth_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.dropbox.async_setup_entry", new=AsyncMock()
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
-    assert mock_setup.await_count == expected_setup_calls
+    assert mock_setup_entry.await_count == expected_setup_calls
 
     if expected_reason == "reauth_successful":
         assert config_entry.data["token"]["access_token"] == "updated-access-token"

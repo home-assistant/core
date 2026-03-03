@@ -66,6 +66,16 @@ def config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+
+    with patch(
+        "homeassistant.components.dropbox.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_dropbox_client(account_info: SimpleNamespace) -> Generator[MagicMock]:
     """Patch Dropbox client instances used by the integration."""
 
