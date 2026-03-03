@@ -78,6 +78,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "charge_permitted": {
+        "name": "Charge permitted"
+      }
+    },
     "number": {
       "current_set": {
         "name": "Charging current"
