@@ -5,13 +5,20 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.recorder.models import StatisticMeanType
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_metadata,
+)
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_all_entities(
@@ -91,3 +98,58 @@ async def test_non_monetary_sensors_not_affected_by_currency(
     assert state is not None
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
     assert "device_class" not in state.attributes
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_migration_from_dollar_symbol(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_api: AsyncMock,
+) -> None:
+    """Test that statistics with '$' unit are migrated to configured currency."""
+    await hass.config.async_update(currency="USD")
+
+    # First, set up the integration to create entities
+    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await async_wait_recording_done(hass)
+
+    # Add external statistics with old "$" unit to simulate pre-migration data
+    entity_id = "sensor.rando_bank_checking_balance"
+    now = dt_util.utcnow()
+
+    async_add_external_statistics(
+        hass,
+        {
+            "has_mean": False,
+            "has_sum": True,
+            "mean_type": StatisticMeanType.NONE,
+            "name": "Test Balance",
+            "source": "recorder",
+            "statistic_id": entity_id,
+            "unit_class": None,
+            "unit_of_measurement": "$",
+        },
+        [{"start": now, "sum": 1000.0, "state": 1000.0}],
+    )
+    await async_wait_recording_done(hass)
+
+    # Verify initial statistics have "$" unit
+    metadata = get_metadata(hass, statistic_ids={entity_id})
+    assert entity_id in metadata
+    assert metadata[entity_id][1]["unit_of_measurement"] == "$"
+
+    # Unload and reload to trigger migration
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    # Verify statistics were migrated to configured currency
+    metadata = get_metadata(hass, statistic_ids={entity_id})
+    assert entity_id in metadata
+    assert metadata[entity_id][1]["unit_of_measurement"] == "USD"
