@@ -110,7 +110,7 @@ class VizioOptionsConfigFlow(OptionsFlow):
     def _get_app_list(self) -> list[dict[str, Any]]:
         """Return the current apps list, falling back to defaults."""
         if apps_coordinator := self.hass.data.get(DATA_APPS):
-            if isinstance(apps_coordinator.data, list):
+            if apps_coordinator.data:
                 return apps_coordinator.data
         return APPS
 
