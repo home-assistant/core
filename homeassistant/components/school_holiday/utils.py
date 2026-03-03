@@ -1,8 +1,10 @@
 """Utility functions for the School Holiday integration."""
 
-from datetime import date, datetime
+from datetime import date
 import re
 from typing import Any
+
+from homeassistant.util.dt import parse_datetime
 
 from .const import COUNTRY_NAMES, LOGGER, REGION_NAMES
 
@@ -41,17 +43,26 @@ def create_calendar_event(
 
 
 def ensure_date(value: str | date) -> date:
-    """Ensure a value is a date (without time)."""
+    """Ensure a value is a date (without time).
+
+    Handles ISO-8601 timestamps with Z suffix, e.g., 2026-01-01T23:59:00Z.
+    """
     if isinstance(value, date):
         return value
 
     if isinstance(value, str):
+        # Try parsing as datetime first (handles ISO-8601 with Z suffix).
+        parsed_dt = parse_datetime(value)
+        if parsed_dt is not None:
+            return parsed_dt.date()
+
+        # Fallback to pure date string parsing.
         try:
-            # Parse as datetime, then get date.
-            return datetime.fromisoformat(value).date()
-        except ValueError:
-            # Fallback to date string.
             return date.fromisoformat(value)
+        except ValueError as err:
+            msg = f"Unable to parse date from '{value}'"
+            raise ValueError(msg) from err
+
     raise TypeError(f"Value {value} must be a string or date, but got {type(value)}")
 
 

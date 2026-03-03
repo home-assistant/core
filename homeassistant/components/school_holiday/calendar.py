@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the School Holiday calendar."""
-    LOGGER.debug("Starting calendar platform setup")
+    LOGGER.debug("Starting calendar setup")
     coordinator = entry.runtime_data
     country = str(entry.data.get(CONF_COUNTRY))
     region = str(entry.data.get(CONF_REGION))
@@ -85,7 +85,8 @@ class SchoolHolidayCalendarEntity(
         upcoming = [e for e in events if e["end"] > now]
 
         if upcoming:
-            event = upcoming[0]
+            # Select the event with the earliest start date.
+            event = min(upcoming, key=lambda e: e["start"])
 
             return CalendarEvent(
                 summary=event["summary"],
@@ -93,6 +94,7 @@ class SchoolHolidayCalendarEntity(
                 end=event["end"],
                 description=event.get("description"),
             )
+
         return None
 
     async def async_get_events(
