@@ -105,6 +105,7 @@ def _mock_system_service() -> MagicMock:
     mock_system_service.props = {
         "firmware_update": MagicMock(spec=Property),
         "firmware_update_status": MagicMock(spec=Property),
+        "send_diagnostic_data": MagicMock(spec=Property),
     }
 
     mock_system_service.props["firmware_update"].get.return_value = 0

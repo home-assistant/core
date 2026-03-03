@@ -30,6 +30,11 @@
     }
   },
   "entity": {
+    "button": {
+      "send_diagnostics": {
+        "name": "Send diagnostics"
+      }
+    },
     "number": {
       "intensity": {
         "name": "Intensity"
