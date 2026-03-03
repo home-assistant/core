@@ -172,23 +172,23 @@ async def _call_and_assert_action(
     service: str,
     service_data: ConfigType | None = None,
     expected_data: ConfigType | None = None,
-    expected_service: str | None = None,
+    expected_action: str | None = None,
 ) -> None:
     """Call a service and validate that it was called properly.
 
-    The service is validated when expected_service is omitted.
+    The service is validated when expected_action is omitted.
     """
-    if expected_service is None:
-        expected_service = service
+    if expected_action is None:
+        expected_action = service
     current = len(calls)
     await hass.services.async_call(
         light.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: TEST_LIGHT.entity_id, **(service_data or {})},
+        {**(service_data or {}), ATTR_ENTITY_ID: TEST_LIGHT.entity_id},
         blocking=True,
     )
     assert_action(
-        TEST_LIGHT, calls, current + 1, expected_service, **(expected_data or {})
+        TEST_LIGHT, calls, current + 1, expected_action, **(expected_data or {})
     )
 
 
@@ -915,7 +915,7 @@ async def test_icon_template(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("icon") in ("", None)
 
-    state = await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
     state = hass.states.get(TEST_LIGHT.entity_id)
 
     assert state.attributes["icon"] == "mdi:check"
@@ -940,7 +940,7 @@ async def test_entity_picture_template(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("entity_picture") in ("", None)
 
-    state = await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["entity_picture"] == "/local/light.png"
 
