@@ -17,6 +17,8 @@ SKILLS_DIR = Path(".claude/skills")
 AGENTS_FILE = Path("AGENTS.md")
 OUTPUT_FILE = Path(".github/copilot-instructions.md")
 
+EXCLUDED_SKILLS = {"github-pr-reviewer"}
+
 
 def gather_skills() -> list[tuple[str, Path]]:
     """Gather all skills from the skills directory.
@@ -30,6 +32,9 @@ def gather_skills() -> list[tuple[str, Path]]:
 
     for skill_dir in sorted(SKILLS_DIR.iterdir()):
         if not skill_dir.is_dir():
+            continue
+
+        if skill_dir.name in EXCLUDED_SKILLS:
             continue
 
         skill_file = skill_dir / "SKILL.md"
