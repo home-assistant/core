@@ -524,9 +524,12 @@ async def test_notify_multiple_targets_if_any_disconnected(
     setup_push_receiver,
     setup_websocket_channel_only_push,
     target: list[str] | None,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that although one target is disconnected, notify still works to other targets and logs a warning."""
+    """Notify works with disconnected targets.
+
+    Test that although one target is disconnected,
+    notify still works to other targets and the exception is still raised.
+    """
     aioclient_mock.post(
         "https://mobile-push.home-assistant.dev/push2",
         json={
