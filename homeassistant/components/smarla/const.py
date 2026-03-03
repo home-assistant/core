@@ -6,7 +6,13 @@ DOMAIN = "smarla"
 
 HOST = "https://devices.swing2sleep.de"
 
-PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 DEVICE_MODEL_NAME = "Smarla"
 MANUFACTURER_NAME = "Swing2Sleep"

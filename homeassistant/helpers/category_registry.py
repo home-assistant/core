@@ -77,7 +77,7 @@ class CategoryRegistryStore(Store[CategoryRegistryStoreData]):
     ) -> CategoryRegistryStoreData:
         """Migrate to the new version."""
         if old_major_version > STORAGE_VERSION_MAJOR:
-            raise ValueError("Can't migrate to future version")
+            raise NotImplementedError
 
         if old_major_version == 1:
             if old_minor_version < 2:
@@ -204,7 +204,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         return new
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the category registry."""
         data = await self._store.async_load()
         category_entries: dict[str, dict[str, CategoryEntry]] = {}
@@ -265,7 +265,7 @@ def async_get(hass: HomeAssistant) -> CategoryRegistry:
     return CategoryRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load category registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
