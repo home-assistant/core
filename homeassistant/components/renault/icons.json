@@ -56,7 +56,7 @@
         "default": "mdi:calendar-remove",
         "state": {
           "delayed": "mdi:calendar-clock",
-          "scheduled": "mdi:calendar-clock"
+          "scheduled": "mdi:calendar-month"
         }
       },
       "fuel_autonomy": {
