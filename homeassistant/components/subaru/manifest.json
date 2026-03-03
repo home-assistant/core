@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["stdiomask", "subarulink"],
-  "requirements": ["subarulink==0.7.15"]
+  "requirements": ["subarulink==0.7.19"]
 }
