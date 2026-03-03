@@ -170,8 +170,8 @@ async def test_multiple_group_entities(hass: HomeAssistant) -> None:
     assert sorted(expanded2) == ["light.c", "light.d"]
 
 
-async def test_generic_group_included_entity_ids(hass: HomeAssistant) -> None:
-    """Test GenericGroup included_entity_ids property."""
+async def test_generic_group_member_entity_ids(hass: HomeAssistant) -> None:
+    """Test GenericGroup member_entity_ids property."""
     platform = MockEntityPlatform(hass, domain="light", platform_name="test")
 
     ent = MockEntity(entity_id="light.test_group")
@@ -180,7 +180,7 @@ async def test_generic_group_included_entity_ids(hass: HomeAssistant) -> None:
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
 
-    assert ent.group.included_entity_ids == ["light.bulb1", "light.bulb2"]
+    assert ent.group.member_entity_ids == ["light.bulb1", "light.bulb2"]
 
 
 async def test_expand_entity_ids_with_generic_group(hass: HomeAssistant) -> None:
@@ -238,8 +238,8 @@ async def test_expand_entity_ids_with_generic_group_self_reference(
     assert sorted(expanded) == ["light.bulb1", "light.bulb2"]
 
 
-async def test_entity_group_attribute_in_state(hass: HomeAssistant) -> None:
-    """Test ATTR_GROUP_ENTITIES is included in entity state attributes."""
+async def test_generic_group_attribute_in_state(hass: HomeAssistant) -> None:
+    """Test ATTR_GROUP_ENTITIES is included in GenericGroup state."""
     platform = MockEntityPlatform(hass, domain="light", platform_name="test")
 
     ent = MockEntity(entity_id="light.group_with_attrs", unique_id="attrs_test")
@@ -254,7 +254,7 @@ async def test_entity_group_attribute_in_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.lamp1", "light.lamp2"]
 
 
-async def test_integration_specific_group_included_entity_ids(
+async def test_integration_specific_group_member_entity_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -274,7 +274,7 @@ async def test_integration_specific_group_included_entity_ids(
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
 
-    assert sorted(ent.group.included_entity_ids) == ["light.member1", "light.member2"]
+    assert sorted(ent.group.member_entity_ids) == ["light.member1", "light.member2"]
 
 
 async def test_integration_specific_group_missing_entities(
@@ -296,14 +296,14 @@ async def test_integration_specific_group_missing_entities(
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
 
-    assert ent.group.included_entity_ids == ["light.member1"]
+    assert ent.group.member_entity_ids == ["light.member1"]
 
 
-async def test_integration_specific_group_included_unique_ids_setter(
+async def test_integration_specific_group_member_unique_ids_setter(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test IntegrationSpecificGroup included_unique_ids setter clears cache."""
+    """Test IntegrationSpecificGroup member_unique_ids setter clears cache."""
     entity_registry.async_get_or_create(
         "light", "test", "unique_1", suggested_object_id="member1"
     )
@@ -321,11 +321,11 @@ async def test_integration_specific_group_included_unique_ids_setter(
 
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
-    assert ent.group.included_entity_ids == ["light.member1"]
+    assert ent.group.member_entity_ids == ["light.member1"]
 
-    ent.group.included_unique_ids = ["unique_2", "unique_3"]
+    ent.group.member_unique_ids = ["unique_2", "unique_3"]
 
-    assert sorted(ent.group.included_entity_ids) == ["light.member2", "light.member3"]
+    assert sorted(ent.group.member_entity_ids) == ["light.member2", "light.member3"]
 
 
 async def test_integration_specific_group_member_added(
@@ -344,14 +344,14 @@ async def test_integration_specific_group_member_added(
 
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
-    assert ent.group.included_entity_ids == ["light.member1"]
+    assert ent.group.member_entity_ids == ["light.member1"]
 
     entity_registry.async_get_or_create(
         "light", "test", "unique_2", suggested_object_id="member2"
     )
     await hass.async_block_till_done()
 
-    assert sorted(ent.group.included_entity_ids) == ["light.member1", "light.member2"]
+    assert sorted(ent.group.member_entity_ids) == ["light.member1", "light.member2"]
 
 
 async def test_integration_specific_group_member_removed(
@@ -374,12 +374,12 @@ async def test_integration_specific_group_member_removed(
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
 
-    assert sorted(ent.group.included_entity_ids) == ["light.member1", "light.member2"]
+    assert sorted(ent.group.member_entity_ids) == ["light.member1", "light.member2"]
 
     entity_registry.async_remove(entry1.entity_id)
     await hass.async_block_till_done()
 
-    assert ent.group.included_entity_ids == ["light.member2"]
+    assert ent.group.member_entity_ids == ["light.member2"]
 
 
 async def test_integration_specific_group_member_renamed(
@@ -398,12 +398,12 @@ async def test_integration_specific_group_member_renamed(
 
     await platform.async_add_entities([ent])
     await hass.async_block_till_done()
-    assert ent.group.included_entity_ids == ["light.original_name"]
+    assert ent.group.member_entity_ids == ["light.original_name"]
 
     entity_registry.async_update_entity(entry.entity_id, new_entity_id="light.new_name")
     await hass.async_block_till_done()
 
-    assert ent.group.included_entity_ids == ["light.new_name"]
+    assert ent.group.member_entity_ids == ["light.new_name"]
 
 
 async def test_integration_specific_group_attribute_in_state(

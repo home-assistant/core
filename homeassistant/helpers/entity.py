@@ -1073,9 +1073,7 @@ class Entity(
         capability_attr = self.capability_attributes
         if self.__group is not None:
             capability_attr = capability_attr.copy() if capability_attr else {}
-            capability_attr[ATTR_GROUP_ENTITIES] = (
-                self.__group.included_entity_ids.copy()
-            )
+            capability_attr[ATTR_GROUP_ENTITIES] = self.__group.member_entity_ids.copy()
 
         attr = capability_attr.copy() if capability_attr else {}
 

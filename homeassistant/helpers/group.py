@@ -21,7 +21,7 @@ ENTITY_PREFIX = "group."
 
 
 class Group:
-    """A group base class."""
+    """Entity group base class."""
 
     _entity: Entity
 
@@ -30,55 +30,63 @@ class Group:
         self._entity = entity
 
     @property
-    def included_entity_ids(self) -> list[str]:
-        """Return the list of entity IDs."""
+    def member_entity_ids(self) -> list[str]:
+        """Return the list of member entity IDs."""
         raise NotImplementedError
 
     @callback
     def async_added_to_hass(self) -> None:
-        """Handle when the entity is added to hass."""
+        """Called when the entity is added to hass."""
         entity = self._entity
         get_group_entities(entity.hass)[entity.entity_id] = entity
 
     @callback
     def async_will_remove_from_hass(self) -> None:
-        """Handle when the entity will be removed from hass."""
+        """Called when the entity will be removed from hass."""
         entity = self._entity
         del get_group_entities(entity.hass)[entity.entity_id]
 
 
 class GenericGroup(Group):
-    """A generic group."""
+    """Generic entity group.
 
-    def __init__(self, entity: Entity, included_entity_ids: list[str]) -> None:
+    Members can come from multiple integrations and are referenced by entity ID.
+    """
+
+    def __init__(self, entity: Entity, member_entity_ids: list[str]) -> None:
         """Initialize the group."""
         super().__init__(entity)
-        self._included_entity_ids = included_entity_ids
+        self._member_entity_ids = member_entity_ids
 
     @cached_property
-    def included_entity_ids(self) -> list[str]:
-        """Return the list of entity IDs."""
-        return self._included_entity_ids
+    def member_entity_ids(self) -> list[str]:
+        """Return the list of member entity IDs."""
+        return self._member_entity_ids
 
 
 class IntegrationSpecificGroup(Group):
-    """An integration-specific group."""
+    """Integration-specific entity group.
 
-    _included_entity_ids: list[str] | None = None
-    _included_unique_ids: list[str]
+    Members come from a single integration and are referenced by unique ID.
+    Entity IDs are resolved via the entity registry. This group listens for
+    entity registry events to keep the resolved entity IDs up to date.
+    """
 
-    def __init__(self, entity: Entity, included_unique_ids: list[str]) -> None:
+    _member_entity_ids: list[str] | None = None
+    _member_unique_ids: list[str]
+
+    def __init__(self, entity: Entity, member_unique_ids: list[str]) -> None:
         """Initialize the group."""
         super().__init__(entity)
-        self._included_unique_ids = included_unique_ids
+        self._member_unique_ids = member_unique_ids
 
     @cached_property
-    def included_entity_ids(self) -> list[str]:
-        """Return the list of entity IDs."""
+    def member_entity_ids(self) -> list[str]:
+        """Return the list of member entity IDs."""
         entity_registry = er.async_get(self._entity.hass)
-        self._included_entity_ids = [
+        self._member_entity_ids = [
             entity_id
-            for unique_id in self.included_unique_ids
+            for unique_id in self.member_unique_ids
             if (
                 entity_id := entity_registry.async_get_entity_id(
                     self._entity.platform.domain,
@@ -88,43 +96,44 @@ class IntegrationSpecificGroup(Group):
             )
             is not None
         ]
-        return self._included_entity_ids
+        return self._member_entity_ids
 
     @property
-    def included_unique_ids(self) -> list[str]:
-        """Return the list of unique IDs."""
-        return self._included_unique_ids
+    def member_unique_ids(self) -> list[str]:
+        """Return the list of member unique IDs."""
+        return self._member_unique_ids
 
-    @included_unique_ids.setter
-    def included_unique_ids(self, value: list[str]) -> None:
-        """Set the list of unique IDs."""
-        self._included_unique_ids = value
-        if self._included_entity_ids is not None:
-            self._included_entity_ids = None
-            del self.included_entity_ids
+    @member_unique_ids.setter
+    def member_unique_ids(self, value: list[str]) -> None:
+        """Set the list of member unique IDs."""
+        self._member_unique_ids = value
+        if self._member_entity_ids is not None:
+            self._member_entity_ids = None
+            del self.member_entity_ids
 
     @callback
     def async_added_to_hass(self) -> None:
-        """Handle when the entity is added to hass."""
+        """Called when the entity is added to hass."""
         super().async_added_to_hass()
 
         entity = self._entity
         entity_registry = er.async_get(entity.hass)
 
-        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
+        @callback
+        def _handle_entity_registry_updated(event: Event[Any]) -> None:
             """Handle registry create or update event."""
             if (
                 event.data["action"] in {"create", "update"}
                 and (entry := entity_registry.async_get(event.data["entity_id"]))
-                and entry.unique_id in self.included_unique_ids
+                and entry.unique_id in self.member_unique_ids
             ) or (
                 event.data["action"] == "remove"
-                and self._included_entity_ids is not None
-                and event.data["entity_id"] in self._included_entity_ids
+                and self._member_entity_ids is not None
+                and event.data["entity_id"] in self._member_entity_ids
             ):
-                if self._included_entity_ids is not None:
-                    self._included_entity_ids = None
-                    del self.included_entity_ids
+                if self._member_entity_ids is not None:
+                    self._member_entity_ids = None
+                    del self.member_entity_ids
                 entity.async_write_ha_state()
 
         entity.async_on_remove(
@@ -167,7 +176,7 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
         if (entity := group_entities.get(entity_id)) is not None and isinstance(
             entity.group, GenericGroup
         ):
-            child_entities = entity.group.included_entity_ids
+            child_entities = entity.group.member_entity_ids
             if entity_id in child_entities:
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
