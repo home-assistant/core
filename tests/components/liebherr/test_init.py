@@ -196,6 +196,27 @@ async def test_dynamic_device_discovery_api_error(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_dynamic_device_discovery_unexpected_error(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device scan gracefully handles unexpected errors."""
+    mock_liebherr_client.get_devices.side_effect = RuntimeError("Unexpected")
+
+    initial_states = len(hass.states.async_all())
+
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # No crash, no new entities
+    assert len(hass.states.async_all()) == initial_states
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_dynamic_device_discovery_coordinator_setup_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -316,11 +337,19 @@ async def test_stale_device_removal(
     )
     assert new_device_entry
 
-    # Simulate the new device being removed from the account
+    # Simulate the new device being removed from the account.
+    # Make get_device_state raise for new_device_id so we can detect
+    # if the stale coordinator is still polling after shutdown.
     mock_liebherr_client.get_devices.return_value = [MOCK_DEVICE]
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        MOCK_DEVICE_STATE
-    )
+
+    def _get_device_state_after_removal(device_id: str, **kw: Any) -> DeviceState:
+        if device_id == "new_device_id":
+            raise AssertionError(
+                "get_device_state called for removed device new_device_id"
+            )
+        return copy.deepcopy(MOCK_DEVICE_STATE)
+
+    mock_liebherr_client.get_device_state.side_effect = _get_device_state_after_removal
 
     freezer.tick(timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
@@ -333,6 +362,12 @@ async def test_stale_device_removal(
     # Stale device should be removed from device registry
     assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
     assert not device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
+
+    # Advance past the coordinator update interval to confirm the stale
+    # coordinator is no longer polling (would raise AssertionError above)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Original device should still work
     assert hass.states.get("sensor.test_fridge_top_zone") is not None

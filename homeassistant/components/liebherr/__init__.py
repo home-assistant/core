@@ -90,6 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         if stale_device_ids:
             device_registry = dr.async_get(hass)
             for device_id in stale_device_ids:
+                coordinator = data.coordinators.pop(device_id)
+                await coordinator.async_shutdown()
                 if device_entry := device_registry.async_get_device(
                     identifiers={(DOMAIN, device_id)}
                 ):
@@ -97,7 +99,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                         device_id=device_entry.id,
                         remove_config_entry_id=entry.entry_id,
                     )
-                del data.coordinators[device_id]
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
