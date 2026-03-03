@@ -9,6 +9,8 @@ from homeassistant.const import UnitOfTemperature
 DOMAIN: Final = "airzone"
 MANUFACTURER: Final = "Airzone"
 
+CONF_USE_HTTPS: Final = "use_https"
+
 AIOAIRZONE_DEVICE_TIMEOUT_SEC: Final = 10
 API_TEMPERATURE_STEP: Final = 0.5
 

@@ -17,7 +17,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +25,14 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_USE_HTTPS, default=True): bool,
     }
 )
-SYSTEM_ID_SCHEMA = CONFIG_SCHEMA.extend(
+SYSTEM_ID_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_USE_HTTPS, default=False): bool,
         vol.Required(CONF_ID, default=1): int,
     }
 )
@@ -54,8 +58,14 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            _LOGGER.info("User input: %s", user_input)
             if CONF_ID not in user_input:
                 user_input[CONF_ID] = DEFAULT_SYSTEM_ID
+
+            # Auto-suggest port based on HTTPS setting if user didn't change it
+            use_https = user_input.get(CONF_USE_HTTPS, True)
+            if user_input[CONF_PORT] == DEFAULT_PORT:  # User didn't change the port
+                user_input[CONF_PORT] = 3443 if use_https else 3000
 
             self._async_abort_entries_match(user_input)
 
@@ -65,6 +75,8 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
                     user_input[CONF_ID],
+                    verify_ssl=False,  # Airzone devices typically use self-signed certificates
+                    use_https=user_input.get(CONF_USE_HTTPS, False),
                 ),
             )
 
@@ -115,7 +127,9 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_mac(self._discovered_mac))
         self._abort_if_unique_id_configured()
 
-        options = ConnectionOptions(self._discovered_ip)
+        options = ConnectionOptions(
+            self._discovered_ip, verify_ssl=False, use_https=False
+        )  # Default to HTTP for discovery
         airzone = AirzoneLocalApi(
             aiohttp_client.async_get_clientsession(self.hass), options
         )
@@ -134,7 +148,10 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_mac is not None
 
         errors = {}
-        base_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
+        base_schema = {
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Required(CONF_USE_HTTPS, default=False): bool,
+        }
 
         if user_input is not None:
             airzone = AirzoneLocalApi(
@@ -143,6 +160,8 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_ip,
                     user_input[CONF_PORT],
                     user_input.get(CONF_ID, DEFAULT_SYSTEM_ID),
+                    verify_ssl=False,  # Airzone devices typically use self-signed certificates
+                    use_https=user_input.get(CONF_USE_HTTPS, False),
                 ),
             )
 
