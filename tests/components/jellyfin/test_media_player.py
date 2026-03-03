@@ -266,8 +266,6 @@ async def test_services_enqueue(
     cases = [
         ("next", "PlayNext"),
         ("add", "PlayLast"),
-        ("play", "PlayNow"),
-        ("replace", "PlayNow"),
     ]
 
     for enqueue_val, expected_command in cases:

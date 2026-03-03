@@ -43,12 +43,20 @@
       }
     }
   },
+  "selector": {
+    "enqueue": {
+      "options": {
+        "add": "Add to end of queue",
+        "next": "Play next"
+      }
+    }
+  },
   "services": {
     "play_media": {
       "description": "Starts playing specified media.",
       "fields": {
         "enqueue": {
-          "description": "If the content should be played now or be added to the queue.",
+          "description": "If the content should be added to the play queue, and how.",
           "name": "Enqueue"
         },
         "media": {

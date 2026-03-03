@@ -9,6 +9,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_SHUFFLE,
     BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -247,24 +248,20 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
-        """Play a piece of media.
+        """Play a piece of media."""
+        # from jellyfin api docs: command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
 
-        from jellyfin api docs:
-        command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
-        """
+        # if enqueue is null, 'now', or 'replace', these will all act identically in jellyfin, so they are not implemented.
         command = "PlayNow"
         shuffle = kwargs.get(ATTR_MEDIA_SHUFFLE, False)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
         if shuffle:
             # shuffle takes priority over enqueue
             command = "PlayShuffle"
-        elif isinstance(enqueue, str):
-            # skip if the default None is passed
-            # both 'now' and 'replace' will act the same in jellyfin, let PlayNow remain if so
-            if enqueue.lower() == "next":
-                command = "PlayNext"
-            elif enqueue.lower() == "add":
-                command = "PlayLast"
+        elif enqueue == MediaPlayerEnqueue.NEXT:
+            command = "PlayNext"
+        elif enqueue == MediaPlayerEnqueue.ADD:
+            command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
             self.session_id, [media_id], command
         )

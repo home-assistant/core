@@ -14,10 +14,8 @@ play_media:
       selector:
         select:
           options:
-            - "play"
-            - "next"
             - "add"
-            - "replace"
+            - "next"
           translation_key: enqueue
     shuffle:
       required: false
