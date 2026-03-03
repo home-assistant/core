@@ -41,11 +41,21 @@ _LOGGER = logging.getLogger(__name__)
 class TibberHomeData(TypedDict, total=False):
     """Data for a Tibber home used by the price sensor."""
 
-    current_price: float | None
-    last_updated: datetime | None
-    intraday_price_ranking: float | None
-    attributes: dict[str, float]
+    currency: str
     price_unit: str
+    current_price: float | None
+    current_price_time: datetime | None
+    intraday_price_ranking: float | None
+    max_price: float
+    avg_price: float
+    min_price: float
+    off_peak_1: float
+    peak: float
+    off_peak_2: float
+    month_cost: float | None
+    peak_hour: float | None
+    peak_hour_time: datetime | None
+    month_cons: float | None
     app_nickname: str | None
     grid_company: str | None
     estimated_annual_consumption: int | None
@@ -56,18 +66,27 @@ def _build_home_data(home: tibber.TibberHome) -> TibberHomeData:
     current_price, last_updated, price_rank = home.current_price_data()
     attributes = home.current_attributes()
     result: TibberHomeData = {
-        "current_price": current_price,
-        "last_updated": last_updated,
-        "intraday_price_ranking": price_rank,
-        "attributes": attributes,
+        "currency": home.currency,
         "price_unit": home.price_unit,
+        "current_price": current_price,
+        "current_price_time": last_updated,
+        "intraday_price_ranking": price_rank,
+        "max_price": attributes["max_price"],
+        "avg_price": attributes["avg_price"],
+        "min_price": attributes["min_price"],
+        "off_peak_1": attributes["off_peak_1"],
+        "peak": attributes["peak"],
+        "off_peak_2": attributes["off_peak_2"],
+        "month_cost": home.month_cost,
+        "peak_hour": home.peak_hour,
+        "peak_hour_time": home.peak_hour_time,
+        "month_cons": home.month_cons,
+        "app_nickname": home.info["viewer"]["home"].get("appNickname"),
+        "grid_company": home.info["viewer"]["home"]["meteringPointData"]["gridCompany"],
+        "estimated_annual_consumption": home.info["viewer"]["home"][
+            "meteringPointData"
+        ]["estimatedAnnualConsumption"],
     }
-    data = home.info["viewer"]["home"]
-    result["app_nickname"] = data.get("appNickname")
-    result["grid_company"] = data.get("meteringPointData")["gridCompany"]
-    result["estimated_annual_consumption"] = data["meteringPointData"][
-        "estimatedAnnualConsumption"
-    ]
     return result
 
 
