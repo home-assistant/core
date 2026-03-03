@@ -24,7 +24,7 @@ DONGLE_DETECT_METHOD = f"{MODULE}.dongle.detect"
 SETUP_ENTRY_METHOD = f"{MODULE}.async_setup_entry"
 
 
-async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -> None:
+async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that the user flow aborts if an instance is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: "/already/configured/path"}
@@ -40,7 +40,7 @@ async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
+async def test_user_flow_with_detected_usb_device(hass: HomeAssistant) -> None:
     """Test the user flow with a detected usb device."""
     with patch(
         f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[MOCK_USB_DEVICE])
@@ -49,16 +49,16 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
+    assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "detect"
-    assert mock_scan_serial_ports.call_count == 1
     options = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
     assert len(options) == 2
     assert options[0].get("value") == "/dev/ttyUSB1234"
     assert options[1].get("value") == "manual"
 
 
-async def test_user_flow_without_detected_dongle(hass: HomeAssistant) -> None:
+async def test_user_flow_without_detected_usb_device(hass: HomeAssistant) -> None:
     """Test the user flow without detected usb device."""
     with patch(
         f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[])
@@ -67,13 +67,13 @@ async def test_user_flow_without_detected_dongle(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
+    assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
-    assert mock_scan_serial_ports.call_count == 1
 
 
-async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
-    """Test the detection flow with a valid path selected."""
+async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
+    """Test the user flow with a valid path selected."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
     with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
@@ -85,8 +85,8 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE] == USER_PROVIDED_PATH
 
 
-async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
-    """Test the detection flow with custom path selected."""
+async def test_user_flow_with_custom_path(hass: HomeAssistant) -> None:
+    """Test the user flow with custom path selected."""
     USER_PROVIDED_PATH = EnOceanFlowHandler.MANUAL_PATH_VALUE
     FAKE_DONGLE_PATH = "/fake/dongle"
 
@@ -104,8 +104,8 @@ async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual"
 
 
-async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
-    """Test the detection flow with an invalid path selected."""
+async def test_user_flow_with_invalid_path(hass: HomeAssistant) -> None:
+    """Test the user flow with an invalid path selected."""
     USER_PROVIDED_PATH = "/invalid/path"
     FAKE_DONGLE_PATH = "/fake/dongle"
 
