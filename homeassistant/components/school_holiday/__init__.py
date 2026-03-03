@@ -18,7 +18,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: SchoolHolidayConfigEntry
 ) -> bool:
     """Set up the School Holiday integration."""
-    LOGGER.debug("Starting setup of School Holiday integration")
+    LOGGER.debug("Starting integration setup")
     coordinator = SchoolHolidayCoordinator(
         hass,
         entry.data[CONF_COUNTRY],
