@@ -322,36 +322,65 @@ async def test_setup_config_ssl(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base", "config_ext", "get_write_api"),
+    ("mock_client", "get_write_api"),
+    [
+        (influxdb.DEFAULT_API_VERSION, _get_write_api_mock_v1),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_minimal_config_no_connection_keys(
+    hass: HomeAssistant,
+    mock_client,
+    get_write_api,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the setup with minimal configuration creates no deprecation issue."""
+    config = {"influxdb": {}}
+
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert get_write_api(mock_client).call_count == 2
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(conf_entries) == 1
+
+    entry = conf_entries[0]
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.data == BASE_V1_CONFIG
+
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_yaml"
+    )
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "config_base", "get_write_api"),
     [
         (
-            influxdb.DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            {},
-            _get_write_api_mock_v1,
-        ),
-        (
             influxdb.API_VERSION_2,
-            BASE_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
                 "organization": "org",
                 "token": "token",
             },
+            BASE_V2_CONFIG,
             _get_write_api_mock_v2,
         ),
     ],
     indirect=["mock_client"],
 )
-async def test_setup_minimal_config(
+async def test_setup_minimal_config_with_connection_keys(
     hass: HomeAssistant,
     mock_client,
-    config_base,
     config_ext,
+    config_base,
     get_write_api,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the setup with minimal configuration and defaults."""
+    """Test the setup with connection keys creates a deprecation issue."""
     config = {"influxdb": {}}
     config["influxdb"].update(config_ext)
 
@@ -369,14 +398,7 @@ async def test_setup_minimal_config(
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data == config_base
 
-    # Deprecation warning only when connection keys are explicitly provided
-    deprecated_issue = issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_yaml"
-    )
-    if config_ext:
-        assert deprecated_issue
-    else:
-        assert not deprecated_issue
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
 
 
 @pytest.mark.parametrize(
