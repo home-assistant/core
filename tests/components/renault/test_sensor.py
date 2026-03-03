@@ -199,7 +199,7 @@ async def test_sensor_throttling_after_init(
     [
         ("zoe_50", 1, 360),  # 6 coordinators => 6 minutes interval
         ("captur_fuel", 1, 180),  # 3 coordinators => 3 minutes interval
-        ("multi", 2, 480),  # 9 coordinators => 9 minutes interval
+        ("multi", 2, 480),  # 8 coordinators => 8 minutes interval
     ],
     indirect=["vehicle_type"],
 )
