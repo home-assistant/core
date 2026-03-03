@@ -23,7 +23,7 @@ def _convert_uint8_to_percentage(value: Any) -> float:
 class BrightnessChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
     """Trigger for brightness changed."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
     _attribute = ATTR_BRIGHTNESS
 
     _converter = staticmethod(_convert_uint8_to_percentage)
@@ -34,7 +34,7 @@ class BrightnessCrossedThresholdTrigger(
 ):
     """Trigger for brightness crossed threshold."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
     _attribute = ATTR_BRIGHTNESS
     _converter = staticmethod(_convert_uint8_to_percentage)
 

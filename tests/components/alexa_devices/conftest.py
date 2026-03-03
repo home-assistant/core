@@ -4,7 +4,6 @@ from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.const.devices import DEVICE_TYPE_TO_MODEL
 import pytest
 
 from homeassistant.components.alexa_devices.const import (
@@ -51,9 +50,6 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
-        client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
-            device.device_type
-        )
         client.send_sound_notification = AsyncMock()
         yield client
 
