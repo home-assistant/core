@@ -12,12 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -27,6 +22,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import MotionConfigEntry
 from .const import (
     CONF_BLIND_TYPE,
     CONF_LOCAL_NAME,
@@ -185,7 +181,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler()

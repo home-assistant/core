@@ -5,14 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from motionblindsble.device import MotionDevice
-
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from . import MotionConfigEntry
 
 CONF_TITLE = "title"
 
@@ -24,10 +21,10 @@ TO_REDACT: Iterable[Any] = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: MotionConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
 
     return async_redact_data(
         {
