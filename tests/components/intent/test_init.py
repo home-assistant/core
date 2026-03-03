@@ -85,7 +85,7 @@ async def test_http_handle_intent(
         },
         "language": hass.config.language,
         "response_type": intent.IntentResponseType.ACTION_DONE.value,
-        "data": {"success": [], "failed": []},
+        "data": {"targets": [], "success": [], "failed": []},
     }
 
 
@@ -134,6 +134,7 @@ async def test_http_language_device_satellite_id(
     assert resp.status == 200
     data = await resp.json()
 
+    # Verify language, device id, and satellite id were passed through.
     # Also check speech slots.
     assert data == {
         "card": {},
@@ -200,8 +201,7 @@ async def test_http_assistant(
         "/api/intent/handle",
         json={
             "name": "HassTurnOn",
-            "data": {"name": "Garage Door 1"},
-            "assistant": conversation.DOMAIN,
+            "data": {"name": "Garage Door 1", "assistant": conversation.DOMAIN},
         },
     )
     assert resp.status == 200
