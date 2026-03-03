@@ -23,6 +23,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -189,6 +190,9 @@ class StateVacuumEntity(
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
+    _segments_not_configured_issue_created: bool = False
+    _segments_changed_last_seen: list[dict[str, Any]] | None = None
+
     __vacuum_legacy_battery_level: bool = False
     __vacuum_legacy_battery_icon: bool = False
     __vacuum_legacy_battery_feature: bool = False
@@ -231,6 +235,11 @@ class StateVacuumEntity(
             self._report_deprecated_battery_properties("battery_level")
         if self.__vacuum_legacy_battery_icon:
             self._report_deprecated_battery_properties("battery_icon")
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_check_segments_issues()
 
     @callback
     def _report_deprecated_battery_properties(self, property: str) -> None:
@@ -429,7 +438,14 @@ class StateVacuumEntity(
             )
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        area_mapping: dict[str, list[str]] = options.get("area_mapping", {})
+        area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
+
+        if area_mapping is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="area_mapping_not_configured",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
 
         # We use a dict to preserve the order of segments.
         segment_ids: dict[str, None] = {}
@@ -489,6 +505,24 @@ class StateVacuumEntity(
                 "entity_id": self.entity_id,
             },
         )
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        self._segments_changed_last_seen = options.get("last_seen_segments")
+
+    @callback
+    def _async_check_segments_issues(self) -> None:
+        """Create or delete segment-related repair issues."""
+        if self.registry_entry is None:
+            return
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+
+        if self._segments_changed_last_seen is not None and (
+            VacuumEntityFeature.CLEAN_AREA not in self.supported_features
+            or options.get("last_seen_segments") != self._segments_changed_last_seen
+        ):
+            issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            self._segments_changed_last_seen = None
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""

@@ -18,18 +18,9 @@ rules:
     status: exempt
     comment: |
       Integration does not provide custom actions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      Verify integration docs at https://www.home-assistant.io/integrations/splunk/ include a high-level description of Splunk with a link to https://www.splunk.com/ and explain the integration's purpose for users unfamiliar with Splunk.
-  docs-installation-instructions:
-    status: todo
-    comment: |
-      Verify integration docs include clear prerequisites and step-by-step setup instructions including how to configure Splunk HTTP Event Collector and obtain the required token.
-  docs-removal-instructions:
-    status: todo
-    comment: |
-      Verify integration docs include instructions on how to remove the integration and clarify what happens to data already in Splunk.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |

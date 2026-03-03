@@ -18,6 +18,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "airobot-thermostat-*",
     },
     {
+        "domain": "airos",
+        "registered_devices": True,
+    },
+    {
         "domain": "airthings",
         "hostname": "airthings-view",
     },

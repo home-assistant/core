@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.3.0.dev0"
+version = "2026.4.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -27,7 +27,7 @@ dependencies = [
   # aiogithubapi is needed by frontend; frontend is unconditionally imported at
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
-  "aiogithubapi==24.6.0",
+  "aiogithubapi==26.0.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
@@ -78,11 +78,11 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==1.5.2",
   "urllib3>=2.0",
-  "uv==0.9.26",
+  "uv==0.10.6",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.2.0",
-  "yarl==1.22.0",
+  "yarl==1.23.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.148.0",
 ]
