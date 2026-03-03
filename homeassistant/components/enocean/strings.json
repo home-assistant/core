@@ -1,11 +1,11 @@
 {
   "config": {
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "invalid_dongle_path": "Invalid dongle path",
       "unknown_device": "Selected device was not found"
     },
     "error": {
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "invalid_dongle_path": "No valid dongle found for this path"
     },
     "flow_title": "{name}",
