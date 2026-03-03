@@ -26,7 +26,7 @@ class FreshrData:
     """Runtime data stored on the config entry."""
 
     devices: FreshrDevicesCoordinator
-    readings: FreshrReadingsCoordinator
+    readings: list[FreshrReadingsCoordinator]
 
 
 type FreshrConfigEntry = ConfigEntry[FreshrData]
@@ -58,11 +58,6 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[list[DeviceSummary]]):
                 await self.client.login(username, password)
 
             devices = await self.client.fetch_devices()
-            if not devices:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="no_devices_found",
-                )
         except LoginError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -77,8 +72,8 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[list[DeviceSummary]]):
             return devices
 
 
-class FreshrReadingsCoordinator(DataUpdateCoordinator[dict[str, DeviceReadings]]):
-    """Coordinator that refreshes device readings every 10 minutes."""
+class FreshrReadingsCoordinator(DataUpdateCoordinator[DeviceReadings]):
+    """Coordinator that refreshes readings for a single device every 10 minutes."""
 
     config_entry: FreshrConfigEntry
 
@@ -86,29 +81,29 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[dict[str, DeviceReadings]]
         self,
         hass: HomeAssistant,
         config_entry: FreshrConfigEntry,
-        devices_coordinator: FreshrDevicesCoordinator,
+        device: DeviceSummary,
+        client: FreshrClient,
     ) -> None:
-        """Initialize the readings coordinator."""
+        """Initialize the readings coordinator for a single device."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN}_readings",
+            name=f"{DOMAIN}_readings_{device.id}",
             update_interval=READINGS_SCAN_INTERVAL,
         )
-        self._devices_coordinator = devices_coordinator
+        self._device = device
+        self._client = client
 
-    async def _async_update_data(self) -> dict[str, DeviceReadings]:
-        """Fetch current readings for each known device from the Fresh-r API."""
-        devices = self._devices_coordinator.data or []
+    @property
+    def device_id(self) -> str:
+        """Return the device ID."""
+        return self._device.id
 
+    async def _async_update_data(self) -> DeviceReadings:
+        """Fetch current readings for this device from the Fresh-r API."""
         try:
-            results: dict[str, DeviceReadings] = {}
-            for device in devices:
-                current = await self._devices_coordinator.client.fetch_device_current(
-                    device
-                )
-                results[device.id] = current
+            return await self._client.fetch_device_current(self._device)
         except LoginError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -119,5 +114,3 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[dict[str, DeviceReadings]]
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
-        else:
-            return results

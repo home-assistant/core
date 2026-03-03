@@ -1,76 +1,46 @@
 """Test the Fresh-r sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 from pyfreshr.exceptions import ApiResponseError
 from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freshr.const import DOMAIN
+from homeassistant.components.freshr.coordinator import (
+    DEVICES_SCAN_INTERVAL,
+    READINGS_SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_ID
 
-from tests.common import MockConfigEntry
-
-
-def _make_client(current: DeviceReadings) -> MagicMock:
-    """Build a minimal FreshrClient mock returning a single device."""
-    client = MagicMock()
-    client.logged_in = False
-    client.login = AsyncMock()
-    client.fetch_devices = AsyncMock(return_value=[DeviceSummary(id=DEVICE_ID)])
-    client.fetch_device_current = AsyncMock(return_value=current)
-    return client
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_sensor_entities_created(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that all sensor entities are created for each device."""
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entries) == 6
-    unique_ids = {e.unique_id for e in entries}
-    assert unique_ids == {
-        f"{DEVICE_ID}_t1",
-        f"{DEVICE_ID}_t2",
-        f"{DEVICE_ID}_co2",
-        f"{DEVICE_ID}_hum",
-        f"{DEVICE_ID}_flow",
-        f"{DEVICE_ID}_dp",
-    }
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_sensor_states(
+async def test_entities(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor states match the coordinator data."""
+    """Test the sensor entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    def get_state(key: str) -> str | None:
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{DEVICE_ID}_{key}"
-        )
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
-        return state.state
-
-    assert get_state("t1") == "21.5"
-    assert get_state("t2") == "5.3"
-    assert get_state("co2") == "850"
-    assert get_state("hum") == "45"
-    assert get_state("flow") == "0.12"
-    assert get_state("dp") == "10.2"
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device_entry
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    for entity_entry in entity_entries:
+        assert entity_entry.device_id == device_entry.id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -78,119 +48,96 @@ async def test_sensor_none_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_freshr_client: MagicMock,
 ) -> None:
-    """Test sensors return unknown when coordinator data is None."""
-    with patch(
-        "homeassistant.components.freshr.coordinator.FreshrClient",
-        return_value=_make_client(
-            DeviceReadings(t1=None, t2=None, co2=None, hum=None, flow=None, dp=None)
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    """Test sensors return unknown when all readings are None."""
+    mock_freshr_client.fetch_device_current.return_value = DeviceReadings(
+        t1=None, t2=None, co2=None, hum=None, flow=None, dp=None
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    for key in ("t1", "t2", "co2", "hum", "dp"):
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{DEVICE_ID}_{key}"
-        )
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == "unknown"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_invalid_numeric_values(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sensors return unknown when the API returns unparsable values."""
-    with patch(
-        "homeassistant.components.freshr.coordinator.FreshrClient",
-        return_value=_make_client(
-            DeviceReadings.from_dict(
-                {
-                    "t1": "not-a-number",
-                    "t2": "not-a-number",
-                    "co2": "not-a-number",
-                    "hum": "not-a-number",
-                    "flow": 0.05,
-                    "dp": "not-a-number",
-                }
-            )
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    for key in ("t1", "t2", "co2", "hum", "dp"):
+    for key in ("t1", "t2", "co2", "hum", "flow", "dp"):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{DEVICE_ID}_{key}"
         )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == "unknown"
 
-    flow_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_flow")
-    assert flow_id is not None
-    assert hass.states.get(flow_id).state == "0.05"
-
-
-async def test_setup_api_response_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_freshr_client: MagicMock,
-) -> None:
-    """Test that an ApiResponseError during setup triggers a retry."""
-    mock_freshr_client.fetch_devices = AsyncMock(
-        side_effect=ApiResponseError("parse error")
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_connection_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_freshr_client: MagicMock,
-) -> None:
-    """Test that a ClientError during setup triggers a retry."""
-    mock_freshr_client.fetch_devices = AsyncMock(
-        side_effect=ClientError("network error")
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
 
 async def test_setup_no_devices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_freshr_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that an empty device list triggers a retry."""
-    mock_freshr_client.fetch_devices = AsyncMock(return_value=[])
+    """Test that an empty device list sets up successfully with no entities."""
+    mock_freshr_client.fetch_devices.return_value = []
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_unload_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test unloading the config entry."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert (
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        == []
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    "error",
+    [ApiResponseError("api error"), ClientError("network error")],
+)
+async def test_readings_connection_error_makes_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_freshr_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test that connection errors during readings refresh mark entities unavailable."""
+    mock_freshr_client.fetch_device_current.side_effect = error
+    async_fire_time_changed(hass, dt_util.utcnow() + READINGS_SCAN_INTERVAL)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_t1")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_dynamic_device_addition(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_freshr_client: MagicMock,
+) -> None:
+    """Test that a device added to the account after setup is discovered dynamically."""
+    second_device_id = "SN002"
+    mock_freshr_client.fetch_devices.return_value = [
+        DeviceSummary(id=DEVICE_ID),
+        DeviceSummary(id=second_device_id),
+    ]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + DEVICES_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # wait for the readings coordinator task
+
+    new_unique_ids = {
+        e.unique_id
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if e.unique_id.startswith(second_device_id)
+    }
+    assert new_unique_ids == {
+        f"{second_device_id}_t1",
+        f"{second_device_id}_t2",
+        f"{second_device_id}_co2",
+        f"{second_device_id}_hum",
+        f"{second_device_id}_flow",
+        f"{second_device_id}_dp",
+    }

@@ -46,14 +46,19 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_freshr_client() -> Generator[MagicMock]:
     """Return a mocked FreshrClient."""
-    with patch(
-        "homeassistant.components.freshr.coordinator.FreshrClient"
-    ) as mock_client_class:
+    with (
+        patch(
+            "homeassistant.components.freshr.coordinator.FreshrClient", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.freshr.config_flow.FreshrClient",
+            new=mock_client_class,
+        ),
+    ):
         client = mock_client_class.return_value
         client.logged_in = False
-        client.login = AsyncMock()
-        client.fetch_devices = AsyncMock(return_value=[DeviceSummary(id=DEVICE_ID)])
-        client.fetch_device_current = AsyncMock(return_value=MOCK_DEVICE_CURRENT)
+        client.fetch_devices.return_value = [DeviceSummary(id=DEVICE_ID)]
+        client.fetch_device_current.return_value = MOCK_DEVICE_CURRENT
         yield client
 
 

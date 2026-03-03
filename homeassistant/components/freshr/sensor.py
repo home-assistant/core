@@ -113,8 +113,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fresh-r sensors from a config entry."""
     devices_coordinator = config_entry.runtime_data.devices
-    readings_coordinator = config_entry.runtime_data.readings
     known_device_ids: set[str] = set()
+    readings_by_device: dict[str, FreshrReadingsCoordinator] = {
+        coordinator.device_id: coordinator
+        for coordinator in config_entry.runtime_data.readings
+    }
 
     def _async_add_new_devices() -> None:
         """Add sensors for any devices not yet registered."""
@@ -125,6 +128,15 @@ async def async_setup_entry(
             if device.id in known_device_ids:
                 continue
             known_device_ids.add(device.id)
+            if device.id not in readings_by_device:
+                coordinator = FreshrReadingsCoordinator(
+                    hass,
+                    config_entry,
+                    device,
+                    devices_coordinator.client,
+                )
+                readings_by_device[device.id] = coordinator
+                hass.async_create_task(coordinator.async_refresh())
             descriptions = SENSOR_TYPES.get(
                 device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
             )
@@ -135,7 +147,7 @@ async def async_setup_entry(
                 manufacturer="Fresh-r",
             )
             entities.extend(
-                FreshrSensor(readings_coordinator, device.id, description, device_info)
+                FreshrSensor(readings_by_device[device.id], description, device_info)
                 for description in descriptions
             )
         if entities:
@@ -156,21 +168,21 @@ class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: FreshrReadingsCoordinator,
-        device_id: str,
         description: FreshrSensorEntityDescription,
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._device_id = device_id
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{device_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return if device is available."""
+        return super().available and self.coordinator.data is not None
 
     @property
     def native_value(self) -> StateType:
         """Return the value from coordinator data."""
-        device_current = self.coordinator.data.get(self._device_id)
-        if device_current is None:
-            return None
-        return self.entity_description.value_fn(device_current)
+        return self.entity_description.value_fn(self.coordinator.data)

@@ -51,8 +51,6 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=f"Fresh-r ({user_input[CONF_USERNAME]})",
                     data=user_input,
                 )
-            finally:
-                await client.close()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

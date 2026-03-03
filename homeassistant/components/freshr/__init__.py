@@ -1,5 +1,7 @@
 """The Fresh-r integration."""
 
+import asyncio
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -18,12 +20,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bo
     devices_coordinator = FreshrDevicesCoordinator(hass, entry)
     await devices_coordinator.async_config_entry_first_refresh()
 
-    readings_coordinator = FreshrReadingsCoordinator(hass, entry, devices_coordinator)
-    await readings_coordinator.async_config_entry_first_refresh()
+    readings_coordinators = [
+        FreshrReadingsCoordinator(hass, entry, device, devices_coordinator.client)
+        for device in devices_coordinator.data
+    ]
+    await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in readings_coordinators
+        )
+    )
 
     entry.runtime_data = FreshrData(
         devices=devices_coordinator,
-        readings=readings_coordinator,
+        readings=readings_coordinators,
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
