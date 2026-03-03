@@ -310,11 +310,18 @@ async def install_humidifier_device(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(name="fan_config_entry")
-async def fan_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
+@pytest.fixture(name="device_config_entry")
+async def device_config_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config,
+    request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
-    """Create a mock VeSync config entry for `SmartTowerFan`."""
+    """Create a mock VeSync config entry for the specified device.
+
+    If the fixture is parametrized (`request.param`) use that value as the
+    device name.
+    """
     entry = MockConfigEntry(
         title="VeSync",
         domain=DOMAIN,
@@ -325,7 +332,7 @@ async def fan_config_entry(
     )
     entry.add_to_hass(hass)
 
-    device_name = "SmartTowerFan"
+    device_name = request.param
     mock_multiple_device_responses(aioclient_mock, [device_name])
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

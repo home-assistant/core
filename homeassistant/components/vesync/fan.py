@@ -9,7 +9,7 @@ from pyvesync.base_devices import VeSyncFanBase, VeSyncPurifier
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -270,7 +270,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
         if preset_mode not in self._available_preset_modes:
-            raise ValueError(
+            raise ServiceValidationError(
                 f"{preset_mode} is not one of the valid preset modes: "
                 f"{self._available_preset_modes}"
             )
