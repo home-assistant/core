@@ -35,7 +35,7 @@ def mock_inotify():
 def mock_list_devices():
     """Mock evdev list_devices to return empty list."""
     with patch(
-        "homeassistant.components.keyboard_remote.list_devices",
+        "evdev.list_devices",
         return_value=[],
     ):
         yield

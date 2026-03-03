@@ -6,11 +6,13 @@ import asyncio
 from contextlib import suppress
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from asyncinotify import Inotify, Mask
-from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
+
+if TYPE_CHECKING:
+    from evdev import InputDevice
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -271,6 +273,8 @@ class KeyboardRemoteManager:
         self, descriptor: str
     ) -> tuple[InputDevice | None, DeviceHandler | None]:
         """Find the matching handler for a device descriptor (path)."""
+        from evdev import InputDevice  # noqa: PLC0415
+
         # Devices are often added and then correct permissions set after
         try:
             dev = InputDevice(descriptor)
@@ -285,6 +289,8 @@ class KeyboardRemoteManager:
 
     async def _async_scan_initial_devices(self) -> None:
         """Scan all current /dev/input/ devices and start matching handlers."""
+        from evdev import list_devices  # noqa: PLC0415
+
         start_tasks: set[asyncio.Task] = set()
         descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
         for descriptor in descriptors:
@@ -292,7 +298,7 @@ class KeyboardRemoteManager:
                 self._get_handler_for_device, descriptor
             )
 
-            if handler is None:
+            if handler is None or dev is None:
                 continue
 
             self._active_handlers_by_descriptor[descriptor] = handler
@@ -305,6 +311,8 @@ class KeyboardRemoteManager:
 
     async def _async_check_handler(self, handler: DeviceHandler) -> None:
         """Check if a newly registered handler's device is currently connected."""
+        from evdev import list_devices  # noqa: PLC0415
+
         descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
         for descriptor in descriptors:
             if descriptor in self._active_handlers_by_descriptor:
@@ -345,7 +353,7 @@ class KeyboardRemoteManager:
                     result = await self.hass.async_add_executor_job(
                         self._get_handler_for_device, descriptor
                     )
-                    if result[1] is None:
+                    if result[0] is None or result[1] is None:
                         continue
                     dev, handler = result[0], result[1]
                     _LOGGER.debug("adding: %s", descriptor)
@@ -503,6 +511,8 @@ class DeviceHandler:
 
     async def _async_monitor_input(self) -> None:
         """Monitor one device for key events using evdev with asyncio."""
+        from evdev import categorize, ecodes  # noqa: PLC0415
+
         dev = self.dev
         assert dev is not None
         repeat_tasks: dict[int, asyncio.Task] = {}
