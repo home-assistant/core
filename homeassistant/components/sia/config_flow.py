@@ -33,6 +33,7 @@ from .const import (
     CONF_IGNORE_TIMESTAMPS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    CONF_IGNORE_BR,
     DOMAIN,
     TITLE,
 )
@@ -48,6 +49,7 @@ HUB_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
+        vol.Optional(CONF_IGNORE_BR, default=False): bool, 
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
@@ -58,11 +60,12 @@ ACCOUNT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
+        vol.Optional(CONF_IGNORE_BR, default=False): bool, 
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
 
-DEFAULT_OPTIONS = {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: None}
+DEFAULT_OPTIONS = {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: None, CONF_IGNORE_BR: False}
 
 
 def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
@@ -174,6 +177,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._options[CONF_ACCOUNTS].setdefault(account, deepcopy(DEFAULT_OPTIONS))
         self._options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
+        self._options[CONF_ACCOUNTS][account][CONF_IGNORE_BR] = user_input[CONF_IGNORE_BR]
 
 
 class SIAOptionsFlowHandler(OptionsFlow):
@@ -219,6 +223,10 @@ class SIAOptionsFlowHandler(OptionsFlow):
                                 CONF_IGNORE_TIMESTAMPS
                             ],
                         ): bool,
+                        vol.Optional(
+                            CONF_IGNORE_BR,
+                            default=self.options[CONF_ACCOUNTS][account][CONF_IGNORE_BR],
+                        ): bool,
                     }
                 ),
                 errors=errors,
@@ -230,6 +238,7 @@ class SIAOptionsFlowHandler(OptionsFlow):
             CONF_IGNORE_TIMESTAMPS
         ]
         self.options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
+        self.options[CONF_ACCOUNTS][account][CONF_IGNORE_BR] = user_input[CONF_IGNORE_BR]
         if self.accounts_todo:
             return await self.async_step_options()
         return self.async_create_entry(title="", data=self.options)

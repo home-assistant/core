@@ -18,7 +18,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, KEY_ALARM, PREVIOUS_STATE
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, CONF_IGNORE_BR, KEY_ALARM, PREVIOUS_STATE
 from .entity import SIABaseEntity, SIAEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +61,8 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "NL": AlarmControlPanelState.ARMED_NIGHT,
         "NE": AlarmControlPanelState.ARMED_NIGHT,
         "NF": AlarmControlPanelState.ARMED_NIGHT,
+        # PH → PREVIOUS_STATE (restore state before trigger)
+        "PH": PREVIOUS_STATE,
         "BR": PREVIOUS_STATE,
     },
 )
@@ -103,9 +105,16 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             zone,
             entity_description,
         )
-
+        # Read option to ignore BR restore (e.g. for Ajax systems)
+        self._ignore_br = (
+            entry.options
+            .get(CONF_ACCOUNTS, {})
+            .get(account, {})
+            .get(CONF_IGNORE_BR, False)
+        )
         self._attr_alarm_state: AlarmControlPanelState | None = None
         self._old_state: AlarmControlPanelState | None = None
+        self._old_state_ph: AlarmControlPanelState | None = None
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
@@ -130,7 +139,13 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             return False
         _LOGGER.debug("New state will be %s", new_state)
         if new_state == PREVIOUS_STATE:
-            new_state = self._old_state
+            if self._ignore_br and sia_event.code == "BR":
+                _LOGGER.debug("Ignoring BR restore event (Ajax mode enabled)")
+                return False  
+            _LOGGER.debug("PH event received, restoring previous state")
+            new_state = self._old_state_ph 
+        if self._attr_alarm_state != "TRIGGERED":
+            self._old_state_ph = self._attr_alarm_state
         if TYPE_CHECKING:
             assert isinstance(new_state, AlarmControlPanelState)
         self._attr_alarm_state, self._old_state = new_state, self._attr_alarm_state
