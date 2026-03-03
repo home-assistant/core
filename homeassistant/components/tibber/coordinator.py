@@ -38,7 +38,7 @@ FIVE_YEARS = 5 * 365 * 24
 _LOGGER = logging.getLogger(__name__)
 
 
-class TibberHomeData(TypedDict, total=False):
+class TibberHomeData(TypedDict):
     """Data for a Tibber home used by the price sensor."""
 
     currency: str
