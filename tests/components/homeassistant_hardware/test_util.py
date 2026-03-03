@@ -184,7 +184,7 @@ async def test_guess_hardware_owners_z2m(
     multipan_addon_manager = AsyncMock(spec_set=AddonManager)
     multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
 
-    def mock_addon_info(slug: str) -> AddonError:
+    def mock_addon_info(slug: str) -> AddonInfo:
         if slug == TEST_Z2M_ADDON_SLUG_1:
             return AddonInfo(
                 available=True,
