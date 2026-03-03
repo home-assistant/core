@@ -799,6 +799,28 @@ async def test_async_stop_with_active_handlers(
     assert len(disconnect_events) == 1
 
 
+async def test_async_stop_cancels_running_monitor_task(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_stop cancels a still-running monitor task."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+
+    # Replace the monitor task with one that is still running
+    manager._monitor_task = hass.async_create_task(asyncio.sleep(999))
+    assert not manager._monitor_task.done()
+
+    await manager.async_stop()
+    await hass.async_block_till_done()
+
+    assert manager._monitor_task is None
+    assert not manager._started
+
+
 async def test_unregister_handler_with_active_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -875,6 +897,43 @@ async def test_check_handler_skips_already_active(
 
     # No new connected event since the descriptor was already active
     assert len(events) == 0
+
+
+async def test_monitor_devices_cancelled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_inotify: MagicMock,
+) -> None:
+    """Test _async_monitor_devices handles CancelledError gracefully."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+
+    # Replace inotify with an async iterator that blocks indefinitely
+    started = asyncio.Event()
+
+    class BlockingInotify:
+        """Async iterator that blocks on first iteration until cancelled."""
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            started.set()
+            await asyncio.sleep(999)  # block until cancelled
+
+    manager._inotify = BlockingInotify()
+
+    task = hass.async_create_task(manager._async_monitor_devices())
+    await started.wait()  # ensure the loop has started
+
+    task.cancel()
+    with suppress(asyncio.CancelledError):
+        await task
+
+    assert task.done()
 
 
 async def test_keyrepeat_fires_hold_events(
