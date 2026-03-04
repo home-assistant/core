@@ -1,0 +1,10 @@
+{
+  "services": {
+    "read_users": {
+      "service": "mdi:account-multiple"
+    },
+    "delete_user": {
+      "service": "mdi:account-remove"
+    }
+  }
+}

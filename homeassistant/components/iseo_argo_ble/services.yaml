@@ -1,0 +1,28 @@
+read_users:
+  target:
+    entity:
+      domain: lock
+      integration: iseo_argo_ble
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: iseo_argo_ble
+
+delete_user:
+  target:
+    entity:
+      domain: lock
+      integration: iseo_argo_ble
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: iseo_argo_ble
+    uuid:
+      required: true
+      example: "EAA06132486F426CB0D26C6B9B578ADD"
+      selector:
+        text:

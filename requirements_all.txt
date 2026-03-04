@@ -1339,6 +1339,9 @@ irm-kmi-api==1.1.1
 # homeassistant.components.isal
 isal==1.8.0
 
+# homeassistant.components.iseo_argo_ble
+iseo-argo-ble==0.5.1
+
 # homeassistant.components.gogogate2
 ismartgate==5.0.2
 
