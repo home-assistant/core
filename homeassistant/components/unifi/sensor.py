@@ -389,9 +389,7 @@ def make_wan_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
 
     # WAN status names (WAN, WAN2, ...) map to API keys (wan1, wan2, ...).
     # Extras are filtered out per-device by supported_fn.
-    wans = tuple(
-        (f"WAN{i}" if i > 1 else "WAN", f"wan{i}") for i in range(1, 7)
-    )
+    wans = tuple((f"WAN{i}" if i > 1 else "WAN", f"wan{i}") for i in range(1, 7))
 
     for wan_name, wan_key in wans:
         wan_slug = wan_name.lower()
@@ -410,7 +408,9 @@ def make_wan_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
                 name_fn=lambda device, _wn=wan_name: f"{_wn} Status",
                 object_fn=lambda api, obj_id: api.devices[obj_id],
                 supported_fn=partial(async_device_wan_status_supported_fn, wan_name),
-                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: f"wan_status-{_ws}-{obj_id}",
+                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: (
+                    f"wan_status-{_ws}-{obj_id}"
+                ),
                 value_fn=partial(async_device_wan_status_value_fn, wan_name),
                 options=["online", "offline"],
             )
@@ -447,7 +447,9 @@ def make_wan_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
                 name_fn=lambda device, _wn=wan_name: f"{_wn} Availability",
                 object_fn=lambda api, obj_id: api.devices[obj_id],
                 supported_fn=partial(async_device_wan_supported_fn, wan_key),
-                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: f"wan_availability-{_ws}-{obj_id}",
+                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: (
+                    f"wan_availability-{_ws}-{obj_id}"
+                ),
                 value_fn=partial(async_device_wan_value_fn, wan_key, "availability"),
             )
         )
@@ -467,7 +469,9 @@ def make_wan_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
                 name_fn=lambda device, _wn=wan_name: f"{_wn} Latency",
                 object_fn=lambda api, obj_id: api.devices[obj_id],
                 supported_fn=partial(async_device_wan_supported_fn, wan_key),
-                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: f"wan_latency-{_ws}-{obj_id}",
+                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: (
+                    f"wan_latency-{_ws}-{obj_id}"
+                ),
                 value_fn=partial(async_device_wan_value_fn, wan_key, "latency"),
             )
         )
@@ -488,7 +492,9 @@ def make_wan_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
                 name_fn=lambda device, _wn=wan_name: f"{_wn} RX Rate",
                 object_fn=lambda api, obj_id: api.devices[obj_id],
                 supported_fn=partial(async_device_wan_supported_fn, wan_key),
-                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: f"wan_rx_rate-{_ws}-{obj_id}",
+                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: (
+                    f"wan_rx_rate-{_ws}-{obj_id}"
+                ),
                 value_fn=partial(async_device_wan_value_fn, wan_key, "rx_bytes-r"),
             )
         )
@@ -509,7 +515,9 @@ def make_wan_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
                 name_fn=lambda device, _wn=wan_name: f"{_wn} TX Rate",
                 object_fn=lambda api, obj_id: api.devices[obj_id],
                 supported_fn=partial(async_device_wan_supported_fn, wan_key),
-                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: f"wan_tx_rate-{_ws}-{obj_id}",
+                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: (
+                    f"wan_tx_rate-{_ws}-{obj_id}"
+                ),
                 value_fn=partial(async_device_wan_value_fn, wan_key, "tx_bytes-r"),
             )
         )
