@@ -107,7 +107,8 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(device_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: self._discovered_host}
+            updates={CONF_IP_ADDRESS: self._discovered_host},
+            reload_on_update=True,
         )
 
         self.context["title_placeholders"] = {"name": self._discovered_name}
