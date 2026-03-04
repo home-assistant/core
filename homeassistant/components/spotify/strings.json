@@ -41,6 +41,12 @@
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
+  "issues": {
+    "user_not_premium": {
+      "description": "The Spotify API has been changed and Developer applications created with a free account can no longer access the API. To continue using the Spotify integration, you should use an Spotify Developer application created with a Spotify Premium account, or upgrade to Spotify Premium.",
+      "title": "Spotify integration requires a Spotify Premium account"
+    }
+  },
   "system_health": {
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"
