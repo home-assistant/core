@@ -277,11 +277,15 @@ async def test_usb_discovery_already_configured_updates_path(
 
 async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USB},
-        data=MOCK_USB_SERVICE_INFO,
-    )
+    with patch(
+        f"{MODULE}.config_flow.get_serial_by_id",
+        return_value=MOCK_SERIAL_BY_ID,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=MOCK_USB_SERVICE_INFO,
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
     assert result["description_placeholders"] == {
@@ -289,10 +293,14 @@ async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
         "manufacturer": "EnOcean",
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USB},
-        data=MOCK_USB_SERVICE_INFO,
-    )
+    with patch(
+        f"{MODULE}.config_flow.get_serial_by_id",
+        return_value=MOCK_SERIAL_BY_ID,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=MOCK_USB_SERVICE_INFO,
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
