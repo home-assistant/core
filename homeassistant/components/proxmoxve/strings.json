@@ -193,6 +193,15 @@
     "invalid_auth_no_details": {
       "message": "Authentication failed for the Proxmox VE instance."
     },
+    "invalid_target_entity": {
+      "message": "The entity `{entity_id}` is not a valid Proxmox VE VM or container entity."
+    },
+    "invalid_target_not_vm_or_container": {
+      "message": "The selected device is not a Proxmox VE VM or LXC container. Only VM and container devices are supported for snapshots."
+    },
+    "invalid_target_single": {
+      "message": "You must target exactly one Proxmox VE VM or container (device or entity)."
+    },
     "no_nodes_found": {
       "message": "No active nodes were found on the Proxmox VE server."
     },
@@ -205,6 +214,9 @@
     "permissions_error": {
       "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
+    "snapshot_failed": {
+      "message": "Creating the snapshot failed while communicating with the Proxmox VE instance."
+    },
     "ssl_error": {
       "message": "An SSL error occurred: {error}"
     },
@@ -213,6 +225,9 @@
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
+    },
+    "version_entity_unavailable": {
+      "message": "The version entity `{entity_id}` is not available or has no version state."
     }
   },
   "issues": {
@@ -235,6 +250,18 @@
     "deprecated_yaml_import_issue_ssl_error": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    }
+  },
+  "services": {
+    "create_snapshot": {
+      "description": "Creates a snapshot on a VM or LXC container. The snapshot is named using the `Home_Assistant_` prefix followed by the Home Assistant version. Use this before upgrading Home Assistant to create a restore point.",
+      "fields": {
+        "version_entity": {
+          "description": "Optional sensor entity that provides the version string to include in the snapshot name (for example the Version integration `Local installation` sensor). If not set, the current Home Assistant version is used.",
+          "name": "Version entity"
+        }
+      },
+      "name": "Create snapshot"
     }
   }
 }

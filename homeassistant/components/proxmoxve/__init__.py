@@ -36,6 +36,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
+from .services import async_setup_services, async_unload_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -145,6 +146,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register services the first time any config entry is loaded.
+    hass.data.setdefault(DOMAIN, set())
+    hass.data[DOMAIN].add(entry.entry_id)
+    if len(hass.data[DOMAIN]) == 1:
+        async_setup_services(hass)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -178,4 +186,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if result and DOMAIN in hass.data:
+        hass.data[DOMAIN].discard(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            async_unload_services(hass)
+            del hass.data[DOMAIN]
+    return result

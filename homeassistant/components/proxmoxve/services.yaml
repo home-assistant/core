@@ -1,0 +1,13 @@
+create_snapshot:
+  target:
+    entity:
+      integration: proxmoxve
+      domain:
+        - binary_sensor
+        - button
+        - sensor
+  fields:
+    version_entity:
+      selector:
+        entity:
+          domain: sensor
