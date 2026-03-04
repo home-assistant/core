@@ -1,7 +1,6 @@
 """Config flows for the EnOcean integration."""
 
 import glob
-import logging
 from typing import Any
 
 from enocean_async import Gateway
@@ -23,8 +22,6 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
-
-_LOGGER = logging.getLogger(__name__)
 
 MANUAL_SCHEMA = vol.Schema(
     {
@@ -174,9 +171,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             await gateway.start()
             gateway.stop()
         except ConnectionError as exception:
-            _LOGGER.warning(
-                "Dongle path %s is invalid: %s", dongle_path, str(exception)
-            )
+            LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
             return False
         return True
 
