@@ -17,6 +17,7 @@ from spotifyaio import (
     RepeatMode as SpotifyRepeatMode,
     Track,
 )
+from spotifyaio.models import ProductType
 from yarl import URL
 
 from homeassistant.components.media_player import (
@@ -136,6 +137,8 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
+        if self.coordinator.current_user.product != ProductType.PREMIUM:
+            return MediaPlayerEntityFeature(0)
         if not self.currently_playing or self.currently_playing.device.is_restricted:
             return MediaPlayerEntityFeature.SELECT_SOURCE
         return SUPPORT_SPOTIFY
