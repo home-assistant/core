@@ -59,10 +59,11 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             data = await self.hass.async_add_executor_job(self._fetch_iss_data)
         except (HTTPError, requests.exceptions.ConnectionError) as err:
             self._consecutive_failures += 1
-            if (
-                self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES
-                or self.data is None
-            ):
+            if self.data is None:
+                raise UpdateFailed(
+                    "Unable to retrieve data"
+                ) from err
+            if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
                 raise UpdateFailed(
                     f"Unable to retrieve data after {self._consecutive_failures} consecutive update failures"
                 ) from err
