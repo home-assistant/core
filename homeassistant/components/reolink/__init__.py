@@ -543,7 +543,20 @@ def migrate_entity_ids(
                 entity.unique_id,
                 new_id,
             )
-            entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+            existing_entity = entity_reg.async_get_entity_id(
+                entity.domain, entity.platform, new_id
+            )
+            if existing_entity is None:
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+            else:
+                _LOGGER.warning(
+                    "Reolink entity with unique_id %s already exists, "
+                    "removing entity with unique_id %s",
+                    new_id,
+                    entity.unique_id,
+                )
+                entity_reg.async_remove(entity.entity_id)
+                continue
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
@@ -573,7 +586,7 @@ def migrate_entity_ids(
                 else:
                     _LOGGER.warning(
                         "Reolink entity with unique_id %s already exists, "
-                        "removing device with unique_id %s",
+                        "removing entity with unique_id %s",
                         new_id,
                         entity.unique_id,
                     )
