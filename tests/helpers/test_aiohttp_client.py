@@ -576,8 +576,8 @@ async def test_redirect_to_custom_scheme_not_blocked(
 
     # weconnect://authenticated is used as an OAuth callback URI.
     # The host 'authenticated' resolves to 0.0.0.0, which would trigger
-    # the SSRF block for http/https/ws/wss, but weconnect:// is a custom
-    # app scheme that aiohttp cannot open a socket to.
+    # the SSRF block for schemes in the connector's allowed set, but
+    # weconnect:// is a custom app scheme that aiohttp cannot connect to.
     redirect_url = (
         f"http://external.example.com:{server_port}"
         "/redirect?to=weconnect://authenticated"
