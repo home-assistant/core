@@ -1913,3 +1913,153 @@ async def test_device_uplink(
     device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
+
+
+GATEWAY_WAN_DEVICE = {
+    "board_rev": 3,
+    "device_id": "mock-id",
+    "ip": "10.0.1.1",
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:01:01",
+    "model": "UGW3",
+    "name": "Gateway",
+    "state": 1,
+    "type": "ugw",
+    "version": "4.4.44",
+    "wan1": {
+        "bytes-r": 242330,
+        "enable": True,
+        "full_duplex": True,
+        "gateway": "2.3.4.5",
+        "ifname": "eth0",
+        "ip": "1.2.3.4",
+        "mac": "00:00:00:00:01:01",
+        "name": "wan",
+        "netmask": "255.255.254.0",
+        "rx_bytes-r": 239494,
+        "speed": 1000,
+        "tx_bytes-r": 2836,
+        "type": "wire",
+        "up": True,
+        "latency": 5,
+        "availability": 100.0,
+    },
+    "wan2": {
+        "bytes-r": 1024,
+        "enable": True,
+        "full_duplex": True,
+        "gateway": "10.0.0.1",
+        "ifname": "eth1",
+        "ip": "10.0.0.2",
+        "mac": "00:00:00:00:01:02",
+        "name": "wan2",
+        "netmask": "255.255.255.0",
+        "rx_bytes-r": 512,
+        "speed": 1000,
+        "tx_bytes-r": 512,
+        "type": "wire",
+        "up": True,
+        "latency": 11,
+        "availability": 99.5,
+    },
+    "last_wan_status": {
+        "WAN": "online",
+        "WAN2": "online",
+    },
+    "last_wan_ip": "1.2.3.4",
+    "speedtest-status": {
+        "latency": 12,
+        "rundate": 1600000000,
+        "runtime": 0,
+        "status_download": 1,
+        "status_ping": 1,
+        "status_summary": 1,
+        "status_upload": 1,
+        "xput_download": 95.5,
+        "xput_upload": 42.3,
+    },
+}
+
+
+@pytest.mark.parametrize("device_payload", [[GATEWAY_WAN_DEVICE]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that WAN sensors are working as expected."""
+    # WAN sensors are disabled by default, enable them
+    wan_entities = [
+        "sensor.gateway_wan_status",
+        "sensor.gateway_wan_ip_address",
+        "sensor.gateway_wan_availability",
+        "sensor.gateway_wan_latency",
+        "sensor.gateway_wan_rx_rate",
+        "sensor.gateway_wan_tx_rate",
+        "sensor.gateway_wan2_status",
+        "sensor.gateway_wan2_ip_address",
+        "sensor.gateway_active_wan",
+        "sensor.gateway_speedtest_download",
+        "sensor.gateway_speedtest_upload",
+        "sensor.gateway_speedtest_latency",
+    ]
+    for entity_id in wan_entities:
+        ent_reg_entry = entity_registry.async_get(entity_id)
+        assert ent_reg_entry is not None, f"{entity_id} not found in registry"
+        assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # WAN Status
+    assert hass.states.get("sensor.gateway_wan_status").state == "online"
+    assert hass.states.get("sensor.gateway_wan2_status").state == "online"
+
+    # WAN IP
+    assert hass.states.get("sensor.gateway_wan_ip_address").state == "1.2.3.4"
+    assert hass.states.get("sensor.gateway_wan2_ip_address").state == "10.0.0.2"
+
+    # WAN Availability
+    assert hass.states.get("sensor.gateway_wan_availability").state == "100.0"
+
+    # WAN Latency
+    assert hass.states.get("sensor.gateway_wan_latency").state == "5"
+
+    # WAN RX/TX (bytes/s converted to Mbit/s by suggested_unit_of_measurement)
+    assert float(hass.states.get("sensor.gateway_wan_rx_rate").state) == pytest.approx(
+        239494 * 8 / 1e6, rel=1e-3
+    )
+    assert float(hass.states.get("sensor.gateway_wan_tx_rate").state) == pytest.approx(
+        2836 * 8 / 1e6, rel=1e-3
+    )
+
+    # Active WAN
+    assert hass.states.get("sensor.gateway_active_wan").state == "WAN"
+
+    # Speedtest
+    assert hass.states.get("sensor.gateway_speedtest_download").state == "95.5"
+    assert hass.states.get("sensor.gateway_speedtest_upload").state == "42.3"
+    assert hass.states.get("sensor.gateway_speedtest_latency").state == "12"
+
+    # WAN3-6 sensors should not exist (no data)
+    assert entity_registry.async_get("sensor.gateway_wan3_status") is None
+    assert entity_registry.async_get("sensor.gateway_wan4_status") is None
+
+    # Simulate WAN1 going down, failover to WAN2
+    device = deepcopy(GATEWAY_WAN_DEVICE)
+    device["last_wan_status"]["WAN"] = "offline"
+    device["last_wan_ip"] = "10.0.0.2"
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.gateway_wan_status").state == "offline"
+    assert hass.states.get("sensor.gateway_wan2_status").state == "online"
+    assert hass.states.get("sensor.gateway_active_wan").state == "WAN2"
