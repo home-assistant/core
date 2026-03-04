@@ -55,7 +55,9 @@ class EnOceanEntity(Entity):
     def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the device when a packet arrives."""
 
-    def send_command(self, data, optional, packet_type: ESP3PacketType) -> None:
+    def send_command(
+        self, data: list[int], optional: list[int], packet_type: ESP3PacketType
+    ) -> None:
         """Send a command via the EnOcean dongle, if data and optional are valid bytes; otherwise, ignore."""
         try:
             packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
