@@ -6862,6 +6862,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'shutter',
       'friendly_name': 'Test name',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

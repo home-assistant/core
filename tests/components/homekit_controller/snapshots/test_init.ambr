@@ -11262,6 +11262,7 @@
             'attributes': dict({
               'current_position': 98,
               'friendly_name': 'Family Room North',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.family_room_north',
@@ -11518,6 +11519,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'Kitchen Window',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.kitchen_window',
@@ -12754,6 +12756,7 @@
             'attributes': dict({
               'current_position': 98,
               'friendly_name': 'Family Room North',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 15>,
             }),
             'entity_id': 'cover.family_room_north',
@@ -13010,6 +13013,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'Kitchen Window',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.kitchen_window',
@@ -21093,6 +21097,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'Master Bath South RYSE Shade',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.master_bath_south_ryse_shade',
@@ -21349,6 +21354,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'RYSE SmartShade RYSE Shade',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.ryse_smartshade_ryse_shade',
@@ -21528,6 +21534,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'BR Left RYSE Shade',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.br_left_ryse_shade',
@@ -21703,6 +21710,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'LR Left RYSE Shade',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.lr_left_ryse_shade',
@@ -21878,6 +21886,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'LR Right RYSE Shade',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.lr_right_ryse_shade',
@@ -22134,6 +22143,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'RZSS RYSE Shade',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.rzss_ryse_shade',
@@ -22634,6 +22644,7 @@
               'current_position': 0,
               'current_tilt_position': 100,
               'friendly_name': 'VELUX Internal Cover Venetian Blinds',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 183>,
             }),
             'entity_id': 'cover.velux_internal_cover_venetian_blinds',
@@ -23727,6 +23738,7 @@
               'current_position': 0,
               'device_class': 'window',
               'friendly_name': 'VELUX Window Roof Window',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_window_roof_window',
@@ -23858,6 +23870,7 @@
               'current_position': 0,
               'device_class': 'window',
               'friendly_name': 'VELUX Window Roof Window',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_window_roof_window',
@@ -23988,6 +24001,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'VELUX External Cover Awning Blinds',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_external_cover_awning_blinds',
