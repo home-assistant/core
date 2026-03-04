@@ -3,15 +3,30 @@
 DOMAIN = "portainer"
 DEFAULT_NAME = "Portainer"
 
-ENDPOINT_STATUS_UP = 1
-ENDPOINT_STATUS_DOWN = 2
 
-CONTAINER_STATE_RUNNING = "running"
+class EndpointStatus:
+    """Portainer endpoint status."""
 
-STACK_STATUS_ACTIVE = 1
-STACK_STATUS_INACTIVE = 2
+    UP = 1
+    DOWN = 2
 
 
-STACK_TYPE_SWARM = 1
-STACK_TYPE_COMPOSE = 2
-STACK_TYPE_KUBERNETES = 3
+class ContainerState:
+    """Portainer container state."""
+
+    RUNNING = "running"
+
+
+class StackStatus:
+    """Portainer stack status."""
+
+    ACTIVE = 1
+    INACTIVE = 2
+
+
+class StackType:
+    """Portainer stack type."""
+
+    SWARM = 1
+    COMPOSE = 2
+    KUBERNETES = 3
