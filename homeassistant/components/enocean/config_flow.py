@@ -53,11 +53,10 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MANUAL_PATH_VALUE = "manual"
 
-    _ports: list[USBDevice] | None = None
-
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
         self.data: dict[str, Any] = {}
+        self._ports: list[USBDevice] | None = None
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
