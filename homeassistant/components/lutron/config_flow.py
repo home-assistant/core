@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 from urllib.error import HTTPError
 
 from pylutron import Lutron
@@ -37,11 +37,12 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             ip_address = user_input[CONF_HOST]
+            guid: str | None = None
 
             main_repeater = Lutron(
                 ip_address,
-                cast(str, user_input.get(CONF_USERNAME)),
-                cast(str, user_input.get(CONF_PASSWORD)),
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
             )
 
             try:
