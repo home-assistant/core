@@ -16,6 +16,10 @@ from typing import Any
 from aiohttp import ClientError, ClientResponseError
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
@@ -26,6 +30,7 @@ from .const import (
     DEVICE_CODE_INITIATE_PATH,
     DEVICE_CODE_POLL_PATH,
     DOMAIN,
+    OAUTH2_CLIENT_ID,
 )
 
 
@@ -75,6 +80,12 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Collect user credentials."""
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(OAUTH2_CLIENT_ID, "", name="Level Home"),
+        )
+
         implementations = await config_entry_oauth2_flow.async_get_implementations(
             self.hass, self.DOMAIN
         )
@@ -123,6 +134,12 @@ class OAuth2FlowHandler(
         self, _: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Initiate device code flow and get user code."""
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(OAUTH2_CLIENT_ID, "", name="Level Home"),
+        )
+
         implementations = await config_entry_oauth2_flow.async_get_implementations(
             self.hass, self.DOMAIN
         )

@@ -230,9 +230,11 @@ def test_env_switching_production(monkeypatch: pytest.MonkeyPatch) -> None:
     assert config["oauth2_base_url"] == "https://oauth2.level.co"
 
 
-def test_env_switching_unknown_defaults_to_dev(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that an unknown LEVEL_ENVIRONMENT value falls back to dev."""
+def test_env_switching_unknown_defaults_to_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that an unknown LEVEL_ENVIRONMENT value falls back to production."""
     monkeypatch.setenv("LEVEL_ENVIRONMENT", "nonexistent")
 
     config = get_env_config()
-    assert config == ENVIRONMENTS["dev"]
+    assert config == ENVIRONMENTS["production"]

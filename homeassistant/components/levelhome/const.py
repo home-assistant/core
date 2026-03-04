@@ -23,7 +23,7 @@ CONF_CONTACT_INFO = "contact_info"
 # ---------------------------------------------------------------------------
 
 LEVEL_ENV_VAR = "LEVEL_ENVIRONMENT"
-DEFAULT_ENVIRONMENT = "prod"
+DEFAULT_ENVIRONMENT = "production"
 
 
 class _EnvConfig(TypedDict):
