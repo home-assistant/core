@@ -594,3 +594,4 @@ homeassistant.components.zeroconf.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*
+homeassistant.components.lutron
