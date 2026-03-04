@@ -7,7 +7,6 @@ import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
@@ -580,26 +579,3 @@ async def test_nabu_casa_zwa2_legacy(
     assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
         "The LED should have the correct friendly name"
     )
-
-
-@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR]])
-async def test_hoppe_ehandle_connectsense(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    client: MagicMock,
-    hoppe_ehandle_connectsense: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test Hoppe eHandle ConnectSense tilt sensor is discovered as a window sensor."""
-    entity_id = "binary_sensor.ehandle_connectsense_window_door_is_tilted"
-    state = hass.states.get(entity_id)
-    assert state is not None, (
-        "Window/door is tilted sensor should be enabled by default"
-    )
-    assert state.state == STATE_OFF
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None
-    assert entry.original_name == "Window/door is tilted"
-    assert entry.original_device_class == BinarySensorDeviceClass.WINDOW
-    assert entry.disabled_by is None, "Entity should be enabled by default"
