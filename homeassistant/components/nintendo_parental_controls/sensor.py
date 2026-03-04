@@ -70,7 +70,7 @@ DEVICE_SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_time_remaining,
     ),
-    NintendoParentalControlsSensorEntityDescription(
+    NintendoParentalControlsDeviceSensorEntityDescription(
         key=NintendoParentalControlsSensor.TIME_EXTENDED,
         translation_key=NintendoParentalControlsSensor.TIME_EXTENDED,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -101,19 +101,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    async_add_entities(
+    entities = []
+    entities.extend(
         NintendoParentalControlsDeviceSensorEntity(entry.runtime_data, device, sensor)
         for device in entry.runtime_data.api.devices.values()
         for sensor in DEVICE_SENSOR_DESCRIPTIONS
     )
     for device in entry.runtime_data.api.devices.values():
-        async_add_entities(
+        entities.extend(
             NintendoParentalControlsPlayerSensorEntity(
                 entry.runtime_data, device, player, sensor
             )
             for player in device.players
             for sensor in PLAYER_SENSOR_DESCRIPTIONS
         )
+    async_add_entities(entities)
 
 
 class NintendoParentalControlsDeviceSensorEntity(NintendoDevice, SensorEntity):
