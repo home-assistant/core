@@ -38,6 +38,14 @@ _mock_evdev.categorize = MagicMock(side_effect=lambda e: f"key event {e.code}")
 if "evdev" not in sys.modules:
     sys.modules["evdev"] = _mock_evdev
 
+
+@pytest.fixture(autouse=True)
+def mock_evdev_module() -> Generator[None]:
+    """Ensure the evdev module is always mocked for these tests."""
+    with patch.dict(sys.modules, {"evdev": _mock_evdev}):
+        yield
+
+
 FAKE_DEVICE_PATH = "/dev/input/by-id/usb-Test_Keyboard-event-kbd"
 FAKE_DEVICE_NAME = "Test Keyboard"
 FAKE_DEVICE_REAL_PATH = "/dev/input/event5"

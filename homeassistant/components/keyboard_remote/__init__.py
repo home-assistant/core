@@ -309,7 +309,7 @@ class KeyboardRemoteManager:
 
             self._active_handlers_by_descriptor[descriptor] = handler
             start_tasks.add(
-                asyncio.create_task(handler.async_device_start_monitoring(dev))
+                self.hass.async_create_task(handler.async_device_start_monitoring(dev))
             )
 
         if start_tasks:
