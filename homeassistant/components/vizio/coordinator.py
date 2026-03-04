@@ -36,7 +36,6 @@ class VizioRuntimeData:
     """Runtime data for Vizio integration."""
 
     device_coordinator: VizioDeviceCoordinator
-    apps_coordinator: VizioAppsDataUpdateCoordinator | None  # None for speakers
 
 
 @dataclass(frozen=True)
@@ -82,13 +81,9 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        self._model_fetched = False
-        self._version_fetched = False
 
-    def _update_device_registry(
-        self, *, model: str | None = None, version: str | None = None
-    ) -> None:
-        """Update device registry with model and/or version info."""
+    async def _async_setup(self) -> None:
+        """Fetch device info and update device registry."""
         if not self.config_entry.unique_id:
             return
         device_registry = dr.async_get(self.hass)
@@ -97,12 +92,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         )
         if not device:
             return
-        if model:
+        if model := await self.device.get_model_name(log_api_exception=False):
             device_registry.async_update_device(device.id, model=model)
-            self._model_fetched = True
-        if version:
+        if version := await self.device.get_version(log_api_exception=False):
             device_registry.async_update_device(device.id, sw_version=version)
-            self._version_fetched = True
 
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
@@ -113,16 +106,6 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
                 f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
             )
 
-        if not self._model_fetched and (
-            model := await self.device.get_model_name(log_api_exception=False)
-        ):
-            self._update_device_registry(model=model)
-        if not self._version_fetched and (
-            version := await self.device.get_version(log_api_exception=False)
-        ):
-            self._update_device_registry(version=version)
-
-        # Handle device off - return minimal data
         if not is_on:
             return VizioDeviceData(is_on=False)
 

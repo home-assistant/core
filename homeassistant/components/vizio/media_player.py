@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import DATA_APPS
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -88,14 +89,12 @@ async def async_setup_entry(
             **params,  # type: ignore[arg-type]
         )
 
-    runtime_data = config_entry.runtime_data
-
     entity = VizioDevice(
         config_entry,
         name,
         device_class,
-        runtime_data.device_coordinator,
-        runtime_data.apps_coordinator,
+        config_entry.runtime_data.device_coordinator,
+        hass.data.get(DATA_APPS),
     )
 
     async_add_entities([entity])
@@ -106,7 +105,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_assumed_state: bool = True
     _current_input: str | None = None
     _current_app_config: AppConfig | None = None
 
@@ -229,8 +227,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is None:
-            return
         self._update_internal_state()
         super()._handle_coordinator_update()
 
@@ -272,8 +268,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         await super().async_added_to_hass()
 
         # Process initial coordinator data
-        if self.coordinator.data is not None:
-            self._update_internal_state()
+        self._update_internal_state()
 
         # Register callback for when config entry is updated.
         self.async_on_remove(

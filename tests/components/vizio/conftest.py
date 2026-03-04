@@ -7,8 +7,6 @@ import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
-from homeassistant.components.vizio.coordinator import VizioDeviceData
-
 from .const import (
     ACCESS_TOKEN,
     APP_LIST,
@@ -144,10 +142,36 @@ def vizio_bypass_setup_fixture() -> Generator[None]:
 
 @pytest.fixture(name="vizio_bypass_update")
 def vizio_bypass_update_fixture() -> Generator[None]:
-    """Mock component update."""
-    with patch(
-        "homeassistant.components.vizio.coordinator.VizioDeviceCoordinator._async_update_data",
-        return_value=VizioDeviceData(is_on=True),
+    """Mock component update with minimal data."""
+    with (
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_version",
+            return_value=None,
+        ),
     ):
         yield
 
