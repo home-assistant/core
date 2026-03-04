@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyvizio import AppConfig, VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -28,10 +29,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -141,13 +138,11 @@ class VizioDevice(MediaPlayerEntity):
         self._config_entry = config_entry
         self._apps_coordinator = apps_coordinator
 
-        self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._current_input: str | None = None
         self._current_app_config: AppConfig | None = None
         self._available_inputs: list[str] = []
         self._available_apps: list[str] = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
-        self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
         )
@@ -170,6 +165,16 @@ class VizioDevice(MediaPlayerEntity):
             manufacturer="VIZIO",
             name=name,
         )
+
+    @property
+    def _volume_step(self) -> int:
+        """Return the configured volume step."""
+        return self._config_entry.options[CONF_VOLUME_STEP]
+
+    @property
+    def _conf_apps(self) -> dict:
+        """Return the configured app filter options."""
+        return self._config_entry.options.get(CONF_APPS, {})
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
@@ -294,22 +299,6 @@ class VizioDevice(MediaPlayerEntity):
             additional_app["name"] for additional_app in self._additional_app_configs
         ]
 
-    @staticmethod
-    async def _async_send_update_options_signal(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        """Send update event when Vizio config entry is updated."""
-        # Move this method to component level if another entity ever gets added for a
-        # single config entry.
-        # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
-        async_dispatcher_send(hass, config_entry.entry_id, config_entry)
-
-    async def _async_update_options(self, config_entry: ConfigEntry) -> None:
-        """Update options if the update signal comes from this entity."""
-        self._volume_step = config_entry.options[CONF_VOLUME_STEP]
-        # Update so that CONF_ADDITIONAL_CONFIGS gets retained for imports
-        self._conf_apps.update(config_entry.options.get(CONF_APPS, {}))
-
     async def async_update_setting(
         self, setting_type: str, setting_name: str, new_value: int | str
     ) -> None:
@@ -323,19 +312,11 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
-        # Register callback for when config entry is updated.
-        self.async_on_remove(
-            self._config_entry.add_update_listener(
-                self._async_send_update_options_signal
-            )
-        )
 
-        # Register callback for update event
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self._config_entry.entry_id, self._async_update_options
-            )
-        )
+        async def _async_write_state(*_: Any) -> None:
+            self.async_write_ha_state()
+
+        self.async_on_remove(self._config_entry.add_update_listener(_async_write_state))
 
         if not self._apps_coordinator:
             return
