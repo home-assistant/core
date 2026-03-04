@@ -1,0 +1,195 @@
+dial:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    number:
+      required: true
+      example: "sip:user@example.com"
+      selector:
+        text:
+
+send_dtmf:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    dtmf:
+      required: true
+      example: "1234"
+      selector:
+        text:
+
+camera_preset_activate:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    preset_id:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 35
+          mode: box
+
+camera_preset_store:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    preset_id:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 35
+          mode: box
+
+camera_position_set:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    camera_id:
+      required: false
+      default: 1
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: box
+    pan:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: -65535
+          max: 65535
+          mode: box
+    tilt:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: -65535
+          max: 65535
+          mode: box
+    zoom:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 65535
+          mode: box
+
+camera_ramp:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    camera_id:
+      required: false
+      default: 1
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: box
+    direction:
+      required: true
+      example: "Up"
+      selector:
+        select:
+          options:
+            - "Up"
+            - "Down"
+            - "Left"
+            - "Right"
+            - "ZoomIn"
+            - "ZoomOut"
+    speed:
+      required: false
+      default: 5
+      example: 5
+      selector:
+        number:
+          min: 1
+          max: 15
+          mode: slider
+
+camera_ramp_stop:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    camera_id:
+      required: false
+      default: 1
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: box
+
+display_message:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    text:
+      required: true
+      example: "Hello World"
+      selector:
+        text:
+          multiline: true
+    duration:
+      required: false
+      default: 10
+      example: 10
+      selector:
+        number:
+          min: 0
+          max: 3600
+          mode: box
+
+clear_message:
+  target:
+    entity:
+      integration: webex_ce
+
+display_webview:
+  target:
+    entity:
+      integration: webex_ce
+  fields:
+    url:
+      required: true
+      example: "https://example.com"
+      selector:
+        text:
+    title:
+      required: false
+      example: "Web Page"
+      selector:
+        text:
+    mode:
+      required: false
+      default: "Modal"
+      example: "Modal"
+      selector:
+        select:
+          options:
+            - "Modal"
+            - "Fullscreen"
+
+close_webview:
+  target:
+    entity:
+      integration: webex_ce
