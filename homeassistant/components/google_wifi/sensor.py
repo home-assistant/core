@@ -133,25 +133,37 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
             return val
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Handle legacy YAML configuration by importing it."""
-    # 1. Create a Repair Issue to warn the user that YAML is deprecated
+
+    # 1. Map legacy keys to modern ones
+    # Old YAML might use 'host' while our flow uses 'ip_address'
+    import_data = {
+        CONF_IP_ADDRESS: config.get("host") or config.get(CONF_IP_ADDRESS),
+        CONF_NAME: config.get(CONF_NAME, "Google Wifi"),
+    }
+
+    # 2. Filter out None values (ensure we have at least an IP)
+    if not import_data[CONF_IP_ADDRESS]:
+        _LOGGER.error("Legacy Google Wifi YAML missing 'host' or 'ip_address'")
+        return
+
+    # 3. Create a Repair Issue to warn the user that YAML is deprecated
     ir.async_create_issue(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_haul_version="2026.9.0", # Set a future target version
+        breaks_in_ha_version="2026.9.0", # Set a future target version
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
     )
 
-    # 2. Trigger the Config Flow import
+    # 4. Trigger the Config Flow import
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
+            data=import_data,
         )
     )
 

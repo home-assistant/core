@@ -8,6 +8,7 @@ import logging
 
 import requests
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,10 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the Google Wifi API."""
 
-    def __init__(self, hass: HomeAssistant, host: str) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.host = host
         self.entry = entry
+
         super().__init__(
             hass,
             _LOGGER,
@@ -35,8 +36,8 @@ class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from the router via HTTP."""
         # Pull the host directly from the entry data every time
         host = self.entry.data[CONF_IP_ADDRESS]
-
         url = f"http://{host}/api/v1/status"
+
         try:
             # We use hass.async_add_executor_job because 'requests' is synchronous
             # Pass an explicit timeout to the synchronous requests call

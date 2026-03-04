@@ -92,7 +92,7 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict) -> ConfigFlowResult:
         """Handle import of configuration from YAML."""
         # Check if the IP address is already in an existing ConfigEntry
-        self._async_abort_entries_match({CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]})
+        self._async_abort_entries_match({CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]})
 
         # Ensure a name is set for imported configurations
         if CONF_NAME not in user_input:

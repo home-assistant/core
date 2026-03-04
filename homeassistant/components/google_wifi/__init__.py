@@ -49,11 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # This triggers the automatic background retry logic
         raise ConfigEntryNotReady(f"Timeout connecting to {entry.data[CONF_IP_ADDRESS]}") from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CONF_IP_ADDRESS: entry.data[CONF_IP_ADDRESS],
-        CONF_NAME: entry.data.get(CONF_NAME, "Google Wifi"),
-        "coordinator": coordinator,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -8,7 +8,8 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured.",
-      "reconfigure_successful": "Reconfiguration was successful."
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "cannot_connect": "The legacy YAML import failed because the router at the specified IP could not be reached."
     },
     "error": {
       "cannot_connect": "Failed to connect to the router. Check the IP and try again.",
