@@ -41,6 +41,34 @@ async def test_climate_setup(
         )
 
 
+async def test_climate_setup_2_quickapps(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_quickapp_1: Mock,
+    mock_thermostat_quickapp_2: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that the climate creates entities for more than one QuickApp."""
+
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_quickapp_1,
+        mock_thermostat_quickapp_2,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        entry1 = entity_registry.async_get("climate.room_1_test_climate_6")
+        assert entry1
+        entry2 = entity_registry.async_get("climate.room_1_test_climate_2_7")
+        assert entry2
+
+
 async def test_hvac_mode_preset(
     hass: HomeAssistant,
     mock_fibaro_client: Mock,
