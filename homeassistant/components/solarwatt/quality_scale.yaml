@@ -1,0 +1,115 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: |
+      No YAML setup; everything is config entry based
+  appropriate-polling:
+    status: done
+    comment: |
+      Polling interval is defined.
+  brands:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  common-modules:
+    status: done
+    comment: |
+      We have a coordinator defined in coordinator.py.
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      100% test coverage for config_flow.
+  config-flow:
+    status: done
+    comment: |
+      We have a config_flow.py and config_flow is set to true in manifest.json.
+  dependency-transparency:
+    status: done
+    comment: |
+      We don't have additional dependencies.
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-high-level-description:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-installation-instructions:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  docs-removal-instructions:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  entity-event-setup:
+    status: done
+    comment: |
+      No need toggle something in backend - methods are usually just "passed through".
+  entity-unique-id:
+    status: done
+    comment: |
+      Device serial number is used as unique ID.
+  has-entity-name:
+    status: exempt
+    comment: |
+      Do NOT set has_entity_name here; we override name property instead.
+  runtime-data:
+    status: exempt
+    comment: |
+      The runtime_data attribute is used and extend the SolarwattConfigEntry.
+  test-before-configure:
+    status: done
+    comment: |
+      The User see a error message that the integration is unable to connect.
+  test-before-setup:
+    status: exempt
+    comment: |
+      Makes no sense here, since async_config_entry_first_refresh() throws internally a ConfigEntryNotReady exception.
+  unique-config-entry:
+    status: done
+    comment: |
+      In config_flow.py We ensure that our device can only set up once.
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      Service actions raise exceptions when encountering failures
+  config-entry-unloading:
+    status: exempt
+    comment: |
+      Support config entry unloading
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      The documentation describes all integration configuration options
+  docs-installation-parameters:
+    status: exempt
+    comment: |
+      The documentation describes all integration installation parameters
+  entity-unavailable:
+    status: done
+    comment: |
+      UpdateFailed is thrown in coordinator.py; available() function in sensors.py
+  integration-owner:
+    status: done
+    comment: |
+      code owner is referenced
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      If internet/device/service is unavailable, log once when unavailable and once when back connected
+  parallel-updates:
+    status: exempt
+    comment: |
+      Number of parallel updates is specified
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Reauthentication needs to be available via the UI
+  test-coverage:
+    status: exempt
+    comment: |
+      Above 95% test coverage for all integration modules
