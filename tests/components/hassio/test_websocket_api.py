@@ -52,6 +52,7 @@ def mock_all(
     addons_list: AsyncMock,
     network_info: AsyncMock,
     os_info: AsyncMock,
+    store_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
