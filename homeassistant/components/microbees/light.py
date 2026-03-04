@@ -3,25 +3,22 @@
 from typing import Any
 
 from homeassistant.components.light import ATTR_RGBW_COLOR, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import MicroBeesConfigEntry
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MicroBeesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config entry."""
-    coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ].coordinator
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
         MBLight(coordinator, bee_id, light.id)
         for bee_id, bee in coordinator.data.bees.items()

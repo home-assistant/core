@@ -1,6 +1,6 @@
 """Test the snapcast media player implementation."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -137,3 +137,41 @@ async def test_join_exception(
 
     # Ensure that the group did not attempt to add a non-Snapcast client
     mock_group_1.add_client.assert_not_awaited()
+
+
+async def test_stream_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_group_2: AsyncMock,
+) -> None:
+    """Test server.stream call KeyError."""
+    mock_create_server.streams = []
+
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("media_player.test_client_2_snapcast_client")
+    assert "media_position" not in state.attributes
+    assert "metadata" not in state.attributes
+
+
+async def test_state_stream_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_group_1: AsyncMock,
+) -> None:
+    """Test state returns OFF when stream is not found."""
+
+    type(mock_group_1).stream_status = PropertyMock(
+        side_effect=KeyError("Stream not found")
+    )
+
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("media_player.test_client_1_snapcast_client")
+    assert state.state == "off"

@@ -5,6 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import (
+    EnumTypeInformation,
+    IntegerTypeInformation,
+)
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -22,14 +33,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import EnumTypeInformation, IntegerTypeInformation
-from .util import RemapHelper
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
@@ -130,7 +133,7 @@ class _IsClosedEnumWrapper(DPCodeEnumWrapper):
         "fully_open": False,
     }
 
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
+    def read_device_status(self, device: CustomerDevice) -> bool | None:  # type: ignore[override]
         if (value := super().read_device_status(device)) is None:
             return None
         return self._MAPPINGS.get(value)
@@ -288,19 +291,19 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
-                        current_position=description.position_wrapper.find_dpcode(
+                        current_position=description.position_wrapper.find_dpcode(  # type: ignore[arg-type]
                             device, description.current_position
                         ),
-                        current_state_wrapper=description.current_state_wrapper.find_dpcode(
+                        current_state_wrapper=description.current_state_wrapper.find_dpcode(  # type: ignore[arg-type]
                             device, description.current_state
                         ),
                         instruction_wrapper=_get_instruction_wrapper(
                             device, description
                         ),
-                        set_position=description.position_wrapper.find_dpcode(
+                        set_position=description.position_wrapper.find_dpcode(  # type: ignore[arg-type]
                             device, description.set_position, prefer_function=True
                         ),
-                        tilt_position=description.position_wrapper.find_dpcode(
+                        tilt_position=description.position_wrapper.find_dpcode(  # type: ignore[arg-type]
                             device,
                             (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
                             prefer_function=True,

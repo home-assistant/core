@@ -106,7 +106,7 @@ def mock_external_calls() -> Generator[None]:
         accent_color_id=0,
         accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
     )
-    test_user = User(123456, "Testbot", True, "mock last name", "mock username")
+    test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(
         message_id=12345,
         date=datetime.now(),
@@ -246,6 +246,33 @@ def update_callback_query():
             "chat_instance": "aaa111",
             "data": "Data from button callback",
             "inline_message_id": "1234csdbsk4839",
+        },
+    }
+
+
+@pytest.fixture
+def update_callback_inline_keyboard():
+    """Fixture for mocking an incoming update of type callback_query from inline keyboard button."""
+    return {
+        "update_id": 1,
+        "callback_query": {
+            "id": "4382bfdwdsb323b2d9",
+            "from": {
+                "id": 12345678,
+                "type": "private",
+                "is_bot": False,
+                "last_name": "Test Lastname",
+                "first_name": "Test Firstname",
+                "username": "Testusername",
+            },
+            "message": {
+                "message_id": 101,
+                "chat": {"id": 987654321, "type": "private"},
+                "date": 1708181000,
+                "text": "command",
+            },
+            "chat_instance": "aaa111",
+            "data": "/command arg1 arg2",
         },
     }
 

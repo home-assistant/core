@@ -51,7 +51,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[window_covering_full][cover.mock_full_window_covering-entry]
+# name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -87,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_full][cover.mock_full_window_covering-state]
+# name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
@@ -104,7 +104,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[window_covering_lift][cover.mock_lift_window_covering-entry]
+# name: test_covers[mock_window_covering_lift][cover.mock_lift_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -136,11 +136,11 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_lift][cover.mock_lift_window_covering-state]
+# name: test_covers[mock_window_covering_lift][cover.mock_lift_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'awning',
@@ -155,7 +155,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_covers[window_covering_pa_lift][cover.longan_link_wncv_da01-entry]
+# name: test_covers[mock_window_covering_pa_lift][cover.longan_link_wncv_da01-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -187,11 +187,11 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_pa_lift][cover.longan_link_wncv_da01-state]
+# name: test_covers[mock_window_covering_pa_lift][cover.longan_link_wncv_da01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 51,
@@ -207,7 +207,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-entry]
+# name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -239,11 +239,11 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-state]
+# name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_tilt_position': 100,
@@ -259,7 +259,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering-entry]
+# name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -291,11 +291,11 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering-state]
+# name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'blind',
