@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -20,7 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
-type WebDavConfigEntry = ConfigEntry[WebDavCoordinator]
+type WebDavConfigEntry = ConfigEntry[WebDavRuntimeData]
+
+
+@dataclass
+class WebDavRuntimeData:
+    """Runtime data for the WebDAV integration."""
+
+    client: Client
+    coordinator: WebDavCoordinator | None = None
 
 
 class WebDavCoordinator(DataUpdateCoordinator[QuotaInfo]):

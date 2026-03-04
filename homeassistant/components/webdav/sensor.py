@@ -66,7 +66,7 @@ async def async_setup_entry(
     """Set up WebDAV sensors from a config entry."""
     # Only add sensors if the coordinator is available, which means that
     # the WebDAV server supports quota, and we were able to fetch the quota data.
-    if (coordinator := entry.runtime_data) is not None:
+    if (coordinator := entry.runtime_data.coordinator) is not None:
         async_add_entities(
             WebDavSensor(coordinator, description)
             for description in SENSORS
