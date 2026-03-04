@@ -275,7 +275,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.coordinator
     coordinator_traffic = entry.runtime_data.coordinator_traffic
     coordinator_speed = entry.runtime_data.coordinator_speed
-    coordinator_utilization = entry.runtime_data.coordinator_util
+    coordinator_utilization = entry.runtime_data.coordinator_utilization
     coordinator_link = entry.runtime_data.coordinator_link
 
     async_add_entities(

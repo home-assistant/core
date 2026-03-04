@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         coordinator_traffic=coordinator_traffic_meter,
         coordinator_speed=coordinator_speed_test,
         coordinator_firmware=coordinator_firmware,
-        coordinator_util=coordinator_utilization,
+        coordinator_utilization=coordinator_utilization,
         coordinator_link=coordinator_link,
     )
 

@@ -20,7 +20,7 @@ class NetgearRuntimeData:
     coordinator_traffic: DataUpdateCoordinator[dict[str, Any] | None]
     coordinator_speed: DataUpdateCoordinator[dict[str, Any] | None]
     coordinator_firmware: DataUpdateCoordinator[dict[str, Any] | None]
-    coordinator_util: DataUpdateCoordinator[dict[str, Any] | None]
+    coordinator_utilization: DataUpdateCoordinator[dict[str, Any] | None]
     coordinator_link: DataUpdateCoordinator[dict[str, Any] | None]
 
 
