@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 
-from . import IssConfigEntry
+from .coordinator import IssConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
 
 

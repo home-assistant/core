@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IssConfigEntry, IssDataUpdateCoordinator
+from .coordinator import IssConfigEntry, IssDataUpdateCoordinator
 from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

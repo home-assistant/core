@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_pyiss() -> Generator[MagicMock]:
     """Mock the pyiss.ISS class."""
-    with patch("homeassistant.components.iss.pyiss.ISS") as mock_iss_class:
+    with patch("homeassistant.components.iss.coordinator.pyiss.ISS") as mock_iss_class:
         mock_iss = MagicMock()
         mock_iss.number_of_people_in_space.return_value = 7
         mock_iss.current_location.return_value = {
