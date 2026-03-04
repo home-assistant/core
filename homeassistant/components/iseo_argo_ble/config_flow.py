@@ -16,13 +16,12 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    callback,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -103,7 +102,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             priv = _generate_identity()
-            priv_int = priv.private_numbers().private_value  # type: ignore[attr-defined]
+            priv_int = priv.private_numbers().private_value
             new_uuid = uuid_module.uuid4().bytes
 
             self._address = address
@@ -141,9 +140,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                {
-                                    "value": info.address,
-                                    "label": (
+                                SelectOptionDict(
+                                    value=info.address,
+                                    label=(
                                         f"{info.name or 'Unknown'}  —  {info.address}"
                                         f"  (RSSI {info.rssi} dBm)"
                                         + (
@@ -152,7 +151,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                                             else ""
                                         )
                                     ),
-                                }
+                                )
                                 for info in found
                             ],
                             mode=SelectSelectorMode.LIST,
@@ -174,7 +173,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_iseo_device")
 
         priv = _generate_identity()
-        priv_int = priv.private_numbers().private_value  # type: ignore[attr-defined]
+        priv_int = priv.private_numbers().private_value
         new_uuid = uuid_module.uuid4().bytes
 
         self._address = discovery_info.address

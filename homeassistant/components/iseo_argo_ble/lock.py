@@ -86,7 +86,8 @@ class IseoLockEntity(LockEntity):
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
 
-        self.client = client
+        assert client is not None, "IseoLockEntity requires a client"
+        self.client: IseoClient = client
 
         self._attr_unique_id = (
             f"{entry.data[CONF_ADDRESS].replace(':', '').lower()}_lock"
@@ -132,11 +133,8 @@ class IseoLockEntity(LockEntity):
                     )
                 )
                 state: LockState = await self.client.read_state()
-        except (IseoConnectionError, IseoAuthError) as exc:
+        except (IseoConnectionError, IseoAuthError, asyncio.TimeoutError, OSError) as exc:
             _LOGGER.debug("State poll failed: %s", exc)
-            return
-        except Exception as exc:
-            _LOGGER.debug("Unexpected error during state poll: %s", exc)
             return
 
         if not self._fw_version_set and state.firmware_info:

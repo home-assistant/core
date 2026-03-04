@@ -13,7 +13,6 @@ from iseo_argo_ble import IseoAuthError, IseoConnectionError
 
 from tests.common import MockConfigEntry
 
-from .conftest import mock_config_entry, mock_derive_private_key, mock_iseo_client  # noqa: F401
 
 
 async def _setup_integration(
@@ -45,10 +44,6 @@ async def test_lock_is_initially_locked(
         hass, mock_config_entry, mock_iseo_client, mock_derive_private_key
     )
 
-    state = hass.states.get(
-        f"lock.iseo_lock_{mock_config_entry.data['address'].replace(':', '').lower()}"
-    )
-    # Entity may not have that exact name — search by domain
     all_locks = [s for s in hass.states.async_all() if s.domain == "lock"]
     assert len(all_locks) == 1
     assert all_locks[0].state == LockState.LOCKED

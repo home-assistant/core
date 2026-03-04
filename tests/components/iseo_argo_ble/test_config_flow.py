@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.iseo_argo_ble.const import (
     CONF_ADDRESS,
     CONF_UUID,
@@ -12,6 +13,8 @@ from homeassistant.components.iseo_argo_ble.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 from . import MOCK_ADDRESS, MOCK_SERVICE_INFO
 
@@ -35,8 +38,6 @@ async def test_bluetooth_discovery_abort_if_already_configured(
     hass: HomeAssistant,
 ) -> None:
     """Test bluetooth discovery aborts for already-configured locks."""
-    from tests.common import MockConfigEntry
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_ADDRESS.replace(":", ""),
@@ -55,8 +56,6 @@ async def test_bluetooth_discovery_abort_if_already_configured(
 
 async def test_bluetooth_discovery_not_iseo(hass: HomeAssistant) -> None:
     """Test bluetooth discovery aborts for non-ISEO devices."""
-    from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
     non_iseo_info = BluetoothServiceInfoBleak(
         name="SomeOtherDevice",
         address="11:22:33:44:55:66",
