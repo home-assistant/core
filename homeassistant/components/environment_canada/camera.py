@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
 from env_canada import ECMap
+import voluptuous as vol
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
