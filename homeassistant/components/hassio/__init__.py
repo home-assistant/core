@@ -100,18 +100,20 @@ from .const import (
 from .coordinator import (
     HassioDataUpdateCoordinator,
     get_addons_info,
-    get_addons_stats,  # noqa: F401
-    get_core_info,  # noqa: F401
-    get_core_stats,  # noqa: F401
-    get_host_info,  # noqa: F401
+    get_addons_stats,
+    get_core_info,
+    get_core_stats,
+    get_host_info,
     get_info,
-    get_issues_info,  # noqa: F401
+    get_issues_info,
+    get_network_info,
     get_os_info,
-    get_supervisor_info,  # noqa: F401
-    get_supervisor_stats,  # noqa: F401
+    get_store,
+    get_supervisor_info,
+    get_supervisor_stats,
 )
 from .discovery import async_setup_discovery_view
-from .handler import (  # noqa: F401
+from .handler import (
     HassIO,
     HassioAPIError,
     async_update_diagnostics,
@@ -121,6 +123,23 @@ from .http import HassIOView
 from .ingress import async_setup_ingress_view
 from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
+
+__all__ = [
+    "async_update_diagnostics",
+    "get_addons_info",
+    "get_addons_stats",
+    "get_core_info",
+    "get_core_stats",
+    "get_host_info",
+    "get_info",
+    "get_issues_info",
+    "get_network_info",
+    "get_os_info",
+    "get_store",
+    "get_supervisor_client",
+    "get_supervisor_info",
+    "get_supervisor_stats",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
