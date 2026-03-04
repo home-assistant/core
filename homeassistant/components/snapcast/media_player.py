@@ -304,7 +304,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     async def async_unjoin_player(self) -> None:
-        """Remove this client from it's current group."""
+        """Remove this client from its current group."""
         if self._current_group is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

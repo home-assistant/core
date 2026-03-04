@@ -290,4 +290,4 @@ async def test_unjoin_group_is_none(
             },
             blocking=True,
         )
-    mock_group_1.add_client.assert_not_awaited()
+    mock_group_1.remove_client.assert_not_awaited()
