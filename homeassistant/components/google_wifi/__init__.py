@@ -5,10 +5,34 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant.helpers import discovery
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# Define the schema for YAML validation
+# This is for migration from the legacy YAML configuration
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_IP_ADDRESS): cv.string,
+                        vol.Optional(CONF_NAME, default="Google Wifi"): cv.string,
+                    }
+                )
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 # Load the sensor.py file-- migrated from the legacy Google_Wifi integration
 PLATFORMS = [Platform.SENSOR]
@@ -16,28 +40,19 @@ PLATFORMS = [Platform.SENSOR]
 
 # Pull in the config flow - entry: ConfigEntry comes from the config flow.
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Google_Wifi integration from a config entry."""
-    # Register a listener for when the entry is updated (reconfigured)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    """Set up Google Wifi from a config entry."""
+    coordinator = GoogleWifiCoordinator(hass, entry)
 
-    # Retrieve the IP address and name saved during the config flow
-    ip_address = entry.data[CONF_IP_ADDRESS]
-    name = entry.data.get(CONF_NAME, "Google Wifi")
-    # Debug log
-    _LOGGER.debug("Starting setup for device %s at IP: %s", name, ip_address)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except UpdateFailed as err:
+        # This triggers the automatic background retry logic
+        raise ConfigEntryNotReady(f"Timeout connecting to {entry.data[CONF_IP_ADDRESS]}") from err
 
-    # Store the data to can access it later
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        "ip_address": ip_address,
-        "name": name,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # Tell Home Assistant to set up the sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
-
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""

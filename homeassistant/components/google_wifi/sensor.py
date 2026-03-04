@@ -73,8 +73,9 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
         self.entity_description = description
         self.device_name = device_name
         # Create a unique ID so the user can rename/customize this in the UI
-        self._attr_unique_id = f"{coordinator.host}_{description.key}"
-        self._attr_name = f"Google Wifi {description.key.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{self.entry.entry_id}_{description.key}"
+        self._attr_name = f"{description.key.replace('_', ' ').title()}"
+
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -92,7 +93,7 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
                 model_name = "Onhub/Wifi"
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.host)},
+            identifiers={(DOMAIN, self.entry.entry_id)},
             name=self.device_name,
             manufacturer="Google",
             model=model_name,
@@ -129,6 +130,11 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
 
             return val
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old YAML sensor setup - now handled by async_setup in __init__.py."""
+    # Tells users it's time to migrate to the new code- no longer YAML config
+    # This is essentially a no-op now, or can be used to redirect users
+    pass
 
 # Define all sensors in one tuple to be imported by sensor.py
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (

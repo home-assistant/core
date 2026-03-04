@@ -22,6 +22,7 @@ class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, host: str) -> None:
         """Initialize the coordinator."""
         self.host = host
+        self.entry = entry
         super().__init__(
             hass,
             _LOGGER,
@@ -31,6 +32,8 @@ class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from the router via HTTP."""
+        # Pull the host directly from the entry data every time
+        host = self.entry.data[CONF_IP_ADDRESS]
         url = f"http://{self.host}/api/v1/status"
         try:
             # We use hass.async_add_executor_job because 'requests' is synchronous
@@ -47,7 +50,7 @@ class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
 
         except requests.exceptions.RequestException as err:
             # This catches timeouts, connection errors, and 4xx/5xx responses
-            raise UpdateFailed(f"Error communicating with Google Wifi: {err}") from err
+            raise UpdateFailed(f"Error communicating with router: {err}") from err
         except ValueError as err:
             # Catches cases where the response isn't valid JSON
-            raise UpdateFailed(f"Invalid JSON received from Google Wifi: {err}") from err
+            raise UpdateFailed(f"Invalid JSON received from router: {err}") from err
