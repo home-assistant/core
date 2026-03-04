@@ -553,7 +553,7 @@ async-upnp-client==0.46.2
 asyncarve==0.1.1
 
 # homeassistant.components.keyboard_remote
-asyncinotify==4.2.0
+asyncinotify==4.4.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -936,7 +936,7 @@ eternalegypt==0.0.18
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.keyboard_remote
-# evdev==1.6.1
+# evdev==1.9.3
 
 # homeassistant.components.evohome
 evohome-async==1.1.3
