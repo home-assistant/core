@@ -129,13 +129,16 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if selected_device is None:
                 return self.async_abort(reason="unknown_device")
-            # set unique id
-            unique_id = usb_unique_id_from_service_info(
-                usb_service_info_from_device(selected_device)
+            selected_service = usb_service_info_from_device(selected_device)
+            # normalize device path
+            selected_service.device = await self.hass.async_add_executor_job(
+                get_serial_by_id, selected_service.device
             )
+            # set unique id
+            unique_id = usb_unique_id_from_service_info(selected_service)
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured(
-                updates={CONF_DEVICE: selected_device.device}
+                updates={CONF_DEVICE: selected_service.device}
             )
             return await self.async_step_manual(user_input)
 
