@@ -22,8 +22,8 @@ from . import KioskerConfigEntry
 from .coordinator import KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
-# Limit concurrent updates to prevent overwhelming the API
-PARALLEL_UPDATES = 3
+# Coordinator-based platform; no per-entity polling concurrency needed
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

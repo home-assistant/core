@@ -15,11 +15,11 @@
     "step": {
       "user": {
         "data": {
-          "api_token": "API Token",
-          "host": "Host",
-          "port": "Port",
-          "ssl": "Use SSL",
-          "verify_ssl": "Verify certificate"
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
@@ -36,8 +36,8 @@
       },
       "zeroconf_confirm": {
         "data": {
-          "api_token": "API Token",
-          "verify_ssl": "Verify certificate"
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
@@ -68,9 +68,6 @@
       },
       "last_motion": {
         "name": "Last motion"
-      },
-      "last_update": {
-        "name": "Last update"
       }
     }
   }
