@@ -1,6 +1,6 @@
 """Tests for EnOcean config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from serial import SerialException
 
@@ -16,7 +16,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_SERIAL_BY_ID, MOCK_USB_DEVICE, MOCK_USB_SERVICE_INFO, MODULE
+from . import MOCK_SERIAL_BY_ID, MODULE
 
 from tests.common import MockConfigEntry
 
@@ -37,10 +37,12 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_flow_with_detected_usb_device(hass: HomeAssistant) -> None:
+async def test_user_flow_with_detected_usb_device(
+    hass: HomeAssistant, mock_usb_device: MagicMock
+) -> None:
     """Test the user flow with a detected usb device."""
     with patch(
-        f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[MOCK_USB_DEVICE])
+        f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[mock_usb_device])
     ) as mock_scan_serial_ports:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -69,12 +71,14 @@ async def test_user_flow_without_detected_usb_device(hass: HomeAssistant) -> Non
     assert result["step_id"] == "manual"
 
 
-async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
+async def test_user_flow_with_valid_path(
+    hass: HomeAssistant, mock_usb_device: MagicMock
+) -> None:
     """Test the user flow with a valid path selected."""
     with (
         patch(
             f"{MODULE}.config_flow.scan_serial_ports",
-            Mock(return_value=[MOCK_USB_DEVICE]),
+            Mock(return_value=[mock_usb_device]),
         ) as mock_scan_serial_ports,
         patch(
             f"{MODULE}.config_flow.get_serial_by_id",
@@ -88,7 +92,7 @@ async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_DEVICE: MOCK_USB_DEVICE.device},
+            data={CONF_DEVICE: mock_usb_device.device},
         )
 
     assert mock_scan_serial_ports.call_count == 1
@@ -117,10 +121,12 @@ async def test_user_flow_with_invalid_manual_path(hass: HomeAssistant) -> None:
     assert result["errors"][CONF_DEVICE] == "invalid_dongle_path"
 
 
-async def test_user_flow_with_invalid_option(hass: HomeAssistant) -> None:
+async def test_user_flow_with_invalid_option(
+    hass: HomeAssistant, mock_usb_device: MagicMock
+) -> None:
     """Test the user flow with unknown selected usb device."""
     with patch(
-        f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[MOCK_USB_DEVICE])
+        f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[mock_usb_device])
     ) as mock_scan_serial_ports:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -133,13 +139,15 @@ async def test_user_flow_with_invalid_option(hass: HomeAssistant) -> None:
     assert result["reason"] == "unknown_device"
 
 
-async def test_user_flow_with_manual_path(hass: HomeAssistant) -> None:
+async def test_user_flow_with_manual_path(
+    hass: HomeAssistant, mock_usb_device: MagicMock
+) -> None:
     """Test the user flow with custom path selected."""
     with (
         patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)),
         patch(
             f"{MODULE}.config_flow.scan_serial_ports",
-            Mock(return_value=[MOCK_USB_DEVICE]),
+            Mock(return_value=[mock_usb_device]),
         ) as mock_scan_serial_ports,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -153,7 +161,9 @@ async def test_user_flow_with_manual_path(hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual"
 
 
-async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
+async def test_user_flow_already_in_progress(
+    hass: HomeAssistant, mock_usb_device: MagicMock, mock_usb_service_info: MagicMock
+) -> None:
     """Test we can't start a flow for the same device twice."""
     with patch(
         f"{MODULE}.config_flow.get_serial_by_id",
@@ -162,7 +172,7 @@ async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USB},
-            data=MOCK_USB_SERVICE_INFO,
+            data=mock_usb_service_info,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
@@ -171,13 +181,13 @@ async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
         patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)),
         patch(
             f"{MODULE}.config_flow.scan_serial_ports",
-            Mock(return_value=[MOCK_USB_DEVICE]),
+            Mock(return_value=[mock_usb_device]),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_DEVICE: MOCK_USB_DEVICE.device},
+            data={CONF_DEVICE: mock_usb_device.device},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
@@ -218,6 +228,7 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
 async def test_usb_discovery(
     hass: HomeAssistant,
+    mock_usb_service_info: MagicMock,
 ) -> None:
     """Test usb discovery success path."""
     # test discovery step
@@ -228,7 +239,7 @@ async def test_usb_discovery(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USB},
-            data=MOCK_USB_SERVICE_INFO,
+            data=mock_usb_service_info,
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -248,7 +259,7 @@ async def test_usb_discovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
-    assert result["data"] == {"device": MOCK_USB_SERVICE_INFO.device}
+    assert result["data"] == {"device": mock_usb_service_info.device}
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
     assert result["context"]["title_placeholders"] == {
         "name": "USB 300 - /dev/serial/by-id/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
@@ -258,6 +269,7 @@ async def test_usb_discovery(
 
 async def test_usb_discovery_already_configured(
     hass: HomeAssistant,
+    mock_usb_service_info: MagicMock,
 ) -> None:
     """Test usb discovery aborts when already configured."""
     # Existing entry with the same unique_id but an old device path
@@ -272,14 +284,17 @@ async def test_usb_discovery_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USB},
-        data=MOCK_USB_SERVICE_INFO,
+        data=mock_usb_service_info,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    # assert existing_entry.data[CONF_DEVICE] == MOCK_USB_SERVICE_INFO.device
 
 
-async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
+async def test_usb_discovery_already_in_progress(
+    hass: HomeAssistant, mock_usb_service_info: MagicMock
+) -> None:
     """Test we can't start a flow for the same device twice."""
     with patch(
         f"{MODULE}.config_flow.get_serial_by_id",
@@ -288,7 +303,7 @@ async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USB},
-            data=MOCK_USB_SERVICE_INFO,
+            data=mock_usb_service_info,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
@@ -300,7 +315,7 @@ async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USB},
-            data=MOCK_USB_SERVICE_INFO,
+            data=mock_usb_service_info,
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
