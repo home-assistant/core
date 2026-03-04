@@ -43,16 +43,20 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             os_version = None
 
         # Use uppercased truncated device ID for display purposes (device name, titles)
-        device_id_short_display = (
-            device_id[:8].upper() if device_id != "unknown" else None
-        )
+        if device_id is not None:
+            try:
+                device_id_short_display = device_id[:8].upper()
+            except TypeError, AttributeError:
+                device_id_short_display = "unknown"
+        else:
+            device_id_short_display = "unknown"
 
         # Set device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=(
                 f"Kiosker {device_id_short_display}"
-                if device_id is not None
+                if device_id_short_display is not None
                 else "Kiosker"
             ),
             manufacturer="Top North",
