@@ -220,7 +220,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
                 except IseoAuthError as exc:
-                    _LOGGER.error("Gateway registration failed: %s", exc)
+                    _LOGGER.debug("Gateway registration failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:
                     _LOGGER.exception("Unexpected error during gateway registration")
@@ -228,7 +228,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gw_register",
-            description_placeholders={"uuid": self._uuid_hex.upper()},
             errors=errors,
         )
 
@@ -258,7 +257,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
                 except IseoAuthError as exc:
-                    _LOGGER.error("Gateway log registration failed: %s", exc)
+                    _LOGGER.debug("Gateway log registration failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:
                     _LOGGER.exception(

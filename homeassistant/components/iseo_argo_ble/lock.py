@@ -78,7 +78,7 @@ class IseoLockEntity(LockEntity):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="ISEO Lock",
+            name=entry.title,
             manufacturer="ISEO",
             model="X1R Smart Lock",
         )
@@ -129,7 +129,7 @@ class IseoLockEntity(LockEntity):
             fw_version = state.firmware_info[5:].strip() or state.firmware_info.strip()
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._entry.entry_id)},
-                name="ISEO Lock",
+                name=self._entry.title,
                 manufacturer="ISEO",
                 model="X1R Smart Lock",
                 sw_version=fw_version,
@@ -229,9 +229,3 @@ class IseoLockEntity(LockEntity):
 
         self._set_unlocked()
         self._relock_task = self.hass.async_create_task(self._auto_relock())
-
-    async def async_lock(self, **kwargs: Any) -> None:
-        """Not supported — the ISEO X1R re-latches physically after every open."""
-        _LOGGER.debug(
-            "async_lock called on ISEO lock — no-op (lock re-latches automatically)"
-        )
