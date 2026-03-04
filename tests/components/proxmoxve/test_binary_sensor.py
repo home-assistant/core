@@ -50,8 +50,8 @@ async def test_all_entities(
         (AuthenticationError("Invalid credentials")),
         (SSLError("SSL handshake failed")),
         (ConnectTimeout("Connection timed out")),
-        (ResourceException),
-        (requests.exceptions.ConnectionError),
+        (ResourceException("404", "status_message", "content")),
+        (requests.exceptions.ConnectionError("Connection error")),
     ],
     ids=[
         "auth_error",

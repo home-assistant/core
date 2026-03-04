@@ -1,4 +1,4 @@
-"""Tests for the BSB-Lan water heater platform."""
+"""Tests for the BSB-LAN water heater platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock

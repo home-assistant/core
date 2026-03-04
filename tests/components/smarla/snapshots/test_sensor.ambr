@@ -76,8 +76,11 @@
     'name': None,
     'object_id_base': 'Amplitude',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Amplitude',
     'platform': 'smarla',
@@ -92,6 +95,7 @@
 # name: test_entities[sensor.smarla_amplitude-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'distance',
       'friendly_name': 'Smarla Amplitude',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
@@ -129,8 +133,11 @@
     'name': None,
     'object_id_base': 'Period',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Period',
     'platform': 'smarla',
@@ -145,6 +152,7 @@
 # name: test_entities[sensor.smarla_period-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Smarla Period',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,

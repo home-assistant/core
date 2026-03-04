@@ -6,6 +6,13 @@ import collections
 from dataclasses import dataclass
 from typing import Any, Self
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -33,13 +40,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import EnumTypeInformation
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -178,7 +178,9 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
         return TUYA_HVAC_TO_HA[raw]
 
     def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: HVACMode
+        self,
+        device: CustomerDevice,
+        value: HVACMode,
     ) -> Any:
         """Convert value to raw value."""
         return next(
@@ -356,7 +358,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         CLIMATE_DESCRIPTIONS[device.category],
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, DPCode.HUMIDITY_CURRENT
                         ),
                         current_temperature_wrapper=temperature_wrappers[0],
@@ -365,7 +367,7 @@ async def async_setup_entry(
                             (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
                             prefer_function=True,
                         ),
-                        hvac_mode_wrapper=_HvacModeWrapper.find_dpcode(
+                        hvac_mode_wrapper=_HvacModeWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, DPCode.MODE, prefer_function=True
                         ),
                         preset_wrapper=_PresetWrapper.find_dpcode(
@@ -376,7 +378,7 @@ async def async_setup_entry(
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, DPCode.HUMIDITY_SET, prefer_function=True
                         ),
                         temperature_unit=temperature_wrappers[2],

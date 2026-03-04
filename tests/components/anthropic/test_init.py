@@ -103,7 +103,7 @@ async def test_downgrade_from_v3_to_v2(
                     "recommended": True,
                     "llm_hass_api": ["assist"],
                     "prompt": "You are a helpful assistant",
-                    "chat_model": "claude-3-haiku-20240307",
+                    "chat_model": "claude-haiku-4-5",
                 },
                 "subentry_id": "mock_id",
                 "subentry_type": "conversation",
@@ -154,7 +154,7 @@ async def test_migration_from_v1_to_v2(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -315,7 +315,7 @@ async def test_migration_from_v1_disabled(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -444,7 +444,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -534,7 +534,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -639,7 +639,7 @@ async def test_migration_from_v2_1_to_v2_2(
         "recommended": True,
         "llm_hass_api": ["assist"],
         "prompt": "You are a helpful assistant",
-        "chat_model": "claude-3-haiku-20240307",
+        "chat_model": "claude-haiku-4-5",
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -901,7 +901,7 @@ async def test_migrate_entry_to_v2_3(
                     "recommended": True,
                     "llm_hass_api": ["assist"],
                     "prompt": "You are a helpful assistant",
-                    "chat_model": "claude-3-haiku-20240307",
+                    "chat_model": "claude-haiku-4-5",
                 },
                 "subentry_id": conversation_subentry_id,
                 "subentry_type": "conversation",

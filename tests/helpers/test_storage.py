@@ -25,7 +25,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
@@ -657,14 +657,23 @@ async def test_minor_version(
     assert hass_storage[store_v_1_2.key]["minor_version"] == MOCK_MINOR_VERSION_2
 
 
-async def test_migrate_major_not_implemented_raises(
-    hass: HomeAssistant, store: storage.Store, store_v_2_1: storage.Store
+async def test_loading_newer_major_version_raises(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    store: storage.Store,
+    store_v_2_1: storage.Store,
 ) -> None:
-    """Test migrating between major versions fails if not implemented."""
-
+    """Test loading storage with a newer major version raises and preserves data."""
     await store_v_2_1.async_save(MOCK_DATA)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(UnsupportedStorageVersionError) as exc_info:
         await store.async_load()
+    assert exc_info.value.storage_key == MOCK_KEY
+    assert exc_info.value.found_version == MOCK_VERSION_2
+    assert exc_info.value.max_supported_version == MOCK_VERSION
+    # Verify on-disk data is not modified
+    assert hass_storage[MOCK_KEY]["version"] == MOCK_VERSION_2
+    assert hass_storage[MOCK_KEY]["minor_version"] == MOCK_MINOR_VERSION_1
+    assert hass_storage[MOCK_KEY]["data"] == MOCK_DATA
 
 
 async def test_migrate_minor_not_implemented(
@@ -1349,3 +1358,27 @@ async def test_storage_concurrent_load(hass: HomeAssistant) -> None:
         )
         for load in loads:
             assert load == "data"
+
+
+async def test_load_empty_returns_none_and_read_only(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test store with load_empty returns None, becomes read-only, and skips version checks."""
+    # Use a future version to also verify no version error is raised
+    hass_storage[MOCK_KEY] = {
+        "version": 99,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": MOCK_DATA,
+    }
+
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    store.set_load_empty()
+
+    data = await store.async_load()
+    assert data is None
+    assert store._read_only is True
+
+    await store.async_save({"new": "data"})
+    assert hass_storage[MOCK_KEY]["data"] == MOCK_DATA
+    assert hass_storage[MOCK_KEY]["version"] == 99
