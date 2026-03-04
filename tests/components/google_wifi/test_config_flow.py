@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.google_wifi.config_flow import CannotConnect
 from homeassistant.components.google_wifi.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -109,3 +110,22 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert entry.data[CONF_IP_ADDRESS] == "1.1.1.2"
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.google_wifi.config_flow.validate_input",
+        side_effect=CannotConnect,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "192.168.86.1", CONF_NAME: "Router"},
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
