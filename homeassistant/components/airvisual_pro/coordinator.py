@@ -68,7 +68,7 @@ class AirVisualProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except InvalidAuthenticationError as err:
             raise ConfigEntryAuthFailed("Invalid Samba password") from err
         except NodeConnectionError as err:
-            if not self.reload_task:
+            if self.reload_task is None:
                 self.reload_task = self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 )
