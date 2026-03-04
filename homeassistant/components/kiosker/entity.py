@@ -26,21 +26,12 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         if description:
             self.entity_description = description
 
-        # Use coordinator data if available, otherwise fallback to config entry data
-        if coordinator.data and coordinator.data.status:
-            status = coordinator.data.status
-            device_id = status.device_id
-            model = status.model
-            app_name = status.app_name
-            app_version = status.app_version
-            os_version = status.os_version
-        else:
-            # Fallback when no data is available yet
-            device_id = None
-            model = None
-            app_name = None
-            app_version = None
-            os_version = None
+        status = coordinator.data.status
+        device_id = status.device_id
+        model = status.model
+        app_name = status.app_name
+        app_version = status.app_version
+        os_version = status.os_version
 
         # Use uppercased truncated device ID for display purposes (device name, titles)
         if device_id is not None:
@@ -75,3 +66,8 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         self._attr_unique_id = (
             f"{device_id}_{description.key}" if description else f"{device_id}"
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data is not None

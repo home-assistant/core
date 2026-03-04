@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+
+from kiosker import Status
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,7 +31,7 @@ PARALLEL_UPDATES = 0
 class KioskerSensorEntityDescription(SensorEntityDescription):
     """Kiosker sensor description."""
 
-    value_fn: Callable[[Any], StateType | datetime]
+    value_fn: Callable[[Status], StateType | datetime]
 
 
 SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
@@ -92,11 +93,4 @@ class KioskerSensor(KioskerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime | None:
         """Return the native value of the sensor."""
-        if not self.coordinator.data:
-            return None
-
-        status = self.coordinator.data.status
-        if not status:
-            return None
-
-        return self.entity_description.value_fn(status)
+        return self.entity_description.value_fn(self.coordinator.data.status)

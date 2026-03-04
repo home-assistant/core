@@ -372,18 +372,18 @@ async def test_sensors_missing_data(
             coordinator.async_update_listeners()
             await hass.async_block_till_done()
 
-    # Check that sensors handle missing data gracefully
-    sensors_with_unknown_state = [
+    # Check that sensors are unavailable when coordinator data is missing
+    sensors_with_unavailable_state = [
         "sensor.kiosker_a98be1ce_battery",
         "sensor.kiosker_a98be1ce_last_interaction",
         "sensor.kiosker_a98be1ce_last_motion",
         "sensor.kiosker_a98be1ce_ambient_light",
     ]
 
-    for sensor_id in sensors_with_unknown_state:
+    for sensor_id in sensors_with_unavailable_state:
         state = hass.states.get(sensor_id)
         assert state is not None
-        assert state.state == "unknown"
+        assert state.state == "unavailable"
 
 
 async def test_sensor_unique_ids(

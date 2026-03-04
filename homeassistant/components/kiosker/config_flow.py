@@ -78,7 +78,7 @@ async def validate_input(
         return ({"base": "unknown"}, None)
 
     # Ensure we have a device_id from the status response
-    if not hasattr(status, "device_id") or not status.device_id:
+    if not status.device_id:
         _LOGGER.error("Device did not return a valid device_id")
         return ({"base": "cannot_connect"}, None)
 
@@ -96,7 +96,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_host: str | None = None
         self._discovered_port: int | None = None
-        self._discovered_uuid: str | None = None
+        self._discovered_device_id: str | None = None
         self._discovered_version: str | None = None
         self._discovered_ssl: bool | None = None
 
@@ -132,15 +132,15 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Extract device information from zeroconf properties
         properties = discovery_info.properties
-        uuid = properties.get("uuid")
+        device_id = properties.get("uuid")
         app_name = properties.get("app", "Kiosker")
         version = properties.get("version", "")
         ssl = properties.get("ssl", "false").lower() == "true"
 
-        # Use UUID from zeroconf
-        if uuid:
-            device_name = f"{app_name} ({uuid[:8].upper()})"
-            unique_id = uuid
+        # Use device_id from zeroconf
+        if device_id:
+            device_name = f"{app_name} ({device_id[:8].upper()})"
+            unique_id = device_id
         else:
             _LOGGER.debug("Zeroconf properties did not include a valid device_id")
             return self.async_abort(reason="cannot_connect")
@@ -160,7 +160,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store discovered information for later use
         self._discovered_host = host
         self._discovered_port = port
-        self._discovered_uuid = uuid
+        self._discovered_device_id = device_id
         self._discovered_version = version
         self._discovered_ssl = ssl
 
@@ -173,7 +173,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf confirmation."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and CONF_API_TOKEN in user_input:
+        if user_input is not None:
             # Use stored discovery info and user-provided token
             host = self._discovered_host
             port = self._discovered_port
