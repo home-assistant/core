@@ -68,8 +68,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.proxmox: ProxmoxAPI
 
         self.known_nodes: set[str] = set()
-        self.known_vms: set[tuple[str, int]] = set()
-        self.known_containers: set[tuple[str, int]] = set()
+        self.known_vms: set[int] = set()
+        self.known_containers: set[int] = set()
 
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
         self.new_vms_callbacks: list[
@@ -202,6 +202,20 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         assert vms is not None and containers is not None
         return vms, containers
 
+    def get_vm_node(self, vmid: int) -> str | None:
+        """Find which node a VM is currently on."""
+        for node_name, node_data in self.data.items():
+            if vmid in node_data.vms:
+                return node_name
+        return None
+
+    def get_container_node(self, vmid: int) -> str | None:
+        """Find which node a container is currently on."""
+        for node_name, node_data in self.data.items():
+            if vmid in node_data.containers:
+                return node_name
+        return None
+
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
         current_nodes = set(data.keys())
@@ -210,10 +224,11 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             _LOGGER.debug("New nodes found: %s", new_nodes)
             self.known_nodes.update(new_nodes)
 
-        # And yes, track new VM's and containers as well
+        # Track VMs by VMID only (not by node), since VMIDs are globally
+        # unique in a Proxmox cluster and VMs can migrate between nodes.
         current_vms = {
-            (node_name, vmid)
-            for node_name, node_data in data.items()
+            vmid
+            for node_data in data.values()
             for vmid in node_data.vms
         }
         new_vms = current_vms - self.known_vms
@@ -222,8 +237,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             self.known_vms.update(new_vms)
 
         current_containers = {
-            (node_name, vmid)
-            for node_name, node_data in data.items()
+            vmid
+            for node_data in data.values()
             for vmid in node_data.containers
         }
         new_containers = current_containers - self.known_containers
