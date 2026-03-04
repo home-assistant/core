@@ -1,6 +1,7 @@
 """A todo platform for OurGroceries."""
 
 import asyncio
+import logging
 from typing import Any
 
 from homeassistant.components.todo import (
@@ -16,6 +17,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OurGroceriesDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -47,6 +50,7 @@ class OurGroceriesTodoListEntity(
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     def __init__(
@@ -67,13 +71,23 @@ class OurGroceriesTodoListEntity(
         if self.coordinator.data is None:
             self._attr_todo_items = None
         else:
+            items = self.coordinator.data[self._list_id]["list"]["items"]
+            cat_order = self.coordinator.category_sort_order
+            sorted_items = sorted(
+                items,
+                key=lambda item: cat_order.get(item.get("categoryId", ""), "\uffff"),
+            )
             self._attr_todo_items = [
                 TodoItem(
                     summary=item["name"],
                     uid=item["id"],
+                    description=self.coordinator.categories.get(
+                        item.get("categoryId", ""), ""
+                    )
+                    or None,
                     status=_completion_status(item),
                 )
-                for item in self.coordinator.data[self._list_id]["list"]["items"]
+                for item in sorted_items
             ]
         super()._handle_coordinator_update()
 
@@ -86,18 +100,58 @@ class OurGroceriesTodoListEntity(
         )
         await self.coordinator.async_refresh()
 
+    async def _resolve_category_id(self, category_name: str) -> str:
+        """Resolve a category name to its ID, creating it if needed."""
+        # Look up existing category by name
+        for cat_id, name in self.coordinator.categories.items():
+            if name.lower() == category_name.lower():
+                return cat_id
+        # Category doesn't exist, create it
+        try:
+            await self.coordinator.og.create_category(category_name)
+            # Refresh categories to get the new ID
+            await self.coordinator.async_refresh_categories()
+        except Exception:
+            _LOGGER.exception("Failed to create category '%s'", category_name)
+            return "uncategorized"
+        for cat_id, name in self.coordinator.categories.items():
+            if name.lower() == category_name.lower():
+                return cat_id
+        return "uncategorized"
+
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
+        if self.coordinator.data is None:
+            return
+        api_items = self.coordinator.data[self._list_id]["list"]["items"]
+        current_item = next(
+            (api_item for api_item in api_items if api_item["id"] == item.uid),
+            None,
+        )
+        if current_item is None:
+            return
+
+        category = current_item.get("categoryId", "uncategorized")
+
+        if item.description is not None:
+            if item.description:
+                category = await self._resolve_category_id(item.description)
+            else:
+                category = "uncategorized"
+
         if item.summary:
-            api_items = self.coordinator.data[self._list_id]["list"]["items"]
-            category = next(
-                api_item.get("categoryId")
-                for api_item in api_items
-                if api_item["id"] == item.uid
-            )
             await self.coordinator.og.change_item_on_list(
                 self._list_id, item.uid, category, item.summary
             )
+        elif item.description is not None:
+            # Description changed but summary didn't — still need to update
+            await self.coordinator.og.change_item_on_list(
+                self._list_id,
+                item.uid,
+                category,
+                current_item["name"],
+            )
+
         if item.status is not None:
             cross_off = item.status == TodoItemStatus.COMPLETED
             await self.coordinator.og.toggle_item_crossed_off(

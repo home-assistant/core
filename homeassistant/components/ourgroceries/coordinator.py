@@ -10,7 +10,7 @@ from ourgroceries import OurGroceries
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -30,6 +30,8 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Initialize global OurGroceries data updater."""
         self.og = og
         self.lists: list[dict] = []
+        self.categories: dict[str, str] = {}
+        self.category_sort_order: dict[str, str] = {}
         self._cache: dict[str, dict] = {}
         interval = timedelta(seconds=SCAN_INTERVAL)
         super().__init__(
@@ -46,9 +48,24 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             return
         self._cache[list_id] = await self.og.get_list_items(list_id=list_id)
 
+    async def async_refresh_categories(self) -> None:
+        """Refresh category data from OurGroceries."""
+        try:
+            category_data = await self.og.get_category_items()
+        except Exception as err:
+            raise UpdateFailed(
+                f"Error fetching OurGroceries category data: {err}"
+            ) from err
+        category_items = category_data.get("list", {}).get("items", [])
+        self.categories = {cat["id"]: cat["name"] for cat in category_items}
+        self.category_sort_order = {
+            cat["id"]: cat.get("sortOrder", "") for cat in category_items
+        }
+
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from OurGroceries."""
         self.lists = (await self.og.get_my_lists())["shoppingLists"]
+        await self.async_refresh_categories()
         await asyncio.gather(
             *[self._update_list(sl["id"], sl["versionId"]) for sl in self.lists]
         )
