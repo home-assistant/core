@@ -111,6 +111,35 @@ async def test_unique_id_already_set(
     assert entry.unique_id == ACCOUNT_USER_ID
 
 
+async def test_unique_id_migration_conflict(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that migration skips backfill when another entry owns that unique_id."""
+    # First entry already has the unique_id
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    ).add_to_hass(hass)
+
+    # Second entry is legacy (no unique_id)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.litterrobot.coordinator.Account",
+        return_value=mock_account,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id is None
+
+
 async def test_device_remove_devices(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

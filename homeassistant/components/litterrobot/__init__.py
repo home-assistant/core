@@ -38,7 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) 
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     if entry.unique_id is None and (user_id := coordinator.account.user_id) is not None:
-        hass.config_entries.async_update_entry(entry, unique_id=user_id)
+        if not hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, user_id):
+            hass.config_entries.async_update_entry(entry, unique_id=user_id)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

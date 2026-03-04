@@ -241,3 +241,45 @@ async def test_reauth_legacy_entry(hass: HomeAssistant, mock_account: Account) -
     assert result["reason"] == "reauth_successful"
     assert entry.unique_id == ACCOUNT_USER_ID
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_legacy_entry_unique_id_conflict(
+    hass: HomeAssistant, mock_account: Account
+) -> None:
+    """Test reauth for legacy entry when another entry already owns that unique_id."""
+    # First entry already has the unique_id
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    ).add_to_hass(hass)
+
+    # Second entry is legacy (no unique_id)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.connect",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.config_flow.Account.user_id",
+            new_callable=PropertyMock,
+            return_value=ACCOUNT_USER_ID,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: CONFIG[DOMAIN][CONF_PASSWORD]},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id is None
