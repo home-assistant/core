@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_URL,
@@ -127,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
         entry.data[CONF_HOST],
+        base_path=entry.data.get(CONF_PATH, "/control"),
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
