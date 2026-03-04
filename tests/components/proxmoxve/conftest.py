@@ -21,6 +21,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
+from . import MERGED_PERMISSIONS
+
 from tests.common import (
     MockConfigEntry,
     load_json_array_fixture,
@@ -72,6 +74,9 @@ def mock_proxmox_client():
         mock_instance.access.ticket.post.return_value = load_json_object_fixture(
             "access_ticket.json", DOMAIN
         )
+
+        # Default to PVEUser privileges
+        mock_instance.access.permissions.get.return_value = MERGED_PERMISSIONS
 
         # Make a separate mock for the qemu and lxc endpoints
         node_mock = MagicMock()
