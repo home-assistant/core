@@ -8,8 +8,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 
-from .coordinator import IssConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import IssConfigEntry
 
 
 class ISSConfigFlow(ConfigFlow, domain=DOMAIN):

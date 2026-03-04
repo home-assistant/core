@@ -60,9 +60,7 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
         except (HTTPError, requests.exceptions.ConnectionError) as err:
             self._consecutive_failures += 1
             if self.data is None:
-                raise UpdateFailed(
-                    "Unable to retrieve data"
-                ) from err
+                raise UpdateFailed("Unable to retrieve data") from err
             if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
                 raise UpdateFailed(
                     f"Unable to retrieve data after {self._consecutive_failures} consecutive update failures"
