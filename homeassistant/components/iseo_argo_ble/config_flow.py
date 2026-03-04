@@ -196,21 +196,31 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Register the UUID as a Gateway (requires Master Card)."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            client = IseoClient(
-                address=self._address,
-                uuid_bytes=bytes.fromhex(self._uuid_hex),
-                identity_priv=self._gw_priv,
-                subtype=self._user_subtype,
-                ble_device=async_ble_device_from_address(
+            if not (
+                ble_device := async_ble_device_from_address(
                     self.hass, self._address, connectable=True
-                ),
-            )
-            try:
-                await client.register_user(name="Home Assistant")
-                return await self.async_step_gw_register_logs()
-            except (IseoConnectionError, IseoAuthError) as exc:
-                _LOGGER.error("Gateway registration failed: %s", exc)
-                errors["base"] = "auth_failed"
+                )
+            ):
+                errors["base"] = "cannot_connect"
+            else:
+                client = IseoClient(
+                    address=self._address,
+                    uuid_bytes=bytes.fromhex(self._uuid_hex),
+                    identity_priv=self._gw_priv,
+                    subtype=self._user_subtype,
+                    ble_device=ble_device,
+                )
+                try:
+                    await client.register_user(name="Home Assistant")
+                    return await self.async_step_gw_register_logs()
+                except IseoConnectionError:
+                    errors["base"] = "cannot_connect"
+                except IseoAuthError as exc:
+                    _LOGGER.error("Gateway registration failed: %s", exc)
+                    errors["base"] = "auth_failed"
+                except Exception:
+                    _LOGGER.exception("Unexpected error during Gateway registration")
+                    errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="gw_register",
@@ -224,24 +234,31 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Enable log notifications for the Gateway (requires Master Card)."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            client = IseoClient(
-                address=self._address,
-                uuid_bytes=bytes.fromhex(self._uuid_hex),
-                identity_priv=self._gw_priv,
-                subtype=self._user_subtype,
-                ble_device=async_ble_device_from_address(
+            if not (
+                ble_device := async_ble_device_from_address(
                     self.hass, self._address, connectable=True
-                ),
-            )
-            try:
-                await client.gw_register_log_notif()
-                return self._async_create_iseo_entry()
-            except (IseoConnectionError, IseoAuthError) as exc:
-                _LOGGER.error("Gateway log registration failed: %s", exc)
-                errors["base"] = "auth_failed"
-            except Exception:
-                _LOGGER.exception("Unexpected error during Gateway log registration")
-                errors["base"] = "unknown"
+                )
+            ):
+                errors["base"] = "cannot_connect"
+            else:
+                client = IseoClient(
+                    address=self._address,
+                    uuid_bytes=bytes.fromhex(self._uuid_hex),
+                    identity_priv=self._gw_priv,
+                    subtype=self._user_subtype,
+                    ble_device=ble_device,
+                )
+                try:
+                    await client.gw_register_log_notif()
+                    return self._async_create_iseo_entry()
+                except IseoConnectionError:
+                    errors["base"] = "cannot_connect"
+                except IseoAuthError as exc:
+                    _LOGGER.error("Gateway log registration failed: %s", exc)
+                    errors["base"] = "auth_failed"
+                except Exception:
+                    _LOGGER.exception("Unexpected error during Gateway log registration")
+                    errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="gw_register_logs",
