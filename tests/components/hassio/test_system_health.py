@@ -56,6 +56,13 @@ async def test_hassio_system_health(
             "version": "1.0.0",
         }
     }
+    hass.data["hassio_apps_list"] = [
+        {
+            "slug": "test",
+            "name": "Awesome Addon",
+            "version": "1.0.0",
+        }
+    ]
     hass.data["hassio_network_info"] = {
         "host_internet": True,
         "supervisor_internet": True,
