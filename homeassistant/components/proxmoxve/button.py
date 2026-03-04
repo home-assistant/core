@@ -208,7 +208,7 @@ async def async_setup_entry(
             (node_data, vm_data)
             for node_data in coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
-            if (node_data.node["node"], vmid) in coordinator.known_vms
+            if vmid in coordinator.known_vms
         ]
     )
     _async_add_new_containers(
@@ -216,7 +216,7 @@ async def async_setup_entry(
             (node_data, container_data)
             for node_data in coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
-            if (node_data.node["node"], vmid) in coordinator.known_containers
+            if vmid in coordinator.known_containers
         ]
     )
 
@@ -278,11 +278,17 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
+        node_name = self._node_name
+        if node_name is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error_no_details",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            self._node_name,
-            self.vm_data["vmid"],
+            node_name,
+            self.device_id,
         )
 
 
@@ -293,9 +299,15 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
+        node_name = self._node_name
+        if node_name is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error_no_details",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            self._node_name,
-            self.container_data["vmid"],
+            node_name,
+            self.device_id,
         )
