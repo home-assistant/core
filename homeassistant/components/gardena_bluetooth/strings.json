@@ -22,6 +22,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "frost_warning": {
+        "name": "Frost"
+      },
       "sensor_connected_state": {
         "name": "Sensor connection"
       },
@@ -52,11 +55,44 @@
       },
       "sensor_threshold": {
         "name": "Sensor threshold"
+      },
+      "spray_distance": {
+        "name": "Distance"
+      },
+      "spray_sector": {
+        "name": "Sector"
       }
     },
     "sensor": {
       "activation_reason": {
         "name": "Activation reason"
+      },
+      "aqua_contour_error": {
+        "name": "Error",
+        "state": {
+          "charger_error": "Charger error",
+          "flash_error": "Flash error",
+          "no_error": "No error detected",
+          "no_water": "Not enough water",
+          "rotation_sensor_error": "Rotation sensor error",
+          "sprinkler_motor_error": "Sprinkler motor error",
+          "valve_motor_error": "Valve motor error"
+        }
+      },
+      "error_timestamp": {
+        "name": "Error timestamp"
+      },
+      "flow_statistics_current": {
+        "name": "Current flow"
+      },
+      "flow_statistics_overall": {
+        "name": "Overall flow"
+      },
+      "flow_statistics_reset_timestamp": {
+        "name": "Flow reset timestamp"
+      },
+      "flow_statistics_resettable": {
+        "name": "Flow since reset"
       },
       "remaining_open_timestamp": {
         "name": "Valve closing"
@@ -69,6 +105,12 @@
       },
       "sensor_type": {
         "name": "Sensor type"
+      },
+      "spray_current_distance": {
+        "name": "Current distance"
+      },
+      "spray_current_sector": {
+        "name": "Current sector"
       }
     },
     "switch": {

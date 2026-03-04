@@ -44,7 +44,7 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
 
-    entity_id = "switch.mock_title_open"
+    entity_id = "switch.timer_open"
     await setup_entry(hass, mock_entry, [Platform.SWITCH])
     assert hass.states.get(entity_id) == snapshot
 
@@ -61,7 +61,7 @@ async def test_switching(
 ) -> None:
     """Test switching makes correct calls."""
 
-    entity_id = "switch.mock_title_open"
+    entity_id = "switch.timer_open"
     await setup_entry(hass, mock_entry, [Platform.SWITCH])
     assert hass.states.get(entity_id)
 
