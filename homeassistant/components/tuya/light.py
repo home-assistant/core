@@ -665,8 +665,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     _white_color_mode = ColorMode.COLOR_TEMP
     _fixed_color_mode: ColorMode | None = None
-    _attr_min_color_temp_kelvin = 2000  # 500 Mireds
-    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
+    _attr_min_color_temp_kelvin = MIN_KELVIN
+    _attr_max_color_temp_kelvin = MAX_KELVIN
 
     def __init__(
         self,
