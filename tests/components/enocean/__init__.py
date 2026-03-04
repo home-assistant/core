@@ -5,6 +5,8 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 MODULE = "homeassistant.components.enocean"
 
+MOCK_SERIAL_BY_ID: str = "/dev/serial/by-id/enocean0"
+
 MOCK_USB_DEVICE: USBDevice = USBDevice(
     device="/dev/enocean0",
     vid="0403",

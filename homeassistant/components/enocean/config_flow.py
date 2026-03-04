@@ -61,16 +61,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        # normalize device path
-        discovery_info.device = await self.hass.async_add_executor_job(
-            get_serial_by_id, discovery_info.device
-        )
-        # set unique id
-        unique_id = usb_unique_id_from_service_info(discovery_info)
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: discovery_info.device}
-        )
+        await self.set_unique_id(discovery_info)
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
@@ -130,16 +121,10 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             if selected_device is None:
                 return self.async_abort(reason="unknown_device")
             selected_service = usb_service_info_from_device(selected_device)
-            # normalize device path
-            selected_service.device = await self.hass.async_add_executor_job(
-                get_serial_by_id, selected_service.device
-            )
-            # set unique id
-            unique_id = usb_unique_id_from_service_info(selected_service)
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_DEVICE: selected_service.device}
-            )
+
+            await self.set_unique_id(selected_service)
+            user_input[CONF_DEVICE] = selected_service.device
+
             return await self.async_step_manual(user_input)
 
         if len(self._ports) == 0:
@@ -198,3 +183,16 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
+
+    async def set_unique_id(self, usbServiceInfo: UsbServiceInfo):
+        """Normalize the USB device serial and set unique ID depending on it."""
+        # normalize device path
+        usbServiceInfo.device = await self.hass.async_add_executor_job(
+            get_serial_by_id, usbServiceInfo.device
+        )
+        # set unique id
+        unique_id = usb_unique_id_from_service_info(usbServiceInfo)
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: usbServiceInfo.device}
+        )

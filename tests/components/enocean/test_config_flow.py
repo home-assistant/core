@@ -16,7 +16,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_USB_DEVICE, MOCK_USB_SERVICE_INFO, MODULE
+from . import MOCK_SERIAL_BY_ID, MOCK_USB_DEVICE, MOCK_USB_SERVICE_INFO, MODULE
 
 from tests.common import MockConfigEntry
 
@@ -80,6 +80,10 @@ async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
             f"{MODULE}.dongle.validate_path",
             return_value=True,
         ),
+        patch(
+            f"{MODULE}.config_flow.get_serial_by_id",
+            return_value=MOCK_SERIAL_BY_ID,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -89,7 +93,7 @@ async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
 
     assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DEVICE] == MOCK_USB_DEVICE.device
+    assert result["data"][CONF_DEVICE] == MOCK_SERIAL_BY_ID
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
 
 
@@ -153,7 +157,7 @@ async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
     with patch(
         f"{MODULE}.config_flow.get_serial_by_id",
-        side_effect=lambda x: x,
+        return_value=MOCK_SERIAL_BY_ID,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -219,7 +223,7 @@ async def test_usb_discovery(
     # test discovery step
     with patch(
         f"{MODULE}.config_flow.get_serial_by_id",
-        side_effect=lambda x: x,
+        return_value=MOCK_SERIAL_BY_ID,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -243,7 +247,7 @@ async def test_usb_discovery(
     assert result["data"] == {"device": MOCK_USB_SERVICE_INFO.device}
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
     assert result["context"]["title_placeholders"] == {
-        "name": "USB 300 - /dev/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
+        "name": "USB 300 - /dev/serial/by-id/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
     }
     assert result["result"].state is ConfigEntryState.LOADED
 
@@ -280,6 +284,10 @@ async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
+    assert result["description_placeholders"] == {
+        "device": MOCK_SERIAL_BY_ID,
+        "manufacturer": "EnOcean",
+    }
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
