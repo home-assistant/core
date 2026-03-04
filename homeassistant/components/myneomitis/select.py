@@ -9,7 +9,15 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyaxencoapi import PyAxencoAPI
+from pyaxencoapi import (
+    PRESET_MODE_MAP,
+    PRESET_MODE_MAP_RELAIS,
+    PRESET_MODE_MAP_UFH,
+    PRESET_MODE_SELECT_EXTRAS,
+    REVERSE_PRESET_MODE_MAP_RELAIS,
+    REVERSE_PRESET_MODE_MAP_UFH,
+    PyAxencoAPI,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
@@ -24,35 +32,14 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_MODELS: frozenset[str] = frozenset({"EWS"})
 SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"UFH"})
 
-PRESET_MODE_MAP = {
-    "comfort": 1,
-    "eco": 2,
-    "antifrost": 3,
-    "standby": 4,
-    "boost": 6,
-    "setpoint": 8,
-    "comfort_plus": 20,
-    "eco_1": 40,
-    "eco_2": 41,
-    "auto": 60,
+# Pilote select uses all base presets + the eco extras
+SELECT_PRESET_MODE_MAP: dict[str, int] = {
+    **PRESET_MODE_MAP,
+    **PRESET_MODE_SELECT_EXTRAS,
 }
-
-PRESET_MODE_MAP_RELAIS = {
-    "on": 1,
-    "off": 2,
-    "auto": 60,
+REVERSE_SELECT_PRESET_MODE_MAP: dict[int, str] = {
+    v: k for k, v in SELECT_PRESET_MODE_MAP.items()
 }
-
-PRESET_MODE_MAP_UFH = {
-    "heating": 0,
-    "cooling": 1,
-}
-
-REVERSE_PRESET_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
-
-REVERSE_PRESET_MODE_MAP_RELAIS = {v: k for k, v in PRESET_MODE_MAP_RELAIS.items()}
-
-REVERSE_PRESET_MODE_MAP_UFH = {v: k for k, v in PRESET_MODE_MAP_UFH.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,9 +63,9 @@ SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
     "pilote": MyNeoSelectEntityDescription(
         key="pilote",
         translation_key="pilote",
-        options=list(PRESET_MODE_MAP),
-        preset_mode_map=PRESET_MODE_MAP,
-        reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP,
+        options=list(SELECT_PRESET_MODE_MAP),
+        preset_mode_map=SELECT_PRESET_MODE_MAP,
+        reverse_preset_mode_map=REVERSE_SELECT_PRESET_MODE_MAP,
         state_key="targetMode",
     ),
     "ufh": MyNeoSelectEntityDescription(

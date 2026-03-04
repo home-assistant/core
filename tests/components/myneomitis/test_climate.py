@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, Mock
 
+from pyaxencoapi import Preset
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.myneomitis.climate import MyNeoClimate
-from homeassistant.components.myneomitis.const import Preset
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

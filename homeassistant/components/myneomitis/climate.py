@@ -5,7 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyaxencoapi import PyAxencoAPI
+from pyaxencoapi import (
+    PRESET_MODE_MAP,
+    PRESET_MODE_MODELS,
+    REVERSE_PRESET_MODE_MAP,
+    Preset,
+    PyAxencoAPI,
+)
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -19,13 +25,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MyNeomitisConfigEntry, process_connection_update
-from .const import (
-    DOMAIN,
-    PRESET_MODE_MAP,
-    PRESET_MODE_MODELS,
-    REVERSE_PRESET_MODE_MAP,
-    Preset,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +42,6 @@ async def async_setup_entry(
     api = config_entry.runtime_data.api
     devices = config_entry.runtime_data.devices
 
-    def _create_entity(device: dict[str, Any]) -> MyNeoClimate:
-        return MyNeoClimate(api, device)
-
     climate_entities: list[MyNeoClimate] = []
     for device in devices:
         model = device.get("model")
@@ -56,7 +53,7 @@ async def async_setup_entry(
             _LOGGER.warning("Skipping device without _id: %s", device.get("name"))
             continue
 
-        climate_entities.append(_create_entity(device))
+        climate_entities.append(MyNeoClimate(api, device))
 
     if climate_entities:
         async_add_entities(climate_entities)
