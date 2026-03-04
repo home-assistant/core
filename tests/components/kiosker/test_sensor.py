@@ -35,7 +35,6 @@ async def test_sensors_setup(
         mock_status.battery_state = "charging"
         mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
         mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
-        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
 
         mock_screensaver = MagicMock()
         mock_screensaver.visible = True
@@ -75,7 +74,6 @@ async def test_sensors_setup(
         "sensor.kiosker_a98be1ce_last_interaction",
         "sensor.kiosker_a98be1ce_last_motion",
         "sensor.kiosker_a98be1ce_ambient_light",
-        "sensor.kiosker_a98be1ce_last_update",
     ]
 
     for sensor_id in expected_sensors:
@@ -112,7 +110,6 @@ async def test_battery_level_sensor(
         mock_status.battery_state = "charging"
         mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
         mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
-        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
 
         mock_api.status.return_value = mock_status
 
@@ -174,7 +171,6 @@ async def test_last_interaction_sensor(
         mock_status.battery_state = "charging"
         mock_status.last_interaction = datetime.fromisoformat("2026-03-03T22:41:09Z")
         mock_status.last_motion = datetime.fromisoformat("2025-03-03T22:40:09Z")
-        mock_status.last_update = datetime.fromisoformat("2026-01-03T12:41:09Z")
 
         mock_api.status.return_value = mock_status
 
@@ -234,7 +230,6 @@ async def test_last_motion_sensor(
         mock_status.battery_state = "charging"
         mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
         mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
-        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
 
         mock_api.status.return_value = mock_status
 
@@ -271,66 +266,6 @@ async def test_last_motion_sensor(
     assert state.attributes["device_class"] == "timestamp"
 
 
-async def test_last_update_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test last update sensor."""
-    with patch(
-        "homeassistant.components.kiosker.coordinator.KioskerAPI"
-    ) as mock_api_class:
-        # Setup mock API
-        mock_api = MagicMock()
-        mock_api.host = "10.0.1.5"
-        mock_api_class.return_value = mock_api
-
-        # Setup mock data
-        mock_status = MagicMock()
-        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
-        mock_status.model = "iPad Pro"
-        mock_status.os_version = "18.0"
-        mock_status.app_name = "Kiosker"
-        mock_status.app_version = "25.1.1"
-        mock_status.battery_level = 85
-        mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
-        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
-
-        mock_api.status.return_value = mock_status
-
-        # Add the config entry
-        mock_config_entry.add_to_hass(hass)
-
-        # Setup the integration
-        with patch(
-            "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
-        ) as mock_update:
-            mock_update.return_value = KioskerData(
-                status=mock_status,
-                screensaver=None,
-                blackout=None,
-            )
-
-            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-            await hass.async_block_till_done()
-
-            # Manually set coordinator data and trigger update
-            coordinator = mock_config_entry.runtime_data
-            coordinator.data = KioskerData(
-                status=mock_status,
-                screensaver=None,
-                blackout=None,
-            )
-            coordinator.async_update_listeners()
-            await hass.async_block_till_done()
-
-    # Check last update sensor
-    state = hass.states.get("sensor.kiosker_a98be1ce_last_update")
-    assert state is not None
-    assert state.state == "2025-01-01T12:05:00+00:00"
-    assert state.attributes["device_class"] == "timestamp"
-
-
 async def test_ambient_light_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -354,7 +289,6 @@ async def test_ambient_light_sensor(
         mock_status.battery_state = "charging"
         mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
         mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
-        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
         mock_status.ambient_light = 2.6
 
         mock_api.status.return_value = mock_status
@@ -444,7 +378,6 @@ async def test_sensors_missing_data(
         "sensor.kiosker_a98be1ce_last_interaction",
         "sensor.kiosker_a98be1ce_last_motion",
         "sensor.kiosker_a98be1ce_ambient_light",
-        "sensor.kiosker_a98be1ce_last_update",
     ]
 
     for sensor_id in sensors_with_unknown_state:
@@ -476,7 +409,6 @@ async def test_sensor_unique_ids(
         mock_status.battery_state = "charging"
         mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
         mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
-        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
 
         mock_api.status.return_value = mock_status
 
@@ -514,7 +446,6 @@ async def test_sensor_unique_ids(
         ("sensor.kiosker_test_sen_last_interaction", "TEST_SENSOR_ID_lastInteraction"),
         ("sensor.kiosker_test_sen_last_motion", "TEST_SENSOR_ID_lastMotion"),
         ("sensor.kiosker_test_sen_ambient_light", "TEST_SENSOR_ID_ambientLight"),
-        ("sensor.kiosker_test_sen_last_update", "TEST_SENSOR_ID_lastUpdate"),
     ]
 
     for entity_id, expected_unique_id in expected_unique_ids:

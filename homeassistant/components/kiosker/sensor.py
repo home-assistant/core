@@ -59,12 +59,6 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.ambient_light,
     ),
-    KioskerSensorEntityDescription(
-        key="lastUpdate",
-        translation_key="last_update",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: x.last_update,
-    ),
 )
 
 

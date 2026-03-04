@@ -15,9 +15,6 @@
       },
       "last_motion": {
         "default": "mdi:motion-sensor"
-      },
-      "last_update": {
-        "default": "mdi:update"
       }
     }
   }

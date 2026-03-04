@@ -67,9 +67,6 @@
           "unknown": "Unknown"
         }
       },
-      "last_interaction": {
-        "name": "Last interaction"
-      },
       "last_motion": {
         "name": "Last motion"
       },
