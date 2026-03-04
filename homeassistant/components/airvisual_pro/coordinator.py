@@ -55,7 +55,7 @@ class AirVisualProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=UPDATE_INTERVAL,
         )
         self._node = node
-        self.reload_task: asyncio.Task[None] | None = None
+        self.reload_task: asyncio.Task[bool] | None = None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get data from the device."""
