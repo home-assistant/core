@@ -19,12 +19,13 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
+from .helpers import is_granted
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -264,6 +265,11 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
+        if not is_granted(self.coordinator.permissions, p_type="nodes"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_permission_node_power",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
@@ -278,6 +284,11 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
+        if not is_granted(self.coordinator.permissions, p_type="vms"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_permission_vm_lxc_power",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
@@ -293,6 +304,12 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
+        # Container power actions fall under vms
+        if not is_granted(self.coordinator.permissions, p_type="vms"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_permission_vm_lxc_power",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,

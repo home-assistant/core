@@ -175,6 +175,9 @@
     }
   },
   "exceptions": {
+    "api_error_details": {
+      "message": "An error occurred while communicating with the Proxmox VE instance: {error}"
+    },
     "api_error_no_details": {
       "message": "An error occurred while communicating with the Proxmox VE instance."
     },
@@ -192,6 +195,15 @@
     },
     "no_nodes_found": {
       "message": "No active nodes were found on the Proxmox VE server."
+    },
+    "no_permission_node_power": {
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "no_permission_vm_lxc_power": {
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "permissions_error": {
+      "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
     "ssl_error": {
       "message": "An SSL error occurred: {error}"
