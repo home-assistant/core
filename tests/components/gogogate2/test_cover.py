@@ -115,6 +115,7 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
         "device_class": "garage",
         "door_id": 1,
         "friendly_name": "Door1",
+        "is_closed": False,
         "supported_features": CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
     }
 
@@ -254,6 +255,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "device_class": "garage",
         "door_id": 1,
         "friendly_name": "Door1",
+        "is_closed": True,
         "supported_features": CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
     }
 

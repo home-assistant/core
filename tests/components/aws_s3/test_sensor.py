@@ -90,7 +90,7 @@ async def test_calculate_backups_size(
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    test_backup: AgentBackup,
+    mock_agent_backup: AgentBackup,
     config_entry_extra_data: dict,
     expected_pagination_call: dict,
 ) -> None:
@@ -104,7 +104,7 @@ async def test_calculate_backups_size(
     assert state.state == "0.0"
 
     # Add a backup
-    metadata_content = json.dumps(test_backup.as_dict())
+    metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
     mock_client.get_object.return_value = {"Body": mock_body}
