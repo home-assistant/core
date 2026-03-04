@@ -745,6 +745,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     blanching = 2020
     bottling = 2021
     sterilize_crockery = 2022
+    soak = 2027
     reheating_with_microwave = 2029
     defrosting_with_microwave = 2030
     artichokes_small = 2031
