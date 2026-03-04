@@ -159,14 +159,15 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self._attr_volume_level = None
         self._attr_is_volume_muted = None
         self._attr_sound_mode = None
-        self._current_input = None
         self._attr_sound_mode_list = []
+        self._attr_app_name = None
+        self._current_input = None
+        self._current_app_config = None
+        self._available_apps = []
 
         # Handle device off
         if not data.is_on:
             self._attr_state = MediaPlayerState.OFF
-            self._attr_app_name = None
-            self._current_app_config = None
             super()._handle_coordinator_update()
             return
 
