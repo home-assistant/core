@@ -39,7 +39,7 @@ async def test_create_snapshot_vm_uses_core_version(
     sanitized = HA_VERSION.replace(".", "_")
     assert call_kwargs["snapname"] == f"Home_Assistant_{sanitized}"
     assert call_kwargs["description"] == HA_VERSION
-    assert call_kwargs["vmstate"] == 0
+    assert "vmstate" not in call_kwargs
 
 
 async def test_create_snapshot_vm_include_ram(
@@ -149,7 +149,7 @@ async def test_create_snapshot_by_vm_device_id(
     call_kwargs = snapshot_mock.call_args.kwargs
     sanitized = HA_VERSION.replace(".", "_")
     assert call_kwargs["snapname"] == f"Home_Assistant_{sanitized}"
-    assert call_kwargs["vmstate"] == 0
+    assert "vmstate" not in call_kwargs
 
 
 async def test_create_snapshot_by_container_device_id(

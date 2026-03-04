@@ -214,11 +214,20 @@ def _create_snapshot_blocking(
     VMs support saving RAM state (vmstate); LXC containers do not.
     """
     if resource_type is _ResourceType.VM:
-        coordinator.proxmox.nodes(node).qemu(vmid).snapshot.post(
-            snapname=snapname,
-            description=description,
-            vmstate=1 if include_ram else 0,
+        _LOGGER.debug(
+            "Creating VM snapshot %s on %s/%s (include_ram=%s)",
+            snapname,
+            node,
+            vmid,
+            include_ram,
         )
+        kwargs: dict[str, object] = {
+            "snapname": snapname,
+            "description": description,
+        }
+        if include_ram:
+            kwargs["vmstate"] = 1
+        coordinator.proxmox.nodes(node).qemu(vmid).snapshot.post(**kwargs)
     else:
         coordinator.proxmox.nodes(node).lxc(vmid).snapshot.post(
             snapname=snapname,
