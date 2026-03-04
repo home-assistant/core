@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from datetime import datetime
 from typing import Any
 
 from uiprotect.data import ModelType
@@ -97,7 +98,10 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
             and not self._event_already_ended(prev_event, prev_event_end)
             and event.type is EventType.RING
         ):
-            self._trigger_event(EVENT_TYPE_DOORBELL_RING, {ATTR_EVENT_ID: event.id})
+            self._trigger_event(
+                EVENT_TYPE_DOORBELL_RING,
+                {ATTR_EVENT_ID: event.id, ATTR_EVENT_START: event.start},
+            )
             self.async_write_ha_state()
 
 
@@ -204,6 +208,7 @@ class ProtectDeviceVehicleEventEntity(
     entity_description: ProtectEventEntityDescription
     _thumbnail_timer_cancel: CALLBACK_TYPE | None = None
     _latest_event_id: str | None = None
+    _latest_event_start: datetime | None = None
     _latest_thumbnails: list[EventDetectedThumbnail] | None = None
     _thumbnail_timer_due: float = 0.0  # Loop time when timer should fire
     _fired_event_id: str | None = None  # Track last fired event to prevent duplicates
@@ -289,17 +294,23 @@ class ProtectDeviceVehicleEventEntity(
             thumbnails: Pre-stored thumbnails to use. If None, fetches from
                 the current event (used when event is still active).
         """
+        event_start: datetime | None = None
         if thumbnails is None:
             # No stored thumbnails; try to get from current event
             event = self.entity_description.get_event_obj(self.device)
             if not event or event.id != event_id:
                 return
             thumbnails = self._get_vehicle_thumbnails(event)
+            event_start = event.start
+        else:
+            event_start = self._latest_event_start
 
         if not thumbnails:
             return
 
         event_data = self._build_event_data(event_id, thumbnails)
+        if event_start is not None:
+            event_data[ATTR_EVENT_START] = event_start
 
         # Prevent duplicate firing of same event with same data
         if self._fired_event_id == event_id and self._fired_event_data == event_data:
@@ -354,6 +365,7 @@ class ProtectDeviceVehicleEventEntity(
             # Store event data and extend/start the timer
             # Timer extension allows better thumbnails (with LPR) to arrive
             self._latest_event_id = event.id
+            self._latest_event_start = event.start
             self._latest_thumbnails = thumbnails
             self._thumbnail_timer_due = (
                 self.hass.loop.time() + VEHICLE_EVENT_DELAY_SECONDS

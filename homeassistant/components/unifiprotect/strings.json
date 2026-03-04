@@ -269,6 +269,9 @@
       "doorbell": {
         "name": "[%key:component::event::entity_component::doorbell::name%]",
         "state_attributes": {
+          "event_start": {
+            "name": "Event start"
+          },
           "event_type": {
             "state": {
               "ring": "Ring"
@@ -306,6 +309,9 @@
       "vehicle": {
         "name": "Vehicle",
         "state_attributes": {
+          "event_start": {
+            "name": "Event start"
+          },
           "event_type": {
             "state": {
               "detected": "Detected"
