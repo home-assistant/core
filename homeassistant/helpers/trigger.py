@@ -869,14 +869,14 @@ def make_entity_numerical_state_attribute_crossed_threshold_trigger(
 
 
 def make_entity_numerical_state_changed_trigger(
-    domain: str,
+    domains: set[str],
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state change."""
 
     class CustomTrigger(EntityNumericalStateChangedTriggerBase):
         """Trigger for numerical state changes."""
 
-        _domain = domain
+        _domains = domains
 
     return CustomTrigger
 
