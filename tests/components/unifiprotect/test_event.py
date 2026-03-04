@@ -18,6 +18,7 @@ from uiprotect.data import (
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_START,
     DEFAULT_ATTRIBUTION,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
@@ -115,6 +116,7 @@ async def test_doorbell_ring(
     timestamp = state.state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert state.attributes[ATTR_EVENT_START] == fixed_now - timedelta(seconds=1)
 
     event = Event(
         model=ModelType.EVENT,
@@ -245,6 +247,7 @@ async def test_doorbell_nfc_scanned(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert state.attributes[ATTR_EVENT_START] == fixed_now - timedelta(seconds=1)
     assert state.attributes["nfc_id"] == "test_nfc_id"
     assert state.attributes["full_name"] == test_user_full_name
 
@@ -518,6 +521,7 @@ async def test_doorbell_fingerprint_identified(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert state.attributes[ATTR_EVENT_START] == fixed_now - timedelta(seconds=1)
     assert state.attributes["ulp_id"] == ulp_id
     assert state.attributes["full_name"] == test_user_full_name
 
@@ -779,6 +783,7 @@ async def test_vehicle_detection_basic(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_vehicle_event_id"
+    assert state.attributes[ATTR_EVENT_START] == fixed_now - timedelta(seconds=1)
     assert state.attributes["confidence"] == 95
     assert "clock_best_wall" in state.attributes
     assert "license_plate" not in state.attributes
