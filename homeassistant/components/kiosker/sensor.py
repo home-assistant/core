@@ -31,7 +31,7 @@ PARALLEL_UPDATES = 0
 class KioskerSensorEntityDescription(SensorEntityDescription):
     """Kiosker sensor description."""
 
-    value_fn: Callable[[Status], StateType | datetime]
+    value_fn: Callable[[Status], StateType | datetime | None]
 
 
 SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
