@@ -1,5 +1,9 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "reconfigure_successful": "Reconfiguration was successful."
+    },
     "error": {
       "invalid_ip": "The IP address entered is not valid.",
       "unknown": "An unexpected error occurred."
