@@ -111,7 +111,7 @@ async def async_setup_entry(
     """Set up AirVisual sensors based on a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        AirVisualGeographySensor(coordinator, entry, description, locale)
+        AirVisualGeographySensor(coordinator, description, locale)
         for locale in GEOGRAPHY_SENSOR_LOCALES
         for description in GEOGRAPHY_SENSOR_DESCRIPTIONS
     )
@@ -123,13 +123,13 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     def __init__(
         self,
         coordinator: AirVisualDataUpdateCoordinator,
-        entry: AirVisualConfigEntry,
         description: SensorEntityDescription,
         locale: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, description)
 
+        entry = coordinator.config_entry
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: entry.data.get(CONF_CITY),
