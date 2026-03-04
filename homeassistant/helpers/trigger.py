@@ -165,7 +165,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     )
 
     await async_process_integration_platforms(
-        hass, "trigger", _register_trigger_platform, wait_for_platforms=True
+        hass, "trigger", async_register_trigger_platform, wait_for_platforms=True
     )
 
 
@@ -184,7 +184,7 @@ def async_subscribe_platform_events(
     return remove_subscription
 
 
-async def _register_trigger_platform(
+async def async_register_trigger_platform(
     hass: HomeAssistant, integration_domain: str, platform: TriggerProtocol
 ) -> None:
     """Register a trigger platform and notify listeners.
