@@ -418,7 +418,7 @@ def mock_sensor_statistics():
             "stat": {"start": start},
         }
 
-    def get_fake_stats(_hass, session, start, _end):
+    def get_fake_stats(_hass, session, start, _end, _custom_equivalent_units):
         instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
@@ -3779,6 +3779,9 @@ async def test_recorder_platform_with_statistics(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
+    def _mock_custom_equivalent_units(*args: Any) -> dict[str, dict[str, str]]:
+        return {}
+
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
         return {}
 
@@ -3787,6 +3790,7 @@ async def test_recorder_platform_with_statistics(
 
     recorder_platform = Mock(
         compile_statistics=Mock(wraps=_mock_compile_statistics),
+        custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
         list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
         update_statistics_issues=Mock(),
         validate_statistics=Mock(wraps=_mock_validate_statistics),
@@ -3799,6 +3803,7 @@ async def test_recorder_platform_with_statistics(
     assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
 
     recorder_platform.compile_statistics.assert_not_called()
+    recorder_platform.custom_equivalent_units.assert_not_called()
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.update_statistics_issues.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
@@ -3811,8 +3816,9 @@ async def test_recorder_platform_with_statistics(
     await async_wait_recording_done(hass)
 
     recorder_platform.compile_statistics.assert_called_once_with(
-        hass, ANY, zero, zero + timedelta(minutes=5)
+        hass, ANY, zero, zero + timedelta(minutes=5), {}
     )
+    recorder_platform.custom_equivalent_units.assert_called_once()
     recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
@@ -3820,6 +3826,7 @@ async def test_recorder_platform_with_statistics(
     # Test list statistic IDs
     await async_list_statistic_ids(hass)
     recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.custom_equivalent_units.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once_with(
         hass, statistic_ids=None, statistic_type=None
     )
@@ -3857,6 +3864,7 @@ async def test_recorder_platform_without_statistics(
     "supported_methods",
     [
         ("compile_statistics",),
+        ("custom_equivalent_units",),
         ("list_statistic_ids",),
         ("update_statistics_issues",),
         ("validate_statistics",),
@@ -3876,6 +3884,9 @@ async def test_recorder_platform_with_partial_statistics_support(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
+    def _mock_custom_equivalent_units() -> dict:
+        return {}
+
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
         return {}
 
@@ -3884,6 +3895,7 @@ async def test_recorder_platform_with_partial_statistics_support(
 
     mock_impl = {
         "compile_statistics": _mock_compile_statistics,
+        "custom_equivalent_units": _mock_custom_equivalent_units,
         "list_statistic_ids": _mock_list_statistic_ids,
         "update_statistics_issues": None,
         "validate_statistics": _mock_validate_statistics,

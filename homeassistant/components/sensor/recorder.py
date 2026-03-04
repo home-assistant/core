@@ -85,6 +85,9 @@ EQUIVALENT_UNITS = {
     "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
 } | AMBIGUOUS_UNITS
 
+# Populated by each integration's recorder platform implementation
+_custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
+
 
 # Keep track of entities for which a warning about decreasing value has been logged
 SEEN_DIP: HassKey[set[str]] = HassKey(f"{DOMAIN}_seen_total_increasing_dip")
@@ -204,12 +207,14 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
 
 
-def _equivalent_units(units: set[str | None]) -> bool:
+def _equivalent_units(units: set[str | None], entity_id: str) -> bool:
     """Return True if the units are equivalent."""
     if len(units) == 1:
         return True
+    custom_entity_units = _custom_equivalent_units_per_entity.get(entity_id, {})
+    all_equivalent_units = EQUIVALENT_UNITS | custom_entity_units
     units = {
-        EQUIVALENT_UNITS[unit] if unit in EQUIVALENT_UNITS else unit  # noqa: SIM401
+        all_equivalent_units[unit] if unit in all_equivalent_units else unit  # noqa: SIM401
         for unit in units
     }
     return len(units) == 1
@@ -306,7 +311,7 @@ def _normalize_states(
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
-        if not _equivalent_units(all_units):
+        if not _equivalent_units(all_units, entity_id):
             if WARN_UNSTABLE_UNIT not in hass.data:
                 hass.data[WARN_UNSTABLE_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
@@ -508,8 +513,11 @@ def compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
+    custom_units_for_entities: dict[str, dict[str, str]],
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
+    _custom_equivalent_units_per_entity.update(custom_units_for_entities)
+
     result: list[StatisticResult] = []
 
     sensor_states = _get_sensor_states(hass)
@@ -607,7 +615,7 @@ def compile_statistics(  # noqa: C901
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
             if not _equivalent_units(
-                {old_metadata[1]["unit_of_measurement"], statistics_unit}
+                {old_metadata[1]["unit_of_measurement"], statistics_unit}, entity_id
             ):
                 if WARN_UNSTABLE_UNIT not in hass.data:
                     hass.data[WARN_UNSTABLE_UNIT] = set()
@@ -873,7 +881,9 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if numeric and not _equivalent_units({state_unit, metadata_unit}):
+                if numeric and not _equivalent_units(
+                    {state_unit, metadata_unit}, entity_id
+                ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
                         UNITS_CHANGED_ISSUE,
