@@ -19,7 +19,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_API_TOKEN, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN
@@ -43,11 +42,13 @@ STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> tuple[dict[str, str], str | None]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    Returns title and device_id for config entry setup.
+    Returns a tuple of (errors dict, device_id). If validation succeeds, errors will be empty.
     """
     api = KioskerAPI(
         host=data[CONF_HOST],
@@ -60,29 +61,28 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         # Test connection by getting status
         status = await hass.async_add_executor_job(api.status)
-    except ConnectionError as exc:
-        raise CannotConnect from exc
-    except (AuthenticationError, IPAuthenticationError) as exc:
-        raise InvalidAuth from exc
-    except TLSVerificationError as exc:
-        raise TLSError from exc
-    except BadRequestError as exc:
-        raise BadRequest from exc
-    except PingError as exc:
-        raise CannotConnect from exc
-    except Exception as exc:
+    except ConnectionError:
+        return ({"base": "cannot_connect"}, None)
+    except AuthenticationError:
+        return ({"base": "invalid_auth"}, None)
+    except IPAuthenticationError:
+        return ({"base": "invalid_ip_auth"}, None)
+    except TLSVerificationError:
+        return ({"base": "tls_error"}, None)
+    except BadRequestError:
+        return ({"base": "bad_request"}, None)
+    except PingError:
+        return ({"base": "cannot_connect"}, None)
+    except Exception:
         _LOGGER.exception("Unexpected exception while connecting to Kiosker")
-        raise CannotConnect from exc
+        return ({"base": "unknown"}, None)
 
     # Ensure we have a device_id from the status response
     if not hasattr(status, "device_id") or not status.device_id:
         _LOGGER.error("Device did not return a valid device_id")
-        raise CannotConnect
+        return ({"base": "cannot_connect"}, None)
 
-    device_id = status.device_id
-    # Use first 8 characters of device_id for consistency with entity naming
-    display_id = device_id[:8] if len(device_id) > 8 else device_id
-    return {"title": f"Kiosker {display_id}", "device_id": device_id}
+    return ({}, status.device_id)
 
 
 class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -106,27 +106,18 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except TLSError:
-                errors["base"] = "tls_error"
-            except BadRequest:
-                errors["base"] = "bad_request"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during validation")
-                errors["base"] = "unknown"
-            else:
+            validation_errors, device_id = await validate_input(self.hass, user_input)
+            if validation_errors:
+                errors.update(validation_errors)
+            elif device_id:
                 # Use device ID as unique identifier
-                await self.async_set_unique_id(
-                    info["device_id"], raise_on_progress=False
-                )
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=info["title"], data=user_input)
+                # Use first 8 characters of device_id for consistency with entity naming
+                display_id = device_id[:8] if len(device_id) > 8 else device_id
+                title = f"Kiosker {display_id}"
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -197,18 +188,14 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
             }
 
-            try:
-                info = await validate_input(self.hass, config_data)
-            except CannotConnect:
-                errors[CONF_API_TOKEN] = "cannot_connect"
-            except InvalidAuth:
-                errors[CONF_API_TOKEN] = "invalid_auth"
-            except TLSError:
-                errors["base"] = "tls_error"
-            except BadRequest:
-                errors["base"] = "bad_request"
-            else:
-                return self.async_create_entry(title=info["title"], data=config_data)
+            validation_errors, device_id = await validate_input(self.hass, config_data)
+            if validation_errors:
+                errors.update(validation_errors)
+            elif device_id:
+                # Use first 8 characters of device_id for consistency with entity naming
+                display_id = device_id[:8] if len(device_id) > 8 else device_id
+                title = f"Kiosker {display_id}"
+                return self.async_create_entry(title=title, data=config_data)
 
         # Show form to get API token for discovered device
         return self.async_show_form(
@@ -217,19 +204,3 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class TLSError(HomeAssistantError):
-    """Error to indicate TLS verification failed."""
-
-
-class BadRequest(HomeAssistantError):
-    """Error to indicate bad request."""

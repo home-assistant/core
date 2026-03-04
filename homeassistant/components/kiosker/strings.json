@@ -8,6 +8,7 @@
       "bad_request": "Invalid request. Check your configuration.",
       "cannot_connect": "Failed to connect to the Kiosker device.",
       "invalid_auth": "Authentication failed. Check your API token.",
+      "invalid_ip_auth": "IP authentication failed. Check your IP whitelist.",
       "tls_error": "TLS verification failed. Check your SSL settings.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

@@ -78,8 +78,14 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
             status, blackout, screensaver = await self.hass.async_add_executor_job(
                 self._fetch_all_data
             )
-        except (AuthenticationError, IPAuthenticationError) as exc:
-            raise ConfigEntryAuthFailed("Authentication failed") from exc
+        except AuthenticationError as exc:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed. Check your API token."
+            ) from exc
+        except IPAuthenticationError as exc:
+            raise ConfigEntryAuthFailed(
+                "IP authentication failed. Check your IP whitelist."
+            ) from exc
         except (ConnectionError, PingError) as exc:
             raise UpdateFailed(f"Connection failed: {exc}") from exc
         except TLSVerificationError as exc:
