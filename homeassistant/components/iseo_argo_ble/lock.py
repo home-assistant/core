@@ -3,9 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta, timezone
 from typing import Any
+
+from iseo_argo_ble import (
+    IseoAuthError,
+    IseoClient,
+    IseoConnectionError,
+    LockState,
+    UserSubType,
+)
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
@@ -15,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-
-from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockState, UserSubType
 
 from .const import (
     CONF_ADDRESS,
@@ -133,7 +139,7 @@ class IseoLockEntity(LockEntity):
                     )
                 )
                 state: LockState = await self.client.read_state()
-        except (IseoConnectionError, IseoAuthError, asyncio.TimeoutError, OSError) as exc:
+        except (TimeoutError, IseoConnectionError, IseoAuthError, OSError) as exc:
             _LOGGER.debug("State poll failed: %s", exc)
             return
 
@@ -160,7 +166,7 @@ class IseoLockEntity(LockEntity):
             return
         if (
             self._poll_suppress_until
-            and datetime.now(tz=timezone.utc) < self._poll_suppress_until
+            and datetime.now(tz=UTC) < self._poll_suppress_until
         ):
             return
 
@@ -177,8 +183,8 @@ class IseoLockEntity(LockEntity):
     def _set_unlocked(self) -> None:
         self._attr_is_unlocking = False
         self._attr_is_locked = False
-        self._poll_suppress_until = (
-            datetime.now(tz=timezone.utc) + timedelta(seconds=_RELOCK_DELAY)
+        self._poll_suppress_until = datetime.now(tz=UTC) + timedelta(
+            seconds=_RELOCK_DELAY
         )
         self.async_write_ha_state()
 
@@ -227,7 +233,7 @@ class IseoLockEntity(LockEntity):
                 translation_domain=DOMAIN,
                 translation_key="lock_rejected_identity",
             ) from exc
-        except (IseoConnectionError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, IseoConnectionError) as exc:
             self._set_locked()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -6,17 +6,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.iseo_argo_ble.const import (
-    CONF_ADDRESS,
-    CONF_UUID,
-    DOMAIN,
-)
+from homeassistant.components.iseo_argo_ble.const import CONF_ADDRESS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 from . import MOCK_ADDRESS, MOCK_SERVICE_INFO
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -24,12 +20,15 @@ def _patch_identity() -> None:
     """Patch identity generation to avoid real crypto in config flow tests."""
     mock_priv = MagicMock()
     mock_priv.private_numbers.return_value = MagicMock(private_value=12345678)
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow._generate_identity",
-        return_value=mock_priv,
-    ), patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.async_ble_device_from_address",
-        return_value=MagicMock(),
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.config_flow._generate_identity",
+            return_value=mock_priv,
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.config_flow.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
     ):
         yield
 

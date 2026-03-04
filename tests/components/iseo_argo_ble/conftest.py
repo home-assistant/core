@@ -13,9 +13,9 @@ from homeassistant.components.iseo_argo_ble.const import (
     DOMAIN,
 )
 
-from tests.common import MockConfigEntry
-
 from . import MOCK_ADDRESS, MOCK_PRIV_SCALAR, MOCK_UUID_HEX
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -65,12 +65,15 @@ def mock_iseo_client() -> Generator[MagicMock]:
     client.gw_register_log_notif = AsyncMock(return_value=None)
     client.update_ble_device = MagicMock()
 
-    with patch(
-        "homeassistant.components.iseo_argo_ble.IseoClient",
-        return_value=client,
-    ), patch(
-        "homeassistant.components.iseo_argo_ble.lock.IseoClient",
-        return_value=client,
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.IseoClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.IseoClient",
+            return_value=client,
+        ),
     ):
         yield client
 

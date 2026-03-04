@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 import logging
-import uuid as uuid_module
 from typing import Any
+import uuid as uuid_module
 
-import voluptuous as vol
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
+from iseo_argo_ble import (
+    IseoAuthError,
+    IseoClient,
+    IseoConnectionError,
+    UserSubType,
+    is_iseo_advertisement,
+)
+import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -27,15 +31,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, UserSubType, is_iseo_advertisement
-
-from .const import (
-    CONF_ADDRESS,
-    CONF_PRIV_SCALAR,
-    CONF_USER_SUBTYPE,
-    CONF_UUID,
-    DOMAIN,
-)
+from .const import CONF_ADDRESS, CONF_PRIV_SCALAR, CONF_USER_SUBTYPE, CONF_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,9 +103,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._address = address
             self._device_name = (
-                self._discovered[address].name
-                if address in self._discovered
-                else ""
+                self._discovered[address].name if address in self._discovered else ""
             )
             self._uuid_hex = new_uuid.hex()
             self._priv_scalar = hex(priv_int)
@@ -129,8 +123,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         configured = {
-            entry.data.get(CONF_ADDRESS)
-            for entry in self._async_current_entries()
+            entry.data.get(CONF_ADDRESS) for entry in self._async_current_entries()
         }
 
         return self.async_show_form(
