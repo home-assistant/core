@@ -258,14 +258,14 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         elif enqueue == MediaPlayerEnqueue.ADD:
             command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id], command)
+            self.session_id, [media_id], command
+        )
 
-    def play_media_shuffle(
-        self, media_type: MediaType | str, media_id: str
-    ) -> None:
+    def play_media_shuffle(self, media_type: MediaType | str, media_id: str) -> None:
         """Play a piece of media on shuffle."""
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id], "PlayShuffle")
+            self.session_id, [media_id], "PlayShuffle"
+        )
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

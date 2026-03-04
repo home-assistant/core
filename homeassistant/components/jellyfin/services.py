@@ -30,6 +30,7 @@ JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
     if (k != ATTR_MEDIA_ANNOUNCE and k != ATTR_MEDIA_ENQUEUE)
 }
 
+
 def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     """If 'media' key exists, promote its fields to the top level."""
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
@@ -47,6 +48,7 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
         del data[ATTR_MEDIA]
     return data
 
+
 def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Create validator that renames keys.
 
@@ -54,11 +56,13 @@ def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
     Async friendly.
     """
+
     def rename(value: dict[str, Any]) -> dict[str, Any]:
         for to_key, from_key in keys.items():
             if from_key in value:
                 value[to_key] = value.pop(from_key)
         return value
+
     return rename
 
 
@@ -69,7 +73,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return
 
     # the player service
-    async def play_media_shuffle_service_handler(entity: MediaPlayerEntity, call: ServiceCall) -> None:
+    async def play_media_shuffle_service_handler(
+        entity: MediaPlayerEntity, call: ServiceCall
+    ) -> None:
         if not isinstance(entity, JellyfinMediaPlayer):
             return
 

@@ -253,6 +253,7 @@ async def test_services(
     )
     assert len(mock_api.remote_unmute.mock_calls) == 1
 
+
 async def test_services_enqueue(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

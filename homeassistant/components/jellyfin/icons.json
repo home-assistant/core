@@ -8,7 +8,7 @@
   },
   "services": {
     "play_media_shuffle": {
-      "default": "mdi:shuffle-variant"
+      "service": "mdi:shuffle-variant"
     }
   }
 }
