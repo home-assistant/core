@@ -175,7 +175,6 @@ async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data={CONF_DEVICE: MOCK_USB_DEVICE.device},
         )
-    assert result == {}
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
