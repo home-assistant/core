@@ -20,8 +20,6 @@ from . import MOCK_USB_DEVICE, MOCK_USB_SERVICE_INFO, MODULE
 
 from tests.common import MockConfigEntry
 
-DONGLE_VALIDATE_PATH_METHOD = f"{MODULE}.dongle.validate_path"
-
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that the user flow aborts if an instance is already configured."""
@@ -30,7 +28,7 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -134,7 +132,7 @@ async def test_user_flow_with_invalid_option(hass: HomeAssistant) -> None:
 async def test_user_flow_with_manual_path(hass: HomeAssistant) -> None:
     """Test the user flow with custom path selected."""
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)),
         patch(
             f"{MODULE}.config_flow.scan_serial_ports",
             Mock(return_value=[MOCK_USB_DEVICE]),
@@ -153,16 +151,20 @@ async def test_user_flow_with_manual_path(hass: HomeAssistant) -> None:
 
 async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USB},
-        data=MOCK_USB_SERVICE_INFO,
-    )
+    with patch(
+        f"{MODULE}.config_flow.get_serial_by_id",
+        side_effect=lambda x: x,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=MOCK_USB_SERVICE_INFO,
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
 
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)),
         patch(
             f"{MODULE}.config_flow.scan_serial_ports",
             Mock(return_value=[MOCK_USB_DEVICE]),
@@ -173,6 +175,7 @@ async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data={CONF_DEVICE: MOCK_USB_DEVICE.device},
         )
+    assert result == {}
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
@@ -181,7 +184,7 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the import flow with a valid path."""
     DATA_TO_IMPORT = {CONF_DEVICE: "/valid/path/to/import"}
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+    with patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -197,7 +200,7 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
     DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
 
     with patch(
-        DONGLE_VALIDATE_PATH_METHOD,
+        f"{MODULE}.dongle.validate_path",
         Mock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -231,7 +234,7 @@ async def test_usb_discovery(
 
     # test device path
     with (
-        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(f"{MODULE}.dongle.validate_path", Mock(return_value=True)),
         patch(f"{MODULE}.async_setup_entry", AsyncMock(return_value=True)),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
