@@ -17,11 +17,17 @@ _LOGGER = logging.getLogger(__name__)
 async def async_list_backups_from_s3(
     client: S3Client,
     bucket: str,
+    prefix: str,
 ) -> list[AgentBackup]:
     """List backups from an S3 bucket by reading metadata files."""
     paginator = client.get_paginator("list_objects_v2")
     metadata_files: list[dict[str, Any]] = []
-    async for page in paginator.paginate(Bucket=bucket):
+
+    list_kwargs: dict[str, Any] = {"Bucket": bucket}
+    if prefix:
+        list_kwargs["Prefix"] = prefix + "/"
+
+    async for page in paginator.paginate(**list_kwargs):
         metadata_files.extend(
             obj
             for obj in page.get("Contents", [])
