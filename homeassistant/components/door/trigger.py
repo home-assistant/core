@@ -1,11 +1,11 @@
 """Provides triggers for doors."""
 
-from homeassistant.components.cover import CoverState
-from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.components.cover import ATTR_IS_CLOSED
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.trigger import EntityTargetStateTriggerBase, Trigger
+from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 DEVICE_CLASS_DOOR = "door"
@@ -21,11 +21,17 @@ def get_device_class_or_undefined(
         return UNDEFINED
 
 
-class DoorOpenedTrigger(EntityTargetStateTriggerBase):
-    """Trigger for door opened state changes."""
+class DoorTriggerBase(EntityTriggerBase):
+    """Base trigger for door state changes.
+
+    Subclasses must set:
+    - _binary_sensor_target_state: the binary_sensor state to trigger on
+    - _cover_is_closed_target: the is_closed attribute value to trigger on
+    """
 
     _domains = {"binary_sensor", "cover"}
-    _to_states = {STATE_ON, CoverState.OPEN, CoverState.OPENING}
+    _binary_sensor_target_state: str
+    _cover_is_closed_target: bool
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities by door device class."""
@@ -35,6 +41,29 @@ class DoorOpenedTrigger(EntityTargetStateTriggerBase):
             for entity_id in entities
             if get_device_class_or_undefined(self._hass, entity_id) == DEVICE_CLASS_DOOR
         }
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the state matches the target door state."""
+        if split_entity_id(state.entity_id)[0] == "cover":
+            return state.attributes.get(ATTR_IS_CLOSED) == self._cover_is_closed_target
+        return state.state == self._binary_sensor_target_state
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the transition is valid for a door state change."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+        if split_entity_id(from_state.entity_id)[0] == "cover":
+            return from_state.attributes.get(ATTR_IS_CLOSED) != to_state.attributes.get(
+                ATTR_IS_CLOSED
+            )
+        return from_state.state != to_state.state
+
+
+class DoorOpenedTrigger(DoorTriggerBase):
+    """Trigger for door opened state changes."""
+
+    _binary_sensor_target_state = STATE_ON
+    _cover_is_closed_target = False
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
