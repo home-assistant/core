@@ -7,8 +7,8 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.helpers import discovery
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant import config_entries
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -41,15 +41,9 @@ PLATFORMS = [Platform.SENSOR]
 # Pull in the config flow - entry: ConfigEntry comes from the config flow.
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Wifi from a config entry."""
-    coordinator = GoogleWifiUpdateCoordinator(hass, entry)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except UpdateFailed as err:
-        # This triggers the automatic background retry logic
-        raise ConfigEntryNotReady(f"Timeout connecting to {entry.data[CONF_IP_ADDRESS]}") from err
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    # Store the entry data directly in hass.data
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

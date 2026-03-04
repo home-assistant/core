@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
+import requests
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -21,13 +22,13 @@ from .const import (
     ATTR_GROUP_ROLE,
     ATTR_LAST_RESTART,
     ATTR_LOCAL_IP,
-    ATTR_MODEL,
     ATTR_NEW_VERSION,
     ATTR_STATUS,
     ATTR_UPTIME,
     DOMAIN,
 )
-from .coordinator import GoogleWifiUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class GoogleWifiSensorEntityDescription(SensorEntityDescription):
@@ -43,76 +44,80 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Google Wifi sensor from a config entry."""
-    # Retrieve the data we stored in __init__.py
-    data = hass.data[DOMAIN][entry.entry_id]
-    ip_address = data["ip_address"]
-    device_name = data["name"]
-
-    # Create the coordinator to manage data updates
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    # Fetch initial data so we don't have empty sensors on startup
-    await coordinator.async_config_entry_first_refresh()
-
     # Add all sensors defined in SENSOR_TYPES
     async_add_entities(
-        GoogleWifiSensor(coordinator, description)
+        GoogleWifiSensor(entry, description)
         for description in SENSOR_TYPES
     )
 
 
-class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEntity):
+class GoogleWifiSensor(SensorEntity):
     """Representation of a Google Wifi sensor."""
 
-    entity_description: GoogleWifiSensorEntityDescription
+    #Makes sensors get prefixed from device name
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: GoogleWifiUpdateCoordinator,
-        description: SensorEntityDescription,
-        device_name
+        entry: ConfigEntry,
+        description: GoogleWifiSensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
         self.entity_description = description
+        self._entry = entry
+        self._attr_data = {}
         # Create a unique ID so the user can rename/customize this in the UI
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
         # Use the name defined in the config entry title for the device name
-        self._attr_name = f"{coordinator.config_entry.title} {description.name}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=coordinator.config_entry.title,
-            manufacturer="Google",
-            model="Google/Nest Wifi",
-        )
+        self._attr_name = description.name
 
     @property
     def device_info(self) -> DeviceInfo:
-    """Return device information about this Google Wifi router."""
-    # Access entry_id and IP through the coordinator's config_entry
-    entry = self.coordinator.config_entry
+        """Return device information the router."""
 
-    return DeviceInfo(
-        # Identifiers must be a set of tuples
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.title,
-        manufacturer="Google",
-        model="Google/Nest Wifi",
-        # Use the current IP from the entry data for the link
-        configuration_url=f"http://{entry.data[CONF_IP_ADDRESS]}",
-        # Pull software version from the last successful data fetch
-        sw_version=self.coordinator.data.get("system", {}).get("softwareVersion"),
-    )
+        # Default model if data doesn't fetch
+        model_name = "Google/Nest Wifi"
+
+        # Extract model from local data: ['system']['modelId']
+        if system_data := self._attr_data.get("system"):
+            model_name = system_data.get("modelId", model_name)
+
+        return DeviceInfo(
+            # Identifiers must be a set of tuples
+            identifiers={(DOMAIN, self._entry.entry_id)},
+            name=self._entry.title,
+            manufacturer="Google",
+            model=model_name,
+            # Use the current IP from the entry data for the link
+            configuration_url=f"http://{_entry.data[CONF_IP_ADDRESS]}",
+            # Pull software version from the last successful data fetch
+            sw_version=self._attr_data.get("software", {}).get("softwareVersion"),
+        )
+
+    async def async_update(self) -> None:
+        """Fetch new state data for the sensor."""
+        host = self._entry.data[CONF_IP_ADDRESS]
+        url = f"http://{host}/api/v1/status"
+
+        def fetch():
+            return requests.get(url, timeout=5)
+
+        try:
+            response = await self.hass.async_add_executor_job(fetch)
+            response.raise_for_status()
+            self._attr_data = response.json()
+        except (requests.exceptions.RequestException, ValueError):
+            _LOGGER.debug("Error updating sensor: %s", err)
+            self._attr_data = {}
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor based on the coordinator data."""
-        if not self.coordinator.data:
+        """Return the state of the sensor."""
+        if not self._attr_data:
             return None
 
-        raw_data = self.coordinator.data
+        raw_data = self._attr_data
         desc = self.entity_description
 
         try:
@@ -174,18 +179,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     GoogleWifiSensorEntityDescription(
         key=ATTR_CURRENT_VERSION,
+        name="Software Version",
         primary_key="software",
         sensor_key="softwareVersion",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_NEW_VERSION,
+        name="New Version",
         primary_key="software",
         sensor_key="updateNewVersion",
         icon="mdi:update",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_UPTIME,
+        name="Uptime",
         primary_key="system",
         sensor_key="uptime",
         native_unit_of_measurement=UnitOfTime.DAYS,
@@ -193,33 +201,23 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_LAST_RESTART,
+        name="Last Restart",
         primary_key="system",
         sensor_key="uptime",
         icon="mdi:restart",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_LOCAL_IP,
+        name="Local IP",
         primary_key="wan",
         sensor_key="localIpAddress",
         icon="mdi:access-point-network",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_STATUS,
+        name="Status",
         primary_key="wan",
         sensor_key="online",
         icon="mdi:google",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_MODEL,
-        primary_key="system",
-        sensor_key="modelId",
-        icon="mdi:router-network-wireless",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_GROUP_ROLE,
-        primary_key="system",
-        sensor_key="groupRole",
-        icon="mdi:family-tree",
     ),
 )
