@@ -5,6 +5,7 @@
       "reconfigure_successful": "Reconfiguration was successful."
     },
     "error": {
+      "cannot_connect": "Failed to connect to the router. Check the IP and try again.",
       "invalid_ip": "The IP address entered is not valid.",
       "unknown": "An unexpected error occurred."
     },

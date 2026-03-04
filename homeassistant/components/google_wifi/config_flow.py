@@ -3,6 +3,7 @@
 import ipaddress
 import logging
 
+import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,6 +26,17 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
         ipaddress.ip_address(data[CONF_IP_ADDRESS])
     except ValueError:
         raise InvalidIPAddress from None
+
+    # Validate Connectivity (New)
+    def fetch_status():
+        url = f"http://{data[CONF_IP_ADDRESS]}/api/v1/status"
+        return requests.get(url, timeout=5)
+
+    try:
+        response = await hass.async_add_executor_job(fetch_status)
+        response.raise_for_status()
+    except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as err:
+        raise CannotConnect from err
 
     # Return info that you want to store in the config entry
     return {"title": data[CONF_IP_ADDRESS]}
@@ -49,6 +61,8 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except InvalidIPAddress:
                 errors["base"] = "invalid_ip"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -117,3 +131,7 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidIPAddress(Exception):
     """Error to indicate the IP address format is invalid."""
+
+
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
