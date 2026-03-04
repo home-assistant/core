@@ -264,16 +264,22 @@ class TemplateEntity(AbstractTemplateEntity):
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
+    def _get_this_variable(self) -> TemplateStateFromEntityId:
+        """Create a this variable for the entity."""
+        if self._preview_callback:
+            return TemplateStateFromEntityId(
+                self.hass, self._entity_id_format.format("preview")
+            )
+
+        return TemplateStateFromEntityId(self.hass, self.entity_id)
+
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
             return self._run_variables
 
         return self._run_variables.async_render(
-            self.hass,
-            {
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            },
+            self.hass, {"this": self._get_this_variable()}
         )
 
     def setup_state_template(
@@ -451,7 +457,7 @@ class TemplateEntity(AbstractTemplateEntity):
         has_availability_template = False
 
         variables = {
-            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            "this": self._get_this_variable(),
             **self._render_script_variables(),
         }
 
