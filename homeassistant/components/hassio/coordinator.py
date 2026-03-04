@@ -39,8 +39,8 @@ from .const import (
     CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_ADDONS_INFO,
-    DATA_ADDONS_LIST,
     DATA_ADDONS_STATS,
+    DATA_APPS_LIST,
     DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_CORE_STATS,
@@ -131,6 +131,16 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
     Async friendly.
     """
     return hass.data.get(DATA_ADDONS_INFO)
+
+
+@callback
+@bind_hass
+def get_apps_list(hass: HomeAssistant) -> list[dict[str, Any]] | None:
+    """Return list of installed apps and subset of details for each.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_APPS_LIST)
 
 
 @callback
@@ -353,13 +363,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass) or {}
-        addons_info = get_addons_info(self.hass) or {}
-        addons_stats = get_addons_stats(self.hass)
+        apps_info = get_addons_info(self.hass) or {}
+        apps_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
         mounts_info = await self.supervisor_client.mounts.info()
-        addons_list = cast(
-            list[dict[str, Any]], self.hass.data.get(DATA_ADDONS_LIST, [])
-        )
+        apps_list = get_apps_list(self.hass) or []
 
         if store_data:
             repositories = {
@@ -372,15 +380,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_ADDONS] = {
             (slug := app[ATTR_SLUG]): {
                 **app,
-                **(addons_stats.get(slug) or {}),
-                ATTR_AUTO_UPDATE: (addons_info.get(slug) or {}).get(
+                **(apps_stats.get(slug) or {}),
+                ATTR_AUTO_UPDATE: (apps_info.get(slug) or {}).get(
                     ATTR_AUTO_UPDATE, False
                 ),
                 ATTR_REPOSITORY: repositories.get(
                     repo_slug := app.get(ATTR_REPOSITORY, ""), repo_slug
                 ),
             }
-            for app in addons_list
+            for app in apps_list
         }
         if self.is_hass_os:
             new_data[DATA_KEY_OS] = get_os_info(self.hass)
@@ -494,7 +502,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             data[key] = result.to_dict()
 
         installed_apps = cast(list[InstalledAddon], apps_list)
-        data[DATA_ADDONS_LIST] = [app.to_dict() for app in installed_apps]
+        data[DATA_APPS_LIST] = [app.to_dict() for app in installed_apps]
 
         # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
         # Can drop this after removal period

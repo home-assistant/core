@@ -11,11 +11,13 @@ from aiohasupervisor.models import ContextType
 import voluptuous as vol
 
 from homeassistant.components.repairs import RepairsFlow
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from . import get_addons_info, get_issues_info
+from . import get_apps_list, get_issues_info
 from .const import (
+    ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
@@ -154,7 +156,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
         placeholders = {PLACEHOLDER_KEY_COMPONENTS: ""}
         supervisor_issues = get_issues_info(self.hass)
         if supervisor_issues and self.issue:
-            addons = get_addons_info(self.hass) or {}
+            apps_list = get_apps_list(self.hass) or []
             components: list[str] = []
             for issue in supervisor_issues.issues:
                 if issue.key == self.issue.key or issue.type != self.issue.type:
@@ -166,9 +168,9 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
                     components.append(
                         next(
                             (
-                                info["name"]
-                                for slug, info in addons.items()
-                                if slug == issue.reference
+                                app[ATTR_NAME]
+                                for app in apps_list
+                                if app[ATTR_SLUG] == issue.reference
                             ),
                             issue.reference or "",
                         )
@@ -187,13 +189,11 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
-            addons = get_addons_info(self.hass)
-            if addons and self.issue.reference in addons:
-                placeholders[PLACEHOLDER_KEY_ADDON] = addons[self.issue.reference][
-                    "name"
-                ]
-            else:
-                placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
+            apps_list = get_apps_list(self.hass) or []
+            placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
+            for app in apps_list:
+                if app[ATTR_SLUG] == self.issue.reference:
+                    placeholders[PLACEHOLDER_KEY_ADDON] = app[ATTR_NAME]
 
         return placeholders or None
 
