@@ -21,6 +21,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_CITY, LOGGER
 
+type AirVisualConfigEntry = ConfigEntry[AirVisualDataUpdateCoordinator]
+
 
 class AirVisualDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching AirVisual data."""
@@ -68,6 +70,3 @@ class AirVisualDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from ex
         except AirVisualError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
-
-
-type AirVisualConfigEntry = ConfigEntry[AirVisualDataUpdateCoordinator]
