@@ -23,13 +23,13 @@
   },
   "exceptions": {
     "join_players_no_group": {
-      "message": "Client '{entity_id}' has no group. Unable to join players."
+      "message": "Client {entity_id} has no group. Unable to join players."
     },
     "select_source_no_group": {
-      "message": "Client '{entity_id}' has no group. Unable to select source '{source}'."
+      "message": "Client {entity_id} has no group. Unable to select source {source}."
     },
     "unjoin_no_group": {
-      "message": "Client '{entity_id}' has no group. Unable to unjoin player."
+      "message": "Client {entity_id} has no group. Unable to unjoin player."
     }
   },
   "services": {
