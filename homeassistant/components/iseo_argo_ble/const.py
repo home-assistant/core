@@ -11,7 +11,6 @@ PLATFORMS: list[Platform] = [Platform.LOCK]
 CONF_ADDRESS = "address"
 CONF_UUID = "uuid"
 CONF_PRIV_SCALAR = "priv_scalar"
-CONF_USER_SUBTYPE = "user_subtype"
 
-# Default user subtype (smartphone)
-DEFAULT_USER_SUBTYPE: int = 16  # UserSubType.BT_SMARTPHONE
+# Default user subtype (gateway)
+DEFAULT_USER_SUBTYPE: int = 17  # UserSubType.BT_GATEWAY

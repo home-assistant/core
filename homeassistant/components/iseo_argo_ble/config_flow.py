@@ -12,7 +12,6 @@ from iseo_argo_ble import (
     IseoAuthError,
     IseoClient,
     IseoConnectionError,
-    UserSubType,
     is_iseo_advertisement,
 )
 import voluptuous as vol
@@ -31,7 +30,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_ADDRESS, CONF_PRIV_SCALAR, CONF_USER_SUBTYPE, CONF_UUID, DOMAIN
+from .const import (
+    CONF_ADDRESS,
+    CONF_PRIV_SCALAR,
+    CONF_UUID,
+    DEFAULT_USER_SUBTYPE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +88,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._uuid_hex: str = ""
         self._priv_scalar: str = ""
         self._gw_priv: ec.EllipticCurvePrivateKey | None = None
-        self._user_subtype: int = UserSubType.BT_GATEWAY
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -207,7 +211,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     address=self._address,
                     uuid_bytes=bytes.fromhex(self._uuid_hex),
                     identity_priv=self._gw_priv,
-                    subtype=self._user_subtype,
+                    subtype=DEFAULT_USER_SUBTYPE,
                     ble_device=ble_device,
                 )
                 try:
@@ -245,7 +249,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     address=self._address,
                     uuid_bytes=bytes.fromhex(self._uuid_hex),
                     identity_priv=self._gw_priv,
-                    subtype=self._user_subtype,
+                    subtype=DEFAULT_USER_SUBTYPE,
                     ble_device=ble_device,
                 )
                 try:
@@ -276,6 +280,5 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: self._address,
                 CONF_UUID: self._uuid_hex,
                 CONF_PRIV_SCALAR: self._priv_scalar,
-                CONF_USER_SUBTYPE: self._user_subtype,
             },
         )

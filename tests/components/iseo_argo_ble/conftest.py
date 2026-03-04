@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.iseo_argo_ble.const import (
     CONF_ADDRESS,
     CONF_PRIV_SCALAR,
-    CONF_USER_SUBTYPE,
     CONF_UUID,
     DOMAIN,
 )
@@ -46,7 +45,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ADDRESS: MOCK_ADDRESS,
             CONF_UUID: MOCK_UUID_HEX,
             CONF_PRIV_SCALAR: MOCK_PRIV_SCALAR,
-            CONF_USER_SUBTYPE: 17,  # UserSubType.BT_GATEWAY
         },
         options={},
     )

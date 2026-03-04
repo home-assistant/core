@@ -7,13 +7,7 @@ from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
-from iseo_argo_ble import (
-    IseoAuthError,
-    IseoClient,
-    IseoConnectionError,
-    LockState,
-    UserSubType,
-)
+from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockState
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
@@ -24,13 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_ADDRESS,
-    CONF_USER_SUBTYPE,
-    CONF_UUID,
-    DEFAULT_USER_SUBTYPE,
-    DOMAIN,
-)
+from .const import CONF_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,16 +38,11 @@ async def async_setup_entry(
     from . import IseoRuntimeData  # noqa: PLC0415
 
     runtime_data: IseoRuntimeData = entry.runtime_data
-    uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
-    subtype: int = entry.data.get(CONF_USER_SUBTYPE, DEFAULT_USER_SUBTYPE)
 
     async_add_entities(
         [
             IseoLockEntity(
                 entry,
-                uuid_bytes,
-                runtime_data.priv,
-                subtype,
                 runtime_data.client,
             )
         ],
@@ -77,16 +60,10 @@ class IseoLockEntity(LockEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        uuid_bytes: bytes,
-        identity_priv: Any,
-        user_subtype: int = UserSubType.BT_SMARTPHONE,
         client: IseoClient | None = None,
     ) -> None:
         """Initialize the lock entity."""
         self._entry = entry
-        self._uuid_bytes = uuid_bytes
-        self._identity_priv = identity_priv
-        self._user_subtype = user_subtype
         self._relock_task: asyncio.Task[None] | None = None
         self._ble_lock = asyncio.Lock()
         self._door_status_supported: bool | None = None
@@ -124,7 +101,7 @@ class IseoLockEntity(LockEntity):
         if self._relock_task and not self._relock_task.done():
             self._relock_task.cancel()
 
-    async def _poll_state(self, _now: Any = None) -> None:
+    async def _poll_state(self, _now: Any = None, force: bool = False) -> None:
         """Read door state via TLV_INFO and update HA state."""
         if self._ble_lock.locked():
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
@@ -170,7 +147,8 @@ class IseoLockEntity(LockEntity):
         if self._attr_is_unlocking:
             return
         if (
-            self._poll_suppress_until
+            not force
+            and self._poll_suppress_until
             and datetime.now(tz=UTC) < self._poll_suppress_until
         ):
             return
@@ -204,7 +182,7 @@ class IseoLockEntity(LockEntity):
         try:
             if self._door_status_supported:
                 await asyncio.sleep(2)
-                await self._poll_state()
+                await self._poll_state(force=True)
                 return
 
             await asyncio.sleep(_RELOCK_DELAY)
@@ -235,10 +213,7 @@ class IseoLockEntity(LockEntity):
         try:
             async with self._ble_lock:
                 self.client.update_ble_device(ble_device)
-                if self._user_subtype == UserSubType.BT_GATEWAY:
-                    await self.client.gw_open(remote_user_name="Home Assistant")
-                else:
-                    await self.client.open_lock()
+                await self.client.gw_open(remote_user_name="Home Assistant")
         except IseoAuthError as exc:
             self._set_locked()
             raise HomeAssistantError(

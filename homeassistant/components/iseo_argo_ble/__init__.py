@@ -17,7 +17,6 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     CONF_ADDRESS,
     CONF_PRIV_SCALAR,
-    CONF_USER_SUBTYPE,
     CONF_UUID,
     DEFAULT_USER_SUBTYPE,
     DOMAIN,
@@ -34,10 +33,9 @@ type IseoConfigEntry = ConfigEntry[IseoRuntimeData]
 class IseoRuntimeData:
     """Runtime data for an ISEO Argo BLE config entry."""
 
-    def __init__(self, client: IseoClient, priv: object) -> None:
+    def __init__(self, client: IseoClient) -> None:
         """Initialize runtime data."""
         self.client = client
-        self.priv = priv
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:
@@ -47,7 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
         derive_private_key, priv_int, SECP224R1(), default_backend()
     )
     uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
-    subtype: int = entry.data.get(CONF_USER_SUBTYPE, DEFAULT_USER_SUBTYPE)
 
     address = entry.data[CONF_ADDRESS]
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
@@ -60,11 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
         address=address,
         uuid_bytes=uuid_bytes,
         identity_priv=priv,
-        subtype=subtype,
+        subtype=DEFAULT_USER_SUBTYPE,
         ble_device=ble_device,
     )
 
-    entry.runtime_data = IseoRuntimeData(client=client, priv=priv)
+    entry.runtime_data = IseoRuntimeData(client=client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
