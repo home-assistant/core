@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_START,
     EVENT_TYPE_DOORBELL_RING,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
@@ -123,6 +124,7 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
         ):
             event_data = {
                 ATTR_EVENT_ID: event.id,
+                ATTR_EVENT_START: event.start,
                 KEYRINGS_USER_FULL_NAME: "",
                 KEYRINGS_ULP_ID: "",
                 KEYRINGS_USER_STATUS: "",
@@ -167,6 +169,7 @@ class ProtectDeviceFingerprintEventEntity(
         ):
             event_data = {
                 ATTR_EVENT_ID: event.id,
+                ATTR_EVENT_START: event.start,
                 KEYRINGS_USER_FULL_NAME: "",
                 KEYRINGS_ULP_ID: "",
             }

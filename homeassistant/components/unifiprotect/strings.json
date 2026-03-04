@@ -279,6 +279,9 @@
       "fingerprint": {
         "name": "Fingerprint",
         "state_attributes": {
+          "event_start": {
+            "name": "Event start"
+          },
           "event_type": {
             "state": {
               "identified": "Identified",
@@ -290,6 +293,9 @@
       "nfc": {
         "name": "NFC",
         "state_attributes": {
+          "event_start": {
+            "name": "Event start"
+          },
           "event_type": {
             "state": {
               "scanned": "Scanned"
