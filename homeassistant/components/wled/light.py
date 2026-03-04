@@ -303,7 +303,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             w_brightness = max(cw, ww)
 
             if w_brightness == 0:
-                cct = 0
+                cct = 127
             elif ww == w_brightness:
                 cct = (cw * 127) // w_brightness
             else:
