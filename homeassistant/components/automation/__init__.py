@@ -141,6 +141,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "button",
     "climate",
     "cover",
+    "door",
     "device_tracker",
     "fan",
     "humidifier",

@@ -2110,6 +2110,7 @@ NO_QUALITY_SCALE = [
     "device_automation",
     "device_tracker",
     "diagnostics",
+    "door",
     "ffmpeg",
     "file_upload",
     "frontend",

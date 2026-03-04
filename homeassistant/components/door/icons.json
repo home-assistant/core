@@ -1,0 +1,7 @@
+{
+  "triggers": {
+    "opened": {
+      "trigger": "mdi:door-open"
+    }
+  }
+}
