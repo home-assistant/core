@@ -94,7 +94,7 @@ async def async_setup_entry(
         name,
         device_class,
         config_entry.runtime_data.device_coordinator,
-        hass.data.get(DATA_APPS),
+        hass.data.get(DATA_APPS) if device_class == MediaPlayerDeviceClass.TV else None,
     )
 
     async_add_entities([entity])

@@ -87,11 +87,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         if not self.config_entry.unique_id:
             return
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self.config_entry.unique_id)}
+        device = device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, self.config_entry.unique_id)},
         )
-        if not device:
-            return
         if model := await self.device.get_model_name(log_api_exception=False):
             device_registry.async_update_device(device.id, model=model)
         if version := await self.device.get_version(log_api_exception=False):
