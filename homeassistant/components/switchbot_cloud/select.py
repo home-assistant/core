@@ -76,7 +76,6 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
             key = self._api.aes_128_cbc_decrypt(password, iv)
             status = item["status"]
             if status == "expired":
-                key = key.replace("expired", "").replace("-", "").strip()
                 key = f"{key} - {status}"
             options.insert(0, key)
 

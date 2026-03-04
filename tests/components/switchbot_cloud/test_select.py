@@ -85,14 +85,15 @@ async def test_keypad_key_is_normal(
         }
     ]
 
-    if "expired" in key_status:
-        expected = f"{expected} - expired"
     mock_aes_128_cbc_decrypt.side_effect = [expected]
+    final_expected = expected
+    if "expired" in key_status:
+        final_expected = f"{expected} - expired"
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "select.keypad_vision_pro_1"
     state = hass.states.get(entity_id)
-    assert state.state == expected
+    assert state.state == final_expected
 
 
 async def test_keypad_create_key(
