@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Longan link HVAC',
-      'percentage': 0,
+      'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
       'preset_modes': list([
@@ -183,7 +183,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Extractor hood',
-      'percentage': 0,
+      'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
       'preset_modes': list([
