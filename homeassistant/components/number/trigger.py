@@ -1,5 +1,6 @@
 """Provides triggers for number entities."""
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import (
     Trigger,
@@ -9,7 +10,9 @@ from homeassistant.helpers.trigger import (
 from .const import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "changed": make_entity_numerical_state_changed_trigger(DOMAIN),
+    "changed": make_entity_numerical_state_changed_trigger(
+        {DOMAIN, INPUT_NUMBER_DOMAIN}
+    ),
 }
 
 

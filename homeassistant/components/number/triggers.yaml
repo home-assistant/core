@@ -1,4 +1,6 @@
 changed:
   target:
     entity:
-      domain: number
+      domain:
+        - number
+        - input_number
