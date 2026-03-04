@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from env_canada import ECWeather
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,

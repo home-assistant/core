@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from env_canada import ECWeather
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

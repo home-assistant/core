@@ -8,6 +8,7 @@ import logging
 import xml.etree.ElementTree as ET
 
 from env_canada import ECAirQuality, ECMap, ECWeather, ECWeatherUpdateFailed, ec_exc
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
