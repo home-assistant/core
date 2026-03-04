@@ -11,6 +11,7 @@ from pylaunches.types import Launch, StarshipResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -34,7 +35,6 @@ class LaunchLibraryCoordinator(DataUpdateCoordinator[LaunchLibraryData]):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        launches: PyLaunches,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -44,7 +44,8 @@ class LaunchLibraryCoordinator(DataUpdateCoordinator[LaunchLibraryData]):
             name=DOMAIN,
             update_interval=timedelta(hours=1),
         )
-        self._launches = launches
+        session = async_get_clientsession(hass)
+        self._launches = PyLaunches(session)
 
     async def _async_update_data(self) -> LaunchLibraryData:
         """Fetch data from Launch Library."""

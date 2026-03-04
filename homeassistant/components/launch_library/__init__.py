@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from pylaunches import PyLaunches
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import LaunchLibraryCoordinator
@@ -17,10 +14,8 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-    session = async_get_clientsession(hass)
-    launches = PyLaunches(session)
 
-    coordinator = LaunchLibraryCoordinator(hass, entry, launches)
+    coordinator = LaunchLibraryCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN] = coordinator
