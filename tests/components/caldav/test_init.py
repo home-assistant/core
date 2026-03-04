@@ -7,6 +7,7 @@ import pytest
 import requests
 from requests.adapters import HTTPAdapter
 
+from homeassistant.components.caldav import CONNECTION_POOL_SIZE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -77,23 +78,25 @@ async def test_connection_pool_size(
     exceeded, causing 'Connection pool is full' warnings.
     """
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    with patch(
-        "homeassistant.components.caldav.config_flow.caldav.DAVClient"
-    ) as mock_client:
-        mock_session = mock_client.return_value.session
+    with (
+        patch("homeassistant.components.caldav.caldav.DAVClient") as mock_client,
+        patch(
+            "homeassistant.components.caldav.HTTPAdapter",
+            wraps=HTTPAdapter,
+        ) as mock_adapter_cls,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # Verify mount was called for both https:// and http://
-    assert mock_session.mount.call_count >= 2
-    mounted = {call[0][0]: call[0][1] for call in mock_session.mount.call_args_list}
-    assert "https://" in mounted
-    assert "http://" in mounted
+    # Verify HTTPAdapter was constructed with the expected pool size
+    mock_adapter_cls.assert_called_once_with(
+        pool_connections=CONNECTION_POOL_SIZE, pool_maxsize=CONNECTION_POOL_SIZE
+    )
 
-    # Verify the adapters have increased pool size
-    for prefix in ("https://", "http://"):
-        adapter = mounted[prefix]
-        assert isinstance(adapter, HTTPAdapter)
-        assert adapter._pool_connections == 20
-        assert adapter._pool_maxsize == 20
+    # Verify the adapter was mounted on the session for both schemes
+    mock_session = mock_client.return_value.session
+    assert mock_session.mount.call_count >= 2
+    mounted_schemes = {call[0][0] for call in mock_session.mount.call_args_list}
+    assert "https://" in mounted_schemes
+    assert "http://" in mounted_schemes
