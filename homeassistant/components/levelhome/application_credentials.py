@@ -17,11 +17,10 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .const import (
     CONF_OAUTH2_BASE_URL,
     CONF_PARTNER_BASE_URL,
-    DEFAULT_OAUTH2_BASE_URL,
-    DEFAULT_PARTNER_BASE_URL,
     DOMAIN,
     OAUTH2_AUTHORIZE_PATH,
     OAUTH2_TOKEN_EXCHANGE_PATH,
+    get_env_config,
 )
 
 
@@ -78,9 +77,10 @@ async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationSe
       oauth2_base_url: https://oauth2.example.com
       partner_base_url: https://partner.example.com
     """
-    base = (hass.data.get(DOMAIN) or {}).get(
-        CONF_OAUTH2_BASE_URL
-    ) or DEFAULT_OAUTH2_BASE_URL
+    env_config = get_env_config()
+    base = (hass.data.get(DOMAIN) or {}).get(CONF_OAUTH2_BASE_URL) or env_config[
+        "oauth2_base_url"
+    ]
     return AuthorizationServer(
         authorize_url=f"{base}{OAUTH2_AUTHORIZE_PATH}",
         token_url=f"{base}{OAUTH2_TOKEN_EXCHANGE_PATH}",
@@ -97,9 +97,10 @@ async def async_get_auth_implementation(
     Token refresh uses the OAuth2 server's token exchange endpoint.
     """
     auth_server = await async_get_authorization_server(hass)
+    env_config = get_env_config()
     partner_base = (hass.data.get(DOMAIN) or {}).get(
         CONF_PARTNER_BASE_URL
-    ) or DEFAULT_PARTNER_BASE_URL
+    ) or env_config["partner_base_url"]
     partner_token_url = f"{partner_base}{OAUTH2_TOKEN_EXCHANGE_PATH}"
 
     return LevelOAuth2Implementation(

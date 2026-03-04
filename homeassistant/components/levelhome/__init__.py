@@ -6,10 +6,19 @@ import logging
 
 from level_ws_client import LevelWebsocketManager
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from . import auth as auth_mod
 from .const import (
@@ -17,6 +26,7 @@ from .const import (
     CONF_PARTNER_BASE_URL,
     DEFAULT_PARTNER_BASE_URL,
     DOMAIN,
+    OAUTH2_CLIENT_ID,
 )
 from .coordinator import LevelLocksCoordinator
 
@@ -24,6 +34,22 @@ from .coordinator import LevelLocksCoordinator
 _PLATFORMS: list[Platform] = [Platform.LOCK]
 
 type LevelHomeConfigEntry = ConfigEntry[LevelLocksCoordinator]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Level Lock integration.
+
+    Imports the baked-in OAuth client credential for the active environment
+    (controlled by the LEVEL_ENVIRONMENT env var).
+    """
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(OAUTH2_CLIENT_ID, "", name="Level Home"),
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LevelHomeConfigEntry) -> bool:

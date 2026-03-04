@@ -15,10 +15,10 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.levelhome.const import (
     CONF_PARTNER_BASE_URL,
-    DEFAULT_OAUTH2_BASE_URL,
     DEFAULT_PARTNER_BASE_URL,
     DOMAIN,
     OAUTH2_TOKEN_EXCHANGE_PATH,
+    get_env_config,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -31,7 +31,8 @@ FAKE_ACCESS_TOKEN = "test-access-token"
 FAKE_REFRESH_TOKEN = "test-refresh-token"
 FAKE_AUTH_IMPL = DOMAIN
 
-OAUTH2_TOKEN_REFRESH = f"{DEFAULT_OAUTH2_BASE_URL}{OAUTH2_TOKEN_EXCHANGE_PATH}"
+_env = get_env_config()
+OAUTH2_TOKEN_REFRESH = f"{_env['oauth2_base_url']}{OAUTH2_TOKEN_EXCHANGE_PATH}"
 SERVER_ACCESS_TOKEN = {
     "access_token": "refreshed-access-token",
     "refresh_token": "refreshed-refresh-token",

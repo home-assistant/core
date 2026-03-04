@@ -9,9 +9,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.levelhome.const import DOMAIN
+from homeassistant.components.application_credentials import DATA_COMPONENT
+from homeassistant.components.levelhome.const import (
+    DOMAIN,
+    ENVIRONMENTS,
+    get_env_config,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .conftest import OAUTH2_TOKEN_REFRESH, SERVER_ACCESS_TOKEN
 
@@ -181,3 +187,52 @@ async def test_auth_failure_triggers_reauth(
         flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
         for flow in flows
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_setup_imports_credential(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_setup imports the baked-in client credential."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    # The application_credentials store should now contain a credential for DOMAIN
+    store = hass.data[DATA_COMPONENT]
+    credentials = store.async_client_credentials(DOMAIN)
+    assert len(credentials) >= 1
+
+
+def test_env_switching_dev(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that LEVEL_ENVIRONMENT=dev returns dev config."""
+    monkeypatch.setenv("LEVEL_ENVIRONMENT", "dev")
+
+    config = get_env_config()
+    assert config == ENVIRONMENTS["dev"]
+    assert "oauth2-dev" in config["oauth2_base_url"]
+
+
+def test_env_switching_staging(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that LEVEL_ENVIRONMENT=staging returns staging config."""
+    monkeypatch.setenv("LEVEL_ENVIRONMENT", "staging")
+
+    config = get_env_config()
+    assert config == ENVIRONMENTS["staging"]
+    assert "staging" in config["oauth2_base_url"]
+
+
+def test_env_switching_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that LEVEL_ENVIRONMENT=production returns production config."""
+    monkeypatch.setenv("LEVEL_ENVIRONMENT", "production")
+
+    config = get_env_config()
+    assert config == ENVIRONMENTS["production"]
+    assert config["oauth2_base_url"] == "https://oauth2.level.co"
+
+
+def test_env_switching_unknown_defaults_to_dev(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that an unknown LEVEL_ENVIRONMENT value falls back to dev."""
+    monkeypatch.setenv("LEVEL_ENVIRONMENT", "nonexistent")
+
+    config = get_env_config()
+    assert config == ENVIRONMENTS["dev"]
