@@ -91,7 +91,7 @@ class BaseFirmwareUpdateEntity(
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
     _attr_has_entity_name = True
-    _flasher_cls: DeviceSpecificFlasher
+    _flasher_cls: type[DeviceSpecificFlasher]
 
     def __init__(
         self,

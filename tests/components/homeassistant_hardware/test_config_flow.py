@@ -302,7 +302,7 @@ def mock_firmware_info(
         hass: HomeAssistant,
         device: str,
         fw_data: bytes,
-        flasher_cls: DeviceSpecificFlasher,
+        flasher_cls: type[DeviceSpecificFlasher],
         expected_installed_firmware_type: ApplicationType,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:

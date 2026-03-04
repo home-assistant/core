@@ -352,7 +352,6 @@ async def test_options_flow(
         "vid": usb_data.vid,
     }
 
-    # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
     assert flash_mock.call_count == 1
 
     flows = hass.config_entries.flow.async_progress()
