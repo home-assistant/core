@@ -37,6 +37,8 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
+    RoborockWashingMachineUpdateCoordinator,
+    RoborockWetDryVacUpdateCoordinator,
 )
 from .entity import (
     RoborockCoordinatedEntityA01,
@@ -252,7 +254,7 @@ SENSOR_DESCRIPTIONS = [
     ),
 ]
 
-A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
+DYAD_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     RoborockSensorDescriptionA01(
         key="status",
         data_protocol=RoborockDyadDataProtocol.STATUS,
@@ -303,6 +305,9 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         translation_key="total_cleaning_time",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+]
+
+ZEO_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     RoborockSensorDescriptionA01(
         key="state",
         data_protocol=RoborockZeoProtocol.STATE,
@@ -334,6 +339,12 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         translation_key="zeo_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         options=ZeoError.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="times_after_clean",
+        data_protocol=RoborockZeoProtocol.TIMES_AFTER_CLEAN,
+        translation_key="times_after_clean",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
@@ -418,7 +429,18 @@ async def async_setup_entry(
             description,
         )
         for coordinator in coordinators.a01
-        for description in A01_SENSOR_DESCRIPTIONS
+        if isinstance(coordinator, RoborockWetDryVacUpdateCoordinator)
+        for description in DYAD_SENSOR_DESCRIPTIONS
+        if description.data_protocol in coordinator.request_protocols
+    )
+    entities.extend(
+        RoborockSensorEntityA01(
+            coordinator,
+            description,
+        )
+        for coordinator in coordinators.a01
+        if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
+        for description in ZEO_SENSOR_DESCRIPTIONS
         if description.data_protocol in coordinator.request_protocols
     )
     entities.extend(

@@ -10,10 +10,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.bsblan.const import DOMAIN
-from homeassistant.components.bsblan.services import (
-    SERVICE_SET_HOT_WATER_SCHEDULE,
-    async_setup_services,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -134,7 +130,7 @@ async def test_set_hot_water_schedule(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HOT_WATER_SCHEDULE,
+        "set_hot_water_schedule",
         service_call_data,
         blocking=True,
     )
@@ -163,7 +159,7 @@ async def test_invalid_device_id(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
+            "set_hot_water_schedule",
             {
                 "device_id": "invalid_device_id",
                 "monday_slots": [
@@ -176,11 +172,12 @@ async def test_invalid_device_id(
     assert exc_info.value.translation_key == "invalid_device_id"
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("service_name", "service_data"),
     [
         (
-            SERVICE_SET_HOT_WATER_SCHEDULE,
+            "set_hot_water_schedule",
             {"monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}]},
         ),
         ("sync_time", {}),
@@ -205,9 +202,6 @@ async def test_no_config_entry_for_device(
         name="Other Device",
     )
 
-    # Register the bsblan service without setting up any bsblan config entry
-    async_setup_services(hass)
-
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
@@ -222,26 +216,15 @@ async def test_no_config_entry_for_device(
 async def test_config_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
+    device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when config entry is not loaded."""
-    # Add the config entry but don't set it up (so it stays in NOT_LOADED state)
-    mock_config_entry.add_to_hass(hass)
-
-    # Create the device manually since setup won't run
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, TEST_DEVICE_MAC)},
-        name="BSB-LAN Device",
-    )
-
-    # Register the service
-    async_setup_services(hass)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
+            "set_hot_water_schedule",
             {
                 "device_id": device_entry.id,
                 "monday_slots": [
@@ -266,7 +249,7 @@ async def test_api_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
+            "set_hot_water_schedule",
             {
                 "device_id": device_entry.id,
                 "monday_slots": [
@@ -302,7 +285,7 @@ async def test_time_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
+            "set_hot_water_schedule",
             {
                 "device_id": device_entry.id,
                 "monday_slots": [
@@ -325,7 +308,7 @@ async def test_unprovided_days_are_none(
     # Only provide Monday and Tuesday, leave other days unprovided
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HOT_WATER_SCHEDULE,
+        "set_hot_water_schedule",
         {
             "device_id": device_entry.id,
             "monday_slots": [
@@ -369,7 +352,7 @@ async def test_string_time_formats(
     # Test with string time formats
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HOT_WATER_SCHEDULE,
+        "set_hot_water_schedule",
         {
             "device_id": device_entry.id,
             "monday_slots": [
@@ -406,7 +389,7 @@ async def test_non_standard_time_types(
     with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
+            "set_hot_water_schedule",
             {
                 "device_id": device_entry.id,
                 "monday_slots": [
@@ -424,7 +407,7 @@ async def test_async_setup_services(
 ) -> None:
     """Test service registration."""
     # Verify service doesn't exist initially
-    assert not hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
+    assert not hass.services.has_service(DOMAIN, "set_hot_water_schedule")
 
     # Set up the integration
     mock_config_entry.add_to_hass(hass)
@@ -432,7 +415,7 @@ async def test_async_setup_services(
     await hass.async_block_till_done()
 
     # Verify service is now registered
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
+    assert hass.services.has_service(DOMAIN, "set_hot_water_schedule")
 
 
 async def test_sync_time_service(
