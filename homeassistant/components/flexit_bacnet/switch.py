@@ -91,6 +91,7 @@ async def async_setup_entry(
                         hass,
                         DOMAIN,
                         f"deprecated_switch_{fireplace_switch_unique_id}",
+                        breaks_in_ha_version="2026.9.0",
                         is_fixable=False,
                         issue_domain=DOMAIN,
                         severity=IssueSeverity.WARNING,
@@ -102,7 +103,7 @@ async def async_setup_entry(
                     entities.append(FlexitSwitch(coordinator, description))
         else:
             entities.append(FlexitSwitch(coordinator, description))
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 PARALLEL_UPDATES = 1
