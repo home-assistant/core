@@ -9,11 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_EXTRA,
-    ATTR_MEDIA_SHUFFLE,
     DOMAIN as MP_DOMAIN,
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA as MP_PLAY_MEDIA_SCHEMA,
     MediaPlayerEntity,
@@ -24,8 +23,12 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import DOMAIN
 from .media_player import JellyfinMediaPlayer
 
-# customize media player input schema adding 'shuffle'
-JELLYFIN_PLAY_MEDIA_SCHEMA = (MP_PLAY_MEDIA_SCHEMA - {ATTR_MEDIA_ENQUEUE}) | {vol.Exclusive(ATTR_MEDIA_SHUFFLE, "shuffle"): cv.boolean}
+# customize media player input schema adding 'shuffle' and removing uneeded fields
+JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
+    k: v
+    for k, v in MP_PLAY_MEDIA_SCHEMA.items()
+    if (k != ATTR_MEDIA_ANNOUNCE and k != ATTR_MEDIA_ENQUEUE)
+}
 
 def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     """If 'media' key exists, promote its fields to the top level."""
@@ -66,22 +69,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return
 
     # the player service
-    async def play_media_service_handler(entity: MediaPlayerEntity,
-                                         call: ServiceCall) -> None:
-        kwargs: dict[str, Any] = {
-            ATTR_MEDIA_SHUFFLE: call.data.get(ATTR_MEDIA_SHUFFLE, False),
-            ATTR_MEDIA_ENQUEUE: call.data.get(ATTR_MEDIA_ENQUEUE, None),
-            ATTR_MEDIA_EXTRA: call.data.get(ATTR_MEDIA_EXTRA, {}),
-        }
-
+    async def play_media_shuffle_service_handler(entity: MediaPlayerEntity, call: ServiceCall) -> None:
         if not isinstance(entity, JellyfinMediaPlayer):
             return
 
         def _play(e=entity) -> None:
-            e.play_media(
+            e.play_media_shuffle(
                 media_type=call.data["media_type"],
                 media_id=call.data["media_id"],
-                **kwargs,
             )
 
         await hass.async_add_executor_job(_play)
@@ -90,17 +85,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "play_media",
+        "play_media_shuffle",
         entity_domain=MP_DOMAIN,
         schema=vol.All(
             _promote_media_fields,
-            cv.make_entity_service_schema(JELLYFIN_PLAY_MEDIA_SCHEMA),
+            cv.make_entity_service_schema(JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA),
             _rename_keys(
                 media_type=ATTR_MEDIA_CONTENT_TYPE,
                 media_id=ATTR_MEDIA_CONTENT_ID,
-                enqueue=ATTR_MEDIA_ENQUEUE,
-                shuffle=ATTR_MEDIA_SHUFFLE,
             ),
         ),
-        func=play_media_service_handler,
+        func=play_media_shuffle_service_handler,
     )

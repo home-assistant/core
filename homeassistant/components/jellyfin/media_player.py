@@ -250,21 +250,22 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         # from jellyfin api docs: command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
-
-        # if enqueue is null, 'now', or 'replace', these will all act identically in jellyfin, so they are not implemented.
+        # if enqueue is null, 'now', or 'replace', these will all act identically to PlayNow in jellyfin, so they are not implemented.
         command = "PlayNow"
-        shuffle = kwargs.get(ATTR_MEDIA_SHUFFLE, False)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
-        if shuffle:
-            # shuffle takes priority over enqueue
-            command = "PlayShuffle"
-        elif enqueue == MediaPlayerEnqueue.NEXT:
+        if enqueue == MediaPlayerEnqueue.NEXT:
             command = "PlayNext"
         elif enqueue == MediaPlayerEnqueue.ADD:
             command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id], command
-        )
+            self.session_id, [media_id], command)
+
+    def play_media_shuffle(
+        self, media_type: MediaType | str, media_id: str
+    ) -> None:
+        """Play a piece of media on shuffle."""
+        self.coordinator.api_client.jellyfin.remote_play_media(
+            self.session_id, [media_id], "PlayShuffle")
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

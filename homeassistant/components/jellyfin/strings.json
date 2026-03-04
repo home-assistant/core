@@ -43,32 +43,16 @@
       }
     }
   },
-  "selector": {
-    "enqueue": {
-      "options": {
-        "add": "Add to end of queue",
-        "next": "Play next"
-      }
-    }
-  },
   "services": {
-    "play_media": {
-      "description": "Starts playing specified media.",
+    "play_media_shuffle": {
+      "description": "Starts playing specified media shuffled. Overwrites current play queue.",
       "fields": {
-        "enqueue": {
-          "description": "If the content should be added to the play queue, and how.",
-          "name": "Enqueue"
-        },
         "media": {
           "description": "The media selected to play.",
           "name": "Media"
-        },
-        "shuffle": {
-          "description": "Whether the media should be played in a randomized order or not. Replaces the current play queue if selected.",
-          "name": "Shuffle"
         }
       },
-      "name": "Play media"
+      "name": "Play media shuffled"
     }
   }
 }
