@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     if hass.config_entries.async_entries(DOMAIN):
-        # We can only have one dongle. If there is already one in the config,
+        # We can only have one gateway. If there is already one in the config,
         # there is no need to import the yaml based config.
         return True
 
@@ -46,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
-    """Set up an EnOcean dongle for the given entry."""
+    """Set up an EnOcean gateway for the given entry."""
     gateway = Gateway(port=config_entry.data[CONF_DEVICE])
 
     gateway.add_erp1_received_callback(
