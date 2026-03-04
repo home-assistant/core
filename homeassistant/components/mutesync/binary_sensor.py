@@ -3,11 +3,12 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import MutesyncUpdateCoordinator
 
 SENSORS = (
     "in_meeting",
@@ -27,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class MuteStatus(update_coordinator.CoordinatorEntity, BinarySensorEntity):
+class MuteStatus(CoordinatorEntity[MutesyncUpdateCoordinator], BinarySensorEntity):
     """Mütesync binary sensors."""
 
     _attr_has_entity_name = True
