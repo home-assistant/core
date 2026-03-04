@@ -622,6 +622,8 @@ async def test_redirect_to_custom_scheme_not_blocked(
         ("http://evil.example.com:{port}/steal", "::1"),
         ("http://evil.example.com:{port}/steal", "0.0.0.0"),
         ("http://evil.example.com:{port}/steal", "::"),
+        ("https://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("https://evil.example.com:{port}/steal", "0.0.0.0"),
         # WebSocket schemes can open TCP connections — must also be blocked
         ("ws://evil.example.com:{port}/steal", "127.0.0.1"),
         ("wss://evil.example.com:{port}/steal", "127.0.0.1"),
