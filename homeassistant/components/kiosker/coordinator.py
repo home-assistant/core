@@ -95,7 +95,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
         except (OSError, TimeoutError) as exc:
             raise UpdateFailed(f"Connection timeout: {exc}") from exc
         except Exception as exc:
-            _LOGGER.debug("Unexpected error updating Kiosker data")
+            _LOGGER.exception("Unexpected error updating Kiosker data")
             raise UpdateFailed(f"Unexpected error: {exc}") from exc
 
         return KioskerData(
