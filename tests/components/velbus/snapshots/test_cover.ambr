@@ -40,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'current_position': 50,
       'friendly_name': 'Basement CoverName',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -91,6 +92,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'Basement CoverNameNoPos',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
