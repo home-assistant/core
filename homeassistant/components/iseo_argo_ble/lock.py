@@ -92,7 +92,8 @@ class IseoLockEntity(LockEntity):
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
 
-        assert client is not None, "IseoLockEntity requires a client"
+        if client is None:
+            raise ValueError("IseoLockEntity requires a client")
         self.client: IseoClient = client
 
         self._attr_unique_id = (
