@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from infrared_protocols.codes.lg import LGTVCode, make_tv_command as make_lg_tv_command
+from infrared_protocols.codes.lg.tv import LGTVCode, make_command as make_lg_tv_command
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.components.media_player import (

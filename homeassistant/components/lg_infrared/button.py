@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from infrared_protocols.codes.lg import LGTVCode, make_tv_command as make_lg_tv_command
+from infrared_protocols.codes.lg.tv import LGTVCode, make_command as make_lg_tv_command
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.components.infrared import async_send_command
