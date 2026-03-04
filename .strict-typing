@@ -342,6 +342,7 @@ homeassistant.components.lookin.*
 homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
+homeassistant.components.lutron
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.mastodon.*
@@ -619,4 +620,3 @@ homeassistant.components.zinvolt.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*
-homeassistant.components.lutron
