@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import AFTER_COMMAND_REFRESH, DEFAULT_EXPIRED_DURATION, DOMAIN
+from .const import AFTER_COMMAND_REFRESH, DOMAIN, KEYPAD_KEY_EXPIRY_DURATION_SECONDS
 from .entity import SwitchBotCloudEntity
 
 
@@ -52,7 +52,7 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
                 "type": "disposable",
                 "password": password,
                 "startTime": now,
-                "endTime": now + DEFAULT_EXPIRED_DURATION,
+                "endTime": now + KEYPAD_KEY_EXPIRY_DURATION_SECONDS,
             }
             await self.send_api_command(
                 KeyPadCommands.CREATE_KEY, parameters=parameters
@@ -69,13 +69,14 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
         if self.coordinator.data is None:
             return
         options = [self.default_option]
-        key_list = self.coordinator.data["keyList"]
+        key_list = self.coordinator.data.get("keyList", [])
         for item in key_list:
             password = item["password"]
             iv = item["iv"]
             key = self._api.aes_128_cbc_decrypt(password, iv)
             status = item["status"]
             if status == "expired":
+                key = key.replace("expired", "").replace("-", "").strip()
                 key = f"{key} - {status}"
             options.insert(0, key)
 

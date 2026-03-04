@@ -1,5 +1,6 @@
 """Test for the switchbot_cloud select."""
 
+import time
 from unittest.mock import patch
 
 import pytest
@@ -39,20 +40,21 @@ async def test_keypad_coordinator_data_is_none(
 
 
 @pytest.mark.parametrize(
-    ("key_status", "key_type", "result"),
+    ("key_type", "key_status", "expected"),
     [
-        ("permanent", "normal", ""),
-        ("disposable", "normal", ""),
-        ("disposable", "expired", " - expired"),
+        ("permanent", "normal", "123456"),
+        ("disposable", "normal", "456789"),
+        ("disposable", "expired", "456789"),
     ],
 )
 async def test_keypad_key_is_normal(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
-    key_status,
+    mock_aes_128_cbc_decrypt,
     key_type,
-    result,
+    key_status,
+    expected,
 ) -> None:
     """Test keypad key list state with different key types and statuses."""
     mock_list_devices.return_value = [
@@ -73,26 +75,31 @@ async def test_keypad_key_is_normal(
                 {
                     "id": 11,
                     "name": "permanent1",
-                    "type": key_status,
-                    "status": key_type,
-                    "createTime": 1772010135000,
+                    "type": key_type,
+                    "status": key_status,
+                    "createTime": time.time(),
                     "password": "vK2gtIy2mNa4QRjiV/7Cpg==",
                     "iv": "c64566e3716ea13b43abbbd3a05861f7",
                 },
             ],
         }
     ]
+
+    if "expired" in key_status:
+        expected = f"{expected} - expired"
+    mock_aes_128_cbc_decrypt.side_effect = [expected]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "select.keypad_vision_pro_1"
     state = hass.states.get(entity_id)
-    assert state.state == result
+    assert state.state == expected
 
 
 async def test_keypad_create_key(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
+    mock_aes_128_cbc_decrypt,
 ) -> None:
     """Test keypad create key."""
     mock_list_devices.return_value = [
@@ -115,7 +122,7 @@ async def test_keypad_create_key(
                     "name": "permanent1",
                     "type": "disposable",
                     "status": "normal",
-                    "createTime": 1772010135000,
+                    "createTime": time.time(),
                     "password": "vK2gtIy2mNa4QRjiV/7Cpg==",
                     "iv": "c64566e3716ea13b43abbbd3a05861f7",
                 },
@@ -130,7 +137,7 @@ async def test_keypad_create_key(
                     "name": "permanent1",
                     "type": "disposable",
                     "status": "normal",
-                    "createTime": 1772010135000,
+                    "createTime": time.time(),
                     "password": "vK2gtIy2mNa4QRjiV/7Cpg==",
                     "iv": "c64566e3716ea13b43abbbd3a05861f7",
                 },
@@ -145,13 +152,14 @@ async def test_keypad_create_key(
                     "name": "permanent1",
                     "type": "disposable",
                     "status": "normal",
-                    "createTime": 1772010135000,
+                    "createTime": time.time(),
                     "password": "vK2gtIy2mNa4QRjiV/7Cpg==",
                     "iv": "c64566e3716ea13b43abbbd3a05861f7",
                 },
             ],
         },
     ]
+    mock_aes_128_cbc_decrypt.side_effect = ["123456", "456789", "123789"]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "select.keypad_vision_pro_1"
@@ -171,9 +179,9 @@ async def test_keypad_create_key(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": ""},
+        {ATTR_ENTITY_ID: entity_id, "option": "456789"},
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
-    assert state.state == ""
+    assert state.state == "456789"
