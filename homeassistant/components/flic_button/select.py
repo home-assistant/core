@@ -5,18 +5,19 @@ from __future__ import annotations
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FlicButtonConfigEntry
-from .const import CONF_PUSH_TWIST_MODE, PushTwistMode
+from .const import CONF_PUSH_TWIST_MODE, DOMAIN, PushTwistMode
 from .coordinator import FlicCoordinator, format_selector_dispatcher_name
 from .entity import FlicButtonEntity
 
 PARALLEL_UPDATES = 0
 
-# 12 slot options (1-indexed for user display)
-SLOT_OPTIONS = [f"Slot {i}" for i in range(1, 13)]
+# 12 slot options as translation keys matching strings.json state entries
+SLOT_OPTIONS = [f"slot_{i}" for i in range(1, 13)]
 
 
 async def async_setup_entry(
@@ -41,12 +42,7 @@ class FlicSelectedSlotSelect(FlicButtonEntity, SelectEntity):
     _attr_options = SLOT_OPTIONS
 
     def __init__(self, coordinator: FlicCoordinator) -> None:
-        """Initialize the selected slot select entity.
-
-        Args:
-            coordinator: Flic coordinator instance
-
-        """
+        """Initialize the selected slot select entity."""
         super().__init__(coordinator)
         self._current_slot_index: int = 0  # Default to Slot 1 (index 0)
         self._attr_unique_id = f"{coordinator.client.address}-selected-slot"
@@ -69,19 +65,15 @@ class FlicSelectedSlotSelect(FlicButtonEntity, SelectEntity):
 
     @callback
     def _handle_selector_update(self, selector_index: int) -> None:
-        """Handle selector slot update from push_twist rotation.
-
-        Args:
-            selector_index: The selected slot index (0-11)
-
-        """
+        """Handle selector slot update from push_twist rotation."""
         if 0 <= selector_index <= 11:
             self._current_slot_index = selector_index
             self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
-        """Handle user selection (read-only, no-op).
-
-        This entity is read-only - it reflects the physical dial position
-        set during push+twist rotation. User cannot change it from HA.
-        """
+        """Handle user selection (read-only)."""
+        raise ServiceValidationError(
+            "This entity is read-only and reflects the physical dial position",
+            translation_domain=DOMAIN,
+            translation_key="read_only_entity",
+        )

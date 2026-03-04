@@ -27,6 +27,7 @@ from .const import (
     FRAME_HEADER_CONN_ID_MASK,
     FRAME_HEADER_FRAGMENT_FLAG,
     FRAME_HEADER_NEWLY_ASSIGNED,
+    OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
     TWIST_DISCONNECT_REASON_INVALID_SIGNATURE,
     TWIST_DISCONNECT_REASON_OTHER_CLIENT,
     TWIST_OPCODE_BUTTON_EVENT,
@@ -83,6 +84,11 @@ class FlicClient:
     protocol handling to DeviceProtocolHandler implementations.
     """
 
+    # Class-level set of BLE addresses with active firmware updates.
+    # Prevents ANY FlicClient instance (including config flow clients)
+    # from connecting to an address while firmware is being transferred.
+    _firmware_update_addresses: set[str] = set()
+
     def __init__(
         self,
         address: str,
@@ -94,19 +100,7 @@ class FlicClient:
         sig_bits: int = 0,
         push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
     ) -> None:
-        """Initialize Flic client.
-
-        Args:
-            address: Bluetooth address of the device
-            ble_device: BLE device to connect to (None if not yet discovered)
-            pairing_id: Stored pairing ID (for reconnection)
-            pairing_key: Stored pairing key (for reconnection)
-            serial_number: Button serial number (used for Duo/Twist detection)
-            device_type: Explicit device type (FLIC2, DUO, or TWIST)
-            sig_bits: Ed25519 signature variant (0-3, used by Twist for quick verify)
-            push_twist_mode: Push twist mode setting for Twist devices
-
-        """
+        """Initialize Flic client."""
         self.ble_device = ble_device
         self.address = address
         self._client: BleakClient | None = None
@@ -131,7 +125,7 @@ class FlicClient:
 
         # Create protocol handler for this device type
         self._handler: DeviceProtocolHandler = create_handler(
-            self._device_type, serial_number, push_twist_mode
+            self._device_type, push_twist_mode
         )
 
         # Session state
@@ -156,6 +150,10 @@ class FlicClient:
         # Selector change callback (for Twist only)
         self.on_selector_change: Callable[[int, dict[str, Any]], None] | None = None
 
+        # Disconnect callback (called when BLE connection drops unexpectedly)
+        self.on_disconnect: Callable[[], None] | None = None
+        self._intentional_disconnect = False
+
         # Firmware update active flag (gates 0x0F notification queueing)
         self._firmware_update_active = False
 
@@ -171,6 +169,24 @@ class FlicClient:
 
     async def connect(self) -> None:
         """Connect to the Flic button via BLE."""
+        if self._firmware_update_active:
+            _LOGGER.debug(
+                "Refusing connect to %s during active firmware update",
+                self.address,
+            )
+            return
+
+        # Block connections from ANY FlicClient instance while another
+        # instance is performing a firmware update on this address.
+        # This prevents config flow or reconnect clients from killing
+        # an active firmware transfer via close_stale_connections_by_address.
+        if self.address in FlicClient._firmware_update_addresses:
+            _LOGGER.debug(
+                "Refusing connect to %s: firmware update active on another client",
+                self.address,
+            )
+            return
+
         if self._client and self._client.is_connected:
             _LOGGER.debug("Already connected to %s", self.address)
             return
@@ -184,6 +200,18 @@ class FlicClient:
             _LOGGER.debug("Cleaning up stale connection to %s", self.address)
             with contextlib.suppress(BleakError):
                 await self._client.disconnect()
+
+            # Re-check after await: a firmware update may have started on
+            # another FlicClient for this address during the disconnect.
+            if self.address in FlicClient._firmware_update_addresses:
+                _LOGGER.debug(
+                    "Firmware update started during cleanup, aborting connect to %s",
+                    self.address,
+                )
+                self._client = None
+                self._state = SessionState.FAILED
+                return
+
             self._client = None
             self._state = SessionState.DISCONNECTED
             self._handler.reset_state()
@@ -206,9 +234,29 @@ class FlicClient:
                 BleakClient,
                 self.ble_device,
                 self.address,
+                disconnected_callback=self._handle_disconnected,
                 max_attempts=1,
             )
             _LOGGER.info("BLE connection established to %s", self.address)
+
+            # Abort if a firmware update started while we were connecting.
+            # The transfer uses the old BleakClient; replacing it would
+            # corrupt the session and break the transfer.
+            if (
+                self._firmware_update_active
+                or self.address in FlicClient._firmware_update_addresses
+            ):
+                _LOGGER.info(
+                    "Firmware update started during reconnect to %s, aborting",
+                    self.address,
+                )
+                with contextlib.suppress(BleakError):
+                    await self._client.disconnect()
+                self._client = None
+                self._state = SessionState.FAILED
+                raise FlicProtocolError(
+                    "Aborted reconnect: firmware update in progress"
+                )
 
             # Check MTU size
             if hasattr(self._client, "mtu_size"):
@@ -250,6 +298,7 @@ class FlicClient:
 
     async def disconnect(self) -> None:
         """Disconnect from the Flic button."""
+        self._intentional_disconnect = True
         if self._client:
             try:
                 await self._client.disconnect()
@@ -260,12 +309,19 @@ class FlicClient:
                 self._state = SessionState.DISCONNECTED
                 self._handler.reset_state()
 
-    async def _request_connection_parameters(self) -> None:
-        """Request BLE connection parameters for optimal communication.
+    def _handle_disconnected(self, _client: BleakClient) -> None:
+        """Handle BLE disconnection event from Bleak."""
+        if self._intentional_disconnect:
+            self._intentional_disconnect = False
+            return
+        _LOGGER.info("BLE connection lost to %s", self.address)
+        self._state = SessionState.DISCONNECTED
+        self._handler.reset_state()
+        if self.on_disconnect:
+            self.on_disconnect()
 
-        Sets latency, connection interval, and supervision timeout.
-        This is platform-dependent and may not be supported on all backends.
-        """
+    async def _request_connection_parameters(self) -> None:
+        """Request BLE connection parameters for optimal communication."""
         if not self._client:
             return
 
@@ -302,12 +358,7 @@ class FlicClient:
             _LOGGER.debug("Failed to request connection parameters: %s", err)
 
     async def _request_connection_parameters_bluez(self, backend: object) -> None:
-        """Request connection parameters on BlueZ (Linux).
-
-        Args:
-            backend: Bleak BlueZ backend instance
-
-        """
+        """Request connection parameters on BlueZ (Linux)."""
         bus = None
         try:
             from dbus_fast.aio import MessageBus  # noqa: PLC0415
@@ -365,17 +416,7 @@ class FlicClient:
     async def _request_connection_parameters_corebluetooth(
         self, backend: object
     ) -> None:
-        """Request connection parameters on Core Bluetooth (macOS).
-
-        Args:
-            backend: Bleak Core Bluetooth backend instance
-
-        Note:
-            Core Bluetooth does not expose direct connection parameter control
-            from the central side. The peripheral device can request parameter
-            updates, but the central can only accept or reject them.
-            We log the desired parameters for debugging purposes.
-        """
+        """Request connection parameters on Core Bluetooth (macOS)."""
         try:
             # Core Bluetooth doesn't expose connection parameter APIs to centrals
             # The CBPeripheral can request updates via L2CAP, but CBCentralManager
@@ -404,12 +445,7 @@ class FlicClient:
             _LOGGER.debug("Core Bluetooth connection parameter request failed: %s", err)
 
     async def _request_connection_parameters_winrt(self, backend: object) -> None:
-        """Request connection parameters on Windows (WinRT).
-
-        Args:
-            backend: Bleak WinRT backend instance
-
-        """
+        """Request connection parameters on Windows (WinRT)."""
         try:
             # Try to import Windows-specific modules
             from winrt.windows.devices.bluetooth import (  # noqa: PLC0415
@@ -494,43 +530,28 @@ class FlicClient:
 
     async def full_verify_pairing(
         self,
-    ) -> tuple[int, bytes, str, int, int, bytes | None]:
-        """Perform full pairing verification (for new pairings).
-
-        Returns:
-            Tuple of (pairing_id, pairing_key, serial_number, battery_level,
-                       sig_bits, button_uuid)
-
-        """
+    ) -> tuple[int, bytes, str, int, int, bytes, int]:
+        """Perform full pairing verification (for new pairings)."""
         if self._state != SessionState.CONNECTED:
             raise FlicProtocolError("Not connected")
 
         self._state = SessionState.WAIT_FULL_VERIFY_1
 
         try:
-            result = await self._handler.full_verify_pairing(
+            (
+                pairing_id,
+                pairing_key,
+                serial_number,
+                battery_level,
+                sig_bits,
+                button_uuid,
+                firmware_version,
+            ) = await self._handler.full_verify_pairing(
                 write_gatt=self._write_gatt,
                 wait_for_opcode=self._wait_for_handler_opcode,
                 wait_for_opcodes=self._wait_for_handler_opcodes,
                 write_packet=self._write_packet,
             )
-
-            # Handle 4-value (Flic2/Duo), 5-value (old Twist), 6-value (Twist with UUID)
-            button_uuid: bytes | None = None
-            if len(result) == 6:
-                (
-                    pairing_id,
-                    pairing_key,
-                    serial_number,
-                    battery_level,
-                    sig_bits,
-                    button_uuid,
-                ) = result
-            elif len(result) == 5:
-                pairing_id, pairing_key, serial_number, battery_level, sig_bits = result
-            else:
-                pairing_id, pairing_key, serial_number, battery_level = result
-                sig_bits = 0
 
             self._pairing_id = pairing_id
             self._pairing_key = pairing_key
@@ -548,6 +569,7 @@ class FlicClient:
                 battery_level,
                 sig_bits,
                 button_uuid,
+                firmware_version,
             )
 
     async def quick_verify(self) -> None:
@@ -616,12 +638,9 @@ class FlicClient:
         )
 
     async def get_battery_level(self) -> int:
-        """Request the battery level from the device (Flic 2/Duo only)."""
+        """Request the battery level from the device."""
         if self._state != SessionState.SESSION_ESTABLISHED:
             raise FlicProtocolError("Session not established")
-
-        if not hasattr(self._handler, "get_battery_level"):
-            raise FlicProtocolError("Battery level command not supported")
 
         return await self._handler.get_battery_level(
             connection_id=self._connection_id,
@@ -629,16 +648,33 @@ class FlicClient:
             wait_for_opcode=self._wait_for_handler_opcode,
         )
 
+    async def get_name(self) -> tuple[str, int]:
+        """Request the device name."""
+        if self._state != SessionState.SESSION_ESTABLISHED:
+            raise FlicProtocolError("Session not established")
+
+        return await self._handler.get_name(
+            connection_id=self._connection_id,
+            write_packet=self._write_packet,
+            wait_for_opcode=self._wait_for_handler_opcode,
+        )
+
+    async def set_name(self, name: str) -> tuple[str, int]:
+        """Set the device name."""
+        if self._state != SessionState.SESSION_ESTABLISHED:
+            raise FlicProtocolError("Session not established")
+
+        return await self._handler.set_name(
+            connection_id=self._connection_id,
+            name=name,
+            write_packet=self._write_packet,
+            wait_for_opcode=self._wait_for_handler_opcode,
+        )
+
     async def async_send_update_twist_position(
         self, mode_index: int, percentage: float
     ) -> None:
-        """Send position update via UpdateTwistPositionRequest.
-
-        Args:
-            mode_index: Twist mode index (0-11 for slots)
-            percentage: Position as percentage (0.0-100.0)
-
-        """
+        """Send position update via UpdateTwistPositionRequest."""
         if not isinstance(self._handler, TwistProtocolHandler):
             raise FlicProtocolError("Not a Twist device")
         if self._state != SessionState.SESSION_ESTABLISHED:
@@ -667,28 +703,12 @@ class FlicClient:
         firmware_binary: bytes,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> bool:
-        """Perform OTA firmware update on a Twist device.
-
-        Args:
-            firmware_binary: Raw firmware binary (header + compressed data)
-            progress_callback: Called with (bytes_acked, total_bytes)
-
-        Returns:
-            True on success
-
-        Raises:
-            FlicFirmwareUpdateError: On firmware update failure
-            FlicProtocolError: If not connected or not a Twist device
-
-        """
-        if not isinstance(self._handler, TwistProtocolHandler):
-            raise FlicProtocolError(
-                "Firmware update is only supported on Twist devices"
-            )
+        """Perform OTA firmware update on the device."""
         if self._state != SessionState.SESSION_ESTABLISHED:
             raise FlicProtocolError("Session not established")
 
         self._firmware_update_active = True
+        FlicClient._firmware_update_addresses.add(self.address)
         try:
             try:
                 start_pos = await self._handler.start_firmware_update(
@@ -720,6 +740,7 @@ class FlicClient:
             return True
         finally:
             self._firmware_update_active = False
+            FlicClient._firmware_update_addresses.discard(self.address)
 
     async def _write_gatt(self, char_uuid: str, data: bytes) -> None:
         """Write data to a GATT characteristic."""
@@ -778,13 +799,7 @@ class FlicClient:
         return fragments
 
     async def _write_packet(self, data: bytes, authenticated: bool = True) -> None:
-        """Write a packet to the button.
-
-        Args:
-            data: Packet data (header + opcode + payload)
-            authenticated: Whether to add authentication signature
-
-        """
+        """Write a packet to the button."""
         if not self._client:
             raise FlicProtocolError("Not connected")
 
@@ -969,6 +984,17 @@ class FlicClient:
 
         # If no events, this might be a command response
         if not button_events and not rotate_events:
+            # Discard firmware update notifications when no update is active.
+            # The device may send stale notifications from a previous
+            # update attempt; queueing them would block other command responses.
+            if (
+                opcode == OPCODE_FIRMWARE_UPDATE_NOTIFICATION
+                and not self._firmware_update_active
+            ):
+                _LOGGER.debug(
+                    "Discarding stale firmware notification (no update active)"
+                )
+                return
             _LOGGER.debug("Putting response opcode=0x%02x in queue", opcode)
             self._response_queue.put_nowait(bytes(data))
 
@@ -1085,17 +1111,11 @@ class FlicClient:
                     _LOGGER.exception("Error in rotate event callback")
 
     async def _wait_for_handler_opcode(self, opcode: int) -> bytes:
-        """Wait for a response with specific opcode (for handler use).
-
-        Routes to appropriate wait function based on frame header presence.
-        """
+        """Wait for a response with specific opcode."""
         return await self._wait_for_handler_opcodes([opcode])
 
     async def _wait_for_handler_opcodes(self, opcodes: list[int]) -> bytes:
-        """Wait for a response with one of specified opcodes (for handler use).
-
-        Routes to appropriate wait function based on frame header presence.
-        """
+        """Wait for a response with one of specified opcodes."""
         has_frame_header = self._handler.capabilities.has_frame_header
         opcode_offset = 1 if has_frame_header else 0
         min_len = 2 if has_frame_header else 1

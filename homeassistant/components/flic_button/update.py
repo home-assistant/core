@@ -10,10 +10,11 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FlicButtonConfigEntry
+from .const import DOMAIN
 from .coordinator import FlicCoordinator
 from .entity import FlicButtonEntity
 
@@ -29,14 +30,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Flic Button update entities."""
     coordinator = entry.runtime_data
-
-    if coordinator.is_twist:
-        async_add_entities([FlicTwistUpdateEntity(coordinator)])
+    async_add_entities([FlicFirmwareUpdateEntity(coordinator)])
 
 
-class FlicTwistUpdateEntity(FlicButtonEntity, UpdateEntity):
-    """Firmware update entity for Flic Twist."""
+class FlicFirmwareUpdateEntity(FlicButtonEntity, UpdateEntity):
+    """Firmware update entity for Flic devices."""
 
+    _attr_auto_update = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -47,6 +47,50 @@ class FlicTwistUpdateEntity(FlicButtonEntity, UpdateEntity):
         """Initialize the firmware update entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.client.address}-firmware"
+        self._auto_install_attempted = False
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity added to hass."""
+        await super().async_added_to_hass()
+        self._maybe_auto_install()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        self._maybe_auto_install()
+
+    @callback
+    def _maybe_auto_install(self) -> None:
+        """Schedule auto-install if a firmware update is available."""
+        if (
+            not self._auto_install_attempted
+            and not self.coordinator.firmware_update_in_progress
+            and not self.coordinator.firmware_awaiting_reboot
+            and self.installed_version is not None
+            and self.latest_version is not None
+            and self.version_is_newer(self.latest_version, self.installed_version)
+        ):
+            self._auto_install_attempted = True
+            self.hass.async_create_background_task(
+                self._async_auto_install(),
+                name=f"{DOMAIN}_auto_install_{self.coordinator.client.address}",
+            )
+
+    async def _async_auto_install(self) -> None:
+        """Auto-install firmware update."""
+        try:
+            _LOGGER.info(
+                "Auto-installing firmware update for %s",
+                self.coordinator.client.address,
+            )
+            await self.coordinator.async_install_firmware()
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning(
+                "Auto firmware install failed for %s, "
+                "update can be retried from the update entity",
+                self.coordinator.client.address,
+            )
 
     @property
     def available(self) -> bool:
@@ -101,10 +145,12 @@ class FlicTwistUpdateEntity(FlicButtonEntity, UpdateEntity):
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return if latest_version is newer than installed_version."""
-        try:
-            return True
-        except (ValueError, TypeError):
-            return False
+        # Handle the special +update suffix used when API offers a re-flash
+        latest_clean = latest_version.split("+", maxsplit=1)[0]
+        installed_clean = installed_version.split("+", maxsplit=1)[0]
+        if latest_clean == installed_clean:
+            return "+" in latest_version
+        return super().version_is_newer(latest_clean, installed_clean)
 
     async def async_install(
         self,
@@ -113,15 +159,4 @@ class FlicTwistUpdateEntity(FlicButtonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install a firmware update."""
-
-        def _progress_callback(bytes_acked: int, total_bytes: int) -> None:
-            """Update progress percentage."""
-            if total_bytes > 0:
-                self.coordinator.set_firmware_update_percentage(
-                    int(bytes_acked * 100 / total_bytes)
-                )
-                self.async_write_ha_state()
-
-        await self.coordinator.async_install_firmware(
-            progress_callback=_progress_callback,
-        )
+        await self.coordinator.async_install_firmware()

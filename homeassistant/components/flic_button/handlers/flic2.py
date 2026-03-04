@@ -3,17 +3,25 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 import secrets
 import struct
+import time
 
 from ..const import (
     COMMAND_TIMEOUT,
+    FIRMWARE_FINAL_ACK_TIMEOUT,
+    FIRMWARE_UPDATE_TIMEOUT,
     FLIC2_ED25519_PUBLIC_KEY,
+    FLIC2_FIRMWARE_IV_SIZE,
+    FLIC2_FIRMWARE_MAX_IN_FLIGHT_WORDS,
+    FLIC2_FIRMWARE_WORD_CHUNK_SIZE,
     FLIC_NOTIFY_CHAR_UUID,
     FLIC_SERVICE_UUID,
     FLIC_WRITE_CHAR_UUID,
     OPCODE_BUTTON_EVENT,
+    OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
     OPCODE_FULL_VERIFY_REQUEST_1,
     OPCODE_FULL_VERIFY_REQUEST_2,
     OPCODE_FULL_VERIFY_RESPONSE_1,
@@ -22,19 +30,29 @@ from ..const import (
     OPCODE_GET_BATTERY_LEVEL_RESPONSE,
     OPCODE_GET_FIRMWARE_VERSION_REQUEST,
     OPCODE_GET_FIRMWARE_VERSION_RESPONSE,
+    OPCODE_GET_NAME_REQUEST,
+    OPCODE_GET_NAME_RESPONSE,
     OPCODE_INIT_BUTTON_EVENTS_REQUEST,
     OPCODE_INIT_BUTTON_EVENTS_RESPONSE_WITH_BOOT_ID,
     OPCODE_INIT_BUTTON_EVENTS_RESPONSE_WITHOUT_BOOT_ID,
     OPCODE_QUICK_VERIFY_REQUEST,
     OPCODE_QUICK_VERIFY_RESPONSE,
+    OPCODE_SET_NAME_REQUEST,
+    OPCODE_SET_NAME_RESPONSE,
+    OPCODE_START_FIRMWARE_UPDATE_RESPONSE,
     PAIRING_TIMEOUT,
 )
 from ..flic_protocol import (
+    FirmwareUpdateNotification,
     Flic2EventNotification,
+    Flic2FirmwareUpdateDataInd,
+    Flic2ForceBtDisconnectInd,
+    Flic2StartFirmwareUpdateRequest,
     FullVerifyResponse2,
     InitButtonEventsRequest,
     QuickVerifyRequest,
     QuickVerifyResponse,
+    StartFirmwareUpdateResponse,
 )
 from ..flic_security import (
     chaskey_16_bytes,
@@ -115,7 +133,7 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> tuple[int, bytes, str, int]:
+    ) -> tuple[int, bytes, str, int, int, bytes, int]:
         """Perform full pairing verification for Flic 2."""
         # Generate temporary connection ID for pairing
         temp_conn_id = secrets.randbelow(2**32)
@@ -263,7 +281,15 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
 
         _LOGGER.info("Pairing successful (serial=%s)", serial_number)
 
-        return pairing_id, pairing_key, serial_number, response2.battery_level
+        return (
+            pairing_id,
+            pairing_key,
+            serial_number,
+            response2.battery_level,
+            0,  # sig_bits (not used for Flic 2)
+            response2.button_uuid,
+            response2.firmware_version,
+        )
 
     async def quick_verify(
         self,
@@ -408,6 +434,217 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
         )
         # Response: [header:1][opcode:1][battery_level:2]
         return struct.unpack("<H", response[2:4])[0]
+
+    async def get_name(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> tuple[str, int]:
+        """Request and return the device name from a Flic 2/Duo device."""
+        request = struct.pack("<BB", connection_id & 0x1F, OPCODE_GET_NAME_REQUEST)
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(OPCODE_GET_NAME_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        # Response: [header:1][opcode:1][timestamp:6][name:var]
+        timestamp_ms = int.from_bytes(response[2:8], "little")
+        name = response[8:].decode("utf-8", errors="replace")
+        return name, timestamp_ms
+
+    async def set_name(
+        self,
+        connection_id: int,
+        name: str,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> tuple[str, int]:
+        """Set the device name on a Flic 2/Duo device."""
+        name_bytes = self._truncate_name_bytes(name)
+
+        # Build 6-byte timestamp_force: 47-bit UTC ms | force_update=1
+        timestamp_ms = int(time.time() * 1000)
+        # Set the force_update bit (bit 0 of the 6-byte field, highest bit)
+        timestamp_force = (timestamp_ms << 1) | 1
+        timestamp_force_bytes = timestamp_force.to_bytes(6, "little")
+
+        request = (
+            struct.pack("<BB", connection_id & 0x1F, OPCODE_SET_NAME_REQUEST)
+            + timestamp_force_bytes
+            + name_bytes
+        )
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(OPCODE_SET_NAME_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        # Response: [header:1][opcode:1][timestamp:6][name:var]
+        resp_timestamp_ms = int.from_bytes(response[2:8], "little")
+        resp_name = response[8:].decode("utf-8", errors="replace")
+        return resp_name, resp_timestamp_ms
+
+    def _build_firmware_start_packet(self, firmware_binary: bytes) -> bytes:
+        """Build the device-specific firmware update start packet."""
+        return Flic2StartFirmwareUpdateRequest.from_firmware_binary(
+            firmware_binary, self._connection_id
+        ).to_bytes()
+
+    async def start_firmware_update(
+        self,
+        firmware_binary: bytes,
+        write_packet: WritePacketFn,
+        wait_for_opcodes: WaitForOpcodesFn,
+    ) -> int:
+        """Start a firmware update on a Flic 2/Duo device."""
+        await write_packet(self._build_firmware_start_packet(firmware_binary), True)
+
+        # Wait for either StartFirmwareUpdateResponse (18) or
+        # FirmwareUpdateNotification (19).
+        response_data = await asyncio.wait_for(
+            wait_for_opcodes(
+                [
+                    OPCODE_START_FIRMWARE_UPDATE_RESPONSE,
+                    OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
+                ]
+            ),
+            timeout=COMMAND_TIMEOUT,
+        )
+
+        # Strip frame header byte for parsing
+        opcode = response_data[1]
+        payload = response_data[1:]
+
+        if opcode == OPCODE_FIRMWARE_UPDATE_NOTIFICATION:
+            notification = FirmwareUpdateNotification.from_bytes(payload)
+            _LOGGER.debug(
+                "Received FirmwareUpdateNotification instead of StartResponse: pos=%d",
+                notification.pos,
+            )
+            return notification.pos
+
+        response = StartFirmwareUpdateResponse.from_bytes(payload)
+        _LOGGER.debug("StartFirmwareUpdateResponse: start_pos=%d", response.start_pos)
+
+        return self._validate_firmware_start_pos(response.start_pos)
+
+    async def send_firmware_data(
+        self,
+        firmware_binary: bytes,
+        start_pos: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> bool:
+        """Send firmware data to a Flic 2 device with word-based flow control."""
+        compressed_data = firmware_binary[FLIC2_FIRMWARE_IV_SIZE:]
+        total_bytes = len(compressed_data)
+        total_words = total_bytes // 4
+
+        sent_words = start_pos
+        acked_words = start_pos
+
+        _LOGGER.debug(
+            "Starting Flic 2 firmware data transfer: total=%d words (%d bytes), start_pos=%d",
+            total_words,
+            total_bytes,
+            start_pos,
+        )
+
+        while sent_words < total_words:
+            # Flow control: wait if too many words in flight
+            while sent_words - acked_words >= FLIC2_FIRMWARE_MAX_IN_FLIGHT_WORDS:
+                notification_data = await asyncio.wait_for(
+                    wait_for_opcode(OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                    timeout=FIRMWARE_UPDATE_TIMEOUT,
+                )
+                # Strip frame header for parsing
+                notification = FirmwareUpdateNotification.from_bytes(
+                    notification_data[1:]
+                )
+
+                if notification.pos == 0:
+                    _LOGGER.error("Firmware signature verification failed")
+                    return False
+
+                acked_words = notification.pos
+                if progress_callback:
+                    # Convert words to bytes for progress
+                    progress_callback(min(acked_words * 4, total_bytes), total_bytes)
+
+                if acked_words >= total_words:
+                    _LOGGER.info("Firmware transfer complete")
+                    return True
+
+            # Send next chunk of words, clamped to remaining in-flight window
+            remaining_window = FLIC2_FIRMWARE_MAX_IN_FLIGHT_WORDS - (
+                sent_words - acked_words
+            )
+            chunk_word_count = min(
+                FLIC2_FIRMWARE_WORD_CHUNK_SIZE,
+                total_words - sent_words,
+                remaining_window,
+            )
+            byte_start = sent_words * 4
+            byte_end = byte_start + chunk_word_count * 4
+            chunk_bytes = compressed_data[byte_start:byte_end]
+
+            # Convert bytes to word list
+            words = [
+                struct.unpack("<I", chunk_bytes[i : i + 4])[0]
+                for i in range(0, len(chunk_bytes), 4)
+            ]
+
+            data_ind = Flic2FirmwareUpdateDataInd(
+                connection_id=self._connection_id, words=words
+            )
+            await write_packet(data_ind.to_bytes(), True)
+            sent_words += chunk_word_count
+
+        # Wait for remaining acknowledgments.
+        # After all data is sent the device verifies the signature and reboots.
+        # The reboot often drops the BLE connection before the final ACK
+        # arrives, so use a shorter timeout and treat it as success.
+        try:
+            while acked_words < total_words:
+                notification_data = await asyncio.wait_for(
+                    wait_for_opcode(OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                    timeout=FIRMWARE_FINAL_ACK_TIMEOUT,
+                )
+                notification = FirmwareUpdateNotification.from_bytes(
+                    notification_data[1:]
+                )
+
+                if notification.pos == 0:
+                    _LOGGER.error("Firmware signature verification failed")
+                    return False
+
+                acked_words = notification.pos
+                if progress_callback:
+                    progress_callback(min(acked_words * 4, total_bytes), total_bytes)
+        except TimeoutError:
+            _LOGGER.info(
+                "Final ACK timed out after all data sent — "
+                "device likely rebooted with new firmware"
+            )
+            return True
+
+        _LOGGER.info("Firmware transfer complete")
+        return True
+
+    async def send_force_disconnect(
+        self,
+        write_packet: WritePacketFn,
+        restart_adv: bool = True,
+    ) -> None:
+        """Send force disconnect to trigger device reboot."""
+        ind = Flic2ForceBtDisconnectInd(
+            connection_id=self._connection_id, restart_adv=restart_adv
+        )
+        await write_packet(ind.to_bytes(), True)
+        _LOGGER.debug("Sent Flic2ForceBtDisconnectInd (restart_adv=%s)", restart_adv)
 
     def handle_notification(
         self,

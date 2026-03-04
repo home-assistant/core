@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ..const import (
+    DEVICE_NAME_MAX_BYTES,
     EVENT_TYPE_CLICK,
     EVENT_TYPE_DOUBLE_CLICK,
     EVENT_TYPE_DOWN,
@@ -75,11 +76,7 @@ WriteGattFn = Callable[[str, bytes], Awaitable[None]]
 
 
 class DeviceProtocolHandler(ABC):
-    """Abstract base class for device-specific protocol handlers.
-
-    Each device type (Flic 2, Duo, Twist) implements this interface
-    to handle its specific pairing, authentication, and event protocols.
-    """
+    """Abstract base class for device-specific protocol handlers."""
 
     def __init__(self) -> None:
         """Initialize the handler."""
@@ -117,24 +114,8 @@ class DeviceProtocolHandler(ABC):
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> (
-        tuple[int, bytes, str, int]
-        | tuple[int, bytes, str, int, int]
-        | tuple[int, bytes, str, int, int, bytes]
-    ):
-        """Perform full pairing verification.
-
-        Args:
-            write_gatt: Function to write to GATT characteristic
-            wait_for_opcode: Function to wait for a specific opcode
-            wait_for_opcodes: Function to wait for one of multiple opcodes
-            write_packet: Function to write authenticated packets
-
-        Returns:
-            Tuple of (pairing_id, pairing_key, serial_number, battery_level)
-            or (pairing_id, pairing_key, serial_number, battery_level, sig_bits)
-
-        """
+    ) -> tuple[int, bytes, str, int, int, bytes, int]:
+        """Perform full pairing verification."""
 
     @abstractmethod
     async def quick_verify(
@@ -146,20 +127,7 @@ class DeviceProtocolHandler(ABC):
         write_packet: WritePacketFn,
         sig_bits: int = 0,
     ) -> tuple[bytes, list[int]]:
-        """Perform quick verification using stored credentials.
-
-        Args:
-            pairing_id: Stored pairing ID
-            pairing_key: Stored pairing key
-            write_gatt: Function to write to GATT characteristic
-            wait_for_opcode: Function to wait for a specific opcode
-            write_packet: Function to write packets
-            sig_bits: Ed25519 signature variant (0-3), used by Twist
-
-        Returns:
-            Tuple of (session_key, chaskey_subkeys)
-
-        """
+        """Perform quick verification using stored credentials."""
 
     @abstractmethod
     async def init_button_events(
@@ -172,18 +140,16 @@ class DeviceProtocolHandler(ABC):
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
     ) -> None:
-        """Initialize button event delivery.
+        """Initialize button event delivery."""
 
-        Args:
-            connection_id: Current connection ID
-            session_key: Session key (for authenticated packets)
-            chaskey_keys: Chaskey subkeys for MAC
-            write_gatt: Function to write to GATT characteristic
-            wait_for_opcode: Function to wait for a specific opcode
-            wait_for_opcodes: Function to wait for one of multiple opcodes
-            write_packet: Function to write authenticated packets
-
-        """
+    @abstractmethod
+    async def get_battery_level(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> int:
+        """Request and return the battery level from the device."""
 
     @abstractmethod
     async def get_firmware_version(
@@ -192,17 +158,7 @@ class DeviceProtocolHandler(ABC):
         write_packet: WritePacketFn,
         wait_for_opcode: WaitForOpcodeFn,
     ) -> int:
-        """Request and return the firmware version from the device.
-
-        Args:
-            connection_id: Current connection ID
-            write_packet: Function to write authenticated packets
-            wait_for_opcode: Function to wait for a specific opcode
-
-        Returns:
-            Firmware version as an integer
-
-        """
+        """Request and return the firmware version from the device."""
 
     @abstractmethod
     def handle_notification(
@@ -210,23 +166,88 @@ class DeviceProtocolHandler(ABC):
         data: bytes,
         connection_id: int,
     ) -> tuple[list[ButtonEvent], list[RotateEvent], int | None]:
-        """Handle a notification from the device.
+        """Handle a notification from the device."""
 
-        This processes event notifications and returns parsed events.
-        This method does NOT handle MAC verification - that's done by FlicClient.
+    @abstractmethod
+    async def start_firmware_update(
+        self,
+        firmware_binary: bytes,
+        write_packet: WritePacketFn,
+        wait_for_opcodes: WaitForOpcodesFn,
+    ) -> int:
+        """Start a firmware update on the device."""
 
-        Args:
-            data: Raw notification data (after MAC verification if applicable)
-            connection_id: Current connection ID
+    @abstractmethod
+    async def send_firmware_data(
+        self,
+        firmware_binary: bytes,
+        start_pos: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> bool:
+        """Send firmware data chunks to the device."""
 
-        Returns:
-            Tuple of (button_events, rotate_events, new_selector_index or None)
+    @abstractmethod
+    async def send_force_disconnect(
+        self,
+        write_packet: WritePacketFn,
+        restart_adv: bool = True,
+    ) -> None:
+        """Send force disconnect to trigger device reboot."""
 
-        """
+    @abstractmethod
+    async def get_name(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> tuple[str, int]:
+        """Request and return the device name."""
+
+    @abstractmethod
+    async def set_name(
+        self,
+        connection_id: int,
+        name: str,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> tuple[str, int]:
+        """Set the device name."""
 
     def reset_state(self) -> None:
         """Reset any handler-specific state (called on disconnect)."""
         self._rotate_tracker = None
+
+    @staticmethod
+    def _truncate_name_bytes(name: str) -> bytes:
+        """Truncate a name to fit within DEVICE_NAME_MAX_BYTES UTF-8 bytes."""
+        encoded = name.encode("utf-8")
+        if len(encoded) <= DEVICE_NAME_MAX_BYTES:
+            return encoded
+        # Truncate and decode with error handling to ensure valid boundary
+        return (
+            encoded[:DEVICE_NAME_MAX_BYTES]
+            .decode("utf-8", errors="ignore")
+            .encode("utf-8")
+        )
+
+    @staticmethod
+    def _validate_firmware_start_pos(start_pos: int) -> int:
+        """Validate firmware update start position, raising on error codes."""
+        if start_pos == -1:
+            raise ValueError("Device rejected firmware update: invalid parameters")
+        if start_pos == -2:
+            raise ValueError("Device rejected firmware update: device busy")
+        if start_pos == -3:
+            raise ValueError(
+                "Device rejected firmware update: pending reboot from previous update"
+            )
+        if start_pos < 0:
+            raise ValueError(
+                f"Device rejected firmware update: unknown error code {start_pos}"
+            )
+        return start_pos
 
     def _get_event_name(self, event_type: int) -> str:
         """Get human-readable name for event type."""
@@ -242,24 +263,20 @@ class DeviceProtocolHandler(ABC):
         }
         return names.get(event_type, f"UNKNOWN({event_type})")
 
+    _EVENT_TYPE_MAP: dict[int, str] = {
+        FLIC2_EVENT_UP: EVENT_TYPE_UP,
+        FLIC2_EVENT_UP_CLICK_PENDING: EVENT_TYPE_UP,
+        FLIC2_EVENT_UP_SINGLE_CLICK: EVENT_TYPE_UP,
+        FLIC2_EVENT_UP_AFTER_HOLD: EVENT_TYPE_UP,
+        FLIC2_EVENT_DOWN: EVENT_TYPE_DOWN,
+        FLIC2_EVENT_SINGLE_CLICK_TIMEOUT: EVENT_TYPE_CLICK,
+        FLIC2_EVENT_HOLD: EVENT_TYPE_HOLD,
+        FLIC2_EVENT_UP_DOUBLE_CLICK: EVENT_TYPE_DOUBLE_CLICK,
+    }
+
     def _map_event_type(self, event_type: int) -> str | None:
         """Map event type to Home Assistant event type."""
-        if event_type == FLIC2_EVENT_UP:
-            return EVENT_TYPE_UP
-        if event_type == FLIC2_EVENT_DOWN:
-            return EVENT_TYPE_DOWN
-        if event_type == FLIC2_EVENT_SINGLE_CLICK_TIMEOUT:
-            return EVENT_TYPE_CLICK
-        if event_type == FLIC2_EVENT_HOLD:
-            return EVENT_TYPE_HOLD
-        if event_type == FLIC2_EVENT_UP_CLICK_PENDING:
-            return EVENT_TYPE_UP
-        if event_type == FLIC2_EVENT_UP_SINGLE_CLICK:
-            return EVENT_TYPE_UP
-        if event_type == FLIC2_EVENT_UP_DOUBLE_CLICK:
-            return EVENT_TYPE_DOUBLE_CLICK
-        if event_type == FLIC2_EVENT_UP_AFTER_HOLD:
-            return EVENT_TYPE_UP
-
-        _LOGGER.debug("Unknown button event type: %d", event_type)
-        return None
+        mapped = self._EVENT_TYPE_MAP.get(event_type)
+        if mapped is None:
+            _LOGGER.debug("Unknown button event type: %d", event_type)
+        return mapped

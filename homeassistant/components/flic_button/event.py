@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
@@ -13,11 +15,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FlicButtonConfigEntry
 from .const import (
+    CONF_PUSH_TWIST_MODE,
     EVENT_CLASS_BUTTON,
     EVENT_TYPE_CLICK,
     EVENT_TYPE_DOUBLE_CLICK,
     EVENT_TYPE_DOWN,
     EVENT_TYPE_HOLD,
+    EVENT_TYPE_PUSH_TWIST_DECREMENT,
+    EVENT_TYPE_PUSH_TWIST_INCREMENT,
     EVENT_TYPE_ROTATE_CLOCKWISE,
     EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
     EVENT_TYPE_SELECTOR_CHANGED,
@@ -25,7 +30,10 @@ from .const import (
     EVENT_TYPE_SWIPE_LEFT,
     EVENT_TYPE_SWIPE_RIGHT,
     EVENT_TYPE_SWIPE_UP,
+    EVENT_TYPE_TWIST_DECREMENT,
+    EVENT_TYPE_TWIST_INCREMENT,
     EVENT_TYPE_UP,
+    PushTwistMode,
 )
 from .coordinator import (
     FlicCoordinator,
@@ -51,50 +59,36 @@ EVENT_DESCRIPTION = EventEntityDescription(
 
 # Duo button-specific descriptions with translation keys
 # Duo buttons support all standard events plus swipe gestures and rotation
+DUO_BUTTON_EVENT_TYPES: list[str] = [
+    EVENT_TYPE_UP,
+    EVENT_TYPE_DOWN,
+    EVENT_TYPE_CLICK,
+    EVENT_TYPE_DOUBLE_CLICK,
+    EVENT_TYPE_HOLD,
+    EVENT_TYPE_SWIPE_LEFT,
+    EVENT_TYPE_SWIPE_RIGHT,
+    EVENT_TYPE_SWIPE_UP,
+    EVENT_TYPE_SWIPE_DOWN,
+    EVENT_TYPE_ROTATE_CLOCKWISE,
+    EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
+]
+
 DUO_SMALL_BUTTON_DESCRIPTION = EventEntityDescription(
     key=f"{EVENT_CLASS_BUTTON}_small",
     translation_key="button_small",
-    event_types=[
-        EVENT_TYPE_UP,
-        EVENT_TYPE_DOWN,
-        EVENT_TYPE_CLICK,
-        EVENT_TYPE_DOUBLE_CLICK,
-        EVENT_TYPE_HOLD,
-        EVENT_TYPE_SWIPE_LEFT,
-        EVENT_TYPE_SWIPE_RIGHT,
-        EVENT_TYPE_SWIPE_UP,
-        EVENT_TYPE_SWIPE_DOWN,
-        EVENT_TYPE_ROTATE_CLOCKWISE,
-        EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
-    ],
+    event_types=DUO_BUTTON_EVENT_TYPES,
     device_class=EventDeviceClass.BUTTON,
 )
 
 DUO_BIG_BUTTON_DESCRIPTION = EventEntityDescription(
     key=f"{EVENT_CLASS_BUTTON}_big",
     translation_key="button_big",
-    event_types=[
-        EVENT_TYPE_UP,
-        EVENT_TYPE_DOWN,
-        EVENT_TYPE_CLICK,
-        EVENT_TYPE_DOUBLE_CLICK,
-        EVENT_TYPE_HOLD,
-        EVENT_TYPE_SWIPE_LEFT,
-        EVENT_TYPE_SWIPE_RIGHT,
-        EVENT_TYPE_SWIPE_UP,
-        EVENT_TYPE_SWIPE_DOWN,
-        EVENT_TYPE_ROTATE_CLOCKWISE,
-        EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
-    ],
+    event_types=DUO_BUTTON_EVENT_TYPES,
     device_class=EventDeviceClass.BUTTON,
 )
 
-# Flic Twist description - single button with rotation and selector
-# Twist supports:
-# - Standard button events (click, hold, etc.)
-# - Rotation events (in all modes, not just push+twist)
-# - Selector position changes (modes 1-11)
-TWIST_BUTTON_DESCRIPTION = EventEntityDescription(
+# Flic Twist description for SELECTOR mode - rotation and selector events
+TWIST_SELECTOR_BUTTON_DESCRIPTION = EventEntityDescription(
     key=f"{EVENT_CLASS_BUTTON}_twist",
     translation_key="button_twist",
     event_types=[
@@ -110,6 +104,24 @@ TWIST_BUTTON_DESCRIPTION = EventEntityDescription(
     device_class=EventDeviceClass.BUTTON,
 )
 
+# Flic Twist description for DEFAULT mode - increment/decrement events
+TWIST_DEFAULT_BUTTON_DESCRIPTION = EventEntityDescription(
+    key=f"{EVENT_CLASS_BUTTON}_twist",
+    translation_key="button_twist_default",
+    event_types=[
+        EVENT_TYPE_UP,
+        EVENT_TYPE_DOWN,
+        EVENT_TYPE_CLICK,
+        EVENT_TYPE_DOUBLE_CLICK,
+        EVENT_TYPE_HOLD,
+        EVENT_TYPE_TWIST_INCREMENT,
+        EVENT_TYPE_TWIST_DECREMENT,
+        EVENT_TYPE_PUSH_TWIST_INCREMENT,
+        EVENT_TYPE_PUSH_TWIST_DECREMENT,
+    ],
+    device_class=EventDeviceClass.BUTTON,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -121,12 +133,17 @@ async def async_setup_entry(
     capabilities = coordinator.capabilities
     entities: list[FlicButtonEventEntity] = []
 
+    push_twist_mode = PushTwistMode(
+        entry.options.get(CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT)
+    )
+
     if capabilities.button_count == 1:
         # Single button device (Flic 2 or Twist)
         entities.append(
             FlicButtonEventEntity(
                 coordinator,
                 is_twist=capabilities.has_selector,  # Twist has selector
+                push_twist_mode=push_twist_mode,
             )
         )
     else:
@@ -149,24 +166,23 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         coordinator: FlicCoordinator,
         button_index: int | None = None,
         is_twist: bool = False,
+        push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
     ) -> None:
-        """Initialize the event entity.
-
-        Args:
-            coordinator: Flic coordinator instance
-            button_index: Button index for Duo (0=big, 1=small), None for Flic 2/Twist
-            is_twist: True if this is a Flic Twist device
-
-        """
+        """Initialize the event entity."""
         super().__init__(coordinator)
         self._button_index = button_index
         self._is_twist = is_twist
 
         # Select entity description based on button type
-        if is_twist:
-            # Flic Twist single button with rotation
-            self.entity_description = TWIST_BUTTON_DESCRIPTION
+        if is_twist and push_twist_mode == PushTwistMode.SELECTOR:
+            # Flic Twist SELECTOR mode with rotation and selector events
+            self.entity_description = TWIST_SELECTOR_BUTTON_DESCRIPTION
             self._attr_translation_key = "button_twist"
+            unique_suffix = f"{EVENT_CLASS_BUTTON}_twist"
+        elif is_twist:
+            # Flic Twist DEFAULT/CONTINUOUS mode with increment/decrement events
+            self.entity_description = TWIST_DEFAULT_BUTTON_DESCRIPTION
+            self._attr_translation_key = "button_twist_default"
             unique_suffix = f"{EVENT_CLASS_BUTTON}_twist"
         elif button_index is None:
             # Flic 2 single button
@@ -210,14 +226,8 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
             )
 
     @callback
-    def _async_handle_event(self, event_type: str, event_data: dict) -> None:
-        """Handle button event from coordinator.
-
-        Args:
-            event_type: Type of event (up, down, click, double_click, hold)
-            event_data: Additional event data
-
-        """
+    def _async_handle_event(self, event_type: str, event_data: dict[str, Any]) -> None:
+        """Handle button event from coordinator."""
         # For Duo buttons, filter events by button_index
         if self._button_index is not None:
             event_button_index = event_data.get("button_index")
@@ -229,15 +239,18 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_handle_rotate_event(self, event_type: str, event_data: dict) -> None:
-        """Handle rotate event from coordinator.
+    def _async_handle_rotate_event(
+        self, event_type: str, event_data: dict[str, Any]
+    ) -> None:
+        """Handle rotate event from coordinator."""
+        # Only trigger if the event type is in this entity's allowed event types
+        if (
+            self.entity_description.event_types is not None
+            and event_type not in self.entity_description.event_types
+        ):
+            return
 
-        Args:
-            event_type: Type of event (rotate_clockwise, rotate_counter_clockwise)
-            event_data: Additional event data including rotation details
-
-        """
-        # For Twist, accept all rotate events (no button_index filtering needed)
+        # For Twist, accept all matching rotate events (no button_index filtering)
         if self._is_twist:
             self._trigger_event(event_type, event_data)
             self.async_write_ha_state()

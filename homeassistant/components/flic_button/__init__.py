@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_BATTERY_LEVEL,
@@ -21,7 +22,7 @@ from .const import (
     CONF_PUSH_TWIST_MODE,
     CONF_SERIAL_NUMBER,
     CONF_SIG_BITS,
-    DOMAIN as DOMAIN,
+    DOMAIN,
     DeviceType,
     PushTwistMode,
 )
@@ -90,7 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     )
 
     # Create coordinator
-    coordinator = FlicCoordinator(hass, client, entry, serial_number, battery_level)
+    coordinator = FlicCoordinator(
+        hass, client, entry, serial_number, battery_level, push_twist_mode
+    )
     entry.runtime_data = coordinator
 
     # Load persisted slot values for Twist devices
@@ -100,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     if ble_device:
         try:
             await coordinator.async_connect()
-        except (TimeoutError, BleakError, FlicProtocolError):
+        except TimeoutError, BleakError, FlicProtocolError:
             _LOGGER.debug(
                 "Initial connection to %s failed, will retry when device is available",
                 address,
@@ -113,8 +116,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle Bluetooth updates for connection/reconnection."""
+
         coordinator.client.ble_device = service_info.device
-        hass.async_create_task(coordinator.async_reconnect_if_needed())
+
+        hass.async_create_background_task(
+            coordinator.async_reconnect_if_needed(),
+            name=f"{DOMAIN}_reconnect_{address}",
+        )
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -128,10 +136,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     # Listen for options updates (reload integration when push_twist_mode changes)
     entry.async_on_unload(entry.add_update_listener(async_options_updated))
 
+    # Clean up orphaned entities from the other push-twist mode.
+    # When switching between DEFAULT and SELECTOR mode, remove entities
+    # that belong to the inactive mode so they don't linger as unavailable.
+    if coordinator.is_twist:
+        _async_cleanup_twist_mode_entities(hass, entry, push_twist_mode)
+
     # Forward entry setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Register device name listener to push HA renames to the physical device
+    unsub = coordinator.async_register_device_name_listener()
+    if unsub:
+        entry.async_on_unload(unsub)
+
     return True
+
+
+@callback
+def _async_cleanup_twist_mode_entities(
+    hass: HomeAssistant,
+    entry: FlicButtonConfigEntry,
+    push_twist_mode: PushTwistMode,
+) -> None:
+    """Remove entity registry entries that belong to the inactive push-twist mode.
+
+    DEFAULT mode uses: twist-position, push-twist-position
+    SELECTOR mode uses: slot-0..slot-11, selected-slot
+    """
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    if push_twist_mode in (PushTwistMode.DEFAULT, PushTwistMode.CONTINUOUS):
+        # Remove SELECTOR mode entities (12 slots + selected slot select)
+        stale_suffixes = (
+            *[f"-slot-{i}" for i in range(12)],
+            "-selected-slot",
+        )
+    else:
+        # Remove DEFAULT/CONTINUOUS mode entities
+        stale_suffixes = ("-twist-position", "-push-twist-position")
+
+    for entity_entry in entries:
+        if entity_entry.unique_id.endswith(stale_suffixes):
+            entity_registry.async_remove(entity_entry.entity_id)
 
 
 async def async_options_updated(

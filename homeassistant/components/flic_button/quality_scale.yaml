@@ -6,7 +6,7 @@ rules:
   appropriate-polling: done
   brands:
     status: exempt
-    comment: Flic/Shortcut Labs does not have a brand entry yet.
+    comment: Brand submission will be handled in a separate PR to home-assistant/brands.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -27,12 +27,10 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: exempt
-    comment: Test will be added in future iteration.
+  test-before-configure: done
   test-before-setup:
     status: exempt
-    comment: Test will be added in future iteration.
+    comment: BLE devices may not be in range at startup; integration registers BLE callback for deferred connection.
   unique-config-entry: done
 
   # Silver

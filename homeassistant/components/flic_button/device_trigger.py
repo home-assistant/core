@@ -15,12 +15,15 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_PUSH_TWIST_MODE,
     DOMAIN,
     EVENT_TYPE_CLICK,
     EVENT_TYPE_DOUBLE_CLICK,
     EVENT_TYPE_DOWN,
     EVENT_TYPE_DUO_DIAL_CHANGED,
     EVENT_TYPE_HOLD,
+    EVENT_TYPE_PUSH_TWIST_DECREMENT,
+    EVENT_TYPE_PUSH_TWIST_INCREMENT,
     EVENT_TYPE_ROTATE_CLOCKWISE,
     EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
     EVENT_TYPE_SELECTOR_CHANGED,
@@ -29,8 +32,11 @@ from .const import (
     EVENT_TYPE_SWIPE_LEFT,
     EVENT_TYPE_SWIPE_RIGHT,
     EVENT_TYPE_SWIPE_UP,
+    EVENT_TYPE_TWIST_DECREMENT,
+    EVENT_TYPE_TWIST_INCREMENT,
     EVENT_TYPE_UP,
     FLIC_BUTTON_EVENT,
+    PushTwistMode,
 )
 from .handlers import DeviceCapabilities
 
@@ -70,36 +76,35 @@ FLIC_DUO_EVENT_TYPES = [
     EVENT_TYPE_DUO_DIAL_CHANGED,
 ]
 
-# Event types for Flic Twist (rotation, selector, and slot changes)
-FLIC_TWIST_EVENT_TYPES = [
+# Event types for Flic Twist SELECTOR mode (rotation, selector, and slot changes)
+FLIC_TWIST_SELECTOR_EVENT_TYPES = [
     EVENT_TYPE_ROTATE_CLOCKWISE,
     EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
     EVENT_TYPE_SELECTOR_CHANGED,
     *EVENT_TYPE_SLOT_CHANGED,  # 12 slot change events
 ]
 
-# All event types (base + Duo gestures/dial + Twist events)
+# Event types for Flic Twist DEFAULT mode (increment/decrement)
+FLIC_TWIST_DEFAULT_EVENT_TYPES = [
+    EVENT_TYPE_TWIST_INCREMENT,
+    EVENT_TYPE_TWIST_DECREMENT,
+    EVENT_TYPE_PUSH_TWIST_INCREMENT,
+    EVENT_TYPE_PUSH_TWIST_DECREMENT,
+]
+
+# All event types (base + Duo + Twist SELECTOR + Twist DEFAULT)
 FLIC_ALL_EVENT_TYPES = (
     FLIC_BASE_EVENT_TYPES
     + FLIC_DUO_EVENT_TYPES
-    + [EVENT_TYPE_SELECTOR_CHANGED]
-    + EVENT_TYPE_SLOT_CHANGED
-)  # Note: EVENT_TYPE_DUO_DIAL_CHANGED is already in FLIC_DUO_EVENT_TYPES
+    + FLIC_TWIST_SELECTOR_EVENT_TYPES
+    + FLIC_TWIST_DEFAULT_EVENT_TYPES
+)
 
 
-def _get_device_capabilities(
+def _get_device_capabilities_and_mode(
     hass: HomeAssistant, device_id: str
-) -> DeviceCapabilities | None:
-    """Get device capabilities from coordinator.
-
-    Args:
-        hass: Home Assistant instance
-        device_id: Device ID
-
-    Returns:
-        DeviceCapabilities or None if not found
-
-    """
+) -> tuple[DeviceCapabilities, PushTwistMode] | None:
+    """Get device capabilities and push-twist mode from coordinator."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
     if device is None:
@@ -112,29 +117,19 @@ def _get_device_capabilities(
             continue
         coordinator = entry.runtime_data
         if (DOMAIN, coordinator.client.address) in device.identifiers:
-            return coordinator.capabilities
+            push_twist_mode = PushTwistMode(
+                entry.options.get(CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT)
+            )
+            return coordinator.capabilities, push_twist_mode
     return None
 
 
-def _get_event_types_for_capabilities(capabilities: DeviceCapabilities) -> list[str]:
-    """Get event types for device capabilities.
-
-    Args:
-        capabilities: Device capabilities
-
-    Returns:
-        List of event types supported by the device
-
-    """
+def _get_event_types_for_capabilities(
+    capabilities: DeviceCapabilities,
+    push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
+) -> list[str]:
+    """Get event types for device capabilities."""
     event_types = list(FLIC_BASE_EVENT_TYPES)
-
-    if capabilities.has_rotation:
-        event_types.extend(
-            [
-                EVENT_TYPE_ROTATE_CLOCKWISE,
-                EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
-            ]
-        )
 
     if capabilities.has_gestures:
         # Gestures and dial are Duo-only features
@@ -144,13 +139,17 @@ def _get_event_types_for_capabilities(capabilities: DeviceCapabilities) -> list[
                 EVENT_TYPE_SWIPE_RIGHT,
                 EVENT_TYPE_SWIPE_UP,
                 EVENT_TYPE_SWIPE_DOWN,
+                EVENT_TYPE_ROTATE_CLOCKWISE,
+                EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
                 EVENT_TYPE_DUO_DIAL_CHANGED,
             ]
         )
-
-    if capabilities.has_selector:
-        event_types.append(EVENT_TYPE_SELECTOR_CHANGED)
-        event_types.extend(EVENT_TYPE_SLOT_CHANGED)
+    elif capabilities.has_selector:
+        # Twist device — event types depend on push-twist mode
+        if push_twist_mode == PushTwistMode.SELECTOR:
+            event_types.extend(FLIC_TWIST_SELECTOR_EVENT_TYPES)
+        else:
+            event_types.extend(FLIC_TWIST_DEFAULT_EVENT_TYPES)
 
     return event_types
 
@@ -173,24 +172,16 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
-    """List device triggers for Flic Button.
-
-    Args:
-        hass: Home Assistant instance
-        device_id: Device ID
-
-    Returns:
-        List of trigger configurations
-
-    """
+    """List device triggers for Flic Button."""
     triggers: list[dict[str, Any]] = []
 
-    # Try to get capabilities from coordinator
-    capabilities = _get_device_capabilities(hass, device_id)
+    # Try to get capabilities and mode from coordinator
+    result = _get_device_capabilities_and_mode(hass, device_id)
 
-    if capabilities:
+    if result:
+        capabilities, push_twist_mode = result
         # Use capabilities for trigger generation
-        event_types = _get_event_types_for_capabilities(capabilities)
+        event_types = _get_event_types_for_capabilities(capabilities, push_twist_mode)
 
         if capabilities.button_count > 1:
             # Multi-button device (Duo) - create triggers for each button
@@ -242,6 +233,15 @@ async def async_get_triggers(
         is_twist = any(entry.unique_id.endswith("_twist") for entry in entries)
 
         if is_twist:
+            # Determine push-twist mode from config entry options
+            twist_event_types = FLIC_TWIST_DEFAULT_EVENT_TYPES
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                push_twist_mode_str = entry.options.get(
+                    CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT
+                )
+                if PushTwistMode(push_twist_mode_str) == PushTwistMode.SELECTOR:
+                    twist_event_types = FLIC_TWIST_SELECTOR_EVENT_TYPES
+                break
             triggers.extend(
                 {
                     CONF_PLATFORM: "device",
@@ -250,7 +250,7 @@ async def async_get_triggers(
                     CONF_TYPE: event_type,
                     CONF_SUBTYPE: SUBTYPE_TWIST_BUTTON,
                 }
-                for event_type in FLIC_BASE_EVENT_TYPES + FLIC_TWIST_EVENT_TYPES
+                for event_type in FLIC_BASE_EVENT_TYPES + twist_event_types
             )
         elif is_duo:
             for subtype in (SUBTYPE_SMALL_BUTTON, SUBTYPE_BIG_BUTTON):
@@ -285,18 +285,7 @@ async def async_attach_trigger(
     action: TriggerActionType,
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
-    """Attach a trigger.
-
-    Args:
-        hass: Home Assistant instance
-        config: Trigger configuration
-        action: Action to execute
-        trigger_info: Trigger information
-
-    Returns:
-        Callback to remove the trigger
-
-    """
+    """Attach a trigger."""
     # Build event data filter
     event_data: dict[str, Any] = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
@@ -328,14 +317,5 @@ async def async_attach_trigger(
 async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
-    """Validate trigger config.
-
-    Args:
-        hass: Home Assistant instance
-        config: Trigger configuration
-
-    Returns:
-        Validated configuration
-
-    """
+    """Validate trigger config."""
     return TRIGGER_SCHEMA(config)

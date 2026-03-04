@@ -7,6 +7,7 @@ from collections.abc import Callable
 import logging
 import secrets
 import struct
+import time
 
 from ..const import (
     COMMAND_TIMEOUT,
@@ -14,6 +15,7 @@ from ..const import (
     EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE,
     EVENT_TYPE_SELECTOR_CHANGED,
     FIRMWARE_DATA_CHUNK_SIZE,
+    FIRMWARE_FINAL_ACK_TIMEOUT,
     FIRMWARE_HEADER_SIZE,
     FIRMWARE_MAX_IN_FLIGHT,
     FIRMWARE_UPDATE_TIMEOUT,
@@ -28,8 +30,12 @@ from ..const import (
     TWIST_OPCODE_GET_BATTERY_LEVEL_RESPONSE,
     TWIST_OPCODE_GET_FIRMWARE_VERSION_REQUEST,
     TWIST_OPCODE_GET_FIRMWARE_VERSION_RESPONSE,
+    TWIST_OPCODE_GET_NAME_REQUEST,
+    TWIST_OPCODE_GET_NAME_RESPONSE,
     TWIST_OPCODE_INIT_BUTTON_EVENTS_RESPONSE,
     TWIST_OPCODE_QUICK_VERIFY_RESPONSE,
+    TWIST_OPCODE_SET_NAME_REQUEST,
+    TWIST_OPCODE_SET_NAME_RESPONSE,
     TWIST_OPCODE_START_FIRMWARE_UPDATE_RESPONSE,
     TWIST_OPCODE_TWIST_EVENT,
     TWIST_RX_CHAR_UUID,
@@ -148,7 +154,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> tuple[int, bytes, str, int, int, bytes]:
+    ) -> tuple[int, bytes, str, int, int, bytes, int]:
         """Perform full pairing verification for Flic Twist."""
         temp_conn_id = secrets.randbelow(2**32)
         _LOGGER.debug(
@@ -289,6 +295,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
             response2.battery_level,
             signature_variant,
             response2.button_uuid,
+            response2.firmware_version,
         )
 
     async def quick_verify(
@@ -363,7 +370,13 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         write_packet: WritePacketFn,
     ) -> None:
         """Initialize button events for Flic Twist."""
-        self._multi_mode_tracker = MultiModeRotateTracker()
+        self._multi_mode_tracker = MultiModeRotateTracker(
+            bound_mode_12=(
+                self._push_twist_mode
+                in (PushTwistMode.DEFAULT, PushTwistMode.CONTINUOUS)
+            ),
+            wrap_position=(self._push_twist_mode == PushTwistMode.CONTINUOUS),
+        )
 
         # Build 13 mode configs based on push_twist_mode setting
         mode_configs = []
@@ -389,6 +402,18 @@ class TwistProtocolHandler(DeviceProtocolHandler):
                         position=0,
                         timeout_seconds=60,
                     )
+                mode_configs.append(config)
+        elif self._push_twist_mode == PushTwistMode.CONTINUOUS:
+            # Continuous mode: like default but with wrapping LED mode
+            for _ in range(13):
+                config = TwistModeConfig(
+                    led_mode=2,  # Continuous LED mode
+                    has_click=False,
+                    has_double_click=False,
+                    extra_leds_after=0,
+                    position=0,
+                    timeout_seconds=0,
+                )
                 mode_configs.append(config)
         else:
             # Default mode: basic rotation without click events
@@ -481,15 +506,62 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         # Response: [opcode:1][battery_level:2]
         return struct.unpack("<H", response[1:3])[0]
 
+    async def get_name(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> tuple[str, int]:
+        """Request and return the device name from a Flic Twist device."""
+        request = struct.pack("<B", TWIST_OPCODE_GET_NAME_REQUEST)
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(TWIST_OPCODE_GET_NAME_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        # Response: [opcode:1][timestamp:6][name:var]
+        timestamp_ms = int.from_bytes(response[1:7], "little")
+        name = response[7:].decode("utf-8", errors="replace")
+        return name, timestamp_ms
+
+    async def set_name(
+        self,
+        connection_id: int,
+        name: str,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> tuple[str, int]:
+        """Set the device name on a Flic Twist device."""
+        name_bytes = self._truncate_name_bytes(name)
+
+        # Build 6-byte timestamp_force: 47-bit UTC ms | force_update=1
+        timestamp_ms = int(time.time() * 1000)
+        timestamp_force = (timestamp_ms << 1) | 1
+        timestamp_force_bytes = timestamp_force.to_bytes(6, "little")
+
+        request = (
+            struct.pack("<B", TWIST_OPCODE_SET_NAME_REQUEST)
+            + timestamp_force_bytes
+            + name_bytes
+        )
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(TWIST_OPCODE_SET_NAME_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        # Response: [opcode:1][timestamp:6][name:var]
+        resp_timestamp_ms = int.from_bytes(response[1:7], "little")
+        resp_name = response[7:].decode("utf-8", errors="replace")
+        return resp_name, resp_timestamp_ms
+
     def handle_notification(
         self,
         data: bytes,
         connection_id: int,
     ) -> tuple[list[ButtonEvent], list[RotateEvent], int | None]:
-        """Handle a notification from a Flic Twist button.
-
-        Twist notifications have opcode as the first byte (no frame header).
-        """
+        """Handle a notification from a Flic Twist button."""
         button_events: list[ButtonEvent] = []
         rotate_events: list[RotateEvent] = []
         selector_change: int | None = None
@@ -592,20 +664,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
     def build_update_twist_position(
         self, mode_index: int, desired_position: int
     ) -> bytes:
-        """Build an UpdateTwistPositionRequest.
-
-        The device displays position as (absolute_position - min).
-        To make it show desired_position, we set:
-            new_min = absolute_position - desired_position
-
-        Args:
-            mode_index: Twist mode index (0-11 for slots)
-            desired_position: Desired display position in raw units (0-49152)
-
-        Returns:
-            Serialized request bytes ready for _write_packet
-
-        """
+        """Build an UpdateTwistPositionRequest."""
         absolute_position = 0
         if self._multi_mode_tracker is not None:
             absolute_position = self._multi_mode_tracker.get_absolute_position(
@@ -631,20 +690,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         write_packet: WritePacketFn,
         wait_for_opcodes: WaitForOpcodesFn,
     ) -> int:
-        """Start a firmware update on the device.
-
-        Args:
-            firmware_binary: Raw firmware binary (header + compressed data)
-            write_packet: Function to write authenticated packets
-            wait_for_opcodes: Function to wait for one of several opcodes
-
-        Returns:
-            start_pos from device (0=new, >0=resume position)
-
-        Raises:
-            ValueError: If device returns an error code
-
-        """
+        """Start a firmware update on the device."""
         request = StartFirmwareUpdateRequest.from_firmware_binary(firmware_binary)
         await write_packet(request.to_bytes(), True)
 
@@ -675,16 +721,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
 
         _LOGGER.debug("StartFirmwareUpdateResponse: start_pos=%d", response.start_pos)
 
-        if response.start_pos == -1:
-            raise ValueError("Device rejected firmware update: invalid parameters")
-        if response.start_pos == -2:
-            raise ValueError("Device rejected firmware update: device busy")
-        if response.start_pos == -3:
-            raise ValueError(
-                "Device rejected firmware update: pending reboot from previous update"
-            )
-
-        return response.start_pos
+        return self._validate_firmware_start_pos(response.start_pos)
 
     async def send_firmware_data(
         self,
@@ -694,19 +731,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         wait_for_opcode: WaitForOpcodeFn,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> bool:
-        """Send firmware data chunks to the device with flow control.
-
-        Args:
-            firmware_binary: Raw firmware binary (header + compressed data)
-            start_pos: Byte position to start/resume from
-            write_packet: Function to write authenticated packets
-            wait_for_opcode: Function to wait for a specific opcode
-            progress_callback: Called with (bytes_acked, total_bytes)
-
-        Returns:
-            True on success, False on signature verification failure
-
-        """
+        """Send firmware data chunks to the device with flow control."""
         compressed_data = firmware_binary[FIRMWARE_HEADER_SIZE:]
         total_bytes = len(compressed_data)
         sent_pos = start_pos
@@ -739,29 +764,42 @@ class TwistProtocolHandler(DeviceProtocolHandler):
                     _LOGGER.info("Firmware transfer complete")
                     return True
 
-            # Send next chunk
-            chunk_end = min(sent_pos + FIRMWARE_DATA_CHUNK_SIZE, total_bytes)
-            chunk = compressed_data[sent_pos:chunk_end]
+            # Send next chunk, capped to remaining in-flight window
+            remaining_window = FIRMWARE_MAX_IN_FLIGHT - (sent_pos - acked_pos)
+            chunk_size = min(
+                FIRMWARE_DATA_CHUNK_SIZE, remaining_window, total_bytes - sent_pos
+            )
+            chunk = compressed_data[sent_pos : sent_pos + chunk_size]
 
             data_ind = FirmwareUpdateDataInd(chunk_data=chunk)
             await write_packet(data_ind.to_bytes(), True)
-            sent_pos = chunk_end
+            sent_pos += chunk_size
 
-        # Wait for remaining acknowledgments
-        while acked_pos < total_bytes:
-            notification_data = await asyncio.wait_for(
-                wait_for_opcode(TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
-                timeout=FIRMWARE_UPDATE_TIMEOUT,
+        # Wait for remaining acknowledgments.
+        # After all data is sent the device verifies the signature and reboots.
+        # The reboot often drops the BLE connection before the final ACK
+        # arrives, so use a shorter timeout and treat it as success.
+        try:
+            while acked_pos < total_bytes:
+                notification_data = await asyncio.wait_for(
+                    wait_for_opcode(TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                    timeout=FIRMWARE_FINAL_ACK_TIMEOUT,
+                )
+                notification = FirmwareUpdateNotification.from_bytes(notification_data)
+
+                if notification.pos == 0:
+                    _LOGGER.error("Firmware signature verification failed")
+                    return False
+
+                acked_pos = notification.pos
+                if progress_callback:
+                    progress_callback(acked_pos, total_bytes)
+        except TimeoutError:
+            _LOGGER.info(
+                "Final ACK timed out after all data sent — "
+                "device likely rebooted with new firmware"
             )
-            notification = FirmwareUpdateNotification.from_bytes(notification_data)
-
-            if notification.pos == 0:
-                _LOGGER.error("Firmware signature verification failed")
-                return False
-
-            acked_pos = notification.pos
-            if progress_callback:
-                progress_callback(acked_pos, total_bytes)
+            return True
 
         _LOGGER.info("Firmware transfer complete")
         return True
@@ -771,13 +809,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         write_packet: WritePacketFn,
         restart_adv: bool = True,
     ) -> None:
-        """Send force disconnect to trigger device reboot.
-
-        Args:
-            write_packet: Function to write authenticated packets
-            restart_adv: Whether device should restart advertising after reboot
-
-        """
+        """Send force disconnect to trigger device reboot."""
         ind = ForceBtDisconnectInd(restart_adv=restart_adv)
         await write_packet(ind.to_bytes(), True)
         _LOGGER.debug("Sent ForceBtDisconnectInd (restart_adv=%s)", restart_adv)

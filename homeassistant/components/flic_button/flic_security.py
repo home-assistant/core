@@ -24,15 +24,6 @@ def verify_ed25519_signature_with_variant(
     The Flic 2 protocol uses signature variants related to the twist security
     parameter in Ed25519. This function tries all 4 variants (0-3) by modifying
     signature[32] and returns the successful variant.
-
-    Args:
-        public_key_bytes: 32-byte Ed25519 public key
-        message: Message that was signed
-        signature: 64-byte Ed25519 signature
-
-    Returns:
-        Variant number (0-3) if signature is valid, None otherwise
-
     """
     try:
         public_key = Ed25519PublicKey.from_public_bytes(public_key_bytes)
@@ -56,28 +47,14 @@ def verify_ed25519_signature_with_variant(
 
 
 def x25519_key_exchange(private_key_bytes: bytes, public_key_bytes: bytes) -> bytes:
-    """Perform X25519 Diffie-Hellman key exchange.
-
-    Args:
-        private_key_bytes: 32-byte X25519 private key
-        public_key_bytes: 32-byte X25519 public key
-
-    Returns:
-        32-byte shared secret
-
-    """
+    """Perform X25519 Diffie-Hellman key exchange."""
     private_key = X25519PrivateKey.from_private_bytes(private_key_bytes)
     public_key = X25519PublicKey.from_public_bytes(public_key_bytes)
     return private_key.exchange(public_key)
 
 
 def generate_x25519_keypair() -> tuple[bytes, bytes]:
-    """Generate an X25519 keypair for ECDH.
-
-    Returns:
-        Tuple of (private_key, public_key) as 32-byte values
-
-    """
+    """Generate an X25519 keypair for ECDH."""
     private_key = X25519PrivateKey.generate()
     public_key = private_key.public_key()
     return (
@@ -87,18 +64,7 @@ def generate_x25519_keypair() -> tuple[bytes, bytes]:
 
 
 def chaskey_generate_subkeys(key: bytes) -> list[int]:
-    """Generate Chaskey subkeys from a 16-byte key.
-
-    This matches the SDK's chaskeyGenerateSubkeys function exactly.
-    Returns 12 integers: [k0, k1, k2, k3, k1_0, k1_1, k1_2, k1_3, k2_0, k2_1, k2_2, k2_3]
-
-    Args:
-        key: 16-byte key
-
-    Returns:
-        List of 12 integers (original key + k1 subkey + k2 subkey)
-
-    """
+    """Generate Chaskey subkeys from a 16-byte key."""
     if len(key) != 16:
         msg = "Chaskey key must be 16 bytes"
         raise ValueError(msg)
@@ -145,21 +111,7 @@ def _load_int(data: bytes, offset: int) -> int:
 def chaskey_with_dir_and_counter(
     keys: list[int], direction: int, counter: int, data: bytes
 ) -> bytes:
-    """Compute Chaskey MAC with direction and packet counter.
-
-    This matches the SDK's chaskeyWithDirAndPacketCounter function exactly.
-    Used for signing/verifying Flic 2 protocol packets.
-
-    Args:
-        keys: 12 integers from chaskey_generate_subkeys()
-        direction: 0 for button-to-client, 1 for client-to-button
-        counter: Packet counter (64-bit)
-        data: Message data to authenticate
-
-    Returns:
-        5-byte MAC
-
-    """
+    """Compute Chaskey MAC with direction and packet counter."""
     if not data:
         msg = "Data must not be empty"
         raise ValueError(msg)
@@ -237,19 +189,7 @@ def chaskey_with_dir_and_counter(
 
 
 def chaskey_16_bytes(keys: list[int], data: bytes) -> bytes:
-    """Compute Chaskey MAC for exactly 16 bytes of data.
-
-    This matches the SDK's chaskey16Bytes function exactly.
-    Used for QuickVerify session key derivation.
-
-    Args:
-        keys: 12 integers from chaskey_generate_subkeys()
-        data: Exactly 16 bytes of data
-
-    Returns:
-        16-byte MAC
-
-    """
+    """Compute Chaskey MAC for exactly 16 bytes of data."""
     if len(data) != 16:
         msg = "Data must be exactly 16 bytes"
         raise ValueError(msg)
@@ -295,27 +235,7 @@ def derive_full_verify_keys(
     *,
     is_twist: bool = False,
 ) -> tuple[bytes, bytes, bytes, int, bytes]:
-    """Derive all cryptographic keys for FullVerify pairing.
-
-    This implements the Flic 2/Twist key derivation as specified in the official SDKs.
-
-    For Flic 2/Duo (SDK Flic2Crypto.kt line 165-171):
-    - The flags byte for key derivation uses supportsDuo=true (0x80)
-
-    For Flic Twist (PROTOCOL.md):
-    - The flags byte (clientVariantByte) is always 0x00
-
-    Args:
-        shared_secret: 32-byte X25519 shared secret
-        signature_variant: Signature variant (0-3) from Ed25519 verification
-        device_random: 8-byte random from device (FullVerifyResponse1)
-        client_random: 8-byte random from client
-        is_twist: If True, use Twist key derivation (flags=0x00)
-
-    Returns:
-        Tuple of (verifier, session_key, pairing_key, pairing_id, full_verify_secret)
-
-    """
+    """Derive all cryptographic keys for FullVerify pairing."""
     # Build flags byte for key derivation
     # Flic 2/Duo: supportsDuo=true (0x80)
     # Twist: clientVariantByte=0x00 (per PROTOCOL.md)
