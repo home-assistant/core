@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.focused_einstein_status-entry]
+# name: test_all_entities[binary_sensor.focused_einstein_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.focused_einstein_status',
+    'entity_id': 'binary_sensor.focused_einstein_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,36 +20,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_status',
+    'translation_key': 'container_status',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_container_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.focused_einstein_status-state]
+# name: test_all_entities[binary_sensor.focused_einstein_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'focused_einstein Status',
+      'friendly_name': 'focused_einstein Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.focused_einstein_status',
+    'entity_id': 'binary_sensor.focused_einstein_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.funny_chatelet_status-entry]
+# name: test_all_entities[binary_sensor.funny_chatelet_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.funny_chatelet_status',
+    'entity_id': 'binary_sensor.funny_chatelet_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,36 +70,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_status',
+    'translation_key': 'container_status',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.funny_chatelet_status-state]
+# name: test_all_entities[binary_sensor.funny_chatelet_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'funny_chatelet Status',
+      'friendly_name': 'funny_chatelet Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.funny_chatelet_status',
+    'entity_id': 'binary_sensor.funny_chatelet_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.my_environment_status-entry]
+# name: test_all_entities[binary_sensor.my_environment_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +112,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_environment_status',
+    'entity_id': 'binary_sensor.my_environment_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,36 +120,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_1_status',
+    'translation_key': 'endpoint_status',
+    'unique_id': 'portainer_test_entry_123_1_endpoint_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.my_environment_status-state]
+# name: test_all_entities[binary_sensor.my_environment_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'my-environment Status',
+      'friendly_name': 'my-environment Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_environment_status',
+    'entity_id': 'binary_sensor.my_environment_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.practical_morse_status-entry]
+# name: test_all_entities[binary_sensor.practical_morse_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -162,7 +162,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.practical_morse_status',
+    'entity_id': 'binary_sensor.practical_morse_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -170,36 +170,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_practical_morse_status',
+    'translation_key': 'container_status',
+    'unique_id': 'portainer_test_entry_123_practical_morse_container_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.practical_morse_status-state]
+# name: test_all_entities[binary_sensor.practical_morse_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'practical_morse Status',
+      'friendly_name': 'practical_morse Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.practical_morse_status',
+    'entity_id': 'binary_sensor.practical_morse_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.serene_banach_status-entry]
+# name: test_all_entities[binary_sensor.serene_banach_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -212,7 +212,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.serene_banach_status',
+    'entity_id': 'binary_sensor.serene_banach_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -220,36 +220,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_serene_banach_status',
+    'translation_key': 'container_status',
+    'unique_id': 'portainer_test_entry_123_serene_banach_container_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.serene_banach_status-state]
+# name: test_all_entities[binary_sensor.serene_banach_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'serene_banach Status',
+      'friendly_name': 'serene_banach Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.serene_banach_status',
+    'entity_id': 'binary_sensor.serene_banach_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.stoic_turing_status-entry]
+# name: test_all_entities[binary_sensor.stoic_turing_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -262,7 +262,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.stoic_turing_status',
+    'entity_id': 'binary_sensor.stoic_turing_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -270,36 +270,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_status',
+    'translation_key': 'container_status',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_container_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.stoic_turing_status-state]
+# name: test_all_entities[binary_sensor.stoic_turing_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'stoic_turing Status',
+      'friendly_name': 'stoic_turing Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.stoic_turing_status',
+    'entity_id': 'binary_sensor.stoic_turing_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.webstack_status-entry]
+# name: test_all_entities[binary_sensor.webstack_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -312,7 +312,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.webstack_status',
+    'entity_id': 'binary_sensor.webstack_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -320,29 +320,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Running',
     'platform': 'portainer',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
+    'translation_key': 'stack_status',
     'unique_id': 'portainer_test_entry_123_1_stack_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.webstack_status-state]
+# name: test_all_entities[binary_sensor.webstack_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'webstack Status',
+      'friendly_name': 'webstack Running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.webstack_status',
+    'entity_id': 'binary_sensor.webstack_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

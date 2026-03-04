@@ -51,8 +51,8 @@ class PortainerStackBinarySensorEntityDescription(BinarySensorEntityDescription)
 
 CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] = (
     PortainerContainerBinarySensorEntityDescription(
-        key="status",
-        translation_key="status",
+        key="container_status",
+        translation_key="container_status",
         state_fn=lambda data: data.container.state == CONTAINER_STATE_RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -61,8 +61,8 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
 
 ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
     PortainerEndpointBinarySensorEntityDescription(
-        key="status",
-        translation_key="status",
+        key="endpoint_status",
+        translation_key="endpoint_status",
         state_fn=lambda data: data.endpoint.status == 1,  # 1 = Running | 2 = Stopped
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -72,7 +72,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
 STACK_SENSORS: tuple[PortainerStackBinarySensorEntityDescription, ...] = (
     PortainerStackBinarySensorEntityDescription(
         key="stack_status",
-        translation_key="status",
+        translation_key="stack_status",
         state_fn=lambda data: (
             data.stack.status == STACK_STATUS_ACTIVE
         ),  # 1 = Active | 2 = Inactive
