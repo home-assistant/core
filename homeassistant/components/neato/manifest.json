@@ -4,6 +4,7 @@
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["application_credentials"],
+  "disabled": "Pilight relies on setuptools.pkg_resources, which is no longer available in setuptools 82.0.0 and later.",
   "documentation": "https://www.home-assistant.io/integrations/neato",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
