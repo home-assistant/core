@@ -264,8 +264,10 @@ async def test_services_enqueue(
     assert state
 
     cases = [
-        ("next", "PlayNext"),
         ("add", "PlayLast"),
+        ("next", "PlayNext"),
+        ("play", "PlayNow"),
+        ("replace", "PlayNow"),
     ]
 
     for enqueue_val, expected_command in cases:
@@ -303,32 +305,11 @@ async def test_services_shuffle(
 
     await hass.services.async_call(
         DOMAIN,
-        "play_media",
+        "play_media_shuffle",
         {
             ATTR_ENTITY_ID: state.entity_id,
             "media_content_type": "",
             "media_content_id": "ITEM-UUID",
-            "shuffle": True,
-        },
-        blocking=True,
-    )
-    assert mock_api.remote_play_media.mock_calls[0].args == (
-        "SESSION-UUID",
-        ["ITEM-UUID"],
-        "PlayShuffle",
-    )
-
-    # ensure shuffle takes priority over enqueue.
-    mock_api.remote_play_media.reset_mock()
-    await hass.services.async_call(
-        DOMAIN,
-        "play_media",
-        {
-            ATTR_ENTITY_ID: state.entity_id,
-            "media_content_type": "",
-            "media_content_id": "ITEM-UUID",
-            "enqueue": "next",
-            "shuffle": True,
         },
         blocking=True,
     )
