@@ -46,12 +46,13 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
         """Show existed key & create key."""
         if option == self.default_option:
             password = f"{random.randint(100000, 999999)}"
+            now = int(time.time())
             parameters = {
-                "name": "PW" + f"{int(time.time())}"[-8:],
+                "name": "PW" + f"{now}"[-8:],
                 "type": "disposable",
                 "password": password,
-                "startTime": int(time.time()),
-                "endTime": int(time.time()) + DEFAULT_EXPIRED_DURATION,
+                "startTime": now,
+                "endTime": now + DEFAULT_EXPIRED_DURATION,
             }
             await self.send_api_command(
                 KeyPadCommands.CREATE_KEY, parameters=parameters
