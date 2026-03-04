@@ -204,6 +204,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
 
     def get_vm_node(self, vmid: int) -> str | None:
         """Find which node a VM is currently on."""
+        if self.data is None:
+            return None
         for node_name, node_data in self.data.items():
             if vmid in node_data.vms:
                 return node_name
@@ -211,6 +213,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
 
     def get_container_node(self, vmid: int) -> str | None:
         """Find which node a container is currently on."""
+        if self.data is None:
+            return None
         for node_name, node_data in self.data.items():
             if vmid in node_data.containers:
                 return node_name
