@@ -273,21 +273,17 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             )
         )
 
-        if not self._apps_coordinator:
+        if not (apps_coordinator := self._apps_coordinator):
             return
 
         # Register callback for app list updates if device is a TV
         @callback
         def apps_list_update() -> None:
             """Update list of all apps."""
-            if not self._apps_coordinator:
-                return
-            self._all_apps = self._apps_coordinator.data
+            self._all_apps = apps_coordinator.data
             self.async_write_ha_state()
 
-        self.async_on_remove(
-            self._apps_coordinator.async_add_listener(apps_list_update)
-        )
+        self.async_on_remove(apps_coordinator.async_add_listener(apps_list_update))
 
     @property
     def source(self) -> str | None:
