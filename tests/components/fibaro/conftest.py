@@ -86,7 +86,7 @@ def mock_power_sensor() -> Mock:
 def mock_positionable_cover() -> Mock:
     """Fixture for a positionable cover."""
     cover = Mock()
-    cover.fibaro_id = 3
+    cover.fibaro_id = 2
     cover.parent_fibaro_id = 0
     cover.name = "Test cover"
     cover.room_id = 1
@@ -209,7 +209,7 @@ def mock_zigbee_light() -> Mock:
 def mock_thermostat() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
-    climate.fibaro_id = 4
+    climate.fibaro_id = 13
     climate.parent_fibaro_id = 0
     climate.name = "Test climate"
     climate.room_id = 1
@@ -290,7 +290,7 @@ def mock_thermostat_with_operating_mode() -> Mock:
 def mock_thermostat_quickapp_1() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
-    climate.fibaro_id = 6
+    climate.fibaro_id = 9
     climate.parent_fibaro_id = 0
     climate.has_endpoint_id = False
     climate.name = "Test climate"
@@ -321,7 +321,7 @@ def mock_thermostat_quickapp_1() -> Mock:
 def mock_thermostat_quickapp_2() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
-    climate.fibaro_id = 7
+    climate.fibaro_id = 10
     climate.parent_fibaro_id = 0
     climate.has_endpoint_id = False
     climate.name = "Test climate 2"
