@@ -660,6 +660,8 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
 class EntityNumericalStateChangedTriggerBase(EntityTriggerBase):
     """Trigger for numerical state changes."""
 
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA
+
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected one."""
         if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):

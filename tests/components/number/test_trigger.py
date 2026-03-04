@@ -102,7 +102,7 @@ async def test_number_changed_trigger_behavior(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, {}, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
         included_state = state["included"]
@@ -176,7 +176,7 @@ async def test_input_number_changed_trigger_behavior(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, {}, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config)
 
     for state in states[1:]:
         included_state = state["included"]
