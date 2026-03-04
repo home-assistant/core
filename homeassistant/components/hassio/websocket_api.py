@@ -26,6 +26,7 @@ from .const import (
     ATTR_METHOD,
     ATTR_PARAMS,
     ATTR_SESSION_DATA_USER_ID,
+    ATTR_SLUG,
     ATTR_TIMEOUT,
     ATTR_VERSION,
     ATTR_WS_EVENT,
@@ -38,7 +39,7 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
-from .coordinator import get_addons_info
+from .coordinator import get_apps_list
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
@@ -164,16 +165,16 @@ async def websocket_supervisor_api(
 async def websocket_update_addon(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Websocket handler to update an addon."""
-    addon_name: str | None = None
-    addon_version: str | None = None
-    addons: dict[str, dict[str, Any]] = get_addons_info(hass) or {}
-    for slug, addon in addons.items():
-        if slug == msg["addon"]:
-            addon_name = addon[ATTR_NAME]
-            addon_version = addon[ATTR_VERSION]
+    """Websocket handler to update an app."""
+    app_name: str | None = None
+    app_version: str | None = None
+    apps_list: list[dict[str, Any]] = get_apps_list(hass) or []
+    for app in apps_list:
+        if app[ATTR_SLUG] == msg["addon"]:
+            app_name = app[ATTR_NAME]
+            app_version = app[ATTR_VERSION]
             break
-    await update_addon(hass, msg["addon"], msg["backup"], addon_name, addon_version)
+    await update_addon(hass, msg["addon"], msg["backup"], app_name, app_version)
     connection.send_result(msg[WS_ID])
 
 
