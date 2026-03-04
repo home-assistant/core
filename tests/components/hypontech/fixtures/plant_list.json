@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "status": "offline",
+      "time": "2026-02-16T18:04:50+01:00",
+      "plant_name": "Balcon",
+      "plant_type": "PvGrid",
+      "photo": "",
+      "owner_name": "admin@example.com",
+      "country": "United States",
+      "city": "New York",
+      "e_today": 1.54,
+      "e_total": 48,
+      "power": 0,
+      "owner_id": "2123456789123456789",
+      "plant_id": "1123456789123456789",
+      "eid": 0,
+      "top": 0,
+      "micro": 1,
+      "property": 1,
+      "kwhimp": 0
+    }
+  ],
+  "message": "ok",
+  "time": 1771277551,
+  "totalPage": 1,
+  "totalCount": 1,
+  "code": 20000
+}

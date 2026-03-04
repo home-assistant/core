@@ -1,5 +1,10 @@
 {
   "entity": {
+    "number": {
+      "room_correction_intensity": {
+        "default": "mdi:home-sound-out"
+      }
+    },
     "select": {
       "audio_output": {
         "default": "mdi:audio-input-stereo-minijack"
@@ -29,6 +34,9 @@
         "state": {
           "off": "mdi:volume-low"
         }
+      },
+      "room_correction": {
+        "default": "mdi:arrow-oscillating"
       }
     }
   }

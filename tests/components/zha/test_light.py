@@ -258,7 +258,7 @@ async def test_on_with_off_color(
         "turn_on",
         {
             "entity_id": device_1_entity_id,
-            "color_temp": 235,
+            "color_temp_kelvin": 4255,
         },
         blocking=True,
     )
@@ -289,7 +289,7 @@ async def test_on_with_off_color(
 
     light1_state = hass.states.get(device_1_entity_id)
     assert light1_state.state == STATE_ON
-    assert light1_state.attributes["color_temp"] == 235
+    assert light1_state.attributes["color_temp_kelvin"] == 4255
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
     # now let's turn off the Execute_if_off option and see if the old behavior is restored
@@ -309,7 +309,7 @@ async def test_on_with_off_color(
         "turn_on",
         {
             "entity_id": device_1_entity_id,
-            "color_temp": 240,
+            "color_temp_kelvin": 4166,
         },
         blocking=True,
     )
@@ -353,7 +353,7 @@ async def test_on_with_off_color(
     light1_state = hass.states.get(device_1_entity_id)
     assert light1_state.state == STATE_ON
     assert light1_state.attributes["brightness"] == 254
-    assert light1_state.attributes["color_temp"] == 240
+    assert light1_state.attributes["color_temp_kelvin"] == 4166
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
 

@@ -29,6 +29,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .models import USBDevice
@@ -42,6 +43,7 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_USB_DATA: HassKey[USBDiscovery] = HassKey(DOMAIN)
 
 PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
 
@@ -67,8 +69,7 @@ def async_register_scan_request_callback(
     hass: HomeAssistant, callback: CALLBACK_TYPE
 ) -> CALLBACK_TYPE:
     """Register to receive a callback when a scan should be initiated."""
-    discovery: USBDiscovery = hass.data[DOMAIN]
-    return discovery.async_register_scan_request_callback(callback)
+    return hass.data[_USB_DATA].async_register_scan_request_callback(callback)
 
 
 @hass_callback
@@ -79,8 +80,7 @@ def async_register_initial_scan_callback(
 
     If the initial scan is already done, the callback is called immediately.
     """
-    discovery: USBDiscovery = hass.data[DOMAIN]
-    return discovery.async_register_initial_scan_callback(callback)
+    return hass.data[_USB_DATA].async_register_initial_scan_callback(callback)
 
 
 @hass_callback
@@ -88,8 +88,7 @@ def async_register_port_event_callback(
     hass: HomeAssistant, callback: PORT_EVENT_CALLBACK_TYPE
 ) -> CALLBACK_TYPE:
     """Register to receive a callback when a USB device is connected or disconnected."""
-    discovery: USBDiscovery = hass.data[DOMAIN]
-    return discovery.async_register_port_event_callback(callback)
+    return hass.data[_USB_DATA].async_register_port_event_callback(callback)
 
 
 @hass_callback
@@ -97,8 +96,7 @@ def async_get_usb_matchers_for_device(
     hass: HomeAssistant, device: USBDevice
 ) -> list[USBMatcher]:
     """Return a list of matchers that match the given device."""
-    usb_discovery: USBDiscovery = hass.data[DOMAIN]
-    return usb_discovery.async_get_usb_matchers_for_device(device)
+    return hass.data[_USB_DATA].async_get_usb_matchers_for_device(device)
 
 
 @overload
@@ -159,7 +157,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     usb = await async_get_usb(hass)
     usb_discovery = USBDiscovery(hass, usb)
     await usb_discovery.async_setup()
-    hass.data[DOMAIN] = usb_discovery
+    hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
 
     return True
@@ -167,7 +165,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_request_scan(hass: HomeAssistant) -> None:
     """Request a USB scan."""
-    usb_discovery: USBDiscovery = hass.data[DOMAIN]
+    usb_discovery = hass.data[_USB_DATA]
     if not usb_discovery.observer_active:
         await usb_discovery.async_request_scan()
 

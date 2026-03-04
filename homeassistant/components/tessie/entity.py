@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
+    TessieBatteryHealthCoordinator,
+    TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -22,8 +24,10 @@ from .models import TessieEnergyData, TessieVehicleData
 class TessieBaseEntity(
     CoordinatorEntity[
         TessieStateUpdateCoordinator
+        | TessieBatteryHealthCoordinator
         | TessieEnergySiteInfoCoordinator
         | TessieEnergySiteLiveCoordinator
+        | TessieEnergyHistoryCoordinator
     ]
 ):
     """Parent class for Tessie entities."""
@@ -33,8 +37,10 @@ class TessieBaseEntity(
     def __init__(
         self,
         coordinator: TessieStateUpdateCoordinator
+        | TessieBatteryHealthCoordinator
         | TessieEnergySiteInfoCoordinator
-        | TessieEnergySiteLiveCoordinator,
+        | TessieEnergySiteLiveCoordinator
+        | TessieEnergyHistoryCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
@@ -136,6 +142,38 @@ class TessieEnergyEntity(TessieBaseEntity):
         super().__init__(coordinator, key)
 
 
+class TessieBatteryEntity(TessieBaseEntity):
+    """Parent class for Tessie battery health entities."""
+
+    def __init__(
+        self,
+        vehicle: TessieVehicleData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Tessie battery health entity."""
+        self.vin = vehicle.vin
+        self._attr_unique_id = f"{vehicle.vin}-{key}"
+        self._attr_device_info = vehicle.device
+
+        super().__init__(vehicle.battery_coordinator, key)
+
+
+class TessieEnergyHistoryEntity(TessieBaseEntity):
+    """Parent class for Tessie energy site history entities."""
+
+    def __init__(
+        self,
+        data: TessieEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Tessie energy history entity."""
+        self.api = data.api
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+        assert data.history_coordinator
+        super().__init__(data.history_coordinator, key)
+
+
 class TessieWallConnectorEntity(TessieBaseEntity):
     """Parent class for Tessie wall connector entities."""
 
@@ -153,7 +191,7 @@ class TessieWallConnectorEntity(TessieBaseEntity):
             manufacturer="Tesla",
             name="Wall Connector",
             via_device=(DOMAIN, str(data.id)),
-            serial_number=din.split("-")[-1],
+            serial_number=din.rsplit("-", maxsplit=1)[-1],
         )
         assert data.live_coordinator
         super().__init__(data.live_coordinator, key)

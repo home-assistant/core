@@ -64,6 +64,8 @@ async def async_setup_entry(
 class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
     """Wall Connector Sensor Entity."""
 
+    entity_description: WallConnectorBinarySensorDescription
+
     def __init__(
         self,
         wall_connectord_data: WallConnectorData,
@@ -74,7 +76,7 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
         super().__init__(wall_connectord_data)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)

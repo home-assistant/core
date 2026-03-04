@@ -1,0 +1,55 @@
+{
+  "device_info": {
+    "lang": "en",
+    "filename": null,
+    "device_name": "RUTX50 Test",
+    "device_model": "RUTX50",
+    "api_version": "1.9.2",
+    "device_identifier": "abcd1234567890ef1234567890abcdef",
+    "serial": "1234567890",
+    "model": "RUTX50"
+  },
+  "system_info": {
+    "mnf_info": {
+      "mac_eth": "001122334455",
+      "name": "RUTX5000XXXX",
+      "hw_ver": "0202",
+      "batch": "0024",
+      "serial": "1234567890",
+      "mac": "001122334456",
+      "bl_ver": "3.0"
+    },
+    "static": {
+      "fw_version": "RUTX_R_00.07.17.3",
+      "kernel": "6.6.96",
+      "system": "ARMv7 Processor rev 5 (v7l)",
+      "device_name": "RUTX50 Test",
+      "hostname": "RUTX50",
+      "cpu_count": 4,
+      "model": "RUTX50"
+    }
+  },
+  "modems_data": [
+    {
+      "id": "2-1",
+      "imei": "123456789012345",
+      "model": "RG501Q-EU",
+      "name": "Internal modem",
+      "temperature": 42,
+      "signal": -63,
+      "operator": "test.operator",
+      "conntype": "5G (NSA)",
+      "state": "Connected",
+      "rssi": -63,
+      "rsrp": -93,
+      "rsrq": -10,
+      "sinr": 15,
+      "band": "5G N3",
+      "active_sim": 1,
+      "simstate": "Inserted",
+      "data_conn_state": "Connected",
+      "txbytes": 215863700781,
+      "rxbytes": 445573412885
+    }
+  ]
+}

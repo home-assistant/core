@@ -1,4 +1,4 @@
-"""Support for BSB-Lan services."""
+"""Support for BSB-LAN services."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .helpers import async_sync_device_time
 
 if TYPE_CHECKING:
     from . import BSBLanConfigEntry
@@ -192,7 +192,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     )
 
     try:
-        # Call the BSB-Lan API to set the schedule
+        # Call the BSB-LAN API to set the schedule
         await client.set_hot_water_schedule(dhw_schedule)
     except BSBLANError as err:
         raise HomeAssistantError(
@@ -245,25 +245,7 @@ async def async_sync_time(service_call: ServiceCall) -> None:
         )
 
     client = entry.runtime_data.client
-
-    try:
-        # Get current device time
-        device_time = await client.time()
-        current_time = dt_util.now()
-        current_time_str = current_time.strftime("%d.%m.%Y %H:%M:%S")
-
-        # Only sync if device time differs from HA time
-        if device_time.time.value != current_time_str:
-            await client.set_time(current_time_str)
-    except BSBLANError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="sync_time_failed",
-            translation_placeholders={
-                "device_name": device_entry.name or device_id,
-                "error": str(err),
-            },
-        ) from err
+    await async_sync_device_time(client, device_entry.name or device_id)
 
 
 SYNC_TIME_SCHEMA = vol.Schema(
@@ -275,7 +257,7 @@ SYNC_TIME_SCHEMA = vol.Schema(
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the BSB-Lan services."""
+    """Register the BSB-LAN services."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_HOT_WATER_SCHEDULE,

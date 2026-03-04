@@ -17,7 +17,13 @@ from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_e
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.REMOTE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> bool:
@@ -76,7 +82,7 @@ async def async_migrate_entities(
     def _update_entry(entry: RegistryEntry) -> dict[str, str] | None:
         """Fix unique_id of power binary_sensor entry."""
         if entry.domain == Platform.BINARY_SENSOR and ":" not in entry.unique_id:
-            if "_power" in entry.unique_id:
+            if entry.unique_id.endswith("_power"):
                 return {"new_unique_id": f"{coordinator.unique_id}_power"}
         return None
 

@@ -32,7 +32,7 @@ async def test_numbers(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.NUMBER)
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_level_control_config_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -140,7 +140,7 @@ async def test_temperature_control_temperature_setpoint(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_matter_exception_on_write_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -162,7 +162,7 @@ async def test_matter_exception_on_write_attribute(
         )
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump_level(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -203,7 +203,7 @@ async def test_pump_level(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+@pytest.mark.parametrize("node_fixture", ["mock_microwave_oven"])
 async def test_microwave_oven(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -212,7 +212,7 @@ async def test_microwave_oven(
     """Test Cooktime for microwave oven."""
 
     # Cooktime on MicrowaveOvenControl cluster (1/96/2)
-    state = hass.states.get("number.microwave_oven_cooking_time")
+    state = hass.states.get("number.mock_microwave_oven_cooking_time")
     assert state
     assert state.state == "30"
 
@@ -221,7 +221,7 @@ async def test_microwave_oven(
         "number",
         "set_value",
         {
-            "entity_id": "number.microwave_oven_cooking_time",
+            "entity_id": "number.mock_microwave_oven_cooking_time",
             "value": 60,  # 60 seconds
         },
         blocking=True,
@@ -280,7 +280,7 @@ async def test_thermostat_occupied_setback(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_attributes(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -310,7 +310,7 @@ async def test_lock_attributes(
     assert state.state == "30"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_matter_exception_on_door_lock_write_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,

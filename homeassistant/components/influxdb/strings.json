@@ -1,0 +1,84 @@
+{
+  "common": {
+    "ssl_ca_cert": "SSL CA certificate (Optional)"
+  },
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_config": "Invalid organization, bucket or token",
+      "invalid_database": "Invalid database",
+      "ssl_error": "SSL certificate error",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "configure_v1": {
+        "data": {
+          "database": "Database",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "database": "The name of the database.",
+          "ssl_ca_cert": "Path to the SSL certificate"
+        },
+        "title": "InfluxDB configuration"
+      },
+      "configure_v2": {
+        "data": {
+          "bucket": "Bucket",
+          "organization": "Organization",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
+          "token": "[%key:common::config_flow::data::api_token%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "bucket": "The name of the bucket.",
+          "organization": "The name of the organization.",
+          "ssl_ca_cert": "Path to the SSL certificate"
+        },
+        "title": "InfluxDB configuration"
+      },
+      "import": {
+        "title": "Import configuration"
+      },
+      "user": {
+        "menu_options": {
+          "configure_v1": "InfluxDB v1.x",
+          "configure_v2": "InfluxDB v2.x / v3"
+        },
+        "title": "Choose InfluxDB version"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring InfluxDB connection settings using YAML is being removed. Your existing YAML connection configuration has been imported into the UI automatically.\n\nRemove the `{domain}` connection and authentication keys from your `configuration.yaml` file and restart Home Assistant to fix this issue. Other options like `include`, `exclude`, and `tags` remain in YAML for now. \n\nThe following keys should be removed:\n- `api_version`\n- `host`\n- `port`\n- `ssl`\n- `verify_ssl`\n- `ssl_ca_cert`\n- `username`\n- `password`\n- `database`\n- `token`\n- `organization`\n- `bucket`\n- `path`",
+      "title": "The InfluxDB YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring InfluxDB connection settings using YAML is being removed but the import failed because Home Assistant could not connect to the InfluxDB server.\n\nPlease correct your YAML configuration and restart Home Assistant.\n\nAlternatively you can remove the `{domain}` connection and authentication keys from your `configuration.yaml` file and continue to [set up the integration]({url}) manually. \n\nThe following keys should be removed:\n- `api_version`\n- `host`\n- `port`\n- `ssl`\n- `verify_ssl`\n- `ssl_ca_cert`\n- `username`\n- `password`\n- `database`\n- `token`\n- `organization`\n- `bucket`\n- `path`",
+      "title": "Failed to import InfluxDB YAML configuration"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring InfluxDB connection settings using YAML is being removed but the import failed because the provided credentials are invalid.\n\nPlease correct your YAML configuration and restart Home Assistant.\n\nAlternatively you can remove the `{domain}` connection and authentication keys from your `configuration.yaml` file and continue to [set up the integration]({url}) manually. \n\nThe following keys should be removed:\n- `api_version`\n- `host`\n- `port`\n- `ssl`\n- `verify_ssl`\n- `ssl_ca_cert`\n- `username`\n- `password`\n- `database`\n- `token`\n- `organization`\n- `bucket`\n- `path`",
+      "title": "[%key:component::influxdb::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_invalid_database": {
+      "description": "Configuring InfluxDB connection settings using YAML is being removed but the import failed because the specified database was not found.\n\nPlease correct your YAML configuration and restart Home Assistant.\n\nAlternatively you can remove the `{domain}` connection and authentication keys from your `configuration.yaml` file and continue to [set up the integration]({url}) manually. \n\nThe following keys should be removed:\n- `api_version`\n- `host`\n- `port`\n- `ssl`\n- `verify_ssl`\n- `ssl_ca_cert`\n- `username`\n- `password`\n- `database`\n- `token`\n- `organization`\n- `bucket`\n- `path`",
+      "title": "[%key:component::influxdb::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_ssl_error": {
+      "description": "Configuring InfluxDB connection settings using YAML is being removed but the import failed due to an SSL certificate error.\n\nPlease correct your YAML configuration and restart Home Assistant.\n\nAlternatively you can remove the `{domain}` connection and authentication keys from your `configuration.yaml` file and continue to [set up the integration]({url}) manually. \n\nThe following keys should be removed:\n- `api_version`\n- `host`\n- `port`\n- `ssl`\n- `verify_ssl`\n- `ssl_ca_cert`\n- `username`\n- `password`\n- `database`\n- `token`\n- `organization`\n- `bucket`\n- `path`",
+      "title": "[%key:component::influxdb::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring InfluxDB connection settings using YAML is being removed but the import failed due to an unknown error.\n\nPlease correct your YAML configuration and restart Home Assistant.\n\nAlternatively you can remove the `{domain}` connection and authentication keys from your `configuration.yaml` file and continue to [set up the integration]({url}) manually. \n\nThe following keys should be removed:\n- `api_version`\n- `host`\n- `port`\n- `ssl`\n- `verify_ssl`\n- `ssl_ca_cert`\n- `username`\n- `password`\n- `database`\n- `token`\n- `organization`\n- `bucket`\n- `path`",
+      "title": "[%key:component::influxdb::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  }
+}

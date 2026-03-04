@@ -138,6 +138,301 @@ async def test_sensor_unavailable_on_coordinator_error(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_midnight_bounce_suppression(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that stale yesterday values after midnight reset are suppressed.
+
+    The Growatt API sometimes delivers stale yesterday values after a midnight
+    reset (9.5 → 0 → 9.5 → 0), causing TOTAL_INCREASING double-counting.
+    """
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_plant_total_energy_today"
+
+    # Initial state: 12.5 kWh produced today
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "12.5"
+
+    # Step 1: Midnight reset — API returns 0 (legitimate reset)
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+    # Step 2: Stale bounce — API returns yesterday's value (12.5) after reset
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 12.5,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Bounce should be suppressed — state stays at 0
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+    # Step 3: Another reset arrives — still 0 (no double-counting)
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+    # Step 4: Genuine new production — small value passes through
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0.1,
+        "total_energy": 1250.1,
+        "current_power": 500,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0.1"
+
+
+async def test_normal_reset_no_bounce(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that normal midnight reset without bounce passes through correctly."""
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_plant_total_energy_today"
+
+    # Initial state: 9.5 kWh
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 9.5,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "9.5"
+
+    # Midnight reset — API returns 0
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+    # No bounce — genuine new production starts
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0.1,
+        "total_energy": 1250.1,
+        "current_power": 500,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0.1"
+
+    # Production continues normally
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 1.5,
+        "total_energy": 1251.5,
+        "current_power": 2000,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1.5"
+
+
+async def test_midnight_bounce_repeated(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test multiple consecutive stale bounces are all suppressed."""
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_plant_total_energy_today"
+
+    # Set up a known pre-reset value
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 8.0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "8.0"
+
+    # Midnight reset
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # First stale bounce — suppressed
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 8.0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # Back to 0
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # Second stale bounce — also suppressed
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 8.0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # Back to 0 again
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0,
+        "total_energy": 1250.0,
+        "current_power": 0,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "0"
+
+    # Finally, genuine new production passes through
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 0.2,
+        "total_energy": 1250.2,
+        "current_power": 1000,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "0.2"
+
+
+async def test_non_total_increasing_sensor_unaffected_by_bounce_suppression(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that non-TOTAL_INCREASING sensors are not affected by bounce suppression.
+
+    The total_energy_output sensor (totalEnergy) has state_class=TOTAL,
+    so bounce suppression (which only targets TOTAL_INCREASING) should not apply.
+    """
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # total_energy_output uses state_class=TOTAL (not TOTAL_INCREASING)
+    entity_id = "sensor.test_plant_total_lifetime_energy_output"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1250.0"
+
+    # Simulate API returning 0 — no bounce suppression on TOTAL sensors
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 12.5,
+        "total_energy": 0,
+        "current_power": 2500,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+    # Value recovers — passes through without suppression
+    mock_growatt_v1_api.plant_energy_overview.return_value = {
+        "today_energy": 12.5,
+        "total_energy": 1250.0,
+        "current_power": 2500,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1250.0"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_total_sensors_classic_api(
     hass: HomeAssistant,

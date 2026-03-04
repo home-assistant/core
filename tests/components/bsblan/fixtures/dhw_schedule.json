@@ -65,9 +65,9 @@
   "dhw_time_program_standard_values": {
     "name": "DHW time program standard values",
     "error": 0,
-    "value": "06:00-22:00",
-    "desc": "",
-    "dataType": 7,
+    "value": "1",
+    "desc": "Yes",
+    "dataType": 1,
     "readonly": 0,
     "unit": ""
   }

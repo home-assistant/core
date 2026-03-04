@@ -8,6 +8,10 @@ from google_weather_api import GoogleWeatherApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -92,15 +96,15 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
         latitude=10.1, longitude=20.1
     )
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["sensor.home_temperature"]},
         blocking=True,
     )

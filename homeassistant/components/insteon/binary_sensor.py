@@ -80,6 +80,6 @@ class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
         self._attr_device_class = SENSOR_TYPES.get(self._insteon_device_group.name)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_group.value)

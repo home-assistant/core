@@ -5,13 +5,18 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  issues: write
-  models: read
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
 
 jobs:
   detect-language:
+    name: Detect non-English issues
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # To comment on, label, and close issues
+      models: read # For AI-based language detection
 
     steps:
       - name: Check issue language
@@ -57,7 +62,7 @@ jobs:
       - name: Detect language using AI
         id: ai_language_detection
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/ai-inference@a6101c89c6feaecc585efdd8d461f18bb7896f20 # v2.0.5
+        uses: actions/ai-inference@a380166897b5408b8fb7dddd148142794cb5624a # v2.0.6
         with:
           model: openai/gpt-4o-mini
           system-prompt: |

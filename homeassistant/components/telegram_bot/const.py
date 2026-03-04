@@ -24,6 +24,8 @@ BOT_NAME = "telegram_bot"
 ERROR_FIELD = "error_field"
 ERROR_MESSAGE = "error_message"
 
+
+DEFAULT_TIMEOUT_SECONDS = 1800  # 30 minutes
 DEFAULT_API_ENDPOINT = "https://api.telegram.org"
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
@@ -100,7 +102,7 @@ ATTR_KEYBOARD = "keyboard"
 ATTR_RESIZE_KEYBOARD = "resize_keyboard"
 ATTR_ONE_TIME_KEYBOARD = "one_time_keyboard"
 ATTR_KEYBOARD_INLINE = "inline_keyboard"
-ATTR_MESSAGEID = "message_id"
+ATTR_MESSAGE_ID = "message_id"
 ATTR_INLINE_MESSAGE_ID = "inline_message_id"
 ATTR_MEDIA_TYPE = "media_type"
 ATTR_MSG = "message"

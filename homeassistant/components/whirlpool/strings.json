@@ -46,6 +46,11 @@
     }
   },
   "entity": {
+    "select": {
+      "refrigerator_temperature_level": {
+        "name": "Temperature level"
+      }
+    },
     "sensor": {
       "dryer_state": {
         "name": "[%key:component::whirlpool::entity::sensor::washer_state::name%]",
@@ -210,6 +215,9 @@
     },
     "appliances_fetch_failed": {
       "message": "Failed to fetch appliances"
+    },
+    "invalid_value_set": {
+      "message": "Invalid value provided"
     },
     "request_failed": {
       "message": "Request failed"

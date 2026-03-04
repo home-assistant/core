@@ -21,6 +21,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
+from . import MERGED_PERMISSIONS
+
 from tests.common import (
     MockConfigEntry,
     load_json_array_fixture,
@@ -37,11 +39,6 @@ MOCK_TEST_CONFIG = {
     CONF_NODES: [
         {
             CONF_NODE: "pve1",
-            CONF_VMS: [100, 101],
-            CONF_CONTAINERS: [200, 201],
-        },
-        {
-            CONF_NODE: "pve2",
             CONF_VMS: [100, 101],
             CONF_CONTAINERS: [200, 201],
         },
@@ -64,23 +61,22 @@ def mock_proxmox_client():
     """Mock Proxmox client with dynamic exception injection support."""
     with (
         patch(
-            "homeassistant.components.proxmoxve.ProxmoxAPI", autospec=True
+            "homeassistant.components.proxmoxve.coordinator.ProxmoxAPI", autospec=True
         ) as mock_api,
-        patch(
-            "homeassistant.components.proxmoxve.common.ProxmoxAPI", autospec=True
-        ) as mock_api_common,
         patch(
             "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI"
         ) as mock_api_cf,
     ):
         mock_instance = MagicMock()
         mock_api.return_value = mock_instance
-        mock_api_common.return_value = mock_instance
         mock_api_cf.return_value = mock_instance
 
         mock_instance.access.ticket.post.return_value = load_json_object_fixture(
             "access_ticket.json", DOMAIN
         )
+
+        # Default to PVEUser privileges
+        mock_instance.access.permissions.get.return_value = MERGED_PERMISSIONS
 
         # Make a separate mock for the qemu and lxc endpoints
         node_mock = MagicMock()
@@ -93,35 +89,45 @@ def mock_proxmox_client():
         qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}
         lxc_by_vmid = {vm["vmid"]: vm for vm in lxc_list}
 
-        # Note to reviewer: I will expand on these fixtures in a next PR
-        # Necessary evil to handle the binary_sensor tests properly
+        # Cache resource mocks by vmid so callers (e.g. button tests) can
+        # inspect specific call counts after pressing a button.
+        qemu_mocks: dict[int, MagicMock] = {}
+        lxc_mocks: dict[int, MagicMock] = {}
+
         def _qemu_resource(vmid: int) -> MagicMock:
-            """Return a mock resource the QEMU."""
-            resource = MagicMock()
-            vm = qemu_by_vmid[vmid]
-            resource.status.current.get.return_value = {
-                "name": vm["name"],
-                "status": vm["status"],
-            }
-            return resource
+            """Return a cached mock resource for a QEMU VM."""
+            if vmid not in qemu_mocks:
+                resource = MagicMock()
+                vm = qemu_by_vmid[vmid]
+                resource.status.current.get.return_value = {
+                    "name": vm["name"],
+                    "status": vm["status"],
+                }
+                qemu_mocks[vmid] = resource
+            return qemu_mocks[vmid]
 
         def _lxc_resource(vmid: int) -> MagicMock:
-            """Return a mock resource the LXC."""
-            resource = MagicMock()
-            ct = lxc_by_vmid[vmid]
-            resource.status.current.get.return_value = {
-                "name": ct["name"],
-                "status": ct["status"],
-            }
-            return resource
+            """Return a cached mock resource for an LXC container."""
+            if vmid not in lxc_mocks:
+                resource = MagicMock()
+                ct = lxc_by_vmid[vmid]
+                resource.status.current.get.return_value = {
+                    "name": ct["name"],
+                    "status": ct["status"],
+                }
+                lxc_mocks[vmid] = resource
+            return lxc_mocks[vmid]
 
         node_mock.qemu.side_effect = _qemu_resource
         node_mock.lxc.side_effect = _lxc_resource
 
+        mock_instance._qemu_mocks = qemu_mocks
+        mock_instance._lxc_mocks = lxc_mocks
+
         nodes_mock = MagicMock()
-        nodes_mock.get.return_value = load_json_array_fixture(
-            "nodes/nodes.json", DOMAIN
-        )
+        all_nodes = load_json_array_fixture("nodes/nodes.json", DOMAIN)
+        # Filter to only pve1 to match MOCK_TEST_CONFIG
+        nodes_mock.get.return_value = [n for n in all_nodes if n["node"] == "pve1"]
         nodes_mock.__getitem__.side_effect = lambda key: node_mock
         nodes_mock.return_value = node_mock
 
@@ -139,4 +145,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="ProxmoxVE test",
         data=MOCK_TEST_CONFIG,
+        entry_id="1234",
     )

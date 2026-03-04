@@ -3,19 +3,36 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from airos.airos6 import AirOS6Data
 from airos.airos8 import AirOS8Data
+from airos.helpers import DetectDeviceData
 import pytest
 
-from homeassistant.components.airos.const import DOMAIN
+from homeassistant.components.airos.const import DEFAULT_USERNAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+
+from . import AirOSData
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def ap_fixture():
-    """Load fixture data for AP mode."""
+def ap_fixture(request: pytest.FixtureRequest) -> AirOSData:
+    """Load fixture data for airOS device."""
     json_data = load_json_object_fixture("airos_loco5ac_ap-ptp.json", DOMAIN)
+    if hasattr(request, "param"):
+        json_data = load_json_object_fixture(request.param, DOMAIN)
+
+    fwversion = json_data.get("host", {}).get("fwversion", "v0.0.0")
+    try:
+        fw_major = int(fwversion.lstrip("v").split(".", 1)[0])
+    except (ValueError, AttributeError) as err:
+        raise RuntimeError(
+            f"Could not parse firmware version from '{fwversion}'"
+        ) from err
+
+    if fw_major == 6:
+        return AirOS6Data.from_dict(json_data)
     return AirOS8Data.from_dict(json_data)
 
 
@@ -33,20 +50,24 @@ def mock_airos_class() -> Generator[MagicMock]:
     """Fixture to mock the AirOS class itself."""
     with (
         patch("homeassistant.components.airos.AirOS8", autospec=True) as mock_class,
+        patch("homeassistant.components.airos.AirOS6", new=mock_class),
         patch("homeassistant.components.airos.config_flow.AirOS8", new=mock_class),
+        patch("homeassistant.components.airos.config_flow.AirOS6", new=mock_class),
         patch("homeassistant.components.airos.coordinator.AirOS8", new=mock_class),
+        patch("homeassistant.components.airos.coordinator.AirOS6", new=mock_class),
     ):
         yield mock_class
 
 
 @pytest.fixture
 def mock_airos_client(
-    mock_airos_class: MagicMock, ap_fixture: AirOS8Data
+    mock_airos_class: MagicMock, ap_fixture: AirOSData
 ) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
     client = mock_airos_class.return_value
     client.status.return_value = ap_fixture
     client.login.return_value = True
+    client.reboot.return_value = True
     return client
 
 
@@ -59,7 +80,42 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "1.1.1.1",
             CONF_PASSWORD: "test-password",
-            CONF_USERNAME: "ubnt",
+            CONF_USERNAME: DEFAULT_USERNAME,
         },
         unique_id="01:23:45:67:89:AB",
     )
+
+
+@pytest.fixture
+def mock_discovery_method() -> Generator[AsyncMock]:
+    """Mock the internal discovery method of the config flow."""
+    with patch(
+        "homeassistant.components.airos.config_flow.airos_discover_devices",
+        new_callable=AsyncMock,
+    ) as mock_method:
+        yield mock_method
+
+
+@pytest.fixture
+def mock_async_get_firmware_data(ap_fixture: AirOSData):
+    """Fixture to mock async_get_firmware_data to not do a network call."""
+    fw_major = int(ap_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
+    return_value = DetectDeviceData(
+        fw_major=fw_major,
+        mac=ap_fixture.derived.mac,
+        hostname=ap_fixture.host.hostname,
+    )
+
+    mock = AsyncMock(return_value=return_value)
+
+    with (
+        patch(
+            "homeassistant.components.airos.config_flow.async_get_firmware_data",
+            new=mock,
+        ),
+        patch(
+            "homeassistant.components.airos.async_get_firmware_data",
+            new=mock,
+        ),
+    ):
+        yield mock

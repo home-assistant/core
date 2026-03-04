@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    DOMAIN,
+    CalendarEntity,
+    CalendarEntityDescription,
+    CalendarEvent,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -54,8 +59,11 @@ class MockCalendarEntity(CalendarEntity):
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
-        self._attr_initial_color = initial_color
         self._attr_unique_id = unique_id
+        self.entity_description = CalendarEntityDescription(
+            key=unique_id or name,
+            initial_color=initial_color,
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -74,7 +82,7 @@ class MockCalendarEntity(CalendarEntity):
         event = CalendarEvent(
             start=start,
             end=end,
-            summary=summary if summary else f"Event {secrets.token_hex(16)}",
+            summary=summary or f"Event {secrets.token_hex(16)}",
             description=description,
             location=location,
         )

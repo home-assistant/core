@@ -22,7 +22,7 @@ from pyplaato.plaato import (
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ["webhook"]
 
 SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
-SENSOR_DATA_KEY = f"{DOMAIN}.{SENSOR}"
+SENSOR_DATA_KEY = f"{DOMAIN}.{SENSOR_DOMAIN}"
 
 WEBHOOK_SCHEMA = vol.Schema(
     {

@@ -51,7 +51,7 @@ class Alpha2IODeviceBatterySensor(
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         # 0=empty, 1=weak, 2=good
         return self.coordinator.data["io_devices"][self.io_device_id]["BATTERY"] < 2

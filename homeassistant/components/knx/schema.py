@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-import math
+from datetime import timedelta
 from typing import ClassVar, Final
 
 import voluptuous as vol
@@ -22,7 +22,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
+    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
@@ -61,8 +61,10 @@ from .const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    NumberConf,
     SceneConf,
 )
+from .dpt import get_supported_dpts
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
     dpt_base_type_validator,
@@ -72,47 +74,19 @@ from .validation import (
     sensor_type_validator,
     string_type_validator,
     sync_state_validator,
+    validate_number_attributes,
+    validate_sensor_attributes,
 )
 
 
 ##################
 # KNX SUB VALIDATORS
 ##################
-def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
-    """Validate a number entity configurations dependent on configured value type."""
-    value_type = entity_config[CONF_TYPE]
-    min_config: float | None = entity_config.get(NumberSchema.CONF_MIN)
-    max_config: float | None = entity_config.get(NumberSchema.CONF_MAX)
-    step_config: float | None = entity_config.get(NumberSchema.CONF_STEP)
-    dpt_class = DPTNumeric.parse_transcoder(value_type)
-
-    if dpt_class is None:
-        raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
-    # Infinity is not supported by Home Assistant frontend so user defined
-    # config is required if if xknx DPTNumeric subclass defines it as limit.
-    if min_config is None and dpt_class.value_min == -math.inf:
-        raise vol.Invalid(f"'min' key required for value type '{value_type}'")
-    if min_config is not None and min_config < dpt_class.value_min:
-        raise vol.Invalid(
-            f"'min: {min_config}' undercuts possible minimum"
-            f" of value type '{value_type}': {dpt_class.value_min}"
-        )
-
-    if max_config is None and dpt_class.value_max == math.inf:
-        raise vol.Invalid(f"'max' key required for value type '{value_type}'")
-    if max_config is not None and max_config > dpt_class.value_max:
-        raise vol.Invalid(
-            f"'max: {max_config}' exceeds possible maximum"
-            f" of value type '{value_type}': {dpt_class.value_max}"
-        )
-
-    if step_config is not None and step_config < dpt_class.resolution:
-        raise vol.Invalid(
-            f"'step: {step_config}' undercuts possible minimum step"
-            f" of value type '{value_type}': {dpt_class.resolution}"
-        )
-
-    return entity_config
+def _number_limit_sub_validator(config: dict) -> dict:
+    """Validate min, max, and step values for a number entity."""
+    transcoder = DPTNumeric.parse_transcoder(config[CONF_TYPE])
+    assert transcoder is not None  # already checked by numeric_type_validator
+    return validate_number_attributes(transcoder, config)
 
 
 def _max_payload_value(payload_length: int) -> int:
@@ -169,6 +143,13 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
         payloads_seen.add(payload)
     return entity_config
+
+
+def _sensor_attribute_sub_validator(config: dict) -> dict:
+    """Validate that state_class is compatible with device_class and unit_of_measurement."""
+    transcoder: type[DPTBase] = DPTBase.parse_transcoder(config[CONF_TYPE])  # type: ignore[assignment]  # already checked in sensor_type_validator
+    dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
+    return validate_sensor_attributes(dpt_metadata, config)
 
 
 #########
@@ -538,6 +519,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
+    CONF_KNX_EXPOSE_PERIODIC_SEND = "periodic_send"
     CONF_KNX_EXPOSE_DEFAULT = "default"
     CONF_TIME = "time"
     CONF_DATE = "date"
@@ -554,7 +536,12 @@ class ExposeSchema(KNXPlatformSchema):
     )
     EXPOSE_SENSOR_SCHEMA = vol.Schema(
         {
-            vol.Optional(CONF_KNX_EXPOSE_COOLDOWN, default=0): cv.positive_float,
+            vol.Optional(
+                CONF_KNX_EXPOSE_COOLDOWN, default=timedelta(0)
+            ): cv.positive_time_period,
+            vol.Optional(
+                CONF_KNX_EXPOSE_PERIODIC_SEND, default=timedelta(0)
+            ): cv.positive_time_period,
             vol.Optional(CONF_RESPOND_TO_READ, default=True): cv.boolean,
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(
                 CONF_KNX_EXPOSE_BINARY, sensor_type_validator
@@ -784,10 +771,6 @@ class NumberSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX numbers."""
 
     PLATFORM = Platform.NUMBER
-
-    CONF_MAX = "max"
-    CONF_MIN = "min"
-    CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
     ENTITY_SCHEMA = vol.All(
@@ -801,13 +784,13 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Required(CONF_TYPE): numeric_type_validator,
                 vol.Required(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_MAX): vol.Coerce(float),
-                vol.Optional(CONF_MIN): vol.Coerce(float),
-                vol.Optional(CONF_STEP): cv.positive_float,
+                vol.Optional(NumberConf.MAX): vol.Coerce(float),
+                vol.Optional(NumberConf.MIN): vol.Coerce(float),
+                vol.Optional(NumberConf.STEP): cv.positive_float,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
-        number_limit_sub_validator,
+        _number_limit_sub_validator,
     )
 
 
@@ -874,17 +857,20 @@ class SensorSchema(KNXPlatformSchema):
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
-    ENTITY_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
-            vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
-            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-            vol.Required(CONF_TYPE): sensor_type_validator,
-            vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-        }
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+                vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
+                vol.Optional(CONF_SENSOR_STATE_CLASS): STATE_CLASSES_SCHEMA,
+                vol.Required(CONF_TYPE): sensor_type_validator,
+                vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            }
+        ),
+        _sensor_attribute_sub_validator,
     )
 
 

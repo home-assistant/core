@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from lru import LRU
 from pysqueezebox import Server, async_discover
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -29,14 +28,12 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     discovery_flow,
-    entity_platform,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
@@ -75,16 +72,12 @@ from .util import safe_library_call
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
 
-SERVICE_CALL_METHOD = "call_method"
-SERVICE_CALL_QUERY = "call_query"
-
 ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
@@ -179,29 +172,6 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, _player_discovered
         )
-    )
-
-    # Register entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CALL_METHOD,
-        {
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_call_method",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CALL_QUERY,
-        {
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_call_query",
     )
 
     # Start server discovery task if not already running

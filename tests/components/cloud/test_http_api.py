@@ -2192,9 +2192,11 @@ async def test_download_support_package_integration_load_error(
         ),
         patch(
             "homeassistant.components.cloud.http_api.async_get_loaded_integration",
-            side_effect=lambda hass, domain: Exception("Integration load error")
-            if domain == "failing_integration"
-            else async_get_loaded_integration(hass, domain),
+            side_effect=lambda hass, domain: (
+                Exception("Integration load error")
+                if domain == "failing_integration"
+                else async_get_loaded_integration(hass, domain)
+            ),
         ),
         patch(
             "homeassistant.components.cloud.http_api.async_get_installed_packages",

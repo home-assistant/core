@@ -3,21 +3,35 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from roborock import B01Props, CleanTypeMapping
-from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
+from roborock.data import (
+    RoborockDockDustCollectionModeCode,
+    RoborockEnum,
+    WaterLevelMapping,
+    ZeoDetergentType,
+    ZeoDryingMode,
+    ZeoMode,
+    ZeoProgram,
+    ZeoRinse,
+    ZeoSoftenerType,
+    ZeoSpin,
+    ZeoTemperature,
+)
 from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockZeoProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
@@ -25,10 +39,17 @@ from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
 )
-from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01Q7,
+    RoborockCoordinatedEntityV1,
+)
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,6 +86,16 @@ class RoborockB01SelectDescription(SelectEntityDescription):
     """Function to get all options of the select entity or returns None if not supported."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockSelectDescriptionA01(SelectEntityDescription):
+    """Class to describe a Roborock A01 select entity."""
+
+    # The protocol that the select entity will send to the api.
+    data_protocol: RoborockZeoProtocol
+    # Enum class for the select entity
+    enum_class: type[RoborockEnum]
+
+
 B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
     RoborockB01SelectDescription(
         key="water_flow",
@@ -92,25 +123,31 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         key="water_box_mode",
         translation_key="mop_intensity",
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-        value_fn=lambda api: api.status.water_box_mode_name,
+        value_fn=lambda api: api.status.water_mode_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            api.status.water_box_mode.keys()
-            if api.status.water_box_mode is not None
+            [mode.value for mode in api.status.water_mode_options]
+            if api.status.water_mode_options
             else None
         ),
-        parameter_lambda=lambda key, api: [api.status.get_mop_intensity_code(key)],
+        parameter_lambda=lambda key, api: [
+            {v: k for k, v in api.status.water_mode_mapping.items()}[key]
+        ],
     ),
     RoborockSelectDescription(
         key="mop_mode",
         translation_key="mop_mode",
         api_command=RoborockCommand.SET_MOP_MODE,
-        value_fn=lambda api: api.status.mop_mode_name,
+        value_fn=lambda api: api.status.mop_route_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            api.status.mop_mode.keys() if api.status.mop_mode is not None else None
+            [mode.value for mode in api.status.mop_route_options]
+            if api.status.mop_route_options
+            else None
         ),
-        parameter_lambda=lambda key, api: [api.status.get_mop_mode_code(key)],
+        parameter_lambda=lambda key, api: [
+            {v: k for k, v in api.status.mop_route_mapping.items()}[key]
+        ],
     ),
     RoborockSelectDescription(
         key="dust_collection_mode",
@@ -129,6 +166,66 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
             RoborockDockDustCollectionModeCode.as_dict().get(key)
         ],
         is_dock_entity=True,
+    ),
+]
+
+
+A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
+    RoborockSelectDescriptionA01(
+        key="program",
+        data_protocol=RoborockZeoProtocol.PROGRAM,
+        translation_key="program",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoProgram,
+    ),
+    RoborockSelectDescriptionA01(
+        key="mode",
+        data_protocol=RoborockZeoProtocol.MODE,
+        translation_key="mode",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoMode,
+    ),
+    RoborockSelectDescriptionA01(
+        key="temperature",
+        data_protocol=RoborockZeoProtocol.TEMP,
+        translation_key="temperature",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoTemperature,
+    ),
+    RoborockSelectDescriptionA01(
+        key="drying_mode",
+        data_protocol=RoborockZeoProtocol.DRYING_MODE,
+        translation_key="drying_mode",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoDryingMode,
+    ),
+    RoborockSelectDescriptionA01(
+        key="spin_level",
+        data_protocol=RoborockZeoProtocol.SPIN_LEVEL,
+        translation_key="spin_level",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoSpin,
+    ),
+    RoborockSelectDescriptionA01(
+        key="rinse_times",
+        data_protocol=RoborockZeoProtocol.RINSE_TIMES,
+        translation_key="rinse_times",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoRinse,
+    ),
+    RoborockSelectDescriptionA01(
+        key="detergent_type",
+        data_protocol=RoborockZeoProtocol.DETERGENT_TYPE,
+        translation_key="detergent_type",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoDetergentType,
+    ),
+    RoborockSelectDescriptionA01(
+        key="softener_type",
+        data_protocol=RoborockZeoProtocol.SOFTENER_TYPE,
+        translation_key="softener_type",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoSoftenerType,
     ),
 ]
 
@@ -159,14 +256,19 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockB01SelectEntity(coordinator, description, options)
-        for coordinator in config_entry.runtime_data.b01
+        for coordinator in config_entry.runtime_data.b01_q7
         for description in B01_SELECT_DESCRIPTIONS
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
         if (options := description.options_lambda(coordinator.api)) is not None
+    )
+    async_add_entities(
+        RoborockSelectEntityA01(coordinator, description)
+        for coordinator in config_entry.runtime_data.a01
+        for description in A01_SELECT_DESCRIPTIONS
+        if description.data_protocol in coordinator.request_protocols
     )
 
 
-class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
+class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
     """Select entity for Roborock B01 devices."""
 
     entity_description: RoborockB01SelectDescription
@@ -303,3 +405,64 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         if current_map_info := self._home_trait.current_map_data:
             return current_map_info.name or f"Map {current_map_info.map_flag}"
         return None
+
+
+class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
+    """A class to let you set options on a Roborock A01 device."""
+
+    entity_description: RoborockSelectDescriptionA01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+        entity_description: RoborockSelectDescriptionA01,
+    ) -> None:
+        """Create an A01 select entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+        )
+        self._attr_options = list(entity_description.enum_class.keys())
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the option."""
+        # Get the protocol value for the selected option
+        option_values = self.entity_description.enum_class.as_dict()
+        if option not in option_values:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="select_option_failed",
+            )
+        value = option_values[option]
+        try:
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
+                self.entity_description.data_protocol,
+                value,
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": self.entity_description.key,
+                },
+            ) from err
+
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def current_option(self) -> str | None:
+        """Get the current status of the select entity from coordinator data."""
+        if self.entity_description.data_protocol not in self.coordinator.data:
+            return None
+
+        current_value = self.coordinator.data[self.entity_description.data_protocol]
+        if current_value is None:
+            return None
+        _LOGGER.debug(
+            "current_value: %s for %s",
+            current_value,
+            self.entity_description.key,
+        )
+        return str(current_value)

@@ -27,9 +27,19 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "backups_size": {
+        "name": "Total size of backups"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Cannot connect to endpoint"
+    },
+    "error_fetching_data": {
+      "message": "Error fetching data"
     },
     "invalid_bucket_name": {
       "message": "Invalid bucket name"

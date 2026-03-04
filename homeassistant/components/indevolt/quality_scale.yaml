@@ -1,0 +1,94 @@
+rules:
+  # Bronze (mandatory for core integrations)
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to entity events, uses coordinator pattern
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no user-configurable parameters beyond setup
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration uses local device with no authentication
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not support network discovery
+  discovery:
+    status: exempt
+    comment: Integration does not support network discovery
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration represents a single device, not a hub with multiple devices
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+  icon-translations:
+    status: todo
+  reconfiguration-flow:
+    status: todo
+  repair-issues:
+    status: exempt
+    comment: No repair issues needed for current functionality
+  stale-devices:
+    status: exempt
+    comment: Integration represents a single device, not a hub with multiple devices
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo

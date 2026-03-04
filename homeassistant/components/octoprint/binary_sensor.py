@@ -56,7 +56,7 @@ class OctoPrintBinarySensorBase(
         self._attr_device_info = coordinator.device_info
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if binary sensor is on."""
         if not (printer := self.coordinator.data["printer"]):
             return None

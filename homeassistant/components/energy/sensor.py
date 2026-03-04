@@ -94,21 +94,14 @@ class SourceAdapter:
 
 
 SOURCE_ADAPTERS: Final = (
+    # Grid import cost (unified format)
     SourceAdapter(
         "grid",
-        "flow_from",
+        None,  # No flow_type - unified format
         "stat_energy_from",
         "stat_cost",
         "Cost",
         "cost",
-    ),
-    SourceAdapter(
-        "grid",
-        "flow_to",
-        "stat_energy_to",
-        "stat_compensation",
-        "Compensation",
-        "compensation",
     ),
     SourceAdapter(
         "gas",
@@ -126,6 +119,16 @@ SOURCE_ADAPTERS: Final = (
         "Cost",
         "cost",
     ),
+)
+
+# Separate adapter for grid export compensation (needs different price field)
+GRID_EXPORT_ADAPTER: Final = SourceAdapter(
+    "grid",
+    None,  # No flow_type - unified format
+    "stat_energy_to",
+    "stat_compensation",
+    "Compensation",
+    "compensation",
 )
 
 
@@ -183,22 +186,20 @@ class SensorManager:
                 if adapter.source_type != energy_source["type"]:
                     continue
 
-                if adapter.flow_type is None:
-                    self._process_sensor_data(
-                        adapter,
-                        energy_source,
-                        to_add,
-                        to_remove,
-                    )
-                    continue
+                self._process_sensor_data(
+                    adapter,
+                    energy_source,
+                    to_add,
+                    to_remove,
+                )
 
-                for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
-                    self._process_sensor_data(
-                        adapter,
-                        flow,
-                        to_add,
-                        to_remove,
-                    )
+            # Handle grid export compensation (unified format uses different price fields)
+            if energy_source["type"] == "grid":
+                self._process_grid_export_sensor(
+                    energy_source,
+                    to_add,
+                    to_remove,
+                )
 
             # Process power sensors for battery and grid sources
             self._process_power_sensor_data(
@@ -222,11 +223,16 @@ class SensorManager:
         if config.get(adapter.total_money_key) is not None:
             return
 
-        key = (adapter.source_type, adapter.flow_type, config[adapter.stat_energy_key])
+        # Skip if the energy stat is not configured (e.g., export-only or power-only grids)
+        stat_energy = config.get(adapter.stat_energy_key)
+        if not stat_energy:
+            return
+
+        key = (adapter.source_type, adapter.flow_type, stat_energy)
 
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed
-        if not valid_entity_id(config[adapter.stat_energy_key]) or (
+        if not valid_entity_id(stat_energy) or (
             config.get("entity_energy_price") is None
             and config.get("number_energy_price") is None
         ):
@@ -243,6 +249,56 @@ class SensorManager:
         to_add.append(self.current_entities[key])
 
     @callback
+    def _process_grid_export_sensor(
+        self,
+        config: Mapping[str, Any],
+        to_add: list[EnergyCostSensor | EnergyPowerSensor],
+        to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
+    ) -> None:
+        """Process grid export compensation sensor (unified format).
+
+        The unified grid format uses different field names for export pricing:
+        - entity_energy_price_export instead of entity_energy_price
+        - number_energy_price_export instead of number_energy_price
+        """
+        # No export meter configured
+        stat_energy_to = config.get("stat_energy_to")
+        if stat_energy_to is None:
+            return
+
+        # Already have a compensation stat
+        if config.get("stat_compensation") is not None:
+            return
+
+        key = ("grid", None, stat_energy_to)
+
+        # Check for export pricing fields (different names in unified format)
+        if not valid_entity_id(stat_energy_to) or (
+            config.get("entity_energy_price_export") is None
+            and config.get("number_energy_price_export") is None
+        ):
+            return
+
+        # Create a config wrapper that maps the sell price fields to standard names
+        # so EnergyCostSensor can use them
+        export_config: dict[str, Any] = {
+            "stat_energy_to": stat_energy_to,
+            "stat_compensation": config.get("stat_compensation"),
+            "entity_energy_price": config.get("entity_energy_price_export"),
+            "number_energy_price": config.get("number_energy_price_export"),
+        }
+
+        if current_entity := to_remove.pop(key, None):
+            current_entity.update_config(export_config)
+            return
+
+        self.current_entities[key] = EnergyCostSensor(
+            GRID_EXPORT_ADAPTER,
+            export_config,
+        )
+        to_add.append(self.current_entities[key])
+
+    @callback
     def _process_power_sensor_data(
         self,
         energy_source: Mapping[str, Any],
@@ -252,20 +308,13 @@ class SensorManager:
         """Process power sensor data for battery and grid sources."""
         source_type = energy_source.get("type")
 
-        if source_type == "battery":
+        if source_type in ("battery", "grid"):
+            # Both battery and grid now use unified format with power_config at top level
             power_config = energy_source.get("power_config")
             if power_config and self._needs_power_sensor(power_config):
                 self._create_or_keep_power_sensor(
                     source_type, power_config, to_add, to_remove
                 )
-
-        elif source_type == "grid":
-            for power in energy_source.get("power", []):
-                power_config = power.get("power_config")
-                if power_config and self._needs_power_sensor(power_config):
-                    self._create_or_keep_power_sensor(
-                        source_type, power_config, to_add, to_remove
-                    )
 
     @staticmethod
     def _needs_power_sensor(power_config: PowerConfig) -> bool:
@@ -312,6 +361,17 @@ class EnergyCostSensor(SensorEntity):
 
     This is intended as a fallback for when no specific cost sensor is available for the
     utility.
+
+    Expected config fields (from adapter or export_config wrapper):
+    - stat_energy_key (via adapter): Key to get the energy statistic ID
+    - total_money_key (via adapter): Key to get the existing cost/compensation stat
+    - entity_energy_price: Entity ID providing price per unit (e.g., $/kWh)
+    - number_energy_price: Fixed price per unit
+
+    Note: For grid export compensation, the unified format uses different field names
+    (entity_energy_price_export, number_energy_price_export). The _process_grid_export_sensor
+    method in SensorManager creates a wrapper config that maps these to the standard
+    field names (entity_energy_price, number_energy_price) so this class can use them.
     """
 
     _attr_entity_registry_visible_default = False

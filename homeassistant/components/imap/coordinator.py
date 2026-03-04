@@ -395,7 +395,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, TimeoutError):
+            except AioImapException, TimeoutError:
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -534,7 +534,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with asyncio.timeout(10):
                     await idle
 
-            except (AioImapException, TimeoutError):
+            except AioImapException, TimeoutError:
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],

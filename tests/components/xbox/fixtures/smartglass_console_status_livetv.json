@@ -1,0 +1,14 @@
+{
+  "status": {
+    "errorCode": "OK",
+    "errorMessage": null
+  },
+  "powerState": "On",
+  "playbackState": "Stopped",
+  "loginState": null,
+  "focusAppAumid": "Microsoft.Xbox.LiveTV_8wekyb3d8bbwe!Microsoft.Xbox.LiveTV.Application",
+  "isTvConfigured": true,
+  "digitalAssistantRemoteControlEnabled": true,
+  "consoleStreamingEnabled": false,
+  "remoteManagementEnabled": true
+}

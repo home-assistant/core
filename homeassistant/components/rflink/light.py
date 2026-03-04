@@ -226,7 +226,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
             self._state = True
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 

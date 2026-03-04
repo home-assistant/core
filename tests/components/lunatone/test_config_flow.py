@@ -11,7 +11,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import BASE_URL, SERIAL_NUMBER
+from . import BASE_URL
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +32,7 @@ async def test_full_flow(
         {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Test {SERIAL_NUMBER}"
+    assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
 
 
@@ -41,7 +41,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     mock_lunatone_info: AsyncMock,
 ) -> None:
     """Test full flow."""
-    mock_lunatone_info.data = None
+    mock_lunatone_info.serial_number = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -117,7 +117,7 @@ async def test_user_step_fail_with_error(
         {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Test {SERIAL_NUMBER}"
+    assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
 
 

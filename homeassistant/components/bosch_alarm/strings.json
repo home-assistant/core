@@ -155,12 +155,6 @@
     "incorrect_door_state": {
       "message": "Door cannot be manipulated while it is momentarily unlocked."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
-    },
     "unknown_error": {
       "message": "An unknown error occurred while setting the date and time on \"{target}\"."
     }

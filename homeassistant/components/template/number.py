@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -19,14 +18,14 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -41,8 +40,6 @@ from .schemas import (
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_SET_VALUE = "set_value"
 
@@ -120,16 +117,28 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
-    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._step_template = config[CONF_STEP]
-        self._min_template = config[CONF_MIN]
-        self._max_template = config[CONF_MAX]
-
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
+
+        self.setup_state_template(
+            CONF_STATE,
+            "_attr_native_value",
+            template_validators.number(self, CONF_STATE),
+        )
+        for option, attribute in (
+            (CONF_STEP, "_attr_native_step"),
+            (CONF_MIN, "_attr_native_min_value"),
+            (CONF_MAX, "_attr_native_max_value"),
+        ):
+            self.setup_template(
+                option, attribute, template_validators.number(self, option)
+            )
+
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
@@ -157,46 +166,10 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
     ) -> None:
         """Initialize the number."""
         TemplateEntity.__init__(self, hass, config, unique_id)
-        AbstractTemplateNumber.__init__(self, config)
-
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
-
-        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template is not None:
-            self.add_template_attribute(
-                "_attr_native_value",
-                self._template,
-                vol.Coerce(float),
-                none_on_template_error=True,
-            )
-        if self._step_template is not None:
-            self.add_template_attribute(
-                "_attr_native_step",
-                self._step_template,
-                vol.Coerce(float),
-                none_on_template_error=True,
-            )
-        if self._min_template is not None:
-            self.add_template_attribute(
-                "_attr_native_min_value",
-                self._min_template,
-                validator=vol.Coerce(float),
-                none_on_template_error=True,
-            )
-        if self._max_template is not None:
-            self.add_template_attribute(
-                "_attr_native_max_value",
-                self._max_template,
-                validator=vol.Coerce(float),
-                none_on_template_error=True,
-            )
-        super()._async_setup_templates()
+        AbstractTemplateNumber.__init__(self, name, config)
 
 
 class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
@@ -212,47 +185,5 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        AbstractTemplateNumber.__init__(self, config)
-
-        for key in (
-            CONF_STATE,
-            CONF_STEP,
-            CONF_MIN,
-            CONF_MAX,
-        ):
-            if isinstance(config.get(key), template.Template):
-                self._to_render_simple.append(key)
-                self._parse_result.add(key)
-
-        self.add_script(
-            CONF_SET_VALUE,
-            config[CONF_SET_VALUE],
-            self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            DOMAIN,
-        )
-
-    def _handle_coordinator_update(self):
-        """Handle updated data from the coordinator."""
-        self._process_data()
-
-        if not self.available:
-            return
-
-        write_ha_state = False
-        for key, attr in (
-            (CONF_STATE, "_attr_native_value"),
-            (CONF_STEP, "_attr_native_step"),
-            (CONF_MIN, "_attr_native_min_value"),
-            (CONF_MAX, "_attr_native_max_value"),
-        ):
-            if (rendered := self._rendered.get(key)) is not None:
-                setattr(self, attr, vol.Any(vol.Coerce(float), None)(rendered))
-                write_ha_state = True
-
-        if len(self._rendered) > 0:
-            # In case any non optimistic template
-            write_ha_state = True
-
-        if write_ha_state:
-            self.async_set_context(self.coordinator.data["context"])
-            self.async_write_ha_state()
+        name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+        AbstractTemplateNumber.__init__(self, name, config)

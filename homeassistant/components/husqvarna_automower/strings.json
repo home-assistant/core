@@ -511,7 +511,7 @@
       "description": "Lets the mower either mow or park for a given duration, overriding all schedules.",
       "fields": {
         "duration": {
-          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored.",
+          "description": "Minimum: 1 minute, maximum: 42 days.",
           "name": "Duration"
         },
         "override_mode": {

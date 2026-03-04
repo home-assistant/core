@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum, unique
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import EvoData
 
 DOMAIN: Final = "evohome"
+EVOHOME_DATA: HassKey[EvoData] = HassKey(DOMAIN)
 
 STORAGE_VER: Final = 1
 STORAGE_KEY: Final = DOMAIN

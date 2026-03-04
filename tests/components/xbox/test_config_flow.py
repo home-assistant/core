@@ -2,8 +2,9 @@
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.people.models import PeopleResponse
 
@@ -22,7 +23,10 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
@@ -576,7 +580,10 @@ async def test_add_friend_flow_config_entry_not_loaded(
 
 
 @pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
-async def test_unique_id_and_friends_migration(hass: HomeAssistant) -> None:
+async def test_unique_id_and_friends_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test config entry unique_id migration and favorite to subentry migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -601,6 +608,17 @@ async def test_unique_id_and_friends_migration(hass: HomeAssistant) -> None:
 
     config_entry.add_to_hass(hass)
 
+    device_own = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "xbox_live")},
+    )
+
+    device_friend = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "2533274838782903")},
+    )
+    assert device_friend.config_entries_subentries[config_entry.entry_id] == {None}
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -611,14 +629,111 @@ async def test_unique_id_and_friends_migration(hass: HomeAssistant) -> None:
     assert config_entry.title == "GSR Ae"
 
     # Assert favorite friends migrated to subentries
-    assert len(config_entry.subentries) == 2
+    assert len(config_entry.subentries) == 1
     subentries = list(config_entry.subentries.values())
     assert subentries[0].unique_id == "2533274838782903"
     assert subentries[0].title == "Ikken Hissatsuu"
     assert subentries[0].subentry_type == "friend"
-    assert subentries[1].unique_id == "2533274913657542"
-    assert subentries[1].title == "erics273"
-    assert subentries[1].subentry_type == "friend"
+
+    ## Assert devices have been migrated
+    assert (device_own := device_registry.async_get(device_own.id))
+    assert device_own.identifiers == {(DOMAIN, "271958441785640")}
+
+    assert (device_friend := device_registry.async_get(device_friend.id))
+    assert device_friend.config_entries_subentries[config_entry.entry_id] == {
+        subentries[0].subentry_id
+    }
+
+
+@pytest.mark.parametrize(
+    ("provider", "method"),
+    [
+        ("people", "get_friends_by_xuid"),
+        ("people", "get_friends_own"),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutException(""),
+        RequestError("", request=Mock()),
+        HTTPStatusError("", request=Mock(), response=Mock()),
+    ],
+)
+@pytest.mark.usefixtures("authentication_manager")
+async def test_migration_exceptions(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    provider: str,
+    method: str,
+    exception: Exception,
+) -> None:
+    """Test exceptions during migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Assistant Cloud",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id=DOMAIN,
+        version=1,
+        minor_version=1,
+    )
+
+    provider = getattr(xbox_live_client, provider)
+    getattr(provider, method).side_effect = exception
+
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+
+
+@pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
+async def test_migration_implementation_unavailable(hass: HomeAssistant) -> None:
+    """Test implementation unavailable exception during migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Assistant Cloud",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id=DOMAIN,
+        version=1,
+        minor_version=1,
+    )
+
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.xbox.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
 
 
 @pytest.mark.usefixtures(

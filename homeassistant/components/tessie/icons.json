@@ -25,6 +25,12 @@
       "grid_services_power": {
         "default": "mdi:transmission-tower"
       },
+      "grid_status": {
+        "state": {
+          "off": "mdi:transmission-tower-off",
+          "on": "mdi:transmission-tower"
+        }
+      },
       "storm_mode_active": {
         "default": "mdi:weather-sunny",
         "state": {
@@ -178,8 +184,17 @@
       "battery_power": {
         "default": "mdi:home-battery"
       },
+      "charge_state_charge_port_latch": {
+        "default": "mdi:ev-plug-tesla"
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
+      },
+      "charge_state_conn_charge_cable": {
+        "default": "mdi:ev-plug-ccs2"
+      },
+      "charge_state_energy_remaining": {
+        "default": "mdi:battery-medium"
       },
       "charge_state_minutes_to_full_charge": {
         "default": "mdi:clock-end"
@@ -202,6 +217,9 @@
       "energy_left": {
         "default": "mdi:battery"
       },
+      "energy_remaining": {
+        "default": "mdi:battery-medium"
+      },
       "generator_power": {
         "default": "mdi:generator-stationary"
       },
@@ -211,8 +229,26 @@
       "grid_services_power": {
         "default": "mdi:transmission-tower"
       },
+      "lifetime_energy_used": {
+        "default": "mdi:battery-heart-variant"
+      },
       "load_power": {
         "default": "mdi:power-plug"
+      },
+      "module_temp_max": {
+        "default": "mdi:thermometer-high"
+      },
+      "module_temp_min": {
+        "default": "mdi:thermometer-low"
+      },
+      "pack_current": {
+        "default": "mdi:current-dc"
+      },
+      "pack_voltage": {
+        "default": "mdi:lightning-bolt"
+      },
+      "phantom_drain_percent": {
+        "default": "mdi:battery-minus-outline"
       },
       "solar_power": {
         "default": "mdi:solar-power"

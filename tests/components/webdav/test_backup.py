@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from io import StringIO
 from unittest.mock import Mock, patch
 
@@ -13,6 +13,7 @@ from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.webdav.backup import async_register_backup_agents_listener
 from homeassistant.components.webdav.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 
 from .const import BACKUP_METADATA
@@ -324,3 +325,44 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) is None
+
+
+async def test_agents_list_backups_with_multi_chunk_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    webdav_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test listing backups when metadata is returned in multiple chunks."""
+    metadata_json = json_dumps(BACKUP_METADATA).encode()
+    mid = len(metadata_json) // 2
+    chunk1 = metadata_json[:mid]
+    chunk2 = metadata_json[mid:]
+
+    async def _multi_chunk_download(path: str, timeout=None) -> AsyncIterator[bytes]:
+        """Mock download returning metadata in multiple chunks."""
+        if path.endswith(".json"):
+            yield chunk1
+            yield chunk2
+            return
+        yield b"backup data"
+
+    webdav_client.download_iter.side_effect = _multi_chunk_download
+
+    # Invalidate the metadata cache so the new mock is used
+    hass.config_entries.async_update_entry(
+        mock_config_entry, title=mock_config_entry.title
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    backups = response["result"]["backups"]
+    assert len(backups) == 1
+    assert backups[0]["backup_id"] == BACKUP_METADATA["backup_id"]
+    assert backups[0]["name"] == BACKUP_METADATA["name"]

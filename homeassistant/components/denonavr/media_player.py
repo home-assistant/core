@@ -27,7 +27,6 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -36,14 +35,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DenonavrConfigEntry
 from .const import (
+    ATTR_DYNAMIC_EQ,
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
     CONF_UPDATE_AUDYSSEY,
@@ -54,7 +53,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
-ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 SUPPORT_DENON = (
     MediaPlayerEntityFeature.VOLUME_STEP
@@ -72,15 +70,11 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.STOP
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
-
-# Services
-SERVICE_GET_COMMAND = "get_command"
-SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
-SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 
 # HA Telnet events
 TELNET_EVENTS = {
@@ -134,24 +128,6 @@ async def async_setup_entry(
         )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
-    )
-
-    # Register additional services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_GET_COMMAND,
-        {vol.Required(ATTR_COMMAND): cv.string},
-        f"async_{SERVICE_GET_COMMAND}",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_DYNAMIC_EQ,
-        {vol.Required(ATTR_DYNAMIC_EQ): cv.boolean},
-        f"async_{SERVICE_SET_DYNAMIC_EQ}",
-    )
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_AUDYSSEY,
-        None,
-        f"async_{SERVICE_UPDATE_AUDYSSEY}",
     )
 
     async_add_entities(entities, update_before_add=True)
@@ -430,6 +406,11 @@ class DenonDevice(MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
+
+    @async_log_errors
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._receiver.async_stop()
 
     @async_log_errors
     async def async_media_previous_track(self) -> None:

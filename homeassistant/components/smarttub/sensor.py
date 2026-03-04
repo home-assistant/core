@@ -33,6 +33,8 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
     ),
 )
 
+PARALLEL_UPDATES = 0
+
 SET_SECONDARY_FILTRATION_SCHEMA: VolDictType = {
     vol.Required(ATTR_MODE): vol.In(
         {
@@ -93,6 +95,17 @@ async def async_setup_entry(
 class SmartTubBuiltinSensor(SmartTubOnboardSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: smarttub.Spa,
+        sensor_name: str,
+        state_key: str,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, spa, sensor_name, state_key)
+        self._attr_translation_key = state_key
+
     @property
     def native_value(self) -> str | None:
         """Return the current state of the sensor."""
@@ -115,6 +128,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
         super().__init__(
             coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
+        self._attr_translation_key = "primary_filtration_cycle"
 
     @property
     def cycle(self) -> smarttub.SpaPrimaryFiltrationCycle:
@@ -155,6 +169,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
         super().__init__(
             coordinator, spa, "Secondary Filtration Cycle", "secondary_filtration"
         )
+        self._attr_translation_key = "secondary_filtration_cycle"
 
     @property
     def cycle(self) -> smarttub.SpaSecondaryFiltrationCycle:

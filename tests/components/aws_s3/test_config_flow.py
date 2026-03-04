@@ -122,12 +122,19 @@ async def test_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("endpoint_url"),
+    [
+        ("@@@"),
+        ("http://example.com"),
+    ],
+)
 async def test_flow_create_not_aws_endpoint(
-    hass: HomeAssistant,
+    hass: HomeAssistant, endpoint_url: str
 ) -> None:
     """Test config flow with a not aws endpoint should raise an error."""
     result = await _async_start_flow(
-        hass, USER_INPUT | {CONF_ENDPOINT_URL: "http://example.com"}
+        hass, USER_INPUT | {CONF_ENDPOINT_URL: endpoint_url}
     )
 
     assert result["type"] is FlowResultType.FORM

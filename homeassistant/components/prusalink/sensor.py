@@ -57,7 +57,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterStatus](
             key="printer.state",
             name=None,
-            value_fn=lambda data: (cast(str, data["printer"]["state"].lower())),
+            value_fn=lambda data: cast(str, data["printer"]["state"].lower()),
             device_class=SensorDeviceClass.ENUM,
             options=[state.value.lower() for state in PrinterState],
             translation_key="printer_state",
@@ -167,7 +167,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=ignore_variance(
-                lambda data: (utcnow() - timedelta(seconds=data["time_printing"])),
+                lambda data: utcnow() - timedelta(seconds=data["time_printing"]),
                 timedelta(minutes=2),
             ),
             available_fn=lambda data: (
@@ -180,7 +180,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=ignore_variance(
-                lambda data: (utcnow() + timedelta(seconds=data["time_remaining"])),
+                lambda data: utcnow() + timedelta(seconds=data["time_remaining"]),
                 timedelta(minutes=2),
             ),
             available_fn=lambda data: (

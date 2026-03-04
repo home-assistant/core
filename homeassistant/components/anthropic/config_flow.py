@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from functools import partial
+from collections.abc import Mapping
 import json
 import logging
 import re
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import anthropic
 import voluptuous as vol
@@ -14,7 +14,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
-    ConfigEntry,
+    SOURCE_REAUTH,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -30,23 +30,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
 )
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -58,9 +63,13 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
+
+if TYPE_CHECKING:
+    from . import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,8 +95,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = await hass.async_add_executor_job(
-        partial(anthropic.AsyncAnthropic, api_key=data[CONF_API_KEY])
+    client = anthropic.AsyncAnthropic(
+        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     await client.models.list(timeout=10.0)
 
@@ -105,18 +114,12 @@ async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionD
         # Resolve alias from versioned model name:
         model_alias = (
             model_info.id[:-9]
-            if model_info.id
-            not in (
-                "claude-3-haiku-20240307",
-                "claude-3-5-haiku-20241022",
-                "claude-3-opus-20240229",
-            )
+            if model_info.id != "claude-3-haiku-20240307"
+            and model_info.id[-2:-1] != "-"
             else model_info.id
         )
         if short_form.search(model_alias):
             model_alias += "-0"
-        if model_alias.endswith(("haiku", "opus", "sonnet")):
-            model_alias += "-latest"
         model_options.append(
             SelectOptionDict(
                 label=model_info.display_name,
@@ -158,6 +161,10 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
                 return self.async_create_entry(
                     title="Claude",
                     data=user_input,
@@ -178,13 +185,34 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or None
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors or None,
+            description_placeholders={
+                "instructions_url": "https://www.home-assistant.io/integrations/anthropic/#generating-an-api-key",
+            },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+            )
+        return await self.async_step_user(user_input)
 
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -354,7 +382,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)):
+        if not model.startswith(tuple(NON_THINKING_MODELS)) and model.startswith(
+            tuple(NON_ADAPTIVE_THINKING_MODELS)
+        ):
             step_schema[
                 vol.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
@@ -370,6 +400,32 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
+
+        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_THINKING_EFFORT,
+                    default=DEFAULT[CONF_THINKING_EFFORT],
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=["none", "low", "medium", "high", "max"],
+                    translation_key=CONF_THINKING_EFFORT,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+        else:
+            self.options.pop(CONF_THINKING_EFFORT, None)
+
+        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_CODE_EXECUTION,
+                    default=DEFAULT[CONF_CODE_EXECUTION],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_CODE_EXECUTION, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(
@@ -435,11 +491,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        client = await self.hass.async_add_executor_job(
-            partial(
-                anthropic.AsyncAnthropic,
-                api_key=self._get_entry().data[CONF_API_KEY],
-            )
+        client = anthropic.AsyncAnthropic(
+            api_key=self._get_entry().data[CONF_API_KEY],
+            http_client=get_async_client(self.hass),
         )
         return await get_model_list(client)
 
@@ -448,11 +502,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
+            client = anthropic.AsyncAnthropic(
+                api_key=self._get_entry().data[CONF_API_KEY],
+                http_client=get_async_client(self.hass),
             )
             location_schema = vol.Schema(
                 {
@@ -473,22 +525,24 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         "role": "user",
                         "content": "Where are the following coordinates located: "
                         f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})? Please respond "
-                        "only with a JSON object using the following schema:\n"
-                        f"{convert(location_schema)}",
-                    },
-                    {
-                        "role": "assistant",
-                        "content": "{",  # hints the model to skip any preamble
-                    },
+                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                    }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
+                output_config={
+                    "format": {
+                        "type": "json_schema",
+                        "schema": {
+                            **convert(location_schema),
+                            "additionalProperties": False,
+                        },
+                    }
+                },
             )
             _LOGGER.debug("Model response: %s", response.content)
             location_data = location_schema(
                 json.loads(
-                    "{"
-                    + "".join(
+                    "".join(
                         block.text
                         for block in response.content
                         if isinstance(block, anthropic.types.TextBlock)

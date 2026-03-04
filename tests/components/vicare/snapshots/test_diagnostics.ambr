@@ -4711,6 +4711,14 @@
             'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes',
           }),
         ]),
+        'device': dict({
+          'id': 'deviceId0',
+          'modelId': 'model0',
+          'roles': list([
+          ]),
+          'status': 'Online',
+          'type': None,
+        }),
       }),
     ]),
     'entry': dict({

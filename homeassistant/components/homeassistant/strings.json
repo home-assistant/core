@@ -27,6 +27,15 @@
     "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
+    "oauth2_helper_reauth_required": {
+      "message": "Credentials are invalid, re-authentication required"
+    },
+    "oauth2_helper_refresh_failed": {
+      "message": "OAuth2 token refresh failed for {domain}"
+    },
+    "oauth2_helper_refresh_transient": {
+      "message": "Temporary error refreshing credentials for {domain}, try again later"
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
     },
@@ -38,6 +47,15 @@
     },
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
+    },
+    "service_config_entry_not_found": {
+      "message": "Integration {domain} config entry with ID {entry_id} was not found."
+    },
+    "service_config_entry_not_loaded": {
+      "message": "Config entry {entry_title} for integration {domain} is not loaded."
+    },
+    "service_config_entry_wrong_domain": {
+      "message": "Config entry {entry_title} does not belong to integration {domain}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
@@ -152,6 +170,24 @@
     "no_platform_setup": {
       "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}",
       "title": "Unused YAML configuration for the {platform} integration"
+    },
+    "orphaned_ignored_config_entry": {
+      "fix_flow": {
+        "abort": {
+          "issue_ignored": "Non-existent integration {domain} ignored."
+        },
+        "step": {
+          "init": {
+            "description": "There is an ignored orphaned config entry for the `{domain}` integration. This can happen when an integration is removed, but the config entry is still present in Home Assistant.\n\nTo resolve this, press **Remove** to clean up the orphaned entry.",
+            "menu_options": {
+              "confirm": "Remove",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::homeassistant::issues::orphaned_ignored_config_entry::title%]"
+          }
+        }
+      },
+      "title": "Orphaned ignored config entry for {domain}"
     },
     "platform_only": {
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",

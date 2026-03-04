@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
@@ -383,6 +384,10 @@ async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
     """Test the setting of the state with off."""
+    # Ensure the trigger executes for trigger configurations
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.UNLOCKED
 
@@ -437,9 +442,6 @@ async def test_template_code_template_syntax_error(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_static(hass: HomeAssistant) -> None:
     """Test that we allow static templates."""
-    state = hass.states.get(TEST_ENTITY_ID)
-    assert state.state == LockState.UNLOCKED
-
     hass.states.async_set(TEST_ENTITY_ID, LockState.LOCKED)
     await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
@@ -457,6 +459,7 @@ async def test_template_static(hass: HomeAssistant) -> None:
         ("{{ True }}", LockState.LOCKED),
         ("{{ False }}", LockState.UNLOCKED),
         ("{{ x - 12 }}", STATE_UNAVAILABLE),
+        ("{{ None }}", STATE_UNKNOWN),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock")
@@ -754,16 +757,16 @@ async def test_lock_actions_fail_with_invalid_code(
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute", "expected"),
+    ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template", 0),
-        (ConfigurationStyle.MODERN, "code_format", 0),
-        (ConfigurationStyle.TRIGGER, "code_format", 2),
+        (ConfigurationStyle.LEGACY, "code_format_template"),
+        (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_lock_actions_dont_execute_with_code_template_rendering_error(
-    hass: HomeAssistant, calls: list[ServiceCall], expected: int
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test lock code format rendering fails block lock/unlock actions."""
 
@@ -783,10 +786,7 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     )
     await hass.async_block_till_done()
 
-    # Trigger expects calls here because trigger based entities don't
-    # allow template exception resolutions into code_format property so
-    # the actions will fire using the previous code_format.
-    assert len(calls) == expected
+    assert len(calls) == 0
 
 
 @pytest.mark.parametrize(
@@ -1163,7 +1163,7 @@ async def test_optimistic(hass: HomeAssistant) -> None:
     """Test configuration with optimistic state."""
 
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.state == LockState.UNLOCKED
+    assert state.state == STATE_UNKNOWN
 
     # Ensure Trigger template entities update.
     hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
@@ -1218,6 +1218,10 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+
+    # Ensure Trigger template entities update.
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == LockState.UNLOCKED

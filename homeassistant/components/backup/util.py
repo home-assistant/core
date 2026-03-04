@@ -8,7 +8,6 @@ import copy
 from dataclasses import dataclass, replace
 from io import BytesIO
 import json
-import os
 from pathlib import Path, PurePath
 from queue import SimpleQueue
 import tarfile
@@ -16,9 +15,15 @@ import threading
 from typing import IO, Any, cast
 
 import aiohttp
-from securetar import SecureTarError, SecureTarFile, SecureTarReadError
+from securetar import (
+    InvalidPasswordError,
+    SecureTarArchive,
+    SecureTarError,
+    SecureTarFile,
+    SecureTarReadError,
+    SecureTarRootKeyContext,
+)
 
-from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -29,7 +34,7 @@ from homeassistant.util.async_iterator import (
 )
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import BUF_SIZE, LOGGER
+from .const import BUF_SIZE, LOGGER, SECURETAR_CREATE_VERSION
 from .models import AddonInfo, AgentBackup, Folder
 
 
@@ -132,17 +137,23 @@ def suggested_filename(backup: AgentBackup) -> str:
 
 
 def validate_password(path: Path, password: str | None) -> bool:
-    """Validate the password."""
-    with tarfile.open(path, "r:", bufsize=BUF_SIZE) as backup_file:
+    """Validate the password.
+
+    This assumes every inner tar is encrypted with the same secure tar version and
+    same password.
+    """
+    with SecureTarArchive(
+        path, "r", bufsize=BUF_SIZE, password=password
+    ) as backup_file:
         compressed = False
         ha_tar_name = "homeassistant.tar"
         try:
-            ha_tar = backup_file.extractfile(ha_tar_name)
+            ha_tar = backup_file.tar.extractfile(ha_tar_name)
         except KeyError:
             compressed = True
             ha_tar_name = "homeassistant.tar.gz"
             try:
-                ha_tar = backup_file.extractfile(ha_tar_name)
+                ha_tar = backup_file.tar.extractfile(ha_tar_name)
             except KeyError:
                 LOGGER.error("No homeassistant.tar or homeassistant.tar.gz found")
                 return False
@@ -150,13 +161,12 @@ def validate_password(path: Path, password: str | None) -> bool:
             with SecureTarFile(
                 path,  # Not used
                 gzip=compressed,
-                key=password_to_key(password) if password is not None else None,
-                mode="r",
+                password=password,
                 fileobj=ha_tar,
             ):
                 # If we can read the tar file, the password is correct
                 return True
-        except tarfile.ReadError:
+        except tarfile.ReadError, InvalidPasswordError, SecureTarReadError:
             LOGGER.debug("Invalid password")
             return False
         except Exception:  # noqa: BLE001
@@ -168,27 +178,29 @@ def validate_password_stream(
     input_stream: IO[bytes],
     password: str | None,
 ) -> None:
-    """Decrypt a backup."""
-    with (
-        tarfile.open(fileobj=input_stream, mode="r|", bufsize=BUF_SIZE) as input_tar,
-    ):
-        for obj in input_tar:
+    """Validate the password.
+
+    This assumes every inner tar is encrypted with the same secure tar version and
+    same password.
+    """
+    with SecureTarArchive(
+        fileobj=input_stream,
+        mode="r",
+        bufsize=BUF_SIZE,
+        streaming=True,
+        password=password,
+    ) as input_archive:
+        for obj in input_archive.tar:
             if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
                 continue
-            istf = SecureTarFile(
-                None,  # Not used
-                gzip=False,
-                key=password_to_key(password) if password is not None else None,
-                mode="r",
-                fileobj=input_tar.extractfile(obj),
-            )
-            with istf.decrypt(obj) as decrypted:
-                if istf.securetar_header.plaintext_size is None:
-                    raise UnsupportedSecureTarVersion
-                try:
+            try:
+                with input_archive.extract_tar(obj) as decrypted:
+                    if decrypted.plaintext_size is None:
+                        raise UnsupportedSecureTarVersion
                     decrypted.read(1)  # Read a single byte to trigger the decryption
-                except SecureTarReadError as err:
-                    raise IncorrectPassword from err
+            except (InvalidPasswordError, SecureTarReadError) as err:
+                raise IncorrectPassword from err
+            else:
                 return
     raise BackupEmpty
 
@@ -212,21 +224,25 @@ def decrypt_backup(
     password: str | None,
     on_done: Callable[[Exception | None], None],
     minimum_size: int,
-    nonces: NonceGenerator,
+    key_context: SecureTarRootKeyContext,
 ) -> None:
     """Decrypt a backup."""
     error: Exception | None = None
     try:
         try:
             with (
-                tarfile.open(
-                    fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
-                ) as input_tar,
+                SecureTarArchive(
+                    fileobj=input_stream,
+                    mode="r",
+                    bufsize=BUF_SIZE,
+                    streaming=True,
+                    password=password,
+                ) as input_archive,
                 tarfile.open(
                     fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
                 ) as output_tar,
             ):
-                _decrypt_backup(backup, input_tar, output_tar, password)
+                _decrypt_backup(backup, input_archive, output_tar)
         except (DecryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error decrypting backup: %s", err)
             error = err
@@ -248,19 +264,18 @@ def decrypt_backup(
 
 def _decrypt_backup(
     backup: AgentBackup,
-    input_tar: tarfile.TarFile,
+    input_archive: SecureTarArchive,
     output_tar: tarfile.TarFile,
-    password: str | None,
 ) -> None:
     """Decrypt a backup."""
     expected_archives = _get_expected_archives(backup)
-    for obj in input_tar:
+    for obj in input_archive.tar:
         # We compare with PurePath to avoid issues with different path separators,
         # for example when backup.json is added as "./backup.json"
         object_path = PurePath(obj.name)
         if object_path == PurePath("backup.json"):
             # Rewrite the backup.json file to indicate that the backup is decrypted
-            if not (reader := input_tar.extractfile(obj)):
+            if not (reader := input_archive.tar.extractfile(obj)):
                 raise DecryptError
             metadata = json_loads_object(reader.read())
             metadata["protected"] = False
@@ -272,21 +287,15 @@ def _decrypt_backup(
         prefix, _, suffix = object_path.name.partition(".")
         if suffix not in ("tar", "tgz", "tar.gz"):
             LOGGER.debug("Unknown file %s will not be decrypted", obj.name)
-            output_tar.addfile(obj, input_tar.extractfile(obj))
+            output_tar.addfile(obj, input_archive.tar.extractfile(obj))
             continue
         if prefix not in expected_archives:
             LOGGER.debug("Unknown inner tar file %s will not be decrypted", obj.name)
-            output_tar.addfile(obj, input_tar.extractfile(obj))
+            output_tar.addfile(obj, input_archive.tar.extractfile(obj))
             continue
-        istf = SecureTarFile(
-            None,  # Not used
-            gzip=False,
-            key=password_to_key(password) if password is not None else None,
-            mode="r",
-            fileobj=input_tar.extractfile(obj),
-        )
-        with istf.decrypt(obj) as decrypted:
-            if (plaintext_size := istf.securetar_header.plaintext_size) is None:
+        with input_archive.extract_tar(obj) as decrypted:
+            # Guard against SecureTar v1 which doesn't store plaintext size
+            if (plaintext_size := decrypted.plaintext_size) is None:
                 raise UnsupportedSecureTarVersion
             decrypted_obj = copy.deepcopy(obj)
             decrypted_obj.size = plaintext_size
@@ -300,7 +309,7 @@ def encrypt_backup(
     password: str | None,
     on_done: Callable[[Exception | None], None],
     minimum_size: int,
-    nonces: NonceGenerator,
+    key_context: SecureTarRootKeyContext,
 ) -> None:
     """Encrypt a backup."""
     error: Exception | None = None
@@ -310,11 +319,16 @@ def encrypt_backup(
                 tarfile.open(
                     fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
                 ) as input_tar,
-                tarfile.open(
-                    fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
-                ) as output_tar,
+                SecureTarArchive(
+                    fileobj=output_stream,
+                    mode="w",
+                    bufsize=BUF_SIZE,
+                    streaming=True,
+                    root_key_context=key_context,
+                    create_version=SECURETAR_CREATE_VERSION,
+                ) as output_archive,
             ):
-                _encrypt_backup(backup, input_tar, output_tar, password, nonces)
+                _encrypt_backup(backup, input_tar, output_archive)
         except (EncryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error encrypting backup: %s", err)
             error = err
@@ -337,9 +351,7 @@ def encrypt_backup(
 def _encrypt_backup(
     backup: AgentBackup,
     input_tar: tarfile.TarFile,
-    output_tar: tarfile.TarFile,
-    password: str | None,
-    nonces: NonceGenerator,
+    output_archive: SecureTarArchive,
 ) -> None:
     """Encrypt a backup."""
     inner_tar_idx = 0
@@ -357,29 +369,20 @@ def _encrypt_backup(
             updated_metadata_b = json.dumps(metadata).encode()
             metadata_obj = copy.deepcopy(obj)
             metadata_obj.size = len(updated_metadata_b)
-            output_tar.addfile(metadata_obj, BytesIO(updated_metadata_b))
+            output_archive.tar.addfile(metadata_obj, BytesIO(updated_metadata_b))
             continue
         prefix, _, suffix = object_path.name.partition(".")
         if suffix not in ("tar", "tgz", "tar.gz"):
             LOGGER.debug("Unknown file %s will not be encrypted", obj.name)
-            output_tar.addfile(obj, input_tar.extractfile(obj))
+            output_archive.tar.addfile(obj, input_tar.extractfile(obj))
             continue
         if prefix not in expected_archives:
             LOGGER.debug("Unknown inner tar file %s will not be encrypted", obj.name)
             continue
-        istf = SecureTarFile(
-            None,  # Not used
-            gzip=False,
-            key=password_to_key(password) if password is not None else None,
-            mode="r",
-            fileobj=input_tar.extractfile(obj),
-            nonce=nonces.get(inner_tar_idx),
+        output_archive.import_tar(
+            input_tar.extractfile(obj), obj, derived_key_id=inner_tar_idx
         )
         inner_tar_idx += 1
-        with istf.encrypt(obj) as encrypted:
-            encrypted_obj = copy.deepcopy(obj)
-            encrypted_obj.size = encrypted.encrypted_size
-            output_tar.addfile(encrypted_obj, encrypted)
 
 
 @dataclass(kw_only=True)
@@ -389,21 +392,6 @@ class _CipherWorkerStatus:
     reader: AsyncIteratorReader
     thread: threading.Thread
     writer: AsyncIteratorWriter
-
-
-class NonceGenerator:
-    """Generate nonces for encryption."""
-
-    def __init__(self) -> None:
-        """Initialize the generator."""
-        self._nonces: dict[int, bytes] = {}
-
-    def get(self, index: int) -> bytes:
-        """Get a nonce for the given index."""
-        if index not in self._nonces:
-            # Generate a new nonce for the given index
-            self._nonces[index] = os.urandom(16)
-        return self._nonces[index]
 
 
 class _CipherBackupStreamer:
@@ -417,7 +405,7 @@ class _CipherBackupStreamer:
             str | None,
             Callable[[Exception | None], None],
             int,
-            NonceGenerator,
+            SecureTarRootKeyContext,
         ],
         None,
     ]
@@ -435,7 +423,7 @@ class _CipherBackupStreamer:
         self._hass = hass
         self._open_stream = open_stream
         self._password = password
-        self._nonces = NonceGenerator()
+        self._key_context = SecureTarRootKeyContext(password)
 
     def size(self) -> int:
         """Return the maximum size of the decrypted or encrypted backup."""
@@ -466,7 +454,7 @@ class _CipherBackupStreamer:
                 self._password,
                 on_done,
                 self.size(),
-                self._nonces,
+                self._key_context,
             ],
         )
         worker_status = _CipherWorkerStatus(

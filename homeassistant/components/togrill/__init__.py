@@ -10,9 +10,9 @@ from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.EVENT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
-    Platform.NUMBER,
 ]
 
 

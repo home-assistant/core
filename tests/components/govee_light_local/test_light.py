@@ -418,7 +418,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, "kelvin": 4400},
+        {"entity_id": light.entity_id, "color_temp_kelvin": 4400},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -75,7 +75,7 @@
       "name": "Go to preset"
     },
     "ptz_control": {
-      "description": "Moves (pan/tilt) and/or zoom a PTZ camera.",
+      "description": "Moves (pan/tilt) and/or zooms a PTZ camera.",
       "fields": {
         "entity_id": {
           "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",

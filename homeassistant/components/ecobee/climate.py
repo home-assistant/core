@@ -619,9 +619,7 @@ class Thermostat(ClimateEntity):
         return [
             {
                 "id": device.id,
-                "name_by_user": device.name_by_user
-                if device.name_by_user
-                else device.name,
+                "name_by_user": device.name_by_user or device.name,
             }
             for device in device_registry.devices.values()
             for sensor_info in sensors_info
@@ -924,7 +922,7 @@ class Thermostat(ClimateEntity):
         sensor_names = self._sensors_in_preset_mode(preset_mode)
         return sorted(
             [
-                device.name_by_user if device.name_by_user else device.name
+                device.name_by_user or device.name
                 for device in device_registry.devices.values()
                 for sensor_name in sensor_names
                 if device.name == sensor_name

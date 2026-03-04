@@ -335,17 +335,38 @@
       }
     },
     "button": {
+      "boost_mode": {
+        "name": "Boost mode"
+      },
       "calibrate_valve": {
         "name": "Calibrate valve"
       },
       "calibrate_z_axis": {
         "name": "Calibrate Z axis"
       },
+      "delete_all_limits": {
+        "name": "Delete all limits"
+      },
+      "delete_lower_limit": {
+        "name": "Delete lower limit"
+      },
+      "delete_upper_limit": {
+        "name": "Delete upper limit"
+      },
+      "enter_calibration_mode": {
+        "name": "Enter calibration mode"
+      },
+      "exit_calibration_mode": {
+        "name": "Exit calibration mode"
+      },
       "feed": {
         "name": "Feed"
       },
       "frost_lock_reset": {
         "name": "Frost lock reset"
+      },
+      "prepare_manual_calibration": {
+        "name": "Prepare manual calibration"
       },
       "reset_alarm": {
         "name": "Reset alarm"
@@ -368,8 +389,20 @@
       "restart_device": {
         "name": "Restart device"
       },
+      "run_auto_calibration": {
+        "name": "Run auto-calibration"
+      },
       "self_test": {
         "name": "Self-test"
+      },
+      "set_lower_limit": {
+        "name": "Set lower limit"
+      },
+      "set_upper_limit": {
+        "name": "Set upper limit"
+      },
+      "timer_mode": {
+        "name": "Timer mode"
       }
     },
     "climate": {
@@ -425,6 +458,9 @@
       }
     },
     "number": {
+      "additional_steps": {
+        "name": "Additional steps"
+      },
       "alarm_duration": {
         "name": "Alarm duration"
       },
@@ -487,6 +523,12 @@
       },
       "calibration_vertical_run_time_up": {
         "name": "Calibration vertical run time up"
+      },
+      "closed_limit_lift": {
+        "name": "Closed limit lift"
+      },
+      "closed_limit_tilt": {
+        "name": "Closed limit tilt"
       },
       "closing_duration": {
         "name": "Closing duration"
@@ -629,6 +671,9 @@
       "impulse_mode_duration": {
         "name": "Impulse mode duration"
       },
+      "inactive_power_threshold": {
+        "name": "Inactive power threshold"
+      },
       "installation_height": {
         "name": "Height from sensor to tank bottom"
       },
@@ -701,6 +746,9 @@
       "max_temperature": {
         "name": "Max temperature"
       },
+      "maximum_dimming_level": {
+        "name": "Maximum dimming level"
+      },
       "maximum_level": {
         "name": "Maximum load dimming level"
       },
@@ -728,8 +776,14 @@
       "mini_set": {
         "name": "Liquid minimal percentage"
       },
+      "minimum_dimming_level": {
+        "name": "Minimum dimming level"
+      },
       "minimum_level": {
         "name": "Minimum load dimming level"
+      },
+      "minimum_on_level": {
+        "name": "Minimum on level"
       },
       "motion_detection_sensitivity": {
         "name": "Motion detection sensitivity"
@@ -776,6 +830,12 @@
       "open_delay_time": {
         "name": "Open delay time"
       },
+      "open_limit_lift": {
+        "name": "Open limit lift"
+      },
+      "open_limit_tilt": {
+        "name": "Open limit tilt"
+      },
       "open_window_detection_guard_period": {
         "name": "Open window detection guard period"
       },
@@ -793,6 +853,12 @@
       },
       "output_time": {
         "name": "Output time"
+      },
+      "pir_o_to_u_delay": {
+        "name": "Occupied to unoccupied delay"
+      },
+      "pir_u_to_o_delay": {
+        "name": "Unoccupied to occupied delay"
       },
       "portion_weight": {
         "name": "Portion weight"
@@ -842,6 +908,9 @@
       "sensitivity": {
         "name": "Sensitivity"
       },
+      "sensitivity_level": {
+        "name": "Sensitivity level"
+      },
       "serving_size": {
         "name": "Serving to dispense"
       },
@@ -875,6 +944,9 @@
       "start_up_current_level": {
         "name": "Start-up current level"
       },
+      "startup_time": {
+        "name": "Startup time"
+      },
       "state_after_power_restored": {
         "name": "Start-up default dimming level"
       },
@@ -902,20 +974,38 @@
       "temperature_sensitivity": {
         "name": "Temperature sensitivity"
       },
+      "temporary_mode_duration": {
+        "name": "Temporary mode duration"
+      },
       "tilt_open_close_and_step_time": {
         "name": "Tilt open close and step time"
       },
       "tilt_position_percentage_after_move_to_level": {
         "name": "Tilt position percentage after move to level"
       },
+      "tilt_turn_time_close_to_open": {
+        "name": "Tilt turn time (close to open)"
+      },
+      "tilt_turn_time_open_to_close": {
+        "name": "Tilt turn time (open to close)"
+      },
       "timer_duration": {
         "name": "Timer duration"
+      },
+      "timer_mode_target_temperature": {
+        "name": "Timer mode target temperature"
       },
       "timer_time_left": {
         "name": "Timer time left"
       },
       "transmit_power": {
         "name": "Transmit power"
+      },
+      "travel_time_close_to_open": {
+        "name": "Travel time (close to open)"
+      },
+      "travel_time_open_to_close": {
+        "name": "Travel time (open to close)"
       },
       "turn_off_delay": {
         "name": "Turn off delay"
@@ -934,6 +1024,9 @@
       },
       "turn_on_delay_right": {
         "name": "Turn on delay right"
+      },
+      "turnaround_guard_time": {
+        "name": "Turnaround guard time"
       },
       "up_movement": {
         "name": "Up movement"
@@ -1093,6 +1186,12 @@
       "increased_non_neutral_output": {
         "name": "Increased non-neutral output"
       },
+      "input_mode": {
+        "name": "Input mode"
+      },
+      "input_mode_id": {
+        "name": "Input mode {input_id}"
+      },
       "irrigation_mode": {
         "name": "Irrigation mode"
       },
@@ -1132,6 +1231,9 @@
       "motion_state": {
         "name": "Motion state"
       },
+      "motor_direction": {
+        "name": "Motor direction"
+      },
       "motor_thrust": {
         "name": "Motor thrust"
       },
@@ -1152,6 +1254,9 @@
       },
       "phase": {
         "name": "Phase"
+      },
+      "phase_control": {
+        "name": "Phase control"
       },
       "pilot_wire_mode": {
         "name": "Pilot wire mode"
@@ -1234,6 +1339,9 @@
       "window_covering_mode": {
         "name": "Curtain mode"
       },
+      "window_covering_type": {
+        "name": "Window covering type"
+      },
       "work_mode": {
         "name": "Work mode"
       },
@@ -1244,6 +1352,15 @@
     "sensor": {
       "ac_frequency": {
         "name": "AC frequency"
+      },
+      "acceleration_x": {
+        "name": "Acceleration X"
+      },
+      "acceleration_y": {
+        "name": "Acceleration Y"
+      },
+      "acceleration_z": {
+        "name": "Acceleration Z"
       },
       "active_power_ph_b": {
         "name": "Power phase B"
@@ -1274,6 +1391,9 @@
       },
       "analog_input": {
         "name": "Analog input"
+      },
+      "auto_calibration_state": {
+        "name": "Auto-calibration state"
       },
       "average_light_intensity_20mins": {
         "name": "Average light intensity last 20 min"
@@ -1657,6 +1777,9 @@
       "adaptation_run_enabled": {
         "name": "Adaptation run enabled"
       },
+      "adaptive_mode": {
+        "name": "Adaptive mode"
+      },
       "auto_clean": {
         "name": "Autoclean"
       },
@@ -1686,6 +1809,12 @@
       },
       "detach_relay": {
         "name": "Detach relay"
+      },
+      "detached": {
+        "name": "Detached mode"
+      },
+      "detached_id": {
+        "name": "Detached mode {input_id}"
       },
       "dimmer_mode": {
         "name": "Dimmer mode"
@@ -2009,7 +2138,7 @@
       },
       "init": {
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?",
-        "title": "Reconfigure ZHA"
+        "title": "Change ZHA adapter settings"
       },
       "intent_migrate": {
         "description": "Before plugging in your new adapter, your old adapter needs to be reset. An automatic backup will be performed. If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?",
@@ -2051,16 +2180,16 @@
         "title": "[%key:component::zha::config::step::plug_in_old_radio::title%]"
       },
       "prompt_migrate_or_reconfigure": {
-        "description": "Are you migrating to a new adapter or re-configuring the current adapter?",
+        "description": "Are you migrating to a new adapter or changing the settings for your current adapter?",
         "menu_option_descriptions": {
           "intent_migrate": "This will help you migrate your Zigbee network from your old adapter to a new one.",
           "intent_reconfigure": "This will let you change the serial port for your current Zigbee adapter."
         },
         "menu_options": {
           "intent_migrate": "Migrate to a new adapter",
-          "intent_reconfigure": "Re-configure the current adapter"
+          "intent_reconfigure": "Change the current adapter's settings"
         },
-        "title": "Migrate or re-configure"
+        "title": "Migrate or change adapter settings"
       },
       "restore_backup": {
         "title": "[%key:component::zha::config::step::restore_backup::title%]"

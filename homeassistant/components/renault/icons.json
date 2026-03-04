@@ -9,6 +9,12 @@
       }
     },
     "button": {
+      "flash_lights": {
+        "default": "mdi:lightbulb-on"
+      },
+      "sound_horn": {
+        "default": "mdi:bugle"
+      },
       "start_air_conditioner": {
         "default": "mdi:air-conditioner"
       },

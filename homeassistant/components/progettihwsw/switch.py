@@ -80,6 +80,6 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Get switch state."""
         return self.coordinator.data[self._switch.id]

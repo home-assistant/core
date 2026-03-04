@@ -157,6 +157,31 @@ async def test_agents_get_backup(
     }
 
 
+async def test_agents_get_backup_missing_file(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+    mock_metadata_file: File,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test what happens when only metadata exists."""
+    mock_onedrive_client.list_drive_items.return_value = [mock_metadata_file]
+
+    backup_id = BACKUP_METADATA["backup_id"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backup"] is None
+    assert (
+        "Backup file 23e64aec.tar not found for metadata 23e64aec.metadata.json"
+        in caplog.text
+    )
+
+
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

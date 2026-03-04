@@ -1,6 +1,11 @@
 """Tests for the Anthropic integration."""
 
 from anthropic.types import (
+    BashCodeExecutionOutputBlock,
+    BashCodeExecutionResultBlock,
+    BashCodeExecutionToolResultBlock,
+    BashCodeExecutionToolResultError,
+    BashCodeExecutionToolResultErrorCode,
     CitationsDelta,
     InputJSONDelta,
     RawContentBlockDeltaEvent,
@@ -13,11 +18,15 @@ from anthropic.types import (
     TextBlock,
     TextCitation,
     TextDelta,
+    TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
     ThinkingDelta,
     ToolUseBlock,
     WebSearchResultBlock,
     WebSearchToolResultBlock,
+)
+from anthropic.types.text_editor_code_execution_tool_result_block import (
+    Content as TextEditorCodeExecutionToolResultBlockContent,
 )
 
 
@@ -128,28 +137,35 @@ def create_tool_use_block(
     ]
 
 
-def create_web_search_block(
-    index: int, id: str, query_parts: list[str]
+def create_server_tool_use_block(
+    index: int, id: str, name: str, args_parts: list[str]
 ) -> list[RawMessageStreamEvent]:
-    """Create a server tool use block for web search."""
+    """Create a server tool use block."""
     return [
         RawContentBlockStartEvent(
             type="content_block_start",
             content_block=ServerToolUseBlock(
-                type="server_tool_use", id=id, input={}, name="web_search"
+                type="server_tool_use", id=id, input={}, name=name
             ),
             index=index,
         ),
         *[
             RawContentBlockDeltaEvent(
-                delta=InputJSONDelta(type="input_json_delta", partial_json=query_part),
+                delta=InputJSONDelta(type="input_json_delta", partial_json=args_part),
                 index=index,
                 type="content_block_delta",
             )
-            for query_part in query_parts
+            for args_part in args_parts
         ],
         RawContentBlockStopEvent(index=index, type="content_block_stop"),
     ]
+
+
+def create_web_search_block(
+    index: int, id: str, query_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool use block for web search."""
+    return create_server_tool_use_block(index, id, "web_search", query_parts)
 
 
 def create_web_search_result_block(
@@ -161,6 +177,77 @@ def create_web_search_result_block(
             type="content_block_start",
             content_block=WebSearchToolResultBlock(
                 type="web_search_tool_result", tool_use_id=id, content=results
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_bash_code_execution_block(
+    index: int, id: str, command_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool use block for bash code execution."""
+    return create_server_tool_use_block(index, id, "bash_code_execution", command_parts)
+
+
+def create_bash_code_execution_result_block(
+    index: int,
+    id: str,
+    error_code: BashCodeExecutionToolResultErrorCode | None = None,
+    content: list[BashCodeExecutionOutputBlock] | None = None,
+    return_code: int = 0,
+    stderr: str = "",
+    stdout: str = "",
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for bash code execution results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=BashCodeExecutionToolResultBlock(
+                type="bash_code_execution_tool_result",
+                content=BashCodeExecutionToolResultError(
+                    type="bash_code_execution_tool_result_error",
+                    error_code=error_code,
+                )
+                if error_code is not None
+                else BashCodeExecutionResultBlock(
+                    type="bash_code_execution_result",
+                    content=content or [],
+                    return_code=return_code,
+                    stderr=stderr,
+                    stdout=stdout,
+                ),
+                tool_use_id=id,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_text_editor_code_execution_block(
+    index: int, id: str, command_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool use block for text editor code execution."""
+    return create_server_tool_use_block(
+        index, id, "text_editor_code_execution", command_parts
+    )
+
+
+def create_text_editor_code_execution_result_block(
+    index: int,
+    id: str,
+    content: TextEditorCodeExecutionToolResultBlockContent,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for text editor code execution results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=TextEditorCodeExecutionToolResultBlock(
+                type="text_editor_code_execution_tool_result",
+                content=content,
+                tool_use_id=id,
             ),
             index=index,
         ),

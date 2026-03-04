@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeIntegerWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
@@ -25,7 +27,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -551,17 +552,19 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
-    ) -> None:
-        """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties, dp_timestamps
-        ):
-            return
-        self.async_write_ha_state()
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""

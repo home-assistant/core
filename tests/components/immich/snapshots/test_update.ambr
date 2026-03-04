@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/immich/icon.png',
+      'entity_picture': '/api/brands/integration/immich/icon.png',
       'friendly_name': 'Someone Version',
       'in_progress': False,
       'installed_version': 'v1.134.0',

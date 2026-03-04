@@ -62,7 +62,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
-            except (ClientError, TimeoutError):
+            except ClientError, TimeoutError:
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -87,7 +87,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
-            except (ClientError, TimeoutError):
+            except ClientError, TimeoutError:
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

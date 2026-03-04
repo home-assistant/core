@@ -95,6 +95,7 @@ ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
 
 ROBOT_CLEANER_MOVEMENT_MAP = {
     "powerOff": "off",
+    "washingMop": "washing_mop",
 }
 
 OVEN_MODE = {
@@ -161,6 +162,13 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
     component_translation_key: dict[str, str] | None = None
+    presentation_fn: (
+        Callable[
+            [str | None, str | float | int | datetime | None],
+            str | float | int | datetime | None,
+        ]
+        | None
+    ) = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -227,9 +235,11 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="audio_volume",
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
-                    lambda status: ("2025.10.0", "media_player")
-                    if Capability.AUDIO_MUTE in status
-                    else None
+                    lambda status: (
+                        ("2025.10.0", "media_player")
+                        if Capability.AUDIO_MUTE in status
+                        else None
+                    )
                 ),
             )
         ]
@@ -645,9 +655,19 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.OVEN_MODE,
                 translation_key="oven_mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
-                options=list(OVEN_MODE.values()),
+                options=[
+                    *OVEN_MODE.values(),
+                    "heating",
+                    "grill",
+                    "defrosting",
+                    "warming",
+                ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: OVEN_MODE.get(value, value),
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_mode_cavity_01",
+                },
             )
         ]
     },
@@ -658,6 +678,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="oven_machine_state",
                 options=["ready", "running", "paused"],
                 device_class=SensorDeviceClass.ENUM,
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_machine_state_cavity_01",
+                },
             )
         ],
         Attribute.OVEN_JOB_STATE: [
@@ -685,6 +709,10 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: OVEN_JOB_STATE_MAP.get(value, value),
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_job_state_cavity_01",
+                },
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -693,6 +721,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
                 value_fn=dt_util.parse_datetime,
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_completion_time_cavity_01",
+                },
             )
         ],
     },
@@ -705,6 +737,10 @@ CAPABILITY_TO_SENSORS: dict[
                 use_temperature_unit=True,
                 # Set the value to None if it is 0 F (-17 C)
                 value_fn=lambda value: None if value in {-17, 0, 1} else value,
+                component_fn=lambda component: component == "cavity-01",
+                component_translation_key={
+                    "cavity-01": "oven_setpoint_cavity_01",
+                },
             )
         ]
     },
@@ -733,6 +769,13 @@ CAPABILITY_TO_SENSORS: dict[
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
                     and "power" in value
+                ),
+                presentation_fn=lambda presentation_id, value: (
+                    value * 1000
+                    if presentation_id is not None
+                    and "EHS" in presentation_id
+                    and isinstance(value, (int, float))
+                    else value
                 ),
             ),
             SmartThingsSensorEntityDescription(
@@ -852,6 +895,7 @@ CAPABILITY_TO_SENSORS: dict[
                     "after",
                     "cleaning",
                     "pause",
+                    "washing_mop",
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
@@ -908,16 +952,21 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 deprecated=(
-                    lambda status: ("2025.12.0", "dhw")
-                    if Capability.CUSTOM_OUTING_MODE in status
-                    else None
+                    lambda status: (
+                        ("2025.12.0", "dhw")
+                        if Capability.CUSTOM_OUTING_MODE in status
+                        else None
+                    )
                 ),
                 component_fn=(
-                    lambda component: component in {"freezer", "cooler", "onedoor"}
+                    lambda component: (
+                        component in {"freezer", "cooler", "onedoor", "cavity-01"}
+                    )
                 ),
                 component_translation_key={
                     "freezer": "freezer_temperature",
                     "cooler": "cooler_temperature",
+                    "cavity-01": "oven_temperature_cavity_01",
                 },
             )
         ]
@@ -937,9 +986,11 @@ CAPABILITY_TO_SENSORS: dict[
                     THERMOSTAT_CAPABILITIES,
                 ],
                 deprecated=(
-                    lambda status: ("2025.12.0", "dhw")
-                    if Capability.CUSTOM_OUTING_MODE in status
-                    else None
+                    lambda status: (
+                        ("2025.12.0", "dhw")
+                        if Capability.CUSTOM_OUTING_MODE in status
+                        else None
+                    )
                 ),
             )
         ]
@@ -1310,7 +1361,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         res = self.get_attribute_value(self.capability, self._attribute)
         if options_map := self.entity_description.options_map:
             return options_map.get(res)
-        return self.entity_description.value_fn(res)
+        value = self.entity_description.value_fn(res)
+        if self.entity_description.presentation_fn:
+            value = self.entity_description.presentation_fn(
+                self.device.device.presentation_id, value
+            )
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:

@@ -4,6 +4,7 @@
   "codeowners": ["@kroimon"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/soundtouch",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["libsoundtouch"],
   "requirements": ["libsoundtouch==0.8"],

@@ -38,6 +38,7 @@
       },
       "entry_type": "AI task",
       "error": {
+        "code_interpreter_minimal_reasoning": "[%key:component::openai_conversation::config_subentries::conversation::error::code_interpreter_minimal_reasoning%]",
         "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]",
         "web_search_minimal_reasoning": "[%key:component::openai_conversation::config_subentries::conversation::error::web_search_minimal_reasoning%]"
       },
@@ -67,6 +68,7 @@
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
             "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::inline_citations%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
+            "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]"
@@ -76,6 +78,7 @@
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
             "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::inline_citations%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
+            "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]"
@@ -91,6 +94,7 @@
       },
       "entry_type": "Conversation agent",
       "error": {
+        "code_interpreter_minimal_reasoning": "Code interpreter is not supported with minimal reasoning effort",
         "model_not_supported": "This model is not supported, please select a different model",
         "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
       },
@@ -125,6 +129,7 @@
             "image_model": "Image generation model",
             "inline_citations": "Include links in web search results",
             "reasoning_effort": "Reasoning effort",
+            "reasoning_summary": "Reasoning summary",
             "search_context_size": "Search context size",
             "user_location": "Include home location",
             "web_search": "Enable web search"
@@ -134,11 +139,60 @@
             "image_model": "The model to use when generating images",
             "inline_citations": "If disabled, additional prompt is added to ask the model to not include source citations",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+            "reasoning_summary": "Controls the length and detail of reasoning summaries provided by the model",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
             "user_location": "Refine search results based on geography",
             "web_search": "Allow the model to search the web for the latest information before generating a response"
           },
           "title": "Model-specific options"
+        }
+      }
+    },
+    "stt": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::openai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Speech-to-text",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure speech-to-text service",
+        "user": "Add speech-to-text service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "Model",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "chat_model": "The model to use to transcribe speech.",
+            "prompt": "Use this prompt to improve the quality of the transcripts. Translate to the pipeline language for best results. See the documentation for more details."
+          }
+        }
+      }
+    },
+    "tts": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::openai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Text-to-speech",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure text-to-speech service",
+        "user": "Add text-to-speech service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "tts_speed": "Speed"
+          },
+          "data_description": {
+            "prompt": "Control aspects of speech, including accent, emotional range, intonation, impressions, speed of speech, tone, whispering, and more",
+            "tts_speed": "Speed of the generated speech"
+          }
         }
       }
     }
@@ -149,6 +203,14 @@
     }
   },
   "issues": {
+    "deprecated_generate_content": {
+      "description": "Action 'openai_conversation.generate_content' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_data' action instead",
+      "title": "Deprecated 'generate_content' action"
+    },
+    "deprecated_generate_image": {
+      "description": "Action 'openai_conversation.generate_image' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_image' action instead",
+      "title": "Deprecated 'generate_image' action"
+    },
     "organization_verification_required": {
       "description": "Your organization must be verified to use this model. Please go to {platform_settings} and select Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
       "title": "Organization verification required"
@@ -163,6 +225,14 @@
         "minimal": "Minimal",
         "none": "None",
         "xhigh": "X-High"
+      }
+    },
+    "reasoning_summary": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "detailed": "Detailed",
+        "off": "[%key:common::state::off%]",
+        "short": "Short"
       }
     },
     "search_context_size": {
@@ -182,7 +252,7 @@
   },
   "services": {
     "generate_content": {
-      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files",
+      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files (deprecated)",
       "fields": {
         "config_entry": {
           "description": "The config entry to use for this action",
@@ -197,10 +267,10 @@
           "name": "Prompt"
         }
       },
-      "name": "Generate content"
+      "name": "Generate content (deprecated)"
     },
     "generate_image": {
-      "description": "Turns a prompt into an image",
+      "description": "Turns a prompt into an image (deprecated)",
       "fields": {
         "config_entry": {
           "description": "The config entry to use for this action",
@@ -224,7 +294,7 @@
           "name": "Style"
         }
       },
-      "name": "Generate image"
+      "name": "Generate image (deprecated)"
     }
   }
 }

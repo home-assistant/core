@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -54,22 +53,10 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 OPEN_STATE = "open"
 OPENING_STATE = "opening"
 CLOSED_STATE = "closed"
 CLOSING_STATE = "closing"
-
-_VALID_STATES = [
-    OPEN_STATE,
-    OPENING_STATE,
-    CLOSED_STATE,
-    CLOSING_STATE,
-    "true",
-    "false",
-    "none",
-]
 
 CONF_POSITION = "position"
 CONF_POSITION_TEMPLATE = "position_template"

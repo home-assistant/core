@@ -64,17 +64,17 @@ class RoborockCoordinators:
 
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
-    b01: list[RoborockDataUpdateCoordinatorB01]
+    b01_q7: list[RoborockB01Q7UpdateCoordinator]
 
     def values(
         self,
     ) -> list[
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
-        | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
     ]:
         """Return all coordinators."""
-        return self.v1 + self.a01 + self.b01
+        return self.v1 + self.a01 + self.b01_q7
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -432,6 +432,18 @@ class RoborockWashingMachineUpdateCoordinator(
             RoborockZeoProtocol.COUNTDOWN,
             RoborockZeoProtocol.WASHING_LEFT,
             RoborockZeoProtocol.ERROR,
+            RoborockZeoProtocol.TIMES_AFTER_CLEAN,
+            RoborockZeoProtocol.DETERGENT_EMPTY,
+            RoborockZeoProtocol.SOFTENER_EMPTY,
+            RoborockZeoProtocol.DETERGENT_TYPE,
+            RoborockZeoProtocol.SOFTENER_TYPE,
+            RoborockZeoProtocol.MODE,
+            RoborockZeoProtocol.PROGRAM,
+            RoborockZeoProtocol.TEMP,
+            RoborockZeoProtocol.RINSE_TIMES,
+            RoborockZeoProtocol.SPIN_LEVEL,
+            RoborockZeoProtocol.DRYING_MODE,
+            RoborockZeoProtocol.SOUND_SET,
         ]
 
     async def _async_update_data(

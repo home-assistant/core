@@ -36,7 +36,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
-from .errors import AuthenticationError, CannotConnect, UnknownError
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,10 +92,10 @@ async def async_setup_entry(
 
     try:
         api = await get_api(hass, dict(config_entry.data))
-    except CannotConnect as error:
-        raise ConfigEntryNotReady from error
-    except (AuthenticationError, UnknownError) as error:
-        raise ConfigEntryAuthFailed from error
+    except TransmissionAuthError as err:
+        raise ConfigEntryAuthFailed from err
+    except (TransmissionConnectError, TransmissionError) as err:
+        raise ConfigEntryNotReady from err
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)
@@ -171,26 +170,17 @@ async def get_api(
     username = entry.get(CONF_USERNAME)
     password = entry.get(CONF_PASSWORD)
 
-    try:
-        api = await hass.async_add_executor_job(
-            partial(
-                transmission_rpc.Client,
-                username=username,
-                password=password,
-                protocol=protocol,
-                host=host,
-                port=port,
-                path=path,
-            )
+    api = await hass.async_add_executor_job(
+        partial(
+            transmission_rpc.Client,
+            username=username,
+            password=password,
+            protocol=protocol,
+            host=host,
+            port=port,
+            path=path,
         )
-    except TransmissionAuthError as error:
-        _LOGGER.error("Credentials for Transmission client are not valid")
-        raise AuthenticationError from error
-    except TransmissionConnectError as error:
-        _LOGGER.error("Connecting to the Transmission client %s failed", host)
-        raise CannotConnect from error
-    except TransmissionError as error:
-        _LOGGER.error(error)
-        raise UnknownError from error
+    )
+
     _LOGGER.debug("Successfully connected to %s", host)
     return api

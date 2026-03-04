@@ -14,16 +14,18 @@ from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVac
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.sharkiq import DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.sharkiq.const import ATTR_ROOMS, DOMAIN
+from homeassistant.components.sharkiq.services import SERVICE_CLEAN_ROOM
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    ATTR_ROOMS,
     FAN_SPEEDS_MAP,
-    SERVICE_CLEAN_ROOM,
 )
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
@@ -290,14 +292,14 @@ async def test_coordinator_updates(
     """Test the update coordinator update functions."""
     coordinator = hass.data[DOMAIN][ENTRY_ID]
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     with patch.object(
         MockShark, "async_update", side_effect=side_effect
     ) as mock_update:
         data = {ATTR_ENTITY_ID: [VAC_ENTITY_ID]}
         await hass.services.async_call(
-            "homeassistant", SERVICE_UPDATE_ENTITY, data, blocking=True
+            HOMEASSISTANT_DOMAIN, SERVICE_UPDATE_ENTITY, data, blocking=True
         )
         assert coordinator.last_update_success == success
         mock_update.assert_called_once()

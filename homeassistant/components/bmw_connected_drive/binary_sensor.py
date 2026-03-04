@@ -148,8 +148,10 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LOCK,
         # device class lock: On means unlocked, Off means locked
         # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
-        value_fn=lambda v: v.doors_and_windows.door_lock_state
-        not in {LockState.LOCKED, LockState.SECURED},
+        value_fn=lambda v: (
+            v.doors_and_windows.door_lock_state
+            not in {LockState.LOCKED, LockState.SECURED}
+        ),
         attr_fn=lambda v, u: {
             "door_lock_state": v.doors_and_windows.door_lock_state.value
         },
@@ -189,9 +191,11 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="is_pre_entry_climatization_enabled",
         translation_key="is_pre_entry_climatization_enabled",
-        value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
-        if v.charging_profile
-        else False,
+        value_fn=lambda v: (
+            v.charging_profile.is_pre_entry_climatization_enabled
+            if v.charging_profile
+            else False
+        ),
         is_available=lambda v: v.has_electric_drivetrain,
     ),
 )

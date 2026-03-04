@@ -125,9 +125,7 @@ async def test_battery_sensors(
     entity_id = "sensor.keypad_v2_maximum_capacity"
     state = hass.states.get(entity_id)
     assert state
-    assert (
-        state.state == "0"
-    )  # This should be None/unknown but will be fixed in a future PR.
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
@@ -143,9 +141,7 @@ async def test_battery_sensors(
     entity_id = "sensor.keypad_v2_temperature"
     state = hass.states.get(entity_id)
     assert state
-    assert (
-        state.state == "0"
-    )  # This should be None/unknown but will be fixed in a future PR.
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
@@ -225,7 +221,7 @@ async def test_numeric_sensor(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.hsm200_illuminance")
     assert state
-    assert state.state == "0"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_invalid_multilevel_sensor_scale(

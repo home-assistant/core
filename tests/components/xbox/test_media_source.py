@@ -1,6 +1,6 @@
 """Tests for the Xbox media source platform."""
 
-import httpx
+from httpx import HTTPStatusError, RequestError, Response, TimeoutException
 import pytest
 from pythonxbox.api.provider.people.models import PeopleResponse
 from syrupy.assertion import SnapshotAssertion
@@ -173,14 +173,30 @@ async def test_browse_media_accounts(
             "titlehub",
             "get_title_info",
         ),
+        (
+            "/271958441785640/1297287135/community_gameclips",
+            "gameclips",
+            "get_recent_community_clips_by_title_id",
+        ),
+        (
+            "/271958441785640/1297287135/community_screenshots",
+            "screenshots",
+            "get_recent_community_screenshots_by_title_id",
+        ),
     ],
 )
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        httpx.HTTPStatusError("", request=MagicMock(), response=httpx.Response(500)),
-        httpx.RequestError(""),
-        httpx.TimeoutException(""),
+        (
+            HTTPStatusError("", request=MagicMock(), response=Response(500)),
+            "request_exception",
+        ),
+        (
+            RequestError(""),
+            "request_exception",
+        ),
+        (TimeoutException(""), "timeout_exception"),
     ],
 )
 async def test_browse_media_exceptions(
@@ -191,6 +207,7 @@ async def test_browse_media_exceptions(
     provider: str,
     method: str,
     exception: Exception,
+    translation_key: str,
 ) -> None:
     """Test browsing media exceptions."""
 
@@ -203,8 +220,9 @@ async def test_browse_media_exceptions(
     provider = getattr(xbox_live_client, provider)
     getattr(provider, method).side_effect = exception
 
-    with pytest.raises(BrowseError):
+    with pytest.raises(BrowseError) as e:
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}{media_content_id}")
+    assert e.value.translation_key == translation_key
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -239,8 +257,9 @@ async def test_browse_media_not_configured_exception(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(BrowseError, match="The Xbox integration is not configured"):
+    with pytest.raises(BrowseError) as e:
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    assert e.value.translation_key == "xbox_not_configured"
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -256,8 +275,9 @@ async def test_browse_media_account_not_configured_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with pytest.raises(BrowseError):
+    with pytest.raises(BrowseError) as e:
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/2533274838782903")
+    assert e.value.translation_key == "account_not_configured"
 
 
 @pytest.mark.parametrize(
@@ -278,8 +298,24 @@ async def test_browse_media_account_not_configured_exception(
             "https://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
             "image/png",
         ),
+        (
+            "/271958441785640/1297287135/community_screenshots/504a78e5-be24-4020-a245-77cb528e91ea",
+            "https://screenshotscontent-d5002.media.xboxlive.com/xuid-2535422966774043-private/504a78e5-be24-4020-a245-77cb528e91ea.PNG?skoid=296fcea0-0bf0-4a22-abf7-16b3524eba1b&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T10%3A21%3A06Z&ske=2025-11-07T10%3A21%3A06Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T10%3A35%3A59Z&se=2125-11-06T10%3A50%3A59Z&sr=b&sp=r&sig=TqUUNeuAzHawaXBTFfSVuUzuXbGOMgrDu0Q2VBTFd5U%3D",
+            "image/png",
+        ),
+        (
+            "/271958441785640/1297287135/community_gameclips/6fa2731a-8b58-4aa6-848c-4bf15734358b",
+            "https://gameclipscontent-d3021.media.xboxlive.com/xuid-2535458333395495-private/6fa2731a-8b58-4aa6-848c-4bf15734358b.MP4?skoid=2938738c-0e58-4f21-9b82-98081ade42e2&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T08%3A20%3A51Z&ske=2025-11-07T08%3A20%3A51Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T10%3A05%3A41Z&se=2125-11-06T10%3A20%3A41Z&sr=b&sp=r&sig=s%2FWDtmE2cnAwl9iJJFcch3knbRlkxkALoinHQwCnNP0%3D&__gda__=1762438393_eb8a56c3f482d00099045aa892a2aa05",
+            "video/mp4",
+        ),
     ],
-    ids=["screenshot", "gameclips", "game_media"],
+    ids=[
+        "screenshot",
+        "gameclips",
+        "game_media",
+        "community_screenshots",
+        "community_gameclips",
+    ],
 )
 @pytest.mark.usefixtures("xbox_live_client")
 async def test_resolve_media(
@@ -320,6 +356,16 @@ async def test_resolve_media(
             "get_recent_clips_by_xuid",
         ),
         (
+            "/271958441785640/1297287135/community_screenshots/504a78e5-be24-4020-a245-77cb528e91ea",
+            "screenshots",
+            "get_recent_community_screenshots_by_title_id",
+        ),
+        (
+            "/271958441785640/1297287135/community_gameclips/6fa2731a-8b58-4aa6-848c-4bf15734358b",
+            "gameclips",
+            "get_recent_community_clips_by_title_id",
+        ),
+        (
             "/271958441785640/1297287135/game_media/0",
             "titlehub",
             "get_title_info",
@@ -327,11 +373,14 @@ async def test_resolve_media(
     ],
 )
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        httpx.HTTPStatusError("", request=MagicMock(), response=httpx.Response(500)),
-        httpx.RequestError(""),
-        httpx.TimeoutException(""),
+        (
+            HTTPStatusError("", request=MagicMock(), response=Response(500)),
+            "request_exception",
+        ),
+        (RequestError(""), "request_exception"),
+        (TimeoutException(""), "timeout_exception"),
     ],
 )
 async def test_resolve_media_exceptions(
@@ -342,6 +391,7 @@ async def test_resolve_media_exceptions(
     provider: str,
     method: str,
     exception: Exception,
+    translation_key: str,
 ) -> None:
     """Test resolve media exceptions."""
 
@@ -354,12 +404,13 @@ async def test_resolve_media_exceptions(
     provider = getattr(xbox_live_client, provider)
     getattr(provider, method).side_effect = exception
 
-    with pytest.raises(Unresolvable):
+    with pytest.raises(Unresolvable) as e:
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}{media_content_id}",
             None,
         )
+    assert e.value.translation_key == translation_key
 
 
 @pytest.mark.parametrize(("media_type"), ["screenshots", "gameclips", "game_media"])
@@ -377,12 +428,13 @@ async def test_resolve_media_not_found_exceptions(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with pytest.raises(Unresolvable, match="The requested media could not be found"):
+    with pytest.raises(Unresolvable) as e:
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/{media_type}/12345",
             None,
         )
+    assert e.value.translation_key == "media_not_found"
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -416,12 +468,13 @@ async def test_resolve_media_not_configured(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(Unresolvable, match="The Xbox integration is not configured"):
+    with pytest.raises(Unresolvable) as e:
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/2533274838782903",
             None,
         )
+    assert e.value.translation_key == "xbox_not_configured"
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -437,9 +490,10 @@ async def test_resolve_media_account_not_configured(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with pytest.raises(Unresolvable, match="The Xbox account is not configured"):
+    with pytest.raises(Unresolvable) as e:
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/2533274838782903",
             None,
         )
+    assert e.value.translation_key == "account_not_configured"

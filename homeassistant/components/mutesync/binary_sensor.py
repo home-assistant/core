@@ -48,6 +48,6 @@ class MuteStatus(update_coordinator.CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.coordinator.data[self._sensor_type]

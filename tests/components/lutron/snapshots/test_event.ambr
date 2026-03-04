@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_event_setup[event.test_keypad_test_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        <LutronEventType.SINGLE_PRESS: 'single_press'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.test_keypad_test_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Test Button',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test Button',
+    'platform': 'lutron',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '12345678901_button_uuid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_setup[event.test_keypad_test_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        <LutronEventType.SINGLE_PRESS: 'single_press'>,
+      ]),
+      'friendly_name': 'Test Keypad Test Button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.test_keypad_test_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

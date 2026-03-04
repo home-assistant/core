@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -49,7 +47,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'AB1',
       'hs_color': tuple(
@@ -57,9 +54,7 @@
         97.8,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         31,
@@ -90,9 +85,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -133,9 +126,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'ab6',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -231,9 +222,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -274,9 +263,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'b2',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -593,9 +580,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -635,7 +620,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 500,
       'color_temp_kelvin': 2000,
       'friendly_name': 'ceiling fan/Light v2',
       'hs_color': tuple(
@@ -643,9 +627,7 @@
         94.547,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         137,
@@ -675,9 +657,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -717,7 +697,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 500,
       'color_temp_kelvin': 2000,
       'friendly_name': 'Ceiling Fan With Light',
       'hs_color': tuple(
@@ -725,9 +704,7 @@
         94.547,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         137,
@@ -757,9 +734,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -800,14 +775,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Ceiling Portal',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -889,9 +861,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -932,14 +902,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Colorful PIR Night Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -963,9 +930,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1005,14 +970,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'DirectietKamer',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1035,9 +997,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1077,14 +1037,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'dressoir spot',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1107,9 +1064,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1150,7 +1105,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 500,
       'color_temp_kelvin': 2000,
       'friendly_name': 'druckerhell',
       'hs_color': tuple(
@@ -1158,9 +1112,7 @@
         94.547,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         137,
@@ -1248,9 +1200,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1290,7 +1240,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 500,
       'color_temp_kelvin': 2000,
       'friendly_name': 'ERKER 1-Gold ',
       'hs_color': tuple(
@@ -1298,9 +1247,7 @@
         94.547,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         137,
@@ -1330,9 +1277,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1373,7 +1318,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 70,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 500,
       'color_temp_kelvin': 2000,
       'friendly_name': 'Fakkel 8',
       'hs_color': tuple(
@@ -1381,9 +1325,7 @@
         94.547,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         137,
@@ -1478,9 +1420,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1521,14 +1461,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Front right Lighting trap',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1552,9 +1489,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1595,14 +1530,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Garage',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1748,9 +1680,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1791,14 +1721,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Gengske 💡 ',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1822,9 +1749,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1864,14 +1789,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'hall 💡 ',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1894,9 +1816,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1936,7 +1856,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 285,
       'color_temp_kelvin': 3508,
       'friendly_name': 'Ieskas',
       'hs_color': tuple(
@@ -1944,9 +1863,7 @@
         44.6,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         193,
@@ -1976,9 +1893,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2019,9 +1934,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Jardim Casa',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2101,9 +2014,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2144,14 +2055,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'L├ímpara Ati',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -2175,9 +2083,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2218,14 +2124,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Landing',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -2249,9 +2152,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2292,7 +2193,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 500,
       'color_temp_kelvin': 2000,
       'friendly_name': 'LED KEUKEN 2',
       'hs_color': tuple(
@@ -2300,9 +2200,7 @@
         94.547,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         137,
@@ -2333,9 +2231,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2376,9 +2272,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LED Porch 2',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2400,9 +2294,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2443,9 +2335,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LSC Party String Light RGBIC+CCT ',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2467,9 +2357,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2510,14 +2398,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Lumy Garage',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -2541,9 +2426,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -2583,14 +2466,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Lumy Hall',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -2613,9 +2493,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2656,7 +2534,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 51,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Master bedroom TV lights',
       'hs_color': tuple(
@@ -2664,9 +2541,7 @@
         100.0,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         111,
@@ -2755,9 +2630,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2798,9 +2671,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Parker Ceiling Fan 1',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2880,9 +2751,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -2923,7 +2792,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 241,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 260,
       'color_temp_kelvin': 3832,
       'friendly_name': 'Plafond bureau ',
       'hs_color': tuple(
@@ -2931,9 +2799,7 @@
         38.001,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         202,
@@ -2964,9 +2830,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3006,9 +2870,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pokerlamp 1',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3029,9 +2891,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3071,9 +2931,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pokerlamp 2',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3158,9 +3016,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -3201,9 +3057,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Portal Casa Carro Jalimy',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -3225,9 +3079,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3267,14 +3119,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'POWERASIA R2',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -3355,9 +3204,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3397,14 +3244,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Shop Light 5',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -3427,9 +3271,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3469,9 +3311,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sjiethoes',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3492,9 +3332,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3534,14 +3372,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Slaapkamer',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -3564,9 +3399,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -3607,14 +3440,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Smart Bulb RGBCW',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -3831,9 +3661,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3873,9 +3701,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Stoel',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -3896,9 +3722,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -3939,9 +3763,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Strip 2',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -3963,9 +3785,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -4006,14 +3826,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Study 1',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -4095,9 +3912,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -4137,14 +3952,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Télécommande lumières ZigBee',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -4225,9 +4037,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -4267,9 +4077,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'WC D1',
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),

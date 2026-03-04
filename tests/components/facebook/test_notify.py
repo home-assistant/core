@@ -34,7 +34,7 @@ async def test_send_simple_message(
             "recipient": {"phone_number": target[0]},
             "message": {"text": message},
             "messaging_type": "MESSAGE_TAG",
-            "tag": "ACCOUNT_UPDATE",
+            "tag": "HUMAN_AGENT",
         }
         assert mock.last_request.json() == expected_body
 
@@ -62,7 +62,7 @@ async def test_send_multiple_message(
                 "recipient": {"phone_number": target},
                 "message": {"text": message},
                 "messaging_type": "MESSAGE_TAG",
-                "tag": "ACCOUNT_UPDATE",
+                "tag": "HUMAN_AGENT",
             }
             assert request.json() == expected_body
 
@@ -94,7 +94,7 @@ async def test_send_message_attachment(
             "recipient": {"phone_number": target[0]},
             "message": data,
             "messaging_type": "MESSAGE_TAG",
-            "tag": "ACCOUNT_UPDATE",
+            "tag": "HUMAN_AGENT",
         }
         assert mock.last_request.json() == expected_body
 

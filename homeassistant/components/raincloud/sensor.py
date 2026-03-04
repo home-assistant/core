@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_RAINCLOUD, ICON_MAP
+from .const import DATA_RAINCLOUD
 from .entity import RainCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
-UNIT_OF_MEASUREMENT_MAP = {
+UNIT_OF_MEASUREMENT_MAP: dict[str, str] = {
     "auto_watering": "",
     "battery": PERCENTAGE,
     "is_watering": "",
@@ -71,28 +72,24 @@ class RainCloudSensor(RainCloudEntity, SensorEntity):
     """A sensor implementation for raincloud device."""
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
 
     def update(self) -> None:
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
+        _LOGGER.debug("Updating RainCloud sensor: %s", self.name)
         if self._sensor_type == "battery":
-            self._state = self.data.battery
+            self._attr_native_value = self.data.battery
         else:
-            self._state = getattr(self.data, self._sensor_type)
+            self._attr_native_value = getattr(self.data, self._sensor_type)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if self._sensor_type == "battery" and self._state is not None:
+        if self._sensor_type == "battery" and self.native_value is not None:
             return icon_for_battery_level(
-                battery_level=int(self._state), charging=False
+                battery_level=int(cast(float, self.native_value)),
+                charging=False,
             )
-        return ICON_MAP.get(self._sensor_type)
+        return super().icon

@@ -7,6 +7,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import statistics
+from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
@@ -223,7 +224,7 @@ def setup_platform(
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
         return
-    except (ConnectTimeout, HTTPError):
+    except ConnectTimeout, HTTPError:
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
@@ -289,7 +290,7 @@ class SolarEdgeSensor(SensorEntity):
         self._attr_name = f"{platform_name} ({description.name})"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if extra_attr := self.entity_description.extra_attribute:
             try:

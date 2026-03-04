@@ -508,10 +508,10 @@
       "name": "Switch set Wi-Fi LED on"
     },
     "vacuum_clean_segment": {
-      "description": "Starts cleaning of the specified segment(s).",
+      "description": "Starts cleaning of the specified segments/rooms.",
       "fields": {
         "segments": {
-          "description": "Segments.",
+          "description": "The segment/room number(s) to clean.",
           "name": "Segments"
         }
       },

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from anthropic.pagination import AsyncPage
 from anthropic.types import (
+    Container,
     Message,
     MessageDeltaUsage,
     ModelInfo,
@@ -14,6 +15,7 @@ from anthropic.types import (
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
+    ServerToolUseBlock,
     ToolUseBlock,
     Usage,
 )
@@ -21,14 +23,6 @@ from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
 from homeassistant.components.anthropic.const import (
-    CONF_CHAT_MODEL,
-    CONF_WEB_SEARCH,
-    CONF_WEB_SEARCH_CITY,
-    CONF_WEB_SEARCH_COUNTRY,
-    CONF_WEB_SEARCH_MAX_USES,
-    CONF_WEB_SEARCH_REGION,
-    CONF_WEB_SEARCH_TIMEZONE,
-    CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
 )
@@ -83,51 +77,24 @@ def mock_config_entry_with_assist(
 
 
 @pytest.fixture
-def mock_config_entry_with_extended_thinking(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with extended thinking."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_web_search(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with server tools enabled."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_MAX_USES: 5,
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
     model_list = AsyncPage(
         data=[
+            ModelInfo(
+                id="claude-sonnet-4-6",
+                created_at=datetime.datetime(2026, 2, 17, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Sonnet 4.6",
+                type="model",
+            ),
+            ModelInfo(
+                id="claude-opus-4-6",
+                created_at=datetime.datetime(2026, 2, 4, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Opus 4.6",
+                type="model",
+            ),
             ModelInfo(
                 id="claude-opus-4-5-20251101",
                 created_at=datetime.datetime(2025, 11, 1, 0, 0, tzinfo=datetime.UTC),
@@ -165,27 +132,9 @@ async def mock_init_component(
                 type="model",
             ),
             ModelInfo(
-                id="claude-3-7-sonnet-20250219",
-                created_at=datetime.datetime(2025, 2, 24, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Sonnet 3.7",
-                type="model",
-            ),
-            ModelInfo(
-                id="claude-3-5-haiku-20241022",
-                created_at=datetime.datetime(2024, 10, 22, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Haiku 3.5",
-                type="model",
-            ),
-            ModelInfo(
                 id="claude-3-haiku-20240307",
                 created_at=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.UTC),
                 display_name="Claude Haiku 3",
-                type="model",
-            ),
-            ModelInfo(
-                id="claude-3-opus-20240229",
-                created_at=datetime.datetime(2024, 2, 29, 0, 0, tzinfo=datetime.UTC),
-                display_name="Claude Opus 3",
                 type="model",
             ),
         ]
@@ -206,6 +155,22 @@ async def setup_ha(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.fixture(autouse=True, scope="package")
+def build_anthropic_pydantic_schemas() -> None:
+    """Build Pydantic Container schema before freezegun patches datetime."""
+    Container.model_rebuild(force=True)
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setup entry."""
+    with patch(
+        "homeassistant.components.anthropic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
+
+
 @pytest.fixture
 def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
@@ -213,6 +178,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
     async def mock_generator(events: Iterable[RawMessageStreamEvent], **kwargs):
         """Create a stream of messages with the specified content blocks."""
         stop_reason = "end_turn"
+        container = None
         refusal_magic_string = "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD2631EDCF22E8CCC1FB35B501C9C86"
         for message in kwargs.get("messages"):
             if message["role"] != "user":
@@ -235,7 +201,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 id="msg_1234567890ABCDEFGHIJKLMN",
                 content=[],
                 role="assistant",
-                model="claude-3-5-sonnet-20240620",
+                model=kwargs["model"],
                 usage=Usage(input_tokens=0, output_tokens=0),
             ),
             type="message_start",
@@ -245,10 +211,26 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 event.content_block, ToolUseBlock
             ):
                 stop_reason = "tool_use"
+            elif (
+                isinstance(event, RawContentBlockStartEvent)
+                and isinstance(event.content_block, ServerToolUseBlock)
+                and event.content_block.name
+                in ["bash_code_execution", "text_editor_code_execution"]
+            ):
+                container = Container(
+                    id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
+                    expires_at=datetime.datetime.now(tz=datetime.UTC)
+                    + datetime.timedelta(minutes=5),
+                )
+
             yield event
         yield RawMessageDeltaEvent(
             type="message_delta",
-            delta=Delta(stop_reason=stop_reason, stop_sequence=""),
+            delta=Delta(
+                stop_reason=stop_reason,
+                stop_sequence="",
+                container=container,
+            ),
             usage=MessageDeltaUsage(output_tokens=0),
         )
         yield RawMessageStopEvent(type="message_stop")

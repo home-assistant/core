@@ -1,0 +1,11 @@
+{
+  "domain": "intelliclima",
+  "name": "IntelliClima",
+  "codeowners": ["@dvdinth"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/intelliclima",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyintelliclima==0.2.2"]
+}

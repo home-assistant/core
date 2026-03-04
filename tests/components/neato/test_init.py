@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.neato.const import NEATO_DOMAIN
+from homeassistant.components.neato.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -17,9 +17,9 @@ async def test_oauth_implementation_not_available(
 ) -> None:
     """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
     config_entry = MockConfigEntry(
-        domain=NEATO_DOMAIN,
+        domain=DOMAIN,
         data={
-            "auth_implementation": NEATO_DOMAIN,
+            "auth_implementation": DOMAIN,
             "token": {
                 "refresh_token": "mock-refresh-token",
                 "access_token": "mock-access-token",

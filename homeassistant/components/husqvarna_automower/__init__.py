@@ -1,21 +1,25 @@
 """The Husqvarna Automower integration."""
 
-import logging
-
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import api
+from .const import DOMAIN
 from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
+from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -28,6 +32,12 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:

@@ -234,7 +234,7 @@ class TeslemetryStreamingUpdateEntity(
     def _async_update_progress(self) -> None:
         """Update the progress of the update."""
 
-        if self._download_percentage > 1 and self._download_percentage < 100:
+        if 1 < self._download_percentage < 100:
             self._attr_in_progress = True
             self._attr_update_percentage = self._download_percentage
         elif self._install_percentage > 10:

@@ -307,7 +307,7 @@ async def test_sensors_aranetrn(
     entity = entity_registry.async_get("sensor.aranetrn_12345_battery")
     device = device_registry.async_get(entity.device_id)
     assert device.name == "AranetRn+ 12345"
-    assert device.model == "Aranet Radon Plus"
+    assert device.model == "Aranet Radon"
     assert device.sw_version == "v1.6.4"
     assert device.manufacturer == "SAF Tehnika"
 

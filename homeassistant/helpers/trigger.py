@@ -149,14 +149,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -593,7 +594,7 @@ def _get_numerical_value(
             return None
         try:
             return float(state.state)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Entity state is not a valid number
             return None
     return entity_or_float
@@ -633,7 +634,7 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
 
         try:
             current_value = self._converter(_attribute_value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Attribute is not a valid number, don't trigger
             return False
 
@@ -760,7 +761,7 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
 
         try:
             current_value = self._converter(_attribute_value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Attribute is not a valid number, don't trigger
             return False
 

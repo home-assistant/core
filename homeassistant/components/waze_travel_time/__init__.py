@@ -127,12 +127,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         origin_coordinates = find_coordinates(hass, service.data[CONF_ORIGIN])
         destination_coordinates = find_coordinates(hass, service.data[CONF_DESTINATION])
 
-        origin = origin_coordinates if origin_coordinates else service.data[CONF_ORIGIN]
-        destination = (
-            destination_coordinates
-            if destination_coordinates
-            else service.data[CONF_DESTINATION]
-        )
+        origin = origin_coordinates or service.data[CONF_ORIGIN]
+        destination = destination_coordinates or service.data[CONF_DESTINATION]
 
         response = await async_get_travel_times(
             client=client,

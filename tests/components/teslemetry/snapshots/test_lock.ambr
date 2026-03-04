@@ -199,15 +199,3 @@
     'state': 'unlocked',
   })
 # ---
-# name: test_lock_streaming[lock.test_charge_cable_lock-locked]
-  'locked'
-# ---
-# name: test_lock_streaming[lock.test_charge_cable_lock-unlocked]
-  'unlocked'
-# ---
-# name: test_lock_streaming[lock.test_lock-locked]
-  'locked'
-# ---
-# name: test_lock_streaming[lock.test_lock-unlocked]
-  'unlocked'
-# ---

@@ -2,26 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
 from pythonkuma.models import MonitorStatus
+from yarl import URL
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import CONF_URL, EntityCategory, UnitOfTime
+from homeassistant.const import CONF_URL, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, HAS_CERT, HAS_HOST, HAS_PORT, HAS_URL
+from .const import DOMAIN, HAS_CERT, HAS_HOST, HAS_PORT, HAS_URL, LOCAL_INSTANCE
 from .coordinator import UptimeKumaConfigEntry, UptimeKumaDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
@@ -37,6 +40,13 @@ class UptimeKumaSensor(StrEnum):
     URL = "url"
     HOSTNAME = "hostname"
     PORT = "port"
+    UPTIME_RATIO_1D = "uptime_1d"
+    UPTIME_RATIO_30D = "uptime_30d"
+    UPTIME_RATIO_365D = "uptime_365d"
+    AVG_RESPONSE_TIME_1D = "avg_response_time_1d"
+    AVG_RESPONSE_TIME_30D = "avg_response_time_30d"
+    AVG_RESPONSE_TIME_365D = "avg_response_time_365d"
+    TAGS = "tags"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -45,6 +55,7 @@ class UptimeKumaSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[UptimeKumaMonitor], StateType]
     create_entity: Callable[[MonitorType], bool]
+    attributes_fn: Callable[[UptimeKumaMonitor], Mapping[str, Any]] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
@@ -65,6 +76,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
             lambda m: m.monitor_response_time if m.monitor_response_time > -1 else None
         ),
         create_entity=lambda _: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.STATUS,
@@ -103,6 +115,91 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda m: m.monitor_port,
         create_entity=lambda t: t in HAS_PORT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.PORT,
+        translation_key=UptimeKumaSensor.PORT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda m: m.monitor_port,
+        create_entity=lambda t: t in HAS_PORT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.UPTIME_RATIO_1D,
+        translation_key=UptimeKumaSensor.UPTIME_RATIO_1D,
+        value_fn=lambda m: (
+            m.monitor_uptime_ratio_1d * 100
+            if m.monitor_uptime_ratio_1d is not None
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.UPTIME_RATIO_30D,
+        translation_key=UptimeKumaSensor.UPTIME_RATIO_30D,
+        value_fn=lambda m: (
+            m.monitor_uptime_ratio_30d * 100
+            if m.monitor_uptime_ratio_30d is not None
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.UPTIME_RATIO_365D,
+        translation_key=UptimeKumaSensor.UPTIME_RATIO_365D,
+        value_fn=lambda m: (
+            m.monitor_uptime_ratio_365d * 100
+            if m.monitor_uptime_ratio_365d is not None
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.AVG_RESPONSE_TIME_1D,
+        translation_key=UptimeKumaSensor.AVG_RESPONSE_TIME_1D,
+        value_fn=lambda m: m.monitor_response_time_seconds_1d,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.AVG_RESPONSE_TIME_30D,
+        translation_key=UptimeKumaSensor.AVG_RESPONSE_TIME_30D,
+        value_fn=lambda m: m.monitor_response_time_seconds_30d,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.AVG_RESPONSE_TIME_365D,
+        translation_key=UptimeKumaSensor.AVG_RESPONSE_TIME_365D,
+        value_fn=lambda m: m.monitor_response_time_seconds_365d,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.TAGS,
+        translation_key=UptimeKumaSensor.TAGS,
+        value_fn=lambda m: len(m.monitor_tags),
+        create_entity=lambda t: True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        attributes_fn=lambda m: {"tags": m.monitor_tags or None},
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -157,16 +254,21 @@ class UptimeKumaSensorEntity(
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{monitor!s}_{entity_description.key}"
         )
+
+        url = URL(coordinator.config_entry.data[CONF_URL]) / "dashboard"
+        if url.host in LOCAL_INSTANCE:
+            configuration_url = None
+        elif isinstance(monitor, int):
+            configuration_url = url / str(monitor)
+        else:
+            configuration_url = url
+
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.data[monitor].monitor_name,
             identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor!s}")},
             manufacturer="Uptime Kuma",
-            configuration_url=(
-                None
-                if "127.0.0.1" in (url := coordinator.config_entry.data[CONF_URL])
-                else url
-            ),
+            configuration_url=configuration_url,
             sw_version=coordinator.api.version.version,
         )
 
@@ -180,3 +282,10 @@ class UptimeKumaSensorEntity(
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.monitor in self.coordinator.data
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        if (fn := self.entity_description.attributes_fn) is not None:
+            return fn(self.coordinator.data[self.monitor])
+        return super().extra_state_attributes

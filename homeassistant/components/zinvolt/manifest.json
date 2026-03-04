@@ -1,0 +1,12 @@
+{
+  "domain": "zinvolt",
+  "name": "Zinvolt",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zinvolt",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["zinvolt"],
+  "quality_scale": "bronze",
+  "requirements": ["zinvolt==0.3.0"]
+}

@@ -337,7 +337,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except (ReadError, StorageError):
+                except ReadError, StorageError:
                     continue
                 return b64encode(code).decode("utf8")
 
@@ -413,7 +413,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except (ReadError, StorageError):
+                except ReadError, StorageError:
                     continue
                 return b64encode(code).decode("utf8")
 

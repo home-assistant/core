@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -164,7 +164,7 @@ async def test_set_temperature_supported_cooling(
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -181,7 +181,7 @@ async def test_set_temperature_supported_cooling(
     mock_connection.write_coil.reset_mock()
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -199,7 +199,7 @@ async def test_set_temperature_supported_cooling(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -209,7 +209,7 @@ async def test_set_temperature_supported_cooling(
         )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -255,7 +255,7 @@ async def test_set_temperature_unsupported_cooling(
 
     # Set temperature to heat
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -272,7 +272,7 @@ async def test_set_temperature_unsupported_cooling(
     # Attempt to set temperature to cool should raise ServiceValidationError
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -324,7 +324,7 @@ async def test_set_hvac_mode(
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -364,7 +364,7 @@ async def test_set_invalid_hvac_mode(
     await async_add_model(hass, model)
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: entity_id,

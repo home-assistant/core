@@ -42,8 +42,8 @@ async def test_lights(
             "light.mock_color_temperature_light",
             ["color_temp"],
         ),
-        ("dimmable_light", "light.mock_dimmable_light", ["brightness"]),
-        ("onoff_light", "light.mock_onoff_light", ["onoff"]),
+        ("mock_dimmable_light", "light.mock_dimmable_light", ["brightness"]),
+        ("mock_onoff_light", "light.mock_onoff_light", ["onoff"]),
         ("onoff_light_with_levelcontrol_present", "light.d215s", ["onoff"]),
     ],
 )
@@ -119,8 +119,8 @@ async def test_light_turn_on_off(
     [
         ("extended_color_light", "light.mock_extended_color_light"),
         ("color_temperature_light", "light.mock_color_temperature_light"),
-        ("dimmable_light", "light.mock_dimmable_light"),
-        ("dimmable_plugin_unit", "light.dimmable_plugin_unit"),
+        ("mock_dimmable_light", "light.mock_dimmable_light"),
+        ("mock_dimmable_plugin_unit", "light.dimmable_plugin_unit"),
     ],
 )
 async def test_dimmable_light(
@@ -214,7 +214,7 @@ async def test_color_temperature_light(
     assert state is not None
     assert state.state == "on"
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert state.attributes["color_temp"] == 3003
+    assert state.attributes["color_temp_kelvin"] == 333
 
     # Change color temperature
     await hass.services.async_call(
@@ -222,7 +222,7 @@ async def test_color_temperature_light(
         "turn_on",
         {
             "entity_id": entity_id,
-            "color_temp": 300,
+            "color_temp_kelvin": 3333,
         },
         blocking=True,
     )
@@ -253,7 +253,7 @@ async def test_color_temperature_light(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": entity_id, "color_temp": 300, "transition": 4.0},
+        {"entity_id": entity_id, "color_temp_kelvin": 3333, "transition": 4.0},
         blocking=True,
     )
 
@@ -398,7 +398,7 @@ async def test_extended_color_light(
     matter_client.send_device_command.assert_has_calls(
         [
             call(
-                node_id=1,
+                node_id=matter_node.node_id,
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
                     hue=167,
@@ -433,7 +433,7 @@ async def test_extended_color_light(
     matter_client.send_device_command.assert_has_calls(
         [
             call(
-                node_id=1,
+                node_id=matter_node.node_id,
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
                     hue=167,

@@ -41,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/lametric/icon.png',
+      'entity_picture': '/api/brands/integration/lametric/icon.png',
       'friendly_name': "spyfly's LaMetric SKY Firmware",
       'in_progress': False,
       'installed_version': '3.0.13',

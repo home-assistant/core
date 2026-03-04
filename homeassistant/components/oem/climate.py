@@ -57,7 +57,7 @@ def setup_platform(
 
     try:
         therm = Thermostat(host, port=port, username=username, password=password)
-    except (ValueError, AssertionError, requests.RequestException):
+    except ValueError, AssertionError, requests.RequestException:
         return
 
     add_entities((ThermostatDevice(therm, name),), True)

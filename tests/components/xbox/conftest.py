@@ -17,6 +17,7 @@ from pythonxbox.api.provider.smartglass.models import (
 from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -34,7 +35,7 @@ CLIENT_SECRET = "5678"
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "cloud"
     )
@@ -99,6 +100,30 @@ def mock_authentication_manager() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+
+        yield client
+
+
+@pytest.fixture(name="oauth2_session")
+def mock_oauth2_session() -> Generator[AsyncMock]:
+    """Mock OAuth2 session."""
+
+    with patch(
+        "homeassistant.components.xbox.OAuth2Session", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+
+        client.token = {
+            "access_token": "1234567890",
+            "expires_at": 1760697327.7298331,
+            "expires_in": 3600,
+            "refresh_token": "0987654321",
+            "scope": "XboxLive.signin XboxLive.offline_access",
+            "service": "xbox",
+            "token_type": "bearer",
+            "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+        }
+        client.valid_token = False
 
         yield client
 

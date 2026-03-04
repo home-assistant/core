@@ -4,40 +4,30 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
-    ATTR_CODE_SLOT,
-    ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
     DoorLockCCConfigurationSetOptions,
     DoorLockMode,
     OperationType,
 )
-from zwave_js_server.exceptions import BaseZwaveJSServerError
-from zwave_js_server.util.lock import clear_usercode, set_configuration, set_usercode
+from zwave_js_server.exceptions import BaseZwaveJSServerError, NotFoundError
+from zwave_js_server.util.lock import (
+    clear_usercode,
+    get_usercode,
+    get_usercodes,
+    set_configuration,
+    set_usercode,
+)
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity, LockState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_AUTO_RELOCK_TIME,
-    ATTR_BLOCK_TO_BLOCK,
-    ATTR_HOLD_AND_RELEASE_TIME,
-    ATTR_LOCK_TIMEOUT,
-    ATTR_OPERATION_TYPE,
-    ATTR_TWIST_ASSIST,
-    DOMAIN,
-    LOGGER,
-    SERVICE_CLEAR_LOCK_USERCODE,
-    SERVICE_SET_LOCK_CONFIGURATION,
-    SERVICE_SET_LOCK_USERCODE,
-)
+from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .models import ZwaveJSConfigEntry
@@ -54,7 +44,6 @@ STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
         LockState.LOCKED: True,
     },
 }
-UNIT16_SCHEMA = vol.All(vol.Coerce(int), vol.Range(min=0, max=65535))
 
 
 async def async_setup_entry(
@@ -79,43 +68,6 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass, f"{DOMAIN}_{config_entry.entry_id}_add_{LOCK_DOMAIN}", async_add_lock
         )
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LOCK_USERCODE,
-        {
-            vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-            vol.Required(ATTR_USERCODE): cv.string,
-        },
-        "async_set_lock_usercode",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_LOCK_USERCODE,
-        {
-            vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-        },
-        "async_clear_lock_usercode",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LOCK_CONFIGURATION,
-        {
-            vol.Required(ATTR_OPERATION_TYPE): vol.All(
-                cv.string,
-                vol.Upper,
-                vol.In(["TIMED", "CONSTANT"]),
-                lambda x: OperationType[x],
-            ),
-            vol.Optional(ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
-            vol.Optional(ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
-            vol.Optional(ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
-            vol.Optional(ATTR_TWIST_ASSIST): vol.Coerce(bool),
-            vol.Optional(ATTR_BLOCK_TO_BLOCK): vol.Coerce(bool),
-        },
-        "async_set_lock_configuration",
     )
 
 
@@ -164,10 +116,56 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             await set_usercode(self.info.node, code_slot, usercode)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to set lock usercode on lock {self.entity_id} code_slot "
-                f"{code_slot}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="set_lock_usercode_failed",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_slot": str(code_slot),
+                    "error": str(err),
+                },
             ) from err
         LOGGER.debug("User code at slot %s on lock %s set", code_slot, self.entity_id)
+
+    async def async_get_lock_usercode(
+        self, code_slot: int | None = None
+    ) -> ServiceResponse:
+        """Get the usercode at index X on the lock."""
+        if code_slot is not None:
+            return self._get_single_usercode(code_slot)
+        return self._get_all_usercodes()
+
+    @callback
+    def _get_single_usercode(self, code_slot: int) -> ServiceResponse:
+        """Get the usercode at index X on the lock."""
+        try:
+            slot = get_usercode(self.info.node, code_slot)
+        except NotFoundError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="get_lock_usercode_not_found",
+                translation_placeholders={
+                    "code_slot": str(code_slot),
+                    "entity_id": self.entity_id,
+                },
+            ) from err
+        return {
+            str(code_slot): {
+                "usercode": slot["usercode"],
+                "in_use": slot["in_use"],
+            },
+        }
+
+    @callback
+    def _get_all_usercodes(self) -> ServiceResponse:
+        """Get all usercodes from the lock."""
+        slots = get_usercodes(self.info.node)
+        return {
+            str(slot["code_slot"]): {
+                "usercode": slot["usercode"],
+                "in_use": slot["in_use"],
+            }
+            for slot in slots
+        }
 
     async def async_clear_lock_usercode(self, code_slot: int) -> None:
         """Clear the usercode at index X on the lock."""
@@ -175,8 +173,13 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             await clear_usercode(self.info.node, code_slot)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to clear lock usercode on lock {self.entity_id} code_slot "
-                f"{code_slot}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="clear_lock_usercode_failed",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_slot": str(code_slot),
+                    "error": str(err),
+                },
             ) from err
         LOGGER.debug(
             "User code at slot %s on lock %s cleared", code_slot, self.entity_id

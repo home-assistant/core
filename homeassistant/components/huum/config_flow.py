@@ -43,7 +43,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum.status()
-            except (Forbidden, NotAuthenticated):
+            except Forbidden, NotAuthenticated:
                 # Most likely Forbidden as that is what is returned from `.status()` with bad creds
                 _LOGGER.error("Could not log in to Huum with given credentials")
                 errors["base"] = "invalid_auth"

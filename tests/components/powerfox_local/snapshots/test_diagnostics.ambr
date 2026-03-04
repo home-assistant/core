@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'energy_return': 111111,
+    'energy_usage': 1111111,
+    'energy_usage_high_tariff': 111111,
+    'energy_usage_low_tariff': 111111,
+    'power': 111,
+  })
+# ---

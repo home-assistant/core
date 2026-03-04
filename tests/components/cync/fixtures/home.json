@@ -48,7 +48,7 @@
               "mac_address": "654321ABCDEF",
               "product_id": "product123",
               "authorize_code": "abcd_code",
-              "is_on": true,
+              "is_on": false,
               "brightness": 90,
               "color_temp": 254,
               "rgb": [120, 145, 180]

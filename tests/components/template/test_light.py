@@ -736,33 +736,24 @@ async def setup_light_with_transition_template(
         )
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("supported_features", "supported_color_modes"),
-    [(0, [ColorMode.BRIGHTNESS])],
+    ("count", "state_template"), [(1, "{{states.test['big.fat...']}}")]
 )
 @pytest.mark.parametrize(
-    ("style", "expected_state"),
-    [
-        (ConfigurationStyle.LEGACY, STATE_OFF),
-        (ConfigurationStyle.MODERN, STATE_OFF),
-        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
-    ],
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize("state_template", ["{{states.test['big.fat...']}}"])
-async def test_template_state_invalid(
-    hass: HomeAssistant,
-    supported_features,
-    supported_color_modes,
-    expected_state,
-    setup_state_light,
-) -> None:
+@pytest.mark.usefixtures("setup_state_light")
+async def test_template_state_invalid(hass: HomeAssistant) -> None:
     """Test template state with render error."""
+    # Trigger
+    hass.states.async_set("light.test_state", None)
+    await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
-    assert state.state == expected_state
-    assert state.attributes["color_mode"] is None
-    assert state.attributes["supported_color_modes"] == supported_color_modes
-    assert state.attributes["supported_features"] == supported_features
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
 
 
 @pytest.mark.parametrize("count", [1])
@@ -1021,7 +1012,7 @@ async def test_on_action_with_transition(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("light_config", "style", "initial_state"),
+    ("light_config", "style"),
     [
         (
             {
@@ -1030,7 +1021,6 @@ async def test_on_action_with_transition(
                 }
             },
             ConfigurationStyle.LEGACY,
-            STATE_OFF,
         ),
         (
             {
@@ -1038,7 +1028,6 @@ async def test_on_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.MODERN,
-            STATE_OFF,
         ),
         (
             {
@@ -1046,22 +1035,19 @@ async def test_on_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.TRIGGER,
-            STATE_UNKNOWN,
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_light")
 async def test_on_action_optimistic(
-    hass: HomeAssistant,
-    initial_state: str,
-    setup_light,
-    calls: list[ServiceCall],
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test on action with optimistic state."""
     hass.states.async_set("light.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_template_light")
-    assert state.state == initial_state
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
@@ -1203,7 +1189,7 @@ async def test_off_action_with_transition(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("light_config", "style", "initial_state"),
+    ("light_config", "style"),
     [
         (
             {
@@ -1212,7 +1198,6 @@ async def test_off_action_with_transition(
                 }
             },
             ConfigurationStyle.LEGACY,
-            STATE_OFF,
         ),
         (
             {
@@ -1220,7 +1205,6 @@ async def test_off_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.MODERN,
-            STATE_OFF,
         ),
         (
             {
@@ -1228,16 +1212,19 @@ async def test_off_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.TRIGGER,
-            STATE_UNKNOWN,
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_light")
 async def test_off_action_optimistic(
-    hass: HomeAssistant, initial_state, setup_light, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test off action with optimistic state."""
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
-    assert state.state == initial_state
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
@@ -1260,11 +1247,7 @@ async def test_off_action_optimistic(
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [
-        ConfigurationStyle.LEGACY,
-        ConfigurationStyle.MODERN,
-        ConfigurationStyle.TRIGGER,
-    ],
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize("state_template", ["{{1 == 1}}"])
 async def test_level_action_no_template(
@@ -1358,7 +1341,7 @@ async def test_level_template(
 @pytest.mark.parametrize(
     ("expected_temp", "attribute_template", "expected_color_mode"),
     [
-        (500, "{{500}}", ColorMode.COLOR_TEMP),
+        (2000, "{{500}}", ColorMode.COLOR_TEMP),
         (None, "{{501}}", ColorMode.COLOR_TEMP),
         (None, "{{x - 12}}", ColorMode.COLOR_TEMP),
         (None, "None", ColorMode.COLOR_TEMP),
@@ -1380,7 +1363,7 @@ async def test_temperature_template(
         await hass.async_block_till_done()
 
     state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("color_temp") == expected_temp
+    assert state.attributes.get("color_temp_kelvin") == expected_temp
     assert state.state == STATE_ON
     assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
@@ -1417,12 +1400,11 @@ async def test_temperature_action_no_template(
     assert len(calls) == 1
     assert calls[-1].data["action"] == "set_temperature"
     assert calls[-1].data["caller"] == "light.test_template_light"
-    assert calls[-1].data["color_temp"] == 345
     assert calls[-1].data["color_temp_kelvin"] == 2898
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
-    assert state.attributes.get("color_temp") == 345
+    assert state.attributes.get("color_temp_kelvin") == 2898
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
@@ -2042,7 +2024,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.HS
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["hs_color"] == (40, 50)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2066,7 +2048,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert state.attributes["color_temp"] == 123
+    assert state.attributes["color_temp_kelvin"] == 8130
     assert "hs_color" in state.attributes  # Color temp represented as hs_color
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2092,7 +2074,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.RGB
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["rgb_color"] == (160, 78, 192)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2122,7 +2104,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.RGBW
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["rgbw_color"] == (160, 78, 192, 25)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2153,7 +2135,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.RGBWW
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["rgbww_color"] == (160, 78, 192, 25, 55)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2178,7 +2160,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.HS
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["hs_color"] == (10, 20)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2202,7 +2184,7 @@ async def test_all_colors_mode_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert state.attributes["color_temp"] == 234
+    assert state.attributes["color_temp_kelvin"] == 4273
     assert "hs_color" in state.attributes  # Color temp represented as hs_color
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -2345,19 +2327,18 @@ async def test_effect_template(
     ],
 )
 @pytest.mark.parametrize(
-    ("expected_min_mireds", "expected_max_kelvin", "attribute_template"),
+    ("expected_max_kelvin", "attribute_template"),
     [
-        (118, 8474, "{{118}}"),
-        (153, 6535, "{{x - 12}}"),
-        (153, 6535, "None"),
-        (153, 6535, "{{ none }}"),
-        (153, 6535, ""),
-        (153, 6535, "{{ 'a' }}"),
+        (8474, "{{118}}"),
+        (6535, "{{x - 12}}"),
+        (6535, "None"),
+        (6535, "{{ none }}"),
+        (6535, ""),
+        (6535, "{{ 'a' }}"),
     ],
 )
 async def test_min_mireds_template(
     hass: HomeAssistant,
-    expected_min_mireds: int,
     expected_max_kelvin: int,
     style: ConfigurationStyle,
     setup_light_with_mireds,
@@ -2369,7 +2350,6 @@ async def test_min_mireds_template(
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
-    assert state.attributes.get("min_mireds") == expected_min_mireds
     assert state.attributes.get("max_color_temp_kelvin") == expected_max_kelvin
 
 
@@ -2383,19 +2363,18 @@ async def test_min_mireds_template(
     ],
 )
 @pytest.mark.parametrize(
-    ("expected_max_mireds", "expected_min_kelvin", "attribute_template"),
+    ("expected_min_kelvin", "attribute_template"),
     [
-        (488, 2049, "{{488}}"),
-        (500, 2000, "{{x - 12}}"),
-        (500, 2000, "None"),
-        (500, 2000, "{{ none }}"),
-        (500, 2000, ""),
-        (500, 2000, "{{ 'a' }}"),
+        (2049, "{{488}}"),
+        (2000, "{{x - 12}}"),
+        (2000, "None"),
+        (2000, "{{ none }}"),
+        (2000, ""),
+        (2000, "{{ 'a' }}"),
     ],
 )
 async def test_max_mireds_template(
     hass: HomeAssistant,
-    expected_max_mireds: int,
     expected_min_kelvin: int,
     style: ConfigurationStyle,
     setup_light_with_mireds,
@@ -2407,7 +2386,6 @@ async def test_max_mireds_template(
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
-    assert state.attributes.get("max_mireds") == expected_max_mireds
     assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
 
 

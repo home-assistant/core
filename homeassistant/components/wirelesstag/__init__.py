@@ -1,10 +1,14 @@
 """Support for Wireless Sensor Tags."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 from wirelesstagpy import SensorTag, WirelessTags
+from wirelesstagpy.binaryevent import BinaryEvent
 from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.components import persistent_notification
@@ -20,6 +24,9 @@ from .const import (
     SIGNAL_TAG_UPDATE,
     WIRELESSTAG_DATA,
 )
+
+if TYPE_CHECKING:
+    from .switch import WirelessTagSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,22 +63,24 @@ class WirelessTagPlatform:
         self.tags = self.api.load_tags()
         return self.tags
 
-    def arm(self, switch):
+    def arm(self, switch: WirelessTagSwitch) -> None:
         """Arm entity sensor monitoring."""
         func_name = f"arm_{switch.entity_description.key}"
         if (arm_func := getattr(self.api, func_name)) is not None:
             arm_func(switch.tag_id, switch.tag_manager_mac)
 
-    def disarm(self, switch):
+    def disarm(self, switch: WirelessTagSwitch) -> None:
         """Disarm entity sensor monitoring."""
         func_name = f"disarm_{switch.entity_description.key}"
         if (disarm_func := getattr(self.api, func_name)) is not None:
             disarm_func(switch.tag_id, switch.tag_manager_mac)
 
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start monitoring push events."""
 
-        def push_callback(tags_spec, event_spec):
+        def push_callback(
+            tags_spec: dict[str, SensorTag], event_spec: dict[str, list[BinaryEvent]]
+        ) -> None:
             """Handle push update."""
             _LOGGER.debug(
                 "Push notification arrived: %s, events: %s", tags_spec, event_spec

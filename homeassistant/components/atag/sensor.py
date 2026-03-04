@@ -64,6 +64,6 @@ class AtagSensor(AtagEntity, SensorEntity):
         return self.coordinator.atag.report[self._id].state
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return icon."""
         return self.coordinator.atag.report[self._id].icon
