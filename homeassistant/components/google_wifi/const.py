@@ -1,9 +1,10 @@
 """Constants for the Google Wifi integration."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
+
+from .sensor import GoogleWifiSensorEntityDescription
 
 DOMAIN = "google_wifi"
 
@@ -16,12 +17,6 @@ ATTR_STATUS = "status"
 ATTR_UPTIME = "uptime"
 ATTR_MODEL = "model"
 ATTR_GROUP_ROLE = "group_role"
-
-@dataclass(frozen=True, kw_only=True)
-class GoogleWifiSensorEntityDescription(SensorEntityDescription):
-    """Describes GoogleWifi sensor entity."""
-    primary_key: str
-    sensor_key: str
 
 # Define all sensors in one tuple to be imported by sensor.py
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
@@ -67,7 +62,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         primary_key="system",
         sensor_key="modelId",
         icon="mdi:router-network-wireless",
-        entity_category="diagnostic"
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_GROUP_ROLE,
