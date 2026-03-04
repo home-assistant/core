@@ -34,6 +34,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     selector,
 )
 from homeassistant.helpers.httpx_client import get_async_client
@@ -49,21 +50,25 @@ from .const import (
     CONF_TOP_P,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
+    DEFAULT_STT_NAME,
+    DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_TTS_OPTIONS,
 )
 from .entity import async_prepare_files_for_prompt
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
 
-PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION, Platform.STT, Platform.TTS)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
@@ -75,6 +80,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
+        LOGGER.warning(
+            "Action '%s.%s' is deprecated and will be removed in the 2026.9.0 release. "
+            "Please use the 'ai_task.generate_image' action instead",
+            DOMAIN,
+            SERVICE_GENERATE_IMAGE,
+        )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_generate_image",
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_generate_image",
+        )
+
         entry_id = call.data["config_entry"]
         entry = hass.config_entries.async_get_entry(entry_id)
 
@@ -110,6 +131,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
         """Send a prompt to ChatGPT and return the response."""
+        LOGGER.warning(
+            "Action '%s.%s' is deprecated and will be removed in the 2026.9.0 release. "
+            "Please use the 'ai_task.generate_data' action instead",
+            DOMAIN,
+            SERVICE_GENERATE_CONTENT,
+        )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_generate_content",
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_generate_content",
+        )
+
         entry_id = call.data["config_entry"]
         entry = hass.config_entries.async_get_entry(entry_id)
 
@@ -441,6 +478,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
                 )
         hass.config_entries.async_update_entry(entry, minor_version=4)
 
+    if entry.version == 2 and entry.minor_version == 4:
+        _add_tts_subentry(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=5)
+
+    if entry.version == 2 and entry.minor_version == 5:
+        _add_stt_subentry(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=6)
+
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
@@ -456,6 +501,32 @@ def _add_ai_task_subentry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None
             data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
             subentry_type="ai_task_data",
             title=DEFAULT_AI_TASK_NAME,
+            unique_id=None,
+        ),
+    )
+
+
+def _add_stt_subentry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
+    """Add STT subentry to the config entry."""
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_STT_OPTIONS),
+            subentry_type="stt",
+            title=DEFAULT_STT_NAME,
+            unique_id=None,
+        ),
+    )
+
+
+def _add_tts_subentry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
+    """Add TTS subentry to the config entry."""
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_TTS_OPTIONS),
+            subentry_type="tts",
+            title=DEFAULT_TTS_NAME,
             unique_id=None,
         ),
     )

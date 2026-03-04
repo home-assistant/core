@@ -7,74 +7,56 @@ rules:
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: Integration does not register any service actions.
   docs-high-level-description: done
-  docs-installation-instructions:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-removal-instructions:
-    status: todo
-    comment: Documentation needs to be created.
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to external events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: todo
-    comment: Config flow does not currently test connection during setup.
-  test-before-setup: todo
+  test-before-configure: done
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-installation-parameters:
-    status: todo
-    comment: Documentation needs to be created.
-  entity-unavailable: todo
+    status: exempt
+    comment: Integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: Handled by the coordinator.
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator.
+  parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: Platform tests for cover and sensor need to be implemented to reach 95% coverage.
+  test-coverage: done
 
   # Gold
   devices: done
   diagnostics: todo
-  discovery: todo
-  discovery-update-info: todo
-  docs-data-update:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-examples:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-known-limitations:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-supported-devices:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-supported-functions:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-troubleshooting:
-    status: todo
-    comment: Documentation needs to be created.
-  docs-use-cases:
-    status: todo
-    comment: Documentation needs to be created.
+  discovery: done
+  discovery-update-info:
+    status: exempt
+    comment: Integration connects via the cloud and not locally.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
@@ -86,7 +68,7 @@ rules:
   repair-issues: todo
   stale-devices:
     status: todo
-    comment: Stale devices can be done dynamically
+    comment: We can automatically remove removed devices
 
   # Platinum
   async-dependency: todo

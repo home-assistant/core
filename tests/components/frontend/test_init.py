@@ -14,9 +14,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.frontend import (
+    CONF_DEVELOPMENT_PR,
     CONF_EXTRA_JS_URL_ES5,
     CONF_EXTRA_MODULE_URL,
+    CONF_GITHUB_TOKEN,
     CONF_THEMES,
+    CONFIG_SCHEMA,
     DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
@@ -33,6 +36,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -1104,3 +1108,344 @@ async def test_www_local_dir(
     client = await hass_client()
     resp = await client.get("/local/x.txt")
     assert resp.status == HTTPStatus.OK
+
+
+async def test_development_pr_and_github_token_inclusive() -> None:
+    """Test that development_pr and github_token must both be set or neither."""
+    # Both present - valid
+    valid_config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+            CONF_GITHUB_TOKEN: "test_token",
+        }
+    }
+    assert CONFIG_SCHEMA(valid_config)
+
+    valid_config_empty: dict[str, dict[str, Any]] = {DOMAIN: {}}
+    assert CONFIG_SCHEMA(valid_config_empty)
+
+    invalid_config_pr_only = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+        }
+    }
+    with pytest.raises(vol.Invalid, match="some but not all"):
+        CONFIG_SCHEMA(invalid_config_pr_only)
+
+    invalid_config_token_only: dict[str, dict[str, Any]] = {
+        DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
+    }
+    with pytest.raises(vol.Invalid, match="some but not all"):
+        CONFIG_SCHEMA(invalid_config_token_only)
+
+
+async def test_setup_with_development_pr_and_token(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that setup succeeds when both development_pr and github_token are provided."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
+    config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+            CONF_GITHUB_TOKEN: "test_token",
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Verify GitHub API was called
+    assert mock_github_api.generic.call_count >= 2  # PR + workflow runs
+
+
+async def test_setup_cleans_up_pr_cache_when_not_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test that PR cache is cleaned up when no PR is configured."""
+    hass.config.config_dir = str(tmp_path)
+
+    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
+    pr_cache_dir.mkdir(parents=True)
+    (pr_cache_dir / "test_file.txt").write_text("test")
+
+    config: dict[str, dict[str, Any]] = {DOMAIN: {}}
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert not pr_cache_dir.exists()
+
+
+async def test_setup_with_development_pr_unexpected_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setup handles unexpected errors during PR download gracefully."""
+    hass.config.config_dir = str(tmp_path)
+
+    with patch(
+        "homeassistant.components.frontend.download_pr_artifact",
+        side_effect=RuntimeError("Unexpected error"),
+    ):
+        config = {
+            DOMAIN: {
+                CONF_DEVELOPMENT_PR: 12345,
+                CONF_GITHUB_TOKEN: "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Unexpected error downloading PR #12345" in caplog.text
+
+
+async def test_update_panel(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
+    """Test frontend/update_panel command."""
+    # Verify initial state
+    await ws_client.send_json({"id": 1, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["require_admin"] is False
+
+    # Update the light panel
+    events = async_capture_events(hass, EVENT_PANELS_UPDATED)
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "frontend/update_panel",
+            "url_path": "light",
+            "title": "My Lights",
+            "icon": "mdi:lightbulb",
+            "require_admin": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(events) == 1
+
+    # Verify the panel was updated
+    await ws_client.send_json({"id": 3, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["icon"] == "mdi:lightbulb"
+    assert msg["result"]["light"]["title"] == "My Lights"
+    assert msg["result"]["light"]["require_admin"] is True
+
+
+async def test_update_panel_partial(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
+    """Test that partial updates only change specified properties."""
+    # Update only title
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/update_panel",
+            "url_path": "climate",
+            "title": "HVAC",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Verify only title changed, others kept defaults
+    await ws_client.send_json({"id": 2, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["climate"]["title"] == "HVAC"
+    assert msg["result"]["climate"]["icon"] == "mdi:home-thermometer"
+    assert msg["result"]["climate"]["require_admin"] is False
+    assert msg["result"]["climate"]["default_visible"] is True
+
+
+async def test_update_panel_not_found(ws_client: MockHAClientWebSocket) -> None:
+    """Test that non-existent panels are rejected."""
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/update_panel",
+            "url_path": "nonexistent",
+            "title": "Does Not Exist",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
+async def test_update_panel_requires_admin(
+    hass: HomeAssistant,
+    ws_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that non-admin users cannot update panels."""
+    hass_admin_user.groups = []
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/update_panel",
+            "url_path": "light",
+            "title": "My Lights",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+
+@pytest.mark.usefixtures("ignore_frontend_deps")
+async def test_update_panel_persists(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that panel config is loaded from storage on startup."""
+    hass_storage["frontend_panels"] = {
+        "key": "frontend_panels",
+        "version": 1,
+        "data": {
+            "light": {
+                "title": "Saved Lights",
+                "icon": "mdi:lamp",
+                "require_admin": True,
+            },
+        },
+    }
+
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "get_panels"})
+    msg = await client.receive_json()
+    assert msg["result"]["light"]["title"] == "Saved Lights"
+    assert msg["result"]["light"]["icon"] == "mdi:lamp"
+    assert msg["result"]["light"]["require_admin"] is True
+
+    # Verify other panels still have defaults
+    assert msg["result"]["climate"]["title"] == "climate"
+    assert msg["result"]["climate"]["icon"] == "mdi:home-thermometer"
+
+
+async def test_update_panel_reset_param(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
+    """Test that setting a param to None resets it to the original value."""
+    # First set a custom icon
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/update_panel",
+            "url_path": "security",
+            "icon": "mdi:shield",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    await ws_client.send_json({"id": 2, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["security"]["icon"] == "mdi:shield"
+
+    # Reset icon by setting to None — should restore original
+    await ws_client.send_json(
+        {
+            "id": 3,
+            "type": "frontend/update_panel",
+            "url_path": "security",
+            "icon": None,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    await ws_client.send_json({"id": 4, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["security"]["icon"] == "mdi:security"
+
+
+async def test_update_panel_toggle_show_in_sidebar(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
+    """Test that show_in_sidebar is returned without altering title and icon."""
+    # Verify initial state has title and icon
+    await ws_client.send_json({"id": 1, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"
+    assert msg["result"]["light"]["show_in_sidebar"] is False
+
+    # Show in sidebar
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "frontend/update_panel",
+            "url_path": "light",
+            "show_in_sidebar": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Title and icon should remain unchanged and show_in_sidebar should be True
+    await ws_client.send_json({"id": 3, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"
+    assert msg["result"]["light"]["show_in_sidebar"] is True
+
+    # Reset show_in_sidebar to panel default
+    await ws_client.send_json(
+        {
+            "id": 4,
+            "type": "frontend/update_panel",
+            "url_path": "light",
+            "show_in_sidebar": None,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # show_in_sidebar should be restored to built-in default
+    await ws_client.send_json({"id": 5, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"
+    assert msg["result"]["light"]["show_in_sidebar"] is False
+
+
+async def test_panels_config_invalid_storage(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that corrupted panel storage is ignored with a warning."""
+    hass_storage["frontend_panels"] = {
+        "key": "frontend_panels",
+        "version": 1,
+        "data": "not_a_dict",
+    }
+
+    assert await async_setup_component(hass, "frontend", {})
+    assert "Ignoring invalid panel storage data" in caplog.text
+
+    client = await hass_ws_client(hass)
+
+    # Panels should still load with defaults
+    await client.send_json({"id": 1, "type": "get_panels"})
+    msg = await client.receive_json()
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"

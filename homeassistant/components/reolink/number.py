@@ -139,8 +139,8 @@ NUMBER_ENTITIES = (
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "floodlight_event"),
         value=lambda api, ch: api.whiteled_event_brightness(ch),
-        method=lambda api, ch, value: (
-            api.baichuan.set_floodlight(ch, event_brightness=int(value))
+        method=lambda api, ch, value: api.baichuan.set_floodlight(
+            ch, event_brightness=int(value)
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -153,8 +153,8 @@ NUMBER_ENTITIES = (
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "ir_brightness"),
         value=lambda api, ch: api.baichuan.ir_brightness(ch),
-        method=lambda api, ch, value: (
-            api.baichuan.set_status_led(ch, ir_brightness=int(value))
+        method=lambda api, ch, value: api.baichuan.set_status_led(
+            ch, ir_brightness=int(value)
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -171,8 +171,8 @@ NUMBER_ENTITIES = (
         native_max_value=900,
         supported=lambda api, ch: api.supported(ch, "floodlight_event"),
         value=lambda api, ch: api.whiteled_event_on_time(ch),
-        method=lambda api, ch, value: (
-            api.baichuan.set_floodlight(ch, event_on_time=int(value))
+        method=lambda api, ch, value: api.baichuan.set_floodlight(
+            ch, event_on_time=int(value)
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -189,8 +189,8 @@ NUMBER_ENTITIES = (
         native_max_value=30,
         supported=lambda api, ch: api.supported(ch, "floodlight_event"),
         value=lambda api, ch: api.whiteled_event_flash_time(ch),
-        method=lambda api, ch, value: (
-            api.baichuan.set_floodlight(ch, event_flash_time=int(value))
+        method=lambda api, ch, value: api.baichuan.set_floodlight(
+            ch, event_flash_time=int(value)
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -350,8 +350,8 @@ NUMBER_ENTITIES = (
             and api.supported(ch, "ai_non-motor vehicle")
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "non-motor vehicle"),
-        method=lambda api, ch, value: (
-            api.set_ai_sensitivity(ch, int(value), "non-motor vehicle")
+        method=lambda api, ch, value: api.set_ai_sensitivity(
+            ch, int(value), "non-motor vehicle"
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -459,8 +459,8 @@ NUMBER_ENTITIES = (
             api.supported(ch, "ai_delay") and api.supported(ch, "ai_non-motor vehicle")
         ),
         value=lambda api, ch: api.ai_delay(ch, "non-motor vehicle"),
-        method=lambda api, ch, value: (
-            api.set_ai_delay(ch, int(value), "non-motor vehicle")
+        method=lambda api, ch, value: api.set_ai_delay(
+            ch, int(value), "non-motor vehicle"
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -734,8 +734,8 @@ SMART_AI_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "ai_crossline"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_sensitivity(ch, "crossline", loc)
+        value=lambda api, ch, loc: api.baichuan.smart_ai_sensitivity(
+            ch, "crossline", loc
         ),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "crossline", loc, sensitivity=int(value)
@@ -752,8 +752,8 @@ SMART_AI_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "ai_intrusion"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_sensitivity(ch, "intrusion", loc)
+        value=lambda api, ch, loc: api.baichuan.smart_ai_sensitivity(
+            ch, "intrusion", loc
         ),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "intrusion", loc, sensitivity=int(value)
@@ -770,8 +770,8 @@ SMART_AI_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "ai_linger"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_sensitivity(ch, "loitering", loc)
+        value=lambda api, ch, loc: api.baichuan.smart_ai_sensitivity(
+            ch, "loitering", loc
         ),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "loitering", loc, sensitivity=int(value)
@@ -788,9 +788,7 @@ SMART_AI_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "ai_forgotten_item"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_sensitivity(ch, "legacy", loc)
-        ),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_sensitivity(ch, "legacy", loc),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "legacy", loc, sensitivity=int(value)
         ),

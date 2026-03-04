@@ -798,7 +798,7 @@ async def test_update_core_progress(
                     "done": done,
                     "stage": None,
                     "extra": {"total": 1234567890} if progress > 0 else None,
-                    "errors": errors if errors else [],
+                    "errors": errors or [],
                 },
             },
         }

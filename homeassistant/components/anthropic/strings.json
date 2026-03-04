@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "authentication_error": "[%key:common::config_flow::error::invalid_auth%]",
@@ -10,10 +11,23 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::anthropic::config::step::user::data_description::api_key%]"
+        },
+        "description": "Reauthentication required. Please enter your updated API key."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
+        },
+        "data_description": {
+          "api_key": "Your Anthropic API key."
+        },
+        "description": "Set up Anthropic integration by providing your Anthropic API key. Instructions to obtain an API key can be found in [the documentation]({instructions_url})."
       }
     }
   },
@@ -35,6 +49,11 @@
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::max_tokens%]",
             "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::temperature%]"
           },
+          "data_description": {
+            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::chat_model%]",
+            "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::max_tokens%]",
+            "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::temperature%]"
+          },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
         },
         "init": {
@@ -42,17 +61,25 @@
             "name": "[%key:common::config_flow::data::name%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data::recommended%]"
           },
+          "data_description": {
+            "name": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::name%]",
+            "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::recommended%]"
+          },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::init::title%]"
         },
         "model": {
           "data": {
+            "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data::code_execution%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
+            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search%]",
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search_max_uses%]"
           },
           "data_description": {
+            "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::code_execution%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
+            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search%]",
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search_max_uses%]"
@@ -78,6 +105,11 @@
             "max_tokens": "Maximum tokens to return in response",
             "temperature": "Temperature"
           },
+          "data_description": {
+            "chat_model": "The model to serve the responses.",
+            "max_tokens": "Limit the number of response tokens.",
+            "temperature": "Control the randomness of the response, trading off between creativity and coherence."
+          },
           "title": "Advanced settings"
         },
         "init": {
@@ -88,19 +120,26 @@
             "recommended": "Recommended model settings"
           },
           "data_description": {
-            "prompt": "Instruct how the LLM should respond. This can be a template."
+            "llm_hass_api": "Allow the LLM to control Home Assistant.",
+            "name": "The name of this configuration",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "recommended": "Use default configuration"
           },
           "title": "Basic settings"
         },
         "model": {
           "data": {
+            "code_execution": "Code execution",
             "thinking_budget": "Thinking budget",
+            "thinking_effort": "Thinking effort",
             "user_location": "Include home location",
             "web_search": "Enable web search",
             "web_search_max_uses": "Maximum web searches"
           },
           "data_description": {
+            "code_execution": "Allow the model to execute code in a secure sandbox environment, enabling it to analyze data and perform complex calculations.",
             "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
+            "thinking_effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
             "user_location": "Localize search results based on home location",
             "web_search": "The web search tool gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff",
             "web_search_max_uses": "Limit the number of searches performed per response"
@@ -118,12 +157,26 @@
             "data": {
               "chat_model": "[%key:common::generic::model%]"
             },
+            "data_description": {
+              "chat_model": "Select the new model to use."
+            },
             "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated. Select a supported model to continue.",
             "title": "Update model"
           }
         }
       },
       "title": "Model deprecated"
+    }
+  },
+  "selector": {
+    "thinking_effort": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "max": "Max",
+        "medium": "[%key:common::state::medium%]",
+        "none": "None"
+      }
     }
   }
 }

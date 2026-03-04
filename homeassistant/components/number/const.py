@@ -47,10 +47,35 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
+    AreaConverter,
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
+    ConductivityConverter,
+    DataRateConverter,
+    DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    EnergyDistanceConverter,
+    InformationConverter,
+    MassConverter,
+    MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
+    PowerConverter,
+    PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
+    SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
+    UnitlessRatioConverter,
+    VolumeConverter,
     VolumeFlowRateConverter,
 )
 
@@ -247,7 +272,7 @@ class NumberDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -265,7 +290,7 @@ class NumberDeviceClass(StrEnum):
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     PH = "ph"
@@ -519,6 +544,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.MOISTURE: {PERCENTAGE},
     NumberDeviceClass.NITROGEN_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.NITROGEN_MONOXIDE: {
@@ -528,6 +554,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.PH: {None},
@@ -587,10 +614,45 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
 }
 
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
+    NumberDeviceClass.APPARENT_POWER: ApparentPowerConverter,
+    NumberDeviceClass.ABSOLUTE_HUMIDITY: MassVolumeConcentrationConverter,
+    NumberDeviceClass.AREA: AreaConverter,
+    NumberDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlucoseConcentrationConverter,
+    NumberDeviceClass.CO: CarbonMonoxideConcentrationConverter,
+    NumberDeviceClass.CONDUCTIVITY: ConductivityConverter,
+    NumberDeviceClass.CURRENT: ElectricCurrentConverter,
+    NumberDeviceClass.DATA_RATE: DataRateConverter,
+    NumberDeviceClass.DATA_SIZE: InformationConverter,
+    NumberDeviceClass.DISTANCE: DistanceConverter,
+    NumberDeviceClass.DURATION: DurationConverter,
+    NumberDeviceClass.ENERGY: EnergyConverter,
+    NumberDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
+    NumberDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    NumberDeviceClass.GAS: VolumeConverter,
+    NumberDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
+    NumberDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,
+    NumberDeviceClass.OZONE: OzoneConcentrationConverter,
+    NumberDeviceClass.POWER: PowerConverter,
+    NumberDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
+    NumberDeviceClass.PRECIPITATION: DistanceConverter,
+    NumberDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
+    NumberDeviceClass.PRESSURE: PressureConverter,
     NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
+    NumberDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
+    NumberDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,
+    NumberDeviceClass.SPEED: SpeedConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
     NumberDeviceClass.TEMPERATURE_DELTA: TemperatureDeltaConverter,
+    NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: MassVolumeConcentrationConverter,
+    NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: UnitlessRatioConverter,
+    NumberDeviceClass.VOLTAGE: ElectricPotentialConverter,
+    NumberDeviceClass.VOLUME: VolumeConverter,
+    NumberDeviceClass.VOLUME_STORAGE: VolumeConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
+    NumberDeviceClass.WATER: VolumeConverter,
+    NumberDeviceClass.WEIGHT: MassConverter,
+    NumberDeviceClass.WIND_SPEED: SpeedConverter,
 }
 
 # We translate units that were using using the legacy coding of μ \u00b5

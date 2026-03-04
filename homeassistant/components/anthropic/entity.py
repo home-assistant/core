@@ -3,26 +3,32 @@
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
     Base64ImageSourceParam,
     Base64PDFSourceParam,
+    BashCodeExecutionToolResultBlock,
     CitationsDelta,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    CodeExecutionTool20250825Param,
+    Container,
     ContentBlockParam,
     DocumentBlockParam,
     ImageBlockParam,
     InputJSONDelta,
+    JSONOutputFormatParam,
     MessageDeltaUsage,
     MessageParam,
     MessageStreamEvent,
+    OutputConfigParam,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
@@ -39,8 +45,10 @@ from anthropic.types import (
     TextCitation,
     TextCitationParam,
     TextDelta,
+    TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
     ThinkingBlockParam,
+    ThinkingConfigAdaptiveParam,
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
@@ -48,18 +56,21 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
-    ToolResultBlockParam,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
-    WebSearchToolRequestErrorParam,
     WebSearchToolResultBlock,
-    WebSearchToolResultBlockParam,
-    WebSearchToolResultError,
+    WebSearchToolResultBlockParamContentParam,
+)
+from anthropic.types.bash_code_execution_tool_result_block_param import (
+    Content as BashCodeExecutionToolResultContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
+from anthropic.types.text_editor_code_execution_tool_result_block_param import (
+    Content as TextEditorCodeExecutionToolResultContentParam,
+)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -71,13 +82,16 @@ from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
+from homeassistant.util.json import JsonObjectType
 
 from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -89,7 +103,9 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
+    NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -126,10 +142,22 @@ class ContentDetails:
     """Native data for AssistantContent."""
 
     citation_details: list[CitationDetails] = field(default_factory=list)
+    thinking_signature: str | None = None
+    redacted_thinking: str | None = None
+    container: Container | None = None
 
     def has_content(self) -> bool:
-        """Check if there is any content."""
+        """Check if there is any text content."""
         return any(detail.length > 0 for detail in self.citation_details)
+
+    def __bool__(self) -> bool:
+        """Check if there is any thinking content or citations."""
+        return (
+            self.thinking_signature is not None
+            or self.redacted_thinking is not None
+            or self.container is not None
+            or self.has_citations()
+        )
 
     def has_citations(self) -> bool:
         """Check if there are any citations."""
@@ -172,30 +200,53 @@ class ContentDetails:
 
 def _convert_content(
     chat_content: Iterable[conversation.Content],
-) -> list[MessageParam]:
+) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
+    container_id: str | None = None
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
+            external_tool = True
             if content.tool_name == "web_search":
-                tool_result_block: ContentBlockParam = WebSearchToolResultBlockParam(
-                    type="web_search_tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=content.tool_result["content"]
-                    if "content" in content.tool_result
-                    else WebSearchToolRequestErrorParam(
-                        type="web_search_tool_result_error",
-                        error_code=content.tool_result.get("error_code", "unavailable"),  # type: ignore[typeddict-item]
+                tool_result_block: ContentBlockParam = {
+                    "type": "web_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        WebSearchToolResultBlockParamContentParam,
+                        content.tool_result["content"]
+                        if "content" in content.tool_result
+                        else {
+                            "type": "web_search_tool_result_error",
+                            "error_code": content.tool_result.get(
+                                "error_code", "unavailable"
+                            ),
+                        },
                     ),
-                )
-                external_tool = True
+                }
+            elif content.tool_name == "bash_code_execution":
+                tool_result_block = {
+                    "type": "bash_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        BashCodeExecutionToolResultContentParam, content.tool_result
+                    ),
+                }
+            elif content.tool_name == "text_editor_code_execution":
+                tool_result_block = {
+                    "type": "text_editor_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        TextEditorCodeExecutionToolResultContentParam,
+                        content.tool_result,
+                    ),
+                }
             else:
-                tool_result_block = ToolResultBlockParam(
-                    type="tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=json_dumps(content.tool_result),
-                )
+                tool_result_block = {
+                    "type": "tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": json_dumps(content.tool_result),
+                }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
                 "assistant" if external_tool else "user"
@@ -240,29 +291,33 @@ def _convert_content(
                         content=[],
                     )
                 )
+            elif isinstance(messages[-1]["content"], str):
+                messages[-1]["content"] = [
+                    TextBlockParam(type="text", text=messages[-1]["content"]),
+                ]
 
-            if isinstance(content.native, ThinkingBlock):
-                messages[-1]["content"].append(  # type: ignore[union-attr]
-                    ThinkingBlockParam(
-                        type="thinking",
-                        thinking=content.thinking_content or "",
-                        signature=content.native.signature,
+            if isinstance(content.native, ContentDetails):
+                if content.native.thinking_signature:
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        ThinkingBlockParam(
+                            type="thinking",
+                            thinking=content.thinking_content or "",
+                            signature=content.native.thinking_signature,
+                        )
                     )
-                )
-            elif isinstance(content.native, RedactedThinkingBlock):
-                redacted_thinking_block = RedactedThinkingBlockParam(
-                    type="redacted_thinking",
-                    data=content.native.data,
-                )
-                if isinstance(messages[-1]["content"], str):
-                    messages[-1]["content"] = [
-                        TextBlockParam(type="text", text=messages[-1]["content"]),
-                        redacted_thinking_block,
-                    ]
-                else:
-                    messages[-1]["content"].append(  # type: ignore[attr-defined]
-                        redacted_thinking_block
+                if content.native.redacted_thinking:
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        RedactedThinkingBlockParam(
+                            type="redacted_thinking",
+                            data=content.native.redacted_thinking,
+                        )
                     )
+                if (
+                    content.native.container is not None
+                    and content.native.container.expires_at > datetime.now(UTC)
+                ):
+                    container_id = content.native.container.id
+
             if content.content:
                 current_index = 0
                 for detail in (
@@ -303,16 +358,30 @@ def _convert_content(
                             text=content.content[current_index:],
                         )
                     )
+
             if content.tool_calls:
                 messages[-1]["content"].extend(  # type: ignore[union-attr]
                     [
                         ServerToolUseBlockParam(
                             type="server_tool_use",
                             id=tool_call.id,
-                            name="web_search",
+                            name=cast(
+                                Literal[
+                                    "web_search",
+                                    "bash_code_execution",
+                                    "text_editor_code_execution",
+                                ],
+                                tool_call.tool_name,
+                            ),
                             input=tool_call.tool_args,
                         )
-                        if tool_call.external and tool_call.tool_name == "web_search"
+                        if tool_call.external
+                        and tool_call.tool_name
+                        in [
+                            "web_search",
+                            "bash_code_execution",
+                            "text_editor_code_execution",
+                        ]
                         else ToolUseBlockParam(
                             type="tool_use",
                             id=tool_call.id,
@@ -322,11 +391,19 @@ def _convert_content(
                         for tool_call in content.tool_calls
                     ]
                 )
+
+            if (
+                isinstance(messages[-1]["content"], list)
+                and len(messages[-1]["content"]) == 1
+                and messages[-1]["content"][0]["type"] == "text"
+            ):
+                # If there is only one text block, simplify the content to a string
+                messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
             # Note: We don't pass SystemContent here as its passed to the API as the prompt
             raise TypeError(f"Unexpected content type: {type(content)}")
 
-    return messages
+    return messages, container_id
 
 
 async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
@@ -373,8 +450,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     content_details = ContentDetails()
     content_details.add_citation_detail()
     input_usage: Usage | None = None
-    has_native = False
-    first_block: bool
+    first_block: bool = True
 
     async for response in stream:
         LOGGER.debug("Received response: %s", response)
@@ -395,13 +471,12 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
                     if first_block or content_details.has_content():
-                        if content_details.has_citations():
+                        if content_details:
                             content_details.delete_empty()
                             yield {"native": content_details}
                         content_details = ContentDetails()
                         content_details.add_citation_detail()
                         yield {"role": "assistant"}
-                        has_native = False
                         first_block = False
             elif isinstance(response.content_block, TextBlock):
                 if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
@@ -412,12 +487,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                         and content_details.has_content()
                     )
                 ):
-                    if content_details.has_citations():
+                    if content_details:
                         content_details.delete_empty()
                         yield {"native": content_details}
                     content_details = ContentDetails()
                     yield {"role": "assistant"}
-                    has_native = False
                     first_block = False
                 content_details.add_citation_detail()
                 if response.content_block.text:
@@ -426,14 +500,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     )
                     yield {"content": response.content_block.text}
             elif isinstance(response.content_block, ThinkingBlock):
-                if first_block or has_native:
-                    if content_details.has_citations():
+                if first_block or content_details.thinking_signature:
+                    if content_details:
                         content_details.delete_empty()
                         yield {"native": content_details}
                     content_details = ContentDetails()
                     content_details.add_citation_detail()
                     yield {"role": "assistant"}
-                    has_native = False
                     first_block = False
             elif isinstance(response.content_block, RedactedThinkingBlock):
                 LOGGER.debug(
@@ -441,17 +514,15 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "encrypted for safety reasons. This doesn’t affect the quality of "
                     "responses"
                 )
-                if has_native:
-                    if content_details.has_citations():
+                if first_block or content_details.redacted_thinking:
+                    if content_details:
                         content_details.delete_empty()
                         yield {"native": content_details}
                     content_details = ContentDetails()
                     content_details.add_citation_detail()
                     yield {"role": "assistant"}
-                    has_native = False
                     first_block = False
-                yield {"native": response.content_block}
-                has_native = True
+                content_details.redacted_thinking = response.content_block.data
             elif isinstance(response.content_block, ServerToolUseBlock):
                 current_tool_block = ServerToolUseBlockParam(
                     type="server_tool_use",
@@ -460,8 +531,15 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     input={},
                 )
                 current_tool_args = ""
-            elif isinstance(response.content_block, WebSearchToolResultBlock):
-                if content_details.has_citations():
+            elif isinstance(
+                response.content_block,
+                (
+                    WebSearchToolResultBlock,
+                    BashCodeExecutionToolResultBlock,
+                    TextEditorCodeExecutionToolResultBlock,
+                ),
+            ):
+                if content_details:
                     content_details.delete_empty()
                     yield {"native": content_details}
                 content_details = ContentDetails()
@@ -469,26 +547,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 yield {
                     "role": "tool_result",
                     "tool_call_id": response.content_block.tool_use_id,
-                    "tool_name": "web_search",
+                    "tool_name": response.content_block.type.removesuffix(
+                        "_tool_result"
+                    ),
                     "tool_result": {
-                        "type": "web_search_tool_result_error",
-                        "error_code": response.content_block.content.error_code,
+                        "content": cast(
+                            JsonObjectType, response.content_block.to_dict()["content"]
+                        )
                     }
-                    if isinstance(
-                        response.content_block.content, WebSearchToolResultError
-                    )
-                    else {
-                        "content": [
-                            {
-                                "type": "web_search_result",
-                                "encrypted_content": block.encrypted_content,
-                                "page_age": block.page_age,
-                                "title": block.title,
-                                "url": block.url,
-                            }
-                            for block in response.content_block.content
-                        ]
-                    },
+                    if isinstance(response.content_block.content, list)
+                    else cast(JsonObjectType, response.content_block.content.to_dict()),
                 }
                 first_block = True
         elif isinstance(response, RawContentBlockDeltaEvent):
@@ -504,19 +572,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 else:
                     current_tool_args += response.delta.partial_json
             elif isinstance(response.delta, TextDelta):
-                content_details.citation_details[-1].length += len(response.delta.text)
-                yield {"content": response.delta.text}
-            elif isinstance(response.delta, ThinkingDelta):
-                yield {"thinking_content": response.delta.thinking}
-            elif isinstance(response.delta, SignatureDelta):
-                yield {
-                    "native": ThinkingBlock(
-                        type="thinking",
-                        thinking="",
-                        signature=response.delta.signature,
+                if response.delta.text:
+                    content_details.citation_details[-1].length += len(
+                        response.delta.text
                     )
-                }
-                has_native = True
+                    yield {"content": response.delta.text}
+            elif isinstance(response.delta, ThinkingDelta):
+                if response.delta.thinking:
+                    yield {"thinking_content": response.delta.thinking}
+            elif isinstance(response.delta, SignatureDelta):
+                content_details.thinking_signature = response.delta.signature
             elif isinstance(response.delta, CitationsDelta):
                 content_details.add_citation(response.delta.citation)
         elif isinstance(response, RawContentBlockStopEvent):
@@ -540,10 +605,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         elif isinstance(response, RawMessageDeltaEvent):
             if (usage := response.usage) is not None:
                 chat_log.async_trace(_create_token_stats(input_usage, usage))
+            content_details.container = response.delta.container
             if response.delta.stop_reason == "refusal":
                 raise HomeAssistantError("Potential policy violation detected")
         elif isinstance(response, RawMessageStopEvent):
-            if content_details.has_citations():
+            if content_details:
                 content_details.delete_empty()
                 yield {"native": content_details}
             content_details = ContentDetails()
@@ -593,6 +659,7 @@ class AnthropicBaseLLMEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -600,7 +667,17 @@ class AnthropicBaseLLMEntity(Entity):
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise TypeError("First message must be a system message")
-        messages = _convert_content(chat_log.content[1:])
+
+        # System prompt with caching enabled
+        system_prompt: list[TextBlockParam] = [
+            TextBlockParam(
+                type="text",
+                text=system.content,
+                cache_control={"type": "ephemeral"},
+            )
+        ]
+
+        messages, container_id = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
@@ -608,25 +685,39 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system.content,
+            system=system_prompt,
             stream=True,
+            container=container_id,
         )
 
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-        )
-        if (
-            not model.startswith(tuple(NON_THINKING_MODELS))
-            and thinking_budget >= MIN_THINKING_BUDGET
-        ):
-            model_args["thinking"] = ThinkingConfigEnabledParam(
-                type="enabled", budget_tokens=thinking_budget
+        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+            thinking_effort = options.get(
+                CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
             )
+            if thinking_effort != "none":
+                model_args["thinking"] = ThinkingConfigAdaptiveParam(type="adaptive")
+                model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
+            else:
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+                model_args["temperature"] = options.get(
+                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+                )
         else:
-            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+            thinking_budget = options.get(
+                CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
             )
+            if (
+                not model.startswith(tuple(NON_THINKING_MODELS))
+                and thinking_budget >= MIN_THINKING_BUDGET
+            ):
+                model_args["thinking"] = ThinkingConfigEnabledParam(
+                    type="enabled", budget_tokens=thinking_budget
+                )
+            else:
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+                model_args["temperature"] = options.get(
+                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+                )
 
         tools: list[ToolUnionParam] = []
         if chat_log.llm_api:
@@ -634,6 +725,14 @@ class AnthropicBaseLLMEntity(Entity):
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        if options.get(CONF_CODE_EXECUTION):
+            tools.append(
+                CodeExecutionTool20250825Param(
+                    name="code_execution",
+                    type="code_execution_20250825",
+                ),
+            )
 
         if options.get(CONF_WEB_SEARCH):
             web_search = WebSearchTool20250305Param(
@@ -670,8 +769,25 @@ class AnthropicBaseLLMEntity(Entity):
             )
 
         if structure and structure_name:
-            structure_name = slugify(structure_name)
-            if model_args["thinking"]["type"] == "disabled":
+            if not model.startswith(tuple(UNSUPPORTED_STRUCTURED_OUTPUT_MODELS)):
+                # Native structured output for those models who support it.
+                structure_name = None
+                model_args.setdefault("output_config", OutputConfigParam())[
+                    "format"
+                ] = JSONOutputFormatParam(
+                    type="json_schema",
+                    schema={
+                        **convert(
+                            structure,
+                            custom_serializer=chat_log.llm_api.custom_serializer
+                            if chat_log.llm_api
+                            else llm.selector_serializer,
+                        ),
+                        "additionalProperties": False,
+                    },
+                )
+            elif model_args["thinking"]["type"] == "disabled":
+                structure_name = slugify(structure_name)
                 if not tools:
                     # Simplest case: no tools and no extended thinking
                     # Add a tool and force its use
@@ -691,33 +807,32 @@ class AnthropicBaseLLMEntity(Entity):
                 # force tool use or disable text responses, so we add a hint to the
                 # system prompt instead. With extended thinking, the model should be
                 # smart enough to use the tool.
+                structure_name = slugify(structure_name)
                 model_args["tool_choice"] = ToolChoiceAutoParam(
                     type="auto",
                 )
 
-                if isinstance(model_args["system"], str):
-                    model_args["system"] = [
-                        TextBlockParam(type="text", text=model_args["system"])
-                    ]
                 model_args["system"].append(  # type: ignore[union-attr]
                     TextBlockParam(
                         type="text",
-                        text=f"Claude MUST use the '{structure_name}' tool to provide the final answer instead of plain text.",
+                        text=f"Claude MUST use the '{structure_name}' tool to provide "
+                        "the final answer instead of plain text.",
                     )
                 )
 
-            tools.append(
-                ToolParam(
-                    name=structure_name,
-                    description="Use this tool to reply to the user",
-                    input_schema=convert(
-                        structure,
-                        custom_serializer=chat_log.llm_api.custom_serializer
-                        if chat_log.llm_api
-                        else llm.selector_serializer,
-                    ),
+            if structure_name:
+                tools.append(
+                    ToolParam(
+                        name=structure_name,
+                        description="Use this tool to reply to the user",
+                        input_schema=convert(
+                            structure,
+                            custom_serializer=chat_log.llm_api.custom_serializer
+                            if chat_log.llm_api
+                            else llm.selector_serializer,
+                        ),
+                    )
                 )
-            )
 
         if tools:
             model_args["tools"] = tools
@@ -725,25 +840,29 @@ class AnthropicBaseLLMEntity(Entity):
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
 
-                messages.extend(
-                    _convert_content(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(
-                                    chat_log,
-                                    stream,
-                                    output_tool=structure_name if structure else None,
-                                ),
-                            )
-                        ]
-                    )
+                new_messages, model_args["container"] = _convert_content(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            _transform_stream(
+                                chat_log,
+                                stream,
+                                output_tool=structure_name or None,
+                            ),
+                        )
+                    ]
                 )
+                messages.extend(new_messages)
+            except anthropic.AuthenticationError as err:
+                self.entry.async_start_reauth(self.hass)
+                raise HomeAssistantError(
+                    "Authentication error with Anthropic API, reauthentication required"
+                ) from err
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"

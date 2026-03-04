@@ -33,6 +33,64 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "airing": {
+        "name": "Airing"
+      },
+      "co2_alert": {
+        "name": "CO2 alert"
+      },
+      "co2_level": {
+        "name": "CO2 level"
+      },
+      "dust_alert": {
+        "name": "Dust alert"
+      },
+      "pump_status": {
+        "name": "Pump status"
+      },
+      "temperature_alert": {
+        "name": "Temperature alert"
+      }
+    },
+    "number": {
+      "boiler_target_temperature": {
+        "name": "Boiler target temperature"
+      },
+      "boiler_target_temperature_const": {
+        "name": "Constant boiler target temperature"
+      },
+      "heating_target_temperature_const": {
+        "name": "Constant heating target temperature"
+      },
+      "mixer_target_temperature": {
+        "name": "Mixer target temperature"
+      },
+      "mixer_target_temperature_zone": {
+        "name": "Mixer {zone} target temperature"
+      },
+      "target_temperature_comfort": {
+        "name": "Target comfort temperature"
+      },
+      "target_temperature_const": {
+        "name": "Constant target temperature"
+      },
+      "target_temperature_eco": {
+        "name": "Target eco temperature"
+      },
+      "target_temperature_eco_cooling": {
+        "name": "Target eco cooling temperature"
+      },
+      "target_temperature_eco_winter": {
+        "name": "Target eco winter temperature"
+      },
+      "target_temperature_holiday": {
+        "name": "Target holiday temperature"
+      },
+      "target_temperature_out_of_home": {
+        "name": "Target out of home temperature"
+      }
+    },
     "select": {
       "aero_by_pass": {
         "name": "Bypass",
@@ -144,6 +202,219 @@
           "summer": "Summer",
           "winter": "Winter"
         }
+      }
+    },
+    "sensor": {
+      "actual_buffer_temp": {
+        "name": "Actual buffer temperature"
+      },
+      "actual_dhw_temp": {
+        "name": "Actual DHW temperature"
+      },
+      "actual_hc_temperature_zone": {
+        "name": "Actual heating circuit {zone} temperature"
+      },
+      "actual_upper_source_temp": {
+        "name": "Actual upper source temperature"
+      },
+      "alarm_code": {
+        "name": "Alarm code",
+        "state": {
+          "battery_fault": "Battery fault",
+          "damaged_outdoor_temp": "Damaged outdoor temperature sensor",
+          "damaged_return_temp": "Damaged return temperature sensor",
+          "discharged_battery": "Discharged battery",
+          "internal_af": "Internal fault",
+          "low_battery_level": "Low battery level",
+          "no_alarm": "No alarm",
+          "no_battery": "No battery",
+          "no_power": "No power",
+          "no_pump": "No pump",
+          "pump_fault": "Pump fault"
+        }
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "boiler_temperature": {
+        "name": "Boiler temperature"
+      },
+      "buffer_return_temperature": {
+        "name": "Buffer return temperature"
+      },
+      "buffer_set_temperature": {
+        "name": "Buffer set temperature"
+      },
+      "calculated_buffer_temp": {
+        "name": "Calculated buffer temperature"
+      },
+      "calculated_dhw_temp": {
+        "name": "Calculated DHW temperature"
+      },
+      "calculated_heating_temperature": {
+        "name": "Calculated heating temperature"
+      },
+      "calculated_target_temperature": {
+        "name": "Calculated target temperature"
+      },
+      "calculated_upper_source_temp": {
+        "name": "Calculated upper source temperature"
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "circuit_target_temperature": {
+        "name": "Circuit target temperature"
+      },
+      "co2_percent": {
+        "name": "CO2 percent"
+      },
+      "collector_power": {
+        "name": "Collector power"
+      },
+      "collector_temperature": {
+        "name": "Collector temperature"
+      },
+      "dhw_measured_temperature": {
+        "name": "DHW measured temperature"
+      },
+      "dhw_temperature": {
+        "name": "DHW temperature"
+      },
+      "energy_consumption": {
+        "name": "Energy consumption"
+      },
+      "energy_smart_grid_yesterday": {
+        "name": "Energy smart grid yesterday"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "energy_total": {
+        "name": "Energy total"
+      },
+      "energy_yesterday": {
+        "name": "Energy yesterday"
+      },
+      "fuel_level": {
+        "name": "Fuel level"
+      },
+      "heating_target_temperature_zone": {
+        "name": "Heating circuit {zone} target temperature"
+      },
+      "lower_source_temperature": {
+        "name": "Lower source temperature"
+      },
+      "mixer_temperature": {
+        "name": "Mixer temperature"
+      },
+      "mixer_temperature_zone": {
+        "name": "Mixer {zone} temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "pk1_function": {
+        "name": "PK1 function",
+        "state": {
+          "cooling": "Cooling",
+          "holiday": "Holiday",
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "summer": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "pm10_level": {
+        "name": "PM10 level",
+        "state": {
+          "exceeded": "Exceeded",
+          "no_sensor": "No sensor",
+          "normal": "Normal",
+          "warning": "Warning"
+        }
+      },
+      "pm1_level": {
+        "name": "PM1 level"
+      },
+      "pm25_level": {
+        "name": "PM2.5 level",
+        "state": {
+          "exceeded": "Exceeded",
+          "no_sensor": "No sensor",
+          "normal": "Normal",
+          "warning": "Warning"
+        }
+      },
+      "pm4_level": {
+        "name": "PM4 level"
+      },
+      "preset_mode": {
+        "name": "Preset mode"
+      },
+      "protection_temperature": {
+        "name": "Protection temperature"
+      },
+      "pump_status": {
+        "name": "Pump status",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "return_circuit_temperature": {
+        "name": "Return circuit temperature"
+      },
+      "set_target_temperature": {
+        "name": "Set target temperature"
+      },
+      "tank_temperature_t2": {
+        "name": "Tank T2 bottom temperature"
+      },
+      "tank_temperature_t3": {
+        "name": "Tank T3 top temperature"
+      },
+      "tank_temperature_t4": {
+        "name": "Tank T4 temperature"
+      },
+      "target_heating_temperature": {
+        "name": "Target heating temperature"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "temperature_alert": {
+        "name": "Temperature alert",
+        "state": {
+          "alert": "Alert",
+          "no_alert": "No alert"
+        }
+      },
+      "upper_source_temperature": {
+        "name": "Upper source temperature"
+      },
+      "ventilation_alarm": {
+        "name": "Ventilation alarm",
+        "state": {
+          "ahu_alarm": "AHU alarm",
+          "bot_alarm": "BOT alarm",
+          "damaged_exhaust_sensor": "Damaged exhaust sensor",
+          "damaged_preheater_sensor": "Damaged preheater sensor",
+          "damaged_supply_and_exhaust_sensors": "Damaged supply and exhaust sensors",
+          "damaged_supply_sensor": "Damaged supply sensor",
+          "no_alarm": "No alarm"
+        }
+      },
+      "ventilation_gear": {
+        "name": "Ventilation gear"
+      },
+      "weather_curve": {
+        "name": "Weather curve"
       }
     }
   }
