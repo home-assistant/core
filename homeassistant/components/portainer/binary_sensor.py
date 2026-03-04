@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import CONTAINER_STATE_RUNNING, STACK_STATUS_ACTIVE
+from .const import CONTAINER_STATE_RUNNING, ENDPOINT_STATUS_UP, STACK_STATUS_ACTIVE
 from .coordinator import PortainerContainerData
 from .entity import (
     PortainerContainerEntity,
@@ -63,7 +63,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
     PortainerEndpointBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.endpoint.status == 1,  # 1 = Running | 2 = Stopped
+        state_fn=lambda data: data.endpoint.status == ENDPOINT_STATUS_UP,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -73,9 +73,7 @@ STACK_SENSORS: tuple[PortainerStackBinarySensorEntityDescription, ...] = (
     PortainerStackBinarySensorEntityDescription(
         key="stack_status",
         translation_key="status",
-        state_fn=lambda data: (
-            data.stack.status == STACK_STATUS_ACTIVE
-        ),  # 1 = Active | 2 = Inactive
+        state_fn=lambda data: data.stack.status == STACK_STATUS_ACTIVE,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
