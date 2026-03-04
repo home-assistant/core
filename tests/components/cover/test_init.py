@@ -140,8 +140,8 @@ def _check_state(
     return all([correct_state, correct_is_closed, correct_position])
 
 
-def is_open(hass: HomeAssistant, ent: Entity, position=None) -> bool:
-    """Return if the cover is closed based on the statemachine."""
+def is_open(hass: HomeAssistant, ent: Entity, position: int | None = None) -> bool:
+    """Return if the cover is open based on the statemachine."""
     return _check_state(
         hass,
         ent,
@@ -152,9 +152,13 @@ def is_open(hass: HomeAssistant, ent: Entity, position=None) -> bool:
 
 
 def is_opening(
-    hass: HomeAssistant, ent: Entity, position=None, *, closed: bool = False
+    hass: HomeAssistant,
+    ent: Entity,
+    position: int | None = None,
+    *,
+    closed: bool = False,
 ) -> bool:
-    """Return if the cover is closed based on the statemachine."""
+    """Return if the cover is opening based on the statemachine."""
     return _check_state(
         hass,
         ent,
@@ -164,7 +168,7 @@ def is_opening(
     )
 
 
-def is_closed(hass: HomeAssistant, ent: Entity, position=None) -> bool:
+def is_closed(hass: HomeAssistant, ent: Entity, position: int | None = None) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return _check_state(
         hass,
@@ -175,8 +179,8 @@ def is_closed(hass: HomeAssistant, ent: Entity, position=None) -> bool:
     )
 
 
-def is_closing(hass: HomeAssistant, ent: Entity, position=None) -> bool:
-    """Return if the cover is closed based on the statemachine."""
+def is_closing(hass: HomeAssistant, ent: Entity, position: int | None = None) -> bool:
+    """Return if the cover is closing based on the statemachine."""
     return _check_state(
         hass,
         ent,
