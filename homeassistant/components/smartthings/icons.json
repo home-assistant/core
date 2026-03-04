@@ -99,6 +99,9 @@
           "stop": "mdi:stop"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "default": "mdi:vacuum"
+      },
       "robot_cleaner_driving_mode": {
         "default": "mdi:car-cog"
       },
