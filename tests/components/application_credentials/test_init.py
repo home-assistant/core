@@ -16,6 +16,7 @@ from homeassistant.components.application_credentials import (
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
+    AuthorizationTypes,
     ClientCredential,
     async_import_client_credential,
 )
@@ -79,6 +80,7 @@ async def setup_application_credentials_integration(
         async_get_authorization_server=AsyncMock(return_value=authorization_server),
     )
     del mock_platform_impl.async_get_auth_implementation  # return False on hasattr
+    del mock_platform_impl.async_get_description_placeholders  # return False on hasattr
     mock_platform(
         hass,
         f"{domain}.application_credentials",
@@ -744,6 +746,21 @@ async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
                 "example2": {},
             },
         }
+
+
+async def test_websocket_integration_list_with_auth_type(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    authorization_server: AuthorizationServer,
+) -> None:
+    """Test websocket integration list command returns auth_type."""
+    client = await ws_client()
+    # I've made a separate test, if the auth_type is desired, this can be merged with the above test
+    result = await client.cmd_result("config")
+    assert TEST_DOMAIN in result["domains"]
+    assert result["integrations"][TEST_DOMAIN] == {
+        "auth_type": AuthorizationTypes.CLIENT_CREDENTIALS,
+    }
 
 
 async def test_name(
