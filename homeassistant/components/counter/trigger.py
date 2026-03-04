@@ -3,7 +3,11 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
+from homeassistant.helpers.trigger import (
+    ENTITY_STATE_TRIGGER_SCHEMA,
+    EntityTriggerBase,
+    Trigger,
+)
 
 from . import ATTR_STEP, CONF_INITIAL, CONF_MAXIMUM, DOMAIN
 
@@ -12,6 +16,7 @@ class CounterStepTrigger(EntityTriggerBase):
     """Base trigger for when a counter value is changed by one step."""
 
     _domains = {DOMAIN}
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -55,6 +60,7 @@ class CounterMaxReachedTrigger(EntityTriggerBase):
     """Trigger for when a counter reaches its maximum value."""
 
     _domains = {DOMAIN}
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
@@ -68,6 +74,7 @@ class CounterResetTrigger(EntityTriggerBase):
     """Trigger for reset of counter entities."""
 
     _domains = {DOMAIN}
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
