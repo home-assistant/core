@@ -76,7 +76,7 @@ async def test_counter_triggers_gated_by_labs_flag(
                     "count": 0,
                 },
                 {
-                    # not triggered as delta is not setp size of 3
+                    # not triggered as delta is not step size of 3
                     "included": {"state": "9", "attributes": {ATTR_STEP: 3}},
                     "count": 0,
                 },
@@ -86,7 +86,7 @@ async def test_counter_triggers_gated_by_labs_flag(
                     "count": 0,
                 },
                 {
-                    # triggered as delta is setp size of 3
+                    # triggered as delta is step size of 3
                     "included": {"state": "2", "attributes": {ATTR_STEP: 3}},
                     "count": 1,
                 },
@@ -116,7 +116,7 @@ async def test_counter_triggers_gated_by_labs_flag(
                     "count": 0,
                 },
                 {
-                    # not triggered as delta is not setp size of 3
+                    # not triggered as delta is not step size of 3
                     "included": {"state": "2", "attributes": {ATTR_STEP: 3}},
                     "count": 0,
                 },
@@ -126,7 +126,7 @@ async def test_counter_triggers_gated_by_labs_flag(
                     "count": 0,
                 },
                 {
-                    # triggered as delta is setp size of 3
+                    # triggered as delta is step size of 3
                     "included": {"state": "7", "attributes": {ATTR_STEP: 3}},
                     "count": 1,
                 },
