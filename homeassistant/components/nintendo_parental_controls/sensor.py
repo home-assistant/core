@@ -100,7 +100,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    entities = []
+    entities: list[NintendoDevice] = []
     entities.extend(
         NintendoParentalControlsDeviceSensorEntity(entry.runtime_data, device, sensor)
         for device in entry.runtime_data.api.devices.values()
