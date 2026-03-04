@@ -7,8 +7,7 @@ from datetime import timedelta
 import logging
 
 import pyiss
-import requests
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,5 +54,5 @@ class IssCoordinator(DataUpdateCoordinator[IssData]):
         """Retrieve data from the pyiss API."""
         try:
             return await self.hass.async_add_executor_job(_update, self._iss)
-        except (HTTPError, requests.exceptions.ConnectionError) as ex:
+        except (HTTPError, RequestsConnectionError) as ex:
             raise UpdateFailed("Unable to retrieve data") from ex
