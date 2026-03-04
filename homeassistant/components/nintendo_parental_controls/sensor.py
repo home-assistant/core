@@ -164,7 +164,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self._attr_translation_placeholders = {
             "nickname": nickname
         }
-        self._attr_unique_id = f"{player}_{description.key}"
+        self._attr_unique_id = f"{device.device_id}_{player}_{description.key}"
 
     @property
     def entity_picture(self) -> str | None:
