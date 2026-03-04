@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any, cast
 
 from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
 
@@ -42,7 +43,7 @@ class LutronData:
     covers: list[tuple[str, Output]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
-    scenes: list[tuple[str, Keypad, Button, Led]]
+    scenes: list[tuple[str, Keypad, Button, Led | None]]
     switches: list[tuple[str, Output]]
 
 

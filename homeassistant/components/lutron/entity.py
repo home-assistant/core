@@ -1,5 +1,7 @@
 """Base class for Lutron devices."""
 
+from typing import cast
+
 from pylutron import Keypad, Lutron, LutronEntity, LutronEvent
 
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
@@ -84,11 +86,16 @@ class LutronKeypad(LutronBaseEntity):
         """Initialize the device."""
         super().__init__(area_name, lutron_device, controller)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, keypad.id)},
+            identifiers={(DOMAIN, str(keypad.id))},
             manufacturer="Lutron",
             name=keypad.name,
         )
         if keypad.type == "MAIN_REPEATER":
-            self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
+            self._attr_device_info[ATTR_IDENTIFIERS].add(
+                (DOMAIN, controller.guid)
+            )
         else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
+            self._attr_device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                controller.guid,
+            )

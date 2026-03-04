@@ -75,7 +75,7 @@ class LutronCover(LutronDevice, CoverEntity):
         """Update the state attributes."""
         level = self._lutron_device.last_level()
         self._attr_is_closed = level < 1
-        self._attr_current_cover_position = level
+        self._attr_current_cover_position = int(level)
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
 
     @property
