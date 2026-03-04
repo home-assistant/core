@@ -22,6 +22,7 @@ type CalDavConfigEntry = ConfigEntry[caldav.DAVClient]
 
 _LOGGER = logging.getLogger(__name__)
 
+CONNECTION_POOL_SIZE = 20
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
@@ -35,11 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
         timeout=30,
     )
-    # Increase the connection pool size to prevent
-    # "Connection pool is full, discarding connection" warnings when many
-    # calendar/todo entities poll the same CalDAV server concurrently.
+    # Increase the connection pool size to prevent "Connection pool is
+    # full, discarding connection" warnings when many calendar and todo
+    # entities poll the same CalDAV server concurrently. The default
+    # urllib3 pool size of 10 is easily exceeded with 10+ calendars.
     # See: https://github.com/home-assistant/core/issues/117927
-    adapter = HTTPAdapter(pool_connections=20, pool_maxsize=20)
+    adapter = HTTPAdapter(
+        pool_connections=CONNECTION_POOL_SIZE, pool_maxsize=CONNECTION_POOL_SIZE
+    )
     client.session.mount("https://", adapter)
     client.session.mount("http://", adapter)
     try:
