@@ -71,7 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(_EMULATE_KEY_HOLD_REPEAT, default=0.033): float,
                     }
                 ),
-                cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP),
+                cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
             ],
         )
     },
@@ -529,7 +529,7 @@ class DeviceHandler:
             _LOGGER.debug("Start device monitoring")
             await self.hass.async_add_executor_job(dev.grab)
             async for event in dev.async_read_loop():
-                if event.type is ecodes.EV_KEY:
+                if event.type == ecodes.EV_KEY:
                     if event.value in self._key_values:
                         _LOGGER.debug(
                             "device: %s: %s",
