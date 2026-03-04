@@ -798,6 +798,7 @@ class HomeAssistant:
             # Use loop.create_task
             # to avoid the extra function call in asyncio.create_task.
             task = self.loop.create_task(target, name=name)
+        setattr(task, "ha_internal_task", True)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
@@ -830,6 +831,7 @@ class HomeAssistant:
             # Use loop.create_task
             # to avoid the extra function call in asyncio.create_task.
             task = self.loop.create_task(target, name=name)
+        setattr(task, "ha_background_task", True)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task
@@ -841,8 +843,15 @@ class HomeAssistant:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
 
-        tracked = asyncio.current_task() in self._tasks
-        task_bucket = self._tasks if tracked else self._background_tasks
+        current = asyncio.current_task()
+        # In this code I skip an extra (el)if, because we default to background_tasks
+        # Both tasks are now labeled and I believe this is the fastest approach
+        task_bucket = (
+            self._tasks
+            if (current is not None and getattr(current, "ha_internal_task", False))
+            else self._background_tasks
+        )
+
         task_bucket.add(task)
         task.add_done_callback(task_bucket.remove)
 

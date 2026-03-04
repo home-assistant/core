@@ -58,6 +58,77 @@ def benchmark[_CallableT: Callable](func: _CallableT) -> _CallableT:
 
 
 @benchmark
+async def executor_job_background(hass: core.HomeAssistant) -> float:
+    """Schedule executor jobs from multiple background tasks."""
+    count = 0
+    event = asyncio.Event()
+    num_tasks = 100
+    jobs_per_task = 100
+    jobs_to_run = num_tasks * jobs_per_task
+
+    def _executor_func() -> None:
+        """Run in executor."""
+        nonlocal count
+        count += 1
+
+    @core.callback
+    def _check_done(future: asyncio.Future) -> None:
+        """Check if all jobs are done."""
+        if count == jobs_to_run:
+            event.set()
+
+    async def _task() -> None:
+        """Schedule executor jobs."""
+        for _ in range(jobs_per_task):
+            future = hass.async_add_executor_job(_executor_func)
+            future.add_done_callback(_check_done)
+
+    start = timer()
+    for i in range(num_tasks):
+        hass.async_create_background_task(_task(), f"benchmark_{i}")
+    await event.wait()
+    assert count == jobs_to_run
+
+    return timer() - start
+
+
+@benchmark
+async def executor_job_foreground(hass: core.HomeAssistant) -> float:
+    """Schedule executor jobs from multiple foreground tasks."""
+    count = 0
+    event = asyncio.Event()
+    num_tasks = 100
+    jobs_per_task = 100
+    jobs_to_run = num_tasks * jobs_per_task
+
+    def _executor_func() -> None:
+        """Run in executor."""
+        nonlocal count
+        count += 1
+
+    @core.callback
+    def _check_done(future: asyncio.Future) -> None:
+        """Check if all jobs are done."""
+        if count == jobs_to_run:
+            event.set()
+
+    async def _task() -> None:
+        """Schedule executor jobs."""
+        for _ in range(jobs_per_task):
+            future = hass.async_add_executor_job(_executor_func)
+            future.add_done_callback(_check_done)
+
+    start = timer()
+    for i in range(num_tasks):
+        # Surprise, this time it's not a background task! ;)
+        hass.async_create_task(_task(), f"benchmark_{i}")
+    await event.wait()
+    assert count == jobs_to_run
+
+    return timer() - start
+
+
+@benchmark
 async def fire_events(hass: core.HomeAssistant) -> float:
     """Fire a million events."""
     count = 0
