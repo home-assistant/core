@@ -11,13 +11,18 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
@@ -92,22 +97,39 @@ async def async_setup_entry(
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
+    registry = er.async_get(hass)
     for blind in motion_gateway.device_list.values():
-        if blind.type in POSITION_DEVICE_MAP:
+        dev_class_override = None
+
+        if blind.type in POSITION_DEVICE_MAP or blind.type in TILT_DEVICE_MAP:
+            entity_id = registry.async_get_entity_id(COVER_DOMAIN, DOMAIN, blind.mac)
+            if entity_id:
+                entry = registry.async_get(entity_id)
+                if entry and entry.device_class in [
+                    CoverDeviceClass.BLIND,
+                    CoverDeviceClass.SHADE,
+                ]:
+                    dev_class_override = CoverDeviceClass(entry.device_class)
+
+        if dev_class_override == CoverDeviceClass.SHADE or (
+            not dev_class_override and blind.type in POSITION_DEVICE_MAP
+        ):
             entities.append(
                 MotionPositionDevice(
                     coordinator,
                     blind,
-                    POSITION_DEVICE_MAP[blind.type],
+                    dev_class_override or POSITION_DEVICE_MAP[blind.type],
                 )
             )
 
-        elif blind.type in TILT_DEVICE_MAP:
+        elif dev_class_override == CoverDeviceClass.BLIND or (
+            not dev_class_override and blind.type in TILT_DEVICE_MAP
+        ):
             entities.append(
                 MotionTiltDevice(
                     coordinator,
                     blind,
-                    TILT_DEVICE_MAP[blind.type],
+                    dev_class_override or TILT_DEVICE_MAP[blind.type],
                 )
             )
 
@@ -308,14 +330,20 @@ class MotionTiltDevice(MotionPositionDevice):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+            if self.current_cover_tilt_position is not None:
+                await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+            else:
+                await self.hass.async_add_executor_job(self._blind.Jog_up)
 
         await self.async_request_position_till_stop()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+            if self.current_cover_tilt_position is not None:
+                await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+            else:
+                await self.hass.async_add_executor_job(self._blind.Jog_down)
 
         await self.async_request_position_till_stop()
 
