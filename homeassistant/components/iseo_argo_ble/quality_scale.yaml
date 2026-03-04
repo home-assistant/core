@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide any service actions.
   appropriate-polling: done
   brands:
     status: exempt
@@ -13,7 +16,7 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      Documentation will be submitted separately.
+      This integration does not provide any service actions.
   docs-high-level-description:
     status: exempt
     comment: |

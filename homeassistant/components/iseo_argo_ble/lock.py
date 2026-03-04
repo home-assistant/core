@@ -20,13 +20,11 @@ from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockSt
 
 from .const import (
     CONF_ADDRESS,
-    CONF_USER_MAP,
     CONF_USER_SUBTYPE,
     CONF_UUID,
     DEFAULT_USER_SUBTYPE,
     DOMAIN,
 )
-from .coordinator import IseoLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +44,6 @@ async def async_setup_entry(
     from . import IseoRuntimeData  # noqa: PLC0415
 
     runtime_data: IseoRuntimeData = entry.runtime_data
-    coordinator = runtime_data.coordinator
     uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
     subtype: int = entry.data.get(CONF_USER_SUBTYPE, DEFAULT_USER_SUBTYPE)
 
@@ -55,9 +52,9 @@ async def async_setup_entry(
             IseoLockEntity(
                 entry,
                 uuid_bytes,
-                coordinator.identity_priv,
+                runtime_data.priv,
                 subtype,
-                coordinator.client,
+                runtime_data.client,
             )
         ],
         update_before_add=False,
@@ -217,29 +214,7 @@ class IseoLockEntity(LockEntity):
                     )
                 )
                 if self._user_subtype == UserSubType.BT_GATEWAY:
-                    remote_name = "Home Assistant"
-                    if self._context and self._context.user_id:
-                        from . import IseoRuntimeData  # noqa: PLC0415
-
-                        runtime_data: IseoRuntimeData = self._entry.runtime_data
-                        coordinator: IseoLogCoordinator = runtime_data.coordinator
-                        user_map: dict[str, str] = self._entry.options.get(
-                            CONF_USER_MAP, {}
-                        )
-                        argo_uuid = next(
-                            (
-                                u
-                                for u, h in user_map.items()
-                                if h == self._context.user_id
-                            ),
-                            None,
-                        )
-                        if argo_uuid:
-                            remote_name = coordinator.user_dir.get(
-                                argo_uuid.lower(), f"User {argo_uuid[:8]}"
-                            )
-
-                    await self.client.gw_open(remote_user_name=remote_name)
+                    await self.client.gw_open(remote_user_name="Home Assistant")
                 else:
                     await self.client.open_lock()
         except IseoAuthError as exc:

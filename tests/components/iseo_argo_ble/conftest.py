@@ -56,8 +56,6 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_iseo_client() -> Generator[MagicMock]:
     """Mock the IseoClient class."""
     client = MagicMock()
-    client.gw_read_unread_logs = AsyncMock(return_value=[])
-    client.read_users = AsyncMock(return_value=[])
     client.read_state = AsyncMock(
         return_value=MagicMock(door_closed=None, firmware_info=None)
     )
@@ -68,13 +66,10 @@ def mock_iseo_client() -> Generator[MagicMock]:
     client.update_ble_device = MagicMock()
 
     with patch(
-        "homeassistant.components.iseo_argo_ble.coordinator.IseoClient",
+        "homeassistant.components.iseo_argo_ble.IseoClient",
         return_value=client,
     ), patch(
         "homeassistant.components.iseo_argo_ble.lock.IseoClient",
-        return_value=client,
-    ), patch(
-        "homeassistant.components.iseo_argo_ble.IseoClient",
         return_value=client,
     ):
         yield client
@@ -87,9 +82,6 @@ def mock_derive_private_key() -> Generator[MagicMock]:
     mock_priv.private_numbers.return_value = MagicMock(private_value=12345678)
     with patch(
         "homeassistant.components.iseo_argo_ble.derive_private_key",
-        return_value=mock_priv,
-    ), patch(
-        "homeassistant.components.iseo_argo_ble.coordinator.derive_private_key",
         return_value=mock_priv,
     ):
         yield mock_priv

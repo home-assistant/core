@@ -22,31 +22,6 @@
       "gw_register_logs": {
         "title": "Enable Gateway Logs",
         "description": "The Gateway needs one more permission to receive real-time log updates:\n\n⚠️ **Close the ARGO app before clicking Submit.**\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully."
-      },
-      "gw_fetch_users": {
-        "title": "Fetch User List",
-        "description": "To map your Argo users to Home Assistant accounts, Home Assistant needs to download the lock's whitelist.\n\n⚠️ **Close the ARGO app before clicking Submit.**\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully."
-      },
-      "map_users": {
-        "title": "Link Argo Users to Home Assistant",
-        "description": "Select the Home Assistant account for each Argo user found on the lock. Leave a field blank to keep those events anonymous.",
-        "data": {
-          "ignore_all": "Skip this step and finish setup"
-        }
-      },
-      "admin_choice": {
-        "title": "Administrative Access",
-        "description": "Choose how to handle administrative tasks. **Advanced features like managing PIN codes and syncing the user list are ONLY available if you set up an Admin identity.**",
-        "data": {
-          "admin_choice": "Administrative Method"
-        }
-      },
-      "admin_enroll": {
-        "title": "Add to Argo App",
-        "description": "Add the following **ARGO UID** as a new **Phone with ARGO UID** user in the Argo app:\n\n1. Open the **Argo app**, tap your lock, then go to **Users → + → Phone with ARGO UID**\n2. Enter a name (e.g. *HA Admin*), copy the UID below and paste it in the app, then tap **Save**\n3. Tap the new user and enable **Login** and **VIP** permissions.\n\n⚠️ **The next step will open the lock.** Once you have completed the steps above, click **Submit** to finish setup.",
-        "data": {
-          "uuid_display": "ARGO UID (Copy this)"
-        }
       }
     },
     "error": {
@@ -60,109 +35,12 @@
       "not_iseo_device": "This device does not appear to be an ISEO lock."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Lock Management",
-        "description": "Choose what you would like to manage for this lock.",
-        "data": {
-          "management_choice": "I want to..."
-        }
-      },
-      "user_management_refresh": {
-        "title": "Refresh User List",
-        "description": "To manage user mappings, Home Assistant needs to refresh the user list from the lock.\n\n⚠️ **Close the ARGO app before clicking Submit.**\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully."
-      },
-      "admin_identity": {
-        "title": "Manage Admin Identity",
-        "description": "Configure an existing Argo Admin Phone identity. This allows Home Assistant to manage users and PINs directly without requiring a Master Card scan.",
-        "data": {
-          "admin_action": "Action"
-        }
-      },
-      "map_users": {
-        "title": "Link Argo Users to Home Assistant",
-        "description": "Select the Home Assistant account for each Argo user below. Leave a field blank to keep those events anonymous. {count} user(s) found.",
-        "data": {}
-      },
-      "admin_enroll": {
-        "title": "Add to Argo App",
-        "description": "Add the following **ARGO UID** as a new **Phone with ARGO UID** user in the Argo app:\n\n1. Open the **Argo app**, tap your lock, then go to **Users → + → Phone with ARGO UID**\n2. Enter a name (e.g. *HA Admin*), copy the UID below and paste it in the app, then tap **Save**\n3. Tap the new user and enable **Login** and **VIP** permissions.\n\n⚠️ **The next step will open the lock.** Once you have completed the steps above, click **Submit** to activate and store the credentials.",
-        "data": {
-          "uuid_display": "ARGO UID (Copy this)"
-        }
-      }
-    }
-  },
-  "selector": {
-    "management_choice": {
-      "options": {
-        "users": "Manage User Mappings",
-        "admin": "Manage Admin Identity (link/unlink admin user)"
-      }
-    },
-    "admin_choice": {
-      "options": {
-        "persistent": "Setup a persistent Admin identity (Enables all features)",
-        "none": "Disable all advanced features (Logs only)"
-      }
-    },
-    "admin_action": {
-      "options": {
-        "setup": "Configure/Rotate Admin Identity",
-        "none": "Keep current configuration",
-        "remove": "Remove existing admin identity"
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "last_event": {
-        "name": "Last Event"
-      },
-      "battery": {
-        "name": "Battery"
-      }
-    }
-  },
   "exceptions": {
     "lock_rejected_identity": {
       "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
     },
     "cannot_connect": {
       "message": "Could not connect to the lock."
-    },
-    "admin_not_configured": {
-      "message": "Admin identity is not configured."
-    },
-    "user_action_failed": {
-      "message": "Failed to update user state on the lock."
-    }
-  },
-  "services": {
-    "read_users": {
-      "name": "Read users",
-      "description": "Fetch the complete list of registered users from the lock. Requires Master Mode (scan Master Card first).",
-      "fields": {
-        "config_entry_id": {
-          "name": "Config entry",
-          "description": "The config entry ID of the ISEO lock."
-        }
-      }
-    },
-    "delete_user": {
-      "name": "Delete user",
-      "description": "Remove a user from the lock's whitelist by their UUID. Requires Master Mode (scan Master Card first).",
-      "fields": {
-        "config_entry_id": {
-          "name": "Config entry",
-          "description": "The config entry ID of the ISEO lock."
-        },
-        "uuid": {
-          "name": "UUID",
-          "description": "The 32-character hex UUID of the user to remove."
-        }
-      }
     }
   }
 }

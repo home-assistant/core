@@ -1,6 +1,5 @@
 """Test the ISEO Argo BLE lock entity."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from iseo_argo_ble import IseoAuthError, IseoConnectionError
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 from .conftest import mock_config_entry, mock_derive_private_key, mock_iseo_client  # noqa: F401
 
@@ -26,9 +25,6 @@ async def _setup_integration(
     mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.iseo_argo_ble.async_ble_device_from_address",
-        return_value=MagicMock(),
-    ), patch(
-        "homeassistant.components.iseo_argo_ble.coordinator.async_ble_device_from_address",
         return_value=MagicMock(),
     ), patch(
         "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
