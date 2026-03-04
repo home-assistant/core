@@ -336,7 +336,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain: str
+    _domains: set[str]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -386,11 +386,11 @@ class EntityTriggerBase(Trigger):
         )
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
+        """Filter entities of these domains."""
         return {
             entity_id
             for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
+            if split_entity_id(entity_id)[0] in self._domains
         }
 
     @override
@@ -805,7 +805,7 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _to_states = to_states_set
 
     return CustomTrigger
@@ -819,7 +819,7 @@ def make_entity_transition_trigger(
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_states = from_states
         _to_states = to_states
 
@@ -834,7 +834,7 @@ def make_entity_origin_state_trigger(
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_state = from_state
 
     return CustomTrigger
@@ -848,7 +848,7 @@ def make_entity_numerical_state_attribute_changed_trigger(
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
 
     return CustomTrigger
@@ -862,7 +862,7 @@ def make_entity_numerical_state_attribute_crossed_threshold_trigger(
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
 
     return CustomTrigger
@@ -889,7 +889,7 @@ def make_entity_target_state_attribute_trigger(
     class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
         _attribute_to_state = to_state
 

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -18,6 +19,7 @@ ENTITY_OUTSIDE_TEMP = "sensor.bsb_lan_outside_temperature"
 ENTITY_TOTAL_ENERGY = "sensor.bsb_lan_total_energy"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_entity_properties(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,

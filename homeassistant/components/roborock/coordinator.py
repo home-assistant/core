@@ -45,7 +45,7 @@ from .const import (
     V1_LOCAL_IN_CLEANING_INTERVAL,
     V1_LOCAL_NOT_CLEANING_INTERVAL,
 )
-from .models import DeviceState
+from .models import DeviceState, get_device_info
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -103,14 +103,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         )
         self._device = device
         self.properties_api = properties_api
-        self.device_info = DeviceInfo(
-            name=self._device.device_info.name,
-            identifiers={(DOMAIN, self.duid)},
-            manufacturer="Roborock",
-            model=self._device.product.model,
-            model_id=self._device.product.model,
-            sw_version=self._device.device_info.fv,
-        )
+        self.device_info = get_device_info(device)
         if mac := properties_api.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
@@ -385,13 +378,7 @@ class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]
             update_interval=A01_UPDATE_INTERVAL,
         )
         self._device = device
-        self.device_info = DeviceInfo(
-            name=device.name,
-            identifiers={(DOMAIN, device.duid)},
-            manufacturer="Roborock",
-            model=device.product.model,
-            sw_version=device.device_info.fv,
-        )
+        self.device_info = get_device_info(device)
         self.request_protocols: list[_V] = []
 
     @cached_property
@@ -432,6 +419,18 @@ class RoborockWashingMachineUpdateCoordinator(
             RoborockZeoProtocol.COUNTDOWN,
             RoborockZeoProtocol.WASHING_LEFT,
             RoborockZeoProtocol.ERROR,
+            RoborockZeoProtocol.TIMES_AFTER_CLEAN,
+            RoborockZeoProtocol.DETERGENT_EMPTY,
+            RoborockZeoProtocol.SOFTENER_EMPTY,
+            RoborockZeoProtocol.DETERGENT_TYPE,
+            RoborockZeoProtocol.SOFTENER_TYPE,
+            RoborockZeoProtocol.MODE,
+            RoborockZeoProtocol.PROGRAM,
+            RoborockZeoProtocol.TEMP,
+            RoborockZeoProtocol.RINSE_TIMES,
+            RoborockZeoProtocol.SPIN_LEVEL,
+            RoborockZeoProtocol.DRYING_MODE,
+            RoborockZeoProtocol.SOUND_SET,
         ]
 
     async def _async_update_data(
@@ -505,13 +504,7 @@ class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
             update_interval=A01_UPDATE_INTERVAL,
         )
         self._device = device
-        self.device_info = DeviceInfo(
-            name=device.name,
-            identifiers={(DOMAIN, device.duid)},
-            manufacturer="Roborock",
-            model=device.product.model,
-            sw_version=device.device_info.fv,
-        )
+        self.device_info = get_device_info(device)
 
     @cached_property
     def duid(self) -> str:

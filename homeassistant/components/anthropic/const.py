@@ -11,6 +11,7 @@ DEFAULT_AI_TASK_NAME = "Claude AI Task"
 CONF_RECOMMENDED = "recommended"
 CONF_PROMPT = "prompt"
 CONF_CHAT_MODEL = "chat_model"
+CONF_CODE_EXECUTION = "code_execution"
 CONF_MAX_TOKENS = "max_tokens"
 CONF_TEMPERATURE = "temperature"
 CONF_THINKING_BUDGET = "thinking_budget"
@@ -25,6 +26,7 @@ CONF_WEB_SEARCH_TIMEZONE = "timezone"
 
 DEFAULT = {
     CONF_CHAT_MODEL: "claude-haiku-4-5",
+    CONF_CODE_EXECUTION: False,
     CONF_MAX_TOKENS: 3000,
     CONF_TEMPERATURE: 1.0,
     CONF_THINKING_BUDGET: 0,
@@ -62,6 +64,10 @@ UNSUPPORTED_STRUCTURED_OUTPUT_MODELS = [
 ]
 
 WEB_SEARCH_UNSUPPORTED_MODELS = [
+    "claude-3-haiku",
+]
+
+CODE_EXECUTION_UNSUPPORTED_MODELS = [
     "claude-3-haiku",
 ]
 
