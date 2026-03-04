@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "incomplete_discovery": "The discovered air-Q device did not provide a device ID. Ensure the firmware is up to date"
+      "incomplete_discovery": "The discovered air-Q device did not provide a device ID. Ensure the firmware is up to date."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
