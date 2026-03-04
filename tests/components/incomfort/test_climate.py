@@ -6,7 +6,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import climate
-from homeassistant.components.incomfort.coordinator import InComfortData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
@@ -77,7 +76,8 @@ async def test_target_temp(
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
 
-    incomfort_data: InComfortData = mock_config_entry.runtime_data.incomfort_data
+    coordinator = mock_config_entry.runtime_data
+    incomfort_data = coordinator.data
 
     with patch.object(
         incomfort_data.heaters[0].rooms[0], "set_override", AsyncMock()
