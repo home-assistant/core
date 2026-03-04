@@ -8,6 +8,7 @@ from homeassistant.components.counter import (
     ATTR_STEP,
     CONF_INITIAL,
     CONF_MAXIMUM,
+    CONF_MINIMUM,
     DOMAIN,
 )
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
@@ -64,10 +65,80 @@ async def test_counter_triggers_gated_by_labs_flag(
             target_states=[("1", {ATTR_STEP: 1})],
             other_states=[("2", {ATTR_STEP: 1})],
         ),
+        (
+            "counter.decremented",
+            {},
+            [
+                {"included": {"state": None, "attributes": {ATTR_STEP: 3}}, "count": 0},
+                {
+                    # not triggered as no from state
+                    "included": {"state": "10", "attributes": {ATTR_STEP: 3}},
+                    "count": 0,
+                },
+                {
+                    # not triggered as delta is not setp size of 3
+                    "included": {"state": "9", "attributes": {ATTR_STEP: 3}},
+                    "count": 0,
+                },
+                {
+                    # not triggered as delta is not step size of 3
+                    "included": {"state": "5", "attributes": {ATTR_STEP: 3}},
+                    "count": 0,
+                },
+                {
+                    # triggered as delta is setp size of 3
+                    "included": {"state": "2", "attributes": {ATTR_STEP: 3}},
+                    "count": 1,
+                },
+                {
+                    # triggered as delta is lower than step size of 3 but new state is minimum value
+                    "included": {
+                        "state": "0",
+                        "attributes": {ATTR_STEP: 3, CONF_MINIMUM: 0},
+                    },
+                    "count": 1,
+                },
+            ],
+        ),
         *parametrize_trigger_states(
             trigger="counter.incremented",
             target_states=[("2", {ATTR_STEP: 1})],
             other_states=[("1", {ATTR_STEP: 1})],
+        ),
+        (
+            "counter.incremented",
+            {},
+            [
+                {"included": {"state": None, "attributes": {ATTR_STEP: 3}}, "count": 0},
+                {
+                    # not triggered as no from state
+                    "included": {"state": "1", "attributes": {ATTR_STEP: 3}},
+                    "count": 0,
+                },
+                {
+                    # not triggered as delta is not setp size of 3
+                    "included": {"state": "2", "attributes": {ATTR_STEP: 3}},
+                    "count": 0,
+                },
+                {
+                    # not triggered as delta is not step size of 3
+                    "included": {"state": "4", "attributes": {ATTR_STEP: 3}},
+                    "count": 0,
+                },
+                {
+                    # triggered as delta is setp size of 3
+                    "included": {"state": "7", "attributes": {ATTR_STEP: 3}},
+                    "count": 1,
+                },
+                {
+                    # triggered as delta is lower than step size of 3 but new state is maximum value
+                    "included": {
+                        "state": "9",
+                        "attributes": {ATTR_STEP: 3, CONF_MAXIMUM: 9},
+                    },
+                    "count": 1,
+                },
+            ],
         ),
         *parametrize_trigger_states(
             trigger="counter.maximum_reached",

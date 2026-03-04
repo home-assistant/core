@@ -1,7 +1,5 @@
 """Provides triggers for counters."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
@@ -9,7 +7,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
 )
 
-from . import ATTR_STEP, CONF_INITIAL, CONF_MAXIMUM, DOMAIN
+from . import ATTR_STEP, CONF_INITIAL, CONF_MAXIMUM, CONF_MINIMUM, DOMAIN
 
 
 class CounterStepTrigger(EntityTriggerBase):
@@ -22,10 +20,24 @@ class CounterStepTrigger(EntityTriggerBase):
         """Check if the origin state is valid and the state has changed."""
         if not super().is_valid_transition(from_state, to_state):
             return False
-        step = to_state.attributes[ATTR_STEP]
-        if TYPE_CHECKING:
-            assert isinstance(step, int)
-        return abs(int(from_state.state) - int(to_state.state)) == step
+
+        step_val = int(to_state.attributes[ATTR_STEP])
+        from_val = int(from_state.state)
+        to_val = int(to_state.state)
+        delta = abs(from_val - to_val)
+
+        if delta == step_val:
+            return True
+
+        if delta > step_val:
+            return False
+
+        max_value = to_state.attributes.get(CONF_MAXIMUM)
+        min_value = to_state.attributes.get(CONF_MINIMUM)
+        if to_val in (min_value, max_value):
+            return True
+
+        return False
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state attribute matches the expected one."""
