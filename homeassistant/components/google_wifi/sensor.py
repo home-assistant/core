@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     # Add all sensors defined in SENSOR_TYPES
     async_add_entities(
-        GoogleWifiSensor(coordinator, description, device_name)
+        GoogleWifiSensor(coordinator, description)
         for description in SENSOR_TYPES
     )
 
@@ -67,41 +67,44 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
     entity_description: GoogleWifiSensorEntityDescription
 
     def __init__(
-        self, coordinator: GoogleWifiUpdateCoordinator, description, device_name
+        self,
+        coordinator: GoogleWifiUpdateCoordinator,
+        description: SensorEntityDescription,
+        device_name
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
-        self.device_name = device_name
         # Create a unique ID so the user can rename/customize this in the UI
-        self._attr_unique_id = f"{self.config_entry.entry_id}_{description.key}"
-        self._attr_name = f"{description.key.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
+        # Use the name defined in the config entry title for the device name
+        self._attr_name = f"{coordinator.config_entry.title} {description.name}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=coordinator.config_entry.title,
+            manufacturer="Google",
+            model="Google/Nest Wifi",
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Attach sensors to a device in HomeAssistant."""
-        # Pull the version and model name from the coordinator's data cache
-        version = None
-        model_name = "Onhub/Wifi"
+    """Return device information about this Google Wifi router."""
+    # Access entry_id and IP through the coordinator's config_entry
+    entry = self.coordinator.config_entry
 
-        if self.coordinator.data:
-            try:
-                version = self.coordinator.data["software"]["softwareVersion"]
-                model_name = self.coordinator.data["system"]["modelId"]
-            except KeyError:
-                version = None
-                model_name = "Onhub/Wifi"
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.entry.entry_id)},
-            name=self.device_name,
-            manufacturer="Google",
-            model=model_name,
-            sw_version=version,
-            configuration_url=f"http://{self.coordinator.host}/api/v1/status",
-        )
+    return DeviceInfo(
+        # Identifiers must be a set of tuples
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=entry.title,
+        manufacturer="Google",
+        model="Google/Nest Wifi",
+        # Use the current IP from the entry data for the link
+        configuration_url=f"http://{entry.data[CONF_IP_ADDRESS]}",
+        # Pull software version from the last successful data fetch
+        sw_version=self.coordinator.data.get("system", {}).get("softwareVersion"),
+    )
 
     @property
     def native_value(self) -> StateType:

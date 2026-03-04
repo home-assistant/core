@@ -70,3 +70,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Wifi component from YAML."""
+    if DOMAIN not in config:
+        return True
+
+    for entry_config in config[DOMAIN]:
+        # We start a background task to initiate the import flow
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=entry_config,
+            )
+        )
+
+    return True
