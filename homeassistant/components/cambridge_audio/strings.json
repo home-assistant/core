@@ -65,6 +65,9 @@
       "early_update": {
         "name": "Early update"
       },
+      "equalizer": {
+        "name": "Equalizer"
+      },
       "pre_amp": {
         "name": "Pre-Amp"
       },
