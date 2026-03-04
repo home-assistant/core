@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "Reauthentication must use the same account"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_code_format": "Code must be 8 characters: 4 letters followed by 4 digits (example: ABCD-1234 or ABCD1234)",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "otp": {
+        "data": {
+          "code": "Verification code"
+        },
+        "data_description": {
+          "code": "Format: ABCD-1234 (4 letters and 4 digits)"
+        },
+        "description": "We sent a verification code to your Level Home app. Enter the code in format ABCD-1234.",
+        "title": "Enter verification code"
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Level Lock integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "contact_info": "Email or phone number",
+          "partner_base_url": "Partner server base URL"
+        },
+        "data_description": {
+          "contact_info": "Enter your email address or phone number (e.g., user@example.com or +1234567890)"
+        },
+        "description": "Enter your email address or phone number to receive a verification code.",
+        "title": "Connect Level account"
+      },
+      "verify": {
+        "description": "Please open your Level Home mobile app and enter the verification code: **{user_code}**\n\nAfter entering the code in your mobile app, click Submit below to continue.",
+        "title": "Verify on your mobile device"
+      }
+    }
+  }
+}
