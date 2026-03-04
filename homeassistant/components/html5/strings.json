@@ -37,6 +37,30 @@
       "title": "HTML5 YAML configuration import failed"
     }
   },
+  "notify": {
+    "notify": {
+      "description": "Sends a notification message using the html5 service.",
+      "fields": {
+        "message": {
+          "description": "The message to be sent.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "The title of the message (optional).",
+          "name": "Title"
+        },
+        "data": {
+          "description": "Extended information of notification. Supports tag.",
+          "name": "Data"
+        },
+        "target": {
+          "description": "An array of targets.",
+          "name": "Target"
+        }
+      },
+      "name": "Send a notification with html5"
+    }
+  },
   "services": {
     "dismiss": {
       "description": "Dismisses an HTML5 notification.",
