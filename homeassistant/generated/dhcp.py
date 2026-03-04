@@ -18,6 +18,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "airobot-thermostat-*",
     },
     {
+        "domain": "airos",
+        "registered_devices": True,
+    },
+    {
         "domain": "airthings",
         "hostname": "airthings-view",
     },
@@ -814,6 +818,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "286D97*",
     },
     {
+        "domain": "smartthings",
+        "hostname": "samsung-*",
+    },
+    {
         "domain": "smlight",
         "registered_devices": True,
     },
@@ -852,6 +860,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "tailwind",
         "registered_devices": True,
+    },
+    {
+        "domain": "teltonika",
+        "macaddress": "209727*",
+    },
+    {
+        "domain": "teltonika",
+        "macaddress": "001E42*",
     },
     {
         "domain": "tesla_wall_connector",
@@ -1341,6 +1357,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*",
+    },
+    {
+        "domain": "vesync",
+        "hostname": "levoit-*",
     },
     {
         "domain": "vicare",

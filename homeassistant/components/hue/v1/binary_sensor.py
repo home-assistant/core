@@ -1,5 +1,7 @@
 """Hue binary sensor entities."""
 
+from typing import Any
+
 from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
 
 from homeassistant.components.binary_sensor import (
@@ -38,12 +40,12 @@ class HuePresence(GenericZLLSensor, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.sensor.presence
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = super().extra_state_attributes
         if "sensitivity" in self.sensor.config:

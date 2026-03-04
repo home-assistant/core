@@ -329,11 +329,11 @@ class TeslemetryStreamingClimateEntity(
                     )
                 )
 
-    def _async_handle_inside_temp(self, data: float | None):
+    def _async_handle_inside_temp(self, data: float | None) -> None:
         self._attr_current_temperature = data
         self.async_write_ha_state()
 
-    def _async_handle_hvac_power(self, data: str | None):
+    def _async_handle_hvac_power(self, data: str | None) -> None:
         self._attr_hvac_mode = (
             None
             if data is None
@@ -343,15 +343,15 @@ class TeslemetryStreamingClimateEntity(
         )
         self.async_write_ha_state()
 
-    def _async_handle_climate_keeper_mode(self, data: str | None):
+    def _async_handle_climate_keeper_mode(self, data: str | None) -> None:
         self._attr_preset_mode = PRESET_MODES.get(data) if data else None
         self.async_write_ha_state()
 
-    def _async_handle_hvac_temperature_request(self, data: float | None):
+    def _async_handle_hvac_temperature_request(self, data: float | None) -> None:
         self._attr_target_temperature = data
         self.async_write_ha_state()
 
-    def _async_handle_rhd(self, data: bool | None):
+    def _async_handle_rhd(self, data: bool | None) -> None:
         if data is not None:
             self.rhd = data
 
@@ -538,15 +538,15 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             )
         )
 
-    def _async_handle_inside_temp(self, value: float | None):
+    def _async_handle_inside_temp(self, value: float | None) -> None:
         self._attr_current_temperature = value
         self.async_write_ha_state()
 
-    def _async_handle_protection_mode(self, value: str | None):
+    def _async_handle_protection_mode(self, value: str | None) -> None:
         self._attr_hvac_mode = COP_MODES.get(value) if value is not None else None
         self.async_write_ha_state()
 
-    def _async_handle_temperature_limit(self, value: str | None):
+    def _async_handle_temperature_limit(self, value: str | None) -> None:
         self._attr_target_temperature = (
             COP_LEVELS.get(value) if value is not None else None
         )
