@@ -567,6 +567,8 @@ build.json @home-assistant/supervisor
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/fyta/ @dontinelli
 /tests/components/fyta/ @dontinelli
+/homeassistant/components/gaposa/ @mwatson2
+/tests/components/gaposa/ @mwatson2
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gardena_bluetooth/ @elupus
