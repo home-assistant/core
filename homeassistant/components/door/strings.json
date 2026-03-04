@@ -15,14 +15,14 @@
   "title": "Door",
   "triggers": {
     "opened": {
-      "description": "Triggers when a door opens.",
+      "description": "Triggers after one or more doors open.",
       "fields": {
         "behavior": {
           "description": "[%key:component::door::common::trigger_behavior_description%]",
           "name": "[%key:component::door::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a door opens"
+      "name": "Door opened"
     }
   }
 }
