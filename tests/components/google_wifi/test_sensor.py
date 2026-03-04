@@ -21,7 +21,7 @@ MOCK_WIFI_DATA = {
 
 
 async def test_sensor_values(hass: HomeAssistant) -> None:
-    """Test sensor states match mocked coordinator data."""
+    """Test sensor states match mocked data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"ip_address": "192.168.86.1", "name": "Google Wifi"},
