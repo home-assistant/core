@@ -76,7 +76,10 @@ async def test_coordinator_update_api_error_logs_once(
 
     # Second error should not log again
     caplog.clear()
-    with pytest.raises(UpdateFailed):
+    with (
+        caplog.at_level(logging.INFO, logger="homeassistant.components.eufy_security"),
+        pytest.raises(UpdateFailed),
+    ):
         await coordinator._async_update_data()
 
     assert "API is unavailable" not in caplog.text

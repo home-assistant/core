@@ -1,5 +1,6 @@
 """Test the Eufy Security camera platform."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from eufy_security import EufySecurityError, InvalidCredentialsError
@@ -254,7 +255,10 @@ async def test_camera_stream_source_api_error(
 
     entity = hass.data["camera"].get_entity("camera.front_door_camera")
 
-    with pytest.raises(HomeAssistantError):
+    with (
+        caplog.at_level(logging.DEBUG, logger="homeassistant.components.eufy_security"),
+        pytest.raises(HomeAssistantError),
+    ):
         await entity.stream_source()
 
     # Check debug logging
