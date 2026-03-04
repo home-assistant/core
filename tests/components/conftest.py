@@ -786,7 +786,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.homeassistant = AsyncMock(spec=HomeAssistantClient)
     supervisor_client.host = AsyncMock(spec=HostClient)
     supervisor_client.jobs = AsyncMock(spec=JobsClient)
-    supervisor_client.jobs.info.return_value = MagicMock(spec=JobsInfo)
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
     supervisor_client.mounts = AsyncMock(spec=MountsClient)
     supervisor_client.mounts.info.return_value = MagicMock(
         spec=MountsInfo, default_backup_mount=None, mounts=[]
