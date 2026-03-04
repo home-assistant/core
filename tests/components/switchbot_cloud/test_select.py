@@ -54,7 +54,7 @@ async def test_keypad_key_is_normal(
     key_type,
     result,
 ) -> None:
-    """Test keypad create key."""
+    """Test keypad key list state with different key types and statuses."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
