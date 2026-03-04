@@ -40,7 +40,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Panasonic Blu-ray platform."""
-    conf = discovery_info if discovery_info else config
+    conf = discovery_info or config
 
     # Register configured device with Home Assistant.
     add_entities([PanasonicBluRay(conf[CONF_HOST], conf[CONF_NAME])])

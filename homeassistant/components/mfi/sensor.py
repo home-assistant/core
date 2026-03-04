@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from mficlient.client import FailedToLogin, MFiClient
+from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
 import requests
 import voluptuous as vol
 
@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    StateType,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -64,24 +65,29 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up mFi sensors."""
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    use_tls = config.get(CONF_SSL)
-    verify_tls = config.get(CONF_VERIFY_SSL)
+    host: str = config[CONF_HOST]
+    username: str = config[CONF_USERNAME]
+    password: str = config[CONF_PASSWORD]
+    use_tls: bool = config[CONF_SSL]
+    verify_tls: bool = config[CONF_VERIFY_SSL]
     default_port = 6443 if use_tls else 6080
-    port = int(config.get(CONF_PORT, default_port))
+    network_port: int = config.get(CONF_PORT, default_port)
 
     try:
         client = MFiClient(
-            host, username, password, port=port, use_tls=use_tls, verify=verify_tls
+            host,
+            username,
+            password,
+            port=network_port,
+            use_tls=use_tls,
+            verify=verify_tls,
         )
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
         return
 
     add_entities(
-        MfiSensor(port, hass)
+        MfiSensor(port)
         for device in client.get_devices()
         for port in device.ports.values()
         if port.model in SENSOR_MODELS
@@ -91,18 +97,17 @@ def setup_platform(
 class MfiSensor(SensorEntity):
     """Representation of a mFi sensor."""
 
-    def __init__(self, port, hass):
+    def __init__(self, port: MFiPort) -> None:
         """Initialize the sensor."""
         self._port = port
-        self._hass = hass
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._port.label
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         try:
             tag = self._port.tag
@@ -129,7 +134,7 @@ class MfiSensor(SensorEntity):
         return None
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         try:
             tag = self._port.tag

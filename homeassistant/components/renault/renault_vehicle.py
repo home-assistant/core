@@ -221,6 +221,16 @@ class RenaultVehicleProxy:
         """Set vehicle charge schedules."""
         return await self._vehicle.set_charge_schedules(schedules)
 
+    @with_error_wrapping
+    async def sound_horn(self) -> None:
+        """Start vehicle horn."""
+        await self._vehicle.start_horn()
+
+    @with_error_wrapping
+    async def flash_lights(self) -> None:
+        """Start vehicle lights."""
+        await self._vehicle.start_lights()
+
 
 COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
     RenaultCoordinatorDescription(

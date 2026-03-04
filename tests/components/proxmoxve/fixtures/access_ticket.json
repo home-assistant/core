@@ -1,0 +1,5 @@
+{
+  "username": "test_user@pam",
+  "ticket": "test_ticket",
+  "CSRFPreventionToken": "test_token"
+}

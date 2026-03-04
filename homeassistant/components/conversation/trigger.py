@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from typing import Any
 
 from hassil.recognize import RecognizeResult
@@ -29,14 +28,6 @@ from .models import ConversationInput
 TRIGGER_CALLBACK_TYPE = Callable[
     [ConversationInput, RecognizeResult], Awaitable[str | None]
 ]
-
-
-@dataclass(slots=True)
-class TriggerDetails:
-    """List of sentences and the callback for a trigger."""
-
-    sentences: list[str]
-    callback: TRIGGER_CALLBACK_TYPE
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
@@ -149,5 +140,5 @@ async def async_attach_trigger(
         return None
 
     return get_agent_manager(hass).register_trigger(
-        TriggerDetails(sentences=sentences, callback=call_action)
+        sentences=sentences, trigger_callback=call_action
     )

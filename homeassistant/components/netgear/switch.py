@@ -9,13 +9,12 @@ from typing import Any
 from pynetgear import ALLOW, BLOCK
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
+from .coordinator import NetgearConfigEntry
 from .entity import NetgearDeviceEntity, NetgearRouterEntity
 from .router import NetgearRouter
 
@@ -100,11 +99,11 @@ ROUTER_SWITCH_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetgearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for Netgear component."""
-    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
+    router = entry.runtime_data.router
 
     async_add_entities(
         NetgearRouterSwitchEntity(router, description)
@@ -112,7 +111,7 @@ async def async_setup_entry(
     )
 
     # Entities per network device
-    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
+    coordinator = entry.runtime_data.coordinator
     tracked = set()
 
     @callback
@@ -149,7 +148,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[bool],
         router: NetgearRouter,
         device: dict,
         entity_description: SwitchEntityDescription,

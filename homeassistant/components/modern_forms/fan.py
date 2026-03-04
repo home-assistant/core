@@ -8,7 +8,6 @@ from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
 import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,26 +21,23 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
-    DOMAIN,
     OPT_ON,
     OPT_SPEED,
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
-from .coordinator import ModernFormsDataUpdateCoordinator
+from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ModernFormsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Modern Forms platform from config entry."""
 
-    coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     platform = entity_platform.async_get_current_platform()
 

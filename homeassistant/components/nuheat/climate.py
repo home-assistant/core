@@ -154,7 +154,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         return nuheat_to_fahrenheit(self._target_temperature)
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return current preset mode."""
         return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(self._schedule_mode, PRESET_RUN)
 

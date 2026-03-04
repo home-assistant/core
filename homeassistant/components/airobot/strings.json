@@ -85,6 +85,14 @@
       "heating_uptime": {
         "name": "Heating uptime"
       }
+    },
+    "switch": {
+      "actuator_exercise_disabled": {
+        "name": "Actuator exercise disabled"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      }
     }
   },
   "exceptions": {
@@ -104,7 +112,13 @@
       "message": "Failed to set temperature to {temperature}."
     },
     "set_value_failed": {
-      "message": "Failed to set value: {error}"
+      "message": "Failed to set value."
+    },
+    "switch_turn_off_failed": {
+      "message": "Failed to turn off {switch}."
+    },
+    "switch_turn_on_failed": {
+      "message": "Failed to turn on {switch}."
     }
   }
 }

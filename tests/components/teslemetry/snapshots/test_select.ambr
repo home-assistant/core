@@ -489,21 +489,3 @@
     'state': 'off',
   })
 # ---
-# name: test_select_streaming[select.test_seat_heater_front_left]
-  'off'
-# ---
-# name: test_select_streaming[select.test_seat_heater_front_right]
-  'low'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_center]
-  'unknown'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_left]
-  'medium'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_right]
-  'high'
-# ---
-# name: test_select_streaming[select.test_steering_wheel_heater]
-  'off'
-# ---

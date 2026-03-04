@@ -11,7 +11,16 @@ from enum import StrEnum
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Final, Protocol, TypedDict, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    override,
+)
 
 import voluptuous as vol
 
@@ -20,13 +29,17 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_DEVICE_ID,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
+    CONF_EVENT_DATA,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
     CONF_TARGET,
     CONF_VARIABLES,
+    CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -41,6 +54,7 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     is_callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import (
@@ -135,14 +149,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -321,7 +336,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain: str
+    _domains: set[str]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -371,11 +386,11 @@ class EntityTriggerBase(Trigger):
         )
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
+        """Filter entities of these domains."""
         return {
             entity_id
             for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
+            if split_entity_id(entity_id)[0] in self._domains
         }
 
     @override
@@ -579,7 +594,7 @@ def _get_numerical_value(
             return None
         try:
             return float(state.state)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Entity state is not a valid number
             return None
     return entity_or_float
@@ -593,6 +608,8 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
 
     _above: None | float | str
     _below: None | float | str
+
+    _converter: Callable[[Any], float] = float
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -616,8 +633,8 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
             return False
 
         try:
-            current_value = float(_attribute_value)
-        except (TypeError, ValueError):
+            current_value = self._converter(_attribute_value)
+        except TypeError, ValueError:
             # Attribute is not a valid number, don't trigger
             return False
 
@@ -706,6 +723,8 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
     _upper_limit: float | str | None = None
     _threshold_type: ThresholdType
 
+    _converter: Callable[[Any], float] = float
+
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
         super().__init__(hass, config)
@@ -741,8 +760,8 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
             return False
 
         try:
-            current_value = float(_attribute_value)
-        except (TypeError, ValueError):
+            current_value = self._converter(_attribute_value)
+        except TypeError, ValueError:
             # Attribute is not a valid number, don't trigger
             return False
 
@@ -773,7 +792,7 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _to_states = to_states_set
 
     return CustomTrigger
@@ -787,7 +806,7 @@ def make_entity_transition_trigger(
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_states = from_states
         _to_states = to_states
 
@@ -802,7 +821,7 @@ def make_entity_origin_state_trigger(
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_state = from_state
 
     return CustomTrigger
@@ -816,7 +835,7 @@ def make_entity_numerical_state_attribute_changed_trigger(
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
 
     return CustomTrigger
@@ -830,7 +849,7 @@ def make_entity_numerical_state_attribute_crossed_threshold_trigger(
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
 
     return CustomTrigger
@@ -844,7 +863,7 @@ def make_entity_target_state_attribute_trigger(
     class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
         _attribute_to_state = to_state
 
@@ -1436,3 +1455,73 @@ async def async_get_all_descriptions(
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache
+
+
+@callback
+def async_extract_devices(trigger_conf: dict) -> list[str]:
+    """Extract devices from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] == "device":
+        return [trigger_conf[CONF_DEVICE_ID]]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID], str)
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
+        return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
+
+    if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
+        return target_devices
+
+    return []
+
+
+@callback
+def async_extract_entities(trigger_conf: dict) -> list[str]:
+    """Extract entities from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
+        return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "calendar":
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "zone":
+        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "geo_location":
+        return [trigger_conf[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] == "sun":
+        return ["sun.sun"]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID], str)
+        and valid_entity_id(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID])
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
+
+    if target_entities := async_extract_targets(trigger_conf, CONF_ENTITY_ID):
+        return target_entities
+
+    return []
+
+
+@callback
+def async_extract_targets(
+    config: dict,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets

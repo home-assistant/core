@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::powerfox_local::config::step::user::data_description::api_key%]"
+        },
+        "description": "The API key for your Poweropti device is no longer valid.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "api_key": "The API key (device ID) of your Poweropti device.",
+          "host": "The hostname or IP address of your Poweropti device."
+        },
+        "description": "Set up your Poweropti device to poll locally."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up the Poweropti device found at {host}?",
+        "title": "Discovered Poweropti"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_return": {
+        "name": "Energy return"
+      },
+      "energy_usage": {
+        "name": "Energy usage"
+      },
+      "energy_usage_high_tariff": {
+        "name": "Energy usage high tariff"
+      },
+      "energy_usage_low_tariff": {
+        "name": "Energy usage low tariff"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with the Poweropti device at {host} failed. Please check your API key."
+    },
+    "connection_error": {
+      "message": "Could not connect to the Poweropti device at {host}. Please check if the device is online and reachable."
+    }
+  }
+}

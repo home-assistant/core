@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+import collections
 from dataclasses import dataclass
 from typing import Any, Self
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -32,13 +40,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import EnumTypeInformation
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -47,6 +48,7 @@ TUYA_HVAC_TO_HA = {
     "heat": HVACMode.HEAT,
     "hot": HVACMode.HEAT,
     "manual": HVACMode.HEAT_COOL,
+    "off": HVACMode.OFF,
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
@@ -140,6 +142,22 @@ class _SwingModeWrapper(DeviceWrapper):
         return commands
 
 
+def _filter_hvac_mode_mappings(tuya_range: list[str]) -> dict[str, HVACMode | None]:
+    """Filter TUYA_HVAC_TO_HA modes that are not in the range.
+
+    If multiple Tuya modes map to the same HA mode, set the mapping to None to avoid
+    ambiguity when converting back from HA to Tuya modes.
+    """
+    modes_in_range = {
+        tuya_mode: TUYA_HVAC_TO_HA.get(tuya_mode) for tuya_mode in tuya_range
+    }
+    modes_occurrences = collections.Counter(modes_in_range.values())
+    for key, value in modes_in_range.items():
+        if value is not None and modes_occurrences[value] > 1:
+            modes_in_range[key] = None
+    return modes_in_range
+
+
 class _HvacModeWrapper(DPCodeEnumWrapper):
     """Wrapper for managing climate HVACMode."""
 
@@ -148,10 +166,9 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init _HvacModeWrapper."""
         super().__init__(dpcode, type_information)
+        self._mappings = _filter_hvac_mode_mappings(type_information.range)
         self.options = [
-            TUYA_HVAC_TO_HA[tuya_mode]
-            for tuya_mode in type_information.range
-            if tuya_mode in TUYA_HVAC_TO_HA
+            ha_mode for ha_mode in self._mappings.values() if ha_mode is not None
         ]
 
     def read_device_status(self, device: CustomerDevice) -> HVACMode | None:
@@ -161,12 +178,14 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
         return TUYA_HVAC_TO_HA[raw]
 
     def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: HVACMode
+        self,
+        device: CustomerDevice,
+        value: HVACMode,
     ) -> Any:
         """Convert value to raw value."""
         return next(
             tuya_mode
-            for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items()
+            for tuya_mode, ha_mode in self._mappings.items()
             if ha_mode == value
         )
 
@@ -179,10 +198,9 @@ class _PresetWrapper(DPCodeEnumWrapper):
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init _PresetWrapper."""
         super().__init__(dpcode, type_information)
+        mappings = _filter_hvac_mode_mappings(type_information.range)
         self.options = [
-            tuya_mode
-            for tuya_mode in type_information.range
-            if tuya_mode not in TUYA_HVAC_TO_HA
+            tuya_mode for tuya_mode, ha_mode in mappings.items() if ha_mode is None
         ]
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
@@ -340,7 +358,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         CLIMATE_DESCRIPTIONS[device.category],
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, DPCode.HUMIDITY_CURRENT
                         ),
                         current_temperature_wrapper=temperature_wrappers[0],
@@ -349,7 +367,7 @@ async def async_setup_entry(
                             (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
                             prefer_function=True,
                         ),
-                        hvac_mode_wrapper=_HvacModeWrapper.find_dpcode(
+                        hvac_mode_wrapper=_HvacModeWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, DPCode.MODE, prefer_function=True
                         ),
                         preset_wrapper=_PresetWrapper.find_dpcode(
@@ -360,7 +378,7 @@ async def async_setup_entry(
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, DPCode.HUMIDITY_SET, prefer_function=True
                         ),
                         temperature_unit=temperature_wrappers[2],
@@ -427,7 +445,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             for mode in hvac_mode_wrapper.options:
-                self._attr_hvac_modes.append(HVACMode(mode))
+                if mode != HVACMode.OFF:
+                    # OFF is always added first
+                    self._attr_hvac_modes.append(HVACMode(mode))
 
         elif switch_wrapper:
             self._attr_hvac_modes = [

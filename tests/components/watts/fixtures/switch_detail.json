@@ -1,0 +1,9 @@
+{
+  "deviceId": "switch_789",
+  "deviceName": "Living Room Switch",
+  "deviceType": "switch",
+  "interface": "homeassistant.components.SWITCH",
+  "roomName": "Living Room",
+  "isOnline": true,
+  "isTurnedOn": true
+}

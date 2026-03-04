@@ -8455,7 +8455,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inlet heat meter None',
+      'friendly_name': 'Inlet heat meter',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
@@ -12375,7 +12375,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inlet heat meter None',
+      'friendly_name': 'Inlet heat meter',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),

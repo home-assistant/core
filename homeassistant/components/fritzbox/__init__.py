@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant
@@ -57,7 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
     """Unloading the AVM FRITZ!SmartHome platforms."""
-    await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
+    try:
+        await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
+    except (RequestConnectionError, HTTPError) as ex:
+        LOGGER.debug("logout failed with '%s', anyway continue with unload", ex)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

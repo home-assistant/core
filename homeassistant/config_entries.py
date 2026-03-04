@@ -69,7 +69,13 @@ from .helpers.event import (
 )
 from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
-from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    NoEventData,
+    UndefinedType,
+)
 from .loader import async_suggest_report_issue
 from .setup import (
     SetupPhases,
@@ -291,6 +297,7 @@ class ConfigFlowContext(FlowContext, total=False):
     configuration_url: str
     confirm_only: bool
     discovery_key: DiscoveryKey
+    dismiss_protected: bool
     entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
@@ -791,6 +798,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
             self.async_start_reauth(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
@@ -808,13 +816,14 @@ class ConfigEntry[_DataT = Any]:
             )
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,
                 wait_time,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
 
             if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -857,7 +866,7 @@ class ConfigEntry[_DataT = Any]:
             )
 
         # pylint: disable-next=broad-except
-        except (SystemExit, Exception):
+        except SystemExit, Exception:
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
@@ -1510,6 +1519,21 @@ class ConfigEntriesFlowManager(
                 subscription("added", flow.flow_id)
 
         return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Continue a configuration flow.
+
+        Mark the flow as dismiss protected since the user has interacted
+        with it. This prevents discovery sources from aborting the flow
+        while the user is actively configuring it.
+        """
+        if (flow := self._progress.get(flow_id)) and flow.context.get(
+            "source"
+        ) in DISCOVERY_SOURCES:
+            flow.context["dismiss_protected"] = True
+        return await super()._async_configure(flow_id, user_input)
 
     async def _async_init(
         self,
@@ -2220,6 +2244,53 @@ class ConfigEntries:
 
         self._entries = entries
         self.async_update_issues()
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
+        )
+
+    async def _async_scan_orphan_ignored_entries(
+        self, event: Event[NoEventData]
+    ) -> None:
+        """Scan for ignored entries that can be removed.
+
+        Orphaned ignored entries are entries that are in ignored state
+        for integrations that are no longer available.
+        """
+        remove_candidates = [
+            entry
+            for entry in self.async_entries(
+                include_ignore=True,
+                include_disabled=False,
+            )
+            if entry.source == SOURCE_IGNORE
+        ]
+
+        if not remove_candidates:
+            return
+
+        for entry in remove_candidates:
+            try:
+                await loader.async_get_integration(self.hass, entry.domain)
+            except loader.IntegrationNotFound:
+                _LOGGER.info(
+                    "Integration for ignored config entry %s not found. Creating repair issue",
+                    entry,
+                )
+                ir.async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="orphaned_ignored_config_entry",
+                    translation_placeholders={"domain": entry.domain},
+                    data={
+                        "domain": entry.domain,
+                        "entry_id": entry.entry_id,
+                    },
+                )
 
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.

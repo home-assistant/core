@@ -42,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -125,6 +126,8 @@ async def async_setup_entry(
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, SmokeDetector):
             entities.append(HomematicipSmokeDetector(hap, device))
+            if smoke_detector_channel_data_exists(device, "chamberDegraded"):
+                entities.append(HomematicipSmokeDetectorChamberDegraded(hap, device))
         if isinstance(device, WaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
         if isinstance(device, (RainSensor, WeatherSensorPlus, WeatherSensorPro)):
@@ -320,6 +323,23 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
                 == SmokeDetectorAlarmType.PRIMARY_ALARM
             )
         return False
+
+
+class HomematicipSmokeDetectorChamberDegraded(
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """Representation of the HomematicIP smoke detector chamber health."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize smoke detector chamber health sensor."""
+        super().__init__(hap, device, post="Chamber Degraded")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if smoke chamber is degraded."""
+        return self._device.chamberDegraded
 
 
 class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):
