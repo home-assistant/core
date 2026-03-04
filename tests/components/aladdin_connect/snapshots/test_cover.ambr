@@ -40,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Test Door',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
