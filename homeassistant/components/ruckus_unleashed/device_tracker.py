@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import API_CLIENT_HOSTNAME, API_CLIENT_IP, KEY_SYS_CLIENTS
+from .const import API_CLIENT_HOSTNAME, API_CLIENT_IP, CONF_MAC_FILTER, KEY_SYS_CLIENTS
 from .coordinator import RuckusDataUpdateCoordinator, RuckusUnleashedConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
@@ -28,17 +28,21 @@ async def async_setup_entry(
 
     tracked: set[str] = set()
 
+    mac_filter: list[str] = entry.options.get(CONF_MAC_FILTER, [])
+
     @callback
     def router_update() -> None:
         """Update the values of the router."""
-        add_new_entities(coordinator, async_add_entities, tracked)
+        add_new_entities(coordinator, async_add_entities, tracked, mac_filter)
 
     router_update()
 
     entry.async_on_unload(coordinator.async_add_listener(router_update))
 
     registry = er.async_get(hass)
-    restore_entities(registry, coordinator, entry, async_add_entities, tracked)
+    restore_entities(
+        registry, coordinator, entry, async_add_entities, tracked, mac_filter
+    )
 
 
 @callback
@@ -46,12 +50,16 @@ def add_new_entities(
     coordinator: RuckusDataUpdateCoordinator,
     async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
+    mac_filter: list[str],
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
 
     for mac in coordinator.data[KEY_SYS_CLIENTS]:
         if mac in tracked:
+            continue
+
+        if mac_filter and mac not in mac_filter:
             continue
 
         device = coordinator.data[KEY_SYS_CLIENTS][mac]
@@ -69,6 +77,7 @@ def restore_entities(
     entry: RuckusUnleashedConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
+    mac_filter: list[str],
 ) -> None:
     """Restore clients that are not a part of active clients list."""
     missing: list[RuckusDevice] = []
@@ -77,6 +86,7 @@ def restore_entities(
         if (
             entity.platform == entry.domain
             and entity.unique_id not in coordinator.data[KEY_SYS_CLIENTS]
+            and (not mac_filter or entity.unique_id in mac_filter)
         ):
             missing.append(
                 RuckusDevice(coordinator, entity.unique_id, entity.original_name)

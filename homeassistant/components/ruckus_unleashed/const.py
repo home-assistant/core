@@ -6,6 +6,8 @@ DOMAIN = "ruckus_unleashed"
 PLATFORMS = [Platform.DEVICE_TRACKER]
 SCAN_INTERVAL = 30
 
+CONF_MAC_FILTER = "mac_filter"
+
 MANUFACTURER = "Ruckus"
 
 KEY_SYS_CLIENTS = "clients"

@@ -62,18 +62,28 @@ TEST_CLIENT = {
     "ap": DEFAULT_AP_INFO[0][API_AP_MAC],
 }
 
+TEST_CLIENT_2_ENTITY_ID = "device_tracker.ruckus_test_device_2"
+TEST_CLIENT_2 = {
+    API_CLIENT_IP: "1.1.1.3",
+    API_CLIENT_MAC: "11:22:33:44:55:66",
+    API_CLIENT_HOSTNAME: "Ruckus Test Device 2",
+    "ap": DEFAULT_AP_INFO[0][API_AP_MAC],
+}
+
 DEFAULT_TITLE = DEFAULT_MESH_INFO[API_MESH_NAME]
 DEFAULT_UNIQUEID = DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
 
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(
+    options: dict | None = None,
+) -> MockConfigEntry:
     """Return a Ruckus mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_TITLE,
         unique_id=DEFAULT_UNIQUEID,
         data=CONFIG,
-        options=None,
+        options=options,
     )
 
 
