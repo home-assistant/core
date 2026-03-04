@@ -5,6 +5,7 @@
       'current_position': 0,
       'device_class': 'garage',
       'friendly_name': 'Cover Controller Test Entity Name',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
