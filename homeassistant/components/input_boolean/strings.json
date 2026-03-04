@@ -1,6 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted input booleans to trigger on.",
+    "trigger_behavior_description": "The behavior of the targeted toggle to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "entity_component": {
@@ -51,24 +51,24 @@
   "title": "Input boolean",
   "triggers": {
     "turned_off": {
-      "description": "Triggers after one or more input booleans turn off.",
+      "description": "Triggers when a toggle is turned off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::input_boolean::common::trigger_behavior_description%]",
           "name": "[%key:component::input_boolean::common::trigger_behavior_name%]"
         }
       },
-      "name": "Input boolean turned off"
+      "name": "Toggle turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more input booleans turn on.",
+      "description": "Triggers when a toggle is turned on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::input_boolean::common::trigger_behavior_description%]",
           "name": "[%key:component::input_boolean::common::trigger_behavior_name%]"
         }
       },
-      "name": "Input boolean turned on"
+      "name": "Toggle turned on"
     }
   }
 }
