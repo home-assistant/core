@@ -249,10 +249,7 @@ async def async_setup_entry(
 
     # Set up storage sensors only if inventory shows batteries are present
     # This addresses the dependency on successful inventory fetch
-    sensor_factory.setup_storage_sensors()
-
-    # Refresh storage service if it was enabled
-    if sensor_factory._storage_service in sensor_factory.all_services:
+    if sensor_factory.setup_storage_sensors():
         await sensor_factory._storage_service.coordinator.async_refresh()
 
     entities = []
@@ -327,21 +324,23 @@ class SolarEdgeSensorFactory:
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
-    def setup_storage_sensors(self) -> None:
+    def setup_storage_sensors(self) -> bool:
         """Set up storage sensors if batteries are available.
 
         This should be called after inventory data has been fetched to check
         if the site has batteries before enabling storage data polling.
+
+        Returns True if storage sensors were set up, False otherwise.
         """
         # Check if inventory data was successfully fetched and has batteries
         if not self._inventory_service.coordinator.last_update_success:
             LOGGER.debug("Inventory data not available, skipping storage sensors")
-            return
+            return False
 
         battery_count = self._inventory_service.data.get("batteries", 0)
         if battery_count == 0:
             LOGGER.debug("No batteries found in inventory, skipping storage sensors")
-            return
+            return False
 
         # Set up storage service and add to services
         self._storage_service.async_setup()
@@ -353,11 +352,19 @@ class SolarEdgeSensorFactory:
         LOGGER.debug(
             "Storage sensors enabled, found %d batteries", battery_count
         )
+        return True
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
-    ) -> SolarEdgeSensorEntity:
-        """Create and return a sensor based on the sensor_key."""
+    ) -> SolarEdgeSensorEntity | None:
+        """Create and return a sensor based on the sensor_key.
+
+        Returns None if the sensor type is not available (e.g., storage sensors
+        when no batteries are present).
+        """
+        if sensor_type.key not in self.services:
+            return None
+
         sensor_class, service = self.services[sensor_type.key]
 
         return sensor_class(sensor_type, service)
