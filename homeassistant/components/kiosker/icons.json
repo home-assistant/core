@@ -1,5 +1,21 @@
 {
   "entity": {
+    "binary_sensor": {
+      "blackout_state": {
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor",
+          "on": "mdi:monitor-off"
+        }
+      },
+      "screensaver_visibility": {
+        "default": "mdi:power-sleep",
+        "state": {
+          "off": "mdi:monitor-shimmer",
+          "on": "mdi:power-sleep"
+        }
+      }
+    },
     "sensor": {
       "ambient_light": {
         "default": "mdi:brightness-6"

@@ -19,7 +19,7 @@ from .coordinator import KioskerData, KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
 # Limit concurrent updates to prevent overwhelming the API
-PARALLEL_UPDATES = 3
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,6 +27,7 @@ class KioskerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Kiosker binary sensor entity."""
 
     value_fn: Callable[[KioskerData], bool]
+    extra_attributes_fn: Callable[[KioskerData], dict[str, Any] | None] | None = None
 
 
 BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
@@ -34,6 +35,7 @@ BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
         key="blackoutState",
         translation_key="blackout_state",
         value_fn=lambda x: x.blackout.visible if x.blackout else False,
+        extra_attributes_fn=lambda x: x.blackout.__dict__ if x.blackout else None,
     ),
     KioskerBinarySensorEntityDescription(
         key="screensaverVisibility",
@@ -82,16 +84,9 @@ class KioskerBinarySensor(KioskerEntity, BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra state attributes for blackout state sensor."""
-        if not self.coordinator.data or self.entity_description.key != "blackoutState":
+        """Return extra state attributes."""
+        if self.entity_description.extra_attributes_fn is None:
             return None
 
-        blackout_data = self.coordinator.data.blackout
-        if blackout_data is None:
-            return None
-
-        return {
-            key: getattr(blackout_data, key)
-            for key in blackout_data.__dataclass_fields__
-            if not key.startswith("_")
-        }
+        result = self.entity_description.extra_attributes_fn(self.coordinator.data)
+        return result if result is not None else None
