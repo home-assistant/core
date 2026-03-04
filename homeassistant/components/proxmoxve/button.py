@@ -288,7 +288,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
             self.entity_description.press_action,
             self.coordinator,
             node_name,
-            self.vm_data["vmid"],
+            self.device_id,
         )
 
 
@@ -309,5 +309,5 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
             self.entity_description.press_action,
             self.coordinator,
             node_name,
-            self.container_data["vmid"],
+            self.device_id,
         )
