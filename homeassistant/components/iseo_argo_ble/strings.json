@@ -14,15 +14,15 @@
     "step": {
       "bluetooth_confirm": {
         "description": "Found a new ISEO lock nearby: **{name}**.\n\nClick **Submit** to begin setup.",
-        "title": "ISEO Lock Discovered"
+        "title": "ISEO lock discovered"
       },
       "gw_register": {
         "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
-        "title": "Register Gateway"
+        "title": "Register gateway"
       },
       "gw_register_logs": {
         "description": "The Gateway needs one more permission to receive real-time log updates:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
-        "title": "Enable Gateway Logs"
+        "title": "Enable gateway logs"
       },
       "user": {
         "data": {
