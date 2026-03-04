@@ -1,0 +1,12 @@
+{
+  "domain": "smn_argentina",
+  "name": "Servicio Meteorológico Nacional de Argentina (SMN)",
+  "codeowners": ["@catastrophicode"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/smn_argentina",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["py-ha-smn==1.0.0"]
+}

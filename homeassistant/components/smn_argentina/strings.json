@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "latitude": "Latitude of the location",
+          "longitude": "Longitude of the location",
+          "name": "Name for this weather location"
+        },
+        "description": "Set up the Servicio Meteorológico Nacional de Argentina (SMN) weather integration.",
+        "title": "Configure SMN Weather"
+      }
+    }
+  },
+
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Update your SMN weather settings.",
+        "title": "Configure SMN Weather"
+      }
+    }
+  }
+}
