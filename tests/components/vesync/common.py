@@ -11,6 +11,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
+ENTITY_HUMIDIFIER_600S = "humidifier.humidifier_600s"
+ENTITY_HUMIDIFIER_600S_MIST_LEVEL = "number.humidifier_600s_mist_level"
+ENTITY_HUMIDIFIER_600S_HUMIDITY = "sensor.humidifier_600s_humidity"
+ENTITY_HUMIDIFIER_600S_WARM_MIST_LEVEL = "number.humidifier_600s_warm_mist_level"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
 ENTITY_FAN = "fan.SmartTowerFan"
@@ -37,7 +41,7 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-detail.json")
     ],
     "Humidifier 600S": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-600s-detail.json")
     ],
     "Air Purifier 131s": [
         (

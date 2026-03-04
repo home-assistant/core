@@ -30,7 +30,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr
+from .common import (
+    get_timer_remaining_minutes,
+    is_air_fryer,
+    is_humidifier,
+    is_outlet,
+    rgetattr,
+    supports_timer,
+)
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -223,6 +230,15 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda device: device.state.preheat_set_time,
         exists_fn=is_air_fryer,
+    ),
+    VeSyncSensorEntityDescription(
+        key="timer_remaining",
+        translation_key="timer_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_timer_remaining_minutes,
+        exists_fn=supports_timer,
     ),
 )
 

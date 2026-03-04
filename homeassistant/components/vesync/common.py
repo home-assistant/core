@@ -12,6 +12,8 @@ from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ProductTypes
 from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
+from homeassistant.exceptions import HomeAssistantError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -73,3 +75,25 @@ def is_air_fryer(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFryer]:
     """Check if the device represents an air fryer."""
 
     return device.product_type == ProductTypes.AIR_FRYER
+
+
+def supports_timer(device: VeSyncBaseDevice) -> bool:
+    """Check if the device has timer state.
+
+    Timer state can be present in the device.state.timer attribute.
+    """
+    try:
+        _ = device.state.timer
+    except AttributeError:
+        return False
+    return True
+
+
+def get_timer_remaining_minutes(device: VeSyncBaseDevice) -> float:
+    """Return timer remaining in minutes from device.state.timer.remaining (seconds)."""
+    if not supports_timer(device):
+        raise HomeAssistantError("Device does not support timer adjustment.")
+    timer = device.state.timer
+    if timer is None:
+        return 0.0
+    return timer.remaining / 60.0
