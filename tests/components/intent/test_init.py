@@ -807,3 +807,131 @@ async def test_stop_moving_intent_unsupported_domain(hass: HomeAssistant) -> Non
         await intent.async_handle(
             hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test light"}}
         )
+
+
+async def test_intent_response_match_failed_error_attributes(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test that IntentResponse stores match_failed_error correctly via HTTP API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestMatchError"
+
+        async def async_handle(self, intent_obj):
+            """Handle the intent."""
+            raise intent.MatchFailedError(
+                result=intent.MatchTargetsResult(
+                    False,
+                    intent.MatchFailedReason.DUPLICATE_NAME,
+                    no_match_name="Duplicate Name",
+                ),
+                constraints=intent.MatchTargetsConstraints(
+                    name="Duplicate Name",
+                    single_target=True,
+                ),
+                preferences=intent.MatchTargetsPreferences(
+                    area_id="preferred-area-id",
+                    floor_id="preferred-floor-id",
+                ),
+            )
+
+    intent.async_register(hass, TestIntentHandler())
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/intent/handle",
+        json={"name": "TestMatchError", "data": {}},
+    )
+
+    assert resp.status == 200
+    data = await resp.json()
+
+    assert data["response_type"] == intent.IntentResponseType.ERROR.value
+    assert data["data"]["code"] == intent.IntentResponseErrorCode.NO_VALID_TARGETS.value
+    assert "match_error" in data["data"]
+    assert data["data"]["match_error"]["no_match_reason"] == "DUPLICATE_NAME"
+    assert data["data"]["match_error"]["no_match_name"] == "Duplicate Name"
+    assert data["data"]["match_error"]["constraints"]["name"] == "Duplicate Name"
+    assert data["data"]["match_error"]["constraints"]["single_target"] is True
+    assert data["data"]["match_error"]["preferences"]["area_id"] == "preferred-area-id"
+    assert (
+        data["data"]["match_error"]["preferences"]["floor_id"] == "preferred-floor-id"
+    )
+
+
+async def test_intent_response_query_field_attributes(hass: HomeAssistant) -> None:
+    """Test that IntentResponse stores matched/unmatched states correctly."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestQuery"
+
+        async def async_handle(self, intent_obj):
+            """Handle the intent."""
+            response = intent_obj.create_response()
+            matched_state = hass.states.get("light.test_light")
+            unmatched_state = hass.states.get("light.test_light_2")
+            response.async_set_states(
+                matched_states=[matched_state] if matched_state else [],
+                unmatched_states=[unmatched_state] if unmatched_state else [],
+            )
+            response.async_set_speech("Test query response")
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    hass.states.async_set("light.test_light", "on")
+    hass.states.async_set("light.test_light_2", "off")
+
+    response = await intent.async_handle(hass, "test", "TestQuery", {})
+
+    assert response.response_type.value == intent.IntentResponseType.ACTION_DONE.value
+    assert len(response.matched_states) == 1
+    assert len(response.unmatched_states) == 1
+    assert response.matched_states[0].entity_id == "light.test_light"
+    assert response.unmatched_states[0].entity_id == "light.test_light_2"
+
+    response_dict = response.as_dict()
+    assert response_dict["data"]["query"]["matched"] == [
+        {"entity_id": "light.test_light", "state": "on"}
+    ]
+    assert response_dict["data"]["query"]["unmatched"] == [
+        {"entity_id": "light.test_light_2", "state": "off"}
+    ]
+
+
+async def test_intent_response_query_empty_states(hass: HomeAssistant) -> None:
+    """Test that IntentResponse handles empty matched/unmatched states."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestEmptyQuery"
+
+        async def async_handle(self, intent_obj):
+            """Handle the intent."""
+            response = intent_obj.create_response()
+            response.async_set_states(matched_states=[], unmatched_states=[])
+            response.async_set_speech("Empty query response")
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    response = await intent.async_handle(hass, "test", "TestEmptyQuery", {})
+
+    assert response.response_type.value == intent.IntentResponseType.ACTION_DONE.value
+    assert len(response.matched_states) == 0
+    assert len(response.unmatched_states) == 0
+
+    response_dict = response.as_dict()
+    assert response_dict["data"]["query"]["matched"] == []
+    assert response_dict["data"]["query"]["unmatched"] == []

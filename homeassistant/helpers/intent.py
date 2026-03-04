@@ -1509,8 +1509,6 @@ class IntentResponse:
                     match_error_dict["no_match_reason"] = (
                         self.match_failed_error.result.no_match_reason.name
                     )
-                else:
-                    match_error_dict["no_match_reason"] = "UNKNOWN"
 
                 if self.match_failed_error.result.no_match_name:
                     match_error_dict["no_match_name"] = (
