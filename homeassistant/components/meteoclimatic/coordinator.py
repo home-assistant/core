@@ -1,9 +1,8 @@
 """Support for Meteoclimatic weather data."""
 
 import logging
-from typing import Any
 
-from meteoclimatic import MeteoclimaticClient
+from meteoclimatic import MeteoclimaticClient, Observation
 from meteoclimatic.exceptions import MeteoclimaticError
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 type MeteoclimaticConfigEntry = ConfigEntry[MeteoclimaticUpdateCoordinator]
 
 
-class MeteoclimaticUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class MeteoclimaticUpdateCoordinator(DataUpdateCoordinator[Observation]):
     """Coordinator for Meteoclimatic weather data."""
 
     config_entry: MeteoclimaticConfigEntry
@@ -34,12 +33,11 @@ class MeteoclimaticUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self._meteoclimatic_client = MeteoclimaticClient()
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> Observation:
         """Obtain the latest data from Meteoclimatic."""
         try:
-            data = await self.hass.async_add_executor_job(
+            return await self.hass.async_add_executor_job(
                 self._meteoclimatic_client.weather_at_station, self._station_code
             )
         except MeteoclimaticError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
-        return data.__dict__
