@@ -148,7 +148,6 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
     """Represent a single player sensor."""
 
     entity_description: NintendoParentalControlsPlayerSensorEntityDescription
-    _unrecorded_attributes = frozenset({"games"})
 
     def __init__(
         self,
@@ -169,24 +168,13 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
+        if self.player_id not in self._device.players:
+            return None
         return self._device.get_player(self.player_id).player_image
 
     @property
     def native_value(self) -> int | float | None:
         """Return the native value."""
+        if self.player_id not in self._device.players:
+            return None
         return self.entity_description.value_fn(self._device.get_player(self.player_id))
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra state attributes."""
-        return {
-            "games": [
-                {
-                    "title": app["meta"]["title"],
-                    "playing_time": app["playingTime"],
-                    "image": app["meta"]["imageUri"]["medium"],
-                    "shop": app["meta"]["shopUri"],
-                }
-                for app in self._device.get_player(self.player_id).apps
-            ]
-        }
