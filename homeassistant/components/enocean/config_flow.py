@@ -169,10 +169,12 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             # Starting the gateway will raise an exception if it can't connect
             gateway = Gateway(port=dongle_path)
             await gateway.start()
-            gateway.stop()
         except ConnectionError as exception:
             LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
             return False
+        finally:
+            gateway.stop()
+
         return True
 
     def create_enocean_entry(self, user_input):

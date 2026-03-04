@@ -56,6 +56,7 @@ async def async_setup_entry(
     try:
         await gateway.start()
     except ConnectionError as err:
+        gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
