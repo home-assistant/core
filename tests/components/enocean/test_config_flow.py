@@ -118,7 +118,7 @@ async def test_user_flow_with_invalid_manual_path(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_with_invalid_option(hass: HomeAssistant) -> None:
-    """Test the user flow without detected usb device."""
+    """Test the user flow with unknown selected usb device."""
     with patch(
         f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[MOCK_USB_DEVICE])
     ) as mock_scan_serial_ports:
