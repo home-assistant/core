@@ -159,8 +159,10 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         super().__init__(coordinator=coordinator, device=device, key=description.key)
         self.entity_description = description
         self.player_id = player
+        player_obj = device.get_player(player)
+        nickname = player_obj.nickname or ""
         self._attr_translation_placeholders = {
-            "nickname": device.get_player(player).nickname  # type: ignore[dict-item]
+            "nickname": nickname
         }
         self._attr_unique_id = f"{player}_{description.key}"
 
