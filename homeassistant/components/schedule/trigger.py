@@ -15,7 +15,7 @@ from .const import ATTR_NEXT_EVENT
 class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
     """Trigger for back-to-back schedule blocks."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
     _from_states = {STATE_OFF, STATE_ON}
     _to_states = {STATE_ON}
 
