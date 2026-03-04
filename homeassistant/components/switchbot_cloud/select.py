@@ -4,7 +4,7 @@ import asyncio
 import random
 import time
 
-from switchbot_api import Device, KeyPadCommands, Remote, SwitchBotAPI
+from switchbot_api import Device, KeyPadCommands, SwitchBotAPI
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -86,7 +86,7 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
 
 @callback
 def _async_make_entity(
-    api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
+    api: SwitchBotAPI, device: Device, coordinator: SwitchBotCoordinator
 ) -> SwitchBotCloudKeypad:
     """Make a SwitchBotCloudSelect entity."""
     return SwitchBotCloudKeypad(api, device, coordinator)
