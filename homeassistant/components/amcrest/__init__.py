@@ -15,6 +15,7 @@ import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
 import httpx
 import voluptuous as vol
+import urllib3
 
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -75,6 +76,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 AUTHENTICATION_LIST = {"basic": "basic"}
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def _has_unique_names(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
     names = [device[CONF_NAME] for device in devices]
@@ -133,6 +135,7 @@ class AmcrestChecker(ApiWrapper):
         port: int,
         user: str,
         password: str,
+        protocol: str,
     ) -> None:
         """Initialize."""
         self._hass = hass
@@ -151,6 +154,8 @@ class AmcrestChecker(ApiWrapper):
             port,
             user,
             password,
+            protocol=protocol,
+            ssl_verify=False,
             retries_connection=COMM_RETRIES,
             timeout_protocol=COMM_TIMEOUT,
         )
@@ -365,9 +370,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         name: str = device[CONF_NAME]
         username: str = device[CONF_USERNAME]
         password: str = device[CONF_PASSWORD]
+        if device[CONF_PORT] == 443:
+            protocol: str = "https"
+        else:
+            protocol: str = "http"
 
         api = AmcrestChecker(
-            hass, name, device[CONF_HOST], device[CONF_PORT], username, password
+            hass, name, device[CONF_HOST], device[CONF_PORT], username, password, protocol=protocol
         )
 
         ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
