@@ -16,7 +16,7 @@ PLATFORMS = [Platform.SENSOR]
 
 # Pull in the config flow - entry: ConfigEntry comes from the config flow.
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up My Custom Integration from a config entry."""
+    """Set up the Google_Wifi integration from a config entry."""
     # Register a listener for when the entry is updated (reconfigured)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 

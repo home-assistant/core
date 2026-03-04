@@ -34,8 +34,20 @@ class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
         url = f"http://{self.host}/api/v1/status"
         try:
             # We use hass.async_add_executor_job because 'requests' is synchronous
-            async with asyncio.timeout(10):
-                response = await self.hass.async_add_executor_job(requests.get, url)
+            # Pass an explicit timeout to the synchronous requests call
+            # and wrap it in the executor job
+            response = await self.hass.async_add_executor_job(
+                lambda: requests.get(url, timeout=5)
+            )
+
+            # Ensure we got a 200 OK before attempting to parse
+            response.raise_for_status()
+
             return response.json()
+
         except requests.exceptions.RequestException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            # This catches timeouts, connection errors, and 4xx/5xx responses
+            raise UpdateFailed(f"Error communicating with Google Wifi: {err}") from err
+        except ValueError as err:
+            # Catches cases where the response isn't valid JSON
+            raise UpdateFailed(f"Invalid JSON received from Google Wifi: {err}") from err

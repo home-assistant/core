@@ -89,6 +89,27 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, user_input: dict) -> ConfigFlowResult:
+        """Handle import of configuration from YAML."""
+        # Ensure a name is set for imported configurations
+        if CONF_NAME not in user_input:
+            user_input = {**user_input, CONF_NAME: "Google Wifi"}
+        try:
+            await validate_input(self.hass, user_input)
+        except InvalidIPAddress:
+            # Abort import if the YAML configuration contains an invalid IP
+            return self.async_abort(reason="invalid_ip")
+        except CannotConnect:
+            # Abort import if the configured device cannot be reached
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception during import")
+            return self.async_abort(reason="unknown")
+        return self.async_create_entry(
+            title=user_input[CONF_NAME],
+            data=user_input,
+        )
+
     async def async_step_reconfigure(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
@@ -104,6 +125,11 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except InvalidIPAddress:
                 errors["base"] = "invalid_ip"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="reconfigure",

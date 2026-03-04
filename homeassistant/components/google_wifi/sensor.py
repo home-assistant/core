@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -28,9 +27,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import GoogleWifiUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass(frozen=True, kw_only=True)
 class GoogleWifiSensorEntityDescription(SensorEntityDescription):
@@ -85,6 +81,8 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
         """Attach sensors to a device in HomeAssistant."""
         # Pull the version and model name from the coordinator's data cache
         version = None
+        model_name = "Onhub/Wifi"
+
         if self.coordinator.data:
             try:
                 version = self.coordinator.data["software"]["softwareVersion"]
