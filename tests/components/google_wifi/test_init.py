@@ -15,7 +15,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "192.168.86.1"})
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.google_wifi.coordinator.requests.get"):
+    with patch("homeassistant.components.google_wifi.sensor.requests.get"):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
