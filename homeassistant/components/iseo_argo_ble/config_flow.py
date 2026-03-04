@@ -100,6 +100,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS]
 
             await self.async_set_unique_id(address.replace(":", ""))
+            self._abort_if_unique_id_configured()
 
             priv = _generate_identity()
             priv_int = priv.private_numbers().private_value  # type: ignore[attr-defined]

@@ -109,6 +109,12 @@ class IseoLockEntity(LockEntity):
             self.async_on_remove(
                 async_track_time_interval(self.hass, self._poll_state, _POLL_INTERVAL)
             )
+        self.async_on_remove(self._cancel_relock_task)
+
+    def _cancel_relock_task(self) -> None:
+        """Cancel any pending relock task."""
+        if self._relock_task and not self._relock_task.done():
+            self._relock_task.cancel()
 
     async def _poll_state(self, _now: Any = None) -> None:
         """Read door state via TLV_INFO and update HA state."""
