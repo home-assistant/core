@@ -15,7 +15,7 @@ from pyvizio.util import gen_apps_list_from_url
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -90,6 +90,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         device = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, self.config_entry.unique_id)},
+            manufacturer="VIZIO",
+            name=self.config_entry.data[CONF_NAME],
         )
         if model := await self.device.get_model_name(log_api_exception=False):
             device_registry.async_update_device(device.id, model=model)

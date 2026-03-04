@@ -11,7 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -50,7 +50,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Vizio media player entry."""
-    name = config_entry.data[CONF_NAME]
     device_class = config_entry.data[CONF_DEVICE_CLASS]
 
     # If config entry options not set up, set them up,
@@ -91,7 +90,6 @@ async def async_setup_entry(
 
     entity = VizioDevice(
         config_entry,
-        name,
         device_class,
         config_entry.runtime_data.device_coordinator,
         hass.data.get(DATA_APPS) if device_class == MediaPlayerDeviceClass.TV else None,
@@ -111,7 +109,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     def __init__(
         self,
         config_entry: VizioConfigEntry,
-        name: str,
         device_class: MediaPlayerDeviceClass,
         coordinator: VizioDeviceCoordinator,
         apps_coordinator: VizioAppsDataUpdateCoordinator | None,
@@ -143,11 +140,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         assert unique_id
         self._attr_unique_id = unique_id
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            manufacturer="VIZIO",
-            name=name,
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
