@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the EcoTracker",
+        "description": "Set up the EcoTracker integration to monitor your electricity usage.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the EcoTracker device."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the EcoTracker device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "power_phase1": {
+        "name": "Power phase 1"
+      },
+      "power_phase2": {
+        "name": "Power phase 2"
+      },
+      "power_phase3": {
+        "name": "Power phase 3"
+      },
+      "power_avg": {
+        "name": "Power average"
+      },
+      "energy_counter_in": {
+        "name": "Energy in"
+      },
+      "energy_counter_out": {
+        "name": "Energy out"
+      },
+      "energy_counter_in_t1": {
+        "name": "Energy in T1"
+      },
+      "energy_counter_in_t2": {
+        "name": "Energy in T2"
+      },
+      "rssi": {
+        "name": "WIFI RSSI"
+      }
+    }
+  }
+}
