@@ -61,7 +61,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        await self.set_unique_id(discovery_info)
+        await self._async_update_device_and_set_unique_id(discovery_info)
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
@@ -122,7 +122,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown_device")
             selected_service = usb_service_info_from_device(selected_device)
 
-            await self.set_unique_id(selected_service)
+            await self._async_update_device_and_set_unique_id(selected_service)
             user_input[CONF_DEVICE] = selected_service.device
 
             return await self.async_step_manual(user_input)
@@ -184,15 +184,17 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
 
-    async def set_unique_id(self, usbServiceInfo: UsbServiceInfo):
+    async def _async_update_device_and_set_unique_id(
+        self, usb_service_info: UsbServiceInfo
+    ) -> None:
         """Normalize the USB device serial and set unique ID depending on it."""
         # normalize device path
-        usbServiceInfo.device = await self.hass.async_add_executor_job(
-            get_serial_by_id, usbServiceInfo.device
+        usb_service_info.device = await self.hass.async_add_executor_job(
+            get_serial_by_id, usb_service_info.device
         )
         # set unique id
-        unique_id = usb_unique_id_from_service_info(usbServiceInfo)
+        unique_id = usb_unique_id_from_service_info(usb_service_info)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: usbServiceInfo.device}
+            updates={CONF_DEVICE: usb_service_info.device}
         )
