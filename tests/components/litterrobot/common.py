@@ -6,6 +6,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 BASE_PATH = "homeassistant.components.litterrobot"
 CONFIG = {DOMAIN: {CONF_USERNAME: "user@example.com", CONF_PASSWORD: "password"}}
 
+ACCOUNT_USER_ID = "1234567"
 ROBOT_NAME = "Test"
 ROBOT_SERIAL = "LR3C012345"
 ROBOT_DATA = {

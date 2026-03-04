@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, DOMAIN, VACUUM_ENTITY_ID
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
@@ -67,6 +67,48 @@ async def test_entry_not_setup(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is expected_state
+
+
+async def test_unique_id_migration(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that entries without unique_id get it set during setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.litterrobot.coordinator.Account",
+        return_value=mock_account,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id == ACCOUNT_USER_ID
+
+
+async def test_unique_id_already_set(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that entries with unique_id are not modified during setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.litterrobot.coordinator.Account",
+        return_value=mock_account,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id == ACCOUNT_USER_ID
 
 
 async def test_device_remove_devices(
