@@ -58,7 +58,13 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             manufacturer="Top North",
             model=app_name,
             sw_version=app_version,
-            hw_version=f"{model} ({os_version})",
+            hw_version=(
+                None
+                if model is None
+                else model
+                if os_version is None
+                else f"{model} ({os_version})"
+            ),
             serial_number=device_id,
         )
 
