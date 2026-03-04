@@ -58,6 +58,7 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
                 KeyPadCommands.CREATE_KEY, parameters=parameters
             )
             self._attr_current_option = password
+            self._attr_options.append(self._attr_current_option)
         else:
             self._attr_current_option = option
         self.async_write_ha_state()
