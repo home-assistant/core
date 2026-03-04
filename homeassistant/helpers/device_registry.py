@@ -1461,7 +1461,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         self.async_schedule_save()
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
 
@@ -1706,10 +1706,10 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
     return DeviceRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

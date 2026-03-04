@@ -43,6 +43,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
@@ -61,6 +62,7 @@ from .const import (
     CLIENT_ERROR_V2,
     CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
+    COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS,
     CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
@@ -79,7 +81,6 @@ from .const import (
     CONF_TAGS_ATTRIBUTES,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
-    DEFAULT_HOST,
     DEFAULT_HOST_V2,
     DEFAULT_MEASUREMENT_ATTR,
     DEFAULT_SSL_V2,
@@ -104,6 +105,7 @@ from .const import (
     WRITE_ERROR,
     WROTE_MESSAGE,
 )
+from .issue import async_create_deprecated_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +139,7 @@ def create_influx_url(conf: dict) -> dict:
 
 def validate_version_specific_config(conf: dict) -> dict:
     """Ensure correct config fields are provided based on API version used."""
-    if conf[CONF_API_VERSION] == API_VERSION_2:
+    if conf.get(CONF_API_VERSION, DEFAULT_API_VERSION) == API_VERSION_2:
         if CONF_TOKEN not in conf:
             raise vol.Invalid(
                 f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
@@ -193,32 +195,13 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     }
 )
 
-INFLUX_SCHEMA = vol.All(
-    _INFLUX_BASE_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
-    validate_version_specific_config,
-    create_influx_url,
+INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend(
+    COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS
 )
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_API_VERSION),
-            cv.deprecated(CONF_HOST),
-            cv.deprecated(CONF_PATH),
-            cv.deprecated(CONF_PORT),
-            cv.deprecated(CONF_SSL),
-            cv.deprecated(CONF_VERIFY_SSL),
-            cv.deprecated(CONF_SSL_CA_CERT),
-            cv.deprecated(CONF_USERNAME),
-            cv.deprecated(CONF_PASSWORD),
-            cv.deprecated(CONF_DB_NAME),
-            cv.deprecated(CONF_TOKEN),
-            cv.deprecated(CONF_ORG),
-            cv.deprecated(CONF_BUCKET),
-            INFLUX_SCHEMA,
-        )
-    },
+    {DOMAIN: vol.All(INFLUX_SCHEMA, validate_version_specific_config)},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -499,21 +482,33 @@ def get_influx_connection(  # noqa: C901
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
-    conf = config.get(DOMAIN)
+    if DOMAIN not in config:
+        return True
 
-    if conf is not None:
-        if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
-            conf[CONF_HOST] = DEFAULT_HOST
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            )
-        )
+    hass.async_create_task(_async_setup(hass, config[DOMAIN]))
 
     return True
+
+
+async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Import YAML configuration into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and (reason := result["reason"]) != "single_instance_allowed"
+    ):
+        async_create_deprecated_yaml_issue(hass, error=reason)
+        return
+
+    # If we are here, the entry already exists (single instance allowed)
+    if config.keys() & (
+        {k.schema for k in COMPONENT_CONFIG_SCHEMA_CONNECTION} - {CONF_PRECISION}
+    ):
+        async_create_deprecated_yaml_issue(hass)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
