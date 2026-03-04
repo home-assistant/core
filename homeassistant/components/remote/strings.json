@@ -129,7 +129,7 @@
   "title": "Remote",
   "triggers": {
     "turned_off": {
-      "description": "Triggers when one or more remotes turned off.",
+      "description": "Triggers when one or more remotes turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::remote::common::trigger_behavior_description%]",
@@ -139,7 +139,7 @@
       "name": "Remote turned off"
     },
     "turned_on": {
-      "description": "Triggers when one or more remotes turned on.",
+      "description": "Triggers when one or more remotes turn on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::remote::common::trigger_behavior_description%]",
