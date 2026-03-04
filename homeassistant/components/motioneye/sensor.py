@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from motioneye_client.client import MotionEyeClient
@@ -14,13 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import get_camera_from_cameras, listen_for_new_cameras
-from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
+from .const import DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
+from .coordinator import MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -29,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
@@ -39,8 +36,8 @@ async def async_setup_entry(
                 MotionEyeActionSensor(
                     entry.entry_id,
                     camera,
-                    entry_data[CONF_CLIENT],
-                    entry_data[CONF_COORDINATOR],
+                    coordinator.client,
+                    coordinator,
                     entry.options,
                 )
             ]
@@ -59,7 +56,7 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         config_entry_id: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MotionEyeUpdateCoordinator,
         options: Mapping[str, str],
     ) -> None:
         """Initialize an action sensor."""
