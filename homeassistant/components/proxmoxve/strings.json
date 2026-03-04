@@ -256,6 +256,10 @@
     "create_snapshot": {
       "description": "Creates a snapshot on a VM or LXC container. The snapshot is named using the `Home_Assistant_` prefix followed by the Home Assistant version. Use this before upgrading Home Assistant to create a restore point.",
       "fields": {
+        "include_ram": {
+          "description": "Save the VM's RAM state in the snapshot. Only applies to VMs — LXC containers do not support RAM snapshots.",
+          "name": "Include RAM"
+        },
         "version_entity": {
           "description": "Optional sensor entity that provides the version string to include in the snapshot name (for example the Version integration `Local installation` sensor). If not set, the current Home Assistant version is used.",
           "name": "Version entity"

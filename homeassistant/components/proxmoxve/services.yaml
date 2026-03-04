@@ -11,3 +11,7 @@ create_snapshot:
       selector:
         entity:
           domain: sensor
+    include_ram:
+      default: false
+      selector:
+        boolean:

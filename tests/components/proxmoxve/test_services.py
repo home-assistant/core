@@ -42,6 +42,25 @@ async def test_create_snapshot_vm_uses_core_version(
     assert call_kwargs["vmstate"] == 0
 
 
+async def test_create_snapshot_vm_include_ram(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that include_ram=True passes vmstate=1 to the Proxmox API."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_SNAPSHOT,
+        {"target": {"entity_id": "button.vm_web_start"}, "include_ram": True},
+        blocking=True,
+    )
+
+    call_kwargs = mock_proxmox_client._qemu_mocks[100].snapshot.post.call_args.kwargs
+    assert call_kwargs["vmstate"] == 1
+
+
 async def test_create_snapshot_container_uses_core_version(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,

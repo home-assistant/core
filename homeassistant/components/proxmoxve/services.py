@@ -65,6 +65,7 @@ CREATE_SNAPSHOT_SCHEMA = vol.Schema(
             vol.All(cv.ensure_list, [str]),
         ),
         vol.Optional("version_entity"): cv.entity_id,
+        vol.Optional("include_ram", default=False): cv.boolean,
     }
 )
 
@@ -206,6 +207,7 @@ def _create_snapshot_blocking(
     resource_type: _ResourceType,
     snapname: str,
     description: str,
+    include_ram: bool,
 ) -> None:
     """Call the Proxmox snapshot API synchronously.
 
@@ -215,7 +217,7 @@ def _create_snapshot_blocking(
         coordinator.proxmox.nodes(node).qemu(vmid).snapshot.post(
             snapname=snapname,
             description=description,
-            vmstate=0,
+            vmstate=1 if include_ram else 0,
         )
     else:
         coordinator.proxmox.nodes(node).lxc(vmid).snapshot.post(
@@ -252,6 +254,7 @@ async def _call_snapshot(
     resource_type: _ResourceType,
     snapname: str,
     description: str,
+    include_ram: bool,
 ) -> None:
     """Run the snapshot API call and translate Proxmox exceptions to HA errors."""
     coordinator: ProxmoxCoordinator = entry.runtime_data
@@ -264,6 +267,7 @@ async def _call_snapshot(
             resource_type,
             snapname,
             description,
+            include_ram,
         )
     except AuthenticationError as err:
         raise HomeAssistantError(
@@ -319,6 +323,7 @@ async def async_create_snapshot(call: ServiceCall) -> None:
 
     snapname = f"Home_Assistant_{_sanitize_snapshot_version(version)}"
     description = version
+    include_ram: bool = call.data["include_ram"]
 
     # Prefer device targeting when a single device_id is provided, as it
     # unambiguously identifies the VM or container.
@@ -337,7 +342,14 @@ async def async_create_snapshot(call: ServiceCall) -> None:
                 hass, device_ids[0]
             )
             await _call_snapshot(
-                hass, entry, node_name, vmid, resource_type, snapname, description
+                hass,
+                entry,
+                node_name,
+                vmid,
+                resource_type,
+                snapname,
+                description,
+                include_ram,
             )
             _LOGGER.debug(
                 "Created snapshot %s on %s %s/%s",
@@ -362,7 +374,7 @@ async def async_create_snapshot(call: ServiceCall) -> None:
     entity_id = next(iter(all_entities))
     entry, node_name, vmid, resource_type = _resolve_from_entity(hass, entity_id)
     await _call_snapshot(
-        hass, entry, node_name, vmid, resource_type, snapname, description
+        hass, entry, node_name, vmid, resource_type, snapname, description, include_ram
     )
     _LOGGER.debug(
         "Created snapshot %s on %s %s/%s",
