@@ -16,9 +16,6 @@ from .coordinator import AmazonConfigEntry
 ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
 ATTR_INFO_SKILL = "info_skill"
-SERVICE_TEXT_COMMAND = "send_text_command"
-SERVICE_SOUND_NOTIFICATION = "send_sound"
-SERVICE_INFO_SKILL = "send_info_skill"
 
 SCHEMA_SOUND_SERVICE = vol.Schema(
     {
@@ -128,17 +125,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amazon Devices integration."""
     for service_name, method, schema in (
         (
-            SERVICE_SOUND_NOTIFICATION,
+            "send_sound",
             async_send_sound_notification,
             SCHEMA_SOUND_SERVICE,
         ),
         (
-            SERVICE_TEXT_COMMAND,
+            "send_text_command",
             async_send_text_command,
             SCHEMA_CUSTOM_COMMAND,
         ),
         (
-            SERVICE_INFO_SKILL,
+            "send_info_skill",
             async_send_info_skill,
             SCHEMA_INFO_SKILL,
         ),
