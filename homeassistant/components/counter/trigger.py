@@ -11,7 +11,7 @@ from . import ATTR_STEP, CONF_INITIAL, CONF_MAXIMUM, DOMAIN
 class CounterStepTrigger(EntityTriggerBase):
     """Base trigger for when a counter value is changed by one step."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -54,7 +54,7 @@ class CounterIncrementedTrigger(CounterStepTrigger):
 class CounterMaxReachedTrigger(EntityTriggerBase):
     """Trigger for when a counter reaches its maximum value."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
@@ -67,7 +67,7 @@ class CounterMaxReachedTrigger(EntityTriggerBase):
 class CounterResetTrigger(EntityTriggerBase):
     """Trigger for reset of counter entities."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
