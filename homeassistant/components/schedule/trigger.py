@@ -1,4 +1,4 @@
-"""Provides triggers for schedulers."""
+"""Provides triggers for schedules."""
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -39,5 +39,5 @@ TRIGGERS: dict[str, type[Trigger]] = {
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the triggers for schedulers."""
+    """Return the triggers for schedules."""
     return TRIGGERS
