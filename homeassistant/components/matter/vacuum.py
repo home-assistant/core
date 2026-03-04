@@ -260,14 +260,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             # Ignore empty segments; some devices transiently
             # report an empty list before sending the real one.
             and (current_segments := self._current_segments)
-            and current_segments != {s.id: s for s in last_seen_segments}
         ):
-            _LOGGER.debug(
-                "Vacuum segments changed: last_seen=%s, current=%s",
-                {s.id: s for s in last_seen_segments},
-                current_segments,
-            )
-            self.async_create_segments_issue()
+            last_seen_by_id = {s.id: s for s in last_seen_segments}
+            if current_segments != last_seen_by_id:
+                _LOGGER.debug(
+                    "Vacuum segments changed: last_seen=%s, current=%s",
+                    last_seen_by_id,
+                    current_segments,
+                )
+                self.async_create_segments_issue()
 
     @callback
     def _calculate_features(self) -> None:
