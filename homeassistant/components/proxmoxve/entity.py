@@ -79,7 +79,6 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._vm_data = vm_data
-        self._node_name = node_data.node["node"]
         self.device_id = vm_data["vmid"]
         self.device_name = vm_data["name"]
 
@@ -101,18 +100,21 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
+    def _node_name(self) -> str | None:
+        """Return the current node name for this VM (dynamically resolved)."""
+        return self.coordinator.get_vm_node(self.device_id)
+
+    @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].vms
-        )
+        return super().available and self._node_name is not None
 
     @property
     def vm_data(self) -> dict[str, Any]:
         """Return the VM data."""
-        return self.coordinator.data[self._node_name].vms[self.device_id]
+        node_name = self._node_name
+        assert node_name is not None
+        return self.coordinator.data[node_name].vms[self.device_id]
 
 
 class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
@@ -129,7 +131,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._container_data = container_data
-        self._node_name = node_data.node["node"]
         self.device_id = container_data["vmid"]
         self.device_name = container_data["name"]
 
@@ -154,15 +155,18 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
+    def _node_name(self) -> str | None:
+        """Return the current node name for this container (dynamically resolved)."""
+        return self.coordinator.get_container_node(self.device_id)
+
+    @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].containers
-        )
+        return super().available and self._node_name is not None
 
     @property
     def container_data(self) -> dict[str, Any]:
         """Return the Container data."""
-        return self.coordinator.data[self._node_name].containers[self.device_id]
+        node_name = self._node_name
+        assert node_name is not None
+        return self.coordinator.data[node_name].containers[self.device_id]
