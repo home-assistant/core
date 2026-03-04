@@ -1,15 +1,9 @@
 {
-  "issues": {
-    "deprecated_yaml": {
-      "title": "Legacy YAML configuration detected",
-      "description": "The Google/Nest Wifi integration now uses the UI for configuration. Your existing YAML settings have been imported, but you should remove them from your configuration.yaml file and restart Home Assistant to clear this warning."
-    }
-  },
   "config": {
     "abort": {
       "already_configured": "Device is already configured.",
-      "reconfigure_successful": "Reconfiguration was successful.",
-      "cannot_connect": "The legacy YAML import failed because the router at the specified IP could not be reached."
+      "cannot_connect": "The legacy YAML import failed because the router at the specified IP could not be reached.",
+      "reconfigure_successful": "Reconfiguration was successful."
     },
     "error": {
       "cannot_connect": "Failed to connect to the router. Check the IP and try again.",
@@ -33,6 +27,12 @@
         "description": "Please enter the IP address of your Google/Nest Wifi router/point.",
         "title": "Set up Google/Nest Wifi"
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "The Google/Nest Wifi integration now uses the UI for configuration. Your existing YAML settings have been imported, but you should remove them from your configuration.yaml file and restart Home Assistant to clear this warning.",
+      "title": "Legacy YAML configuration detected"
     }
   }
 }
