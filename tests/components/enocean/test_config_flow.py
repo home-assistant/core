@@ -77,12 +77,12 @@ async def test_user_flow_with_valid_path(hass: HomeAssistant) -> None:
             Mock(return_value=[MOCK_USB_DEVICE]),
         ) as mock_scan_serial_ports,
         patch(
-            f"{MODULE}.dongle.validate_path",
-            return_value=True,
-        ),
-        patch(
             f"{MODULE}.config_flow.get_serial_by_id",
             return_value=MOCK_SERIAL_BY_ID,
+        ),
+        patch(
+            f"{MODULE}.dongle.validate_path",
+            return_value=True,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -234,6 +234,10 @@ async def test_usb_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
     assert result["errors"] is None
+    assert result["description_placeholders"] == {
+        "device": MOCK_SERIAL_BY_ID,
+        "manufacturer": "EnOcean",
+    }
 
     # test device path
     with (
@@ -252,10 +256,10 @@ async def test_usb_discovery(
     assert result["result"].state is ConfigEntryState.LOADED
 
 
-async def test_usb_discovery_already_configured_updates_path(
+async def test_usb_discovery_already_configured(
     hass: HomeAssistant,
 ) -> None:
-    """Test usb discovery aborts when already configured and updates device path."""
+    """Test usb discovery aborts when already configured."""
     # Existing entry with the same unique_id but an old device path
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -288,10 +292,6 @@ async def test_usb_discovery_already_in_progress(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
-    assert result["description_placeholders"] == {
-        "device": MOCK_SERIAL_BY_ID,
-        "manufacturer": "EnOcean",
-    }
 
     with patch(
         f"{MODULE}.config_flow.get_serial_by_id",
