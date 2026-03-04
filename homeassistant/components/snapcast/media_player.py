@@ -203,11 +203,14 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to select source",
-                self._device.friendly_name,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="select_source_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "source": source,
+                },
             )
-            return
 
         streams = self._current_group.streams_by_name()
         if source in streams:
@@ -270,11 +273,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add `group_members` to this client's current group."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to join players",
-                self._device.friendly_name,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="join_players_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
             )
-            return
 
         # Get the client entity for each group member excluding self
         entity_registry = er.async_get(self.hass)
@@ -301,11 +306,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     async def async_unjoin_player(self) -> None:
         """Remove this client from it's current group."""
         if self._current_group is None:
-            _LOGGER.warning(
-                "Client '%s' has no group. Unable to unjoin player",
-                self._device.friendly_name,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unjoin_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
             )
-            return
 
         await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
