@@ -9,6 +9,12 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
         ]),
       }),
@@ -54,6 +60,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -83,6 +99,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -112,6 +138,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -141,6 +177,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -170,6 +216,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -199,6 +255,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -228,6 +294,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
@@ -257,6 +333,16 @@
       'data': dict({
         'failed': list([
         ]),
+        'query': dict({
+          'matched': list([
+            dict({
+              'entity_id': 'light.kitchen',
+              'state': 'off',
+            }),
+          ]),
+          'unmatched': list([
+          ]),
+        }),
         'success': list([
           dict({
             'id': 'light.kitchen',
