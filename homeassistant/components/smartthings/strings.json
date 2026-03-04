@@ -76,6 +76,9 @@
       "remote_control": {
         "name": "Remote control"
       },
+      "robot_cleaner_dust_bag": {
+        "name": "Dust bag full"
+      },
       "sub_remote_control": {
         "name": "Upper washer remote control"
       },
@@ -162,6 +165,11 @@
         }
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -226,12 +234,31 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "name": "Cleaning type",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuuming",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop_together": "Vacuum and mop together"
+        }
+      },
       "robot_cleaner_driving_mode": {
         "name": "Driving mode",
         "state": {
           "area_then_walls": "Area then walls",
           "quick_clean_zigzag_pattern": "Quick clean in a zigzag pattern",
           "walls_first": "Walls first"
+        }
+      },
+      "robot_cleaner_water_spray_level": {
+        "name": "Water level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "Medium",
+          "moderate_high": "Moderate high",
+          "moderate_low": "Moderate low"
         }
       },
       "selected_zone": {
@@ -254,6 +281,14 @@
           "none": "None",
           "normal": "[%key:common::state::normal%]",
           "up": "Up"
+        }
+      },
+      "sound_detection_sensitivity": {
+        "name": "Sound detection sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "spin_level": {
@@ -932,6 +967,14 @@
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
+      }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "name": "Do not disturb end time"
+      },
+      "do_not_disturb_start_time": {
+        "name": "Do not disturb start time"
       }
     },
     "vacuum": {
