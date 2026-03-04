@@ -1883,7 +1883,7 @@ async def test_preview_this_variable(
     user_input: dict,
     expected_state: str,
 ) -> None:
-    """Test preview will error if any template errors."""
+    """Test 'this' variable will not produce an error when rendering a template."""
     client = await hass_ws_client(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1915,7 +1915,7 @@ async def test_preview_this_variable(
     assert msg["success"]
     assert msg["result"] is None
 
-    # Test expected error
+    # Verify we do not get an error and that we receive a preview state.
     msg = await client.receive_json()
     assert "error" not in msg["event"]
     assert msg["event"]["state"] == expected_state

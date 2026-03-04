@@ -29,7 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -267,9 +267,10 @@ class TemplateEntity(AbstractTemplateEntity):
     def _get_this_variable(self) -> TemplateStateFromEntityId:
         """Create a this variable for the entity."""
         if self._preview_callback:
-            return TemplateStateFromEntityId(
-                self.hass, self._entity_id_format.format("preview")
+            preview_entity_id = async_generate_entity_id(
+                self._entity_id_format, self._attr_name or "preview", hass=self.hass
             )
+            return TemplateStateFromEntityId(self.hass, preview_entity_id)
 
         return TemplateStateFromEntityId(self.hass, self.entity_id)
 
