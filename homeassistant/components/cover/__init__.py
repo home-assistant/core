@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -91,6 +92,7 @@ __all__ = [
 ]
 
 
+@deprecated_function("code which checks the state", breaks_in_ha_version="2027.4")
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(entity_id, CoverState.CLOSED)
