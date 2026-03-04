@@ -401,6 +401,11 @@ async def async_setup_entry(
                     or int(state_key) in info.entity_description.states
                 )
             )
+        elif (
+            isinstance(info, NewZwaveDiscoveryInfo)
+            and info.entity_class is ZWaveBooleanBinarySensor
+        ):
+            entities.append(ZWaveBooleanBinarySensor(config_entry, driver, info))
         elif isinstance(info, NewZwaveDiscoveryInfo):
             pass  # other entity classes are not migrated yet
         elif info.platform_hint == "notification":
@@ -481,12 +486,16 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self,
         config_entry: ZwaveJSConfigEntry,
         driver: Driver,
-        info: ZwaveDiscoveryInfo,
+        info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZWaveBooleanBinarySensor entity."""
         super().__init__(config_entry, driver, info)
 
-        # Entity class attributes
+        if isinstance(info, NewZwaveDiscoveryInfo):
+            # Entity name and description are set from the discovery schema.
+            return
+
+        # Entity class attributes for old-style discovery.
         self._attr_name = self.generate_name(include_value_name=True)
         primary_value = self.info.primary_value
         if description := BOOLEAN_SENSOR_MAPPINGS.get(
@@ -578,6 +587,27 @@ class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
 
 
 DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    NewZWaveDiscoverySchema(
+        # Hoppe eHandle ConnectSense (0x0313:0x0701:0x0002) - window tilt sensor.
+        # The window tilt state is exposed as a binary sensor that is disabled by default
+        # instead of a notification sensor. We enable that sensor and give it a name
+        # that is more consistent with the other window related entities.
+        platform=Platform.BINARY_SENSOR,
+        manufacturer_id={0x0313},
+        product_id={0x0002},
+        product_type={0x0701},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_BINARY},
+            property={"Tilt"},
+            type={ValueType.BOOLEAN},
+        ),
+        entity_description=BinarySensorEntityDescription(
+            key="window_door_is_tilted",
+            name="Window/door is tilted",
+            device_class=BinarySensorDeviceClass.WINDOW,
+        ),
+        entity_class=ZWaveBooleanBinarySensor,
+    ),
     NewZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(
