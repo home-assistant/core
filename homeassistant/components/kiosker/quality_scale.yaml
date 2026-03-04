@@ -1,17 +1,23 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom actions to document
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration is polling-only and does not subscribe to external events
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -20,17 +26,19 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide custom actions
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration does not provide configuration options (no options flow)
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: Removed from initial PR per review feedback
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
