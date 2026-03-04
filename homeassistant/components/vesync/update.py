@@ -62,9 +62,13 @@ class VeSyncDeviceUpdate(VeSyncBaseEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Return installed_version."""
-        return self.device.current_firm_version
+        if self.device.current_firm_version is None:
+            return None
+        return str(self.device.current_firm_version)
 
     @property
     def latest_version(self) -> str | None:
         """Return latest_version."""
-        return self.device.latest_firm_version
+        if self.device.latest_firm_version is None:
+            return None
+        return str(self.device.latest_firm_version)
