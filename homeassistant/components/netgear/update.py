@@ -42,7 +42,7 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
         router: NetgearRouter,
     ) -> None:
         """Initialize a Netgear device."""

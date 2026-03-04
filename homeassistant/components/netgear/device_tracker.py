@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
@@ -58,7 +57,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[bool],
         router: NetgearRouter,
         device: dict,
     ) -> None:

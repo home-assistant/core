@@ -365,7 +365,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
         router: NetgearRouter,
         entity_description: NetgearSensorEntityDescription,
     ) -> None:

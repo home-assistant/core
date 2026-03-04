@@ -148,7 +148,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[bool],
         router: NetgearRouter,
         device: dict,
         entity_description: SwitchEntityDescription,

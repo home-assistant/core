@@ -57,7 +57,7 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[bool],
         router: NetgearRouter,
         entity_description: NetgearButtonEntityDescription,
     ) -> None:
