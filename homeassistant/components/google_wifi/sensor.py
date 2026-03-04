@@ -5,22 +5,26 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any, cast
+
 import requests
 
+from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import EntityCategory, UnitOfTime, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_CURRENT_VERSION,
-    ATTR_GROUP_ROLE,
     ATTR_LAST_RESTART,
     ATTR_LOCAL_IP,
     ATTR_NEW_VERSION,
@@ -30,6 +34,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
 class GoogleWifiSensorEntityDescription(SensorEntityDescription):
@@ -47,21 +52,20 @@ async def async_setup_entry(
     """Set up the Google Wifi sensor from a config entry."""
     # Add all sensors defined in SENSOR_TYPES
     async_add_entities(
-        GoogleWifiSensor(entry, description)
-        for description in SENSOR_TYPES
+        GoogleWifiSensor(entry, description) for description in SENSOR_TYPES
     )
 
 
 class GoogleWifiSensor(SensorEntity):
     """Representation of a Google Wifi sensor."""
 
-    #Makes sensors get prefixed from device name
+    # Makes sensors get prefixed from device name
     _attr_has_entity_name = True
+    # Type annotation
+    _attr_data: dict[str, Any]
 
     def __init__(
-        self,
-        entry: ConfigEntry,
-        description: GoogleWifiSensorEntityDescription
+        self, entry: ConfigEntry, description: GoogleWifiSensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
@@ -71,7 +75,7 @@ class GoogleWifiSensor(SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
         # Use the name defined in the config entry title for the device name
-        self._attr_name = description.name
+        self._attr_name = cast(str | None, description.name)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -118,8 +122,9 @@ class GoogleWifiSensor(SensorEntity):
         if not self._attr_data:
             return None
 
+        # cast Desc as a googlewifisensorentitydescription so mypy stops being mad
+        desc = cast(GoogleWifiSensorEntityDescription, self.entity_description)
         raw_data = self._attr_data
-        desc = self.entity_description
 
         try:
             val = raw_data[desc.primary_key][desc.sensor_key]
@@ -141,7 +146,13 @@ class GoogleWifiSensor(SensorEntity):
 
             return val
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Handle legacy YAML configuration by importing it."""
 
     # 1. Map legacy keys to modern ones
@@ -161,7 +172,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2026.9.0", # Set a future target version
+        breaks_in_ha_version="2026.9.0",  # Set a future target version
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -175,6 +186,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             data=import_data,
         )
     )
+
 
 # Define all sensors in one tuple to be imported by sensor.py
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
