@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aiowebdav2 import QuotaInfo
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import WebDavConfigEntry, WebDavCoordinator, WebDavData
+from .coordinator import WebDavConfigEntry, WebDavCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -26,8 +28,8 @@ PARALLEL_UPDATES = 0
 class WebDavSensorEntityDescription(SensorEntityDescription):
     """Describes a WebDAV sensor entity."""
 
-    value_fn: Callable[[WebDavData], int | None]
-    available_fn: Callable[[WebDavData], bool]
+    value_fn: Callable[[QuotaInfo], int | None]
+    available_fn: Callable[[QuotaInfo], bool]
 
 
 SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
@@ -39,8 +41,8 @@ SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.quota.available_bytes,
-        available_fn=lambda data: data.quota.available_bytes is not None,
+        value_fn=lambda quota: quota.available_bytes,
+        available_fn=lambda quota: quota.available_bytes is not None,
     ),
     WebDavSensorEntityDescription(
         key="used_space",
@@ -50,8 +52,8 @@ SENSORS: tuple[WebDavSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.quota.used_bytes,
-        available_fn=lambda data: data.quota.used_bytes is not None,
+        value_fn=lambda quota: quota.used_bytes,
+        available_fn=lambda quota: quota.used_bytes is not None,
     ),
 )
 
@@ -62,9 +64,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WebDAV sensors from a config entry."""
-    coordinator = entry.runtime_data
-
-    if coordinator.data is not None:
+    # Only add sensors if the coordinator is available, which means that
+    # the WebDAV server supports quota, and we were able to fetch the quota data.
+    if (coordinator := entry.runtime_data) is not None:
         async_add_entities(
             WebDavSensor(coordinator, description)
             for description in SENSORS

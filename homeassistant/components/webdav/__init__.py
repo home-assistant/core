@@ -18,7 +18,11 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import WebDavConfigEntry, WebDavCoordinator
-from .helpers import async_create_client, async_ensure_path_exists
+from .helpers import (
+    async_create_client,
+    async_ensure_path_exists,
+    async_server_supports_quota,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -60,10 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
             translation_key="cannot_access_or_create_backup_path",
         )
 
-    coordinator = WebDavCoordinator(hass, client, entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
+    if await async_server_supports_quota(client):
+        coordinator = WebDavCoordinator(hass, client, entry)
+        await coordinator.async_config_entry_first_refresh()
+        entry.runtime_data = coordinator
 
     def async_notify_backup_listeners() -> None:
         for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):

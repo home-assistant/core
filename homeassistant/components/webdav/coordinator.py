@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 from aiowebdav2.client import Client
-from aiowebdav2.exceptions import (
-    MethodNotSupportedError,
-    UnauthorizedError,
-    WebDavError,
-)
+from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 from aiowebdav2.models import QuotaInfo
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,18 +23,10 @@ SCAN_INTERVAL = timedelta(minutes=15)
 type WebDavConfigEntry = ConfigEntry[WebDavCoordinator]
 
 
-@dataclass(frozen=True)
-class WebDavData:
-    """Data class for WebDAV coordinator."""
-
-    quota: QuotaInfo
-
-
-class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
+class WebDavCoordinator(DataUpdateCoordinator[QuotaInfo]):
     """The WebDAV coordinator."""
 
     config_entry: WebDavConfigEntry
-    _initial_quota: QuotaInfo | None
 
     def __init__(
         self,
@@ -56,30 +43,9 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
             config_entry=config_entry,
         )
         self.client = client
-        self._initial_quota: QuotaInfo | None = None
 
-    async def _async_setup(self) -> None:
-        """Set up the WebDAV coordinator."""
-        try:
-            quota = await self.client.quota()
-        except MethodNotSupportedError:
-            _LOGGER.debug("WebDAV server does not support quota")
-            await self.async_shutdown()
-            return
-
-        if quota.available_bytes is None and quota.used_bytes is None:
-            _LOGGER.debug("WebDAV server does not provide quota information")
-            await self.async_shutdown()
-            return
-
-        self._initial_quota = quota
-
-    async def _async_update_data(self) -> WebDavData:
+    async def _async_update_data(self) -> QuotaInfo:
         """Fetch data from WebDAV server."""
-        if (initial_quota := self._initial_quota) is not None:
-            self._initial_quota = None
-            return WebDavData(quota=initial_quota)
-
         try:
             quota = await self.client.quota()
         except UnauthorizedError as err:
@@ -87,4 +53,4 @@ class WebDavCoordinator(DataUpdateCoordinator[WebDavData]):
         except WebDavError as err:
             raise UpdateFailed(f"Failed to fetch quota data: {err}") from err
 
-        return WebDavData(quota=quota)
+        return quota

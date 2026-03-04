@@ -2,6 +2,7 @@
 
 import logging
 
+from aiowebdav2 import MethodNotSupportedError
 from aiowebdav2.client import Client, ClientOptions
 
 from homeassistant.core import HomeAssistant, callback
@@ -38,5 +39,20 @@ async def async_ensure_path_exists(client: Client, path: str) -> bool:
         sub_path = "/".join(parts[:i])
         if not await client.check(sub_path) and not await client.mkdir(sub_path):
             return False
+
+    return True
+
+
+async def async_server_supports_quota(client: Client) -> bool:
+    """Check if the WebDAV server supports quota."""
+    try:
+        quota = await client.quota()
+    except MethodNotSupportedError:
+        _LOGGER.debug("Quota request not supported")
+        return False
+
+    if quota.available_bytes is None and quota.used_bytes is None:
+        _LOGGER.debug("WebDAV server does not provide quota information")
+        return False
 
     return True
