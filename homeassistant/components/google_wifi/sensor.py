@@ -8,13 +8,14 @@ import logging
 import requests
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -90,7 +91,7 @@ class GoogleWifiSensor(SensorEntity):
             manufacturer="Google",
             model=model_name,
             # Use the current IP from the entry data for the link
-            configuration_url=f"http://{_entry.data[CONF_IP_ADDRESS]}",
+            configuration_url=f"http://{self._entry.data[CONF_IP_ADDRESS]}",
             # Pull software version from the last successful data fetch
             sw_version=self._attr_data.get("software", {}).get("softwareVersion"),
         )
@@ -107,7 +108,7 @@ class GoogleWifiSensor(SensorEntity):
             response = await self.hass.async_add_executor_job(fetch)
             response.raise_for_status()
             self._attr_data = response.json()
-        except (requests.exceptions.RequestException, ValueError):
+        except (requests.exceptions.RequestException, ValueError) as err:
             _LOGGER.debug("Error updating sensor: %s", err)
             self._attr_data = {}
 
