@@ -476,3 +476,24 @@ async def test_smoke_co_notification_sensors(
     assert state.state == STATE_ON, (
         f"Expected smoke diagnostic state to be 'on', got '{state.state}'"
     )
+
+
+async def test_hoppe_ehandle_connectsense(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hoppe_ehandle_connectsense: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test Hoppe eHandle ConnectSense tilt sensor is discovered as a window sensor."""
+    entity_id = "binary_sensor.ehandle_connectsense_window_door_is_tilted"
+    state = hass.states.get(entity_id)
+    assert state is not None, (
+        "Window/door is tilted sensor should be enabled by default"
+    )
+    assert state.state == STATE_OFF
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.original_name == "Window/door is tilted"
+    assert entry.original_device_class == BinarySensorDeviceClass.WINDOW
+    assert entry.disabled_by is None, "Entity should be enabled by default"

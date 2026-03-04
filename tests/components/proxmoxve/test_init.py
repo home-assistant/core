@@ -16,6 +16,10 @@ from homeassistant.components.proxmoxve.const import (
     CONF_VMS,
     DOMAIN,
 )
+from homeassistant.components.proxmoxve.coordinator import (
+    ProxmoxNodesNotFoundError,
+    ProxmoxPermissionsError,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -73,32 +77,70 @@ async def test_config_import(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    ("exception", "expected_state", "target"),
     [
         (
             AuthenticationError("Invalid credentials"),
             ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
         ),
         (
             SSLError("SSL handshake failed"),
             ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
         ),
-        (ConnectTimeout("Connection timed out"), ConfigEntryState.SETUP_RETRY),
+        (
+            ConnectTimeout("Connection timed out"),
+            ConfigEntryState.SETUP_RETRY,
+            "access.permissions.get",
+        ),
+        (
+            ResourceException(403, "Forbidden", ""),
+            ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
+        ),
         (
             ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_RETRY,
+            "access.permissions.get",
+        ),
+        (
+            ResourceException(403, "Forbidden", ""),
             ConfigEntryState.SETUP_ERROR,
+            "nodes.get",
+        ),
+        (
+            ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_RETRY,
+            "nodes.get",
         ),
         (
             requests.exceptions.ConnectionError("Connection refused"),
             ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
+        ),
+        (
+            ProxmoxPermissionsError("Failed to retrieve permissions"),
+            ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
+        ),
+        (
+            ProxmoxNodesNotFoundError("No nodes found"),
+            ConfigEntryState.SETUP_ERROR,
+            "nodes.get",
         ),
     ],
     ids=[
         "auth_error",
         "ssl_error",
         "connect_timeout",
-        "resource_exception",
+        "resource_exception_permissions_403",
+        "resource_exception_permissions_500",
+        "resource_exception_nodes_403",
+        "resource_exception_nodes_500",
         "connection_error",
+        "permissions_error",
+        "nodes_not_found",
     ],
 )
 async def test_setup_exceptions(
@@ -107,9 +149,14 @@ async def test_setup_exceptions(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_state: ConfigEntryState,
+    target: str,
 ) -> None:
     """Test the _async_setup."""
-    mock_proxmox_client.nodes.get.side_effect = exception
+    attr_to_mock = mock_proxmox_client
+    for part in target.split("."):
+        attr_to_mock = getattr(attr_to_mock, part)
+    attr_to_mock.side_effect = exception
+
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state == expected_state
 
