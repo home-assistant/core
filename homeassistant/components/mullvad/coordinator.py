@@ -31,7 +31,7 @@ class MullvadCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=1),
         )
 
-    async def _async_update_data(self) -> Any:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Mullvad API."""
         async with asyncio.timeout(10):
             api = await self.hass.async_add_executor_job(MullvadAPI)
