@@ -153,32 +153,25 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         return apps
 
     @callback
-    def _update_internal_state(self) -> None:
-        """Update internal state from coordinator data."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         data = self.coordinator.data
+        self._attr_volume_level = None
+        self._attr_is_volume_muted = None
+        self._attr_sound_mode = None
+        self._current_input = None
+        self._attr_sound_mode_list = []
 
         # Handle device off
         if not data.is_on:
             self._attr_state = MediaPlayerState.OFF
-            self._attr_volume_level = None
-            self._attr_is_volume_muted = None
-            self._current_input = None
             self._attr_app_name = None
             self._current_app_config = None
-            self._attr_sound_mode = None
+            super()._handle_coordinator_update()
             return
 
-        # Device is on - reset to defaults, then apply coordinator data
+        # Device is on - apply coordinator data
         self._attr_state = MediaPlayerState.ON
-        self._attr_volume_level = None
-        self._attr_is_volume_muted = None
-        self._attr_sound_mode = None
-        self._attr_sound_mode_list = []
-        self._attr_supported_features = SUPPORTED_COMMANDS[
-            self._attr_device_class  # type: ignore[index]
-        ]
-        self._current_input = None
-        self._available_inputs = []
 
         # Audio settings
         if data.audio_settings:
@@ -218,10 +211,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             if self._attr_app_name == NO_APP_RUNNING:
                 self._attr_app_name = None
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_internal_state()
         super()._handle_coordinator_update()
 
     def _get_additional_app_names(self) -> list[str]:
@@ -262,7 +251,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         await super().async_added_to_hass()
 
         # Process initial coordinator data
-        self._update_internal_state()
+        self._handle_coordinator_update()
 
         # Register callback for when config entry is updated.
         self.async_on_remove(
