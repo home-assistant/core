@@ -270,9 +270,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state attributes."""
         data: dict[str, Any] = {}
 
-        # pylint: disable-next=redefined-outer-name
-        if (is_closed := self.is_closed) is not None:
-            data[ATTR_IS_CLOSED] = is_closed
+        data[ATTR_IS_CLOSED] = self.is_closed
 
         if (current := self.current_cover_position) is not None:
             data[ATTR_CURRENT_POSITION] = current
