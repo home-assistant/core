@@ -358,7 +358,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         CLIMATE_DESCRIPTIONS[device.category],
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, DPCode.HUMIDITY_CURRENT
                         ),
                         current_temperature_wrapper=temperature_wrappers[0],
@@ -367,7 +367,7 @@ async def async_setup_entry(
                             (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
                             prefer_function=True,
                         ),
-                        hvac_mode_wrapper=_HvacModeWrapper.find_dpcode(  # type: ignore[arg-type]
+                        hvac_mode_wrapper=_HvacModeWrapper.find_dpcode(
                             device, DPCode.MODE, prefer_function=True
                         ),
                         preset_wrapper=_PresetWrapper.find_dpcode(
@@ -378,7 +378,7 @@ async def async_setup_entry(
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, DPCode.HUMIDITY_SET, prefer_function=True
                         ),
                         temperature_unit=temperature_wrappers[2],

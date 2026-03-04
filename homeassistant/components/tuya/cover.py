@@ -291,19 +291,19 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
-                        current_position=description.position_wrapper.find_dpcode(  # type: ignore[arg-type]
+                        current_position=description.position_wrapper.find_dpcode(
                             device, description.current_position
                         ),
-                        current_state_wrapper=description.current_state_wrapper.find_dpcode(  # type: ignore[arg-type]
+                        current_state_wrapper=description.current_state_wrapper.find_dpcode(
                             device, description.current_state
                         ),
                         instruction_wrapper=_get_instruction_wrapper(
                             device, description
                         ),
-                        set_position=description.position_wrapper.find_dpcode(  # type: ignore[arg-type]
+                        set_position=description.position_wrapper.find_dpcode(
                             device, description.set_position, prefer_function=True
                         ),
-                        tilt_position=description.position_wrapper.find_dpcode(  # type: ignore[arg-type]
+                        tilt_position=description.position_wrapper.find_dpcode(
                             device,
                             (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
                             prefer_function=True,

@@ -139,10 +139,10 @@ async def async_setup_entry(
                         action_wrapper=_AlarmActionWrapper(
                             master_mode.dpcode, master_mode
                         ),
-                        changed_by_wrapper=_AlarmChangedByWrapper.find_dpcode(  # type: ignore[arg-type]
+                        changed_by_wrapper=_AlarmChangedByWrapper.find_dpcode(
                             device, DPCode.ALARM_MSG
                         ),
-                        state_wrapper=_AlarmStateWrapper(  # type: ignore[arg-type]
+                        state_wrapper=_AlarmStateWrapper(
                             master_mode.dpcode, master_mode
                         ),
                     )

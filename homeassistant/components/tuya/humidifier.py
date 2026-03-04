@@ -104,7 +104,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, description.current_humidity
                         ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
@@ -115,7 +115,7 @@ async def async_setup_entry(
                             description.dpcode or description.key,
                             prefer_function=True,
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, description.humidity, prefer_function=True
                         ),
                     )

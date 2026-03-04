@@ -47,7 +47,7 @@ class _AlarmMessageWrapper(DPCodeStringWrapper[tuple[str, dict[str, Any]]]):
         super().__init__(dpcode, type_information)
         self.options = ["triggered"]
 
-    def read_device_status(  # type: ignore[override]
+    def read_device_status(
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the alarm message."""
