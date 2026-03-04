@@ -39,8 +39,9 @@ from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# Proxmox snapshot names allow alphanumeric characters, dots, hyphens, underscores.
-_SNAPSHOT_NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
+# Proxmox snapshot names only allow alphanumeric characters and hyphens/underscores.
+# Dots are NOT valid despite appearing in Proxmox docs — the API rejects them.
+_SNAPSHOT_NAME_RE = re.compile(r"[^a-zA-Z0-9_-]+")
 
 CREATE_SNAPSHOT_SCHEMA = vol.Schema(
     {
@@ -214,7 +215,7 @@ def _create_snapshot_blocking(
         coordinator.proxmox.nodes(node).qemu(vmid).snapshot.post(
             snapname=snapname,
             description=description,
-            vmstate=False,
+            vmstate=0,
         )
     else:
         coordinator.proxmox.nodes(node).lxc(vmid).snapshot.post(

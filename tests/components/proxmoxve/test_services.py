@@ -36,9 +36,10 @@ async def test_create_snapshot_vm_uses_core_version(
     snapshot_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
     snapshot_mock.assert_called_once()
     call_kwargs = snapshot_mock.call_args.kwargs
-    assert call_kwargs["snapname"] == f"Home_Assistant_{HA_VERSION}"
+    sanitized = HA_VERSION.replace(".", "_")
+    assert call_kwargs["snapname"] == f"Home_Assistant_{sanitized}"
     assert call_kwargs["description"] == HA_VERSION
-    assert call_kwargs["vmstate"] is False
+    assert call_kwargs["vmstate"] == 0
 
 
 async def test_create_snapshot_container_uses_core_version(
@@ -59,7 +60,8 @@ async def test_create_snapshot_container_uses_core_version(
     snapshot_mock = mock_proxmox_client._lxc_mocks[200].snapshot.post
     snapshot_mock.assert_called_once()
     call_kwargs = snapshot_mock.call_args.kwargs
-    assert call_kwargs["snapname"] == f"Home_Assistant_{HA_VERSION}"
+    sanitized = HA_VERSION.replace(".", "_")
+    assert call_kwargs["snapname"] == f"Home_Assistant_{sanitized}"
     assert call_kwargs["description"] == HA_VERSION
     # LXC snapshots do not accept vmstate
     assert "vmstate" not in call_kwargs
@@ -88,7 +90,7 @@ async def test_create_snapshot_vm_uses_version_entity(
     snapshot_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
     snapshot_mock.assert_called_once()
     call_kwargs = snapshot_mock.call_args.kwargs
-    assert call_kwargs["snapname"] == "Home_Assistant_2026.3.0"
+    assert call_kwargs["snapname"] == "Home_Assistant_2026_3_0"
     assert call_kwargs["description"] == "2026.3.0"
 
 
@@ -126,8 +128,9 @@ async def test_create_snapshot_by_vm_device_id(
     snapshot_mock = mock_proxmox_client._qemu_mocks[100].snapshot.post
     snapshot_mock.assert_called_once()
     call_kwargs = snapshot_mock.call_args.kwargs
-    assert call_kwargs["snapname"] == f"Home_Assistant_{HA_VERSION}"
-    assert call_kwargs["vmstate"] is False
+    sanitized = HA_VERSION.replace(".", "_")
+    assert call_kwargs["snapname"] == f"Home_Assistant_{sanitized}"
+    assert call_kwargs["vmstate"] == 0
 
 
 async def test_create_snapshot_by_container_device_id(
@@ -164,7 +167,8 @@ async def test_create_snapshot_by_container_device_id(
     snapshot_mock = mock_proxmox_client._lxc_mocks[200].snapshot.post
     snapshot_mock.assert_called_once()
     call_kwargs = snapshot_mock.call_args.kwargs
-    assert call_kwargs["snapname"] == f"Home_Assistant_{HA_VERSION}"
+    sanitized = HA_VERSION.replace(".", "_")
+    assert call_kwargs["snapname"] == f"Home_Assistant_{sanitized}"
     assert "vmstate" not in call_kwargs
 
 
