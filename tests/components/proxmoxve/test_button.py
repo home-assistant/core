@@ -330,7 +330,7 @@ async def test_node_buttons_permission_denied_for_auditor_role(
     entity_id: str,
     translation_key: str,
 ) -> None:
-    """Test that buttons are informing properly when only Audit permissions exist."""
+    """Test that buttons are raising accordingly for Auditor permissions."""
     mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
 
     await setup_integration(hass, mock_config_entry)
