@@ -307,6 +307,140 @@ async def test_door_trigger_binary_sensor_behavior_last(
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("cover"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="door.opened",
+            target_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+            ],
+            other_states=[
+                (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+            ],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+    ],
+)
+async def test_door_trigger_cover_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_covers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test door trigger fires on the first cover state change."""
+    other_entity_ids = set(target_covers["included"]) - {entity_id}
+    excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
+
+    for eid in target_covers["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
+
+    for state in states[1:]:
+        excluded_state = state["excluded"]
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("cover"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="door.opened",
+            target_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+            ],
+            other_states=[
+                (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+            ],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+    ],
+)
+async def test_door_trigger_cover_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_covers: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test door trigger fires when the last cover changes state."""
+    other_entity_ids = set(target_covers["included"]) - {entity_id}
+    excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
+
+    for eid in target_covers["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
+
+    for state in states[1:]:
+        excluded_state = state["excluded"]
+        included_state = state["included"]
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     (
         "trigger_key",
         "binary_sensor_initial",
