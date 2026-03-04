@@ -165,7 +165,7 @@ async def websocket_supervisor_api(
 async def websocket_update_addon(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Websocket handler to update an app."""
+    """Websocket handler to update an addon."""
     app_name: str | None = None
     app_version: str | None = None
     apps_list: list[dict[str, Any]] = get_apps_list(hass) or []
