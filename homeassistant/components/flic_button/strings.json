@@ -4,13 +4,16 @@
       "already_configured": "This Flic button is already configured.",
       "cannot_connect": "Failed to connect to button at address {address}.",
       "device_not_found": "Button not found. Make sure it is in range and powered on.",
-      "use_bluetooth_discovery": "Flic buttons are automatically discovered via Bluetooth. Put your button in pairing mode (hold for 7 seconds until LED flashes) and it will appear in discovered devices."
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
       "cannot_connect": "Failed to connect to the button. Make sure it is in range and try again.",
       "invalid_signature": "Invalid button signature during pairing. This may not be a genuine Flic button.",
       "pairing_failed": "Pairing failed. Please ensure the button is in pairing mode (LED flashing) and try again.",
       "unknown": "An unexpected error occurred during pairing."
+    },
+    "progress": {
+      "wait_for_discovery": "Put the Flic button into pairing mode by holding it for 7 seconds until the LED starts flashing. Waiting for a button to appear\u2026"
     },
     "step": {
       "bluetooth_confirm": {
@@ -20,6 +23,9 @@
       "pair": {
         "description": "Put the Flic button into pairing mode by holding it for 7 seconds until the LED starts flashing. Then submit this form to complete pairing with {name}.",
         "title": "Pair with Flic button"
+      },
+      "user": {
+        "title": "Pair with Flic button"
       }
     }
   },
@@ -28,7 +34,7 @@
       "big_button": "Big button",
       "button": "Button",
       "small_button": "Small button",
-      "twist_button": "Twist button"
+      "twist_button": "Twist"
     },
     "trigger_type": {
       "click": "{subtype} clicked",
@@ -36,6 +42,8 @@
       "down": "{subtype} pressed",
       "duo_dial_changed": "{subtype} dial position changed",
       "hold": "{subtype} held",
+      "push_twist_decrement": "{subtype} push-twist decremented",
+      "push_twist_increment": "{subtype} push-twist incremented",
       "rotate_clockwise": "{subtype} rotated clockwise",
       "rotate_counter_clockwise": "{subtype} rotated counter-clockwise",
       "selector_changed": "{subtype} selector changed",
@@ -55,6 +63,8 @@
       "swipe_left": "{subtype} swiped left",
       "swipe_right": "{subtype} swiped right",
       "swipe_up": "{subtype} swiped up",
+      "twist_decrement": "{subtype} twist decremented",
+      "twist_increment": "{subtype} twist incremented",
       "up": "{subtype} released"
     }
   },
@@ -75,7 +85,7 @@
         }
       },
       "button_big": {
-        "name": "Big Button",
+        "name": "Big button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -83,6 +93,8 @@
               "double_click": "Double click",
               "down": "Pressed",
               "hold": "Hold",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
               "swipe_down": "Swipe down",
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",
@@ -93,7 +105,7 @@
         }
       },
       "button_small": {
-        "name": "Small Button",
+        "name": "Small button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -101,6 +113,8 @@
               "double_click": "Double click",
               "down": "Pressed",
               "hold": "Hold",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
               "swipe_down": "Swipe down",
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",
@@ -126,11 +140,32 @@
             }
           }
         }
+      },
+      "button_twist_default": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single click",
+              "double_click": "Double click",
+              "down": "Pressed",
+              "hold": "Hold",
+              "push_twist_decrement": "Push-twist decremented",
+              "push_twist_increment": "Push-twist incremented",
+              "twist_decrement": "Twist decremented",
+              "twist_increment": "Twist incremented",
+              "up": "Released"
+            }
+          }
+        }
       }
     },
     "number": {
       "big_dial": {
-        "name": "Big Button Rotate"
+        "name": "Big button rotate"
+      },
+      "push_twist_position": {
+        "name": "Push twist position"
       },
       "slot_1": {
         "name": "Slot 1 position"
@@ -169,7 +204,10 @@
         "name": "Slot 9 position"
       },
       "small_dial": {
-        "name": "Small Button Rotate"
+        "name": "Small button rotate"
+      },
+      "twist_position": {
+        "name": "Twist position"
       }
     },
     "select": {
@@ -194,15 +232,17 @@
     "sensor": {
       "battery": {
         "name": "Battery"
-      },
-      "button_uuid": {
-        "name": "Button UUID"
       }
     },
     "update": {
       "firmware": {
         "name": "Firmware"
       }
+    }
+  },
+  "exceptions": {
+    "read_only_entity": {
+      "message": "This entity is read-only and reflects the physical dial position."
     }
   },
   "options": {
@@ -215,9 +255,18 @@
           "push_twist_mode": "Push twist mode"
         },
         "data_description": {
-          "push_twist_mode": "Controls the behavior when holding the button and twisting. Selector mode enables click and double-click events and shows the selected slot entity."
+          "push_twist_mode": "Controls the behavior when holding the button and twisting. Default mode shows two sliders (twist position and push-twist position) that clamp at boundaries. Continuous mode is like default but wraps around instead of clamping. Selector mode shows 12 per-slot sliders, enables click and double-click events, and shows the selected slot entity."
         },
         "title": "Flic Twist options"
+      }
+    }
+  },
+  "selector": {
+    "push_twist_mode": {
+      "options": {
+        "continuous": "Continuous",
+        "default": "Default",
+        "selector": "Selector mode"
       }
     }
   }

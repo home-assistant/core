@@ -1,12 +1,8 @@
-"""Flic device protocol handlers.
-
-This module provides device-specific protocol handlers for Flic devices:
-- Flic2ProtocolHandler: For standard Flic 2 buttons
-- DuoProtocolHandler: For Flic Duo buttons (two buttons, rotation, gestures)
-- TwistProtocolHandler: For Flic Twist buttons (rotation, selector modes)
-"""
+"""Flic device protocol handlers."""
 
 from __future__ import annotations
+
+from typing import assert_never
 
 from ..const import DeviceType, PushTwistMode
 from .base import ButtonEvent, DeviceCapabilities, DeviceProtocolHandler, RotateEvent
@@ -28,21 +24,9 @@ __all__ = [
 
 def create_handler(
     device_type: DeviceType,
-    serial_number: str | None = None,
     push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
 ) -> DeviceProtocolHandler:
-    """Create the appropriate protocol handler for a device type.
-
-    Args:
-        device_type: The type of Flic device
-        serial_number: Optional serial number (used for detection if device_type is None)
-        push_twist_mode: Push twist mode setting for Twist devices
-
-    Returns:
-        A protocol handler instance for the device type
-
-    """
-    # If device type is explicitly specified, use it
+    """Create the appropriate protocol handler for a device type."""
     match device_type:
         case DeviceType.TWIST:
             return TwistProtocolHandler(push_twist_mode=push_twist_mode)
@@ -50,13 +34,5 @@ def create_handler(
             return DuoProtocolHandler()
         case DeviceType.FLIC2:
             return Flic2ProtocolHandler()
-
-    # Fallback: Try to detect from serial number prefix
-    if serial_number:
-        return create_handler(
-            DeviceType.from_serial_number(serial_number),
-            push_twist_mode=push_twist_mode,
-        )
-
-    # Default to Flic 2
-    return Flic2ProtocolHandler()
+        case _:
+            assert_never(device_type)

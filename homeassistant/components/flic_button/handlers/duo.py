@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 import time
 from typing import Final
 
 from ..const import (
     COMMAND_TIMEOUT,
+    DUO_FIRMWARE_DATA_CHUNK_SIZE,
+    DUO_FIRMWARE_MAX_IN_FLIGHT,
     EVENT_TYPE_CLICK,
     EVENT_TYPE_DOUBLE_CLICK,
     EVENT_TYPE_DOWN,
@@ -20,7 +23,11 @@ from ..const import (
     EVENT_TYPE_SWIPE_RIGHT,
     EVENT_TYPE_SWIPE_UP,
     EVENT_TYPE_UP,
+    FIRMWARE_FINAL_ACK_TIMEOUT,
+    FIRMWARE_HEADER_SIZE,
+    FIRMWARE_UPDATE_TIMEOUT,
     OPCODE_BUTTON_EVENT_DUO,
+    OPCODE_FIRMWARE_UPDATE_NOTIFICATION,
     OPCODE_INIT_BUTTON_EVENTS_DUO_REQUEST,
     OPCODE_INIT_BUTTON_EVENTS_DUO_RESPONSE_WITH_BOOT_ID,
     OPCODE_INIT_BUTTON_EVENTS_DUO_RESPONSE_WITHOUT_BOOT_ID,
@@ -28,8 +35,11 @@ from ..const import (
 )
 from ..flic_protocol import (
     ButtonEventType,
+    DuoFirmwareUpdateDataInd,
     DuoParserState,
+    DuoStartFirmwareUpdateRequest,
     EnablePushTwistRequest,
+    FirmwareUpdateNotification,
     FlicDuoEventNotification,
     Gesture,
     InitButtonEventsDuoRequest,
@@ -183,6 +193,100 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
         )
         await write_packet(request, True)
         _LOGGER.debug("Push twist events enabled")
+
+    def _build_firmware_start_packet(self, firmware_binary: bytes) -> bytes:
+        """Build the Duo-specific firmware update start packet."""
+        return DuoStartFirmwareUpdateRequest.from_firmware_binary(
+            firmware_binary, self._connection_id
+        ).to_bytes()
+
+    async def send_firmware_data(
+        self,
+        firmware_binary: bytes,
+        start_pos: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> bool:
+        """Send firmware data to a Duo device with byte-based flow control."""
+        compressed_data = firmware_binary[FIRMWARE_HEADER_SIZE:]
+        total_bytes = len(compressed_data)
+        sent_pos = start_pos
+        acked_pos = start_pos
+
+        _LOGGER.debug(
+            "Starting Duo firmware data transfer: total=%d bytes, start_pos=%d",
+            total_bytes,
+            start_pos,
+        )
+
+        while sent_pos < total_bytes:
+            # Flow control: wait if too many bytes in flight
+            while sent_pos - acked_pos >= DUO_FIRMWARE_MAX_IN_FLIGHT:
+                notification_data = await asyncio.wait_for(
+                    wait_for_opcode(OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                    timeout=FIRMWARE_UPDATE_TIMEOUT,
+                )
+                # Strip frame header for parsing
+                notification = FirmwareUpdateNotification.from_bytes(
+                    notification_data[1:]
+                )
+
+                if notification.pos == 0:
+                    _LOGGER.error("Firmware signature verification failed")
+                    return False
+
+                acked_pos = notification.pos
+                if progress_callback:
+                    progress_callback(acked_pos, total_bytes)
+
+                if acked_pos >= total_bytes:
+                    _LOGGER.info("Firmware transfer complete")
+                    return True
+
+            # Send next chunk, clamped to remaining in-flight window
+            remaining_window = DUO_FIRMWARE_MAX_IN_FLIGHT - (sent_pos - acked_pos)
+            chunk_size = min(
+                DUO_FIRMWARE_DATA_CHUNK_SIZE, total_bytes - sent_pos, remaining_window
+            )
+            chunk = compressed_data[sent_pos : sent_pos + chunk_size]
+
+            data_ind = DuoFirmwareUpdateDataInd(
+                connection_id=self._connection_id, chunk_data=chunk
+            )
+            await write_packet(data_ind.to_bytes(), True)
+            sent_pos += chunk_size
+
+        # Wait for remaining acknowledgments.
+        # After all data is sent the device verifies the signature and reboots.
+        # The reboot often drops the BLE connection before the final ACK
+        # arrives, so use a shorter timeout and treat it as success.
+        try:
+            while acked_pos < total_bytes:
+                notification_data = await asyncio.wait_for(
+                    wait_for_opcode(OPCODE_FIRMWARE_UPDATE_NOTIFICATION),
+                    timeout=FIRMWARE_FINAL_ACK_TIMEOUT,
+                )
+                notification = FirmwareUpdateNotification.from_bytes(
+                    notification_data[1:]
+                )
+
+                if notification.pos == 0:
+                    _LOGGER.error("Firmware signature verification failed")
+                    return False
+
+                acked_pos = notification.pos
+                if progress_callback:
+                    progress_callback(acked_pos, total_bytes)
+        except TimeoutError:
+            _LOGGER.info(
+                "Final ACK timed out after all data sent — "
+                "device likely rebooted with new firmware"
+            )
+            return True
+
+        _LOGGER.info("Firmware transfer complete")
+        return True
 
     def handle_notification(
         self,
@@ -367,16 +471,7 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
                 return None
 
     def _parse_push_twist_event(self, event_data: bytes) -> list[RotateEvent]:
-        """Parse Flic Duo push twist (rotation) event.
-
-        Returns a RotateEvent with dial_percentage (0-100) based on 120° rotation.
-        Each button has its own independent dial position.
-
-        Three-layer filtering prevents swipe gestures from triggering rotation:
-        1. Zero-rotation filter: drops events with angle_diff == 0
-        2. Press-duration gate: buffers events for first 250ms after button DOWN
-        3. Post-swipe suppression: suppresses events for 300ms after a swipe gesture
-        """
+        """Parse Flic Duo push twist (rotation) event with swipe filtering."""
         _LOGGER.debug(
             "Processing push twist event data: %s (%d bytes)",
             event_data.hex(),

@@ -186,6 +186,7 @@ def create_mock_flic_client(
             TEST_BATTERY_LEVEL,
             TEST_SIG_BITS,
             None,
+            10,
         )
     )
     mock_client.quick_verify = MagicMock(return_value=None)
@@ -197,6 +198,7 @@ def create_mock_flic_client(
 def create_mock_coordinator(
     address: str = FLIC2_ADDRESS,
     serial_number: str = FLIC2_SERIAL,
+    device_type: DeviceType = DeviceType.FLIC2,
     connected: bool = True,
     is_duo: bool = False,
     is_twist: bool = False,
@@ -215,6 +217,11 @@ def create_mock_coordinator(
     mock_coordinator.serial_number = serial_number
     mock_coordinator.is_duo = is_duo
     mock_coordinator.is_twist = is_twist
+    mock_coordinator.device_type = device_type
+    mock_coordinator.last_update_success = True
+    mock_coordinator.async_connect = AsyncMock()
+    mock_coordinator.async_disconnect = AsyncMock()
+    mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
 
     # Mock capabilities
     mock_capabilities = MagicMock()
@@ -223,18 +230,34 @@ def create_mock_coordinator(
     mock_capabilities.has_selector = is_twist
     mock_coordinator.capabilities = mock_capabilities
 
+    # Model name
+    if is_duo:
+        mock_coordinator.model_name = "Flic Duo"
+    elif is_twist:
+        mock_coordinator.model_name = "Flic Twist"
+    else:
+        mock_coordinator.model_name = "Flic 2"
+
+    # Mock handler
+    mock_handler = MagicMock()
+    mock_handler.capabilities = mock_capabilities
+    mock_coordinator.handler = mock_handler
+
     # Mock data
     mock_coordinator.data = (
         {"battery_voltage": battery_voltage} if battery_voltage else {}
     )
 
-    # Firmware version
+    # Firmware state
     mock_coordinator.firmware_version = None
+    mock_coordinator.latest_firmware_version = None
+    mock_coordinator.firmware_download_url = None
+    mock_coordinator.firmware_update_in_progress = False
+    mock_coordinator.firmware_update_percentage = None
+    mock_coordinator.firmware_awaiting_reboot = False
 
     # Mock methods
-    mock_coordinator.async_connect = MagicMock(return_value=None)
-    mock_coordinator.async_disconnect = MagicMock(return_value=None)
-    mock_coordinator.async_reconnect_if_needed = MagicMock(return_value=None)
+    mock_coordinator.async_reconnect_if_needed = AsyncMock()
     mock_coordinator.async_load_slot_values = AsyncMock()
 
     return mock_coordinator

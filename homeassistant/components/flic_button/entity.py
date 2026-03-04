@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,12 +21,7 @@ class FlicButtonEntity(CoordinatorEntity[FlicCoordinator]):
     _unavailable_logged: bool = False
 
     def __init__(self, coordinator: FlicCoordinator) -> None:
-        """Initialize the Flic button entity.
-
-        Args:
-            coordinator: Flic coordinator instance
-
-        """
+        """Initialize the Flic button entity."""
         super().__init__(coordinator)
         serial = coordinator.serial_number
         if serial:
@@ -46,17 +42,18 @@ class FlicButtonEntity(CoordinatorEntity[FlicCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        is_available = super().available and self.coordinator.connected
+        return super().available and self.coordinator.connected
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        is_available = self.available
 
         if not is_available and not self._unavailable_logged:
-            _LOGGER.info(
-                "Flic button %s is unavailable", self.coordinator.client.address
-            )
+            _LOGGER.info("%s is unavailable", self.coordinator.client.address)
             self._unavailable_logged = True
         elif is_available and self._unavailable_logged:
-            _LOGGER.info(
-                "Flic button %s is back online", self.coordinator.client.address
-            )
+            _LOGGER.info("%s is back online", self.coordinator.client.address)
             self._unavailable_logged = False
 
-        return is_available
+        super()._handle_coordinator_update()

@@ -8,23 +8,37 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.flic_button.const import (
+    DUO_FIRMWARE_DATA_CHUNK_SIZE,
     FIRMWARE_HEADER_SIZE,
+    OPCODE_FIRMWARE_UPDATE_DATA_DUO_IND,
+    OPCODE_FIRMWARE_UPDATE_DATA_IND,
+    OPCODE_FORCE_BT_DISCONNECT_IND,
+    OPCODE_START_FIRMWARE_UPDATE_DUO_REQUEST,
+    OPCODE_START_FIRMWARE_UPDATE_REQUEST,
     TWIST_OPCODE_START_FIRMWARE_UPDATE_REQUEST,
     TWIST_OPCODE_START_FIRMWARE_UPDATE_RESPONSE,
 )
 from homeassistant.components.flic_button.flic_protocol import (
+    DuoFirmwareUpdateDataInd,
+    DuoStartFirmwareUpdateRequest,
     FirmwareUpdateDataInd,
     FirmwareUpdateNotification,
+    Flic2FirmwareUpdateDataInd,
+    Flic2ForceBtDisconnectInd,
+    Flic2StartFirmwareUpdateRequest,
     ForceBtDisconnectInd,
     StartFirmwareUpdateRequest,
     StartFirmwareUpdateResponse,
 )
+from homeassistant.components.flic_button.update import FlicFirmwareUpdateEntity
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-ENTITY_ID = "update.flic_twist_t12345_firmware"
+TWIST_ENTITY_ID = "update.flic_twist_t12345_firmware"
+FLIC2_ENTITY_ID = "update.flic_2_b12345_firmware"
+DUO_ENTITY_ID = "update.flic_duo_d12345_firmware"
 
 
 @pytest.fixture
@@ -38,17 +52,26 @@ async def test_update_entity_created_for_twist(
     init_twist_integration,
 ) -> None:
     """Test update entity is created for Twist devices."""
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(TWIST_ENTITY_ID)
     assert state is not None
 
 
-async def test_update_entity_not_created_for_flic2(
+async def test_update_entity_created_for_flic2(
     hass: HomeAssistant,
     init_integration,
 ) -> None:
-    """Test update entity is not created for Flic 2 devices."""
+    """Test update entity is created for Flic 2 devices."""
     states = hass.states.async_entity_ids(UPDATE_DOMAIN)
-    assert len(states) == 0
+    assert len(states) == 1
+
+
+async def test_update_entity_created_for_duo(
+    hass: HomeAssistant,
+    init_duo_integration,
+) -> None:
+    """Test update entity is created for Duo devices."""
+    states = hass.states.async_entity_ids(UPDATE_DOMAIN)
+    assert len(states) == 1
 
 
 async def test_no_update_available(
@@ -57,7 +80,7 @@ async def test_no_update_available(
     init_twist_integration,
 ) -> None:
     """Test state is off when no update available."""
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(TWIST_ENTITY_ID)
     assert state is not None
     # latest_firmware_version is None, so latest_version equals installed_version
     assert state.state == STATE_OFF
@@ -72,12 +95,13 @@ async def test_update_available(
     mock_twist_coordinator.latest_firmware_version = 11
     mock_twist_coordinator.firmware_version = 10
 
-    # Trigger state update
-    entity = hass.data["entity_components"][UPDATE_DOMAIN].get_entity(ENTITY_ID)
+    # Trigger entity state refresh via entity component
+    entity_comp = hass.data["entity_components"][UPDATE_DOMAIN]
+    entity = entity_comp.get_entity(TWIST_ENTITY_ID)
     assert entity is not None
     entity.async_write_ha_state()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(TWIST_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -93,7 +117,7 @@ async def test_install_success(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         "install",
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {ATTR_ENTITY_ID: TWIST_ENTITY_ID},
         blocking=True,
     )
 
@@ -115,13 +139,59 @@ async def test_install_failure(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             "install",
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {ATTR_ENTITY_ID: TWIST_ENTITY_ID},
+            blocking=True,
+        )
+
+
+async def test_duo_install_success(
+    hass: HomeAssistant,
+    mock_duo_coordinator: MagicMock,
+    init_duo_integration,
+) -> None:
+    """Test successful firmware install on Duo device."""
+    mock_duo_coordinator.latest_firmware_version = 11
+
+    states = hass.states.async_entity_ids(UPDATE_DOMAIN)
+    assert len(states) == 1
+    entity_id = states[0]
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        "install",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_duo_coordinator.async_install_firmware.assert_awaited_once()
+
+
+async def test_duo_install_failure(
+    hass: HomeAssistant,
+    mock_duo_coordinator: MagicMock,
+    init_duo_integration,
+) -> None:
+    """Test firmware install failure on Duo device raises error."""
+    mock_duo_coordinator.latest_firmware_version = 11
+    mock_duo_coordinator.async_install_firmware.side_effect = HomeAssistantError(
+        "Firmware update failed"
+    )
+
+    states = hass.states.async_entity_ids(UPDATE_DOMAIN)
+    assert len(states) == 1
+    entity_id = states[0]
+
+    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            "install",
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
 
 # =============================================================================
-# Protocol message tests
+# Twist protocol message tests
 # =============================================================================
 
 
@@ -260,3 +330,178 @@ def test_force_bt_disconnect_ind_to_bytes() -> None:
     ind_no_adv = ForceBtDisconnectInd(restart_adv=False)
     data_no_adv = ind_no_adv.to_bytes()
     assert data_no_adv[1] == 0
+
+
+# =============================================================================
+# Flic 2 protocol message tests
+# =============================================================================
+
+
+def test_flic2_start_firmware_update_request_from_binary() -> None:
+    """Test creating Flic 2 firmware update request from binary."""
+    # Flic 2 binary: 8-byte IV + compressed data
+    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08"
+    compressed_data = bytes(120)  # 120 bytes = 30 words
+
+    firmware_binary = iv + compressed_data
+    request = Flic2StartFirmwareUpdateRequest.from_firmware_binary(
+        firmware_binary, connection_id=5
+    )
+
+    assert request.iv == iv
+    assert request.length_compressed_words == 30  # 120 / 4
+    assert request.connection_id == 5
+
+
+def test_flic2_start_firmware_update_request_to_bytes() -> None:
+    """Test serializing Flic2StartFirmwareUpdateRequest."""
+    iv = bytes(8)
+    request = Flic2StartFirmwareUpdateRequest(
+        connection_id=3,
+        length_compressed_words=100,
+        iv=iv,
+        status_interval=60,
+    )
+    data = request.to_bytes()
+
+    assert data[0] == 3  # frame header (connection_id)
+    assert data[1] == OPCODE_START_FIRMWARE_UPDATE_REQUEST
+    assert struct.unpack("<H", data[2:4])[0] == 100  # length in words
+    assert data[4:12] == iv
+    assert struct.unpack("<H", data[12:14])[0] == 60  # status_interval
+
+
+def test_flic2_start_firmware_update_request_short_binary() -> None:
+    """Test that short Flic 2 firmware binary raises ValueError."""
+    with pytest.raises(ValueError, match="Firmware binary too short"):
+        Flic2StartFirmwareUpdateRequest.from_firmware_binary(bytes(4))
+
+
+def test_flic2_start_firmware_update_request_word_rounding() -> None:
+    """Test that compressed data length truncates partial words."""
+    iv = bytes(8)
+    # 13 bytes of data -> 3 words (floor(13/4)), trailing bytes dropped
+    compressed_data = bytes(13)
+    firmware_binary = iv + compressed_data
+    request = Flic2StartFirmwareUpdateRequest.from_firmware_binary(firmware_binary)
+    assert request.length_compressed_words == 3
+
+
+def test_flic2_firmware_update_data_ind_to_bytes() -> None:
+    """Test serializing Flic 2 firmware data indication."""
+    words = [0x11223344, 0x55667788, 0x99AABBCC]
+    data_ind = Flic2FirmwareUpdateDataInd(connection_id=2, words=words)
+    data = data_ind.to_bytes()
+
+    assert data[0] == 2  # frame header
+    assert data[1] == OPCODE_FIRMWARE_UPDATE_DATA_IND
+    assert struct.unpack("<I", data[2:6])[0] == 0x11223344
+    assert struct.unpack("<I", data[6:10])[0] == 0x55667788
+    assert struct.unpack("<I", data[10:14])[0] == 0x99AABBCC
+    assert len(data) == 2 + 3 * 4  # header + opcode + 3 words
+
+
+def test_flic2_force_bt_disconnect_ind_to_bytes() -> None:
+    """Test serializing Flic 2 force disconnect indication."""
+    ind = Flic2ForceBtDisconnectInd(connection_id=4, restart_adv=True)
+    data = ind.to_bytes()
+
+    assert data[0] == 4  # frame header
+    assert data[1] == OPCODE_FORCE_BT_DISCONNECT_IND
+    assert data[2] == 1  # restart_adv
+
+    ind_no_adv = Flic2ForceBtDisconnectInd(connection_id=4, restart_adv=False)
+    data_no_adv = ind_no_adv.to_bytes()
+    assert data_no_adv[2] == 0
+
+
+# =============================================================================
+# Flic Duo protocol message tests
+# =============================================================================
+
+
+def test_duo_start_firmware_update_request_from_binary() -> None:
+    """Test creating Duo firmware update request from binary."""
+    # Duo binary: 76-byte header + compressed data (same as Twist)
+    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08"
+    length_uncompressed_words = 1024
+    signature = bytes(64)
+    compressed_data = bytes(200)
+
+    firmware_binary = (
+        iv + struct.pack("<I", length_uncompressed_words) + signature + compressed_data
+    )
+    request = DuoStartFirmwareUpdateRequest.from_firmware_binary(
+        firmware_binary, connection_id=7
+    )
+
+    assert request.firmware_header == firmware_binary[:FIRMWARE_HEADER_SIZE]
+    assert request.length_compressed_bytes == 200
+    assert request.connection_id == 7
+
+
+def test_duo_start_firmware_update_request_to_bytes() -> None:
+    """Test serializing DuoStartFirmwareUpdateRequest."""
+    firmware_header = bytes(76)
+    request = DuoStartFirmwareUpdateRequest(
+        connection_id=5,
+        length_compressed_bytes=300,
+        firmware_header=firmware_header,
+        status_interval=2,
+    )
+    data = request.to_bytes()
+
+    assert data[0] == 5  # frame header
+    assert data[1] == OPCODE_START_FIRMWARE_UPDATE_DUO_REQUEST
+    assert struct.unpack("<I", data[2:6])[0] == 300  # length
+    assert data[6:82] == firmware_header  # 76-byte header
+    assert struct.unpack("<H", data[82:84])[0] == 2  # status_interval
+
+
+def test_duo_start_firmware_update_request_short_binary() -> None:
+    """Test that short Duo firmware binary raises ValueError."""
+    with pytest.raises(ValueError, match="Firmware binary too short"):
+        DuoStartFirmwareUpdateRequest.from_firmware_binary(bytes(50))
+
+
+def test_duo_firmware_update_data_ind_to_bytes() -> None:
+    """Test serializing Duo firmware data indication."""
+    chunk = b"\xaa\xbb\xcc\xdd\xee"
+    data_ind = DuoFirmwareUpdateDataInd(connection_id=3, chunk_data=chunk)
+    data = data_ind.to_bytes()
+
+    assert data[0] == 3  # frame header
+    assert data[1] == OPCODE_FIRMWARE_UPDATE_DATA_DUO_IND
+    assert data[2:] == chunk
+
+
+def test_duo_firmware_update_data_ind_max_chunk() -> None:
+    """Test Duo firmware data indication with max chunk size."""
+    chunk = bytes(DUO_FIRMWARE_DATA_CHUNK_SIZE)
+    data_ind = DuoFirmwareUpdateDataInd(connection_id=0, chunk_data=chunk)
+    data = data_ind.to_bytes()
+
+    assert len(data) == 2 + DUO_FIRMWARE_DATA_CHUNK_SIZE
+
+
+# =============================================================================
+# version_is_newer tests
+# =============================================================================
+
+
+@pytest.mark.parametrize(
+    ("latest", "installed", "expected"),
+    [
+        ("11", "10", True),
+        ("9", "10", False),
+        ("10", "10", False),
+        ("10+update", "10", True),
+        ("abc", "10", False),
+    ],
+    ids=["newer", "older", "same", "update_suffix", "invalid"],
+)
+def test_version_is_newer(latest: str, installed: str, expected: bool) -> None:
+    """Test version_is_newer compares firmware versions correctly."""
+    assert (
+        FlicFirmwareUpdateEntity.version_is_newer(None, latest, installed) is expected
+    )

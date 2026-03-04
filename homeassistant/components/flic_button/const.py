@@ -89,6 +89,12 @@ EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE: Final = "rotate_counter_clockwise"
 # Twist-specific event types
 EVENT_TYPE_SELECTOR_CHANGED: Final = "selector_changed"
 
+# Twist DEFAULT mode increment/decrement event types
+EVENT_TYPE_TWIST_INCREMENT: Final = "twist_increment"
+EVENT_TYPE_TWIST_DECREMENT: Final = "twist_decrement"
+EVENT_TYPE_PUSH_TWIST_INCREMENT: Final = "push_twist_increment"
+EVENT_TYPE_PUSH_TWIST_DECREMENT: Final = "push_twist_decrement"
+
 # Twist slot position changed event types (one per slot, modes 0-11)
 EVENT_TYPE_SLOT_CHANGED: Final = [f"slot_{i}_changed" for i in range(1, 13)]
 
@@ -205,6 +211,7 @@ class PushTwistMode(StrEnum):
     """Push twist mode options."""
 
     DEFAULT = "default"
+    CONTINUOUS = "continuous"
     SELECTOR = "selector"
 
 
@@ -212,26 +219,73 @@ class PushTwistMode(StrEnum):
 # Firmware update constants
 # ============================================================================
 
-# Firmware update opcodes (Host -> Device)
+# Twist firmware update opcodes (Host -> Device)
 TWIST_OPCODE_FORCE_BT_DISCONNECT_IND: Final = 0x06
 TWIST_OPCODE_START_FIRMWARE_UPDATE_REQUEST: Final = 0x0F
 TWIST_OPCODE_FIRMWARE_UPDATE_DATA_IND: Final = 0x10
 
-# Firmware update opcodes (Device -> Host)
+# Twist firmware update opcodes (Device -> Host)
 TWIST_OPCODE_START_FIRMWARE_UPDATE_RESPONSE: Final = 0x0E
 TWIST_OPCODE_FIRMWARE_UPDATE_NOTIFICATION: Final = 0x0F
+
+# Flic 2 firmware update opcodes (Host -> Device, with frame header)
+OPCODE_FORCE_BT_DISCONNECT_IND: Final = 6
+OPCODE_START_FIRMWARE_UPDATE_REQUEST: Final = 17
+OPCODE_FIRMWARE_UPDATE_DATA_IND: Final = 18
+
+# Flic 2 firmware update opcodes (Device -> Host, with frame header)
+OPCODE_START_FIRMWARE_UPDATE_RESPONSE: Final = 18
+OPCODE_FIRMWARE_UPDATE_NOTIFICATION: Final = 19
+
+# Flic Duo firmware update opcodes (Host -> Device, with frame header)
+OPCODE_START_FIRMWARE_UPDATE_DUO_REQUEST: Final = 38
+OPCODE_FIRMWARE_UPDATE_DATA_DUO_IND: Final = 39
 
 # Firmware binary header
 FIRMWARE_HEADER_SIZE: Final = 76
 
-# Transfer constants
+# Twist transfer constants
 FIRMWARE_DATA_CHUNK_SIZE: Final = 120  # Max payload bytes per data packet
 FIRMWARE_MAX_IN_FLIGHT: Final = 480  # Max unacknowledged bytes (4 * 120)
 FIRMWARE_STATUS_INTERVAL: Final = 2  # Device reports progress every N packets
 FIRMWARE_UPDATE_TIMEOUT: Final = 300  # 5 min timeout for firmware transfer
+FIRMWARE_FINAL_ACK_TIMEOUT: Final = (
+    30  # Shorter timeout for final ACK after all data sent
+)
 
-# Flic firmware API
+# Flic 2 transfer constants (word-based: 1 word = 4 bytes)
+FLIC2_FIRMWARE_WORD_CHUNK_SIZE: Final = 30  # Max words per data packet
+FLIC2_FIRMWARE_MAX_IN_FLIGHT_WORDS: Final = 512  # Max unacknowledged words
+FLIC2_FIRMWARE_STATUS_INTERVAL: Final = 60  # Device reports progress every N packets
+FLIC2_FIRMWARE_IV_SIZE: Final = 8  # IV size in firmware header for Flic 2
+
+# Duo transfer constants (byte-based like Twist but different sizes)
+DUO_FIRMWARE_DATA_CHUNK_SIZE: Final = 110  # Max payload bytes per data packet
+DUO_FIRMWARE_MAX_IN_FLIGHT: Final = 550  # Max unacknowledged bytes
+DUO_FIRMWARE_STATUS_INTERVAL: Final = 2  # Device reports progress every N packets
+
+# Flic firmware APIs
 FLIC_FIRMWARE_API_URL: Final = "https://api.flic.io/api/v1/buttons/versions/firmware2"
+FLIC_FIRMWARE3_API_URL: Final = "https://api.flic.io/api/v1/buttons/versions/firmware3"
+
+# Name management opcodes - Flic 2/Duo (Host -> Device)
+OPCODE_SET_NAME_REQUEST: Final = 10
+OPCODE_GET_NAME_REQUEST: Final = 11
+
+# Name management opcodes - Flic 2/Duo (Device -> Host)
+OPCODE_GET_NAME_RESPONSE: Final = 16
+OPCODE_SET_NAME_RESPONSE: Final = 17
+
+# Name management opcodes - Twist (Host -> Device)
+TWIST_OPCODE_SET_NAME_REQUEST: Final = 0x09
+TWIST_OPCODE_GET_NAME_REQUEST: Final = 0x0A
+
+# Name management opcodes - Twist (Device -> Host)
+TWIST_OPCODE_GET_NAME_RESPONSE: Final = 0x0C
+TWIST_OPCODE_SET_NAME_RESPONSE: Final = 0x0D
+
+# Name constraints
+DEVICE_NAME_MAX_BYTES: Final = 23
 
 # Config entry key for button UUID
 CONF_BUTTON_UUID: Final = "button_uuid"

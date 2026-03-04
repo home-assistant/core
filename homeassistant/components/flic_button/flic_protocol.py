@@ -13,14 +13,22 @@ import struct
 from typing import TYPE_CHECKING
 
 from .const import (
+    DUO_FIRMWARE_STATUS_INTERVAL,
     FIRMWARE_HEADER_SIZE,
     FIRMWARE_STATUS_INTERVAL,
+    FLIC2_FIRMWARE_IV_SIZE,
+    FLIC2_FIRMWARE_STATUS_INTERVAL,
     OPCODE_ENABLE_PUSH_TWIST_IND,
+    OPCODE_FIRMWARE_UPDATE_DATA_DUO_IND,
+    OPCODE_FIRMWARE_UPDATE_DATA_IND,
+    OPCODE_FORCE_BT_DISCONNECT_IND,
     OPCODE_FULL_VERIFY_REQUEST_1,
     OPCODE_FULL_VERIFY_REQUEST_2,
     OPCODE_INIT_BUTTON_EVENTS_DUO_REQUEST,
     OPCODE_INIT_BUTTON_EVENTS_REQUEST,
     OPCODE_QUICK_VERIFY_REQUEST,
+    OPCODE_START_FIRMWARE_UPDATE_DUO_REQUEST,
+    OPCODE_START_FIRMWARE_UPDATE_REQUEST,
     TWIST_OPCODE_ACK_BUTTON_EVENTS,
     TWIST_OPCODE_FIRMWARE_UPDATE_DATA_IND,
     TWIST_OPCODE_FORCE_BT_DISCONNECT_IND,
@@ -923,7 +931,7 @@ def _parse_duo_events_from_bytes(
             state.restore(snapshot)
             got_event_count = got_event_snapshot
             break
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             state.restore(snapshot)
             got_event_count = got_event_snapshot
             had_parse_error = True
@@ -1511,7 +1519,7 @@ class AckButtonEventsTwistRequest:
 
 
 # =============================================================================
-# Firmware Update Messages (Twist only)
+# Firmware Update Messages
 # =============================================================================
 
 
@@ -1645,4 +1653,185 @@ class ForceBtDisconnectInd:
             "<BB",
             TWIST_OPCODE_FORCE_BT_DISCONNECT_IND,
             1 if self.restart_adv else 0,
+        )
+
+
+# =============================================================================
+# Flic 2 Firmware Update Messages (with frame header)
+# =============================================================================
+
+
+@dataclass
+class Flic2StartFirmwareUpdateRequest:
+    """Request to start a firmware update on a Flic 2 device.
+
+    Flic 2 firmware binary has an 8-byte IV header followed by compressed data.
+    The length field is in 32-bit words (not bytes).
+
+    Format: [header:1][opcode:1][len_words:2][iv:8][status_interval:2]
+    """
+
+    connection_id: int
+    length_compressed_words: int  # u16: length of compressed data in words
+    iv: bytes  # 8 bytes
+    status_interval: int = FLIC2_FIRMWARE_STATUS_INTERVAL  # u16
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        frame_header = self.connection_id & 0x1F
+        return (
+            struct.pack(
+                "<BBH",
+                frame_header,
+                OPCODE_START_FIRMWARE_UPDATE_REQUEST,
+                self.length_compressed_words,
+            )
+            + self.iv
+            + struct.pack("<H", self.status_interval)
+        )
+
+    @classmethod
+    def from_firmware_binary(
+        cls, firmware_binary: bytes, connection_id: int = 0
+    ) -> Flic2StartFirmwareUpdateRequest:
+        """Create request from a Flic 2 firmware binary file.
+
+        Args:
+            firmware_binary: Raw firmware binary (8-byte IV + compressed data)
+            connection_id: Current connection ID
+
+        """
+        if len(firmware_binary) < FLIC2_FIRMWARE_IV_SIZE:
+            raise ValueError(
+                f"Firmware binary too short: {len(firmware_binary)} bytes "
+                f"(minimum {FLIC2_FIRMWARE_IV_SIZE})"
+            )
+
+        iv = firmware_binary[:FLIC2_FIRMWARE_IV_SIZE]
+        compressed_data = firmware_binary[FLIC2_FIRMWARE_IV_SIZE:]
+        # Length in 32-bit words (truncate partial words to match reference)
+        length_words = len(compressed_data) // 4
+
+        return cls(
+            connection_id=connection_id,
+            length_compressed_words=length_words,
+            iv=iv,
+        )
+
+
+@dataclass
+class Flic2FirmwareUpdateDataInd:
+    """Firmware data chunk sent to Flic 2 device during OTA update.
+
+    Data is sent as 32-bit words. Format: [header:1][opcode:1][words[]:max 30 uint32]
+    """
+
+    connection_id: int
+    words: list[int]  # List of uint32 values
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        frame_header = self.connection_id & 0x1F
+        payload = struct.pack("<BB", frame_header, OPCODE_FIRMWARE_UPDATE_DATA_IND)
+        for word in self.words:
+            payload += struct.pack("<I", word)
+        return payload
+
+
+@dataclass
+class Flic2ForceBtDisconnectInd:
+    """Force Bluetooth disconnect for Flic 2/Duo devices.
+
+    Format: [header:1][opcode:1][restart_adv:1]
+    """
+
+    connection_id: int
+    restart_adv: bool = True
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        frame_header = self.connection_id & 0x1F
+        return struct.pack(
+            "<BBB",
+            frame_header,
+            OPCODE_FORCE_BT_DISCONNECT_IND,
+            1 if self.restart_adv else 0,
+        )
+
+
+# =============================================================================
+# Flic Duo Firmware Update Messages (with frame header)
+# =============================================================================
+
+
+@dataclass
+class DuoStartFirmwareUpdateRequest:
+    """Request to start a firmware update on a Flic Duo device.
+
+    Duo uses the firmware3 API and has the same 76-byte header as Twist.
+    Format: [header:1][opcode:1][len:4][header_76:76][status_interval:2]
+    """
+
+    connection_id: int
+    length_compressed_bytes: int  # u32
+    firmware_header: bytes  # 76 bytes (iv + uncompressed_words + signature)
+    status_interval: int = DUO_FIRMWARE_STATUS_INTERVAL  # u16
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        frame_header = self.connection_id & 0x1F
+        return (
+            struct.pack(
+                "<BBI",
+                frame_header,
+                OPCODE_START_FIRMWARE_UPDATE_DUO_REQUEST,
+                self.length_compressed_bytes,
+            )
+            + self.firmware_header
+            + struct.pack("<H", self.status_interval)
+        )
+
+    @classmethod
+    def from_firmware_binary(
+        cls, firmware_binary: bytes, connection_id: int = 0
+    ) -> DuoStartFirmwareUpdateRequest:
+        """Create request from a Duo firmware binary file.
+
+        Args:
+            firmware_binary: Raw firmware binary (76-byte header + compressed data)
+            connection_id: Current connection ID
+
+        """
+        if len(firmware_binary) < FIRMWARE_HEADER_SIZE:
+            raise ValueError(
+                f"Firmware binary too short: {len(firmware_binary)} bytes "
+                f"(minimum {FIRMWARE_HEADER_SIZE})"
+            )
+
+        firmware_header = firmware_binary[:FIRMWARE_HEADER_SIZE]
+        compressed_data = firmware_binary[FIRMWARE_HEADER_SIZE:]
+
+        return cls(
+            connection_id=connection_id,
+            length_compressed_bytes=len(compressed_data),
+            firmware_header=firmware_header,
+        )
+
+
+@dataclass
+class DuoFirmwareUpdateDataInd:
+    """Firmware data chunk sent to Duo device during OTA update.
+
+    Format: [header:1][opcode:1][data[]:max 110 bytes]
+    """
+
+    connection_id: int
+    chunk_data: bytes  # Up to DUO_FIRMWARE_DATA_CHUNK_SIZE bytes
+
+    def to_bytes(self) -> bytes:
+        """Serialize to bytes."""
+        frame_header = self.connection_id & 0x1F
+        return (
+            struct.pack("<BB", frame_header, OPCODE_FIRMWARE_UPDATE_DATA_DUO_IND)
+            + self.chunk_data
         )
