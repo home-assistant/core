@@ -68,8 +68,8 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
         if self.coordinator.data is None:
             return
         options = [self.default_option]
-        keyList = self.coordinator.data["keyList"]
-        for item in keyList:
+        key_list = self.coordinator.data["keyList"]
+        for item in key_list:
             password = item["password"]
             iv = item["iv"]
             key = self._api.aes_128_cbc_decrypt(password, iv)
