@@ -270,7 +270,7 @@ async def async_setup_entry(
     entry: NetgearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up device tracker for Netgear component."""
+    """Set up Netgear sensors from a config entry."""
     router = entry.runtime_data.router
     coordinator = entry.runtime_data.coordinator
     coordinator_traffic = entry.runtime_data.coordinator_traffic
