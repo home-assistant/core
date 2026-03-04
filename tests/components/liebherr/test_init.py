@@ -221,6 +221,7 @@ async def test_dynamic_device_discovery_coordinator_setup_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device scan skips devices that fail coordinator setup."""
@@ -239,7 +240,7 @@ async def test_dynamic_device_discovery_coordinator_setup_failure(
     await hass.async_block_till_done()
 
     # New device should NOT be added
-    assert "new_device_id" not in mock_config_entry.runtime_data.coordinators
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
@@ -247,6 +248,7 @@ async def test_dynamic_device_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_liebherr_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are automatically discovered on all platforms."""
@@ -290,9 +292,9 @@ async def test_dynamic_device_discovery(
     # Original device should still exist
     assert hass.states.get("sensor.test_fridge_top_zone") is not None
 
-    # Runtime data should have both coordinators
-    assert "new_device_id" in mock_config_entry.runtime_data.coordinators
-    assert "test_device_id" in mock_config_entry.runtime_data.coordinators
+    # Both devices should be in the device registry
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
 
 
 async def test_stale_device_removal(
@@ -325,8 +327,8 @@ async def test_stale_device_removal(
         await hass.async_block_till_done()
 
     # Both devices should exist
-    assert "test_device_id" in mock_config_entry.runtime_data.coordinators
-    assert "new_device_id" in mock_config_entry.runtime_data.coordinators
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
     assert hass.states.get("sensor.test_fridge_top_zone") is not None
     assert hass.states.get("sensor.new_fridge") is not None
 
@@ -354,10 +356,6 @@ async def test_stale_device_removal(
     freezer.tick(timedelta(minutes=5, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    # Stale device should be removed from coordinators
-    assert "test_device_id" in mock_config_entry.runtime_data.coordinators
-    assert "new_device_id" not in mock_config_entry.runtime_data.coordinators
 
     # Stale device should be removed from device registry
     assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
