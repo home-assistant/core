@@ -574,10 +574,10 @@ async def test_redirect_to_custom_scheme_not_blocked(
     session = client.async_create_clientsession(hass)
     server_port = redirect_server.port
 
-    # A real-world example: weconnect://authenticated is used as an OAuth
-    # callback URI.  The host 'authenticated' resolves to 0.0.0.0, which
-    # would normally trigger the SSRF block, but the custom scheme means
-    # aiohttp cannot open a socket to it.
+    # weconnect://authenticated is used as an OAuth callback URI.
+    # The host 'authenticated' resolves to 0.0.0.0, which would trigger
+    # the SSRF block for http/https/ws/wss, but weconnect:// is a custom
+    # app scheme that aiohttp cannot open a socket to.
     redirect_url = (
         f"http://external.example.com:{server_port}"
         "/redirect?to=weconnect://authenticated"
@@ -622,6 +622,9 @@ async def test_redirect_to_custom_scheme_not_blocked(
         ("http://evil.example.com:{port}/steal", "::1"),
         ("http://evil.example.com:{port}/steal", "0.0.0.0"),
         ("http://evil.example.com:{port}/steal", "::"),
+        # WebSocket schemes can open TCP connections — must also be blocked
+        ("ws://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("wss://evil.example.com:{port}/steal", "127.0.0.1"),
     ],
 )
 async def test_redirect_to_blocked_address(
