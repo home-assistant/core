@@ -27,6 +27,14 @@ class IssData:
     current_location: dict[str, str]
 
 
+def _update(iss: pyiss.ISS) -> IssData:
+    """Retrieve data from the pyiss API."""
+    return IssData(
+        number_of_people_in_space=iss.number_of_people_in_space(),
+        current_location=iss.current_location(),
+    )
+
+
 class IssCoordinator(DataUpdateCoordinator[IssData]):
     """Coordinator for ISS data."""
 
@@ -43,16 +51,9 @@ class IssCoordinator(DataUpdateCoordinator[IssData]):
         )
         self._iss = pyiss.ISS()
 
-    def _update(self) -> IssData:
-        """Retrieve data from the pyiss API."""
-        return IssData(
-            number_of_people_in_space=self._iss.number_of_people_in_space(),
-            current_location=self._iss.current_location(),
-        )
-
     async def _async_update_data(self) -> IssData:
         """Retrieve data from the pyiss API."""
         try:
-            return await self.hass.async_add_executor_job(self._update)
+            return await self.hass.async_add_executor_job(_update, self._iss)
         except (HTTPError, requests.exceptions.ConnectionError) as ex:
             raise UpdateFailed("Unable to retrieve data") from ex
