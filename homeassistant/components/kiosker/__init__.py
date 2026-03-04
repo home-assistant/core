@@ -7,16 +7,13 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> bool:
     """Set up Kiosker from a config entry."""
 
-    coordinator = KioskerDataUpdateCoordinator(
-        hass,
-        entry,
-    )
+    coordinator = KioskerDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -16,7 +16,7 @@ from kiosker import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow as HAConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -38,7 +38,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
@@ -62,25 +61,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         # Test connection by getting status
         status = await hass.async_add_executor_job(api.status)
     except ConnectionError as exc:
-        _LOGGER.debug("Failed to connect", exc_info=True)
         raise CannotConnect from exc
     except (AuthenticationError, IPAuthenticationError) as exc:
-        _LOGGER.debug("Authentication failed", exc_info=True)
         raise InvalidAuth from exc
     except TLSVerificationError as exc:
-        _LOGGER.debug("TLS verification failed", exc_info=True)
         raise TLSError from exc
     except BadRequestError as exc:
-        _LOGGER.debug("Bad request", exc_info=True)
         raise BadRequest from exc
     except PingError as exc:
-        _LOGGER.debug("Ping failed", exc_info=True)
-        raise CannotConnect from exc
-    except (OSError, TimeoutError) as exc:
-        _LOGGER.debug("Failed to connect", exc_info=True)
-        raise CannotConnect from exc
-    except (ValueError, TypeError) as exc:
-        _LOGGER.debug("Invalid configuration data", exc_info=True)
         raise CannotConnect from exc
     except Exception as exc:
         _LOGGER.exception("Unexpected exception while connecting to Kiosker")
@@ -97,7 +85,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"title": f"Kiosker {display_id}", "device_id": device_id}
 
 
-class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
+class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kiosker."""
 
     VERSION = 1
@@ -105,11 +93,12 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        super().__init__()
+
         self._discovered_host: str | None = None
         self._discovered_port: int | None = None
         self._discovered_uuid: str | None = None
         self._discovered_version: str | None = None
+        self._discovered_ssl: bool | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -135,12 +124,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     info["device_id"], raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                    }
-                )
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -160,6 +144,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
         uuid = properties.get("uuid")
         app_name = properties.get("app", "Kiosker")
         version = properties.get("version", "")
+        ssl = properties.get("ssl", "false").lower() == "true"
 
         # Use UUID from zeroconf
         if uuid:
@@ -171,13 +156,14 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
 
         # Set unique ID and check for duplicates
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
+        self._abort_if_unique_id_configured()
 
         # Store discovery info for confirmation step
         self.context["title_placeholders"] = {
             "name": device_name,
             "host": host,
             "port": str(port),
+            "ssl": ssl,
         }
 
         # Store discovered information for later use
@@ -185,6 +171,7 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
         self._discovered_port = port
         self._discovered_uuid = uuid
         self._discovered_version = version
+        self._discovered_ssl = ssl
 
         # Show confirmation dialog
         return await self.async_step_zeroconf_confirm()
@@ -199,13 +186,14 @@ class KioskerConfigFlow(HAConfigFlow, domain=DOMAIN):
             # Use stored discovery info and user-provided token
             host = self._discovered_host
             port = self._discovered_port
+            ssl = self._discovered_ssl
 
             # Create config with discovered host/port and user-provided token
             config_data = {
                 CONF_HOST: host,
                 CONF_PORT: port,
                 CONF_API_TOKEN: user_input[CONF_API_TOKEN],
-                CONF_SSL: user_input.get(CONF_SSL, DEFAULT_SSL),
+                CONF_SSL: ssl,
                 CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
             }
 

@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -26,50 +26,32 @@ from .entity import KioskerEntity
 PARALLEL_UPDATES = 3
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class KioskerSensorEntityDescription(SensorEntityDescription):
     """Kiosker sensor description."""
 
-    value_fn: Callable[[Any], StateType | datetime] | None = None
-
-
-def parse_datetime(value: Any) -> datetime | None:
-    """Parse datetime from various formats."""
-    if value is None:
-        return None
-    if isinstance(value, datetime):
-        return value
-    try:
-        return datetime.fromisoformat(str(value))
-    except ValueError, TypeError:
-        return None
+    value_fn: Callable[[Any], StateType | datetime]
 
 
 SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
     KioskerSensorEntityDescription(
         key="batteryLevel",
-        translation_key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.battery_level,
     ),
     KioskerSensorEntityDescription(
-        key="batteryState",
-        translation_key="battery_state",
-        value_fn=lambda x: x.battery_state,
-    ),
-    KioskerSensorEntityDescription(
         key="lastInteraction",
         translation_key="last_interaction",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: parse_datetime(x.last_interaction),
+        value_fn=lambda x: x.last_interaction,
     ),
     KioskerSensorEntityDescription(
         key="lastMotion",
         translation_key="last_motion",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: parse_datetime(x.last_motion),
+        value_fn=lambda x: x.last_motion,
     ),
     KioskerSensorEntityDescription(
         key="ambientLight",
@@ -81,20 +63,7 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         key="lastUpdate",
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: parse_datetime(x.last_update),
-    ),
-    KioskerSensorEntityDescription(
-        key="blackoutState",
-        translation_key="blackout_state",
-        icon="mdi:monitor-off",
-        value_fn=lambda x: "active" if x is not None and x.visible else "inactive",
-    ),
-    KioskerSensorEntityDescription(
-        key="screensaverVisibility",
-        translation_key="screensaver_visibility",
-        value_fn=lambda x: (
-            "visible" if hasattr(x, "visible") and x.visible else "hidden"
-        ),
+        value_fn=lambda x: x.last_update,
     ),
 )
 
@@ -126,47 +95,14 @@ class KioskerSensor(KioskerEntity, SensorEntity):
         """Initialize the sensor entity."""
         super().__init__(coordinator, description)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        value = None
+    @property
+    def native_value(self) -> StateType | datetime | None:
+        """Return the native value of the sensor."""
+        if not self.coordinator.data:
+            return None
 
-        if self.entity_description.key == "blackoutState":
-            # Special handling for blackout state
-            blackout_data = (
-                self.coordinator.data.blackout if self.coordinator.data else None
-            )
-            if self.entity_description.value_fn:
-                value = self.entity_description.value_fn(blackout_data)
+        status = self.coordinator.data.status
+        if not status:
+            return None
 
-            # Add all blackout data as extra attributes
-            if blackout_data is not None:
-                self._attr_extra_state_attributes = {
-                    key: getattr(blackout_data, key)
-                    for key in blackout_data.__dataclass_fields__
-                    if not key.startswith("_")
-                }
-            else:
-                self._attr_extra_state_attributes = {}
-        elif self.entity_description.key == "screensaverVisibility":
-            # Special handling for screensaver visibility
-            screensaver_data = (
-                self.coordinator.data.screensaver if self.coordinator.data else None
-            )
-            if self.entity_description.value_fn:
-                value = self.entity_description.value_fn(screensaver_data)
-            # Clear extra attributes for screensaver sensor
-            self._attr_extra_state_attributes = {}
-        elif self.coordinator.data:
-            # Handle status-based sensors
-            status = self.coordinator.data.status
-            if self.entity_description.value_fn:
-                value = self.entity_description.value_fn(status)
-            # Clear extra attributes for non-blackout sensors
-            self._attr_extra_state_attributes = {}
-        else:
-            # Clear extra attributes if no data
-            self._attr_extra_state_attributes = {}
-
-        self._attr_native_value = value
-        self.async_write_ha_state()
+        return self.entity_description.value_fn(status)

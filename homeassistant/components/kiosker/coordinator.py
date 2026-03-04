@@ -65,13 +65,18 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
             config_entry=config_entry,
         )
 
+    def _fetch_all_data(self) -> tuple[Status, Blackout, ScreensaverState]:
+        """Fetch all data from the API in a single executor job."""
+        status = self.api.status()
+        blackout = self.api.blackout_get()
+        screensaver = self.api.screensaver_get_state()
+        return status, blackout, screensaver
+
     async def _async_update_data(self) -> KioskerData:
         """Update data via library."""
         try:
-            status = await self.hass.async_add_executor_job(self.api.status)
-            blackout = await self.hass.async_add_executor_job(self.api.blackout_get)
-            screensaver = await self.hass.async_add_executor_job(
-                self.api.screensaver_get_state
+            status, blackout, screensaver = await self.hass.async_add_executor_job(
+                self._fetch_all_data
             )
         except (AuthenticationError, IPAuthenticationError) as exc:
             raise ConfigEntryAuthFailed("Authentication failed") from exc

@@ -51,6 +51,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "blackout_state": {
+        "name": "Blackout"
+      },
+      "screensaver_visibility": {
+        "name": "Screensaver"
+      }
+    },
     "sensor": {
       "ambient_light": {
         "name": "Ambient light"
@@ -67,13 +75,6 @@
           "unknown": "Unknown"
         }
       },
-      "blackout_state": {
-        "name": "Blackout state",
-        "state": {
-          "active": "Active",
-          "inactive": "Inactive"
-        }
-      },
       "last_interaction": {
         "name": "Last interaction"
       },
@@ -82,13 +83,6 @@
       },
       "last_update": {
         "name": "Last update"
-      },
-      "screensaver_visibility": {
-        "name": "Screensaver visibility",
-        "state": {
-          "hidden": "Hidden",
-          "visible": "Visible"
-        }
       }
     }
   }

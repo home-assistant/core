@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -55,9 +56,9 @@ def mock_kiosker_api():
     mock_status.app_version = "25.1.1"
     mock_status.battery_level = 85
     mock_status.battery_state = "charging"
-    mock_status.last_interaction = "2025-01-01T12:00:00Z"
-    mock_status.last_motion = "2025-01-01T11:55:00Z"
-    mock_status.last_update = "2025-01-01T12:05:00Z"
+    mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
+    mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
+    mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00Z")
 
     mock_api.status.return_value = mock_status
 

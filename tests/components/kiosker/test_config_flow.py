@@ -26,6 +26,7 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
         "uuid": "A98BE1CE-1234-1234-1234-123456789ABC",
         "app": "Kiosker",
         "version": "1.0.0",
+        "ssl": "true",
     },
     type="_kiosker._tcp.local.",
 )
@@ -36,7 +37,7 @@ DISCOVERY_INFO_NO_UUID = ZeroconfServiceInfo(
     hostname="kiosker-device.local.",
     name="Kiosker Device._kiosker._tcp.local.",
     port=8081,
-    properties={"app": "Kiosker", "version": "1.0.0"},
+    properties={"app": "Kiosker", "version": "1.0.0", "ssl": "false"},
     type="_kiosker._tcp.local.",
 )
 
@@ -159,6 +160,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "name": "Kiosker (A98BE1CE)",
         "host": "192.168.1.39",
         "port": "8081",
+        "ssl": True,
     }
 
 
@@ -213,7 +215,6 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-token",
-                CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
             },
         )
@@ -225,7 +226,7 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.1.39",
         CONF_PORT: 8081,
         CONF_API_TOKEN: "test-token",
-        CONF_SSL: False,
+        CONF_SSL: True,
         CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -247,7 +248,6 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-token",
-                CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
             },
         )
