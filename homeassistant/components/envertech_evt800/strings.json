@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "type": "EVT800 local server mode"
+        },
+        "data_description": {
+          "ip_address": "The IP address of your Envertech EVT800 device.",
+          "port": "The Port of your Envertech EVT800 device.",
+          "type": "The server mode should match the selected server mode on the Envertech EVT800 device."
+        },
+        "description": "Enter your EVT800 device information.",
+        "title": "Setup EVT800 device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_frequency_1": {
+        "name": "AC Frequency MPPT 1"
+      },
+      "ac_frequency_2": {
+        "name": "AC Frequency MPPT 2"
+      },
+      "ac_voltage_1": {
+        "name": "AC Voltage MPPT 1"
+      },
+      "ac_voltage_2": {
+        "name": "AC Voltage MPPT 2"
+      },
+      "current_1": {
+        "name": "DC Current MPPT 1"
+      },
+      "current_2": {
+        "name": "DC Current MPPT 2"
+      },
+      "input_voltage_1": {
+        "name": "DC Voltage MPPT 1"
+      },
+      "input_voltage_2": {
+        "name": "DC Voltage MPPT 2"
+      },
+      "mppt_id_1": {
+        "name": "MPPT ID 1"
+      },
+      "mppt_id_2": {
+        "name": "MPPT ID 2"
+      },
+      "power_1": {
+        "name": "DC Power MPPT 1"
+      },
+      "power_2": {
+        "name": "DC Power MPPT 2"
+      },
+      "temperature_1": {
+        "name": "Temperature MPPT 1"
+      },
+      "temperature_2": {
+        "name": "Temperature MPPT 2"
+      },
+      "total_energy_1": {
+        "name": "Total Energy MPPT 1"
+      },
+      "total_energy_2": {
+        "name": "Total Energy MPPT 2"
+      }
+    }
+  }
+}
