@@ -6,24 +6,14 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_COORDINATOR_FIRMWARE,
-    KEY_COORDINATOR_LINK,
-    KEY_COORDINATOR_SPEED,
-    KEY_COORDINATOR_TRAFFIC,
-    KEY_COORDINATOR_UTIL,
-    KEY_ROUTER,
-    PLATFORMS,
-)
+from .const import PLATFORMS
+from .coordinator import NetgearConfigEntry, NetgearRuntimeData
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -34,7 +24,7 @@ SPEED_TEST_INTERVAL = timedelta(hours=2)
 SCAN_INTERVAL_FIRMWARE = timedelta(hours=5)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> bool:
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)
     try:
@@ -58,8 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             router.port,
             router.ssl,
         )
-
-    hass.data.setdefault(DOMAIN, {})
 
     async def async_update_devices() -> bool:
         """Fetch data from the router."""
@@ -144,31 +132,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_utilization.async_config_entry_first_refresh()
     await coordinator_link.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        KEY_ROUTER: router,
-        KEY_COORDINATOR: coordinator,
-        KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
-        KEY_COORDINATOR_SPEED: coordinator_speed_test,
-        KEY_COORDINATOR_FIRMWARE: coordinator_firmware,
-        KEY_COORDINATOR_UTIL: coordinator_utilization,
-        KEY_COORDINATOR_LINK: coordinator_link,
-    }
+    entry.runtime_data = NetgearRuntimeData(
+        router=router,
+        coordinator=coordinator,
+        coordinator_traffic=coordinator_traffic_meter,
+        coordinator_speed=coordinator_speed_test,
+        coordinator_firmware=coordinator_firmware,
+        coordinator_utilization=coordinator_utilization,
+        coordinator_link=coordinator_link,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+    router = entry.runtime_data.router
 
     if not router.track_devices:
         router_id = None
@@ -193,10 +176,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: NetgearConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a device from a config entry."""
-    router = hass.data[DOMAIN][config_entry.entry_id][KEY_ROUTER]
+    router = config_entry.runtime_data.router
 
     device_mac = None
     for connection in device_entry.connections:

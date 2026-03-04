@@ -33,10 +33,13 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     mock_youless = _get_mock_youless_api(
         initialize={"homes": [{"id": 1, "name": "myhome"}]}
     )
-    with patch(
-        "homeassistant.components.youless.config_flow.YoulessAPI",
-        return_value=mock_youless,
-    ) as mocked_youless:
+    with (
+        patch(
+            "homeassistant.components.youless.config_flow.YoulessAPI",
+            return_value=mock_youless,
+        ) as mocked_youless,
+        patch("homeassistant.components.youless.async_setup_entry", return_value=True),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "localhost"},

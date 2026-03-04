@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "charge_permitted": {
+        "default": "mdi:ev-station"
+      }
+    },
     "number": {
       "current_set": {
         "default": "mdi:current-ac"
