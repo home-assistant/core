@@ -323,7 +323,6 @@ class MotionTiltDevice(MotionPositionDevice):
                 await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
 
             await self.async_request_position_till_stop()
-
         else:
             async with self._api_lock:
                 await self.hass.async_add_executor_job(self._blind.Jog_down)
