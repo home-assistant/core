@@ -161,9 +161,7 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self.player_id = player
         player_obj = device.get_player(player)
         nickname = player_obj.nickname or ""
-        self._attr_translation_placeholders = {
-            "nickname": nickname
-        }
+        self._attr_translation_placeholders = {"nickname": nickname}
         self._attr_unique_id = f"{device.device_id}_{player}_{description.key}"
 
     @property
