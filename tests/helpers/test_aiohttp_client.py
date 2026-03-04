@@ -607,7 +607,7 @@ async def test_redirect_to_custom_scheme_not_blocked(
 @pytest.mark.parametrize(
     ("location", "target_resolved_addr"),
     [
-        # Loopback IPs and hostnames — blocked before DNS resolution
+        # Loopback IPs and hostnames — blocked before DNS resolution (http)
         ("http://127.0.0.1/evil", None),
         ("http://[::1]/evil", None),
         ("http://localhost/evil", None),
@@ -616,17 +616,36 @@ async def test_redirect_to_custom_scheme_not_blocked(
         ("http://example.localhost./evil", None),
         ("http://app.localhost/evil", None),
         ("http://sub.domain.localhost/evil", None),
-        # Benign hostnames resolving to blocked IPs — blocked after DNS
+        # Loopback IPs and hostnames — blocked before DNS resolution (https)
+        ("https://127.0.0.1/evil", None),
+        ("https://[::1]/evil", None),
+        ("https://localhost/evil", None),
+        # Loopback IPs and hostnames — blocked before DNS resolution (ws/wss)
+        ("ws://127.0.0.1/evil", None),
+        ("ws://localhost/evil", None),
+        ("wss://127.0.0.1/evil", None),
+        ("wss://localhost/evil", None),
+        # Benign hostnames resolving to blocked IPs — blocked after DNS (http)
         ("http://evil.example.com:{port}/steal", "127.0.0.1"),
         ("http://evil.example.com:{port}/steal", "127.0.0.2"),
         ("http://evil.example.com:{port}/steal", "::1"),
         ("http://evil.example.com:{port}/steal", "0.0.0.0"),
         ("http://evil.example.com:{port}/steal", "::"),
+        # Benign hostnames resolving to blocked IPs — blocked after DNS (https)
         ("https://evil.example.com:{port}/steal", "127.0.0.1"),
         ("https://evil.example.com:{port}/steal", "0.0.0.0"),
-        # WebSocket schemes can open TCP connections — must also be blocked
+        # Benign hostnames resolving to blocked IPs — blocked after DNS (ws/wss)
         ("ws://evil.example.com:{port}/steal", "127.0.0.1"),
         ("wss://evil.example.com:{port}/steal", "127.0.0.1"),
+        # Upper-case schemes — yarl normalizes to lowercase per RFC 3986
+        ("HTTP://localhost/evil", None),
+        ("HTTPS://localhost/evil", None),
+        ("WS://localhost/evil", None),
+        ("WSS://localhost/evil", None),
+        ("HTTP://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("HTTPS://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("WS://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("WSS://evil.example.com:{port}/steal", "127.0.0.1"),
     ],
 )
 async def test_redirect_to_blocked_address(
