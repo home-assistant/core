@@ -14,6 +14,17 @@ from .const import DOMAIN
 from .coordinator import NRGkickDataUpdateCoordinator
 
 
+def get_nested_dict_value(data: Any, *keys: str) -> Any:
+    """Safely get a nested value from dict-like API responses."""
+    current: Any = data
+    for key in keys:
+        try:
+            current = current.get(key)
+        except AttributeError:
+            return None
+    return current
+
+
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities with common device info setup."""
 
