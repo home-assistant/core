@@ -25,8 +25,8 @@ from homeassistant.components.keyboard_remote.const import (
 
 from tests.common import MockConfigEntry
 
-# Stable evdev constants for tests (must be the same objects used in event mocks
-# because production code uses `is` comparison: `event.type is ecodes.EV_KEY`)
+# Stable evdev constants for tests (must match the constants used in event mocks
+# so that mocked events behave consistently with the integration under test)
 EV_KEY = 1
 
 # Build a mock evdev module with stable constants before any integration import

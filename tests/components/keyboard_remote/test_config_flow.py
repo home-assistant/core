@@ -552,8 +552,7 @@ def test_resolve_yaml_descriptor_with_by_id() -> None:
         ),
         patch(
             "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-            return_value=[by_id_entry],
-        ),
+        ) as mock_scandir,
         patch(
             "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
             return_value=FAKE_DEVICE_REAL_PATH,
@@ -564,6 +563,8 @@ def test_resolve_yaml_descriptor_with_by_id() -> None:
         ),
         patch("evdev.InputDevice", return_value=mock_dev),
     ):
+        mock_scandir.return_value.__enter__ = MagicMock(return_value=[by_id_entry])
+        mock_scandir.return_value.__exit__ = MagicMock(return_value=False)
         result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
 
     assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)
@@ -626,8 +627,7 @@ def test_resolve_yaml_name_with_by_id() -> None:
         ),
         patch(
             "homeassistant.components.keyboard_remote.config_flow.os.scandir",
-            return_value=[by_id_entry],
-        ),
+        ) as mock_scandir,
         patch(
             "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
             return_value=FAKE_DEVICE_REAL_PATH,
@@ -639,6 +639,8 @@ def test_resolve_yaml_name_with_by_id() -> None:
         patch("evdev.InputDevice", return_value=mock_dev),
         patch("evdev.list_devices", return_value=[FAKE_DEVICE_REAL_PATH]),
     ):
+        mock_scandir.return_value.__enter__ = MagicMock(return_value=[by_id_entry])
+        mock_scandir.return_value.__exit__ = MagicMock(return_value=False)
         result = _resolve_yaml_device({"device_name": FAKE_DEVICE_NAME})
 
     assert result == (FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME)

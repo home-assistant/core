@@ -101,9 +101,10 @@ def _resolve_yaml_device(
     # Build realpath -> by-id mapping
     by_id_map: dict[str, str] = {}
     if os.path.isdir(DEVINPUT_BY_ID):
-        for entry in os.scandir(DEVINPUT_BY_ID):
-            if entry.is_symlink():
-                by_id_map[os.path.realpath(entry.path)] = entry.path
+        with os.scandir(DEVINPUT_BY_ID) as entries:
+            for entry in entries:
+                if entry.is_symlink():
+                    by_id_map[os.path.realpath(entry.path)] = entry.path
 
     if descriptor:
         real_path = os.path.realpath(descriptor)

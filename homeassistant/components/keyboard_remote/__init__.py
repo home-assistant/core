@@ -234,7 +234,7 @@ class KeyboardRemoteManager:
 
             # Stop all active device handlers
             stop_tasks = {
-                asyncio.create_task(handler.async_device_stop_monitoring())
+                self.hass.async_create_task(handler.async_device_stop_monitoring())
                 for handler in self._active_handlers_by_descriptor.values()
             }
             if stop_tasks:
