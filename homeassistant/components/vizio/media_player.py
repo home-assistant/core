@@ -168,8 +168,17 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             self._attr_sound_mode = None
             return
 
-        # Device is on - apply business logic to coordinator data
+        # Device is on - reset to defaults, then apply coordinator data
         self._attr_state = MediaPlayerState.ON
+        self._attr_volume_level = None
+        self._attr_is_volume_muted = None
+        self._attr_sound_mode = None
+        self._attr_sound_mode_list = []
+        self._attr_supported_features = SUPPORTED_COMMANDS[
+            self._attr_device_class  # type: ignore[index]
+        ]
+        self._current_input = None
+        self._available_inputs = []
 
         # Audio settings
         if data.audio_settings:
@@ -180,20 +189,12 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
                 self._attr_is_volume_muted = (
                     data.audio_settings[VIZIO_MUTE].lower() == VIZIO_MUTE_ON
                 )
-            else:
-                self._attr_is_volume_muted = None
-
             if VIZIO_SOUND_MODE in data.audio_settings:
                 self._attr_supported_features |= (
                     MediaPlayerEntityFeature.SELECT_SOUND_MODE
                 )
                 self._attr_sound_mode = data.audio_settings[VIZIO_SOUND_MODE]
                 self._attr_sound_mode_list = data.sound_mode_list or []
-            else:
-                # Explicitly remove sound mode feature if not available
-                self._attr_supported_features &= (
-                    ~MediaPlayerEntityFeature.SELECT_SOUND_MODE
-                )
 
         # Input state
         if data.current_input:
