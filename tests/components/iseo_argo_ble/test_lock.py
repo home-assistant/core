@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.lock import LockState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import EntityComponent
 
 from tests.common import MockConfigEntry
 
@@ -155,7 +156,6 @@ async def test_poll_state_no_ble_device(
     )
 
     # Get the entity from the component
-    from homeassistant.helpers.entity_component import EntityComponent
     component: EntityComponent = hass.data["lock"]
     lock_entity = next(iter(component.entities))
 

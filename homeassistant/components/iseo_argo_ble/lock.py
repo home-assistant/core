@@ -130,17 +130,18 @@ class IseoLockEntity(LockEntity):
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
             return
 
+        if not (
+            ble_device := async_ble_device_from_address(
+                self.hass,
+                self._entry.data[CONF_ADDRESS],
+                connectable=True,
+            )
+        ):
+            _LOGGER.debug("State poll failed: Device not found")
+            return
+
         try:
             async with self._ble_lock:
-                if not (
-                    ble_device := async_ble_device_from_address(
-                        self.hass,
-                        self._entry.data[CONF_ADDRESS],
-                        connectable=True,
-                    )
-                ):
-                    raise IseoConnectionError("Device not found")
-
                 self.client.update_ble_device(ble_device)
                 state: LockState = await self.client.read_state()
         except (TimeoutError, IseoConnectionError, IseoAuthError, OSError) as exc:
@@ -218,20 +219,21 @@ class IseoLockEntity(LockEntity):
 
         self._set_unlocking()
 
+        if not (
+            ble_device := async_ble_device_from_address(
+                self.hass,
+                self._entry.data[CONF_ADDRESS],
+                connectable=True,
+            )
+        ):
+            self._set_locked()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            )
+
         try:
             async with self._ble_lock:
-                if not (
-                    ble_device := async_ble_device_from_address(
-                        self.hass,
-                        self._entry.data[CONF_ADDRESS],
-                        connectable=True,
-                    )
-                ):
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="cannot_connect",
-                    )
-
                 self.client.update_ble_device(ble_device)
                 if self._user_subtype == UserSubType.BT_GATEWAY:
                     await self.client.gw_open(remote_user_name="Home Assistant")

@@ -193,7 +193,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_gw_register(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Register the UUID as a Gateway (requires Master Card)."""
+        """Register the UUID as a gateway (requires Master Card)."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if not (
@@ -219,7 +219,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.error("Gateway registration failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:
-                    _LOGGER.exception("Unexpected error during Gateway registration")
+                    _LOGGER.exception("Unexpected error during gateway registration")
                     errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -231,7 +231,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_gw_register_logs(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Enable log notifications for the Gateway (requires Master Card)."""
+        """Enable log notifications for the gateway (requires Master Card)."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if not (
@@ -257,7 +257,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.error("Gateway log registration failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:
-                    _LOGGER.exception("Unexpected error during Gateway log registration")
+                    _LOGGER.exception(
+                        "Unexpected error during gateway log registration"
+                    )
                     errors["base"] = "unknown"
 
         return self.async_show_form(

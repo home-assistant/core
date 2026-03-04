@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -168,7 +169,6 @@ async def test_user_step_with_device(hass: HomeAssistant) -> None:
 
 async def test_gw_register_connection_error(hass: HomeAssistant) -> None:
     """Test gw_register handles connection error."""
-    from iseo_argo_ble import IseoConnectionError
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
@@ -203,7 +203,6 @@ async def test_gw_register_connection_error(hass: HomeAssistant) -> None:
 
 async def test_gw_register_auth_error(hass: HomeAssistant) -> None:
     """Test gw_register handles auth error."""
-    from iseo_argo_ble import IseoAuthError
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
