@@ -287,6 +287,68 @@ def mock_thermostat_with_operating_mode() -> Mock:
 
 
 @pytest.fixture
+def mock_thermostat_quickapp_1() -> Mock:
+    """Fixture for a thermostat."""
+    climate = Mock()
+    climate.fibaro_id = 6
+    climate.parent_fibaro_id = 0
+    climate.has_endpoint_id = False
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.hvacSystemHeat"
+    climate.base_type = "com.fibaro.hvacSystem"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = {"setHeatingThermostatSetpoint": 1, "setThermostatMode": 1}
+    climate.supported_features = {}
+    climate.has_supported_operating_modes = False
+    climate.has_supported_thermostat_modes = True
+    climate.supported_thermostat_modes = ["Off", "Heat"]
+    climate.has_thermostat_mode = True
+    climate.thermostat_mode = "Heat"
+    climate.has_unit = False
+    climate.has_heating_thermostat_setpoint = False
+    climate.has_heating_thermostat_setpoint_future = False
+    value_mock = Mock()
+    value_mock.has_value = False
+    climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
+def mock_thermostat_quickapp_2() -> Mock:
+    """Fixture for a thermostat."""
+    climate = Mock()
+    climate.fibaro_id = 7
+    climate.parent_fibaro_id = 0
+    climate.has_endpoint_id = False
+    climate.name = "Test climate 2"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.hvacSystemHeat"
+    climate.base_type = "com.fibaro.hvacSystem"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = {"setHeatingThermostatSetpoint": 1, "setThermostatMode": 1}
+    climate.supported_features = {}
+    climate.has_supported_operating_modes = False
+    climate.has_supported_thermostat_modes = True
+    climate.supported_thermostat_modes = ["Off", "Heat"]
+    climate.has_thermostat_mode = True
+    climate.thermostat_mode = "Heat"
+    climate.has_unit = False
+    climate.has_heating_thermostat_setpoint = False
+    climate.has_heating_thermostat_setpoint_future = False
+    value_mock = Mock()
+    value_mock.has_value = False
+    climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
 def mock_fan_device() -> Mock:
     """Fixture for a fan endpoint of a thermostat device."""
     climate = Mock()
