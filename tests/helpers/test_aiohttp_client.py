@@ -567,6 +567,43 @@ async def test_redirect_to_non_loopback_allowed(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_redirect_to_custom_scheme_not_blocked(
+    hass: HomeAssistant, redirect_server: TestServer
+) -> None:
+    """Test that redirects to custom (non-HTTP/S) URI schemes are not blocked."""
+    session = client.async_create_clientsession(hass)
+    server_port = redirect_server.port
+
+    # A real-world example: weconnect://authenticated is used as an OAuth
+    # callback URI.  The host 'authenticated' resolves to 0.0.0.0, which
+    # would normally trigger the SSRF block, but the custom scheme means
+    # aiohttp cannot open a socket to it.
+    redirect_url = (
+        f"http://external.example.com:{server_port}"
+        "/redirect?to=weconnect://authenticated"
+    )
+
+    async def mock_async_resolve_host(host: str) -> list[dict[str, object]]:
+        """Mock DNS for the SSRF middleware check (not TCP connections)."""
+        if host == "external.example.com":
+            # Origin must be public so middleware doesn't treat this as
+            # loopback→loopback (which is always allowed).
+            return _resolve_result(host, "93.184.216.34")
+        # The scheme check skips DNS for non-HTTP(S), so this branch is
+        # only reached if that check is removed — ensuring the test then
+        # fails with SSRFRedirectError instead of silently passing.
+        return _resolve_result(host, "0.0.0.0")
+
+    connector = session.connector
+    # allow_redirects=False so aiohttp returns the 307 response directly
+    # rather than attempting to connect to the custom-scheme URI.
+    # SSRFRedirectError must NOT be raised despite "authenticated" → 0.0.0.0.
+    with patch.object(connector, "async_resolve_host", mock_async_resolve_host):
+        resp = await session.get(redirect_url, allow_redirects=False)
+    assert resp.status == 307
+
+
+@pytest.mark.usefixtures("socket_enabled")
 @pytest.mark.parametrize(
     ("location", "target_resolved_addr"),
     [

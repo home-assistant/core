@@ -87,6 +87,12 @@ async def _ssrf_redirect_middleware(
         # Relative redirects stay on the same host - always safe
         return resp
 
+    # Non-HTTP(S) schemes (e.g. custom app URI schemes like weconnect://)
+    # cannot result in a network connection via aiohttp, so SSRF protection
+    # does not apply.
+    if redirect_url.scheme not in ("http", "https"):
+        return resp
+
     host = redirect_url.host
     if await _async_is_blocked_host(host, connector):
         resp.close()
