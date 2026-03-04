@@ -1,0 +1,106 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: Single brand, no additional brand integrations.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not use authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: BACnet uses its own WhoIs discovery protocol, not standard HA discovery methods like zeroconf or SSDP.
+  discovery-update-info:
+    status: exempt
+    comment: BACnet discovery does not provide runtime network updates.
+  docs-data-update:
+    status: todo
+    comment: Documentation to be created.
+  docs-examples:
+    status: todo
+    comment: Documentation to be created.
+  docs-known-limitations:
+    status: todo
+    comment: Documentation to be created.
+  docs-supported-devices:
+    status: todo
+    comment: Documentation to be created.
+  docs-supported-functions:
+    status: todo
+    comment: Documentation to be created.
+  docs-troubleshooting:
+    status: todo
+    comment: Documentation to be created.
+  docs-use-cases:
+    status: todo
+    comment: Documentation to be created.
+  dynamic-devices:
+    status: exempt
+    comment: Devices are added via discovery flows per config entry.
+  entity-category:
+    status: exempt
+    comment: Primary sensor entities should not have entity category.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Primary functionality should not be disabled by default.
+  entity-translations:
+    status: exempt
+    comment: Entity names come from BACnet object names on the device.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Default sensor icons are appropriate.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repairable issues to handle.
+  stale-devices:
+    status: exempt
+    comment: Devices are managed per config entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: Integration uses local UDP/IP connections, not HTTP.
+  strict-typing:
+    status: todo
+    comment: Strict typing to be completed.
