@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -33,7 +32,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -63,6 +62,7 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ruckus."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -71,7 +71,7 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -86,12 +86,10 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=info[KEY_SYS_TITLE], data=user_input
                     )
-                reauth_entry = self._get_reauth_entry()
-                if info[KEY_SYS_SERIAL] == reauth_entry.unique_id:
-                    return self.async_update_reload_and_abort(
-                        reauth_entry, data=user_input
-                    )
-                errors["base"] = "invalid_host"
+                self._abort_if_unique_id_mismatch(reason="invalid_host")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=user_input
+                )
 
         data_schema = DATA_SCHEMA
         if self.source == SOURCE_REAUTH:
