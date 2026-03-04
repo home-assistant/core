@@ -53,6 +53,7 @@
         }),
         'general': dict({
           'charge_count': 5,
+          'charge_permitted': 1,
           'charging_rate': 11.0,
           'error_code': 0,
           'rcd_trigger': 0,

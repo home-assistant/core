@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -15,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -28,15 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_COORDINATOR_LINK,
-    KEY_COORDINATOR_SPEED,
-    KEY_COORDINATOR_TRAFFIC,
-    KEY_COORDINATOR_UTIL,
-    KEY_ROUTER,
-)
+from .coordinator import NetgearConfigEntry
 from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -275,16 +267,16 @@ SENSOR_LINK_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetgearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up device tracker for Netgear component."""
-    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
-    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
-    coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
-    coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
-    coordinator_utilization = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_UTIL]
-    coordinator_link = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_LINK]
+    """Set up Netgear sensors from a config entry."""
+    router = entry.runtime_data.router
+    coordinator = entry.runtime_data.coordinator
+    coordinator_traffic = entry.runtime_data.coordinator_traffic
+    coordinator_speed = entry.runtime_data.coordinator_speed
+    coordinator_utilization = entry.runtime_data.coordinator_utilization
+    coordinator_link = entry.runtime_data.coordinator_link
 
     async_add_entities(
         NetgearRouterSensorEntity(coordinator, router, description)
@@ -334,7 +326,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Any],
         router: NetgearRouter,
         device: dict,
         attribute: str,
@@ -373,7 +365,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
         router: NetgearRouter,
         entity_description: NetgearSensorEntityDescription,
     ) -> None:

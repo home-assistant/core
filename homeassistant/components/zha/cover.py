@@ -67,8 +67,12 @@ class ZhaCover(ZHAEntity, CoverEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
+    @staticmethod
+    def _convert_supported_features(
+        zha_features: ZHACoverEntityFeature,
+    ) -> CoverEntityFeature:
+        """Convert ZHA cover features to HA cover features."""
         features = CoverEntityFeature(0)
-        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
 
         if ZHACoverEntityFeature.OPEN in zha_features:
             features |= CoverEntityFeature.OPEN
@@ -87,7 +91,13 @@ class ZhaCover(ZHAEntity, CoverEntity):
         if ZHACoverEntityFeature.SET_TILT_POSITION in zha_features:
             features |= CoverEntityFeature.SET_TILT_POSITION
 
-        self._attr_supported_features = features
+        return features
+
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Return the supported features."""
+        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
+        return self._convert_supported_features(zha_features)
 
     @property
     def is_closed(self) -> bool | None:
