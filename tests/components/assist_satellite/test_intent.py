@@ -53,6 +53,7 @@ async def test_broadcast_intent(
         "card": {},
         "data": {
             "failed": [],
+            "query": {"matched": [], "unmatched": []},
             "success": [
                 {
                     "id": "assist_satellite.test_entity",
@@ -90,6 +91,7 @@ async def test_broadcast_intent(
         "card": {},
         "data": {
             "failed": [],
+            "query": {"matched": [], "unmatched": []},
             "success": [
                 {
                     "id": "assist_satellite.test_entity_2",
@@ -127,6 +129,7 @@ async def test_broadcast_intent_excluded_domains(
             "card": {},
             "data": {
                 "failed": [],
+                "query": {"matched": [], "unmatched": []},
                 "success": [],  # no satellites
             },
             "language": "en",

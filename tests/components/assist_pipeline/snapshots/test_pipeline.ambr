@@ -110,6 +110,12 @@
             'data': dict({
               'failed': list([
               ]),
+              'query': dict({
+                'matched': list([
+                ]),
+                'unmatched': list([
+                ]),
+              }),
               'success': list([
               ]),
             }),
@@ -343,6 +349,12 @@
             'data': dict({
               'failed': list([
               ]),
+              'query': dict({
+                'matched': list([
+                ]),
+                'unmatched': list([
+                ]),
+              }),
               'success': list([
               ]),
             }),
@@ -573,6 +585,12 @@
             'data': dict({
               'failed': list([
               ]),
+              'query': dict({
+                'matched': list([
+                ]),
+                'unmatched': list([
+                ]),
+              }),
               'success': list([
               ]),
             }),
@@ -650,6 +668,12 @@
             'data': dict({
               'failed': list([
               ]),
+              'query': dict({
+                'matched': list([
+                ]),
+                'unmatched': list([
+                ]),
+              }),
               'success': list([
               ]),
             }),
@@ -702,6 +726,12 @@
             'data': dict({
               'failed': list([
               ]),
+              'query': dict({
+                'matched': list([
+                ]),
+                'unmatched': list([
+                ]),
+              }),
               'success': list([
               ]),
             }),
@@ -754,6 +784,12 @@
             'data': dict({
               'failed': list([
               ]),
+              'query': dict({
+                'matched': list([
+                ]),
+                'unmatched': list([
+                ]),
+              }),
               'success': list([
               ]),
             }),

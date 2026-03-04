@@ -1144,6 +1144,9 @@ async def test_webhook_handle_conversation_process(
             "data": {
                 "success": [],
                 "failed": [],
+                "query": {"matched": [], "unmatched": []},
+                "success": [],
+                "targets": [],
             },
         },
         "conversation_id": None,

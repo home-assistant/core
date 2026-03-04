@@ -249,6 +249,11 @@ async def test_assist_api(
         "data": {
             "failed": [],
             "success": [],
+            "targets": [],
+            "query": {
+                "matched": [{"entity_id": "light.matched", "state": "on"}],
+                "unmatched": [{"entity_id": "light.unmatched", "state": "on"}],
+            },
         },
         "reprompt": {
             "plain": {
@@ -307,6 +312,11 @@ async def test_assist_api(
         "data": {
             "failed": [],
             "success": [],
+            "targets": [],
+            "query": {
+                "matched": [{"entity_id": "light.matched", "state": "on"}],
+                "unmatched": [{"entity_id": "light.unmatched", "state": "on"}],
+            },
         },
         "response_type": "action_done",
         "reprompt": {
