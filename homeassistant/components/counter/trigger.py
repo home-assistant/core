@@ -91,6 +91,8 @@ class CounterResetTrigger(EntityTriggerBase):
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
         init_state = state.attributes.get(CONF_INITIAL)
+        if init_state is None:
+            return False
         return state.state == str(init_state)
 
 
