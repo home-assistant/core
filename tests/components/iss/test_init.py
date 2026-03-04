@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
-from homeassistant.components.iss.const import DOMAIN, MAX_CONSECUTIVE_FAILURES
+from homeassistant.components.iss.const import MAX_CONSECUTIVE_FAILURES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
