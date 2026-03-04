@@ -147,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'awning',
       'friendly_name': 'Mock Lift Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -252,6 +253,7 @@
       'current_tilt_position': 100,
       'device_class': 'blind',
       'friendly_name': 'Mock PA Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -303,6 +305,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'blind',
       'friendly_name': 'Mock Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,

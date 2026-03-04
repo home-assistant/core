@@ -404,6 +404,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

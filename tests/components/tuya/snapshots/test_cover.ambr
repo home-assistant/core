@@ -199,6 +199,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'curtain',
       'friendly_name': 'Estore Sala Curtain',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
