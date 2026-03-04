@@ -33,8 +33,10 @@ async def test_sensors_setup(
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 85
         mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2025-01-01T12:00:00+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
 
         mock_screensaver = MagicMock()
         mock_screensaver.visible = True
@@ -108,8 +110,10 @@ async def test_battery_level_sensor(
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 42
         mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2025-01-01T12:00:00+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
 
         mock_api.status.return_value = mock_status
 
@@ -169,8 +173,10 @@ async def test_last_interaction_sensor(
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 85
         mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2026-03-03T22:41:09Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-03-03T22:40:09Z")
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2026-03-03T22:41:09+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-03-03T22:40:09+00:00")
 
         mock_api.status.return_value = mock_status
 
@@ -228,8 +234,10 @@ async def test_last_motion_sensor(
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 85
         mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2025-01-01T12:00:00+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
 
         mock_api.status.return_value = mock_status
 
@@ -287,8 +295,10 @@ async def test_ambient_light_sensor(
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 85
         mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2025-01-01T12:00:00+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
         mock_status.ambient_light = 2.6
 
         mock_api.status.return_value = mock_status
@@ -407,8 +417,10 @@ async def test_sensor_unique_ids(
         mock_status.app_version = "25.1.1"
         mock_status.battery_level = 85
         mock_status.battery_state = "charging"
-        mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00Z")
-        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00Z")
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2025-01-01T12:00:00+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
 
         mock_api.status.return_value = mock_status
 
