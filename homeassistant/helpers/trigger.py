@@ -662,6 +662,9 @@ class EntityNumericalStateChangedTriggerBase(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected one."""
+        if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
         try:
             float(state.state)
         except TypeError, ValueError:
