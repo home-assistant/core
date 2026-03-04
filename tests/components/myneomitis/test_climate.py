@@ -1,6 +1,5 @@
 """Tests for the MyNeomitis climate component."""
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -400,13 +399,6 @@ async def test_skip_device_without_id(
     assert not any(e.domain == "climate" for e in entries)
 
 
-async def test_constructor_missing_id_raises() -> None:
-    """MyNeoClimate constructor should raise when _id missing."""
-    api = AsyncMock()
-    with pytest.raises(ValueError):
-        MyNeoClimate(api, {"model": "EV30"})
-
-
 async def test_default_presets_fallback() -> None:
     """Unknown model should fall back to canonical Preset order."""
     api = AsyncMock()
@@ -467,50 +459,6 @@ async def test_async_set_preset_mode_standby_direct() -> None:
     assert ent._attr_hvac_mode == HVACMode.OFF
 
 
-async def test_register_listener_unsubscribe_variants(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-) -> None:
-    """Cleanup returned as .unsubscribe attribute must be called when entity is removed."""
-    cleanup_fn = Mock()
-
-    def reg_listener(_device_id, _cb):
-        return SimpleNamespace(unsubscribe=cleanup_fn)
-
-    mock_pyaxenco_client.register_listener = reg_listener
-    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # register_listener must have been invoked during entity setup
-    assert cleanup_fn.call_count == 0  # not yet removed
-
-    # Unloading the entry triggers entity removal and must call the cleanup
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    cleanup_fn.assert_called_once()
-
-
-async def test_register_listener_with_close(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-) -> None:
-    """register_listener returning object with `close` should be accepted."""
-    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
-    mock_pyaxenco_client.register_listener.return_value = SimpleNamespace(
-        close=lambda: None
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_pyaxenco_client.register_listener.assert_called_once()
-
-
 async def test_async_set_preset_mode_when_hvac_off_ntd_sets_cool() -> None:
     """When hvac mode is OFF for an NTD with changeOverUser==1, setting preset selects COOL."""
     api = AsyncMock()
@@ -526,17 +474,18 @@ async def test_async_set_preset_mode_when_hvac_off_ntd_sets_cool() -> None:
     assert ent._attr_hvac_mode == HVACMode.COOL
 
 
-async def test_async_set_hvac_mode_restore_fallback_raises() -> None:
-    """When no known preset can be restored, a HomeAssistantError is raised."""
+async def test_async_set_hvac_mode_restore_fallback_uses_first_non_standby() -> None:
+    """When last preset is unknown, the first non-standby preset is used."""
     api = AsyncMock()
     ent = MyNeoClimate(api, CLIMATE_DEVICE)
     ent.async_write_ha_state = Mock()
 
     ent._last_preset_mode = None
-    ent._attr_preset_modes = ["standby", "invalid_preset"]
+    ent._attr_preset_modes = ["standby", "eco", "comfort"]
 
-    with pytest.raises(HomeAssistantError):
-        await ent.async_set_hvac_mode(HVACMode.HEAT)
+    await ent.async_set_hvac_mode(HVACMode.HEAT)
+    assert ent._attr_preset_mode == "eco"
+    assert ent._attr_hvac_mode == HVACMode.HEAT
 
 
 async def test_set_hvac_mode_off_api_error(

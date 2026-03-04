@@ -70,27 +70,27 @@ class MyNeoClimate(ClimateEntity):
     _attr_translation_key = "myneomitis"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, api: PyAxencoAPI, device: dict[str, Any]) -> None:
         """Initialize the MyNeoClimate entity."""
         self._api = api
         self._device = device
-        device_id = device.get("_id")
-        if not device_id:
-            raise ValueError("Device is missing required _id")
-        self._device_id: str = device_id
-        model = device.get("model", "")
-        name = device.get("name") or device_id or "MyNeomitis device"
-        connected = bool(device.get("connected", False))
+        self._device_id: str = device["_id"]
+        model = device.get("model")
+        name = device.get("name") or self._device_id
 
-        self._attr_unique_id = device_id
+        self._attr_unique_id = self._device_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
+            identifiers={(DOMAIN, self._device_id)},
             name=name,
             manufacturer="Axenco",
             model=model,
         )
 
+        connected = bool(device.get("connected", False))
         self._attr_available = connected
         self._unavailable_logged: bool = False
 
@@ -117,7 +117,7 @@ class MyNeoClimate(ClimateEntity):
         )
         target_mode = state.get("targetMode")
         if isinstance(target_mode, int):
-            self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(int(target_mode))
+            self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(target_mode)
         else:
             self._attr_preset_mode = None
         self._last_preset_mode: str | None = (
@@ -140,37 +140,13 @@ class MyNeoClimate(ClimateEntity):
                 else HVACMode.HEAT
             )
 
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-        )
-
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
-        register_listener = getattr(self._api, "register_listener", None)
-        if not callable(register_listener):
-            _LOGGER.debug(
-                "API has no callable register_listener, skipping ws listener for %s",
-                self._device_id,
-            )
-            return
-
-        unsubscribe = register_listener(self._device_id, self.handle_ws_update)
-
-        if callable(unsubscribe):
+        if unsubscribe := self._api.register_listener(
+            self._device_id, self.handle_ws_update
+        ):
             self.async_on_remove(unsubscribe)
-        elif hasattr(unsubscribe, "unsubscribe"):
-            self.async_on_remove(unsubscribe.unsubscribe)
-        elif hasattr(unsubscribe, "close"):
-            self.async_on_remove(unsubscribe.close)
-        elif unsubscribe is None:
-            pass
-        else:
-            _LOGGER.debug(
-                "register_listener returned unsupported type %s for %s",
-                type(unsubscribe),
-                self._device_id,
-            )
 
     @callback
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
@@ -296,9 +272,6 @@ class MyNeoClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
-        supported_modes = getattr(self, "hvac_modes", None)
-        if supported_modes is not None and hvac_mode not in supported_modes:
-            raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
         if hvac_mode == HVACMode.OFF:
             if self._attr_preset_mode and self._attr_preset_mode != "standby":
                 self._last_preset_mode = self._attr_preset_mode
@@ -319,29 +292,10 @@ class MyNeoClimate(ClimateEntity):
                 preset_to_restore = self._last_preset_mode
 
             if not preset_to_restore:
-                for candidate in ("comfort", "setpoint", "eco", "auto"):
-                    if (
-                        self._attr_preset_modes is not None
-                        and candidate in self._attr_preset_modes
-                        and candidate != "standby"
-                    ):
-                        preset_to_restore = candidate
-                        break
-
-            if not preset_to_restore:
-                if self._attr_preset_modes:
-                    preset_to_restore = next(
-                        (p for p in self._attr_preset_modes if p != "standby"),
-                        None,
-                    )
-                    if preset_to_restore is None:
-                        raise HomeAssistantError(
-                            f"No available non-standby preset to restore for {self.entity_id}"
-                        )
-                else:
-                    raise HomeAssistantError(
-                        f"No preset modes available to restore for {self.entity_id}"
-                    )
+                preset_to_restore = next(
+                    (p for p in (self._attr_preset_modes or []) if p != "standby"),
+                    "comfort",
+                )
 
             ok = await self._set_device_mode(preset_to_restore)
             if not ok:
