@@ -43,7 +43,7 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
     _attr_translation_key = "keypad"
 
     async def async_select_option(self, option: str) -> None:
-        """Show existed key & create key."""
+        """Select an existing key or create a new one."""
         if option == self.default_option:
             password = f"{random.randint(100000, 999999)}"
             now = int(time.time())
