@@ -39,6 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'cover',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

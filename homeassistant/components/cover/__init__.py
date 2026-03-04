@@ -91,6 +91,7 @@ class CoverEntityFeature(IntFlag):
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
+ATTR_IS_CLOSED = "is_closed"
 ATTR_POSITION = "position"
 ATTR_TILT_POSITION = "tilt_position"
 
@@ -267,7 +268,9 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        data = {}
+        data: dict[str, Any] = {}
+
+        data[ATTR_IS_CLOSED] = self.is_closed
 
         if (current := self.current_cover_position) is not None:
             data[ATTR_CURRENT_POSITION] = current

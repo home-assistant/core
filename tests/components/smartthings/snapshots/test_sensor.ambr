@@ -8822,7 +8822,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1568.087',
+    'state': '1446.085',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy_difference-entry]
@@ -8879,7 +8879,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.007',
+    'state': '0.021',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy_saved-entry]
@@ -9099,8 +9099,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Refrigerator Power',
-      'power_consumption_end': '2025-02-09T17:49:00Z',
-      'power_consumption_start': '2025-02-09T17:38:01Z',
+      'power_consumption_end': '2026-02-14T14:51:07Z',
+      'power_consumption_start': '2026-02-14T14:35:06Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -9109,7 +9109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '74',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_power_energy-entry]
@@ -9166,7 +9166,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0135559777781698',
+    'state': '0.0205731166644229',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_water_filter_usage-entry]
@@ -10506,7 +10506,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_battery_battery_battery',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_battery_battery_battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -10514,7 +10514,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Robot vacuum Battery',
+      'friendly_name': 'Robot Vacuum Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -10522,7 +10522,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '59',
+    'state': '99',
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_cleaning_mode-entry]
@@ -10566,7 +10566,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_cleaning_mode',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_robotCleanerCleaningMode_robotCleanerCleaningMode_robotCleanerCleaningMode',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_robotCleanerCleaningMode_robotCleanerCleaningMode_robotCleanerCleaningMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -10574,7 +10574,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Robot vacuum Cleaning mode',
+      'friendly_name': 'Robot Vacuum Cleaning mode',
       'options': list([
         'auto',
         'part',
@@ -10629,7 +10629,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_powerConsumptionReport_powerConsumption_energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -10637,7 +10637,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Robot vacuum Energy',
+      'friendly_name': 'Robot Vacuum Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -10646,7 +10646,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.981',
+    'state': '0.335',
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_difference-entry]
@@ -10686,7 +10686,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -10694,7 +10694,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Robot vacuum Energy difference',
+      'friendly_name': 'Robot Vacuum Energy difference',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -10703,7 +10703,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.021',
+    'state': '0.003',
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_energy_saved-entry]
@@ -10743,7 +10743,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_powerConsumptionReport_powerConsumption_energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -10751,7 +10751,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Robot vacuum Energy saved',
+      'friendly_name': 'Robot Vacuum Energy saved',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -10780,6 +10780,7 @@
         'after',
         'cleaning',
         'pause',
+        'washing_mop',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -10808,7 +10809,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_movement',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_robotCleanerMovement_robotCleanerMovement_robotCleanerMovement',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_robotCleanerMovement_robotCleanerMovement_robotCleanerMovement',
     'unit_of_measurement': None,
   })
 # ---
@@ -10816,7 +10817,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Robot vacuum Movement',
+      'friendly_name': 'Robot Vacuum Movement',
       'options': list([
         'homing',
         'idle',
@@ -10828,6 +10829,7 @@
         'after',
         'cleaning',
         'pause',
+        'washing_mop',
       ]),
     }),
     'context': <ANY>,
@@ -10835,7 +10837,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'cleaning',
+    'state': 'charging',
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][sensor.robot_vacuum_power-entry]
@@ -10875,7 +10877,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_powerConsumptionReport_powerConsumption_power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -10883,9 +10885,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Robot vacuum Power',
-      'power_consumption_end': '2025-07-10T11:20:22Z',
-      'power_consumption_start': '2025-07-10T11:11:22Z',
+      'friendly_name': 'Robot Vacuum Power',
+      'power_consumption_end': '2026-02-27T17:02:44Z',
+      'power_consumption_start': '2026-02-27T16:52:44Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -10934,7 +10936,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -10942,7 +10944,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Robot vacuum Power energy',
+      'friendly_name': 'Robot Vacuum Power energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -10993,7 +10995,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_turbo_mode',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_robotCleanerTurboMode_robotCleanerTurboMode_robotCleanerTurboMode',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_robotCleanerTurboMode_robotCleanerTurboMode_robotCleanerTurboMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -11001,7 +11003,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Robot vacuum Turbo mode',
+      'friendly_name': 'Robot Vacuum Turbo mode',
       'options': list([
         'on',
         'off',
@@ -11014,7 +11016,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'extra_silence',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-entry]
@@ -11152,6 +11154,7 @@
         'after',
         'cleaning',
         'pause',
+        'washing_mop',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -11200,6 +11203,7 @@
         'after',
         'cleaning',
         'pause',
+        'washing_mop',
       ]),
     }),
     'context': <ANY>,
@@ -11500,7 +11504,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.015',
+    'state': '15.0',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][sensor.eco_heating_system_power_energy-entry]
@@ -11846,7 +11850,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.015',
+    'state': '15.0',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][sensor.heat_pump_main_power_energy-entry]
@@ -12192,7 +12196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.015',
+    'state': '15.0',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][sensor.warmepumpe_power_energy-entry]

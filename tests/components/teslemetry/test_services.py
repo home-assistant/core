@@ -206,11 +206,29 @@ async def test_services(
             SERVICE_TIME_OF_USE,
             {
                 CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
+                ATTR_TOU_SETTINGS: {"utility": "test"},
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once()
+        set_time_of_use.assert_called_once_with({"utility": "test"})
+
+    # Test that tariff_content_v2 wrapper is unwrapped before passing to SDK
+    with patch(
+        "tesla_fleet_api.teslemetry.EnergySite.time_of_use_settings",
+        return_value=COMMAND_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_TOU_SETTINGS: {
+                    "tariff_content_v2": {"utility": "test"},
+                },
+            },
+            blocking=True,
+        )
+        set_time_of_use.assert_called_once_with({"utility": "test"})
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.add_charge_schedule",
