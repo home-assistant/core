@@ -17,11 +17,10 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STACK_TYPE_COMPOSE, STACK_TYPE_KUBERNETES, STACK_TYPE_SWARM
+from .const import StackType
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
-    PortainerCoordinator,
     PortainerStackData,
 )
 from .entity import (
@@ -294,11 +293,11 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
         translation_key="stack_type",
         value_fn=lambda data: (
             "swarm"
-            if data.stack.type == STACK_TYPE_SWARM
+            if data.stack.type == StackType.SWARM
             else "compose"
-            if data.stack.type == STACK_TYPE_COMPOSE
+            if data.stack.type == StackType.COMPOSE
             else "kubernetes"
-            if data.stack.type == STACK_TYPE_KUBERNETES
+            if data.stack.type == StackType.KUBERNETES
             else None
         ),
         device_class=SensorDeviceClass.ENUM,
@@ -398,19 +397,6 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
 
     entity_description: PortainerContainerSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerContainerSensorEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
@@ -421,18 +407,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
     """Representation of a Portainer endpoint sensor."""
 
     entity_description: PortainerEndpointSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerEndpointSensorEntityDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer endpoint sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -445,19 +419,6 @@ class PortainerStackSensor(PortainerStackEntity, SensorEntity):
     """Representation of a Portainer stack sensor."""
 
     entity_description: PortainerStackSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerStackSensorEntityDescription,
-        device_info: PortainerStackData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer stack sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.stack.id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:

@@ -62,4 +62,12 @@ MOCK_VEHICLES = {
             "pressure": "pressure.1.json",
         },
     },
+    "megane_e_tech": {
+        "endpoints": {
+            "battery_status": "battery_status_charging.json",
+            "cockpit": "cockpit_ev.json",
+            "hvac_status": "hvac_status.1.json",
+            "location": "location.json",
+        },
+    },
 }

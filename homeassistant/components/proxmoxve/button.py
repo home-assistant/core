@@ -19,12 +19,13 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
+from .helpers import is_granted
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -262,20 +263,13 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxNodeButtonNodeEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeButtonNodeEntityDescription,
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox Node button entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
-
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
+        if not is_granted(self.coordinator.permissions, p_type="nodes"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_permission_node_power",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
@@ -288,21 +282,13 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxVMButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxVMButtonEntityDescription,
-        vm_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox VM button entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, vm_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
-
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
+        if not is_granted(self.coordinator.permissions, p_type="vms"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_permission_vm_lxc_power",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
@@ -316,21 +302,14 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxContainerButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxContainerButtonEntityDescription,
-        container_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox Container button entity."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, container_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
-
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
+        # Container power actions fall under vms
+        if not is_granted(self.coordinator.permissions, p_type="vms"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_permission_vm_lxc_power",
+            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,

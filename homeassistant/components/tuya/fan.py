@@ -154,7 +154,7 @@ async def async_setup_entry(
                         oscillate_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, _OSCILLATE_DPCODES, prefer_function=True
                         ),
-                        speed_wrapper=_get_speed_wrapper(device),
+                        speed_wrapper=_get_speed_wrapper(device),  # type: ignore[arg-type]
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, _SWITCH_DPCODES, prefer_function=True
                         ),

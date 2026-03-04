@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONTAINER_STATE_RUNNING, DOMAIN, ENDPOINT_STATUS_DOWN
+from .const import DOMAIN, ContainerState, EndpointStatus
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -154,7 +154,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
-            if endpoint.status == ENDPOINT_STATUS_DOWN:
+            if endpoint.status == EndpointStatus.DOWN:
                 _LOGGER.debug(
                     "Skipping offline endpoint: %s (ID: %d)",
                     endpoint.name,
@@ -170,11 +170,11 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     docker_system_df,
                     stacks,
                 ) = await asyncio.gather(
-                    self.portainer.get_containers(endpoint_id=endpoint.id),
-                    self.portainer.docker_version(endpoint_id=endpoint.id),
-                    self.portainer.docker_info(endpoint_id=endpoint.id),
+                    self.portainer.get_containers(endpoint.id),
+                    self.portainer.docker_version(endpoint.id),
+                    self.portainer.docker_info(endpoint.id),
                     self.portainer.docker_system_df(endpoint.id),
-                    self.portainer.get_stacks(endpoint_id=endpoint.id),
+                    self.portainer.get_stacks(endpoint.id),
                 )
 
                 prev_endpoint = self.data.get(endpoint.id) if self.data else None
@@ -215,7 +215,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 running_containers = [
                     container
                     for container in containers
-                    if container.state == CONTAINER_STATE_RUNNING
+                    if container.state == ContainerState.RUNNING
                 ]
                 if running_containers:
                     container_stats = dict(
