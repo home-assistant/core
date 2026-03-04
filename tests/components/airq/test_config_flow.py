@@ -30,7 +30,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     hostname="airq.local.",
     type="_http._tcp.local.",
     name="air-Q._http._tcp.local.",
-    properties={"device": "air-Q", "devicename": "My air-Q", "id": "test-serial-123"},
+    properties={"device": "air-q", "devicename": "My air-Q", "id": "test-serial-123"},
 )
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -269,7 +269,7 @@ async def test_zeroconf_discovery_missing_id(
         hostname="airq.local.",
         type="_http._tcp.local.",
         name="air-Q._http._tcp.local.",
-        properties={"device": "air-Q", "devicename": "My air-Q"},
+        properties={"device": "air-q", "devicename": "My air-Q"},
     )
 
     result = await hass.config_entries.flow.async_init(

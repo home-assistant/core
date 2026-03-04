@@ -18,7 +18,10 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import BooleanSelector
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE, DOMAIN
 
@@ -100,7 +103,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery of an air-Q device."""
         self._discovered_host = discovery_info.host
         self._discovered_name = discovery_info.properties.get("devicename", "air-Q")
-        device_id = discovery_info.properties.get("id")
+        device_id = discovery_info.properties.get(ATTR_PROPERTIES_ID)
 
         if not device_id:
             return self.async_abort(reason="incomplete_discovery")

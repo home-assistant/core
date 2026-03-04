@@ -9,6 +9,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
     },
+    "flow_title": "{name}",
     "step": {
       "discovery_confirm": {
         "data": {
