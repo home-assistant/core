@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
 
 from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
 

@@ -1,7 +1,5 @@
 """Base class for Lutron devices."""
 
-from typing import cast
-
 from pylutron import Keypad, Lutron, LutronEntity, LutronEvent
 
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
