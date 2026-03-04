@@ -28,13 +28,15 @@ class GoogleWifiUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
+            config_entry=entry
         )
 
     async def _async_update_data(self):
         """Fetch data from the router via HTTP."""
         # Pull the host directly from the entry data every time
         host = self.entry.data[CONF_IP_ADDRESS]
-        url = f"http://{self.host}/api/v1/status"
+
+        url = f"http://{host}/api/v1/status"
         try:
             # We use hass.async_add_executor_job because 'requests' is synchronous
             # Pass an explicit timeout to the synchronous requests call

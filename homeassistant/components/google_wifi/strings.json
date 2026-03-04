@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "deprecated_yaml": {
+      "title": "Legacy YAML configuration detected",
+      "description": "The Google/Nest Wifi integration now uses the UI for configuration. Your existing YAML settings have been imported, but you should remove them from your configuration.yaml file and restart Home Assistant to clear this warning."
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "Device is already configured.",

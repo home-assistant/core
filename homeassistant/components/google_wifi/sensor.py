@@ -9,6 +9,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -48,7 +49,7 @@ async def async_setup_entry(
     device_name = data["name"]
 
     # Create the coordinator to manage data updates
-    coordinator = GoogleWifiUpdateCoordinator(hass, ip_address)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     # Fetch initial data so we don't have empty sensors on startup
     await coordinator.async_config_entry_first_refresh()
@@ -71,9 +72,10 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
+
         self.device_name = device_name
         # Create a unique ID so the user can rename/customize this in the UI
-        self._attr_unique_id = f"{self.entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{self.config_entry.entry_id}_{description.key}"
         self._attr_name = f"{description.key.replace('_', ' ').title()}"
 
 
@@ -131,10 +133,27 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiUpdateCoordinator], SensorEnt
             return val
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old YAML sensor setup - now handled by async_setup in __init__.py."""
-    # Tells users it's time to migrate to the new code- no longer YAML config
-    # This is essentially a no-op now, or can be used to redirect users
-    pass
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Handle legacy YAML configuration by importing it."""
+    # 1. Create a Repair Issue to warn the user that YAML is deprecated
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_haul_version="2026.9.0", # Set a future target version
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    # 2. Trigger the Config Flow import
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 # Define all sensors in one tuple to be imported by sensor.py
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
