@@ -35,8 +35,10 @@ def mock_get_status():
 @pytest.fixture
 def mock_aes_128_cbc_decrypt():
     """Mock aes_128_cbc_decrypt."""
-    with patch.object(SwitchBotAPI, "aes_128_cbc_decrypt") as mock_get_status:
-        yield mock_get_status
+    with patch.object(
+        SwitchBotAPI, "aes_128_cbc_decrypt"
+    ) as mock_aes_128_cbc_decrypt:
+        yield mock_aes_128_cbc_decrypt
 
 
 @pytest.fixture(scope="package", autouse=True)
