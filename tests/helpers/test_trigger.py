@@ -698,18 +698,6 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
     "homeassistant.components.binary_sensor.trigger.async_get_triggers",
     new=AsyncMock(return_value={}),
 )
-@patch(
-    "homeassistant.components.door.trigger.async_get_triggers",
-    new=AsyncMock(return_value={}),
-)
-@patch(
-    "homeassistant.components.garage_door.trigger.async_get_triggers",
-    new=AsyncMock(return_value={}),
-)
-@patch(
-    "homeassistant.components.window.trigger.async_get_triggers",
-    new=AsyncMock(return_value={}),
-)
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
