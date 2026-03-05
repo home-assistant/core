@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.loader import async_get_integration, async_get_loaded_integration
 
 from .const import CONF_UNIT_ID, DEFAULT_PORT, DOMAIN, PLATFORMS
@@ -33,11 +32,6 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _slugify(text: str) -> str:
-    """Make text safe for use as an ID."""
-    return "".join(ch if ch.isalnum() else "_" for ch in str(text)).strip("_").lower()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:
@@ -76,9 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
         version=version,
         device_name=device_name,
     )
-
-    with contextlib.suppress(Exception):
-        ir.async_delete_issue(hass, DOMAIN, "registry_migration_suggested")
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

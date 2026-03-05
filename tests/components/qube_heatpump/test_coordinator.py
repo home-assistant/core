@@ -64,7 +64,12 @@ async def test_coordinator_reconnects_when_disconnected(
         client.port = 502
         client.unit = 1
         client.is_connected = False  # Start disconnected
-        client.connect = AsyncMock(return_value=True)
+
+        async def _connect() -> bool:
+            client.is_connected = True
+            return True
+
+        client.connect = AsyncMock(side_effect=_connect)
         client.close = AsyncMock(return_value=None)
 
         state = QubeState()

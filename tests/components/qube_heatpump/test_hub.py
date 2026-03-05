@@ -170,7 +170,13 @@ async def test_hub_get_all_data(hass: HomeAssistant) -> None:
         client.host = "1.2.3.4"
         client.port = 502
         client.unit = 1
-        client.connect = AsyncMock(return_value=True)
+        client.is_connected = False
+
+        async def _connect() -> bool:
+            client.is_connected = True
+            return True
+
+        client.connect = AsyncMock(side_effect=_connect)
         client.get_all_data = AsyncMock(return_value=MagicMock())
 
         hub = QubeHub(hass, "1.2.3.4", 502, "test_entry_id", 1, "qube1")
@@ -190,6 +196,7 @@ async def test_hub_get_all_data_connection_fails(hass: HomeAssistant) -> None:
         client.host = "1.2.3.4"
         client.port = 502
         client.unit = 1
+        client.is_connected = False
         client.connect = AsyncMock(return_value=False)
 
         hub = QubeHub(hass, "1.2.3.4", 502, "test_entry_id", 1, "qube1")

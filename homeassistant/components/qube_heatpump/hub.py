@@ -69,7 +69,7 @@ class QubeHub:
                 socket.gethostbyname, self.client.host
             )
             self._resolved_ip = result
-        except (OSError, socket.gaierror):
+        except OSError:
             # If resolution fails, use the original host
             self._resolved_ip = self.client.host
 
@@ -109,6 +109,8 @@ class QubeHub:
 
     async def async_get_all_data(self) -> QubeState | None:
         """Get all data from the device."""
-        if not await self.client.connect():
+        if not self.is_connected:
+            await self.async_connect()
+        if not self.is_connected:
             return None
         return await self.client.get_all_data()

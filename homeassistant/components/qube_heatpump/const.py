@@ -1,7 +1,9 @@
 """Constants for the Qube Heat Pump integration."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "qube_heatpump"
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 CONF_UNIT_ID = "unit_id"
 
