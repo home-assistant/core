@@ -41,6 +41,7 @@
       'current_position': 75,
       'device_class': 'shutter',
       'friendly_name': 'Shutter mock 1',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
