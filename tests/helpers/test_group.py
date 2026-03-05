@@ -119,7 +119,7 @@ async def test_get_group_entities(hass: HomeAssistant) -> None:
 
     platform = MockEntityPlatform(hass, domain="light", platform_name="test")
 
-    ent = MockEntity(entity_id="light.test_group", unique_id="test_group_1")
+    ent = MockEntity(entity_id="light.test_group", unique_id="test_group")
     ent.group = GenericGroup(ent, ["light.bulb1", "light.bulb2"])
 
     await platform.async_add_entities([ent])
@@ -134,7 +134,7 @@ async def test_group_entity_removed_from_registry(hass: HomeAssistant) -> None:
     """Test group entity is removed from get_group_entities on removal."""
     platform = MockEntityPlatform(hass, domain="light", platform_name="test")
 
-    ent = MockEntity(entity_id="light.test_group", unique_id="test_group_2")
+    ent = MockEntity(entity_id="light.test_group", unique_id="test_group")
     ent.group = GenericGroup(ent, ["light.bulb1", "light.bulb2"])
 
     await platform.async_add_entities([ent])
@@ -144,6 +144,32 @@ async def test_group_entity_removed_from_registry(hass: HomeAssistant) -> None:
     await platform.async_remove_entity(ent.entity_id)
     await hass.async_block_till_done()
     assert "light.test_group" not in get_group_entities(hass)
+
+
+async def test_group_entity_renamed_in_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test get_group_entities reflects new key when group entity is renamed."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+
+    ent = MockEntity(entity_id="light.old_id", unique_id="test_group")
+    ent.group = GenericGroup(ent, ["light.bulb1", "light.bulb2"])
+
+    await platform.async_add_entities([ent])
+    await hass.async_block_till_done()
+
+    assert "light.old_id" in get_group_entities(hass)
+
+    entity_registry.async_update_entity("light.old_id", new_entity_id="light.new_id")
+    await hass.async_block_till_done()
+
+    group_entities = get_group_entities(hass)
+    assert "light.old_id" not in group_entities
+    assert "light.new_id" in group_entities
+
+    expanded = group.expand_entity_ids(hass, ["light.new_id"])
+    assert sorted(expanded) == ["light.bulb1", "light.bulb2"]
 
 
 async def test_multiple_group_entities(hass: HomeAssistant) -> None:
@@ -400,10 +426,10 @@ async def test_integration_specific_group_member_renamed(
     await hass.async_block_till_done()
     assert ent.group.member_entity_ids == ["light.original_name"]
 
-    entity_registry.async_update_entity(entry.entity_id, new_entity_id="light.new_name")
+    entity_registry.async_update_entity(entry.entity_id, new_entity_id="light.new_id")
     await hass.async_block_till_done()
 
-    assert ent.group.member_entity_ids == ["light.new_name"]
+    assert ent.group.member_entity_ids == ["light.new_id"]
 
 
 async def test_integration_specific_group_attribute_in_state(
