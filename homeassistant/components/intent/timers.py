@@ -541,11 +541,26 @@ def _find_timer(
         elif find_filter == FindTimerFilter.ONLY_INACTIVE:
             matching_timers = [t for t in matching_timers if not t.is_active]
 
+    # Search by id first
+    timer_id: str | None = None
+    if "id" in slots:
+        has_filter = True
+        timer_id = slots["id"]["value"]
+        assert timer_id is not None
+
+        matching_timers = [t for t in matching_timers if t.id == timer_id]
         if len(matching_timers) == 1:
             # Only 1 match
             return matching_timers[0]
+        # No matches
+        raise TimerNotFoundError
 
-    # Search by name first
+    if find_filter and len(matching_timers) == 1:
+        # Only 1 match remaining with filter
+        # Happens after filtering by ID to prevent false positives
+        return matching_timers[0]
+
+    # Search by name
     name: str | None = None
     if "name" in slots:
         has_filter = True
@@ -666,7 +681,18 @@ def _find_timers(
         t for t in timer_manager.timers.values() if not t.conversation_command
     ]
 
-    # Filter by name first
+    # Filter by id first
+    timer_id: str | None = None
+    if "id" in slots:
+        timer_id = slots["id"]["value"]
+        assert timer_id is not None
+
+        matching_timers = [t for t in matching_timers if t.id == timer_id]
+        if not matching_timers:
+            # No matches
+            raise TimerNotFoundError
+
+    # Filter by name
     name: str | None = None
     if "name" in slots:
         name = slots["name"]["value"]
@@ -935,6 +961,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
+        vol.Optional("id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -988,6 +1015,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
+        vol.Optional("id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -1012,6 +1040,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
+        vol.Optional("id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -1035,6 +1064,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
+        vol.Optional("id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -1059,6 +1089,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
+        vol.Optional("id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -1083,6 +1114,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("area"): cv.string,
+        vol.Optional("id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
