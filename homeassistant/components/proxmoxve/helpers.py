@@ -10,14 +10,9 @@ def is_granted(
     permission: str = PERM_POWER,
 ) -> bool:
     """Validate user permissions for the given type and permission."""
-    # Most specific permission matching
-    if p_id is not None:
-        path = f"/{p_type}/{p_id}"
-        if permission in permissions.get(path, {}):
-            return permissions.get(path, {}).get(permission) == 1
-    # Type specific permission
-    path = f"/{p_type}"
-    if permission in permissions.get(path, {}):
-        return permissions.get(path, {}).get(permission) == 1
-    # Global permission
-    return permissions.get("/", {}).get(permission) == 1
+    paths = [f"/{p_type}/{p_id}", f"/{p_type}", "/"]
+    for path in paths:
+        value = permissions.get(path, {}).get(permission)
+        if value is not None:
+            return value == 1
+    return False
