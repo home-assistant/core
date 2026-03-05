@@ -19,6 +19,9 @@
   },
   "entity": {
     "button": {
+      "air_purifier_light_sensor": {
+        "name": "Light Sensor"
+      },
       "art_frame_next_picture": {
         "name": "Next"
       },
