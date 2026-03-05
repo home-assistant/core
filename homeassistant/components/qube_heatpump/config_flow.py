@@ -116,7 +116,7 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 writer.close()
                 with contextlib.suppress(Exception):
                     await writer.wait_closed()
-            except OSError, TimeoutError:
+            except (OSError, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
                 if await self._async_has_conflicting_host(host):
@@ -180,7 +180,7 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     writer.close()
                     with contextlib.suppress(Exception):
                         await writer.wait_closed()
-                except OSError, TimeoutError:
+                except (OSError, TimeoutError):
                     errors["base"] = "cannot_connect"
 
             if not errors:

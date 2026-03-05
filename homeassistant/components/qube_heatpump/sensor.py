@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
@@ -141,14 +147,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="compressor_speed",
         translation_key="compressor_speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="flow_rate",
         translation_key="flow_rate",
-        native_unit_of_measurement="L/min",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
