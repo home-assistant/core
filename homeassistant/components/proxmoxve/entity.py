@@ -101,8 +101,11 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
 
     @property
     def _node_name(self) -> str | None:
-        """Return the current node name for this VM (dynamically resolved)."""
-        return self.coordinator.get_vm_node(self.device_id)
+        """Dynamically resolve which node this VM is currently on."""
+        for node_name, node_data in self.coordinator.data.items():
+            if self.device_id in node_data.vms:
+                return node_name
+        return None
 
     @property
     def available(self) -> bool:
@@ -154,8 +157,11 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
 
     @property
     def _node_name(self) -> str | None:
-        """Return the current node name for this container (dynamically resolved)."""
-        return self.coordinator.get_container_node(self.device_id)
+        """Dynamically resolve which node this container is currently on."""
+        for node_name, node_data in self.coordinator.data.items():
+            if self.device_id in node_data.containers:
+                return node_name
+        return None
 
     @property
     def available(self) -> bool:

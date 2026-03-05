@@ -72,10 +72,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.known_containers: set[int] = set()
         self.permissions: dict[str, dict[str, int]] = {}
 
-        # O(1) lookup maps rebuilt on every coordinator refresh.
-        self._vmid_to_node: dict[int, str] = {}
-        self._ctid_to_node: dict[int, str] = {}
-
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
         self.new_vms_callbacks: list[
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
@@ -176,7 +172,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 },
             )
 
-        self._rebuild_id_maps(data)
         self._async_add_remove_nodes(data)
         return data
 
@@ -228,26 +223,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         return vms, containers
-
-    def get_vm_node(self, vmid: int) -> str | None:
-        """Find which node a VM is currently on (O(1) lookup)."""
-        return self._vmid_to_node.get(vmid)
-
-    def get_container_node(self, vmid: int) -> str | None:
-        """Find which node a container is currently on (O(1) lookup)."""
-        return self._ctid_to_node.get(vmid)
-
-    def _rebuild_id_maps(self, data: dict[str, ProxmoxNodeData]) -> None:
-        """Rebuild VMID/CTID to node lookup maps from fresh data."""
-        vmid_to_node: dict[int, str] = {}
-        ctid_to_node: dict[int, str] = {}
-        for node_name, node_data in data.items():
-            for vmid in node_data.vms:
-                vmid_to_node[vmid] = node_name
-            for ctid in node_data.containers:
-                ctid_to_node[ctid] = node_name
-        self._vmid_to_node = vmid_to_node
-        self._ctid_to_node = ctid_to_node
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
