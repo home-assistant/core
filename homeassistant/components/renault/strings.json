@@ -140,6 +140,14 @@
       "charging_remaining_time": {
         "name": "Charging remaining time"
       },
+      "charging_settings_mode": {
+        "name": "Charging mode",
+        "state": {
+          "always": "Always",
+          "delayed": "Delayed",
+          "scheduled": "Scheduled"
+        }
+      },
       "front_left_pressure": {
         "name": "Front left tyre pressure"
       },
