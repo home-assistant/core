@@ -45,9 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Not yet implemented.
+  diagnostics: done
   discovery: done
   discovery-update-info:
     status: exempt
