@@ -349,6 +349,13 @@ def _normalize_states(
 
     for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if state_unit and state_unit not in valid_units:
+            state_unit = (
+                custom_equivalent_units_per_entity.get(entity_id, {}).get(state_unit)
+                or state_unit
+            )
+
         # Exclude states with unsupported unit from statistics
         if state_unit not in valid_units:
             if WARN_UNSUPPORTED_UNIT not in hass.data:
