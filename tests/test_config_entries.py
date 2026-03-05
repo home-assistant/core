@@ -9889,7 +9889,6 @@ async def test_orphaned_ignored_entries(
     )
     entry.add_to_hass(hass)
 
-    # Not sure if this is the best way. Let's wait a review
     async def _raise(hass_param: HomeAssistant, domain: str) -> None:
         raise loader.IntegrationNotFound(domain)
 
@@ -9931,3 +9930,35 @@ async def test_orphaned_ignored_entries_existing_integration(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("safe_mode", "recovery_mode"),
+    [
+        (True, False),
+        (False, True),
+    ],
+)
+async def test_orphaned_ignored_entries_safe_recovery_mode(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    safe_mode: bool,
+    recovery_mode: bool,
+) -> None:
+    """Test orphaned ignored entry scan is skipped in safe or recovery mode."""
+    hass.config.safe_mode = safe_mode
+    hass.config.recovery_mode = recovery_mode
+
+    await hass.config_entries.async_initialize()
+    entry = MockConfigEntry(
+        domain="ghost_orphan_domain", source=config_entries.SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    # No issue is allowed to be made by now
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+        )
+        is None
+    )
