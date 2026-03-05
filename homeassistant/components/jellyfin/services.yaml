@@ -8,4 +8,4 @@ play_media_shuffle:
       required: true
       selector:
         media:
-      example: '{"media_content_id": "https://home-assistant.io/images/cast/splash.png", "media_content_type": "music"}'
+      example: '{"media_content_id": "a656b907eb3a73532e40e44b968d0225", "media_content_type": "tvshow"}'

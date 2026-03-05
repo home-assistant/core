@@ -72,7 +72,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, "play_media"):
         return
 
-    # the player service
     async def play_media_shuffle_service_handler(
         entity: MediaPlayerEntity, call: ServiceCall
     ) -> None:
@@ -87,7 +86,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         await hass.async_add_executor_job(_play)
 
-    # register play_media to use the custom service schema
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,

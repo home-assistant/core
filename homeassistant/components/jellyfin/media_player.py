@@ -250,7 +250,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         # from jellyfin api docs: command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
-        # if enqueue is null, 'now', or 'replace', these will all act identically to PlayNow in jellyfin, so they are not implemented.
         command = "PlayNow"
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
         if enqueue == MediaPlayerEnqueue.NEXT:
