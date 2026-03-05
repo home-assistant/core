@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -46,7 +47,7 @@ async def test_light_turn_off(
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        Platform.LIGHT,
+        LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
@@ -68,7 +69,7 @@ async def test_light_turn_on(
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        Platform.LIGHT,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,

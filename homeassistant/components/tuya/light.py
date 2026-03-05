@@ -7,6 +7,15 @@ from enum import StrEnum
 import json
 from typing import Any, cast
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeJsonWrapper,
+)
+from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
@@ -30,15 +39,6 @@ from homeassistant.util.json import json_loads_object
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeJsonWrapper,
-)
-from .type_information import IntegerTypeInformation
-from .util import RemapHelper
 
 
 class _BrightnessWrapper(DPCodeIntegerWrapper):
@@ -174,7 +174,7 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
     s_type = DEFAULT_S_TYPE
     v_type = DEFAULT_V_TYPE
 
-    def read_device_status(
+    def read_device_status(  # type: ignore[override]
         self, device: CustomerDevice
     ) -> tuple[float, float, float] | None:
         """Return a tuple (H, S, V) from this color data."""
@@ -633,17 +633,17 @@ async def async_setup_entry(
                         manager,
                         description,
                         brightness_wrapper=(
-                            brightness_wrapper := _get_brightness_wrapper(
+                            brightness_wrapper := _get_brightness_wrapper(  # type: ignore[arg-type]
                                 device, description
                             )
                         ),
-                        color_data_wrapper=_get_color_data_wrapper(
+                        color_data_wrapper=_get_color_data_wrapper(  # type: ignore[arg-type]
                             device, description, brightness_wrapper
                         ),
                         color_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, description.color_mode, prefer_function=True
                         ),
-                        color_temp_wrapper=_ColorTempWrapper.find_dpcode(
+                        color_temp_wrapper=_ColorTempWrapper.find_dpcode(  # type: ignore[arg-type]
                             device, description.color_temp, prefer_function=True
                         ),
                         switch_wrapper=switch_wrapper,

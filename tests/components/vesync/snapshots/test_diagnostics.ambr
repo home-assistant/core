@@ -485,7 +485,7 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'firmware',
-              'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+              'entity_picture': '/api/brands/integration/vesync/icon.png',
               'friendly_name': 'Test Fan Firmware',
               'supported_features': 0,
             }),

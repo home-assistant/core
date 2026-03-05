@@ -1361,21 +1361,23 @@ def test_attribute_selector_schema(
         (
             {},
             (
-                {"seconds": 10},
+                {
+                    "seconds": 10
+                },  # Seconds is allowed also if `enable_second` is not set
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
                 {"milliseconds": 500},
             ),
-            (None, {}),
-        ),
-        (
-            {"enable_day": True, "enable_millisecond": True},
-            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
-            (None, {}),
-        ),
-        (
-            {"allow_negative": False},
-            ({"seconds": 10}, {"days": 10}),
             (None, {}, {"seconds": -1}),
+        ),
+        (
+            {"enable_day": True, "enable_millisecond": True, "enable_second": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
+            (None, {}, {"seconds": -1}),
+        ),
+        (
+            {"allow_negative": True},
+            ({"seconds": 10}, {"seconds": -1}),
+            (None, {}),
         ),
     ],
 )

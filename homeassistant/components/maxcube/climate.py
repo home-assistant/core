@@ -225,7 +225,7 @@ class MaxCubeClimate(ClimateEntity):
             raise ValueError(f"unsupported preset mode {preset_mode}")
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         if not self._device.is_thermostat():
             return {}
