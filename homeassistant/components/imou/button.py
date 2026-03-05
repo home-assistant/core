@@ -2,92 +2,72 @@
 
 from __future__ import annotations
 
-import logging
-
 from pyimouapi.exceptions import ImouException
+from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ImouConfigEntry
-from .const import PARAM_RESTART_DEVICE, PARAM_ROTATION_DURATION
+from .const import PARAM_RESTART_DEVICE, PARAM_STATE, PARAM_STATUS
+from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
-
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ImouConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Imou button entities.
-
-    Args:
-        hass: Home Assistant core object
-        entry: Configuration entry
-        async_add_entities: Callback to add entities
-    """
-    _LOGGER.debug("Setting up button entities")
-    imou_entry: ImouConfigEntry = entry
-    imou_coordinator = imou_entry.runtime_data
-    entities = []
-    for device in imou_coordinator.devices:
-        for button_type in device.buttons:
-            button_entity = ImouButton(
-                imou_coordinator,
-                entry,
-                button_type,
-                device,
-            )
-            entities.append(button_entity)
-    if entities:
-        async_add_entities(entities)
+    """Set up Imou button entities."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        ImouButton(coordinator, button_type, device)
+        for device in coordinator.devices
+        for button_type in device.buttons
+    )
 
 
 class ImouButton(ImouEntity, ButtonEntity):
     """Imou button entity."""
 
-    async def async_press(self) -> None:
-        """Handle button press.
+    _attr_device_class: ButtonDeviceClass | None = ButtonDeviceClass.RESTART
 
-        Uses the rotation duration from config entry options.
-        """
-        await self._async_do_press(
-            self._config_entry.options.get(PARAM_ROTATION_DURATION, 500)
-        )
+    def __init__(
+        self,
+        coordinator: ImouDataUpdateCoordinator,
+        entity_type: str,
+        device: ImouHaDevice,
+    ) -> None:
+        """Initialize the Imou button entity."""
+        super().__init__(coordinator, entity_type, device)
+        if entity_type != PARAM_RESTART_DEVICE:
+            self._attr_device_class = None
 
     @property
-    def device_class(self) -> ButtonDeviceClass | None:
-        """Return the device class.
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        if not super().available:
+            return False
+        if self._entity_type == PARAM_STATUS:
+            return True
+        if PARAM_STATUS not in self._device.sensors:
+            return False
+        return (
+            self._device.sensors[PARAM_STATUS][PARAM_STATE]
+            != DeviceStatus.OFFLINE.value
+        )
 
-        Returns:
-            Button device class, or None if not applicable
-        """
-        if self._entity_type == PARAM_RESTART_DEVICE:
-            return ButtonDeviceClass.RESTART
-        return None
-
-    async def _async_do_press(self, duration: int) -> None:
-        """Execute button press operation.
-
-        Args:
-            duration: Duration in milliseconds
-
-        Raises:
-            HomeAssistantError: If the operation fails
-        """
+    async def async_press(self) -> None:
+        """Handle button press."""
         try:
-            await self._coordinator.device_manager.async_press_button(
+            await self.coordinator.device_manager.async_press_button(
                 self._device,
                 self._entity_type,
-                duration,
+                500,
             )
         except ImouException as e:
             raise HomeAssistantError(e.message) from e

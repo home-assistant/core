@@ -1,24 +1,24 @@
 {
   "config": {
     "abort": {
-      "already_configured": "AppId is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "Connection timeout": "Connection timeout",
       "Invalid credentials": "Invalid credentials",
       "appIdOrSecret_invalid": "Invalid appId or appSecret",
-      "connect_failed": "Failed to connect to Imou",
+      "connect_failed": "[%key:common::config_flow::error::cannot_connect%]",
       "request_failed": "Request failed"
     },
     "step": {
-      "login": {
+      "user": {
         "data": {
-          "api_url": "url",
-          "app_id": "AppId",
-          "app_secret": "AppSecret"
+          "api_url": "Server region",
+          "app_id": "App ID",
+          "app_secret": "App secret"
         },
         "data_description": {
-          "api_url": "The API URL of IMOU Cloud platform",
+          "api_url": "Select the server region closest to your location",
           "app_id": "The App ID obtained from IMOU Cloud platform",
           "app_secret": "The App Secret obtained from IMOU Cloud platform"
         },
@@ -32,31 +32,29 @@
         "name": "Mute"
       },
       "ptz_down": {
-        "name": "Ptz Down"
+        "name": "PTZ down"
       },
       "ptz_left": {
-        "name": "Ptz Left"
+        "name": "PTZ left"
       },
       "ptz_right": {
-        "name": "Ptz Right"
+        "name": "PTZ right"
       },
       "ptz_up": {
-        "name": "Ptz Up"
+        "name": "PTZ up"
       },
       "restart_device": {
-        "name": "Restart Device"
+        "name": "Restart device"
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "rotation_duration": "Single PTZ rotation duration (milliseconds)"
-        },
-        "data_description": {
-          "rotation_duration": "The duration in milliseconds for a single PTZ rotation"
-        }
+  "selector": {
+    "api_url": {
+      "options": {
+        "cn": "China",
+        "eu": "Europe",
+        "na": "North America",
+        "sg": "Singapore (Asia-Pacific)"
       }
     }
   }

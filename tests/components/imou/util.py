@@ -3,11 +3,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.imou.const import (
-    CONF_API_URL_SG,
+    CONF_API_URL,
+    CONF_APP_ID,
+    CONF_APP_SECRET,
     DOMAIN,
-    PARAM_API_URL,
-    PARAM_APP_ID,
-    PARAM_APP_SECRET,
 )
 from homeassistant.core import HomeAssistant
 
@@ -15,18 +14,18 @@ from tests.common import MockConfigEntry
 
 TEST_APP_ID = "test_app_id"
 TEST_APP_SECRET = "test_app_secret"
-TEST_API_URL = CONF_API_URL_SG
+TEST_API_URL = "sg"
 
 USER_INPUT = {
-    PARAM_APP_ID: TEST_APP_ID,
-    PARAM_APP_SECRET: TEST_APP_SECRET,
-    PARAM_API_URL: TEST_API_URL,
+    CONF_APP_ID: TEST_APP_ID,
+    CONF_APP_SECRET: TEST_APP_SECRET,
+    CONF_API_URL: TEST_API_URL,
 }
 
 CONFIG_ENTRY_DATA = {
-    PARAM_APP_ID: TEST_APP_ID,
-    PARAM_APP_SECRET: TEST_APP_SECRET,
-    PARAM_API_URL: TEST_API_URL,
+    CONF_APP_ID: TEST_APP_ID,
+    CONF_APP_SECRET: TEST_APP_SECRET,
+    CONF_API_URL: TEST_API_URL,
 }
 
 
@@ -57,7 +56,7 @@ async def async_init_integration(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config_entry_data,
-        unique_id=config_entry_data.get(PARAM_APP_ID),
+        unique_id=config_entry_data.get(CONF_APP_ID),
         entry_id="test_entry_id",
     )
     config_entry.add_to_hass(hass)

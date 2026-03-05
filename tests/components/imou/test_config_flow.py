@@ -6,14 +6,10 @@ from pyimouapi.exceptions import ImouException
 import pytest
 
 from homeassistant.components.imou.const import (
-    CONF_API_URL_FK,
-    CONF_API_URL_HZ,
-    CONF_API_URL_OR,
-    CONF_API_URL_SG,
+    CONF_API_URL,
+    CONF_APP_ID,
+    CONF_APP_SECRET,
     DOMAIN,
-    PARAM_API_URL,
-    PARAM_APP_ID,
-    PARAM_APP_SECRET,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -58,7 +54,7 @@ async def test_user_flow_success(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "login"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -67,10 +63,10 @@ async def test_user_flow_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
-    assert result["data"][PARAM_APP_ID] == USER_INPUT[PARAM_APP_ID]
-    assert result["data"][PARAM_APP_SECRET] == USER_INPUT[PARAM_APP_SECRET]
-    assert result["data"][PARAM_API_URL] == USER_INPUT[PARAM_API_URL]
-    assert result["result"].unique_id == USER_INPUT[PARAM_APP_ID]
+    assert result["data"][CONF_APP_ID] == USER_INPUT[CONF_APP_ID]
+    assert result["data"][CONF_APP_SECRET] == USER_INPUT[CONF_APP_SECRET]
+    assert result["data"][CONF_API_URL] == USER_INPUT[CONF_API_URL]
+    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -83,7 +79,7 @@ async def test_user_flow_duplicate_entry(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=USER_INPUT,
-        unique_id=USER_INPUT[PARAM_APP_ID],
+        unique_id=USER_INPUT[CONF_APP_ID],
     )
     config_entry.add_to_hass(hass)
 
@@ -101,70 +97,6 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
-) -> None:
-    """Test options flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=USER_INPUT,
-        unique_id=USER_INPUT[PARAM_APP_ID],
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.imou.ImouHaDeviceManager",
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"rotation_duration": 1000},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options["rotation_duration"] == 1000
-
-
-async def test_options_flow_with_default_value(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
-) -> None:
-    """Test options flow with default value."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=USER_INPUT,
-        unique_id=USER_INPUT[PARAM_APP_ID],
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.imou.ImouHaDeviceManager",
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    # Verify default value is shown in form
-    assert "data_schema" in result
-
-
 async def test_user_flow_form_initial(
     hass: HomeAssistant,
 ) -> None:
@@ -175,7 +107,7 @@ async def test_user_flow_form_initial(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "login"
+    assert result["step_id"] == "user"
     assert "data_schema" in result
 
 
@@ -184,7 +116,6 @@ async def test_user_flow_exception_handling(
     mock_api_client: AsyncMock,
 ) -> None:
     """Test exception handling in user flow."""
-    # Test with ImouException (which is caught and handled)
     mock_exception = ImouException("Connection timeout")
     mock_exception.get_title = lambda: "Connection timeout"
     mock_api_client.async_get_token.side_effect = mock_exception
@@ -199,9 +130,8 @@ async def test_user_flow_exception_handling(
         user_input=USER_INPUT,
     )
 
-    # Should still show form with error
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "login"
+    assert result["step_id"] == "user"
     assert "errors" in result
     assert result["errors"]["base"] == "Connection timeout"
 
@@ -211,20 +141,14 @@ async def test_user_flow_different_api_urls(
     mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
 ) -> None:
-    """Test user flow with different API URLs."""
-    api_urls = [
-        CONF_API_URL_SG,
-        CONF_API_URL_OR,
-        CONF_API_URL_FK,
-        CONF_API_URL_HZ,
-    ]
+    """Test user flow with different API URL regions."""
+    api_regions = ["sg", "eu", "na", "cn"]
 
-    for idx, api_url in enumerate(api_urls):
-        # Use different app_id for each URL to avoid duplicate entry errors
+    for idx, region in enumerate(api_regions):
         user_input = {
-            PARAM_APP_ID: f"{TEST_APP_ID}_{idx}",
-            PARAM_APP_SECRET: TEST_APP_SECRET,
-            PARAM_API_URL: api_url,
+            CONF_APP_ID: f"{TEST_APP_ID}_{idx}",
+            CONF_APP_SECRET: TEST_APP_SECRET,
+            CONF_API_URL: region,
         }
 
         result = await hass.config_entries.flow.async_init(
@@ -238,31 +162,4 @@ async def test_user_flow_different_api_urls(
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][PARAM_API_URL] == api_url
-
-
-async def test_options_flow_cancel(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
-) -> None:
-    """Test canceling options flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=USER_INPUT,
-        unique_id=USER_INPUT[PARAM_APP_ID],
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.imou.ImouHaDeviceManager",
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+        assert result["data"][CONF_API_URL] == region
