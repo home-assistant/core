@@ -43,6 +43,10 @@ async def test_level_control_config_entities(
     assert state
     assert state.state == "255"
 
+    state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
+    assert state
+    assert state.state == "255"
+
     state = hass.states.get("number.mock_dimmable_light_on_transition_time")
     assert state
     assert state.state == "0.0"
@@ -61,6 +65,20 @@ async def test_level_control_config_entities(
     state = hass.states.get("number.mock_dimmable_light_on_level")
     assert state
     assert state.state == "20"
+
+    set_node_attribute(matter_node, 1, 0x00000008, 0x4000, 128)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
+    assert state
+    assert state.state == "128"
+
+    set_node_attribute(matter_node, 1, 0x00000008, 0x4000, 255)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
+    assert state
+    assert state.state == "255"
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_weather_sensor"])
