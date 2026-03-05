@@ -3,23 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
 
 from tesla_powerwall import (
     BatteryResponse,
     DeviceType,
     GridStatus,
     MetersAggregatesResponse,
-    Powerwall,
     PowerwallStatusResponse,
     SiteInfoResponse,
     SiteMasterResponse,
 )
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-type PowerwallConfigEntry = ConfigEntry[PowerwallRuntimeData]
 
 
 @dataclass
@@ -46,12 +39,3 @@ class PowerwallData:
     grid_status: GridStatus
     backup_reserve: float | None
     batteries: dict[str, BatteryResponse]
-
-
-class PowerwallRuntimeData(TypedDict):
-    """Run time data for the powerwall."""
-
-    coordinator: DataUpdateCoordinator[PowerwallData] | None
-    api_instance: Powerwall
-    base_info: PowerwallBaseInfo
-    api_changed: bool

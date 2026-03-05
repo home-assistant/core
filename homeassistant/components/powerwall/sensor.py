@@ -29,8 +29,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import POWERWALL_COORDINATOR
+from .coordinator import PowerwallConfigEntry, PowerwallRuntimeData
 from .entity import BatteryEntity, PowerWallEntity
-from .models import BatteryResponse, PowerwallConfigEntry, PowerwallRuntimeData
+from .models import BatteryResponse
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
