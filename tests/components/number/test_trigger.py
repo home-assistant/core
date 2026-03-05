@@ -4,7 +4,12 @@ import pytest
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number.const import DOMAIN
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
+from homeassistant.const import (
+    ATTR_LABEL_ID,
+    CONF_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
@@ -80,6 +85,30 @@ async def test_number_triggers_gated_by_labs_flag(
                 {"included": {"state": "1", "attributes": {}}, "count": 0},
                 {"included": {"state": "not a number", "attributes": {}}, "count": 0},
                 {"included": {"state": "2", "attributes": {}}, "count": 1},
+            ],
+        ),
+        (
+            "number.changed",
+            [
+                {
+                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "count": 0,
+                },
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 1},
+                {
+                    "included": {"state": STATE_UNAVAILABLE, "attributes": {}},
+                    "count": 0,
+                },
+            ],
+        ),
+        (
+            "number.changed",
+            [
+                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 1},
+                {"included": {"state": STATE_UNKNOWN, "attributes": {}}, "count": 0},
             ],
         ),
     ],
