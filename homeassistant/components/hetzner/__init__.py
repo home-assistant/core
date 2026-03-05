@@ -6,7 +6,7 @@ from hcloud import APIException, Client
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .coordinator import HetznerConfigEntry, HetznerCoordinator, HetznerData
 
@@ -20,6 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HetznerConfigEntry) -> b
     try:
         await hass.async_add_executor_job(client.load_balancers.get_all)
     except APIException as err:
+        if err.code == 401:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed: {err.message}"
+            ) from err
         raise ConfigEntryNotReady(
             f"Error connecting to Hetzner Cloud API: {err.message}"
         ) from err

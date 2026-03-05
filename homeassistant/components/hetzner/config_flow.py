@@ -49,10 +49,10 @@ class HetznerFlowHandler(ConfigFlow, domain=DOMAIN):
                 client = Client(token=token)
                 await self.hass.async_add_executor_job(client.load_balancers.get_all)
             except APIException:
-                LOGGER.exception("Error connecting to Hetzner Cloud API")
+                LOGGER.exception("Error connecting to API")
                 errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected error connecting to Hetzner Cloud")
+                LOGGER.exception("Unexpected error connecting to API")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -85,12 +85,10 @@ class HetznerFlowHandler(ConfigFlow, domain=DOMAIN):
                 client = Client(token=token)
                 await self.hass.async_add_executor_job(client.load_balancers.get_all)
             except APIException:
-                LOGGER.exception("Error connecting to Hetzner Cloud API during reauth")
+                LOGGER.exception("Error connecting to API during reauth")
                 errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
-                LOGGER.exception(
-                    "Unexpected error connecting to Hetzner Cloud during reauth"
-                )
+                LOGGER.exception("Unexpected error connecting during reauth")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(

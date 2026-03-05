@@ -42,6 +42,23 @@ async def test_setup_entry_connection_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_entry_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hcloud: MagicMock,
+) -> None:
+    """Test setup with authentication failure triggers reauth."""
+    mock_hcloud.load_balancers.get_all.side_effect = APIException(
+        code=401, message="Unauthorized", details={}
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, sources={"reauth"}))
+
+
 @pytest.mark.usefixtures("mock_hcloud")
 async def test_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

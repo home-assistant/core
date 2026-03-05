@@ -74,7 +74,7 @@ rules:
 
   # Platinum
   async-dependency:
-    status: exempt
+    status: todo
     comment: The hcloud library is synchronous and wrapped with async_add_executor_job.
   inject-websession:
     status: exempt

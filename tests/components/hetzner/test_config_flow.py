@@ -37,7 +37,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 async def test_user_flow_invalid_auth(
     hass: HomeAssistant, mock_hcloud_config_flow: MagicMock
 ) -> None:
-    """Test user flow with invalid authentication."""
+    """Test user flow with invalid authentication and recovery."""
     mock_hcloud_config_flow.load_balancers.get_all.side_effect = APIException(
         code=401, message="Unauthorized", details={}
     )
@@ -52,11 +52,19 @@ async def test_user_flow_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    # Recover from error
+    mock_hcloud_config_flow.load_balancers.get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: "good-token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_unknown_error(
     hass: HomeAssistant, mock_hcloud_config_flow: MagicMock
 ) -> None:
-    """Test user flow with unknown error."""
+    """Test user flow with unknown error and recovery."""
     mock_hcloud_config_flow.load_balancers.get_all.side_effect = RuntimeError(
         "Unexpected"
     )
@@ -70,6 +78,14 @@ async def test_user_flow_unknown_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    # Recover from error
+    mock_hcloud_config_flow.load_balancers.get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: "test-token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_hcloud_config_flow")
@@ -115,7 +131,7 @@ async def test_reauth_flow_invalid_auth(
     mock_config_entry: MockConfigEntry,
     mock_hcloud_config_flow: MagicMock,
 ) -> None:
-    """Test reauth flow with invalid authentication."""
+    """Test reauth flow with invalid authentication and recovery."""
     mock_config_entry.add_to_hass(hass)
     mock_hcloud_config_flow.load_balancers.get_all.side_effect = APIException(
         code=401, message="Unauthorized", details={}
@@ -128,3 +144,43 @@ async def test_reauth_flow_invalid_auth(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    # Recover from error
+    mock_hcloud_config_flow.load_balancers.get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: "new-api-token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "new-api-token"
+
+
+async def test_reauth_flow_unknown_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hcloud_config_flow: MagicMock,
+) -> None:
+    """Test reauth flow with unknown error and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    mock_hcloud_config_flow.load_balancers.get_all.side_effect = RuntimeError(
+        "Unexpected"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: "new-token"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    # Recover from error
+    mock_hcloud_config_flow.load_balancers.get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: "new-api-token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "new-api-token"

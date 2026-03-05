@@ -9,6 +9,7 @@ from hcloud.load_balancers.client import BoundLoadBalancer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER, SCAN_INTERVAL
@@ -53,6 +54,10 @@ class HetznerCoordinator(DataUpdateCoordinator[dict[int, BoundLoadBalancer]]):
                 self.client.load_balancers.get_all
             )
         except APIException as err:
+            if err.code == 401:
+                raise ConfigEntryAuthFailed(
+                    f"Authentication failed: {err.message}"
+                ) from err
             raise UpdateFailed(
                 f"Error communicating with Hetzner Cloud API: {err.message}"
             ) from err
