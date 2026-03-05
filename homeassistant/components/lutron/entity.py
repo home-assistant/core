@@ -89,7 +89,4 @@ class LutronKeypad(LutronBaseEntity):
         if keypad.type == "MAIN_REPEATER":
             self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
         else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                controller.guid,
-            )
+            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
