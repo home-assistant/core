@@ -59,7 +59,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             unique_ids = [
                 entity.info_object.unique_id
                 for member in group_proxy.group.members
-                for entity in member.device.platform_entities.values()
+                for entity in member.associated_entities
                 if platform == entity.PLATFORM
             ]
             self.group = IntegrationSpecificGroup(self, unique_ids)
