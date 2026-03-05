@@ -21,21 +21,6 @@ from . import MOCK_SERIAL_BY_ID, MOCK_USB_DEVICE, MODULE
 from tests.common import MockConfigEntry
 
 
-async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test that the user flow aborts if an instance is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: "/already/configured/path"}
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
 async def test_user_flow_with_detected_usb_device(
     hass: HomeAssistant, mock_usb_device: USBDevice
 ) -> None:
@@ -176,6 +161,21 @@ async def test_user_flow_with_manual_path(
     assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+
+
+async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test that the user flow aborts if an instance is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: "/already/configured/path"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_user_flow_already_in_progress(
