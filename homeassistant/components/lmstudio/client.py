@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
@@ -66,18 +65,17 @@ class LMStudioClient:
         url = f"{self._base_url}/api/v1/models"
         timeout = aiohttp.ClientTimeout(total=self._timeout)
         try:
-            async with asyncio.timeout(self._timeout):
-                async with self._session.get(
-                    url, headers=self._headers(), timeout=timeout
-                ) as resp:
-                    if resp.status in (401, 403):
-                        raise LMStudioAuthError("Authentication failed")
-                    if resp.status >= 400:
-                        message = await resp.text()
-                        raise LMStudioResponseError(
-                            f"Unexpected response ({resp.status}): {message}"
-                        )
-                    payload = await resp.json()
+            async with self._session.get(
+                url, headers=self._headers(), timeout=timeout
+            ) as resp:
+                if resp.status in (401, 403):
+                    raise LMStudioAuthError("Authentication failed")
+                if resp.status >= 400:
+                    message = await resp.text()
+                    raise LMStudioResponseError(
+                        f"Unexpected response ({resp.status}): {message}"
+                    )
+                payload = await resp.json()
         except (aiohttp.ClientError, TimeoutError) as err:
             raise LMStudioConnectionError("Unable to connect") from err
 

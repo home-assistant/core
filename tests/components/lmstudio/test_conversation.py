@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 import logging
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -161,3 +161,28 @@ async def test_unavailable_logging_and_recovery(
     state = hass.states.get("conversation.lm_studio_conversation")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_converse_error_returns_error_result(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a ConverseError during LLM data provision returns an error result."""
+    _response = intent.IntentResponse(language="en")
+    _response.async_set_error(intent.IntentResponseErrorCode.UNKNOWN, "error")
+    _converse_error = conversation.ConverseError("error", "conv-id", _response)
+
+    with patch(
+        "homeassistant.components.conversation.chat_log.ChatLog.async_provide_llm_data",
+        AsyncMock(side_effect=_converse_error),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR

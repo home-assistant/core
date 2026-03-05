@@ -118,6 +118,24 @@
     }
   },
   "exceptions": {
+    "attachment_not_found": {
+      "message": "Attachment file not found: {file_path}"
+    },
+    "auth_failed": {
+      "message": "Authentication with the LM Studio server failed."
+    },
+    "connection_error": {
+      "message": "Failed to reach the LM Studio server."
+    },
+    "invalid_structured_response": {
+      "message": "The model returned an invalid structured response."
+    },
+    "no_assistant_response": {
+      "message": "The model did not return a response."
+    },
+    "no_user_content": {
+      "message": "No user input found in the conversation."
+    },
     "unsupported_attachment_type": {
       "message": "LM Studio only supports image attachments in user content, but received a non-image attachment."
     }

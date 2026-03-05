@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_USER,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -91,7 +92,7 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LM Studio."""
 
     VERSION = 1
-    MINOR_VERSION = 0
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -191,7 +192,7 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
     @property
     def _is_new(self) -> bool:
         """Return if this is a new subentry."""
-        return self.source == "user"
+        return self.source == SOURCE_USER
 
     @property
     def _client(self) -> LMStudioClient:
@@ -210,7 +211,7 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
             try:
                 async with asyncio.timeout(DEFAULT_TIMEOUT):
                     models = await self._client.async_list_models()
-            except (LMStudioAuthError, LMStudioConnectionError, LMStudioResponseError):
+            except LMStudioAuthError, LMStudioConnectionError, LMStudioResponseError:
                 _LOGGER.exception("Failed to get models from server")
                 return self.async_abort(reason="cannot_connect")
 

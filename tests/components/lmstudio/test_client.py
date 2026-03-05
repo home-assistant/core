@@ -188,3 +188,101 @@ async def test_iter_sse_skips_invalid_payload() -> None:
     assert events == [
         LMStudioStreamEvent("message.delta", {"type": "message.delta", "content": "ok"})
     ]
+
+
+async def test_stream_chat_auth_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test streaming chat raises auth error on 401."""
+    client = LMStudioClient(
+        hass=hass,
+        base_url="http://localhost:1234",
+        api_key=None,
+        timeout=5,
+    )
+
+    aioclient_mock.post("http://localhost:1234/api/v1/chat", status=401)
+
+    with pytest.raises(LMStudioAuthError):
+        async for _ in client.async_stream_chat({"model": "test-model"}):
+            pass
+
+
+async def test_stream_chat_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test streaming chat raises connection error on network failure."""
+    client = LMStudioClient(
+        hass=hass,
+        base_url="http://localhost:1234",
+        api_key=None,
+        timeout=5,
+    )
+
+    aioclient_mock.post(
+        "http://localhost:1234/api/v1/chat",
+        exc=aiohttp.ClientError("offline"),
+    )
+
+    with pytest.raises(LMStudioConnectionError):
+        async for _ in client.async_stream_chat({"model": "test-model"}):
+            pass
+
+
+async def test_iter_sse_skips_flush_with_no_data() -> None:
+    """Test that a flush (empty line) after an event name but no data is skipped."""
+    lines = [
+        b"event: message.start\n",
+        b"\n",  # flush with no data lines — event_name is reset, no event yielded
+        b'data: {"type": "chat.end"}\n',
+        b"\n",
+    ]
+
+    response = _FakeResponse(lines)
+    events = [event async for event in _iter_sse(response)]
+
+    assert len(events) == 1
+    assert events[0].name == "chat.end"
+
+
+async def test_iter_sse_skips_event_without_type() -> None:
+    """Test that a data payload with no event name and no type field is skipped."""
+    lines = [
+        b'data: {"no_type_field": true}\n',
+        b"\n",
+        b'data: {"type": "chat.end"}\n',
+        b"\n",
+    ]
+
+    response = _FakeResponse(lines)
+    events = [event async for event in _iter_sse(response)]
+
+    assert len(events) == 1
+    assert events[0].name == "chat.end"
+
+
+async def test_iter_sse_yields_trailing_data() -> None:
+    """Test that data at end of stream without a final empty line is still yielded."""
+    lines = [
+        b'data: {"type": "chat.end", "response_id": "resp-1"}\n',
+        # No final empty line — the trailing flush path
+    ]
+
+    response = _FakeResponse(lines)
+    events = [event async for event in _iter_sse(response)]
+
+    assert len(events) == 1
+    assert events[0].name == "chat.end"
+
+
+async def test_iter_sse_skips_trailing_invalid_json() -> None:
+    """Test that trailing data with invalid JSON at end of stream is skipped."""
+    lines = [
+        b"data: {bad json at eof\n",
+        # No final empty line — trailing flush with invalid JSON
+    ]
+
+    response = _FakeResponse(lines)
+    events = [event async for event in _iter_sse(response)]
+
+    assert events == []

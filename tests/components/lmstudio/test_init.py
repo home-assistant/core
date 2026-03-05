@@ -11,6 +11,7 @@ from homeassistant.components.lmstudio import LMStudioConversationStore
 from homeassistant.components.lmstudio.client import (
     LMStudioAuthError,
     LMStudioConnectionError,
+    LMStudioResponseError,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -45,6 +46,21 @@ async def test_setup_entry_auth_failed(hass: HomeAssistant) -> None:
             side_effect=LMStudioAuthError("bad"),
         ),
         pytest.raises(ConfigEntryAuthFailed),
+    ):
+        await lmstudio.async_setup_entry(hass, entry)
+
+
+async def test_setup_entry_response_error(hass: HomeAssistant) -> None:
+    """Test setup entry raises ConfigEntryNotReady on response errors."""
+    entry = MockConfigEntry(domain=lmstudio.DOMAIN, data=TEST_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.lmstudio.LMStudioClient.async_list_models",
+            side_effect=LMStudioResponseError("bad response"),
+        ),
+        pytest.raises(ConfigEntryNotReady),
     ):
         await lmstudio.async_setup_entry(hass, entry)
 

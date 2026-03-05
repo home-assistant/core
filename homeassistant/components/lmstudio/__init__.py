@@ -9,7 +9,6 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .client import (
     LMStudioAuthError,
@@ -77,11 +76,6 @@ class LMStudioRuntimeData:
 type LMStudioConfigEntry = ConfigEntry[LMStudioRuntimeData]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up LM Studio."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> bool:
     """Set up LM Studio from a config entry."""
     base_url = entry.data[CONF_URL]
@@ -113,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> bool:
     """Unload LM Studio."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

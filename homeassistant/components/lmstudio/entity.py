@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 import json
 import logging
 from mimetypes import guess_type
@@ -117,17 +117,22 @@ class LMStudioBaseLLMEntity(Entity):
             ):
                 pass
         except LMStudioAuthError as err:
-            raise HomeAssistantError("Your authentication failed") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
         except LMStudioConnectionError as err:
             self._handle_unavailable(err)
             _LOGGER.error("Unexpected error talking to server: %s", err)
             raise HomeAssistantError(
-                f"Sorry, your request could not reach the server: {err}"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
             ) from err
         except LMStudioResponseError as err:
             _LOGGER.error("Unexpected error talking to server: %s", err)
             raise HomeAssistantError(
-                f"Sorry, your request could not reach the server: {err}"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
             ) from err
         else:
             self._handle_recovered()
@@ -245,7 +250,10 @@ class LMStudioBaseLLMEntity(Entity):
         for content in reversed(chat_log.content):
             if isinstance(content, conversation.UserContent):
                 return content
-        raise HomeAssistantError("No user content found in the chat log")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_user_content",
+        )
 
     async def _async_build_input_payload(
         self,
@@ -309,7 +317,9 @@ class LMStudioBaseLLMEntity(Entity):
             data = await self.hass.async_add_executor_job(_read_file)
         except FileNotFoundError as err:
             raise HomeAssistantError(
-                f"Your attachment file was not found: {file_path}"
+                translation_domain=DOMAIN,
+                translation_key="attachment_not_found",
+                translation_placeholders={"file_path": file_path},
             ) from err
 
         encoded = base64.b64encode(data).decode("utf-8")
@@ -341,7 +351,7 @@ class LMStudioBaseLLMEntity(Entity):
         chat_log: conversation.ChatLog,
         payload: dict[str, Any],
         prompt_signature: str,
-    ) -> AsyncIterator[conversation.AssistantContentDeltaDict]:
+    ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
         """Stream LM Studio response to the chat log."""
         new_message = True
         stream_error: str | None = None

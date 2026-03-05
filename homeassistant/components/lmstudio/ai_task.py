@@ -6,12 +6,13 @@ from json import JSONDecodeError
 import logging
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from . import LMStudioConfigEntry
+from .const import DOMAIN
 from .entity import LMStudioBaseLLMEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LMStudioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AI Task entities."""
@@ -53,7 +54,10 @@ class LMStudioTaskEntity(
         await self._async_handle_chat_log(chat_log, task.structure)
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
-            raise HomeAssistantError("Your request did not return assistant content")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_assistant_response",
+            )
 
         text = chat_log.content[-1].content or ""
 
@@ -68,7 +72,8 @@ class LMStudioTaskEntity(
         except JSONDecodeError as err:
             _LOGGER.error("Failed to parse JSON response: %s", err)
             raise HomeAssistantError(
-                "Your request returned an invalid structured response"
+                translation_domain=DOMAIN,
+                translation_key="invalid_structured_response",
             ) from err
 
         return ai_task.GenDataTaskResult(

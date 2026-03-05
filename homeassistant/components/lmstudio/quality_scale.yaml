@@ -74,7 +74,7 @@ rules:
     status: exempt
     comment: Only one conversation entity is created per entry.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
