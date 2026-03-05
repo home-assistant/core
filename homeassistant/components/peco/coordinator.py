@@ -49,12 +49,12 @@ class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
     async def _async_update_data(self) -> PECOCoordinatorData:
         """Fetch data from API."""
         try:
-            outages: OutageResults = (
+            outages = (
                 await self._api.get_outage_totals(self._websession)
                 if self._county == "TOTAL"
                 else await self._api.get_outage_count(self._county, self._websession)
             )
-            alerts: AlertResults = await self._api.get_map_alerts(self._websession)
+            alerts = await self._api.get_map_alerts(self._websession)
         except HttpError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
         except BadJSONError as err:
@@ -85,9 +85,7 @@ class PecoSmartMeterCoordinator(DataUpdateCoordinator[bool]):
     async def _async_update_data(self) -> bool:
         """Fetch data from API."""
         try:
-            data: bool = await self._api.meter_check(
-                self._phone_number, self._websession
-            )
+            data = await self._api.meter_check(self._phone_number, self._websession)
         except UnresponsiveMeterError as err:
             raise UpdateFailed("Unresponsive meter") from err
         except HttpError as err:
