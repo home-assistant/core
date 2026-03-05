@@ -4,12 +4,41 @@
 # Stop on errors
 set -e
 
+usage() {
+    echo "Usage: ./script/setup [--all | --base]"
+    exit 1
+}
+
 cd "$(realpath "$(dirname "$0")/..")"
+
+case "$#" in
+    0)
+        MODE="_all"
+        ;;
+    1)
+        case "$1" in
+            --all)
+                MODE="_all"
+                ;;
+            --base)
+                MODE=""
+                ;;
+            *)
+                echo "Error: unknown option '$1'" >&2
+                usage
+                ;;
+        esac
+        ;;
+    *)
+        echo "Error: too many arguments" >&2
+        usage
+        ;;
+esac
 
 echo "Installing development dependencies..."
 uv pip install \
   -e . \
-  -r requirements_test_all.txt \
+  -r requirements_test$MODE.txt \
   colorlog \
   --upgrade \
   --config-settings editable_mode=compat

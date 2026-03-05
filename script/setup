@@ -29,7 +29,7 @@ if ! [ -x "$(command -v uv)" ]; then
   python3 -m pip install uv
 fi
 
-script/bootstrap
+script/bootstrap "$@"
 
 prek install
 
