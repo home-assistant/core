@@ -24,6 +24,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from .const import (
     AFFECTS_TO_ACTIVE_PROGRAM,
     AFFECTS_TO_SELECTED_PROGRAM,
+    AFFECTS_TO_START_SELECTED,
     ATTR_AFFECTS_TO,
     ATTR_KEY,
     ATTR_PROGRAM,
@@ -81,8 +82,13 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
 
 
 def _require_program_or_at_least_one_option(data: dict) -> dict:
-    if ATTR_PROGRAM not in data and not any(
-        option_key in data for option_key in (PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS)
+    if (
+        ATTR_PROGRAM not in data
+        and not any(
+            option_key in data
+            for option_key in (PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS)
+        )
+        and data.get(ATTR_AFFECTS_TO) != AFFECTS_TO_START_SELECTED
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -96,7 +102,11 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
         {
             vol.Required(ATTR_DEVICE_ID): str,
             vol.Required(ATTR_AFFECTS_TO): vol.In(
-                [AFFECTS_TO_ACTIVE_PROGRAM, AFFECTS_TO_SELECTED_PROGRAM]
+                [
+                    AFFECTS_TO_ACTIVE_PROGRAM,
+                    AFFECTS_TO_SELECTED_PROGRAM,
+                    AFFECTS_TO_START_SELECTED,
+                ],
             ),
             vol.Optional(ATTR_PROGRAM): vol.In(TRANSLATION_KEYS_PROGRAMS_MAP.keys()),
         }
@@ -197,22 +207,40 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
     affects_to = data.pop(ATTR_AFFECTS_TO)
     client, ha_id = await _get_client_and_ha_id(call.hass, data.pop(ATTR_DEVICE_ID))
 
-    options: list[Option] = []
+    options_dict: dict[OptionKey, Option] = {}
+
+    if affects_to == AFFECTS_TO_START_SELECTED:
+        try:
+            selected_program = await client.get_selected_program(ha_id)
+        except HomeConnectError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_selected_program_error",
+                translation_placeholders=get_dict_from_home_connect_error(err),
+            ) from err
+        if not selected_program.key:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_selected_program_to_start",
+            )
+        program = program or selected_program.key
+        if selected_program.options:
+            options_dict = {option.key: option for option in selected_program.options}
 
     for option, value in data.items():
         if option in PROGRAM_ENUM_OPTIONS:
-            options.append(
-                Option(
-                    PROGRAM_ENUM_OPTIONS[option][0],
-                    PROGRAM_ENUM_OPTIONS[option][1][value],
-                )
+            option_key = PROGRAM_ENUM_OPTIONS[option][0]
+            options_dict[option_key] = Option(
+                option_key,
+                PROGRAM_ENUM_OPTIONS[option][1][value],
             )
         elif option in PROGRAM_OPTIONS:
             option_key = PROGRAM_OPTIONS[option][0]
-            options.append(Option(option_key, value))
+            options_dict[option_key] = Option(option_key, value)
 
     method_call: Awaitable[Any]
     exception_translation_key: str
+    options = list(options_dict.values())
     if program:
         program = (
             program
@@ -220,7 +248,7 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
             else TRANSLATION_KEYS_PROGRAMS_MAP[program]
         )
 
-        if affects_to == AFFECTS_TO_ACTIVE_PROGRAM:
+        if affects_to in (AFFECTS_TO_ACTIVE_PROGRAM, AFFECTS_TO_START_SELECTED):
             method_call = client.start_program(
                 ha_id, program_key=program, options=options
             )

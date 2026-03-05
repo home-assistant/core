@@ -73,6 +73,7 @@ ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
+AFFECTS_TO_START_SELECTED = "start_selected"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {

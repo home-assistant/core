@@ -14,6 +14,7 @@ set_program_and_options:
           options:
             - active_program
             - selected_program
+            - start_selected
     program:
       example: dishcare_dishwasher_program_auto_2
       selector:
