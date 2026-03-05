@@ -79,6 +79,48 @@ async def test_level_control_config_entities(
     state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
     assert state
     assert state.state == "255"
+    
+    """Test writing LevelControl StartUpCurrentLevel (startup current level)."""
+    # Set a concrete value (not null)
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_dimmable_light_level_on_mains_power_connect",
+            "value": 128,
+        },
+        blocking=True,
+    )
+
+    # Set a null-equivalent value (255 should map to None on the wire)
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_dimmable_light_level_on_mains_power_connect",
+            "value": 255,
+        },
+        blocking=True,
+    )
+
+    # Verify both writes
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.LevelControl.Attributes.StartUpCurrentLevel,
+        ),
+        value=128,
+    )
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.LevelControl.Attributes.StartUpCurrentLevel,
+        ),
+        value=None,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_weather_sensor"])
