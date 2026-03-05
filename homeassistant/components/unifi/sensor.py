@@ -368,7 +368,7 @@ def async_device_active_wan_value_fn(hub: UnifiHub, device: Device) -> str | Non
 @callback
 def async_device_speedtest_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if device has speedtest data."""
-    return hub.api.devices[obj_id].speedtest_status is not None
+    return any(f"wan{i}" in hub.api.devices[obj_id].raw for i in range(1, 7))
 
 
 @callback
