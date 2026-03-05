@@ -27,7 +27,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .coordinator import (
+    NetgearConfigEntry,
+    NetgearDataCoordinator,
+    NetgearTrackerCoordinator,
+)
 from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -325,7 +329,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: NetgearDataCoordinator[Any],
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         device: dict,
         attribute: str,
