@@ -1,6 +1,5 @@
 """Support for NuHeat thermostats."""
 
-from datetime import timedelta
 from http import HTTPStatus
 import logging
 
@@ -11,9 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
+from .coordinator import NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,18 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False
 
-    async def _async_update_data():
-        """Fetch data from API endpoint."""
-        await hass.async_add_executor_job(thermostat.get_data)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=f"nuheat {serial_number}",
-        update_method=_async_update_data,
-        update_interval=timedelta(minutes=5),
-    )
+    coordinator = NuHeatCoordinator(hass, entry, thermostat)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = (thermostat, coordinator)
