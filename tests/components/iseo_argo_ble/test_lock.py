@@ -439,7 +439,9 @@ async def test_poll_state_firmware_update(
         await lock_entity._poll_state()
 
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, mock_config_entry.unique_id)})
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
     assert device is not None
     assert device.sw_version == "1.2.3"
     assert lock_entity._fw_version_set is True

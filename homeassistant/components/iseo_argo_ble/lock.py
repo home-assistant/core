@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockState
 
@@ -70,7 +70,7 @@ class IseoLockEntity(LockEntity):
 
         self._attr_unique_id = f"{entry.unique_id}_lock"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
+            identifiers={(DOMAIN, cast(str, entry.unique_id))},
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             name=entry.title,
             manufacturer="ISEO",
@@ -137,7 +137,7 @@ class IseoLockEntity(LockEntity):
             fw_version = state.firmware_info[5:].strip() or state.firmware_info.strip()
             dev_reg = dr.async_get(self.hass)
             if device := dev_reg.async_get_device(
-                identifiers={(DOMAIN, self._entry.unique_id)}
+                identifiers={(DOMAIN, cast(str, self._entry.unique_id))}
             ):
                 dev_reg.async_update_device(device.id, sw_version=fw_version)
             self._fw_version_set = True

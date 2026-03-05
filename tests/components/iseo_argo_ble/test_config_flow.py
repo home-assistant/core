@@ -36,9 +36,9 @@ def _patch_identity() -> None:
         yield
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_bluetooth_discovery_abort_if_already_configured(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test bluetooth discovery aborts for already-configured locks."""
     entry = MockConfigEntry(
@@ -87,9 +87,9 @@ async def test_bluetooth_discovery_not_iseo(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_iseo_device"
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_bluetooth_discovery_confirm_and_register(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test full bluetooth discovery → confirm → gw_register flow."""
     with patch(
@@ -142,9 +142,9 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_user_step_with_device(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test user step shows discovered devices and allows selection."""
     with patch(
@@ -170,9 +170,9 @@ async def test_user_step_with_device(
     assert result2["step_id"] == "gw_register"
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_connection_error(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test gw_register handles connection error."""
 
@@ -207,9 +207,9 @@ async def test_gw_register_connection_error(
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_auth_error(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test gw_register handles auth error."""
 
@@ -244,9 +244,9 @@ async def test_gw_register_auth_error(
     assert result3["errors"] == {"base": "auth_failed"}
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_no_ble_device(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test gw_register handles case where ble_device is None."""
     with patch(
@@ -277,9 +277,9 @@ async def test_gw_register_no_ble_device(
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_unknown_error(
     hass: HomeAssistant,
-    _patch_identity: None,
 ) -> None:
     """Test gw_register handles unknown error."""
     with patch(
