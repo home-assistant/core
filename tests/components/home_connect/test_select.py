@@ -1214,8 +1214,8 @@ async def test_use_base_program_on_favorite_program(
     """Test that base program is used.
 
     Assert that when the favorite program is active/selected,
-    use the base program if present to set the value of the entity,
-    if not present, it should be None.
+    use the base program if present to set the value of the entity;
+    if not present, the state should be unknown.
     """
     client.get_all_programs = AsyncMock(
         return_value=ArrayOfPrograms(

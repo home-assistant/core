@@ -442,7 +442,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
         return self.data
 
-    async def get_appliance_data(self) -> None:  # pylint: disable=too-many-nested-blocks
+    async def get_appliance_data(self) -> None:
         """Get appliance data."""
         appliance = self.data.info
         self.device_registry.async_get_or_create(
