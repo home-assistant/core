@@ -10,7 +10,6 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: "3.14.2"
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
@@ -42,10 +41,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Get information
         id: info
@@ -132,11 +131,11 @@ jobs:
           workflow_conclusion: success
           name: package
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         if: needs.init.outputs.channel == 'dev'
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Adjust nightly version
         if: needs.init.outputs.channel == 'dev'
@@ -182,7 +181,7 @@ jobs:
           fi
 
       - name: Download translations
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: translations
 
@@ -538,13 +537,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Download translations
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: translations
 
