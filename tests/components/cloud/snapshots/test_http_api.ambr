@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 23
+  Built-in integrations: 22
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -38,7 +38,6 @@
   cloud.stt | Unknown
   cloud.tts | Unknown
   conversation | Conversation
-  door | Door
   ffmpeg | FFmpeg
   homeassistant | Home Assistant Core Integration
   http | HTTP
@@ -135,7 +134,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 23
+  Built-in integrations: 22
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -152,7 +151,6 @@
   cloud.stt | Unknown
   cloud.tts | Unknown
   conversation | Conversation
-  door | Door
   ffmpeg | FFmpeg
   homeassistant | Home Assistant Core Integration
   http | HTTP
