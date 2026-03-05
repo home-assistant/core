@@ -278,16 +278,10 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
-        node_name = self._node_name
-        if node_name is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error_no_details",
-            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            node_name,
+            self._node_name,
             self.device_id,
         )
 
@@ -299,15 +293,9 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
-        node_name = self._node_name
-        if node_name is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error_no_details",
-            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            node_name,
+            self._node_name,
             self.device_id,
         )
