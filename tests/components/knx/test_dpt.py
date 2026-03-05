@@ -12,14 +12,16 @@ from homeassistant.components.knx.schema import _sensor_attribute_sub_validator
 
 @pytest.mark.parametrize(
     "dpt",
-    {
-        *_sensor_device_classes,
-        *_sensor_state_class_overrides,
-        *_sensor_unit_overrides,
-        # add generic numeric DPTs without specific device and state class
-        "7",
-        "2byte_float",
-    },
+    sorted(
+        {
+            *_sensor_device_classes,
+            *_sensor_state_class_overrides,
+            *_sensor_unit_overrides,
+            # add generic numeric DPTs without specific device and state class
+            "7",
+            "2byte_float",
+        }
+    ),
 )
 def test_dpt_default_device_classes(dpt) -> None:
     """Test DPT default device and state classes and unit are valid."""
