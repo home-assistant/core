@@ -5,20 +5,13 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.recorder.models import StatisticMeanType
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
-    get_metadata,
-)
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_all_entities(
@@ -100,56 +93,68 @@ async def test_non_monetary_sensors_not_affected_by_currency(
     assert "device_class" not in state.attributes
 
 
-@pytest.mark.usefixtures("recorder_mock")
-async def test_statistics_migration_from_dollar_symbol(
+async def test_statistics_migration_called_for_monetary_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
 ) -> None:
-    """Test that statistics with '$' unit are migrated to configured currency."""
+    """Test that statistics migration is called for existing monetary sensors on setup."""
     await hass.config.async_update(currency="USD")
 
-    # First, set up the integration to create entities
-    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    # Add entry to hass first so we can add entities to it
+    mock_config_entry.add_to_hass(hass)
 
-    await async_wait_recording_done(hass)
-
-    # Add external statistics with old "$" unit to simulate pre-migration data
-    entity_id = "sensor.rando_bank_checking_balance"
-    now = dt_util.utcnow()
-
-    async_add_external_statistics(
-        hass,
-        {
-            "has_mean": False,
-            "has_sum": True,
-            "mean_type": StatisticMeanType.NONE,
-            "name": "Test Balance",
-            "source": "recorder",
-            "statistic_id": entity_id,
-            "unit_class": None,
-            "unit_of_measurement": "$",
-        },
-        [{"start": now, "sum": 1000.0, "state": 1000.0}],
+    # Pre-populate entity registry with existing monetary sensor entries
+    # This simulates a previous installation that had these entities
+    entity_registry.async_get_or_create(
+        "sensor",
+        "monarch_money",
+        "222260252323873333_checking_currentBalance",
+        config_entry=mock_config_entry,
+        original_device_class="monetary",
+        suggested_object_id="rando_bank_checking_balance",
     )
-    await async_wait_recording_done(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        "monarch_money",
+        "222260252323873333_sum_income",
+        config_entry=mock_config_entry,
+        original_device_class="monetary",
+        suggested_object_id="cashflow_income_year_to_date",
+    )
+    # Add a non-monetary sensor to verify it's not migrated
+    entity_registry.async_get_or_create(
+        "sensor",
+        "monarch_money",
+        "222260252323873333_checking_age",
+        config_entry=mock_config_entry,
+        original_device_class="timestamp",
+        suggested_object_id="rando_bank_checking_data_age",
+    )
 
-    # Verify initial statistics have "$" unit
-    metadata = get_metadata(hass, statistic_ids={entity_id})
-    assert entity_id in metadata
-    assert metadata[entity_id][1]["unit_of_measurement"] == "$"
-
-    # Unload and reload to trigger migration
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-
-    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
+    with (
+        patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.monarch_money.async_update_statistics_metadata"
+        ) as mock_update_stats,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await async_wait_recording_done(hass)
+    # Verify async_update_statistics_metadata was called for monetary sensors
+    assert mock_update_stats.call_count == 2  # Only the 2 monetary sensors
 
-    # Verify statistics were migrated to configured currency
-    metadata = get_metadata(hass, statistic_ids={entity_id})
-    assert entity_id in metadata
-    assert metadata[entity_id][1]["unit_of_measurement"] == "USD"
+    # Collect all entity_ids that were called
+    called_entity_ids = {call.args[1] for call in mock_update_stats.call_args_list}
+
+    # Verify monetary sensors were included
+    assert "sensor.rando_bank_checking_balance" in called_entity_ids
+    assert "sensor.cashflow_income_year_to_date" in called_entity_ids
+
+    # Verify non-monetary sensor was NOT included
+    assert "sensor.rando_bank_checking_data_age" not in called_entity_ids
+
+    # Verify all calls used the configured currency
+    for call in mock_update_stats.call_args_list:
+        assert call.kwargs["new_unit_of_measurement"] == "USD"
