@@ -16,7 +16,10 @@ from ha_silabs_firmware_client import (
 import pytest
 from yarl import URL
 
-from homeassistant.components.homeassistant_hardware.const import Z2M_EMBER_DOCS_URL
+from homeassistant.components.homeassistant_hardware.const import (
+    DOMAIN,
+    Z2M_EMBER_DOCS_URL,
+)
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -195,7 +198,7 @@ async def mock_test_firmware_platform(
     mock_integration(hass, mock_module)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with mock_config_flow(TEST_DOMAIN, FakeFirmwareConfigFlow):
         yield

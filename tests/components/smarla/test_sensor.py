@@ -75,11 +75,15 @@ async def test_sensor_state_update(
 
     entity_id = entity_info["entity_id"]
 
-    assert hass.states.get(entity_id).state == "0"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
 
     mock_sensor_property.get.return_value = entity_info["test_value"]
 
     await update_property_listeners(mock_sensor_property)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "1"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1"

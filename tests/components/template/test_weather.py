@@ -469,7 +469,7 @@ async def test_forecasts_invalid(
         return_response=True,
     )
     assert response == expected
-    assert "Only valid keys in Forecast are allowed" in caplog.text
+    assert "expected valid forecast keys, unallowed keys:" in caplog.text
 
     # Test twice daily missing is_daytime
     hass.states.async_set(
@@ -521,7 +521,7 @@ async def test_forecasts_invalid(
         return_response=True,
     )
     assert response == expected
-    assert "`datetime` is required in forecasts" in caplog.text
+    assert "`datetime` is missing in forecast" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -612,7 +612,7 @@ async def test_forecast_format_error(
         blocking=True,
         return_response=True,
     )
-    assert "Forecast in list is not a dict, see Weather documentation" in caplog.text
+    assert "expected a list of forecast dictionaries, got" in caplog.text
     await hass.services.async_call(
         WEATHER_DOMAIN,
         SERVICE_GET_FORECASTS,
@@ -620,7 +620,7 @@ async def test_forecast_format_error(
         blocking=True,
         return_response=True,
     )
-    assert "Forecasts is not a list, see Weather documentation" in caplog.text
+    assert "expected a list, " in caplog.text
 
 
 SAVED_EXTRA_DATA = {
@@ -839,11 +839,27 @@ SAVED_EXTRA_DATA_MISSING_KEY = {
     "last_wind_speed": None,
 }
 
+SAVED_EXTRA_DATA_STRING_HUMIDITY = {
+    "last_apparent_temperature": None,
+    "last_cloud_coverage": None,
+    "last_dew_point": None,
+    "last_humidity": "20.0",
+    "last_ozone": None,
+    "last_pressure": None,
+    "last_temperature": 20.0,
+    "last_uv_index": None,
+    "last_visibility": None,
+    "last_wind_bearing": None,
+    "last_wind_gust_speed": None,
+    "last_wind_speed": None,
+}
+
 
 @pytest.mark.parametrize(
     ("saved_attributes", "saved_extra_data"),
     [
         (SAVED_ATTRIBUTES_1, SAVED_EXTRA_DATA_MISSING_KEY),
+        (SAVED_ATTRIBUTES_1, SAVED_EXTRA_DATA_STRING_HUMIDITY),
         (SAVED_ATTRIBUTES_1, None),
     ],
 )

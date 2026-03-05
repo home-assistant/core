@@ -96,7 +96,7 @@ class FreeboxHomeEntity(Entity):
     def get_command_id(self, nodes, ep_type: str, name: str) -> int | None:
         """Get the command id."""
         node = next(
-            filter(lambda x: (x["name"] == name and x["ep_type"] == ep_type), nodes),
+            filter(lambda x: x["name"] == name and x["ep_type"] == ep_type, nodes),
             None,
         )
         if not node:

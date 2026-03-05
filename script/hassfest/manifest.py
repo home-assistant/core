@@ -62,6 +62,7 @@ NO_IOT_CLASS = [
     "auth",
     "automation",
     "blueprint",
+    "brands",
     "color_extractor",
     "config",
     "configurator",

@@ -1,12 +1,37 @@
 """Base entity classes for Actron Air integration."""
 
-from actron_neo_api import ActronAirZone
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate
 
+from actron_neo_api import ActronAirAPIError, ActronAirZone
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ActronAirSystemCoordinator
+
+
+def handle_actron_api_errors[_EntityT: ActronAirEntity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate Actron Air API calls to handle ActronAirAPIError exceptions."""
+
+    @wraps(func)
+    async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        """Wrap API calls with exception handling."""
+        try:
+            await func(self, *args, **kwargs)
+        except ActronAirAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    return wrapper
 
 
 class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):

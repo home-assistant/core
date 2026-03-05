@@ -58,11 +58,11 @@ class HomeeSensorEntityDescription(SensorEntityDescription):
     device_class_fn: Callable[
         [HomeeAttribute, SensorDeviceClass | None], SensorDeviceClass | None
     ] = lambda attribute, device_class: device_class
-    value_fn: Callable[[HomeeAttribute], str | float | None] = (
-        lambda value: value.current_value
+    value_fn: Callable[[HomeeAttribute], str | float | None] = lambda value: (
+        value.current_value
     )
-    native_unit_of_measurement_fn: Callable[[str], str | None] = (
-        lambda homee_unit: HOMEE_UNIT_TO_HA_UNIT[homee_unit]
+    native_unit_of_measurement_fn: Callable[[str], str | None] = lambda homee_unit: (
+        HOMEE_UNIT_TO_HA_UNIT[homee_unit]
     )
 
 
@@ -84,9 +84,11 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         device_class_fn=get_brightness_device_class,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
-            lambda attribute: attribute.current_value * 1000
-            if attribute.unit == "klx"
-            else attribute.current_value
+            lambda attribute: (
+                attribute.current_value * 1000
+                if attribute.unit == "klx"
+                else attribute.current_value
+            )
         ),
     ),
     AttributeType.CURRENT: HomeeSensorEntityDescription(

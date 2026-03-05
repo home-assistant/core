@@ -11,6 +11,8 @@
       "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "Please log in using the same account, or create a new entry.",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
@@ -18,11 +20,23 @@
     },
     "error": {
       "srp_auth_failed": "Error authenticating HomeLink account",
-      "unknown": "An unknown error occurred. Please try again later"
+      "unknown": "An unknown error occurred. Please try again later."
     },
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::gentex_homelink::config::step::user::data_description::email%]",
+          "password": "[%key:component::gentex_homelink::config::step::user::data_description::password%]"
+        },
+        "description": "The HomeLink integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {

@@ -1,5 +1,24 @@
 {
   "entity": {
+    "button": {
+      "art_frame_next_picture": {
+        "default": "mdi:chevron-right-box"
+      },
+      "art_frame_previous_picture": {
+        "default": "mdi:chevron-left-box"
+      }
+    },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "mdi:clock-outline"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "default": "mdi:air-purifier",

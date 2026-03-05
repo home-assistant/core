@@ -534,6 +534,10 @@ class Analytics:
 
         payload = await _async_snapshot_payload(self._hass)
 
+        if not payload:
+            LOGGER.info("Skipping snapshot submission, no data to send")
+            return
+
         headers = {
             "Content-Type": "application/json",
             "User-Agent": f"home-assistant/{HA_VERSION}",

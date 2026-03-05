@@ -594,6 +594,10 @@ ZEROCONF = {
             "name": "vrroom-*",
         },
         {
+            "domain": "homevolt",
+            "name": "homevolt*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -621,6 +625,10 @@ ZEROCONF = {
         },
         {
             "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
+            "domain": "powerfox_local",
             "name": "powerfox*",
         },
         {
@@ -951,6 +959,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_systemnexa2._tcp.local.": [
+        {
+            "domain": "systemnexa2",
         },
     ],
     "_technove-stations._tcp.local.": [

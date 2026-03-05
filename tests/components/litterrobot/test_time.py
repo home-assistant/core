@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from pylitterbot import LitterRobot3
 import pytest
 
-from homeassistant.components.time import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +22,7 @@ async def test_sleep_mode_start_time(
     hass: HomeAssistant, mock_account: MagicMock
 ) -> None:
     """Tests the sleep mode start time."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, TIME_DOMAIN)
 
     entity = hass.states.get(SLEEP_START_TIME_ENTITY_ID)
     assert entity
@@ -30,7 +30,7 @@ async def test_sleep_mode_start_time(
 
     robot: LitterRobot3 = mock_account.robots[0]
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        TIME_DOMAIN,
         "set_value",
         {ATTR_ENTITY_ID: SLEEP_START_TIME_ENTITY_ID, "time": time(23, 0)},
         blocking=True,

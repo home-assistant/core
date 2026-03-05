@@ -25,7 +25,7 @@ async def test_watching(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "JELLYFIN-SERVER Active clients"
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    assert state.state == "3"
+    assert state.state == "5"
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
