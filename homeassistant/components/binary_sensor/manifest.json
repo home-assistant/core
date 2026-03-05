@@ -2,6 +2,7 @@
   "domain": "binary_sensor",
   "name": "Binary Sensor",
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["door"],
   "documentation": "https://www.home-assistant.io/integrations/binary_sensor",
   "integration_type": "entity",
   "quality_scale": "internal"
