@@ -70,8 +70,8 @@ rules:
     status: exempt
     comment: The lock is the only entity and should be enabled by default.
   entity-translations:
-    status: todo
-    comment: Not yet implemented.
+    status: exempt
+    comment: The only entity uses the device name directly via _attr_name = None.
   exception-translations: done
   icon-translations:
     status: exempt
