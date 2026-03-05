@@ -1,13 +1,22 @@
 """The Jellyfin integration."""
 
+from contextlib import suppress
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import CONF_CLIENT_DEVICE_ID, DEFAULT_NAME, DOMAIN, PLATFORMS
+from .const import (
+    CONF_CLIENT_DEVICE_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLATFORMS,
+    SERVER_KEY_ID,
+    SERVER_KEY_NAME,
+    SERVER_KEY_VERSION,
+)
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 
 
@@ -25,17 +34,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
 
     try:
         user_id, connect_result = await validate_input(hass, dict(entry.data), client)
-    except CannotConnect as ex:
-        raise ConfigEntryNotReady("Cannot connect to Jellyfin server") from ex
+        api_server = connect_result["Servers"][0]
+        # Use entry.entry_id for consistent device identification
+        # Store actual server info separately
+        server_info: dict[str, Any] = {
+            SERVER_KEY_ID: entry.entry_id,
+            SERVER_KEY_NAME: api_server.get("Name", "Jellyfin"),
+            SERVER_KEY_VERSION: api_server.get("Version"),
+        }
+    except CannotConnect:
+        # Connection failed - create fresh client to avoid partial state
+        client = create_client(device_id=device_id, device_name=device_name)
+        server_info = {
+            SERVER_KEY_ID: entry.entry_id,
+            SERVER_KEY_NAME: entry.title or "Jellyfin",
+            SERVER_KEY_VERSION: None,
+        }
+        user_id = entry.entry_id
+        connected = False
     except InvalidAuth as ex:
         raise ConfigEntryAuthFailed(ex) from ex
-
-    server_info: dict[str, Any] = connect_result["Servers"][0]
+    else:
+        connected = True
 
     coordinator = JellyfinDataUpdateCoordinator(
-        hass, entry, client, server_info, user_id
+        hass, entry, client, server_info, user_id, connected
     )
-    await coordinator.async_config_entry_first_refresh()
+
+    with suppress(Exception):
+        await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

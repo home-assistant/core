@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
@@ -39,7 +40,7 @@ async def async_setup_entry(
     def handle_coordinator_update() -> None:
         """Add media player per session."""
         entities: list[MediaPlayerEntity] = []
-        for session_id in coordinator.data:
+        for session_id in coordinator.data or {}:
             if session_id not in coordinator.session_ids:
                 entity: MediaPlayerEntity = JellyfinMediaPlayer(coordinator, session_id)
                 LOGGER.debug("Creating media player for session: %s", session_id)
@@ -215,56 +216,80 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
     def media_seek(self, position: float) -> None:
         """Send seek command."""
-        self.coordinator.api_client.jellyfin.remote_seek(
-            self.session_id, int(position * 10000000)
-        )
+        try:
+            self.coordinator.api_client.jellyfin.remote_seek(
+                self.session_id, int(position * 10000000)
+            )
+        except IntegrationError as err:
+            _LOGGER.error("Failed to seek media: %s", err)
 
     def media_pause(self) -> None:
         """Send pause command."""
-        self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
-        self._attr_state = MediaPlayerState.PAUSED
-        self.schedule_update_ha_state()
+        try:
+            self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
+            self._attr_state = MediaPlayerState.PAUSED
+            self.schedule_update_ha_state()
+        except IntegrationError as err:
+            _LOGGER.error("Failed to pause media: %s", err)
 
     def media_play(self) -> None:
         """Send play command."""
-        self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
-        self._attr_state = MediaPlayerState.PLAYING
-        self.schedule_update_ha_state()
+        try:
+            self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
+            self._attr_state = MediaPlayerState.PLAYING
+            self.schedule_update_ha_state()
+        except IntegrationError as err:
+            _LOGGER.error("Failed to play media: %s", err)
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
-        self.coordinator.api_client.jellyfin.remote_playpause(self.session_id)
+        try:
+            self.coordinator.api_client.jellyfin.remote_playpause(self.session_id)
+        except IntegrationError as err:
+            _LOGGER.error("Failed to toggle play/pause: %s", err)
 
     def media_stop(self) -> None:
         """Send stop command."""
-        self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
-        self._attr_state = MediaPlayerState.IDLE
-        self.schedule_update_ha_state()
+        try:
+            self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
+            self._attr_state = MediaPlayerState.IDLE
+            self.schedule_update_ha_state()
+        except IntegrationError as err:
+            _LOGGER.error("Failed to stop media: %s", err)
 
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id]
-        )
+        try:
+            self.coordinator.api_client.jellyfin.remote_play_media(
+                self.session_id, [media_id]
+            )
+        except IntegrationError as err:
+            _LOGGER.error("Failed to play media: %s", err)
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.coordinator.api_client.jellyfin.remote_set_volume(
-            self.session_id, int(volume * 100)
-        )
-        self._attr_volume_level = volume
-        self.schedule_update_ha_state()
+        try:
+            self.coordinator.api_client.jellyfin.remote_set_volume(
+                self.session_id, int(volume * 100)
+            )
+            self._attr_volume_level = volume
+            self.schedule_update_ha_state()
+        except IntegrationError as err:
+            _LOGGER.error("Failed to set volume level: %s", err)
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        if mute:
-            self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
-        else:
-            self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
-        self._attr_is_volume_muted = mute
-        self.schedule_update_ha_state()
+        try:
+            if mute:
+                self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
+            else:
+                self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
+            self._attr_is_volume_muted = mute
+            self.schedule_update_ha_state()
+        except IntegrationError as err:
+            _LOGGER.error("Failed to mute volume: %s", err)
 
     async def async_browse_media(
         self,
