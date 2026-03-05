@@ -21,9 +21,15 @@
         "state": {
           "on": "mdi:remote"
         }
+      },
+      "robot_cleaner_dust_bag": {
+        "default": "mdi:delete"
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "default": "mdi:air-filter"
+      },
       "reset_water_filter": {
         "default": "mdi:reload"
       },
@@ -93,6 +99,15 @@
           "stop": "mdi:stop"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "default": "mdi:vacuum"
+      },
+      "robot_cleaner_driving_mode": {
+        "default": "mdi:car-cog"
+      },
+      "robot_cleaner_water_spray_level": {
+        "default": "mdi:spray-bottle"
+      },
       "selected_zone": {
         "state": {
           "all": "mdi:card",
@@ -103,6 +118,9 @@
       },
       "soil_level": {
         "default": "mdi:liquid-spot"
+      },
+      "sound_detection_sensitivity": {
+        "default": "mdi:home-sound-in"
       },
       "spin_level": {
         "default": "mdi:rotate-right"
@@ -243,6 +261,14 @@
         "state": {
           "off": "mdi:tumble-dryer-off"
         }
+      }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "default": "mdi:bell-ring"
+      },
+      "do_not_disturb_start_time": {
+        "default": "mdi:bell-cancel"
       }
     }
   }
