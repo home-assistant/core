@@ -12,11 +12,7 @@ import re
 from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import (
-    FritzActionError,
-    FritzConnectionException,
-    FritzSecurityError,
-)
+from fritzconnection.core.exceptions import FritzActionError
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -47,6 +43,7 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
     SCAN_INTERVAL,
     MeshRoles,
@@ -425,12 +422,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         hosts_info: list[HostInfo] = []
         try:
             try:
-                hosts_attributes = await self.hass.async_add_executor_job(
-                    self.fritz_hosts.get_hosts_attributes
+                hosts_attributes = cast(
+                    list[HostAttributes],
+                    await self.hass.async_add_executor_job(
+                        self.fritz_hosts.get_hosts_attributes
+                    ),
                 )
             except FritzActionError:
-                hosts_info = await self.hass.async_add_executor_job(
-                    self.fritz_hosts.get_hosts_info
+                hosts_info = cast(
+                    list[HostInfo],
+                    await self.hass.async_add_executor_job(
+                        self.fritz_hosts.get_hosts_info
+                    ),
                 )
         except Exception as ex:
             if not self.hass.is_stopping:
@@ -586,7 +589,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 topology := await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_mesh_topology
                 )
-            ):
+            ) or not isinstance(topology, dict):
                 raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
@@ -742,7 +745,7 @@ class AvmWrapper(FritzBoxTools):
                     **kwargs,
                 )
             )
-        except FritzSecurityError:
+        except FRITZ_AUTH_EXCEPTIONS:
             _LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
@@ -753,12 +756,6 @@ class AvmWrapper(FritzBoxTools):
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
-            )
-            return {}
-        except FritzConnectionException:
-            _LOGGER.exception(
-                "Connection Error: Please check the device is properly configured"
-                " for remote login"
             )
             return {}
         return result

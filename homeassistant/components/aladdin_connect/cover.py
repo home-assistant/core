@@ -4,13 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
+import aiohttp
+
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SUPPORTED_FEATURES
+from .const import DOMAIN, SUPPORTED_FEATURES
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .entity import AladdinConnectEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -40,11 +45,23 @@ class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
-        await self.client.open_door(self._device_id, self._number)
+        try:
+            await self.client.open_door(self._device_id, self._number)
+        except aiohttp.ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="open_door_failed",
+            ) from err
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
-        await self.client.close_door(self._device_id, self._number)
+        try:
+            await self.client.close_door(self._device_id, self._number)
+        except aiohttp.ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="close_door_failed",
+            ) from err
 
     @property
     def is_closed(self) -> bool | None:

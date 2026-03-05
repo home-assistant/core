@@ -84,7 +84,7 @@ async def test_service_get_requests_no_meta(
             "get_requests",
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
-            "Error connecting to the Overseerr instance: Timeout",
+            "Error connecting to the Seerr instance: Timeout",
         )
     ],
 )

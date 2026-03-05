@@ -188,7 +188,7 @@
     'type': 'result',
   })
 # ---
-# name: test_can_decrypt_on_download[backup.local-c0cb53bd-hunter2]
+# name: test_can_decrypt_on_download[backup.local-backup_compressed_protected_v2-hunter2]
   dict({
     'id': 1,
     'result': None,
@@ -196,7 +196,26 @@
     'type': 'result',
   })
 # ---
-# name: test_can_decrypt_on_download[backup.local-c0cb53bd-wrong_password]
+# name: test_can_decrypt_on_download[backup.local-backup_compressed_protected_v2-wrong_password]
+  dict({
+    'error': dict({
+      'code': 'password_incorrect',
+      'message': 'Incorrect password',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-backup_compressed_protected_v3-hunter2]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-backup_compressed_protected_v3-wrong_password]
   dict({
     'error': dict({
       'code': 'password_incorrect',

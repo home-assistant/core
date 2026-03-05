@@ -64,7 +64,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.ONOFF: 'onoff'>,
+        <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -100,10 +100,11 @@
 # name: test_setup[light.device_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'brightness': None,
       'color_mode': None,
       'friendly_name': 'Device 2',
       'supported_color_modes': list([
-        <ColorMode.ONOFF: 'onoff'>,
+        <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),

@@ -9,12 +9,15 @@ from satel_integra.satel_integra import AlarmState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .client import SatelClient
 from .const import ZONES
 
 _LOGGER = logging.getLogger(__name__)
+
+PARTITION_UPDATE_DEBOUNCE_DELAY = 0.15
 
 
 @dataclass
@@ -106,9 +109,21 @@ class SatelIntegraPartitionsCoordinator(
 
         self.data = {}
 
+        self._debouncer = Debouncer(
+            hass=self.hass,
+            logger=_LOGGER,
+            cooldown=PARTITION_UPDATE_DEBOUNCE_DELAY,
+            immediate=False,
+            function=callback(
+                lambda: self.async_set_updated_data(
+                    self.client.controller.partition_states
+                )
+            ),
+        )
+
     @callback
     def partitions_update_callback(self) -> None:
         """Update partition objects as per notification from the alarm."""
         _LOGGER.debug("Sending request to update panel state")
 
-        self.async_set_updated_data(self.client.controller.partition_states)
+        self._debouncer.async_schedule_call()
