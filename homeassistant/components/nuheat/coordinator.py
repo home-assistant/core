@@ -35,8 +35,8 @@ class NuHeatCoordinator(DataUpdateCoordinator[None]):
             name=f"nuheat {entry.data[CONF_SERIAL_NUMBER]}",
             update_interval=SCAN_INTERVAL,
         )
-        self._thermostat = thermostat
+        self.thermostat = thermostat
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self.hass.async_add_executor_job(self._thermostat.get_data)
+        await self.hass.async_add_executor_job(self.thermostat.get_data)
