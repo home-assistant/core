@@ -33,9 +33,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.fixture(autouse=True)
 async def platforms() -> AsyncGenerator[None]:
     """Return the platforms to be loaded for this test."""
-    with patch(
-        "homeassistant.components.laundrify.PLATFORMS", [Platform.SENSOR]
-    ):
+    with patch("homeassistant.components.laundrify.PLATFORMS", [Platform.SENSOR]):
         yield
 
 
