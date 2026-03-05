@@ -2,7 +2,8 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+
+import nuheat
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,7 +25,7 @@ class NuHeatCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        thermostat: Any,
+        thermostat: nuheat.NuHeatThermostat,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

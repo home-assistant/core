@@ -17,7 +17,7 @@ from .coordinator import NuHeatCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_thermostat(api, serial_number):
+def _get_thermostat(api: nuheat.NuHeat, serial_number: str) -> nuheat.NuHeatThermostat:
     """Authenticate and create the thermostat object."""
     api.authenticate()
     return api.get_thermostat(serial_number)
@@ -28,9 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     conf = entry.data
 
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    serial_number = conf[CONF_SERIAL_NUMBER]
+    username: str = conf[CONF_USERNAME]
+    password: str = conf[CONF_PASSWORD]
+    serial_number: str = conf[CONF_SERIAL_NUMBER]
 
     api = nuheat.NuHeat(username, password)
 
