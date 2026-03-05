@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -44,10 +45,8 @@ CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_CODE): cv.string,
     }
 )
-
 
 CODE_SCHEMA = vol.Schema(
     {
@@ -119,11 +118,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            valid = await self.test_connection(
-                user_input[CONF_HOST], user_input[CONF_PORT]
-            )
-
-            if valid:
+            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data={
@@ -136,19 +131,58 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         return self.async_show_form(
-            step_id="user", data_schema=CONNECTION_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=CONNECTION_SCHEMA.extend(CODE_SCHEMA.schema),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                    reload_even_if_entry_is_unchanged=False,
+                )
+
+            errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                CONNECTION_SCHEMA, reconfigure_entry.data
+            ),
+            errors=errors,
         )
 
     async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
         controller = AsyncSatel(host, port, self.hass.loop)
 
-        result = await controller.connect()
+        try:
+            async with asyncio.timeout(5):
+                return bool(await controller.connect())
+        except TimeoutError:
+            _LOGGER.debug("Connection to %s:%s timed out", host, port)
+            return False
 
-        # Make sure we close the connection again
-        controller.close()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Connection to %s:%s failed: %s", host, port, err)
+            return False
 
-        return result
+        finally:
+            controller.close()
 
 
 class SatelOptionsFlow(OptionsFlow):
