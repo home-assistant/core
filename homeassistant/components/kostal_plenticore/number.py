@@ -67,6 +67,22 @@ NUMBER_SETTINGS_DATA = [
         fmt_from="format_round",
         fmt_to="format_round_back",
     ),
+    PlenticoreNumberEntityDescription(
+        key="active_power_limitation",
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+        name="Active Power Limitation",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_max_value=10000,
+        native_min_value=0,
+        native_step=1,
+        module_id="devices:local",
+        data_id="Inverter:ActivePowerLimitation",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
 ]
 
 
