@@ -36,11 +36,10 @@ CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
 
 PLAYABLE_MEDIA_TYPES = [
     MediaType.EPISODE,
-    MediaType.SEASON,
-    MediaType.TVSHOW,
-    "collection",
     MediaType.MOVIE,
     MediaType.MUSIC,
+    MediaType.SEASON,
+    MediaType.TVSHOW,
 ]
 
 
