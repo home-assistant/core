@@ -1,11 +1,12 @@
 """Tests for EnOcean config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from serial import SerialException
 
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
 from homeassistant.components.enocean.const import DOMAIN, MANUFACTURER
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USB,
@@ -15,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import MOCK_SERIAL_BY_ID, MOCK_USB_DEVICE, MODULE
 
@@ -38,7 +40,7 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_with_detected_usb_device(
-    hass: HomeAssistant, mock_usb_device: MagicMock
+    hass: HomeAssistant, mock_usb_device: USBDevice
 ) -> None:
     """Test the user flow with a detected usb device."""
     with patch(
@@ -72,7 +74,7 @@ async def test_user_flow_without_detected_usb_device(hass: HomeAssistant) -> Non
 
 
 async def test_user_flow_with_valid_path(
-    hass: HomeAssistant, mock_usb_device: MagicMock
+    hass: HomeAssistant, mock_usb_device: USBDevice
 ) -> None:
     """Test the user flow with a valid path selected."""
     with (
@@ -122,7 +124,7 @@ async def test_user_flow_with_invalid_manual_path(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_with_invalid_option(
-    hass: HomeAssistant, mock_usb_device: MagicMock
+    hass: HomeAssistant, mock_usb_device: USBDevice
 ) -> None:
     """Test the user flow with unknown selected usb device."""
     with patch(
@@ -140,7 +142,7 @@ async def test_user_flow_with_invalid_option(
 
 
 async def test_user_flow_with_manual_path(
-    hass: HomeAssistant, mock_usb_device: MagicMock
+    hass: HomeAssistant, mock_usb_device: USBDevice
 ) -> None:
     """Test the user flow with custom path selected."""
     with (
@@ -162,7 +164,9 @@ async def test_user_flow_with_manual_path(
 
 
 async def test_user_flow_already_in_progress(
-    hass: HomeAssistant, mock_usb_device: MagicMock, mock_usb_service_info: MagicMock
+    hass: HomeAssistant,
+    mock_usb_device: USBDevice,
+    mock_usb_service_info: UsbServiceInfo,
 ) -> None:
     """Test we can't start a flow for the same device twice."""
     with patch(
@@ -228,7 +232,7 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
 async def test_usb_discovery(
     hass: HomeAssistant,
-    mock_usb_service_info: MagicMock,
+    mock_usb_service_info: UsbServiceInfo,
 ) -> None:
     """Test usb discovery success path."""
     # test discovery step
@@ -269,7 +273,7 @@ async def test_usb_discovery(
 
 async def test_usb_discovery_already_configured(
     hass: HomeAssistant,
-    mock_usb_service_info: MagicMock,
+    mock_usb_service_info: UsbServiceInfo,
 ) -> None:
     """Test usb discovery aborts when already configured."""
     # Existing entry with the same unique_id but an old device path
@@ -292,7 +296,7 @@ async def test_usb_discovery_already_configured(
 
 
 async def test_usb_discovery_already_in_progress(
-    hass: HomeAssistant, mock_usb_service_info: MagicMock
+    hass: HomeAssistant, mock_usb_service_info: UsbServiceInfo
 ) -> None:
     """Test we can't start a flow for the same device twice."""
     with patch(
