@@ -45,9 +45,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Integration connects to a cloud service; no local network discovery is possible.
-  discovery:
-    status: exempt
-    comment: Integration connects to a cloud service; no local network discovery is possible.
+  discovery: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -66,7 +64,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios exist; authentication failures are handled via the reauthentication flow.
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: done

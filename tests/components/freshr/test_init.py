@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MagicMock, MockConfigEntry
 
@@ -39,3 +40,22 @@ async def test_setup_fetch_devices_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_no_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_freshr_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that an empty device list sets up successfully with no entities."""
+    mock_freshr_client.fetch_devices.return_value = []
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        == []
+    )

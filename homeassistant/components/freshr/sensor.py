@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -114,11 +114,8 @@ async def async_setup_entry(
     """Set up Fresh-r sensors from a config entry."""
     devices_coordinator = config_entry.runtime_data.devices
     known_device_ids: set[str] = set()
-    readings_by_device: dict[str, FreshrReadingsCoordinator] = {
-        coordinator.device_id: coordinator
-        for coordinator in config_entry.runtime_data.readings
-    }
 
+    @callback
     def _async_add_new_devices() -> None:
         """Add sensors for any devices not yet registered."""
         if not devices_coordinator.data:
@@ -128,15 +125,6 @@ async def async_setup_entry(
             if device.id in known_device_ids:
                 continue
             known_device_ids.add(device.id)
-            if device.id not in readings_by_device:
-                coordinator = FreshrReadingsCoordinator(
-                    hass,
-                    config_entry,
-                    device,
-                    devices_coordinator.client,
-                )
-                readings_by_device[device.id] = coordinator
-                hass.async_create_task(coordinator.async_refresh())
             descriptions = SENSOR_TYPES.get(
                 device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
             )
@@ -147,7 +135,11 @@ async def async_setup_entry(
                 manufacturer="Fresh-r",
             )
             entities.extend(
-                FreshrSensor(readings_by_device[device.id], description, device_info)
+                FreshrSensor(
+                    config_entry.runtime_data.readings[device.id],
+                    description,
+                    device_info,
+                )
                 for description in descriptions
             )
         if entities:
@@ -176,11 +168,6 @@ class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_device_info = device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if device is available."""
-        return super().available and self.coordinator.data is not None
 
     @property
     def native_value(self) -> StateType:

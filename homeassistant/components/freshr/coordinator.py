@@ -26,7 +26,7 @@ class FreshrData:
     """Runtime data stored on the config entry."""
 
     devices: FreshrDevicesCoordinator
-    readings: list[FreshrReadingsCoordinator]
+    readings: dict[str, FreshrReadingsCoordinator]
 
 
 type FreshrConfigEntry = ConfigEntry[FreshrData]
