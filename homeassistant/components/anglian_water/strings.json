@@ -35,7 +35,7 @@
   "entity": {
     "sensor": {
       "last_updated": {
-        "name": "Last updated"
+        "name": "Last meter reading processed"
       },
       "latest_reading": {
         "name": "Latest reading"
