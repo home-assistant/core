@@ -17,8 +17,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_ARMING_STATE_CHANGED, NessAlarmConfigEntry
+from . import SIGNAL_ARMING_STATE_CHANGED
 from .const import CONF_SHOW_HOME_MODE, DOMAIN
+from .coordinator import NessAlarmConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ness Alarm alarm control panel from config entry."""
-    client = entry.runtime_data
+    client = entry.runtime_data.client
     show_home_mode = entry.options.get(CONF_SHOW_HOME_MODE, True)
 
     async_add_entities(

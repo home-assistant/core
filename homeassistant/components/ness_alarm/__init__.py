@@ -40,11 +40,10 @@ from .const import (
     SIGNAL_ARMING_STATE_CHANGED,
     SIGNAL_ZONE_CHANGED,
 )
+from .coordinator import NessAlarmConfigEntry, NessAlarmCoordinator
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-
-type NessAlarmConfigEntry = ConfigEntry[Client]
 
 
 class ZoneChangedData(NamedTuple):
@@ -143,21 +142,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
     client = Client(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
-        update_interval=DEFAULT_SCAN_INTERVAL.total_seconds(),
         infer_arming_state=entry.data.get(CONF_INFER_ARMING_STATE, False),
     )
 
+    coordinator = NessAlarmCoordinator(hass, entry, client)
+
     # Verify the client can connect to the alarm panel
     try:
-        await client.update()
-    except OSError as err:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
         await client.close()
-        raise ConfigEntryNotReady(
-            f"Unable to connect to alarm panel at"
-            f" {entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        ) from err
+        raise
 
-    entry.runtime_data = client
+    entry.runtime_data = coordinator
 
     def on_zone_change(zone_id: int, state: bool) -> None:
         """Receive and propagate zone state updates."""
@@ -182,9 +179,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     async def _started(hass: HomeAssistant) -> None:
-        _LOGGER.debug("Invoking client keepalive() & update()")
+        _LOGGER.debug("Invoking client keepalive()")
         hass.async_create_task(client.keepalive())
-        hass.async_create_task(client.update())
 
     async_at_started(hass, _started)
 
@@ -202,7 +198,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        await entry.runtime_data.close()
+        await entry.runtime_data.client.close()
 
     return unload_ok
 
