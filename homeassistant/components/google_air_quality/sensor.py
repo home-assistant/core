@@ -3,8 +3,9 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
-from google_air_quality_api.model import AirQualityCurrentConditionsData
+from google_air_quality_api.model import AirQualityCurrentConditionsData, Index
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,6 +34,18 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+def _uaqi(data: AirQualityCurrentConditionsData) -> Index:
+    if TYPE_CHECKING:
+        assert data.indexes.uaqi is not None
+    return data.indexes.uaqi
+
+
+def _laqi(data: AirQualityCurrentConditionsData) -> Index:
+    if TYPE_CHECKING:
+        assert data.indexes.laqi is not None
+    return data.indexes.laqi
+
+
 @dataclass(frozen=True, kw_only=True)
 class AirQualitySensorEntityDescription(SensorEntityDescription):
     """Describes Air Quality sensor entity."""
@@ -56,52 +69,46 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="uaqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
-        value_fn=lambda x: x.indexes[0].aqi,
+        value_fn=lambda x: _uaqi(x).aqi,
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_category",
         translation_key="uaqi_category",
         device_class=SensorDeviceClass.ENUM,
-        options_fn=lambda x: x.indexes[0].category_options,
-        value_fn=lambda x: x.indexes[0].category,
+        value_fn=lambda x: _uaqi(x).category,
+        options_fn=lambda x: _uaqi(x).category_options,
     ),
     AirQualitySensorEntityDescription(
         key="local_aqi",
         translation_key="local_aqi",
-        exists_fn=lambda x: x.indexes[1].aqi is not None,
+        exists_fn=lambda x: _laqi(x).aqi is not None,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
-        value_fn=lambda x: x.indexes[1].aqi,
-        translation_placeholders_fn=lambda data: {
-            "local_aqi": data.indexes[1].display_name
-        },
+        value_fn=lambda x: _laqi(x).aqi,
+        translation_placeholders_fn=lambda x: {"local_aqi": _laqi(x).display_name},
     ),
     AirQualitySensorEntityDescription(
         key="local_category",
         translation_key="local_category",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.indexes[1].category,
-        options_fn=lambda x: x.indexes[1].category_options,
-        translation_placeholders_fn=lambda data: {
-            "local_aqi": data.indexes[1].display_name
-        },
+        value_fn=lambda x: _laqi(x).category,
+        options_fn=lambda x: _laqi(x).category_options,
+        translation_placeholders_fn=lambda x: {"local_aqi": _laqi(x).display_name},
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_dominant_pollutant",
         translation_key="uaqi_dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.indexes[0].dominant_pollutant,
-        options_fn=lambda x: x.indexes[0].pollutant_options,
+        value_fn=lambda x: _uaqi(x).dominant_pollutant,
+        options_fn=lambda x: _uaqi(x).pollutant_options,
     ),
     AirQualitySensorEntityDescription(
         key="local_dominant_pollutant",
         translation_key="local_dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.indexes[1].dominant_pollutant,
-        options_fn=lambda x: x.indexes[1].pollutant_options,
-        translation_placeholders_fn=lambda data: {
-            "local_aqi": data.indexes[1].display_name
-        },
+        value_fn=lambda x: _laqi(x).dominant_pollutant,
+        options_fn=lambda x: _laqi(x).pollutant_options,
+        translation_placeholders_fn=lambda x: {"local_aqi": _laqi(x).display_name},
     ),
     AirQualitySensorEntityDescription(
         key="c6h6",

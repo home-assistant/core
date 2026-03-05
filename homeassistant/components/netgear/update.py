@@ -10,12 +10,10 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR_FIRMWARE, KEY_ROUTER
+from .coordinator import NetgearConfigEntry, NetgearFirmwareCoordinator
 from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -24,18 +22,20 @@ LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetgearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Netgear component."""
-    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
-    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_FIRMWARE]
+    router = entry.runtime_data.router
+    coordinator = entry.runtime_data.coordinator_firmware
     entities = [NetgearUpdateEntity(coordinator, router)]
 
     async_add_entities(entities)
 
 
-class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
+class NetgearUpdateEntity(
+    NetgearRouterCoordinatorEntity[NetgearFirmwareCoordinator], UpdateEntity
+):
     """Update entity for a Netgear device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -43,7 +43,7 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: NetgearFirmwareCoordinator,
         router: NetgearRouter,
     ) -> None:
         """Initialize a Netgear device."""

@@ -3,28 +3,30 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import Any
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import NetgearDataCoordinator, NetgearTrackerCoordinator
 from .router import NetgearRouter
 
 
-class NetgearDeviceEntity(CoordinatorEntity):
+class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
     """Base class for a device connected to a Netgear router."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
+        self,
+        coordinator: NetgearTrackerCoordinator,
+        router: NetgearRouter,
+        device: dict,
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator)
@@ -86,12 +88,12 @@ class NetgearRouterEntity(Entity):
         )
 
 
-class NetgearRouterCoordinatorEntity(NetgearRouterEntity, CoordinatorEntity):
+class NetgearRouterCoordinatorEntity[T: NetgearDataCoordinator[Any]](
+    NetgearRouterEntity, CoordinatorEntity[T]
+):
     """Base class for a Netgear router entity."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, router: NetgearRouter
-    ) -> None:
+    def __init__(self, coordinator: T, router: NetgearRouter) -> None:
         """Initialize a Netgear device."""
         CoordinatorEntity.__init__(self, coordinator)
         NetgearRouterEntity.__init__(self, router)

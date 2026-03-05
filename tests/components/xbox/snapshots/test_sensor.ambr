@@ -4,7 +4,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -39,6 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'erics273 Follower',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -54,7 +57,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -89,6 +94,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'erics273 Following',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -104,7 +110,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -139,6 +147,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'erics273 Friends',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -154,7 +163,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -189,6 +200,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'erics273 Gamerscore',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
@@ -471,7 +483,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -506,6 +520,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GSR Ae Follower',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -521,7 +536,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -556,6 +573,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GSR Ae Following',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -571,7 +589,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -606,6 +626,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GSR Ae Friends',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -621,7 +642,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -656,6 +679,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GSR Ae Gamerscore',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
@@ -939,7 +963,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -974,6 +1000,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ikken Hissatsuu Follower',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -989,7 +1016,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1024,6 +1053,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ikken Hissatsuu Following',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -1039,7 +1069,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1074,6 +1106,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ikken Hissatsuu Friends',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -1089,7 +1122,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1124,6 +1159,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ikken Hissatsuu Gamerscore',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'points',
     }),
     'context': <ANY>,

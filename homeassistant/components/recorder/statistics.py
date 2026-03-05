@@ -505,14 +505,17 @@ def _compile_hourly_statistics_summary_mean_stmt(
     # As we use the StatisticsMeta.mean_type in the select case statement we need
     # to group by it as well.
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
-        .filter(StatisticsShortTerm.start_ts >= start_time_ts)
-        .filter(StatisticsShortTerm.start_ts < end_time_ts)
-        .join(
-            StatisticsMeta, and_(StatisticsShortTerm.metadata_id == StatisticsMeta.id)
+        lambda: (
+            select(*QUERY_STATISTICS_SUMMARY_MEAN)
+            .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+            .filter(StatisticsShortTerm.start_ts < end_time_ts)
+            .join(
+                StatisticsMeta,
+                and_(StatisticsShortTerm.metadata_id == StatisticsMeta.id),
+            )
+            .group_by(StatisticsShortTerm.metadata_id, StatisticsMeta.mean_type)
+            .order_by(StatisticsShortTerm.metadata_id)
         )
-        .group_by(StatisticsShortTerm.metadata_id, StatisticsMeta.mean_type)
-        .order_by(StatisticsShortTerm.metadata_id)
     )
 
 
@@ -521,16 +524,18 @@ def _compile_hourly_statistics_last_sum_stmt(
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
     return lambda_stmt(
-        lambda: select(
-            subquery := (
-                select(*QUERY_STATISTICS_SUMMARY_SUM)
-                .filter(StatisticsShortTerm.start_ts >= start_time_ts)
-                .filter(StatisticsShortTerm.start_ts < end_time_ts)
-                .subquery()
+        lambda: (
+            select(
+                subquery := (
+                    select(*QUERY_STATISTICS_SUMMARY_SUM)
+                    .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                    .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                    .subquery()
+                )
             )
+            .filter(subquery.c.rownum == 1)
+            .order_by(subquery.c.metadata_id)
         )
-        .filter(subquery.c.rownum == 1)
-        .order_by(subquery.c.metadata_id)
     )
 
 
@@ -1335,6 +1340,54 @@ def _reduce_statistics_per_month(
     )
 
 
+def reduce_year_ts_factory() -> tuple[
+    Callable[[float, float], bool],
+    Callable[[float], tuple[float, float]],
+]:
+    """Return functions to match same year and year start end."""
+    _lower_bound: float = 0
+    _upper_bound: float = 0
+
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
+    )
+
+    def _same_year_ts(time1: float, time2: float) -> bool:
+        """Return True if time1 and time2 are in the same year."""
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _year_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
+
+    def _year_start_end_ts(time: float) -> tuple[float, float]:
+        """Return the start and end of the period (year) time is within."""
+        start_local = _local_from_timestamp(time).replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        return (
+            start_local.timestamp(),
+            (start_local.replace(year=start_local.year + 1)).timestamp(),
+        )
+
+    # We create _year_start_end_ts_cached in the closure in case the timezone changes
+    _year_start_end_ts_cached = lru_cache(maxsize=6)(_year_start_end_ts)
+
+    return _same_year_ts, _year_start_end_ts_cached
+
+
+def _reduce_statistics_per_year(
+    stats: dict[str, list[StatisticsRow]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+) -> dict[str, list[StatisticsRow]]:
+    """Reduce hourly statistics to yearly statistics."""
+    _same_year_ts, _year_start_end_ts = reduce_year_ts_factory()
+    return _reduce_statistics(
+        stats, _same_year_ts, _year_start_end_ts, timedelta(days=366), types, metadata
+    )
+
+
 def _generate_statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
@@ -1517,10 +1570,12 @@ def _first_statistic(
 ) -> datetime | None:
     """Return the date of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
-        lambda: select(table.start_ts)
-        .filter(table.metadata_id == metadata_id)
-        .order_by(table.start_ts.asc())
-        .limit(1)
+        lambda: (
+            select(table.start_ts)
+            .filter(table.metadata_id == metadata_id)
+            .order_by(table.start_ts.asc())
+            .limit(1)
+        )
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
         return dt_util.utc_from_timestamp(stats[0].start_ts)
@@ -1534,10 +1589,12 @@ def _last_statistic(
 ) -> datetime | None:
     """Return the date of the newest statistic row for a given metadata id."""
     stmt = lambda_stmt(
-        lambda: select(table.start_ts)
-        .filter(table.metadata_id == metadata_id)
-        .order_by(table.start_ts.desc())
-        .limit(1)
+        lambda: (
+            select(table.start_ts)
+            .filter(table.metadata_id == metadata_id)
+            .order_by(table.start_ts.desc())
+            .limit(1)
+        )
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
         return dt_util.utc_from_timestamp(stats[0].start_ts)
@@ -1564,11 +1621,13 @@ def _get_oldest_sum_statistic(
     ) -> float | None:
         """Return the oldest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            lambda: select(table.sum)
-            .filter(table.metadata_id == metadata_id)
-            .filter(table.sum.is_not(None))
-            .order_by(table.start_ts.asc())
-            .limit(1)
+            lambda: (
+                select(table.sum)
+                .filter(table.metadata_id == metadata_id)
+                .filter(table.sum.is_not(None))
+                .order_by(table.start_ts.asc())
+                .limit(1)
+            )
         )
         if start_time is not None:
             start_time = start_time + table.duration - timedelta.resolution
@@ -1657,13 +1716,15 @@ def _get_newest_sum_statistic(
     ) -> float | None:
         """Return the newest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            lambda: select(
-                table.sum,
+            lambda: (
+                select(
+                    table.sum,
+                )
+                .filter(table.metadata_id == metadata_id)
+                .filter(table.sum.is_not(None))
+                .order_by(table.start_ts.desc())
+                .limit(1)
             )
-            .filter(table.metadata_id == metadata_id)
-            .filter(table.sum.is_not(None))
-            .order_by(table.start_ts.desc())
-            .limit(1)
         )
         if start_time is not None:
             start_time_ts = start_time.timestamp()
@@ -1965,7 +2026,7 @@ def _statistics_during_period_with_session(
     start_time: datetime,
     end_time: datetime | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -2026,6 +2087,22 @@ def _statistics_during_period_with_session(
         if end_time is not None:
             end_time = _find_month_end_time(dt_util.as_local(end_time))
 
+    elif period == "year":
+        start_time = dt_util.as_local(start_time).replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        if end_time is not None:
+            end_local = dt_util.as_local(end_time)
+            end_time = end_local.replace(
+                year=end_local.year + 1,
+                month=1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
@@ -2059,6 +2136,9 @@ def _statistics_during_period_with_session(
     if period == "month":
         result = _reduce_statistics_per_month(result, types, metadata)
 
+    if period == "year":
+        result = _reduce_statistics_per_year(result, types, metadata)
+
     if "change" in _types:
         _augment_result_with_change(
             hass, session, start_time, units, _types, table, metadata, result
@@ -2079,7 +2159,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -2107,10 +2187,12 @@ def _get_last_statistics_stmt(
 ) -> StatementLambdaElement:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS)
-        .filter_by(metadata_id=metadata_id)
-        .order_by(Statistics.metadata_id, Statistics.start_ts.desc())
-        .limit(number_of_stats)
+        lambda: (
+            select(*QUERY_STATISTICS)
+            .filter_by(metadata_id=metadata_id)
+            .order_by(Statistics.metadata_id, Statistics.start_ts.desc())
+            .limit(number_of_stats)
+        )
     )
 
 
@@ -2123,10 +2205,14 @@ def _get_last_statistics_short_term_stmt(
     For a given statistic_id.
     """
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM)
-        .filter_by(metadata_id=metadata_id)
-        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts.desc())
-        .limit(number_of_stats)
+        lambda: (
+            select(*QUERY_STATISTICS_SHORT_TERM)
+            .filter_by(metadata_id=metadata_id)
+            .order_by(
+                StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts.desc()
+            )
+            .limit(number_of_stats)
+        )
     )
 
 
@@ -2333,26 +2419,28 @@ def _generate_statistics_at_time_stmt_dependent_sub_query(
     # condition we can use it as a subquery to get the last start_time_ts
     # before a specific point in time for all entities.
     return _generate_select_columns_for_types_stmt(table, types) + (
-        lambda q: q.select_from(StatisticsMeta)
-        .join(
-            table,
-            and_(
-                table.start_ts
-                == (
-                    select(table.start_ts)
-                    .where(
-                        (StatisticsMeta.id == table.metadata_id)
-                        & (table.start_ts < start_time_ts)
+        lambda q: (
+            q.select_from(StatisticsMeta)
+            .join(
+                table,
+                and_(
+                    table.start_ts
+                    == (
+                        select(table.start_ts)
+                        .where(
+                            (StatisticsMeta.id == table.metadata_id)
+                            & (table.start_ts < start_time_ts)
+                        )
+                        .order_by(table.start_ts.desc())
+                        .limit(1)
                     )
-                    .order_by(table.start_ts.desc())
-                    .limit(1)
-                )
-                .scalar_subquery()
-                .correlate(StatisticsMeta),
-                table.metadata_id == StatisticsMeta.id,
-            ),
+                    .scalar_subquery()
+                    .correlate(StatisticsMeta),
+                    table.metadata_id == StatisticsMeta.id,
+                ),
+            )
+            .where(table.metadata_id.in_(metadata_ids))
         )
-        .where(table.metadata_id.in_(metadata_ids))
     )
 
 
@@ -2815,12 +2903,14 @@ def _find_latest_short_term_statistic_for_metadata_id_stmt(
     #
     #
     return lambda_stmt(
-        lambda: select(
-            StatisticsShortTerm.id,
+        lambda: (
+            select(
+                StatisticsShortTerm.id,
+            )
+            .where(StatisticsShortTerm.metadata_id == metadata_id)
+            .order_by(StatisticsShortTerm.start_ts.desc())
+            .limit(1)
         )
-        .where(StatisticsShortTerm.metadata_id == metadata_id)
-        .order_by(StatisticsShortTerm.start_ts.desc())
-        .limit(1)
     )
 
 

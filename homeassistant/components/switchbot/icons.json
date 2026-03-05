@@ -141,5 +141,10 @@
         }
       }
     }
+  },
+  "services": {
+    "add_password": {
+      "service": "mdi:key-plus"
+    }
   }
 }

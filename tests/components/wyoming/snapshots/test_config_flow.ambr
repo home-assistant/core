@@ -3,6 +3,7 @@
   FlowResultSnapshot({
     'context': dict({
       'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
         'name': 'Piper',
@@ -53,6 +54,7 @@
   FlowResultSnapshot({
     'context': dict({
       'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
         'name': 'Piper',
@@ -102,6 +104,7 @@
 # name: test_zeroconf_discovery
   FlowResultSnapshot({
     'context': dict({
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'Test Satellite',

@@ -47,8 +47,9 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("updates", "expected_state", "last_reported"),
     [
-        # Update without dpcode - state should not change, last_reported stays at initial
-        ({"control": "stop"}, "forward", "2024-01-01T00:00:00+00:00"),
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"control": "stop"}, "forward", "2024-01-01T00:00:20+00:00"),
         # Update with dpcode - state should change, last_reported advances
         ({"control_back_mode": "back"}, "back", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change

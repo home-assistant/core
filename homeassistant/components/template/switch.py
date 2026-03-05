@@ -21,14 +21,12 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -36,7 +34,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -52,8 +50,6 @@ from .schemas import (
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
-
-_VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
 LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
@@ -155,8 +151,20 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
-    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+
+        self.setup_state_template(
+            CONF_STATE,
+            "_attr_is_on",
+            template_validators.boolean(self, CONF_STATE),
+        )
+
+        # Scripts can be an empty list, therefore we need to check for None
+        if (on_action := config.get(CONF_TURN_ON)) is not None:
+            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
+        if (off_action := config.get(CONF_TURN_OFF)) is not None:
+            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
@@ -188,53 +196,19 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
     ) -> None:
         """Initialize the Template switch."""
         TemplateEntity.__init__(self, hass, config, unique_id)
-        AbstractTemplateSwitch.__init__(self, config)
-
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
-
-        # Scripts can be an empty list, therefore we need to check for None
-        if (on_action := config.get(CONF_TURN_ON)) is not None:
-            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
-        if (off_action := config.get(CONF_TURN_OFF)) is not None:
-            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
-
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._attr_is_on = None
-            return
-
-        if isinstance(result, bool):
-            self._attr_is_on = result
-            return
-
-        if isinstance(result, str):
-            self._attr_is_on = result.lower() in ("true", STATE_ON)
-            return
-
-        self._attr_is_on = False
+        AbstractTemplateSwitch.__init__(self, name, config)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        if self._template is None:
+        if CONF_STATE not in self._templates:
             # restore state after startup
             await super().async_added_to_hass()
             if state := await self.async_get_last_state():
                 self._attr_is_on = state.state == STATE_ON
         await super().async_added_to_hass()
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template is not None:
-            self.add_template_attribute(
-                "_attr_is_on", self._template, None, self._update_state
-            )
-
-        super()._async_setup_templates()
 
 
 class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
@@ -250,17 +224,8 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        AbstractTemplateSwitch.__init__(self, config)
-
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        if on_action := config.get(CONF_TURN_ON):
-            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
-        if off_action := config.get(CONF_TURN_OFF):
-            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
-
-        if CONF_STATE in config:
-            self._to_render_simple.append(CONF_STATE)
-            self._parse_result.add(CONF_STATE)
+        AbstractTemplateSwitch.__init__(self, name, config)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -274,24 +239,3 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
         ):
             self._attr_is_on = last_state.state == STATE_ON
             self.restore_attributes(last_state)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            return
-
-        write_ha_state = False
-        if (state := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_is_on = template.result_as_boolean(state)
-            write_ha_state = True
-
-        elif len(self._rendered) > 0:
-            # In case name, icon, or friendly name have a template but
-            # states does not
-            write_ha_state = True
-
-        if write_ha_state:
-            self.async_write_ha_state()

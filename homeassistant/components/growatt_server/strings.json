@@ -53,8 +53,11 @@
       "battery_discharge_power_limit": {
         "name": "Battery discharge power limit"
       },
-      "battery_discharge_soc_limit": {
-        "name": "Battery discharge SOC limit"
+      "battery_discharge_soc_limit_off_grid": {
+        "name": "Battery discharge SOC limit (off-grid)"
+      },
+      "battery_discharge_soc_limit_on_grid": {
+        "name": "Battery discharge SOC limit (on-grid)"
       }
     },
     "sensor": {

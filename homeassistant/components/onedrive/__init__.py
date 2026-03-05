@@ -14,7 +14,6 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import ItemUpdate
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -72,15 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             entry, data={**entry.data, CONF_FOLDER_ID: backup_folder.id}
         )
 
-    # write instance id to description
-    if backup_folder.description != (instance_id := await async_get_instance_id(hass)):
-        await _handle_item_operation(
-            lambda: client.update_drive_item(
-                backup_folder.id, ItemUpdate(description=instance_id)
-            ),
-            folder_name,
-        )
-
     # update in case folder was renamed manually inside OneDrive
     if backup_folder.name != entry.data[CONF_FOLDER_NAME]:
         hass.config_entries.async_update_entry(
@@ -122,7 +112,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) ->
 
 
 async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -> None:
-    """Migrate backup files to metadata version 2."""
+    """Migrate backup files from metadata version 1 to version 2.
+
+    Version 1: Backup metadata was stored in the backup file's description field.
+    Version 2: Backup metadata is stored in a separate .metadata.json file.
+    """
     files = await client.list_drive_items(backup_folder_id)
     for file in files:
         if file.description and '"metadata_version": 1' in (
@@ -131,23 +125,10 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
             metadata = loads(metadata_json)
             del metadata["metadata_version"]
             metadata_filename = file.name.rsplit(".", 1)[0] + ".metadata.json"
-            metadata_file = await client.upload_file(
+            await client.upload_file(
                 backup_folder_id,
                 metadata_filename,
                 dumps(metadata),
-            )
-            metadata_description = {
-                "metadata_version": 2,
-                "backup_id": metadata["backup_id"],
-                "backup_file_id": file.id,
-            }
-            await client.update_drive_item(
-                path_or_id=metadata_file.id,
-                data=ItemUpdate(description=dumps(metadata_description)),
-            )
-            await client.update_drive_item(
-                path_or_id=file.id,
-                data=ItemUpdate(description=""),
             )
             _LOGGER.debug("Migrated backup file %s", file.name)
 

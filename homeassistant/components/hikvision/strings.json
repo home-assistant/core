@@ -34,6 +34,67 @@
       "name": "{device_name} channel {channel_number}"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "attended_baggage": {
+        "name": "Attended baggage"
+      },
+      "bad_video": {
+        "name": "Bad video"
+      },
+      "disk_error": {
+        "name": "Disk error"
+      },
+      "disk_full": {
+        "name": "Disk full"
+      },
+      "entering_region": {
+        "name": "Entering region"
+      },
+      "exiting_region": {
+        "name": "Exiting region"
+      },
+      "face_detection": {
+        "name": "Face detection"
+      },
+      "field_detection": {
+        "name": "Field detection"
+      },
+      "illegal_access": {
+        "name": "Illegal access"
+      },
+      "io": {
+        "name": "I/O alarm"
+      },
+      "ip_conflict": {
+        "name": "IP conflict"
+      },
+      "line_crossing": {
+        "name": "Line crossing"
+      },
+      "net_interface_broken": {
+        "name": "Network interface broken"
+      },
+      "pir_alarm": {
+        "name": "PIR alarm"
+      },
+      "recording_failure": {
+        "name": "Recording failure"
+      },
+      "scene_change_detection": {
+        "name": "Scene change detection"
+      },
+      "shelter_alarm": {
+        "name": "Shelter alarm"
+      },
+      "unattended_baggage": {
+        "name": "Unattended baggage"
+      },
+      "video_mismatch": {
+        "name": "Video mismatch"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue": {
       "description": "Configuring {integration_title} using YAML is deprecated and the import failed. Please remove the `{domain}` entry from your `configuration.yaml` file and set up the integration manually.",

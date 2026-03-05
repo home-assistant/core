@@ -6,9 +6,9 @@ from aioimmich.exceptions import ImmichError
 import voluptuous as vol
 
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import service
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import DOMAIN
@@ -38,22 +38,10 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
         service_call.data,
     )
     hass = service_call.hass
-    target_entry: ImmichConfigEntry | None = hass.config_entries.async_get_entry(
-        service_call.data[CONF_CONFIG_ENTRY_ID]
+    target_entry: ImmichConfigEntry = service.async_get_config_entry(
+        hass, DOMAIN, service_call.data[CONF_CONFIG_ENTRY_ID]
     )
     source_media_id = service_call.data[CONF_FILE]["media_content_id"]
-
-    if not target_entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-        )
-
-    if target_entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_loaded",
-        )
 
     media = await async_resolve_media(hass, source_media_id, None)
     if media.path is None:

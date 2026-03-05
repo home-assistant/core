@@ -32,7 +32,7 @@
       },
       "hassio_confirm": {
         "description": "Do you want to add the Music Assistant server to Home Assistant?",
-        "title": "Discovered Music Assistant add-on"
+        "title": "Discovered Music Assistant app"
       },
       "reauth_confirm": {
         "description": "The authentication token for Music Assistant server `{url}` is no longer valid. Please re-authenticate to continue using the integration.",

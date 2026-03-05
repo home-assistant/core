@@ -189,6 +189,10 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Development Commands
 
+### Environment
+- **Local development (non-container)**: Activate the project venv before running commands: `source .venv/bin/activate`
+- **Dev container**: No activation needed, the environment is pre-configured
+
 ### Code Quality & Linting
 - **Run all linters on all files**: `prek run --all-files`
 - **Run linters on staged files only**: `prek run`

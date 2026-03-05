@@ -1,0 +1,27 @@
+{
+  "data": {
+    "company": "W",
+    "capacity_company": "KW",
+    "e_total": 48.01,
+    "e_today": 1.54,
+    "total_co2": 0.03,
+    "total_tree": 1.73,
+    "power": 0,
+    "normal_dev_num": 0,
+    "offline_dev_num": 1,
+    "fault_dev_num": 0,
+    "wait_dev_num": 0,
+    "percent": 0,
+    "capacity": 1.6,
+    "earning": [
+      {
+        "currency": "USD",
+        "today": 0.95,
+        "total": 0.95
+      }
+    ]
+  },
+  "message": "ok",
+  "time": 1771277551,
+  "code": 20000
+}

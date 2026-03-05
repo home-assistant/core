@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 1,
+    "Name": "webstack",
+    "Type": 2,
+    "EndpointId": 1,
+    "Status": 1,
+    "EntryPoint": "docker-compose.yml",
+    "ProjectPath": "/data/compose/webstack",
+    "CreatedBy": "admin",
+    "CreationDate": 1739700000,
+    "FromAppTemplate": false
+  }
+]

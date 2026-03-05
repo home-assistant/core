@@ -9,13 +9,11 @@ from typing import Any
 from pynetgear import ALLOW, BLOCK
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearDeviceEntity, NetgearRouterEntity
 from .router import NetgearRouter
 
@@ -100,11 +98,11 @@ ROUTER_SWITCH_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetgearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for Netgear component."""
-    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
+    router = entry.runtime_data.router
 
     async_add_entities(
         NetgearRouterSwitchEntity(router, description)
@@ -112,14 +110,14 @@ async def async_setup_entry(
     )
 
     # Entities per network device
-    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
+    coordinator_tracker = entry.runtime_data.coordinator_tracker
     tracked = set()
 
     @callback
     def new_device_callback() -> None:
         """Add new devices if needed."""
         new_entities = []
-        if not coordinator.data:
+        if not coordinator_tracker.data:
             return
 
         for mac, device in router.devices.items():
@@ -128,7 +126,9 @@ async def async_setup_entry(
 
             new_entities.extend(
                 [
-                    NetgearAllowBlock(coordinator, router, device, entity_description)
+                    NetgearAllowBlock(
+                        coordinator_tracker, router, device, entity_description
+                    )
                     for entity_description in SWITCH_TYPES
                 ]
             )
@@ -136,9 +136,9 @@ async def async_setup_entry(
 
         async_add_entities(new_entities)
 
-    entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
+    entry.async_on_unload(coordinator_tracker.async_add_listener(new_device_callback))
 
-    coordinator.data = True
+    coordinator_tracker.data = True
     new_device_callback()
 
 
@@ -149,7 +149,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         device: dict,
         entity_description: SwitchEntityDescription,

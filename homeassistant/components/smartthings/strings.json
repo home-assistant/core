@@ -9,6 +9,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
@@ -22,6 +23,9 @@
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a SmartThings device on your network. Press **Submit** to continue setting up SmartThings."
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
@@ -66,8 +70,14 @@
       "keep_fresh_mode_active": {
         "name": "Keep fresh mode active"
       },
+      "oven_cavity_status": {
+        "name": "Second cavity status"
+      },
       "remote_control": {
         "name": "Remote control"
+      },
+      "robot_cleaner_dust_bag": {
+        "name": "Dust bag full"
       },
       "sub_remote_control": {
         "name": "Upper washer remote control"
@@ -77,6 +87,9 @@
       }
     },
     "button": {
+      "reset_hepa_filter": {
+        "name": "Reset HEPA filter"
+      },
       "reset_hood_filter": {
         "name": "Reset filter"
       },
@@ -152,6 +165,11 @@
         }
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -216,6 +234,42 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "name": "Cleaning type",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuuming",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop_together": "Vacuum and mop together"
+        }
+      },
+      "robot_cleaner_driving_mode": {
+        "name": "Driving mode",
+        "state": {
+          "area_then_walls": "Area then walls",
+          "quick_clean_zigzag_pattern": "Quick clean in a zigzag pattern",
+          "walls_first": "Walls first"
+        }
+      },
+      "robot_cleaner_water_spray_level": {
+        "name": "Water level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "moderate_high": "Moderate high",
+          "moderate_low": "Moderate low"
+        }
+      },
+      "selected_zone": {
+        "name": "Selected zone",
+        "state": {
+          "all": "All",
+          "lower": "Lower",
+          "none": "None",
+          "upper": "Upper"
+        }
+      },
       "soil_level": {
         "name": "Soil level",
         "state": {
@@ -227,6 +281,14 @@
           "none": "None",
           "normal": "[%key:common::state::normal%]",
           "up": "Up"
+        }
+      },
+      "sound_detection_sensitivity": {
+        "name": "Sound detection sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "spin_level": {
@@ -279,6 +341,15 @@
           "semi_hot": "Semi Hot",
           "tap_cold": "Tap Cold",
           "warm": "Warm"
+        }
+      },
+      "zone_booster": {
+        "name": "Zone booster",
+        "state": {
+          "all": "All",
+          "left": "Left",
+          "none": "None",
+          "right": "Right"
         }
       }
     },
@@ -488,6 +559,9 @@
       "odor_sensor": {
         "name": "Odor sensor"
       },
+      "oven_completion_time_cavity_01": {
+        "name": "Second cavity completion time"
+      },
       "oven_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
@@ -510,11 +584,41 @@
           "warming": "Warming"
         }
       },
+      "oven_job_state_cavity_01": {
+        "name": "Second cavity job state",
+        "state": {
+          "cleaning": "[%key:component::smartthings::entity::sensor::oven_job_state::state::cleaning%]",
+          "cooking": "[%key:component::smartthings::entity::sensor::oven_job_state::state::cooking%]",
+          "cooling": "[%key:component::smartthings::entity::sensor::oven_job_state::state::cooling%]",
+          "defrosting": "[%key:component::smartthings::entity::sensor::oven_job_state::state::defrosting%]",
+          "draining": "[%key:component::smartthings::entity::sensor::oven_job_state::state::draining%]",
+          "fast_preheat": "[%key:component::smartthings::entity::sensor::oven_job_state::state::fast_preheat%]",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
+          "preheat": "[%key:component::smartthings::entity::sensor::oven_job_state::state::preheat%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_job_state::state::ready%]",
+          "rinsing": "[%key:component::smartthings::entity::sensor::oven_job_state::state::rinsing%]",
+          "scheduled_end": "[%key:component::smartthings::entity::sensor::oven_job_state::state::scheduled_end%]",
+          "scheduled_start": "[%key:component::smartthings::entity::sensor::oven_job_state::state::scheduled_start%]",
+          "searing": "[%key:component::smartthings::entity::sensor::oven_job_state::state::searing%]",
+          "sensing": "[%key:component::smartthings::entity::sensor::oven_job_state::state::sensing%]",
+          "stone_heating": "[%key:component::smartthings::entity::sensor::oven_job_state::state::stone_heating%]",
+          "time_hold_preheat": "[%key:component::smartthings::entity::sensor::oven_job_state::state::time_hold_preheat%]",
+          "warming": "[%key:component::smartthings::entity::sensor::oven_job_state::state::warming%]"
+        }
+      },
       "oven_machine_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
         "state": {
           "paused": "[%key:common::state::paused%]",
           "ready": "Ready",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
+        }
+      },
+      "oven_machine_state_cavity_01": {
+        "name": "Second cavity machine state",
+        "state": {
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
           "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
         }
       },
@@ -552,8 +656,48 @@
           "warming": "Warming"
         }
       },
+      "oven_mode_cavity_01": {
+        "name": "Second cavity oven mode",
+        "state": {
+          "bake": "[%key:component::smartthings::entity::sensor::oven_mode::state::bake%]",
+          "bottom_heat": "[%key:component::smartthings::entity::sensor::oven_mode::state::bottom_heat%]",
+          "broil": "[%key:component::smartthings::entity::sensor::oven_mode::state::broil%]",
+          "convection_bake": "[%key:component::smartthings::entity::sensor::oven_mode::state::convection_bake%]",
+          "convection_broil": "[%key:component::smartthings::entity::sensor::oven_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::smartthings::entity::sensor::oven_mode::state::convection_roast%]",
+          "conventional": "[%key:component::smartthings::entity::sensor::oven_mode::state::conventional%]",
+          "defrosting": "[%key:component::smartthings::entity::sensor::oven_mode::state::defrosting%]",
+          "dehydrate": "[%key:component::smartthings::entity::sensor::oven_mode::state::dehydrate%]",
+          "descale": "[%key:component::smartthings::entity::sensor::oven_mode::state::descale%]",
+          "grill": "[%key:component::smartthings::entity::sensor::oven_mode::state::grill%]",
+          "heating": "[%key:component::smartthings::entity::sensor::oven_mode::state::heating%]",
+          "microwave": "[%key:component::smartthings::entity::sensor::oven_mode::state::microwave%]",
+          "microwave_plus_convection": "[%key:component::smartthings::entity::sensor::oven_mode::state::microwave_plus_convection%]",
+          "microwave_plus_grill": "[%key:component::smartthings::entity::sensor::oven_mode::state::microwave_plus_grill%]",
+          "microwave_plus_hot_blast": "[%key:component::smartthings::entity::sensor::oven_mode::state::microwave_plus_hot_blast%]",
+          "microwave_plus_hot_blast_2": "[%key:component::smartthings::entity::sensor::oven_mode::state::microwave_plus_hot_blast_2%]",
+          "others": "[%key:component::smartthings::entity::sensor::oven_mode::state::others%]",
+          "proof": "[%key:component::smartthings::entity::sensor::oven_mode::state::proof%]",
+          "rinse": "[%key:component::smartthings::entity::sensor::oven_mode::state::rinse%]",
+          "slim_middle": "[%key:component::smartthings::entity::sensor::oven_mode::state::slim_middle%]",
+          "slim_strong": "[%key:component::smartthings::entity::sensor::oven_mode::state::slim_strong%]",
+          "slow_cook": "[%key:component::smartthings::entity::sensor::oven_mode::state::slow_cook%]",
+          "steam_bake": "[%key:component::smartthings::entity::sensor::oven_mode::state::steam_bake%]",
+          "steam_bottom_heat_plus_convection": "[%key:component::smartthings::entity::sensor::oven_mode::state::steam_bottom_heat_plus_convection%]",
+          "steam_cook": "[%key:component::smartthings::entity::sensor::oven_mode::state::steam_cook%]",
+          "steam_roast": "[%key:component::smartthings::entity::sensor::oven_mode::state::steam_roast%]",
+          "strong_steam": "[%key:component::smartthings::entity::sensor::oven_mode::state::strong_steam%]",
+          "warming": "[%key:component::smartthings::entity::sensor::oven_mode::state::warming%]"
+        }
+      },
       "oven_setpoint": {
         "name": "Setpoint"
+      },
+      "oven_setpoint_cavity_01": {
+        "name": "Second cavity setpoint"
+      },
+      "oven_temperature_cavity_01": {
+        "name": "Second cavity temperature"
       },
       "pm10_health_concern": {
         "name": "PM10 health concern",
@@ -620,7 +764,8 @@
           "off": "[%key:common::state::off%]",
           "pause": "[%key:common::state::paused%]",
           "point": "Point",
-          "reserve": "Reserve"
+          "reserve": "Reserve",
+          "washing_mop": "Washing mop"
         }
       },
       "robot_cleaner_turbo_mode": {
@@ -748,6 +893,9 @@
       }
     },
     "switch": {
+      "add_rinse": {
+        "name": "Add rinse"
+      },
       "auto_cycle_link": {
         "name": "Auto Cycle Link"
       },
@@ -756,6 +904,21 @@
       },
       "display_lighting": {
         "name": "Display lighting"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
+      "dry_plus": {
+        "name": "Dry plus"
+      },
+      "heated_dry": {
+        "name": "Heated dry"
+      },
+      "high_temp_wash": {
+        "name": "High temp wash"
+      },
+      "hot_air_dry": {
+        "name": "Hot air dry"
       },
       "ice_maker": {
         "name": "Cubed ice"
@@ -766,11 +929,17 @@
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
       },
+      "multi_tab": {
+        "name": "Multi-tab"
+      },
       "power_cool": {
         "name": "Power cool"
       },
       "power_freeze": {
         "name": "Power freeze"
+      },
+      "rinse_plus": {
+        "name": "Rinse plus"
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
@@ -778,11 +947,48 @@
       "sanitize": {
         "name": "Sanitize"
       },
+      "sanitizing_wash": {
+        "name": "Sanitizing wash"
+      },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
       "sound_effect": {
         "name": "Sound effect"
       },
+      "speed_booster": {
+        "name": "Speed booster"
+      },
+      "steam_soak": {
+        "name": "Steam soak"
+      },
+      "storm_wash": {
+        "name": "Storm wash"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
+      }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "name": "Do not disturb end time"
+      },
+      "do_not_disturb_start_time": {
+        "name": "Do not disturb start time"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "maximum": "Maximum",
+              "normal": "Normal",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
       }
     }
   },

@@ -157,7 +157,7 @@ class MediaroomDevice(MediaPlayerEntity):
         self._attr_state = (
             MediaPlayerState.PLAYING if optimistic else MediaPlayerState.IDLE
         )
-        self._name = f"Mediaroom {device_id if device_id else host}"
+        self._name = f"Mediaroom {device_id or host}"
         self._available = True
         if device_id:
             self._unique_id = device_id

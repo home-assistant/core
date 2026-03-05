@@ -36,6 +36,7 @@ from .storage.entity_store_validation import (
     validate_entity_data,
 )
 from .storage.serialize import get_serialized_schema
+from .storage.time_server import validate_time_server_data
 from .telegrams import (
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
@@ -65,6 +66,8 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_entries)
     websocket_api.async_register_command(hass, ws_create_device)
     websocket_api.async_register_command(hass, ws_get_schema)
+    websocket_api.async_register_command(hass, ws_get_time_server_config)
+    websocket_api.async_register_command(hass, ws_update_time_server_config)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -583,3 +586,55 @@ def ws_create_device(
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_time_server_config",
+    }
+)
+@provide_knx
+@callback
+def ws_get_time_server_config(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get time server configuration from entity store."""
+    config_info = knx.config_store.get_time_server_config()
+    connection.send_result(msg["id"], config_info)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/update_time_server_config",
+        vol.Required("config"): dict,  # validation done in handler
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_update_time_server_config(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Update entity in entity store and reload it."""
+    try:
+        validated_config = validate_time_server_data(msg["config"])
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
+        return
+    try:
+        await knx.config_store.update_time_server_config(validated_config)
+    except ConfigStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(
+        msg["id"], EntityStoreValidationSuccess(success=True, entity_id=None)
+    )

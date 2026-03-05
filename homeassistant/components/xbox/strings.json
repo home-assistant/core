@@ -7,6 +7,7 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -173,6 +174,9 @@
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
+    },
+    "turn_on_failed": {
+      "message": "Turn on failed. Xbox is not connected to the Xbox Network."
     },
     "xbox_not_configured": {
       "message": "The Xbox integration is not configured."
