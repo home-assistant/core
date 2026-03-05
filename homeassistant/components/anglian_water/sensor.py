@@ -19,7 +19,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .coordinator import AnglianWaterConfigEntry, AnglianWaterUpdateCoordinator
 from .entity import AnglianWaterEntity
@@ -82,9 +81,7 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.LAST_UPDATED,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda entity: dt_util.as_local(entity.last_updated)
-        if entity.last_updated
-        else None,
+        value_fn=lambda entity: entity.last_updated,
         translation_key=AnglianWaterSensor.LAST_UPDATED,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
