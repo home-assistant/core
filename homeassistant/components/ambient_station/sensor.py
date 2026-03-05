@@ -287,6 +287,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_FEELSLIKE,
@@ -442,6 +443,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_24H,
@@ -753,6 +755,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="uv_index",
         native_unit_of_measurement="Index",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_WEEKLYRAININ,
@@ -760,6 +763,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
@@ -799,12 +803,14 @@ SENSOR_DESCRIPTIONS = (
         translation_key="wind_average_10m",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG2M,
         translation_key="wind_average_2m",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
