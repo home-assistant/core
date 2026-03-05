@@ -236,6 +236,9 @@ DEFAULT_INTEGRATIONS = {
     "input_text",
     "schedule",
     "timer",
+    #
+    # Base platforms:
+    *BASE_PLATFORMS,
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.
