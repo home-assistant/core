@@ -14,7 +14,6 @@
   "entity": {
     "sensor": {
       "season": {
-        "name": "[%key:component::season::title%]",
         "state": {
           "autumn": "Autumn",
           "spring": "Spring",
