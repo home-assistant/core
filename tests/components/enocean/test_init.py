@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from serial import SerialException
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -19,8 +17,8 @@ async def test_device_not_connected(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"{MODULE}.dongle.SerialCommunicator",
-        side_effect=SerialException("Device not found"),
+        f"{MODULE}.Gateway.start",
+        side_effect=ConnectionError("Device not found"),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

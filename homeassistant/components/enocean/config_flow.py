@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from enocean_async import Gateway
 import voluptuous as vol
 
 from homeassistant.components.usb import (
@@ -23,7 +24,6 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
 
 MANUAL_SCHEMA = vol.Schema(
@@ -177,7 +177,17 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def validate_enocean_conf(self, user_input) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
-        return await self.hass.async_add_executor_job(dongle.validate_path, dongle_path)
+        try:
+            # Starting the gateway will raise an exception if it can't connect
+            gateway = Gateway(port=dongle_path)
+            await gateway.start()
+        except ConnectionError as exception:
+            LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
+            return False
+        finally:
+            gateway.stop()
+
+        return True
 
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
