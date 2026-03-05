@@ -1,7 +1,5 @@
 """Constants for the Home Connect integration."""
 
-from typing import cast
-
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
@@ -76,9 +74,9 @@ AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
-    bsh_key_to_translation_key(program.value): cast(ProgramKey, program)
+    bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program != ProgramKey.UNKNOWN
+    if program not in (ProgramKey.UNKNOWN, ProgramKey.BSH_COMMON_FAVORITE_001)
 }
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {
