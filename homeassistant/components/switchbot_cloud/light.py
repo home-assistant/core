@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from switchbot_api import (
+    AirPurifierCommands,
     CeilingLightCommands,
     CommonCommands,
     Device,
@@ -216,6 +217,61 @@ class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
         )
 
 
+class SwitchBotCloudAirPurifierLight(SwitchBotCloudLight):
+    """Representation of SwitchBot AirPurifier Light Control."""
+
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_is_on = None
+
+    async def _send_brightness_command(self, brightness: int) -> None:
+        """Send a brightness command."""
+        await self.send_api_command(
+            AirPurifierCommands.SET_BRIGHTNESS,
+            parameters=value_map_brightness(brightness),
+        )
+
+    async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
+        """Send an RGB command."""
+        await self.send_api_command(
+            AirPurifierCommands.SET_LIGHT_COLOR,
+            parameters={
+                "red": rgb_color[0],
+                "green": rgb_color[1],
+                "blue": rgb_color[2],
+            },
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+
+        await self.send_api_command(
+            AirPurifierCommands.SET_LIGHT_SENSOR, parameters="off"
+        )
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        brightness: int | None = kwargs.get("brightness")
+        rgb_color: tuple[int, int, int] | None = kwargs.get("rgb_color")
+
+        if brightness is not None:
+            await self._send_brightness_command(brightness)
+        elif rgb_color is not None:
+            await self._send_rgb_color_command(rgb_color)
+        else:
+            await self.send_api_command(
+                AirPurifierCommands.SET_LIGHT_SENSOR, parameters="steadyMode"
+            )
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        # there is no response for light status
+        return
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
@@ -229,4 +285,6 @@ def _async_make_entity(
         return SwitchBotCloudCandleWarmerLamp(api, device, coordinator)
     if device.device_type in ["RGBIC Neon Rope Light", "RGBIC Neon Wire Rope Light"]:
         return SwitchBotCloudRGBICLight(api, device, coordinator)
+    if device.device_type in AirPurifierCommands.get_supported_devices():
+        return SwitchBotCloudAirPurifierLight(api, device, coordinator)
     return SwitchBotCloudRGBWWLight(api, device, coordinator)
