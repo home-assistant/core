@@ -268,6 +268,8 @@ async def test_subentry_unsupported_model(
         ("gpt-5.2", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.2-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.3-codex", ["none", "low", "medium", "high", "xhigh"]),
+        ("gpt-5.4", ["none", "low", "medium", "high", "xhigh"]),
+        ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
