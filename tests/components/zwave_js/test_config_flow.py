@@ -2195,7 +2195,7 @@ async def test_addon_running_already_configured(
             "lr_s2_authenticated_key": "old321",
         },
         title=TITLE,
-        unique_id=1234,  # Unique ID is purposely set to int to test migration logic
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
