@@ -280,7 +280,7 @@ async def test_missing_attribute(
 
 async def test_invalid_name_does_not_create(hass: HomeAssistant) -> None:
     """Test for invalid name."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, "binary_sensor"):
         assert await setup.async_setup_component(
             hass,
             "binary_sensor",
@@ -298,7 +298,7 @@ async def test_invalid_name_does_not_create(hass: HomeAssistant) -> None:
 
 async def test_invalid_sensor_does_not_create(hass: HomeAssistant) -> None:
     """Test invalid sensor."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, "binary_sensor"):
         assert await setup.async_setup_component(
             hass,
             "binary_sensor",
@@ -316,7 +316,7 @@ async def test_invalid_sensor_does_not_create(hass: HomeAssistant) -> None:
 
 async def test_no_sensors_does_not_create(hass: HomeAssistant) -> None:
     """Test no sensors."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, "binary_sensor"):
         assert await setup.async_setup_component(
             hass, "binary_sensor", {"binary_sensor": {"platform": "trend"}}
         )
