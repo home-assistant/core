@@ -47,7 +47,7 @@ class LaundrifyBaseSensor(SensorEntity):
     def __init__(self, device: LaundrifyDevice) -> None:
         """Initialize the sensor."""
         self._device = device
-        self._attr_device_info = self._attr_device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             name=device.name,
             manufacturer=MANUFACTURER,
