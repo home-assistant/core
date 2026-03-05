@@ -80,7 +80,6 @@ async def test_level_control_config_entities(
     assert state
     assert state.state == "255"
     
-    """Test writing LevelControl StartUpCurrentLevel (startup current level)."""
     # Set a concrete value (not null)
     await hass.services.async_call(
         "number",
