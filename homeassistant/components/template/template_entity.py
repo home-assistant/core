@@ -267,9 +267,13 @@ class TemplateEntity(AbstractTemplateEntity):
     def _get_this_variable(self) -> TemplateStateFromEntityId:
         """Create a this variable for the entity."""
         if self._preview_callback:
-            preview_entity_id = async_generate_entity_id(
-                self._entity_id_format, self._attr_name or "preview", hass=self.hass
-            )
+            if (
+                self.registry_entry
+                and (preview_entity_id := self.registry_entry.entity_id) is None
+            ) or not self.registry_entry:
+                preview_entity_id = async_generate_entity_id(
+                    self._entity_id_format, self._attr_name or "preview", hass=self.hass
+                )
             return TemplateStateFromEntityId(self.hass, preview_entity_id)
 
         return TemplateStateFromEntityId(self.hass, self.entity_id)
