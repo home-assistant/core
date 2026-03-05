@@ -29,6 +29,12 @@
     },
     "hue_activate_scene": {
       "service": "mdi:palette"
+    },
+    "set_group_state": {
+      "service": "mdi:palette"
+    },
+    "set_light_state": {
+      "service": "mdi:palette"
     }
   }
 }
