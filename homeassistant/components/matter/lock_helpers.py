@@ -14,7 +14,6 @@ from chip.clusters.Types import NullValue
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
-    CLEAR_ALL_INDEX,
     CRED_TYPE_FACE,
     CRED_TYPE_FINGER_VEIN,
     CRED_TYPE_FINGERPRINT,
@@ -220,42 +219,6 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
 
 
 # --- Credential management helpers ---
-
-
-async def _clear_user_credentials(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    user_index: int,
-) -> None:
-    """Clear all credentials for a specific user.
-
-    Fetches the user to get credential list, then clears each credential.
-    """
-    get_user_response = await matter_client.send_device_command(
-        node_id=node_id,
-        endpoint_id=endpoint_id,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=user_index),
-    )
-
-    creds = _get_attr(get_user_response, "credentials")
-    if not creds:
-        return
-
-    for cred in creds:
-        cred_type = _get_attr(cred, "credentialType")
-        cred_index = _get_attr(cred, "credentialIndex")
-        await matter_client.send_device_command(
-            node_id=node_id,
-            endpoint_id=endpoint_id,
-            command=clusters.DoorLock.Commands.ClearCredential(
-                credential=clusters.DoorLock.Structs.CredentialStruct(
-                    credentialType=cred_type,
-                    credentialIndex=cred_index,
-                ),
-            ),
-            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-        )
 
 
 class LockEndpointNotFoundError(HomeAssistantError):
@@ -557,32 +520,15 @@ async def clear_lock_user(
     node: MatterNode,
     user_index: int,
 ) -> None:
-    """Clear a user from the lock, cleaning up credentials first.
+    """Clear a user from the lock.
 
+    Per the Matter spec, ClearUser also clears all associated credentials
+    and schedules for the user.
     Use index 0xFFFE (CLEAR_ALL_INDEX) to clear all users.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
     _ensure_usr_support(lock_endpoint)
-
-    if user_index == CLEAR_ALL_INDEX:
-        # Clear all: clear all credentials first, then all users
-        await matter_client.send_device_command(
-            node_id=node.node_id,
-            endpoint_id=lock_endpoint.endpoint_id,
-            command=clusters.DoorLock.Commands.ClearCredential(
-                credential=None,
-            ),
-            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-        )
-    else:
-        # Clear credentials for this specific user before deleting them
-        await _clear_user_credentials(
-            matter_client,
-            node.node_id,
-            lock_endpoint.endpoint_id,
-            user_index,
-        )
 
     await matter_client.send_device_command(
         node_id=node.node_id,
