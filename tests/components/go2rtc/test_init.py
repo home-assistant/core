@@ -127,7 +127,7 @@ async def _test_setup_and_signaling(
         entity_id,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=h264#audio=opus#query=log_level=debug",
         ],
     )
 
@@ -145,7 +145,7 @@ async def _test_setup_and_signaling(
         entity_id,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=h264#audio=opus#query=log_level=debug",
         ],
     )
 
@@ -820,7 +820,7 @@ async def test_generic_workaround(
         camera.entity_id,
         [
             "ffmpeg:https://my_stream_url.m3u8",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=h264#audio=opus#query=log_level=debug",
         ],
     )
 
@@ -853,7 +853,7 @@ async def _test_camera_orientation(
         camera.entity_id,
         [
             expected_stream_source,
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{camera.entity_id}#video=h264#audio=opus#query=log_level=debug",
         ],
     )
 
