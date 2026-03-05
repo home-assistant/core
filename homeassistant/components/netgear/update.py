@@ -12,9 +12,8 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .coordinator import NetgearConfigEntry
+from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
 from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -42,7 +41,7 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
+        coordinator: NetgearDataCoordinator[dict[str, Any] | None],
         router: NetgearRouter,
     ) -> None:
         """Initialize a Netgear device."""

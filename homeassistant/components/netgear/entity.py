@@ -10,12 +10,10 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import NetgearDataCoordinator
 from .router import NetgearRouter
 
 
@@ -26,7 +24,7 @@ class NetgearDeviceEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: NetgearDataCoordinator[Any],
         router: NetgearRouter,
         device: dict,
     ) -> None:
@@ -94,7 +92,7 @@ class NetgearRouterCoordinatorEntity(NetgearRouterEntity, CoordinatorEntity):
     """Base class for a Netgear router entity."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[Any], router: NetgearRouter
+        self, coordinator: NetgearDataCoordinator[Any], router: NetgearRouter
     ) -> None:
         """Initialize a Netgear device."""
         CoordinatorEntity.__init__(self, coordinator)
