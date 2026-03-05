@@ -5,6 +5,8 @@ from enum import IntEnum, StrEnum
 DOMAIN = "portainer"
 DEFAULT_NAME = "Portainer"
 
+API_MAX_RETRIES = 3
+
 
 class EndpointStatus(IntEnum):
     """Portainer endpoint status."""
