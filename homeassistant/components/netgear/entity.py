@@ -13,18 +13,18 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import NetgearDataCoordinator
+from .coordinator import NetgearDataCoordinator, NetgearTrackerCoordinator
 from .router import NetgearRouter
 
 
-class NetgearDeviceEntity(CoordinatorEntity):
+class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
     """Base class for a device connected to a Netgear router."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: NetgearDataCoordinator[Any],
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         device: dict,
     ) -> None:
