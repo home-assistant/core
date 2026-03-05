@@ -37,23 +37,23 @@ ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
 }
 
 
-class _AlarmChangedByWrapper(DPCodeRawWrapper):
+class _AlarmChangedByWrapper(DPCodeRawWrapper[str]):
     """Wrapper for changed_by.
 
     Decode base64 to utf-16be string, but only if alarm has been triggered.
     """
 
-    def read_device_status(self, device: CustomerDevice) -> str | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"
-            or (status := super().read_device_status(device)) is None
+            or (status := self._read_dpcode_value(device)) is None
         ):
             return None
         return status.decode("utf-16be")
 
 
-class _AlarmStateWrapper(DPCodeEnumWrapper):
+class _AlarmStateWrapper(DPCodeEnumWrapper[AlarmControlPanelState]):
     """Wrapper for the alarm state of a device.
 
     Handles alarm mode enum values and determines the alarm state,
@@ -84,7 +84,7 @@ class _AlarmStateWrapper(DPCodeEnumWrapper):
             ):
                 return AlarmControlPanelState.TRIGGERED
 
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return self._STATE_MAPPINGS.get(status)
 
@@ -139,10 +139,10 @@ async def async_setup_entry(
                         action_wrapper=_AlarmActionWrapper(
                             master_mode.dpcode, master_mode
                         ),
-                        changed_by_wrapper=_AlarmChangedByWrapper.find_dpcode(  # type: ignore[arg-type]
+                        changed_by_wrapper=_AlarmChangedByWrapper.find_dpcode(
                             device, DPCode.ALARM_MSG
                         ),
-                        state_wrapper=_AlarmStateWrapper(  # type: ignore[arg-type]
+                        state_wrapper=_AlarmStateWrapper(
                             master_mode.dpcode, master_mode
                         ),
                     )
