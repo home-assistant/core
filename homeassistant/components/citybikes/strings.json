@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "Unable to connect to CityBikes service",
+      "need_name": "You must provide a name for the hub",
+      "no_network_chosen": "You must choose a network",
+      "unknown": "Unknown error occurred"
+    },
+    "error": {
+      "no_station_filter_chosen": "You must choose at least one station filter"
+    },
+    "step": {
+      "radius": {
+        "description": "Choose the radius around your location to monitor stations within it.",
+        "title": "Select radius"
+      },
+      "stations": {
+        "description": "Choose the station(s) you want to monitor.",
+        "title": "Select stations"
+      },
+      "user": {
+        "data": {
+          "name": "Hub name",
+          "network": "Network",
+          "station_filter": "Which stations to monitor"
+        },
+        "data_description": {
+          "name": "An optional name for this CityBikes hub",
+          "network": "The bike share network you want to monitor",
+          "station_filter": "Choose to monitor a selection of stations, stations near your location, or both"
+        },
+        "title": "Pick CityBike network"
+      }
+    }
+  }
+}

@@ -2,8 +2,11 @@
   "domain": "citybikes",
   "name": "CityBikes",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/citybikes",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
+  "loggers": ["citybikes"],
   "quality_scale": "legacy",
   "requirements": ["python-citybikes==0.3.3"]
 }
