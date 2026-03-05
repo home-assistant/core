@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick device tracker based on a config entry."""
-    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     data = coordinator.data
     assert data is not None
