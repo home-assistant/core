@@ -494,6 +494,27 @@ async def test_arming_state_unknown_mode(hass: HomeAssistant, mock_nessclient) -
     await hass.async_block_till_done()
 
 
+async def test_homeassistant_stop_event(hass: HomeAssistant, mock_nessclient) -> None:
+    """Test client is closed on homeassistant_stop event."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Fire the homeassistant_stop event
+    hass.bus.async_fire("homeassistant_stop")
+    await hass.async_block_till_done()
+
+    # Client should be closed
+    mock_nessclient.close.assert_called()
+
+
 async def test_entry_reload_on_update(hass: HomeAssistant, mock_nessclient) -> None:
     """Test config entry reload when update listener is triggered."""
     entry = MockConfigEntry(
