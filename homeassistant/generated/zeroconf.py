@@ -566,6 +566,12 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "airq",
+            "properties": {
+                "device": "air-q",
+            },
+        },
+        {
             "domain": "awair",
             "name": "awair*",
         },
