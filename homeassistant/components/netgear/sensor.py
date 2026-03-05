@@ -27,12 +27,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import NetgearConfigEntry
-from .entity import (
-    NetgearDataCoordinator,
-    NetgearDeviceEntity,
-    NetgearRouterCoordinatorEntity,
-)
+from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)

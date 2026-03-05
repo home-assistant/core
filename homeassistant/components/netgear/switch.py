@@ -13,8 +13,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import NetgearConfigEntry
-from .entity import NetgearDataCoordinator, NetgearDeviceEntity, NetgearRouterEntity
+from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .entity import NetgearDeviceEntity, NetgearRouterEntity
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
