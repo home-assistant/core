@@ -13,8 +13,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
-from .const import CONF_HOST, CONF_NAME, CONF_PORT, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -185,7 +186,11 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data={CONF_HOST: new_host, CONF_PORT: new_port, CONF_NAME: new_name},
+                    data={
+                        CONF_HOST: new_host,
+                        CONF_PORT: new_port,
+                        CONF_NAME: new_name,
+                    },
                     unique_id=new_unique_id,
                     title=new_name,
                 )

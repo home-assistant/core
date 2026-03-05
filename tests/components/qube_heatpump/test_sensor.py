@@ -9,7 +9,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from python_qube_heatpump.models import QubeState
 
-from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN
+from homeassistant.components.qube_heatpump.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -17,34 +18,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_qube_state_for_tests() -> QubeState:
-    """Return a mock QubeState object for sensor tests."""
-    state = QubeState()
-    state.temp_supply = 45.0
-    state.temp_return = 40.0
-    state.temp_outside = 10.0
-    state.temp_source_in = 8.0
-    state.temp_source_out = 12.0
-    state.temp_room = 21.0
-    state.temp_dhw = 50.0
-    state.power_thermic = 5000.0
-    state.power_electric = 1200.0
-    state.energy_total_electric = 123.456
-    state.energy_total_thermic = 500.0
-    state.cop_calc = 4.2
-    state.compressor_speed = 3000.0
-    state.flow_rate = 15.5
-    state.setpoint_room_heat_day = 21.0
-    state.setpoint_room_heat_night = 18.0
-    state.setpoint_room_cool_day = 25.0
-    state.setpoint_room_cool_night = 23.0
-    state.setpoint_dhw = 55.0
-    state.status_code = 1
-    return state
-
-
-@pytest.fixture
-def sensor_mock_client(mock_qube_state_for_tests: QubeState) -> MagicMock:
+def sensor_mock_client(mock_qube_state: QubeState) -> MagicMock:
     """Create a mock client for sensor tests."""
     client = MagicMock()
     client.host = "1.2.3.4"
@@ -53,7 +27,7 @@ def sensor_mock_client(mock_qube_state_for_tests: QubeState) -> MagicMock:
     client.connect = AsyncMock(return_value=True)
     client.is_connected = True
     client.close = AsyncMock(return_value=None)
-    client.get_all_data = AsyncMock(return_value=mock_qube_state_for_tests)
+    client.get_all_data = AsyncMock(return_value=mock_qube_state)
     return client
 
 
@@ -63,13 +37,12 @@ def get_entity_id_by_unique_id_suffix(
     """Get entity_id from entity registry by unique_id suffix."""
     entity_registry = er.async_get(hass)
     unique_id = f"{entry_unique_id}-{key}"
-    entity_entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    return entity_entry
+    return entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
 
 
 async def test_sensor_setup(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test sensors are created during setup."""
@@ -97,7 +70,7 @@ async def test_sensor_setup(
 
 async def test_temperature_sensors(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test temperature sensor values."""
@@ -128,7 +101,7 @@ async def test_temperature_sensors(
 
 async def test_power_sensors(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test power sensor values."""
@@ -159,7 +132,7 @@ async def test_power_sensors(
 
 async def test_computed_status_sensor(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test computed status sensor."""
@@ -191,7 +164,7 @@ async def test_computed_status_sensor(
 
 async def test_device_info(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test device info is set correctly."""
@@ -221,7 +194,7 @@ async def test_device_info(
 
 async def test_cop_sensor(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test COP sensor."""
@@ -241,9 +214,7 @@ async def test_cop_sensor(
         await hass.async_block_till_done()
 
         # Look up entity by unique_id via entity registry
-        entity_id = get_entity_id_by_unique_id_suffix(
-            hass, entry.unique_id, "cop_calc"
-        )
+        entity_id = get_entity_id_by_unique_id_suffix(hass, entry.unique_id, "cop_calc")
         assert entity_id is not None
         state = hass.states.get(entity_id)
         assert state is not None
@@ -252,7 +223,7 @@ async def test_cop_sensor(
 
 async def test_flow_rate_sensor(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test flow rate sensor."""
@@ -319,7 +290,7 @@ async def test_sensor_with_none_status_code(hass: HomeAssistant) -> None:
 
 async def test_energy_sensors(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
     """Test energy sensors exist and have correct values."""
@@ -396,7 +367,7 @@ async def test_total_energy_sensor_with_none_data(hass: HomeAssistant) -> None:
 
 async def test_sensor_coordinator_refresh_updates_values(
     hass: HomeAssistant,
-    mock_qube_state_for_tests: QubeState,
+    mock_qube_state: QubeState,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that coordinator refresh updates sensor values."""
@@ -407,7 +378,7 @@ async def test_sensor_coordinator_refresh_updates_values(
     client.connect = AsyncMock(return_value=True)
     client.is_connected = True
     client.close = AsyncMock(return_value=None)
-    client.get_all_data = AsyncMock(return_value=mock_qube_state_for_tests)
+    client.get_all_data = AsyncMock(return_value=mock_qube_state)
 
     with patch(
         "homeassistant.components.qube_heatpump.hub.QubeClient",

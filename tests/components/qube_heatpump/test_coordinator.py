@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from python_qube_heatpump.models import QubeState
 
-from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN
+from homeassistant.components.qube_heatpump.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,8 +23,7 @@ def get_entity_id_by_unique_id_suffix(
     """Get entity_id from entity registry by unique_id suffix."""
     entity_registry = er.async_get(hass)
     unique_id = f"{entry_unique_id}-{key}"
-    entity_entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    return entity_entry
+    return entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
 
 
 async def test_coordinator_fetches_data(

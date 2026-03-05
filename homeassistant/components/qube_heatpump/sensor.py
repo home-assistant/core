@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from python_qube_heatpump.models import QubeState
 
@@ -15,18 +15,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import DOMAIN
+from .entity import QubeEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
     from . import QubeConfigEntry
+    from .coordinator import QubeCoordinator
     from .hub import QubeHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -261,16 +260,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class QubeSensor(CoordinatorEntity, SensorEntity):
+class QubeSensor(QubeEntity, SensorEntity):
     """Qube generic sensor."""
 
     entity_description: QubeSensorEntityDescription
     _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: Any,
+        coordinator: QubeCoordinator,
         hub: QubeHub,
         entry: QubeConfigEntry,
         version: str,
@@ -278,26 +276,12 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
         description: QubeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, hub, version, device_name)
         self.entity_description = description
-        self._hub = hub
-        self._version = version
-        self._device_name = device_name
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
         # Use key (vendor_id equivalent) for stable, predictable entity IDs
         label = slugify(device_name) or "qube"
         self.entity_id = f"sensor.{label}_{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=self._device_name,
-            manufacturer="Qube",
-            model="Heat Pump",
-            sw_version=self._version,
-        )
 
     @property
     def native_value(self) -> StateType:
@@ -308,11 +292,10 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
         return getattr(data, self.entity_description.key_path, None)
 
 
-class QubeStatusSensor(CoordinatorEntity, SensorEntity):
+class QubeStatusSensor(QubeEntity, SensorEntity):
     """Heat pump status sensor with enum device class."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_translation_key = "status_heatpump"
     _attr_options = [
@@ -329,32 +312,18 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: Any,
+        coordinator: QubeCoordinator,
         hub: QubeHub,
         entry: QubeConfigEntry,
         version: str,
         device_name: str,
     ) -> None:
         """Initialize status sensor."""
-        super().__init__(coordinator)
-        self._hub = hub
-        self._version = version
-        self._device_name = device_name
+        super().__init__(coordinator, hub, version, device_name)
         self._attr_unique_id = f"{entry.unique_id}-status_heatpump"
         # Use translation_key for stable, predictable entity IDs
         label = slugify(device_name) or "qube"
         self.entity_id = f"sensor.{label}_status_heatpump"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=self._device_name,
-            manufacturer="Qube",
-            model="Heat Pump",
-            sw_version=self._version,
-        )
 
     @property
     def native_value(self) -> str | None:
@@ -364,4 +333,6 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
             return None
 
         code = data.status_code
+        if code is None:
+            return None
         return STATUS_MAP.get(code)

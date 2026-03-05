@@ -7,12 +7,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.qube_heatpump.config_flow import _async_resolve_host
-from homeassistant.components.qube_heatpump.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    DOMAIN,
-)
+from homeassistant.components.qube_heatpump.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

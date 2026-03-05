@@ -8,18 +8,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.loader import async_get_integration, async_get_loaded_integration
 
-from .const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_UNIT_ID,
-    DEFAULT_PORT,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_UNIT_ID, DEFAULT_PORT, DOMAIN, PLATFORMS
 from .coordinator import QubeCoordinator
 from .hub import QubeHub
 

@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured.",
-      "duplicate_ip": "Another Qube heat pump is already configured with this IP address.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {

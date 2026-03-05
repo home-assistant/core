@@ -47,6 +47,11 @@ class QubeHub:
         return self.client.unit
 
     @property
+    def is_connected(self) -> bool:
+        """Return whether the client is connected."""
+        return self.client.is_connected
+
+    @property
     def label(self) -> str:
         """Return label."""
         return self._label

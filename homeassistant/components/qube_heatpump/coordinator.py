@@ -50,7 +50,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
     async def _async_update_data(self) -> QubeState:
         """Fetch data from the hub."""
         # Ensure connection
-        if not self.hub.client.is_connected:
+        if not self.hub.is_connected:
             await self.hub.async_connect()
 
         try:

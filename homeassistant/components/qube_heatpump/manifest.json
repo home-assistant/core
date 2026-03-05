@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/qube_heatpump",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["homeassistant.components.qube_heatpump"],
+  "loggers": ["python_qube_heatpump"],
   "quality_scale": "bronze",
   "requirements": ["python-qube-heatpump==1.5.1"]
 }

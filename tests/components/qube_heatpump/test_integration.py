@@ -2,15 +2,13 @@
 
 from unittest.mock import MagicMock
 
-import pytest
-
-from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN
+from homeassistant.components.qube_heatpump.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def test_setup_with_entities(
     hass: HomeAssistant, mock_qube_client: MagicMock
 ) -> None:
