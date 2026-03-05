@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -209,8 +208,7 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is None:
             try:
-                async with asyncio.timeout(DEFAULT_TIMEOUT):
-                    models = await self._client.async_list_models()
+                models = await self._client.async_list_models()
             except LMStudioAuthError, LMStudioConnectionError, LMStudioResponseError:
                 _LOGGER.exception("Failed to get models from server")
                 return self.async_abort(reason="cannot_connect")

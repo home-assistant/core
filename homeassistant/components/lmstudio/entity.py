@@ -407,4 +407,8 @@ class LMStudioBaseLLMEntity(Entity):
                 continue
 
         if stream_error:
-            raise HomeAssistantError(stream_error)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_error",
+                translation_placeholders={"message": stream_error},
+            )

@@ -246,11 +246,13 @@ async def test_stream_response_error_event_raises(
     entity = _make_task_entity(hass, entry)
     chat_log = _DummyChatLog(conversation_id="conv-2", traces=[])
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         async for _ in entity._async_stream_response(
             chat_log, {"model": "test-model"}, "sig"
         ):
             pass
+
+    assert err.value.translation_key == "stream_error"
 
 
 async def test_stream_response_non_string_delta_skipped(
@@ -259,7 +261,7 @@ async def test_stream_response_non_string_delta_skipped(
     """Test message.delta events with non-string content are skipped."""
     events = [
         LMStudioStreamEvent("message.start", {}),
-        LMStudioStreamEvent("message.delta", {"content": 42}),  # non-string — skipped
+        LMStudioStreamEvent("message.delta", {"content": 42}),
         LMStudioStreamEvent("message.delta", {"content": "hello"}),
         LMStudioStreamEvent("chat.end", {}),
     ]
@@ -281,7 +283,6 @@ async def test_stream_response_non_string_delta_skipped(
         )
     ]
 
-    # Only the valid string delta should be yielded (with role since new_message=True)
     assert len(deltas) == 1
     assert deltas[0]["content"] == "hello"
     assert deltas[0]["role"] == "assistant"
@@ -341,7 +342,6 @@ def test_format_history_with_tool_result_and_other_roles(
         tool_name="my_tool",
         tool_result="result_data",
     )
-    # Current user message that gets excluded from history (last item)
     user2 = conversation.UserContent(content="new")
 
     @dataclass
@@ -370,11 +370,9 @@ def test_format_history_non_user_content_before_any_user_message(
     class _ChatLog:
         content: list
 
-    # assistant before any user message in [1:-1] — should be skipped
     log = _ChatLog(content=[system, assistant, user_latest])
     result = entity._format_history(log, max_history=10)
 
-    # The assistant content before a user message has no current_round, so skipped
     assert result == ""
 
 
@@ -410,7 +408,7 @@ async def test_encode_attachments_guesses_mime_type(
 
     attachment = conversation.Attachment(
         media_content_id="m",
-        mime_type=None,  # not provided — should be guessed from filename
+        mime_type=None,
         path=file_path,
     )
 

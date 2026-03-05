@@ -122,9 +122,8 @@ async def test_unavailable_logging_and_recovery(
     async def fail_stream(
         self, payload: dict[str, Any]
     ) -> AsyncGenerator[LMStudioStreamEvent]:
-        if payload.get("_force_yield"):
-            yield  # pragma: no cover - ensures async generator
         raise LMStudioConnectionError("offline")
+        yield  # pylint: disable=unreachable
 
     with patch(
         "homeassistant.components.lmstudio.client.LMStudioClient.async_stream_chat",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 import json
 import logging
@@ -87,7 +87,7 @@ class LMStudioClient:
 
     async def async_stream_chat(
         self, payload: dict[str, Any]
-    ) -> AsyncIterator[LMStudioStreamEvent]:
+    ) -> AsyncGenerator[LMStudioStreamEvent]:
         """Stream chat events from the server."""
         url = f"{self._base_url}/api/v1/chat"
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=self._timeout)
@@ -113,7 +113,7 @@ class LMStudioClient:
 
 async def _iter_sse(
     response: aiohttp.ClientResponse,
-) -> AsyncIterator[LMStudioStreamEvent]:
+) -> AsyncGenerator[LMStudioStreamEvent]:
     """Yield parsed SSE events from a response."""
     event_name: str | None = None
     data_lines: list[str] = []

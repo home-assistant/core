@@ -98,7 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> 
     entry.runtime_data = LMStudioRuntimeData(
         client=client,
         conversation_store=LMStudioConversationStore(),
-        unavailable_logged=False,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

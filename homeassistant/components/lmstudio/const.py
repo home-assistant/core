@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Final
 
 DOMAIN: Final = "lmstudio"
-DEFAULT_NAME: Final = "LM Studio"
 
 CONF_MODEL: Final = "model"
 CONF_PROMPT: Final = "prompt"

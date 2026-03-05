@@ -124,7 +124,6 @@ async def test_generate_data_no_assistant_content(
     async def stream_chat(
         self, payload: dict[str, Any]
     ) -> AsyncGenerator[LMStudioStreamEvent]:
-        # Yields nothing — chat log ends without AssistantContent
         yield LMStudioStreamEvent("chat.end", {"response_id": "resp-1"})
 
     with (

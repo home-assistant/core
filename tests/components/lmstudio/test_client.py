@@ -233,7 +233,7 @@ async def test_iter_sse_skips_flush_with_no_data() -> None:
     """Test that a flush (empty line) after an event name but no data is skipped."""
     lines = [
         b"event: message.start\n",
-        b"\n",  # flush with no data lines — event_name is reset, no event yielded
+        b"\n",
         b'data: {"type": "chat.end"}\n',
         b"\n",
     ]
@@ -265,7 +265,6 @@ async def test_iter_sse_yields_trailing_data() -> None:
     """Test that data at end of stream without a final empty line is still yielded."""
     lines = [
         b'data: {"type": "chat.end", "response_id": "resp-1"}\n',
-        # No final empty line — the trailing flush path
     ]
 
     response = _FakeResponse(lines)
@@ -279,7 +278,6 @@ async def test_iter_sse_skips_trailing_invalid_json() -> None:
     """Test that trailing data with invalid JSON at end of stream is skipped."""
     lines = [
         b"data: {bad json at eof\n",
-        # No final empty line — trailing flush with invalid JSON
     ]
 
     response = _FakeResponse(lines)
