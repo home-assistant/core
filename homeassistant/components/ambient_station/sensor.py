@@ -298,6 +298,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
