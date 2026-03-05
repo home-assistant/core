@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
 
 from .entity import QubeEntity
 
@@ -259,9 +258,6 @@ class QubeSensor(QubeEntity, SensorEntity):
         super().__init__(coordinator, hub, version, device_name)
         self.entity_description = description
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
-        # Use key (vendor_id equivalent) for stable, predictable entity IDs
-        label = slugify(device_name) or "qube"
-        self.entity_id = f"sensor.{label}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -301,9 +297,6 @@ class QubeStatusSensor(QubeEntity, SensorEntity):
         """Initialize status sensor."""
         super().__init__(coordinator, hub, version, device_name)
         self._attr_unique_id = f"{entry.unique_id}-status_heatpump"
-        # Use translation_key for stable, predictable entity IDs
-        label = slugify(device_name) or "qube"
-        self.entity_id = f"sensor.{label}_status_heatpump"
 
     @property
     def native_value(self) -> str | None:
