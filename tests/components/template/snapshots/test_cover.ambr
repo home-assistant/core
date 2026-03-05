@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'friendly_name': 'My template',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
