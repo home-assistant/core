@@ -267,7 +267,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.28.0
+aiohomeconnect==0.30.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -794,7 +794,7 @@ energyid-webhooks==0.0.14
 energyzero==4.0.1
 
 # homeassistant.components.enocean
-enocean==0.50
+enocean-async==0.4.1
 
 # homeassistant.components.environment_canada
 env-canada==0.13.2
@@ -1462,7 +1462,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.4
+onedrive-personal-sdk==0.1.5
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1756,7 +1756,7 @@ pydroplet==2.3.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.2.1
+pyeconet==0.2.2
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0

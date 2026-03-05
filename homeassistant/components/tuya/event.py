@@ -29,19 +29,17 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _EventEnumWrapper(DPCodeEnumWrapper):
+class _EventEnumWrapper(DPCodeEnumWrapper[tuple[str, None]]):
     """Wrapper for event enum DP codes."""
 
-    def read_device_status(  # type: ignore[override]
-        self, device: CustomerDevice
-    ) -> tuple[str, None] | None:
+    def read_device_status(self, device: CustomerDevice) -> tuple[str, None] | None:
         """Return the event details."""
-        if (raw_value := super().read_device_status(device)) is None:
+        if (raw_value := self._read_dpcode_value(device)) is None:
             return None
         return (raw_value, None)
 
 
-class _AlarmMessageWrapper(DPCodeStringWrapper):
+class _AlarmMessageWrapper(DPCodeStringWrapper[tuple[str, dict[str, Any]]]):
     """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
 
     def __init__(self, dpcode: str, type_information: Any) -> None:
@@ -49,16 +47,16 @@ class _AlarmMessageWrapper(DPCodeStringWrapper):
         super().__init__(dpcode, type_information)
         self.options = ["triggered"]
 
-    def read_device_status(  # type: ignore[override]
+    def read_device_status(
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the alarm message."""
-        if (raw_value := super().read_device_status(device)) is None:
+        if (raw_value := self._read_dpcode_value(device)) is None:
             return None
         return ("triggered", {"message": b64decode(raw_value).decode("utf-8")})
 
 
-class _DoorbellPicWrapper(DPCodeRawWrapper):
+class _DoorbellPicWrapper(DPCodeRawWrapper[tuple[str, dict[str, Any]]]):
     """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
 
     It is expected that the RAW data is base64/utf8 encoded URL of the picture.
@@ -69,11 +67,11 @@ class _DoorbellPicWrapper(DPCodeRawWrapper):
         super().__init__(dpcode, type_information)
         self.options = ["triggered"]
 
-    def read_device_status(  # type: ignore[override]
+    def read_device_status(
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the doorbell picture."""
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return ("triggered", {"message": status.decode("utf-8")})
 
