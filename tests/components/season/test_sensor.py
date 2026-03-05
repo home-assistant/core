@@ -5,8 +5,6 @@ from datetime import datetime
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.util.dt import UTC
-
 from homeassistant.components.season.const import (
     DOMAIN,
     TYPE_ASTRONOMICAL,
@@ -22,6 +20,7 @@ from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_TYPE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.dt import UTC
 
 from tests.common import MockConfigEntry
 

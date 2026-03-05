@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 
 import ephem
 
@@ -58,17 +58,21 @@ def get_season(
         return None
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
-        spring_start = ephem.next_equinox(str(current_date.year)).datetime().replace(
-            tzinfo=dt_util.UTC
+        spring_start = (
+            ephem.next_equinox(str(current_date.year))
+            .datetime()
+            .replace(tzinfo=dt_util.UTC)
         )
-        summer_start = ephem.next_solstice(str(current_date.year)).datetime().replace(
-            tzinfo=dt_util.UTC
+        summer_start = (
+            ephem.next_solstice(str(current_date.year))
+            .datetime()
+            .replace(tzinfo=dt_util.UTC)
         )
-        autumn_start = ephem.next_equinox(spring_start).datetime().replace(
-            tzinfo=dt_util.UTC
+        autumn_start = (
+            ephem.next_equinox(spring_start).datetime().replace(tzinfo=dt_util.UTC)
         )
-        winter_start = ephem.next_solstice(summer_start).datetime().replace(
-            tzinfo=dt_util.UTC
+        winter_start = (
+            ephem.next_solstice(summer_start).datetime().replace(tzinfo=dt_util.UTC)
         )
     else:
         spring_start = current_date.replace(
@@ -114,6 +118,4 @@ class SeasonSensorEntity(SensorEntity):
 
     def update(self) -> None:
         """Update season."""
-        self._attr_native_value = get_season(
-            dt_util.now(), self.hemisphere, self.type
-        )
+        self._attr_native_value = get_season(dt_util.now(), self.hemisphere, self.type)
