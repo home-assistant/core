@@ -72,7 +72,6 @@
         "name": "Display"
       }
     },
-
     "sensor": {
       "light_level": {
         "name": "Light level"

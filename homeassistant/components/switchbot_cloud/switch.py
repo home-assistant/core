@@ -3,7 +3,14 @@
 import asyncio
 from typing import Any
 
-from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotAPI
+from switchbot_api import (
+    AirPurifierCommands,
+    CommonCommands,
+    Device,
+    PowerState,
+    Remote,
+    SwitchBotAPI,
+)
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -43,7 +50,7 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
     """Representation of a SwitchBot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_name = None
+    _attr_name: str | None = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -135,6 +142,18 @@ class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
         )
 
 
+class SwitchBotCloudAirPurifierChildLock(SwitchBotCloudSwitch):
+    """Representation of a SwitchBot AirPurifier ChildLock."""
+
+    _attr_name = "Child Lock"
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
+        self._attr_is_on = self.coordinator.data.get("childLock") == 1
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
@@ -148,5 +167,7 @@ def _async_make_entity(
         return SwitchBotCloudPlugSwitch(api, device, coordinator)
     if "Bot" in device.device_type:
         return SwitchBotCloudSwitch(api, device, coordinator)
+    if device.device_type in AirPurifierCommands.get_supported_devices():
+        return SwitchBotCloudAirPurifierChildLock(api, device, coordinator)
 
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")
