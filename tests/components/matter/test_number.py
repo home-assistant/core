@@ -90,6 +90,18 @@ async def test_level_control_config_entities(
         blocking=True,
     )
 
+    # Verify write
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.LevelControl.Attributes.StartUpCurrentLevel,
+        ),
+        value=128,
+    )
+
+    matter_client.write_attribute.reset_mock()
     # Set a null-equivalent value (255 should map to None on the wire)
     await hass.services.async_call(
         "number",
@@ -101,17 +113,9 @@ async def test_level_control_config_entities(
         blocking=True,
     )
 
-    # Verify both writes
-    assert matter_client.write_attribute.call_count == 2
+    # Verify write
+    assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        attribute_path=create_attribute_path_from_attribute(
-            endpoint_id=1,
-            attribute=clusters.LevelControl.Attributes.StartUpCurrentLevel,
-        ),
-        value=128,
-    )
-    assert matter_client.write_attribute.call_args_list[1] == call(
         node_id=matter_node.node_id,
         attribute_path=create_attribute_path_from_attribute(
             endpoint_id=1,
