@@ -126,9 +126,7 @@ async def async_setup_entry(
 
             new_entities.extend(
                 [
-                    NetgearAllowBlock(
-                        coordinator_tracker, router, device, entity_description
-                    )
+                    NetgearAllowBlock(coordinator_tracker, device, entity_description)
                     for entity_description in SWITCH_TYPES
                 ]
             )
@@ -150,12 +148,11 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: NetgearTrackerCoordinator,
-        router: NetgearRouter,
         device: dict,
         entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router, device)
+        super().__init__(coordinator, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._mac}-{entity_description.key}"
         self.async_update_device()
