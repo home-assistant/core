@@ -4,7 +4,6 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components import conversation
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -13,7 +12,6 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
