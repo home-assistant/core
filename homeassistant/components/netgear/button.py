@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -56,7 +56,7 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: NetgearDataCoordinator[bool],
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         entity_description: NetgearButtonEntityDescription,
     ) -> None:

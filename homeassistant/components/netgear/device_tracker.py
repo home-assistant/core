@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEVICE_ICONS
-from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearDeviceEntity
 from .router import NetgearRouter
 
@@ -58,7 +58,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
 
     def __init__(
         self,
-        coordinator: NetgearDataCoordinator[bool],
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         device: dict,
     ) -> None:
