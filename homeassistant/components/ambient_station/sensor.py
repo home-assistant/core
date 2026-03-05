@@ -241,6 +241,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMRELIN,
@@ -248,6 +249,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_CO2,
