@@ -147,6 +147,18 @@ class SwitchBotCloudAirPurifierChildLock(SwitchBotCloudSwitch):
 
     _attr_name = "Child Lock"
 
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        await self.send_api_command(AirPurifierCommands.SET_CHILD_LOCK, parameters=1)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        await self.send_api_command(AirPurifierCommands.SET_CHILD_LOCK, parameters=0)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:

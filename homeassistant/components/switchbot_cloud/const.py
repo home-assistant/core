@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "switchbot_cloud"
 ENTRY_TITLE = "SwitchBot Cloud"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=600)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_HUMIDITY = "humidity"
@@ -28,6 +28,14 @@ HUMIDITY_LEVELS = {
     34: 101,  # Low humidity mode
     67: 102,  # Medium humidity mode
     100: 103,  # High humidity mode
+}
+
+
+AirPurifierFanSpeedMapGear = {
+    0: 0,
+    33: 1,
+    66: 2,
+    100: 3,
 }
 
 
