@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: This integration does not provide any service actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Brands repo entry will be submitted separately.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
