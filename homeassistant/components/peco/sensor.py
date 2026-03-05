@@ -21,8 +21,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import PECOCoordinatorData
 from .const import ATTR_CONTENT, CONF_COUNTY, DOMAIN
+from .coordinator import PECOCoordinatorData
 
 
 @dataclass(frozen=True, kw_only=True)
