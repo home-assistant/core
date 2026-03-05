@@ -95,7 +95,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Pick a lock from HA's BLE cache."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and CONF_ADDRESS in user_input:
+        if user_input is not None:
             address = user_input[CONF_ADDRESS]
 
             await self.async_set_unique_id(address.replace(":", ""))
