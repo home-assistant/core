@@ -3633,6 +3633,12 @@
     "lg": {
       "name": "LG",
       "integrations": {
+        "lg_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "LG Infrared"
+        },
         "lg_netcast": {
           "integration_type": "device",
           "config_flow": true,
@@ -3658,12 +3664,6 @@
           "name": "LG webOS TV"
         }
       }
-    },
-    "lg_infrared": {
-      "name": "LG Infrared",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
