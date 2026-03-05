@@ -267,3 +267,53 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
     state = hass.states.get(entity3.entity_id)
     assert state
     assert state.attributes == {"supported_features": NotifyEntityFeature(0)}
+
+
+async def test_per_entity_service_registration(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test that individual services are registered for each notify entity."""
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+
+    entity = MockNotifyEntity(name="test_notifier", entity_id="notify.test_notifier")
+    # Reset any previous mock calls
+    entity.send_message_mock_calls.reset_mock()
+
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the individual service is registered
+    assert hass.services.has_service(DOMAIN, "test_notifier")
+
+    # Test calling the individual service (like alerts do)
+    await hass.services.async_call(
+        DOMAIN,
+        "test_notifier",
+        {
+            notify.ATTR_MESSAGE: "Test via individual service",
+            notify.ATTR_TITLE: "Alert Title",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entity.send_message_mock_calls.assert_called_once_with(
+        "Test via individual service", title="Alert Title"
+    )
+
+    # Test unloading removes the service
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.services.has_service(DOMAIN, "test_notifier")

@@ -135,6 +135,7 @@ class NotifyEntity(RestoreEntity):
     _attr_device_class: None
     _attr_state: None = None
     __last_notified_isoformat: str | None = None
+    __service_name: str | None = None
 
     @cached_property
     @final
@@ -154,6 +155,37 @@ class NotifyEntity(RestoreEntity):
         state = await self.async_get_last_state()
         if state is not None and state.state not in (STATE_UNAVAILABLE, None):
             self.__set_state(state.state)
+
+        # Register individual per entity services for backwards compatibility
+        if self.entity_id and self.entity_id.startswith(f"{DOMAIN}."):
+            self.__service_name = self.entity_id[len(DOMAIN) + 1 :]
+
+            async def _async_notify_service_handler(service_call: ServiceCall) -> None:
+                """Handle the notify service call for this entity."""
+                # Extract message and optional title to match entity service behavior
+                kwargs = {ATTR_MESSAGE: service_call.data[ATTR_MESSAGE]}
+                if ATTR_TITLE in service_call.data:
+                    kwargs[ATTR_TITLE] = service_call.data[ATTR_TITLE]
+                await self._async_send_message(**kwargs)
+
+            # Only register if not already registered
+            if not self.hass.services.has_service(DOMAIN, self.__service_name):
+                self.hass.services.async_register(
+                    DOMAIN,
+                    self.__service_name,
+                    _async_notify_service_handler,
+                    schema=NOTIFY_SERVICE_SCHEMA,
+                )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when the notify entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        # Unregister individual service when entity is removed
+        if self.__service_name and self.hass.services.has_service(
+            DOMAIN, self.__service_name
+        ):
+            self.hass.services.async_remove(DOMAIN, self.__service_name)
 
     @final
     async def _async_send_message(self, **kwargs: Any) -> None:
