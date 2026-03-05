@@ -461,7 +461,7 @@ class Entity(
     internal_integration_suggested_object_id: str | None
 
     # A group information in case the entity represents a group
-    group: Group | None
+    group: Group | None = None
     __group: Group | None = None
 
     # If we reported if this entity was slow
@@ -1514,7 +1514,7 @@ class Entity(
             )
             self._async_subscribe_device_updates()
 
-        if hasattr(self, "group") and self.group is not None:
+        if self.group is not None:
             if not isinstance(self.group, Group):
                 report_usage(  # type: ignore[unreachable]
                     f"sets a `group` attribute on entity {self.entity_id} which is "
