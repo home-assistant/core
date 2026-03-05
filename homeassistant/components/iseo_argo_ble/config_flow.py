@@ -197,7 +197,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_gw_register(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Register the UUID as a gateway (requires Master Card)."""
+        """Register the gateway and enable log notifications (requires Master Card)."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if not (
@@ -215,59 +215,19 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     ble_device=ble_device,
                 )
                 try:
-                    await client.register_user(name="Home Assistant")
-                    return await self.async_step_gw_register_logs()
-                except IseoConnectionError:
-                    errors["base"] = "cannot_connect"
-                except IseoAuthError as exc:
-                    _LOGGER.debug("Gateway registration failed: %s", exc)
-                    errors["base"] = "auth_failed"
-                except Exception:
-                    _LOGGER.exception("Unexpected error during gateway registration")
-                    errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="gw_register",
-            errors=errors,
-        )
-
-    async def async_step_gw_register_logs(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Enable log notifications for the gateway (requires Master Card)."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if not (
-                ble_device := async_ble_device_from_address(
-                    self.hass, self._address, connectable=True
-                )
-            ):
-                errors["base"] = "cannot_connect"
-            else:
-                client = IseoClient(
-                    address=self._address,
-                    uuid_bytes=bytes.fromhex(self._uuid_hex),
-                    identity_priv=self._gw_priv,
-                    subtype=DEFAULT_USER_SUBTYPE,
-                    ble_device=ble_device,
-                )
-                try:
-                    await client.gw_register_log_notif()
+                    await client.setup_gateway(name="Home Assistant")
                     return self._async_create_iseo_entry()
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
                 except IseoAuthError as exc:
-                    _LOGGER.debug("Gateway log registration failed: %s", exc)
+                    _LOGGER.debug("Gateway setup failed: %s", exc)
                     errors["base"] = "auth_failed"
                 except Exception:
-                    _LOGGER.exception(
-                        "Unexpected error during gateway log registration"
-                    )
+                    _LOGGER.exception("Unexpected error during gateway setup")
                     errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="gw_register_logs",
-            data_schema=vol.Schema({}),
+            step_id="gw_register",
             errors=errors,
         )
 

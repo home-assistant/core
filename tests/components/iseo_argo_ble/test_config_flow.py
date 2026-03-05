@@ -110,9 +110,7 @@ async def test_bluetooth_discovery_confirm_and_register(
 
     # Register gateway — mock the client
     mock_client = MagicMock()
-    mock_client.register_user = AsyncMock(return_value=None)
-    mock_client.gw_register_log_notif = AsyncMock(return_value=None)
-    mock_client.read_users = AsyncMock(return_value=[])
+    mock_client.setup_gateway = AsyncMock(return_value=None)
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.IseoClient",
@@ -122,8 +120,7 @@ async def test_bluetooth_discovery_confirm_and_register(
             result2["flow_id"], user_input={}
         )
 
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "gw_register_logs"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_no_devices(hass: HomeAssistant) -> None:
@@ -187,7 +184,7 @@ async def test_gw_register_connection_error(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "gw_register"
 
     mock_client = MagicMock()
-    mock_client.register_user = AsyncMock(side_effect=IseoConnectionError)
+    mock_client.setup_gateway = AsyncMock(side_effect=IseoConnectionError)
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.IseoClient",
@@ -221,7 +218,7 @@ async def test_gw_register_auth_error(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "gw_register"
 
     mock_client = MagicMock()
-    mock_client.register_user = AsyncMock(side_effect=IseoAuthError)
+    mock_client.setup_gateway = AsyncMock(side_effect=IseoAuthError)
 
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.IseoClient",
@@ -265,8 +262,8 @@ async def test_gw_register_no_ble_device(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_gw_register_logs_unknown_error(hass: HomeAssistant) -> None:
-    """Test gw_register_logs handles unknown error."""
+async def test_gw_register_unknown_error(hass: HomeAssistant) -> None:
+    """Test gw_register handles unknown error."""
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
         return_value=True,
@@ -283,9 +280,8 @@ async def test_gw_register_logs_unknown_error(hass: HomeAssistant) -> None:
     )
     assert result2["step_id"] == "gw_register"
 
-    # Register gateway success
     mock_client = MagicMock()
-    mock_client.register_user = AsyncMock(return_value=None)
+    mock_client.setup_gateway = AsyncMock(side_effect=Exception("BOOM"))
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.IseoClient",
         return_value=mock_client,
@@ -294,17 +290,5 @@ async def test_gw_register_logs_unknown_error(hass: HomeAssistant) -> None:
             result2["flow_id"], user_input={}
         )
 
-    assert result3["step_id"] == "gw_register_logs"
-
-    # Now fail gw_register_logs
-    mock_client.gw_register_log_notif = AsyncMock(side_effect=Exception("BOOM"))
-    with patch(
-        "homeassistant.components.iseo_argo_ble.config_flow.IseoClient",
-        return_value=mock_client,
-    ):
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"], user_input={}
-        )
-
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["errors"] == {"base": "unknown"}
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["errors"] == {"base": "unknown"}
