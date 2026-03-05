@@ -277,7 +277,7 @@ async def test_not_possible_to_use_favorite_program(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Raise a ValueError when trying to use a favorite program."""
+    """Raise a MultipleInvalid when trying to use a favorite program."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -294,7 +294,7 @@ async def test_not_possible_to_use_favorite_program(
                 "device_id": device_entry.id,
                 "affects_to": "selected_program",
                 "program": bsh_key_to_translation_key(
-                    ProgramKey.BSH_COMMON_FAVORITE_001
+                    ProgramKey.BSH_COMMON_FAVORITE_001.value
                 ),
             },
             blocking=True,
