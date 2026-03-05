@@ -178,6 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
         await client.close()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
+    entry.async_on_unload(client.close)
 
     async def _started(hass: HomeAssistant) -> None:
         _LOGGER.debug("Invoking client keepalive()")
