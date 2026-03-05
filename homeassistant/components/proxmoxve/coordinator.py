@@ -219,9 +219,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Get vms and containers for a node."""
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get()
-        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get()
-        assert vms is not None and containers is not None
+        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         return vms, containers
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
