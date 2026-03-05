@@ -2,15 +2,17 @@
 
 from unittest.mock import AsyncMock, patch
 
-from telegram import AcceptedGiftTypes, ChatFullInfo, User
-from telegram.constants import AccentColor
+from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
+from homeassistant.components.telegram_bot.config_flow import DESCRIPTION_PLACEHOLDERS
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
     PARSER_PLAIN_TEXT,
@@ -24,7 +26,7 @@ from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, pytest
 
 
 async def test_options_flow(
@@ -130,6 +132,7 @@ async def test_reconfigure_flow_webhooks(
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             SECTION_ADVANCED_SETTINGS: {
+                CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -192,9 +195,86 @@ async def test_reconfigure_flow_webhooks(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_broadcast_config_entry.data[CONF_URL] == "https://reconfigure"
+    assert mock_broadcast_config_entry.data[CONF_API_ENDPOINT] == DEFAULT_API_ENDPOINT
     assert mock_broadcast_config_entry.data[CONF_TRUSTED_NETWORKS] == [
         "149.154.160.0/20"
     ]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error", "expected_description_placeholders"),
+    [
+        # test case 1: logout fails with network error, then succeeds
+        pytest.param(
+            [NetworkError("mock network error"), True],
+            "telegram_error",
+            {**DESCRIPTION_PLACEHOLDERS, "error_message": "mock network error"},
+        ),
+        # test case 2: logout fails with unsuccessful response, then succeeds
+        pytest.param(
+            [False, True],
+            "bot_logout_failed",
+            DESCRIPTION_PLACEHOLDERS,
+        ),
+    ],
+)
+async def test_reconfigure_flow_logout_failed(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    side_effect: list,
+    expected_error: str,
+    expected_description_placeholders: dict[str, str],
+) -> None:
+    """Test reconfigure flow for with change in API endpoint and logout failed."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_broadcast_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.log_out",
+        AsyncMock(side_effect=side_effect),
+    ):
+        # first logout attempt fails
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: "http://mock1",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["step_id"] == "reconfigure"
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": expected_error}
+        assert result["description_placeholders"] == expected_description_placeholders
+
+        # second logout attempt success
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: "http://mock2",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_broadcast_config_entry.data[CONF_API_ENDPOINT] == "http://mock2"
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -296,6 +376,75 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
 
 
+@pytest.mark.parametrize(
+    ("api_endpoint", "webhook_url"),
+    [
+        (
+            DEFAULT_API_ENDPOINT,
+            "https://mock_webhook",
+        ),
+        (
+            "http://mock_api_endpoint",
+            "https://mock_webhook",
+        ),
+        (
+            "http://mock_api_endpoint",
+            "http://mock_webhook",
+        ),
+    ],
+)
+async def test_create_webhook_entry(
+    hass: HomeAssistant, api_endpoint: str, webhook_url: str
+) -> None:
+    """Test user flow that creates a webhook bot."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+        return_value=User(123456, "Testbot", True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_WEBHOOKS,
+                CONF_API_KEY: "mock api key",
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: api_endpoint,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["step_id"] == "webhooks"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: webhook_url,
+            CONF_TRUSTED_NETWORKS: "149.154.160.0/20",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Testbot"
+    assert result["data"][CONF_PLATFORM] == PLATFORM_WEBHOOKS
+    assert result["data"][CONF_API_KEY] == "mock api key"
+    assert result["data"][CONF_API_ENDPOINT] == api_endpoint
+    assert result["data"][CONF_URL] == webhook_url
+    assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
+
+
 async def test_reauth_flow(
     hass: HomeAssistant, mock_webhooks_config_entry: MockConfigEntry
 ) -> None:
@@ -352,19 +501,15 @@ async def test_reauth_flow(
 
 
 async def test_subentry_flow(
-    hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
 ) -> None:
     """Test subentry flow."""
     mock_broadcast_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-        return_value=User(123456, "Testbot", True),
-    ):
-        assert await hass.config_entries.async_setup(
-            mock_broadcast_config_entry.entry_id
-        )
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
         (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
@@ -372,24 +517,17 @@ async def test_subentry_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["description_placeholders"] == {
+        **DESCRIPTION_PLACEHOLDERS,
+        "bot_username": "@mock_bot",
+        "bot_url": "https://t.me/mock_bot",
+    }
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_chat",
-        return_value=ChatFullInfo(
-            id=987654321,
-            title="mock title",
-            first_name="mock first_name",
-            type="PRIVATE",
-            max_reaction_count=100,
-            accent_color_id=AccentColor.COLOR_000,
-            accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
-        ),
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            user_input={CONF_CHAT_ID: 987654321},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 987654321},
+    )
+    await hass.async_block_till_done()
 
     subentry_id = list(mock_broadcast_config_entry.subentries)[-1]
     subentry: ConfigSubentry = mock_broadcast_config_entry.subentries[subentry_id]
@@ -401,20 +539,32 @@ async def test_subentry_flow(
     assert subentry.data == {CONF_CHAT_ID: 987654321}
 
 
-async def test_subentry_flow_chat_error(
+async def test_subentry_flow_config_not_ready(
     hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
+) -> None:
+    """Test subentry flow where config entry is not loaded."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+    assert result["description_placeholders"] == {"telegram_bot": "Mock Title"}
+
+
+async def test_subentry_flow_chat_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
 ) -> None:
     """Test subentry flow."""
     mock_broadcast_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-        return_value=User(123456, "Testbot", True),
-    ):
-        assert await hass.config_entries.async_setup(
-            mock_broadcast_config_entry.entry_id
-        )
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
         (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
@@ -425,9 +575,7 @@ async def test_subentry_flow_chat_error(
 
     # test: chat not found
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_chat"
-    ) as mock_bot:
+    with patch("homeassistant.components.telegram_bot.bot.Bot.get_chat") as mock_bot:
         mock_bot.side_effect = BadRequest("mock chat not found")
 
         result = await hass.config_entries.subentries.async_configure(
@@ -442,23 +590,11 @@ async def test_subentry_flow_chat_error(
 
     # test: chat id already configured
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_chat",
-        return_value=ChatFullInfo(
-            id=123456,
-            title="mock title",
-            first_name="mock first_name",
-            type="PRIVATE",
-            max_reaction_count=100,
-            accent_color_id=AccentColor.COLOR_000,
-            accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
-        ),
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            user_input={CONF_CHAT_ID: 123456},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 123456},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -470,7 +606,9 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {},
+        SECTION_ADVANCED_SETTINGS: {
+            CONF_API_ENDPOINT: "http://mock_api_endpoint",
+        },
     }
 
     with patch(
@@ -489,6 +627,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"
+        assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
         assert result["options"][ATTR_PARSER] == PARSER_MD
 
         # test: import 2nd entry failed due to duplicate

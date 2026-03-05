@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Cannot connect to Proxmox VE server",
@@ -11,6 +13,36 @@
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The new password for the Proxmox VE server"
+        },
+        "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
+        "title": "Re-authenticate Proxmox VE integration"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "realm": "[%key:component::proxmoxve::config::step::user::data::realm%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
+          "password": "[%key:component::proxmoxve::config::step::user::data_description::password%]",
+          "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
+          "realm": "[%key:component::proxmoxve::config::step::user::data_description::realm%]",
+          "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Use the following form to reconfigure your Proxmox VE server connection.",
+        "title": "Reconfigure Proxmox VE integration"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -20,12 +52,174 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your Proxmox VE server",
+          "password": "The password for the Proxmox VE server",
+          "port": "The port of your Proxmox VE server (default: 8006)",
+          "realm": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "username": "The username for the Proxmox VE server",
+          "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
+        },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "button": {
+      "hibernate": {
+        "name": "Hibernate"
+      },
+      "reset": {
+        "name": "Reset"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "start_all": {
+        "name": "Start all"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "stop_all": {
+        "name": "Stop all"
+      }
+    },
+    "sensor": {
+      "container_cpu": {
+        "name": "CPU usage"
+      },
+      "container_disk": {
+        "name": "Disk usage"
+      },
+      "container_max_cpu": {
+        "name": "Max CPU"
+      },
+      "container_max_disk": {
+        "name": "Max disk usage"
+      },
+      "container_max_memory": {
+        "name": "Max memory usage"
+      },
+      "container_memory": {
+        "name": "Memory usage"
+      },
+      "container_status": {
+        "name": "Status",
+        "state": {
+          "running": "Running",
+          "stopped": "Stopped",
+          "suspended": "Suspended"
+        }
+      },
+      "node_cpu": {
+        "name": "CPU usage"
+      },
+      "node_disk": {
+        "name": "Disk usage"
+      },
+      "node_max_cpu": {
+        "name": "Max CPU"
+      },
+      "node_max_disk": {
+        "name": "Max disk usage"
+      },
+      "node_max_memory": {
+        "name": "Max memory usage"
+      },
+      "node_memory": {
+        "name": "Memory usage"
+      },
+      "node_status": {
+        "name": "Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
+      "vm_cpu": {
+        "name": "CPU usage"
+      },
+      "vm_disk": {
+        "name": "Disk usage"
+      },
+      "vm_max_cpu": {
+        "name": "Max CPU"
+      },
+      "vm_max_disk": {
+        "name": "Max disk usage"
+      },
+      "vm_max_memory": {
+        "name": "Max memory usage"
+      },
+      "vm_memory": {
+        "name": "Memory usage"
+      },
+      "vm_status": {
+        "name": "Status",
+        "state": {
+          "running": "Running",
+          "stopped": "Stopped",
+          "suspended": "Suspended"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error_details": {
+      "message": "An error occurred while communicating with the Proxmox VE instance: {error}"
+    },
+    "api_error_no_details": {
+      "message": "An error occurred while communicating with the Proxmox VE instance."
+    },
+    "cannot_connect": {
+      "message": "An error occurred while trying to connect to the Proxmox VE instance: {error}"
+    },
+    "cannot_connect_no_details": {
+      "message": "Could not connect to the Proxmox VE instance."
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying to authenticate: {error}"
+    },
+    "invalid_auth_no_details": {
+      "message": "Authentication failed for the Proxmox VE instance."
+    },
+    "no_nodes_found": {
+      "message": "No active nodes were found on the Proxmox VE server."
+    },
+    "no_permission_node_power": {
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "no_permission_vm_lxc_power": {
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "permissions_error": {
+      "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
+    },
+    "ssl_error": {
+      "message": "An SSL error occurred: {error}"
+    },
+    "timeout_connect": {
+      "message": "A timeout occurred while trying to connect to the Proxmox VE instance: {error}"
+    },
+    "timeout_connect_no_details": {
+      "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
+    }
+  },
   "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    },
     "deprecated_yaml_import_issue_connect_timeout": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection timeout occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"

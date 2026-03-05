@@ -107,6 +107,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -517,6 +518,19 @@ def create_devices(
                     ATTR_SERIAL_NUMBER: matter.serial_number,
                 }
             )
+        if (main_component := device.status.get(MAIN)) is not None and (
+            device_identification := main_component.get(
+                Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
+            )
+        ) is not None:
+            new_kwargs = {
+                ATTR_SERIAL_NUMBER: device_identification[Attribute.SERIAL_NUMBER].value
+            }
+            if ATTR_MODEL_ID not in kwargs:
+                new_kwargs[ATTR_MODEL_ID] = device_identification[
+                    Attribute.MODEL_NAME
+                ].value
+            kwargs.update(new_kwargs)
         if (
             device_registry.async_get_device({(DOMAIN, device.device.device_id)})
             is None
@@ -578,7 +592,8 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
                 if "burner" in component:
                     burner_id = int(component.split("-")[-1])
                     component = f"burner-0{burner_id}"
-                if component in status:
+                # Don't delete 'lamp' component even when disabled
+                if component in status and component != "lamp":
                     del status[component]
     for component_status in status.values():
         process_component_status(component_status)

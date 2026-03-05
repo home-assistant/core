@@ -269,6 +269,26 @@ class MotionTiltDevice(MotionPositionDevice):
     _restore_tilt = True
 
     @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Flag supported features."""
+        supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+        )
+
+        if self.current_cover_position is not None:
+            supported_features |= CoverEntityFeature.SET_POSITION
+
+        if self.current_cover_tilt_position is not None:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        return supported_features
+
+    @property
     def current_cover_tilt_position(self) -> int | None:
         """Return current angle of cover.
 
@@ -287,17 +307,25 @@ class MotionTiltDevice(MotionPositionDevice):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+        if self.current_cover_tilt_position is not None:
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
 
-        await self.async_request_position_till_stop()
+            await self.async_request_position_till_stop()
+        else:
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Jog_up)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+        if self.current_cover_tilt_position is not None:
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
 
-        await self.async_request_position_till_stop()
+            await self.async_request_position_till_stop()
+        else:
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(self._blind.Jog_down)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""

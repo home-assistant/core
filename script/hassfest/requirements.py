@@ -41,7 +41,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
-    "typing_extensions": "SemVer",
+    "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
     "zeroconf": "SemVer",
@@ -149,12 +149,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
-    "guardian": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # aioguardian > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},
@@ -162,17 +156,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "influxdb": {
-        # https://github.com/influxdata/influxdb-client-python/issues/695
-        # influxdb-client > setuptools
-        "influxdb-client": {"setuptools"}
-    },
     "izone": {"python-izone": {"async-timeout"}},
-    "keba": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # keba-kecontact > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
@@ -192,11 +176,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "microbeespy": {"setuptools"}
     },
     "mill": {"millheater": {"async-timeout"}, "mill-local": {"async-timeout"}},
-    "minecraft_server": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # mcstatus > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "mochad": {
         # https://github.com/mtreinish/pymochad/issues/8
         # pymochad > pbr > setuptools
@@ -223,11 +202,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
-    "tami4": {
-        # https://github.com/SeleniumHQ/selenium/issues/16943
-        # tami4 > selenium > types*
-        "selenium": {"types-certifi", "types-urllib3"},
-    },
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -236,7 +210,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
-    "unifiprotect": {"uiprotect": {"async-timeout"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},

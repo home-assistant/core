@@ -143,8 +143,13 @@ async def async_setup_entry(
     min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
     update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
 
+    # Track firmware versions to detect external updates (e.g., via Reolink app)
+    last_known_firmware: dict[int | None, str | None] = {}
+
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
+        nonlocal last_known_firmware
+
         async with asyncio.timeout(update_timeout):
             try:
                 await host.update_states()
@@ -161,6 +166,23 @@ async def async_setup_entry(
                 raise UpdateFailed(str(err)) from err
 
         host.credential_errors = 0
+
+        # Check for firmware version changes (external update detection)
+        firmware_changed = False
+        for ch in (*host.api.channels, None):
+            new_version = host.api.camera_sw_version(ch)
+            old_version = last_known_firmware.get(ch)
+            if (
+                old_version is not None
+                and new_version is not None
+                and new_version != old_version
+            ):
+                firmware_changed = True
+            last_known_firmware[ch] = new_version
+
+        # Notify firmware coordinator if firmware changed externally
+        if firmware_changed and firmware_coordinator is not None:
+            firmware_coordinator.async_set_updated_data(None)
 
         async with asyncio.timeout(min_timeout):
             await host.renew()
@@ -543,7 +565,20 @@ def migrate_entity_ids(
                 entity.unique_id,
                 new_id,
             )
-            entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+            existing_entity = entity_reg.async_get_entity_id(
+                entity.domain, entity.platform, new_id
+            )
+            if existing_entity is None:
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+            else:
+                _LOGGER.warning(
+                    "Reolink entity with unique_id %s already exists, "
+                    "removing entity with unique_id %s",
+                    new_id,
+                    entity.unique_id,
+                )
+                entity_reg.async_remove(entity.entity_id)
+                continue
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
@@ -573,7 +608,7 @@ def migrate_entity_ids(
                 else:
                     _LOGGER.warning(
                         "Reolink entity with unique_id %s already exists, "
-                        "removing device with unique_id %s",
+                        "removing entity with unique_id %s",
                         new_id,
                         entity.unique_id,
                     )

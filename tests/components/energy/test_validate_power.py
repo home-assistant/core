@@ -27,13 +27,7 @@ async def test_validation_grid_power_valid(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.grid_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.grid_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -66,13 +60,7 @@ async def test_validation_grid_power_wrong_unit(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.grid_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.grid_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -113,13 +101,7 @@ async def test_validation_grid_power_wrong_state_class(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.grid_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.grid_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -160,13 +142,7 @@ async def test_validation_grid_power_entity_missing(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.missing_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.missing_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -203,13 +179,7 @@ async def test_validation_grid_power_entity_unavailable(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.unavailable_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.unavailable_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -242,13 +212,7 @@ async def test_validation_grid_power_entity_non_numeric(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.non_numeric_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.non_numeric_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -289,13 +253,7 @@ async def test_validation_grid_power_wrong_device_class(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.wrong_device_class_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.wrong_device_class_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -333,23 +291,20 @@ async def test_validation_grid_power_different_units(
     hass: HomeAssistant, mock_energy_manager, mock_get_metadata
 ) -> None:
     """Test validating grid with power sensors using different valid units."""
+    # With unified format, each grid has one power sensor, so we use two grids
     await mock_energy_manager.async_update(
         {
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.power_watt",
-                        },
-                        {
-                            "stat_rate": "sensor.power_milliwatt",
-                        },
-                    ],
+                    "stat_rate": "sensor.power_watt",
                     "cost_adjustment_day": 0.0,
-                }
+                },
+                {
+                    "type": "grid",
+                    "stat_rate": "sensor.power_milliwatt",
+                    "cost_adjustment_day": 0.0,
+                },
             ]
         }
     )
@@ -374,7 +329,7 @@ async def test_validation_grid_power_different_units(
 
     result = await validate.async_validate(hass)
     assert result.as_dict() == {
-        "energy_sources": [[]],
+        "energy_sources": [[], []],
         "device_consumption": [],
         "device_consumption_water": [],
     }
@@ -391,13 +346,7 @@ async def test_validation_grid_power_external_statistics(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "external:power_stat",
-                        }
-                    ],
+                    "stat_rate": "external:power_stat",
                     "cost_adjustment_day": 0.0,
                 }
             ]
@@ -431,13 +380,7 @@ async def test_validation_grid_power_recorder_untracked(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "power": [
-                        {
-                            "stat_rate": "sensor.untracked_power",
-                        }
-                    ],
+                    "stat_rate": "sensor.untracked_power",
                     "cost_adjustment_day": 0.0,
                 }
             ]

@@ -415,6 +415,128 @@
     'state': 'high',
   })
 # ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'vacuum',
+        'mop',
+        'vacuum_and_mop_together',
+        'mop_after_vacuum',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_cleaning_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning type',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_cleaning_type',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerCleaningType_cleaningType_cleaningType',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Cleaning type',
+      'options': list([
+        'vacuum',
+        'mop',
+        'vacuum_and_mop_together',
+        'mop_after_vacuum',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_cleaning_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vacuum',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'area_then_walls',
+        'walls_first',
+        'quick_clean_zigzag_pattern',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_driving_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Driving mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Driving mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_driving_mode',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerDrivingMode_drivingMode_drivingMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Driving mode',
+      'options': list([
+        'area_then_walls',
+        'walls_first',
+        'quick_clean_zigzag_pattern',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_driving_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'area_then_walls',
+  })
+# ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -452,14 +574,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lamp',
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.lamp_brightnessLevel_brightnessLevel',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum Lamp',
+      'friendly_name': 'Robot Vacuum Lamp',
       'options': list([
         'on',
         'off',
@@ -471,6 +593,130 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_detection_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_sound_detection_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound detection sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound detection sensitivity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_detection_sensitivity',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.soundDetectionSensitivity_level_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_detection_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Sound detection sensitivity',
+      'options': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_sound_detection_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'high',
+        'moderate_high',
+        'medium',
+        'moderate_low',
+        'low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_water_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_water_spray_level',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerWaterSprayLevel_waterSprayLevel_waterSprayLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Water level',
+      'options': list([
+        'high',
+        'moderate_high',
+        'medium',
+        'moderate_low',
+        'low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_water_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
@@ -533,6 +779,124 @@
     'state': 'stop',
   })
 # ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher_selected_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'lower',
+        'all',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dishwasher_selected_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected zone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected zone',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_zone',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherWashingOptions_selectedZone_selectedZone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher_selected_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Selected zone',
+      'options': list([
+        'none',
+        'lower',
+        'all',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher_selected_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'all',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher_zone_booster-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'left',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dishwasher_zone_booster',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone booster',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone booster',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_booster',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherWashingOptions_zoneBooster_zoneBooster',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher_zone_booster-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Zone booster',
+      'options': list([
+        'none',
+        'left',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher_zone_booster',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -591,6 +955,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_selected_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'lower',
+        'all',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dishwasher_selected_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Selected zone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Selected zone',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_zone',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherWashingOptions_selectedZone_selectedZone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_selected_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Selected zone',
+      'options': list([
+        'lower',
+        'all',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher_selected_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'all',
   })
 # ---
 # name: test_all_entities[da_wm_sc_000001][select.airdresser-entry]

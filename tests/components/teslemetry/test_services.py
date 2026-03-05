@@ -51,11 +51,11 @@ lon = 153.3726526
 
 async def test_services(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services are correct."""
 
     await setup_platform(hass)
-    entity_registry = er.async_get(hass)
 
     # Get a vehicle device ID
     vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
@@ -206,11 +206,29 @@ async def test_services(
             SERVICE_TIME_OF_USE,
             {
                 CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
+                ATTR_TOU_SETTINGS: {"utility": "test"},
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once()
+        set_time_of_use.assert_called_once_with({"utility": "test"})
+
+    # Test that tariff_content_v2 wrapper is unwrapped before passing to SDK
+    with patch(
+        "tesla_fleet_api.teslemetry.EnergySite.time_of_use_settings",
+        return_value=COMMAND_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_TOU_SETTINGS: {
+                    "tariff_content_v2": {"utility": "test"},
+                },
+            },
+            blocking=True,
+        )
+        set_time_of_use.assert_called_once_with({"utility": "test"})
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.add_charge_schedule",
@@ -338,15 +356,15 @@ async def test_services(
 
 async def test_service_validation_errors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services handle bad data."""
 
     await setup_platform(hass)
-    entity_registry = er.async_get(hass)
     vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
 
-    # Bad device ID
-    with pytest.raises(ServiceValidationError):
+    # Bad device ID - verify translation key is used
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
@@ -356,9 +374,10 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "invalid_device"
 
     # Test set_scheduled_charging validation error (enable=True but no time)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SCHEDULED_CHARGING,
@@ -368,9 +387,10 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "set_scheduled_charging_time"
 
     # Test set_scheduled_departure validation error (preconditioning_enabled=True but no departure_time)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SCHEDULED_DEPARTURE,
@@ -380,9 +400,10 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "set_scheduled_departure_preconditioning"
 
     # Test set_scheduled_departure validation error (off_peak_charging_enabled=True but no end_off_peak_time)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SCHEDULED_DEPARTURE,
@@ -392,3 +413,4 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "set_scheduled_departure_off_peak"
