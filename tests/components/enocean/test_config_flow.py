@@ -16,7 +16,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_SERIAL_BY_ID, MODULE
+from . import MOCK_SERIAL_BY_ID, MOCK_USB_DEVICE, MODULE
 
 from tests.common import MockConfigEntry
 
@@ -92,7 +92,7 @@ async def test_user_flow_with_valid_path(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_DEVICE: mock_usb_device.device},
+            data={CONF_DEVICE: MOCK_USB_DEVICE.device},
         )
 
     assert mock_scan_serial_ports.call_count == 1
@@ -259,7 +259,7 @@ async def test_usb_discovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
-    assert result["data"] == {"device": mock_usb_service_info.device}
+    assert result["data"] == {"device": MOCK_SERIAL_BY_ID}
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
     assert result["context"]["title_placeholders"] == {
         "name": "USB 300 - /dev/serial/by-id/enocean0, s/n: 1234 - EnOcean GmbH - 0403:6001"
