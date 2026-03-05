@@ -65,6 +65,7 @@ class IseoLockEntity(LockEntity):
         self._ble_lock = asyncio.Lock()
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
+        self._unavailable_logged = False
         self.client: IseoClient = client
 
         self._attr_unique_id = f"{entry.unique_id}_lock"
@@ -107,7 +108,9 @@ class IseoLockEntity(LockEntity):
                 connectable=True,
             )
         ):
-            _LOGGER.debug("State poll failed: Device not found")
+            if not self._unavailable_logged:
+                _LOGGER.info("Lock is unavailable: device not found")
+                self._unavailable_logged = True
             return
 
         try:
@@ -115,8 +118,14 @@ class IseoLockEntity(LockEntity):
                 self.client.update_ble_device(ble_device)
                 state: LockState = await self.client.read_state()
         except (TimeoutError, IseoConnectionError, IseoAuthError, OSError) as exc:
-            _LOGGER.debug("State poll failed: %s", exc)
+            if not self._unavailable_logged:
+                _LOGGER.info("Lock is unavailable: %s", exc)
+                self._unavailable_logged = True
             return
+
+        if self._unavailable_logged:
+            _LOGGER.info("Lock is back online")
+            self._unavailable_logged = False
 
         if not self._fw_version_set and state.firmware_info:
             fw_version = state.firmware_info[5:].strip() or state.firmware_info.strip()
