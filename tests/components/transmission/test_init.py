@@ -30,6 +30,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_config_flow_entry_migrate_1_1_to_1_2(
     hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
 ) -> None:
     """Test that config flow entry is migrated correctly from v1.1 to v1.2."""
     entry = MockConfigEntry(
@@ -150,6 +151,7 @@ async def test_unload_entry(
 )
 async def test_migrate_unique_id(
     hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
     entity_registry: er.EntityRegistry,
     domain: str,
     old_unique_id: str,

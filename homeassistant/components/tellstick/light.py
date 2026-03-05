@@ -52,7 +52,7 @@ class TellstickLight(TellstickDevice, LightEntity):
         self._brightness = 255
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 

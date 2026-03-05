@@ -4,6 +4,7 @@
   "codeowners": ["@adamkrol93", "@mtielen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wolflink",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["wolf_comm"],
   "requirements": ["wolf-comm==0.0.23"]

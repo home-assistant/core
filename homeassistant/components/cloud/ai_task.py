@@ -31,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _convert_image_for_editing(data: bytes) -> tuple[bytes, str]:
     """Ensure the image data is in a format accepted by OpenAI image edits."""
+    img: Image.Image
     stream = io.BytesIO(data)
     with Image.open(stream) as img:
         mode = img.mode

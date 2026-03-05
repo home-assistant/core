@@ -8,34 +8,18 @@
         'dali_types': list([
         ]),
         'features': dict({
-          'color_kelvin': dict({
-            'status': 1000.0,
-          }),
+          'color_kelvin': None,
           'color_kelvin_with_fade': None,
-          'color_rgb': dict({
-            'status': dict({
-              'blue': 0.0,
-              'green': 0.0,
-              'red': 0.0,
-            }),
-          }),
+          'color_rgb': None,
           'color_rgb_with_fade': None,
-          'color_waf': dict({
-            'status': dict({
-              'amber': 0.0,
-              'free_color': 0.0,
-              'white': 0.0,
-            }),
-          }),
+          'color_waf': None,
           'color_waf_with_fade': None,
           'color_xy': None,
           'color_xy_with_fade': None,
           'dali_cmd16': None,
           'dim_down': None,
           'dim_up': None,
-          'dimmable': dict({
-            'status': 0.0,
-          }),
+          'dimmable': None,
           'dimmable_kelvin': None,
           'dimmable_rgb': None,
           'dimmable_waf': None,
@@ -79,25 +63,11 @@
         'dali_types': list([
         ]),
         'features': dict({
-          'color_kelvin': dict({
-            'status': 1000.0,
-          }),
+          'color_kelvin': None,
           'color_kelvin_with_fade': None,
-          'color_rgb': dict({
-            'status': dict({
-              'blue': 0.0,
-              'green': 0.0,
-              'red': 0.0,
-            }),
-          }),
+          'color_rgb': None,
           'color_rgb_with_fade': None,
-          'color_waf': dict({
-            'status': dict({
-              'amber': 0.0,
-              'free_color': 0.0,
-              'white': 0.0,
-            }),
-          }),
+          'color_waf': None,
           'color_waf_with_fade': None,
           'color_xy': None,
           'color_xy_with_fade': None,
@@ -208,6 +178,7 @@
       'node_red': False,
       'startup_mode': 'normal',
       'tier': 'basic',
+      'uid': None,
       'version': 'v1.14.1/1.4.3',
     }),
   })
