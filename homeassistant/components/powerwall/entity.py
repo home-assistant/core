@@ -1,5 +1,7 @@
 """The Tesla Powerwall integration base entity."""
 
+from tesla_powerwall import BatteryResponse
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -11,8 +13,7 @@ from .const import (
     POWERWALL_BASE_INFO,
     POWERWALL_COORDINATOR,
 )
-from .coordinator import PowerwallRuntimeData, PowerwallUpdateCoordinator
-from .models import BatteryResponse, PowerwallData
+from .coordinator import PowerwallData, PowerwallRuntimeData, PowerwallUpdateCoordinator
 
 
 class PowerWallEntity(CoordinatorEntity[PowerwallUpdateCoordinator]):

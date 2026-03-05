@@ -33,11 +33,12 @@ from .const import (
     POWERWALL_COORDINATOR,
 )
 from .coordinator import (
+    PowerwallBaseInfo,
     PowerwallConfigEntry,
+    PowerwallData,
     PowerwallRuntimeData,
     PowerwallUpdateCoordinator,
 )
-from .models import PowerwallBaseInfo, PowerwallData
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
