@@ -170,7 +170,7 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     return mock_conversation_agent_fixture_helper(hass)
 
 
-@pytest.fixture(scope="session", autouse=find_spec("ffmpeg") is not None)
+@pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
 def prevent_ffmpeg_subprocess() -> Generator[None]:
     """If installed, prevent ffmpeg from creating a subprocess."""
     with patch(
