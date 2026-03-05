@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "reconfigure_successful": "**Reconfiguration was successful**\n\nGo to webhooks in the Traccar Client and update the webhook with the following URL: `{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details.",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
@@ -9,6 +10,10 @@
       "default": "To send events to Home Assistant, you will need to set up the webhook feature in Traccar Client.\n\nUse the following URL: `{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
     },
     "step": {
+      "reconfigure": {
+        "description": "Are you sure you want to reconfigure the Traccar Client?",
+        "title": "Reconfigure Traccar Client"
+      },
       "user": {
         "description": "Are you sure you want to set up Traccar Client?",
         "title": "Set up Traccar Client"

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
@@ -297,7 +297,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     @asynccontextmanager
     async def _async_provision_context(
         self, ble_mac: str
-    ) -> AsyncIterator[asyncio.Future[str]]:
+    ) -> AsyncGenerator[asyncio.Future[str]]:
         """Context manager to register and cleanup provisioning future."""
         future = self.hass.loop.create_future()
         provisioning_futures = async_get_provisioning_futures(self.hass)

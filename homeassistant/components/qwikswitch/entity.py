@@ -15,20 +15,11 @@ class QSEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, qsid, name):
+    def __init__(self, qsid: str, name: str) -> None:
         """Initialize the QSEntity."""
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = f"qs{qsid}"
         self.qsid = qsid
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return f"qs{self.qsid}"
 
     @callback
     def update_packet(self, packet):
@@ -60,7 +51,7 @@ class QSToggleEntity(QSEntity):
         super().__init__(qsid, self.device.name)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Check if device is on (non-zero)."""
         return self.device.value > 0
 

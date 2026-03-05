@@ -212,7 +212,7 @@ async def async_browse_media(
                 media_class=MediaClass.APP,
                 media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry.entry_id}",
                 media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
-                thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                thumbnail="/api/brands/integration/spotify/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -223,7 +223,7 @@ async def async_browse_media(
             media_class=MediaClass.APP,
             media_content_id=MEDIA_PLAYER_PREFIX,
             media_content_type="spotify",
-            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+            thumbnail="/api/brands/integration/spotify/logo.png",
             can_play=False,
             can_expand=True,
             children=children,
@@ -427,7 +427,7 @@ async def build_item_response(  # noqa: C901
             browse_media.children.append(
                 item_payload(item, can_play_artist=can_play_artist)
             )
-        except (MissingMediaInformation, UnknownMediaType):
+        except MissingMediaInformation, UnknownMediaType:
             continue
 
     return browse_media

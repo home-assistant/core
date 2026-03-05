@@ -10,6 +10,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.util import color as color_util
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
@@ -44,8 +45,8 @@ async def test_lights(
         ColorMode.XY,
     }
     assert light_1.attributes["xy_color"] == (0.5614, 0.4058)
-    assert light_1.attributes["min_mireds"] == 153
-    assert light_1.attributes["max_mireds"] == 500
+    assert light_1.attributes["max_color_temp_kelvin"] == 6535
+    assert light_1.attributes["min_color_temp_kelvin"] == 2000
     assert light_1.attributes["dynamics"] == "dynamic_palette"
     assert light_1.attributes["effect_list"] == ["off", "candle", "fire"]
     assert light_1.attributes["effect"] == "off"
@@ -59,8 +60,8 @@ async def test_lights(
     assert light_2.state == "off"
     assert light_2.attributes["mode"] == "normal"
     assert light_2.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
-    assert light_2.attributes["min_mireds"] == 153
-    assert light_2.attributes["max_mireds"] == 454
+    assert light_2.attributes["max_color_temp_kelvin"] == 6535
+    assert light_2.attributes["min_color_temp_kelvin"] == 2202
     assert light_2.attributes["dynamics"] == "none"
     assert light_2.attributes["effect_list"] == ["off", "candle", "sunrise"]
 
@@ -101,7 +102,7 @@ async def test_light_turn_on_service(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "brightness_pct": 100, "color_temp": 300},
+        {"entity_id": test_light_id, "brightness_pct": 100, "color_temp_kelvin": 3333},
         blocking=True,
     )
 
@@ -166,7 +167,7 @@ async def test_light_turn_on_service(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "color_temp": 50},
+        {"entity_id": test_light_id, "color_temp_kelvin": 20000},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 5
@@ -174,7 +175,7 @@ async def test_light_turn_on_service(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "color_temp": 550},
+        {"entity_id": test_light_id, "color_temp_kelvin": 1818},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 6
@@ -251,7 +252,7 @@ async def test_light_turn_on_service(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "effect": "candle", "color_temp": 500},
+        {"entity_id": test_light_id, "effect": "candle", "color_temp_kelvin": 2000},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 11
@@ -444,8 +445,8 @@ async def test_grouped_lights(
         ColorMode.COLOR_TEMP,
         ColorMode.XY,
     }
-    assert test_entity.attributes["min_mireds"] == 153
-    assert test_entity.attributes["max_mireds"] == 500
+    assert test_entity.attributes["max_color_temp_kelvin"] == 6535
+    assert test_entity.attributes["min_color_temp_kelvin"] == 2000
     assert test_entity.attributes["is_hue_group"] is True
     assert test_entity.attributes["hue_scenes"] == {"Dynamic Test Scene"}
     assert test_entity.attributes["hue_type"] == "zone"
@@ -466,8 +467,8 @@ async def test_grouped_lights(
     assert test_entity.attributes["friendly_name"] == "Test Room"
     assert test_entity.state == "off"
     assert test_entity.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
-    assert test_entity.attributes["min_mireds"] == 153
-    assert test_entity.attributes["max_mireds"] == 454
+    assert test_entity.attributes["max_color_temp_kelvin"] == 6535
+    assert test_entity.attributes["min_color_temp_kelvin"] == 2202
     assert test_entity.attributes["is_hue_group"] is True
     assert test_entity.attributes["hue_scenes"] == {
         "Regular Test Scene",
@@ -641,7 +642,9 @@ async def test_grouped_lights(
             "turn_on",
             {
                 "entity_id": light_name,
-                "color_temp": mirek,
+                "color_temp_kelvin": color_util.color_temperature_mired_to_kelvin(
+                    mirek
+                ),
             },
             blocking=True,
         )

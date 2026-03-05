@@ -23,11 +23,6 @@ from tests.components import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 async def target_binary_sensors(hass: HomeAssistant) -> tuple[list[str], list[str]]:
     """Create multiple binary sensor entities associated with different targets."""

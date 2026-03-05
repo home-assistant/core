@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -205,6 +206,12 @@
       "core_temperature": {
         "name": "Core temperature"
       },
+      "degreasing_counter": {
+        "name": "Degreasing cycles"
+      },
+      "descaling_counter": {
+        "name": "Descaling cycles"
+      },
       "drying_step": {
         "name": "Drying step",
         "state": {
@@ -229,6 +236,9 @@
       },
       "finish": {
         "name": "Finish"
+      },
+      "milk_cleaning_counter": {
+        "name": "Milk pipework cleaning cycles"
       },
       "plate": {
         "name": "Plate {plate_no}",
@@ -287,6 +297,7 @@
           "auto": "[%key:common::state::auto%]",
           "auto_roast": "Auto roast",
           "automatic": "Automatic",
+          "automatic_maintenance": "Automatic maintenance",
           "automatic_plus": "Automatic plus",
           "baguettes": "Baguettes",
           "barista_assistant": "BaristaAssistant",
@@ -448,6 +459,8 @@
           "dark_mixed_grain_bread": "Dark mixed grain bread",
           "decrystallise_honey": "Decrystallize honey",
           "defrost": "Defrost",
+          "defrost_meat": "Defrost meat",
+          "defrost_vegetables": "Defrost vegetables",
           "defrosting_with_microwave": "Defrosting with microwave",
           "defrosting_with_steam": "Defrosting with steam",
           "delicates": "Delicates",
@@ -457,6 +470,7 @@
           "dissolve_gelatine": "Dissolve gelatine",
           "down_duvets": "Down duvets",
           "down_filled_items": "Down-filled items",
+          "downs_duvets": "Downs/Duvets",
           "drain_spin": "Drain/spin",
           "drop_cookies_1_tray": "Drop cookies (1 tray)",
           "drop_cookies_2_trays": "Drop cookies (2 trays)",
@@ -521,10 +535,13 @@
           "green_split_peas": "Green split peas",
           "green_tea": "Green tea",
           "greenage_plums": "Greenage plums",
+          "grill": "Grill",
           "halibut_fillet_2_cm": "Halibut (fillet, 2 cm)",
           "halibut_fillet_3_cm": "Halibut (fillet, 3 cm)",
           "ham_roast": "Ham roast",
+          "heating_bakes_gratins": "Heating bakes/gratins",
           "heating_damp_flannels": "Heating damp flannels",
+          "heating_vegetables": "Heating vegetables",
           "hens_eggs_size_l_hard": "Hen’s eggs (size „L“, hard)",
           "hens_eggs_size_l_medium": "Hen’s eggs (size „L“, medium)",
           "hens_eggs_size_l_soft": "Hen’s eggs (size „L“, soft)",
@@ -545,6 +562,7 @@
           "hygiene": "Hygiene",
           "intensive": "Intensive",
           "intensive_bake": "Intensive bake",
+          "intermediate_rinsing": "Intermediate rinsing",
           "iridescent_shark_fillet": "Iridescent shark (fillet)",
           "japanese_tea": "Japanese tea",
           "jasmine_rice_rapid_steam_cooking": "Jasmine rice (rapid steam cooking)",
@@ -584,6 +602,9 @@
           "melt_chocolate": "Melt chocolate",
           "menu_cooking": "Menu cooking",
           "microwave": "Microwave",
+          "microwave_auto_roast": "Microwave + Auto roast",
+          "microwave_fan_grill": "Microwave + Fan grill",
+          "microwave_fan_plus": "Microwave + Fan plus",
           "milk_foam": "Milk foam",
           "milk_pipework_clean": "Milk pipework clean",
           "milk_pipework_rinse": "Milk pipework rinse",
@@ -654,6 +675,7 @@
           "pike_fillet": "Pike (fillet)",
           "pike_piece": "Pike (piece)",
           "pillows": "Pillows",
+          "pillows_sanitize": "Pillows sanitize",
           "pinto_beans": "Pinto beans",
           "pizza_oil_cheese_dough_baking_tray": "Pizza, oil cheese dough (baking tray)",
           "pizza_oil_cheese_dough_round_baking_tine": "Pizza, oil cheese dough (round baking tine)",
@@ -721,8 +743,8 @@
           "potatoes_waxy_whole_small": "Potatoes (waxy, whole, small)",
           "poularde_breast": "Poularde breast",
           "poularde_whole": "Poularde (whole)",
-          "power_fresh": "PowerFresh",
           "power_wash": "PowerWash",
+          "powerfresh": "PowerFresh",
           "prawns": "Prawns",
           "pre_ironing": "Pre-ironing",
           "proofing": "Proofing",
@@ -735,7 +757,9 @@
           "pumpkin_soup": "Pumpkin soup",
           "pyrolytic": "Pyrolytic",
           "quiche_lorraine": "Quiche Lorraine",
+          "quick_hygiene": "QuickHygiene",
           "quick_mw": "Quick MW",
+          "quick_power_dry": "QuickPowerDry",
           "quick_power_wash": "QuickPowerWash",
           "quinces_diced": "Quinces (diced)",
           "quinoa": "Quinoa",
@@ -955,6 +979,7 @@
           "cleaning": "Cleaning",
           "comfort_cooling": "Comfort cooling",
           "cooling_down": "Cooling down",
+          "cooling_phase": "Cooling phase",
           "dirty_sensors": "Dirty sensors",
           "disinfecting": "Disinfecting",
           "dispensing": "Dispensing",
@@ -992,6 +1017,7 @@
           "normal": "Normal",
           "normal_plus": "Normal plus",
           "not_running": "Not running",
+          "perfect_dry_active": "PerfectDry active",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
           "pre_heating": "Pre-heating",
@@ -1006,7 +1032,9 @@
           "rinse_hold": "Rinse hold",
           "rinse_out_lint": "Rinse out lint",
           "rinses": "Rinses",
+          "roasting": "Roasting",
           "safety_cooling": "Safety cooling",
+          "searing": "Searing",
           "slightly_dry": "Slightly dry",
           "slow_roasting": "Slow roasting",
           "smoothing": "Smoothing",

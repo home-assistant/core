@@ -78,6 +78,11 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
 
+    # Change attribute below resolution of DPT; expect no telegram
+    hass.states.async_set(entity_id, "on", {attribute: 1.2})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
     # Read in between
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (1,))
@@ -249,6 +254,32 @@ async def test_expose_cooldown(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (3,))
+
+
+async def test_expose_periodic_send(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an expose with periodic send."""
+    entity_id = "fake.entity"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "percentU8",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_PERIODIC_SEND: {"minutes": 1},
+            }
+        },
+    )
+    # Initialize state
+    hass.states.async_set(entity_id, "15", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (15,))
+    # Wait for time to pass
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (15,))
 
 
 async def test_expose_value_template(

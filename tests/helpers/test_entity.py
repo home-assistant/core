@@ -1068,7 +1068,7 @@ async def test_friendly_name_attr(
         (False, UNDEFINED, None),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1372,7 +1372,7 @@ async def test_entity_name_translation_placeholder_errors(
         (False, UNDEFINED, None),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1409,7 +1409,7 @@ async def test_friendly_name_property(
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(

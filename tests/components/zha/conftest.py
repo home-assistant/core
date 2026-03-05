@@ -120,7 +120,7 @@ def _wrap_mock_instance(obj: Any) -> MagicMock:
     mock = create_autospec(obj, spec_set=True, instance=True)
 
     for attr_name in dir(obj):
-        if attr_name.startswith("__") and attr_name not in {"__getitem__"}:
+        if attr_name.startswith("__") and attr_name != "__getitem__":
             continue
 
         real_attr = getattr(obj, attr_name)

@@ -106,5 +106,5 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(DATA_SCHEMA),
-            errors=errors if errors else {},
+            errors=errors or {},
         )

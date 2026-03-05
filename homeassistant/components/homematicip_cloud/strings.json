@@ -3,9 +3,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "connection_aborted": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
+      "connection_aborted": "Registration failed, please try again.",
       "invalid_sgtin_or_pin": "Invalid SGTIN or PIN code, please try again.",
       "press_the_button": "Please press the blue button.",
       "register_failed": "Failed to register, please try again.",
@@ -24,11 +26,47 @@
       "link": {
         "description": "Press the blue button on the access point and the **Submit** button to register Homematic IP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
         "title": "Link access point"
+      },
+      "reauth_confirm": {
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "description": "The authentication token for your HomematicIP access point is no longer valid. Press **Submit** and then press the blue button on your access point to re-register.",
+        "title": "Re-authenticate HomematicIP access point"
       }
     }
   },
   "entity": {
+    "light": {
+      "optical_signal_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "billow": "Billow",
+              "blinking": "Blinking",
+              "flash": "Flash",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
+      "smoke_detector_alarm_counter": {
+        "name": "Alarm counter"
+      },
+      "smoke_detector_dirt_level": {
+        "name": "Dirt level"
+      },
+      "smoke_detector_last_alarm": {
+        "name": "Last alarm"
+      },
+      "smoke_detector_last_test": {
+        "name": "Last test"
+      },
+      "smoke_detector_test_counter": {
+        "name": "Test counter"
+      },
       "tilt_state": {
         "state": {
           "neutral": "Neutral",

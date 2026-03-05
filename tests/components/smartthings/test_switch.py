@@ -22,10 +22,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import (
+    set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
     trigger_health_update,
@@ -105,6 +107,45 @@ async def test_command_switch_turn_on_off(
         "02f7256e-8353-5bdd-547f-bd5b1647e01b",
         Capability.CUSTOM_DRYER_WRINKLE_PREVENT,
         Command.SET_DRYER_WRINKLE_PREVENT,
+        MAIN,
+        argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+@pytest.mark.parametrize(
+    ("action", "argument"),
+    [
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
+    ],
+)
+async def test_dishwasher_washing_option_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    argument: str,
+) -> None:
+    """Test switch turn on and off command."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7ff318f3-3772-524d-3c9f-72fcd26413ed",
+        Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
+        Command.SET_SPEED_BOOSTER,
         MAIN,
         argument,
     )
@@ -465,3 +506,99 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_turn_on_without_remote_control(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "false",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Can only be updated when remote control is enabled",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_turn_on_with_wrong_dishwasher_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.DISHWASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "run",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Can only be updated when dishwasher machine state is stop",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_turn_on_with_wrong_dishwasher_cycle(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+        Attribute.WASHING_COURSE,
+        "preWash",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option is not supported by selected cycle",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
