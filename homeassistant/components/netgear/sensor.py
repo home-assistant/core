@@ -311,7 +311,7 @@ async def async_setup_entry(
                 continue
 
             new_entities.extend(
-                NetgearSensorEntity(coordinator_tracker, router, device, attribute)
+                NetgearSensorEntity(coordinator_tracker, device, attribute)
                 for attribute in sensors
             )
             tracked.add(mac)
@@ -330,12 +330,11 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
     def __init__(
         self,
         coordinator: NetgearTrackerCoordinator,
-        router: NetgearRouter,
         device: dict,
         attribute: str,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router, device)
+        super().__init__(coordinator, device)
         self._attribute = attribute
         self.entity_description = SENSOR_TYPES[attribute]
         self._attr_unique_id = f"{self._mac}-{attribute}"

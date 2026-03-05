@@ -25,12 +25,11 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
     def __init__(
         self,
         coordinator: NetgearTrackerCoordinator,
-        router: NetgearRouter,
         device: dict,
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator)
-        self._router = router
+        self._router = coordinator.router
         self._device = device
         self._mac = device["mac"]
         self._device_name = self.get_device_name()
@@ -40,7 +39,7 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             default_name=self._device_name,
             default_model=device["device_model"],
-            via_device=(DOMAIN, router.unique_id),
+            via_device=(DOMAIN, coordinator.router.unique_id),
         )
 
     def get_device_name(self):
