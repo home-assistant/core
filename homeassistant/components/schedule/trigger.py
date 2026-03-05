@@ -8,8 +8,7 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-from . import DOMAIN
-from .const import ATTR_NEXT_EVENT
+from .const import ATTR_NEXT_EVENT, DOMAIN
 
 
 class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
