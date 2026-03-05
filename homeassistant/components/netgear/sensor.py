@@ -33,7 +33,6 @@ from .coordinator import (
     NetgearTrackerCoordinator,
 )
 from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
-from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,7 +281,7 @@ async def async_setup_entry(
     coordinator_link = entry.runtime_data.coordinator_link
 
     async_add_entities(
-        NetgearRouterSensorEntity(coordinator, router, description)
+        NetgearRouterSensorEntity(coordinator, description)
         for (coordinator, descriptions) in (
             (coordinator_traffic, SENSOR_TRAFFIC_TYPES),
             (coordinator_speed, SENSOR_SPEED_TYPES),
@@ -368,13 +367,12 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
     def __init__(
         self,
         coordinator: NetgearDataCoordinator[dict[str, Any] | None],
-        router: NetgearRouter,
         entity_description: NetgearSensorEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router)
+        super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
+        self._attr_unique_id = f"{coordinator.router.serial_number}-{entity_description.key}-{entity_description.index}"
 
         self._value: StateType | date | datetime | Decimal = None
         self.async_update_device()

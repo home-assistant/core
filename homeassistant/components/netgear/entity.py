@@ -92,10 +92,10 @@ class NetgearRouterCoordinatorEntity[T: NetgearDataCoordinator[Any]](
 ):
     """Base class for a Netgear router entity."""
 
-    def __init__(self, coordinator: T, router: NetgearRouter) -> None:
+    def __init__(self, coordinator: T) -> None:
         """Initialize a Netgear device."""
         CoordinatorEntity.__init__(self, coordinator)
-        NetgearRouterEntity.__init__(self, router)
+        NetgearRouterEntity.__init__(self, coordinator.router)
 
     @abstractmethod
     @callback
