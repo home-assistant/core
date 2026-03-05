@@ -348,8 +348,8 @@ def async_device_wan_status_value_fn(
 
 @callback
 def async_device_active_wan_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Determine if device has active WAN data."""
-    return hub.api.devices[obj_id].last_wan_ip is not None
+    """Determine if device has WAN interfaces."""
+    return any(f"wan{i}" in hub.api.devices[obj_id].raw for i in range(1, 7))
 
 
 @callback
