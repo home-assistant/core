@@ -26,6 +26,7 @@ MOCK_VEHICLES = {
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
             "charge_mode": "charge_mode_schedule.json",
+            "charging_settings": "charging_settings.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.2.json",
             "location": "location.json",
@@ -38,6 +39,7 @@ MOCK_VEHICLES = {
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
+            "charging_settings": "charging_settings_always.json",
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
             "lock_status": "lock_status.1.json",
@@ -56,6 +58,7 @@ MOCK_VEHICLES = {
         "endpoints": {
             "battery_status": "battery_status_waiting_for_charger.json",
             "charge_mode": "charge_mode_always.2.json",
+            "charging_settings": "charging_settings_always.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.3.json",
             "location": "location.json",
@@ -65,6 +68,7 @@ MOCK_VEHICLES = {
     "megane_e_tech": {
         "endpoints": {
             "battery_status": "battery_status_charging.json",
+            "charging_settings": "charging_settings_delayed.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.1.json",
             "location": "location.json",

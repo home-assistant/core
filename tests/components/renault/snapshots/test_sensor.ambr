@@ -295,6 +295,67 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe40vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-40 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1028,6 +1089,67 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_40_charge_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe40vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-40 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2208,6 +2330,67 @@
     'state': 'charge_in_progress',
   })
 # ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_phev_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1capturphevvin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-CAPTUR_PHEV Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_phev_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'always',
+  })
+# ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3111,6 +3294,67 @@
     'state': 'charge_in_progress',
   })
 # ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1meganeetechvin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-MEG-0 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'delayed',
+  })
+# ---
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3900,6 +4144,67 @@
     'state': 'waiting_for_current_charge',
   })
 # ---
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_twingo_iii_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1twingoiiivin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-TWINGO-III Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_twingo_iii_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'always',
+  })
+# ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4630,6 +4935,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'charge_in_progress',
+  })
+# ---
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe40vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-40 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
@@ -5426,6 +5792,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'charge_error',
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_50_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe50vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-50 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_50_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'scheduled',
   })
 # ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_remaining_time-entry]
