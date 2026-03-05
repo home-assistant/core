@@ -52,9 +52,9 @@ class DoorTriggerBase(EntityTriggerBase):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
         if split_entity_id(from_state.entity_id)[0] == COVER_DOMAIN:
-            return from_state.attributes.get(ATTR_IS_CLOSED) != to_state.attributes.get(
-                ATTR_IS_CLOSED
-            )
+            if (from_is_closed := from_state.attributes.get(ATTR_IS_CLOSED)) is None:
+                return False
+            return from_is_closed != to_state.attributes.get(ATTR_IS_CLOSED)
         return from_state.state != to_state.state
 
 
