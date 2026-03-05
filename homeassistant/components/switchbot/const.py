@@ -64,6 +64,9 @@ class SupportedModels(StrEnum):
     ART_FRAME = "art_frame"
     KEYPAD_VISION = "keypad_vision"
     KEYPAD_VISION_PRO = "keypad_vision_pro"
+    LOCK_VISION_PRO = "lock_vision_pro"
+    LOCK_VISION = "lock_vision"
+    LOCK_PRO_WIFI = "lock_pro_wifi"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -107,6 +110,9 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.KEYPAD_VISION: SupportedModels.KEYPAD_VISION,
     SwitchbotModel.KEYPAD_VISION_PRO: SupportedModels.KEYPAD_VISION_PRO,
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
+    SwitchbotModel.LOCK_VISION_PRO: SupportedModels.LOCK_VISION_PRO,
+    SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
+    SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -148,6 +154,9 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.ART_FRAME,
     SwitchbotModel.KEYPAD_VISION,
     SwitchbotModel.KEYPAD_VISION_PRO,
+    SwitchbotModel.LOCK_VISION_PRO,
+    SwitchbotModel.LOCK_VISION,
+    SwitchbotModel.LOCK_PRO_WIFI,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -173,6 +182,9 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.ART_FRAME: switchbot.SwitchbotArtFrame,
     SwitchbotModel.KEYPAD_VISION: switchbot.SwitchbotKeypadVision,
     SwitchbotModel.KEYPAD_VISION_PRO: switchbot.SwitchbotKeypadVision,
+    SwitchbotModel.LOCK_VISION_PRO: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

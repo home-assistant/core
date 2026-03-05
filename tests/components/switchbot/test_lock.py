@@ -19,8 +19,11 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     LOCK_LITE_SERVICE_INFO,
+    LOCK_PRO_WIFI_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     LOCK_ULTRA_SERVICE_INFO,
+    LOCK_VISION_PRO_SERVICE_INFO,
+    LOCK_VISION_SERVICE_INFO,
     WOLOCKPRO_SERVICE_INFO,
 )
 
@@ -35,6 +38,9 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ("lock", LOCK_SERVICE_INFO),
         ("lock_lite", LOCK_LITE_SERVICE_INFO),
         ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_vision", LOCK_VISION_SERVICE_INFO),
+        ("lock_vision_pro", LOCK_VISION_PRO_SERVICE_INFO),
+        ("lock_pro_wifi", LOCK_PRO_WIFI_SERVICE_INFO),
     ],
 )
 @pytest.mark.parametrize(
@@ -83,6 +89,9 @@ async def test_lock_services(
         ("lock", LOCK_SERVICE_INFO),
         ("lock_lite", LOCK_LITE_SERVICE_INFO),
         ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_vision", LOCK_VISION_SERVICE_INFO),
+        ("lock_vision_pro", LOCK_VISION_PRO_SERVICE_INFO),
+        ("lock_pro_wifi", LOCK_PRO_WIFI_SERVICE_INFO),
     ],
 )
 @pytest.mark.parametrize(

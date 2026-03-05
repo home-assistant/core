@@ -761,6 +761,81 @@ LOCK_ULTRA_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+LOCK_VISION_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Vision",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\x6f\xc9\xa6\x0a\x00\x00\x2e\x00\x0c\x00\x00\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80.\x00\x11i\x08"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Vision",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\x6f\xc9\xa6\x0a\x00\x00\x2e\x00\x0c\x00\x00\x00\x00"
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80.\x00\x11i\x08"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Vision"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_VISION_PRO_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Vision Pro",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\xe6\x1aq\x03\x00\x003\x00\x0c\x00\x00\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x803\x00\x11i\t"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Vision Pro",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\xe6\x1aq\x03\x00\x003\x00\x0c\x00\x00\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x803\x00\x11i\t"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Vision Pro"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_PRO_WIFI_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Pro Wifi",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xb0^\xfe\x0e\x02\x00=\x00\x08"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80=\x00\x10\xff\x90"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Pro Wifi",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb0^\xfe\x0e\x02\x00=\x00\x08"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80=\x00\x10\xff\x90"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Pro Wifi"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 AIR_PURIFIER_TBALE_PM25_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Air Purifier Table PM25",
     manufacturer_data={
