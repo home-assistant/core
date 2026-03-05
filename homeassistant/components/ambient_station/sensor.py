@@ -178,6 +178,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM10_IN_24H_AQIN,
@@ -185,6 +186,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_CO2_IN_AQIN,
