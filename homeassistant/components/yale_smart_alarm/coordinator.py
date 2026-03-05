@@ -99,6 +99,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "sensor_battery_map": _sensor_battery_map,
             "temp_map": _temp_map,
             "panel_info": updates["panel_info"],
+            "alarm_event_latest": updates["cycle"]["alarm_event_latest"],
         }
 
     def get_updates(self) -> dict[str, Any]:
