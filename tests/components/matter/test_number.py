@@ -79,7 +79,6 @@ async def test_level_control_config_entities(
     state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
     assert state
     assert state.state == "255"
-    
     # Set a concrete value (not null)
     await hass.services.async_call(
         "number",
