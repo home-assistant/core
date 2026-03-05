@@ -10,6 +10,10 @@ from .const import INTEGRATIONS_DIR
 from .util import flatten_translations, get_base_arg_parser, substitute_references
 
 
+class InvalidSubstitutionKey(Exception):
+    """Exception for invalid substitution keys."""
+
+
 def valid_integration(integration):
     """Test if it's a valid integration."""
     if not (INTEGRATIONS_DIR / integration).is_dir():
