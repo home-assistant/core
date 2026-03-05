@@ -5,6 +5,7 @@ import ctypes
 import logging
 import struct
 import threading
+from typing import Any
 
 import pyads
 
@@ -55,13 +56,26 @@ class AdsHub:
         self._devices.append(device)
 
     def write_by_name(self, name, value, plc_datatype):
-        """Write a value to the device."""
-
+        """Write a single value to the device by variable name and PLC datatype."""
         with self._lock:
             try:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
+
+    def write_list_by_name(self, items: list[tuple[str, Any]]) -> None:
+        """Write multiple values in one ADS transaction so they apply in the same PLC cycle.
+
+        Uses pyads write_list_by_name so all values land in the same PLC cycle.
+        Separate write_by_name calls could span multiple cycles. Data types are
+        inferred from the PLC symbol cache; PLC variables must be declared with
+        the expected types (BOOL, UINT, USINT).
+        """
+        with self._lock:
+            try:
+                self._client.write_list_by_name(dict(items))
+            except pyads.ADSError as err:
+                _LOGGER.error("Error writing list: %s", err)
 
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
