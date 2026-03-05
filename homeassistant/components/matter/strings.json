@@ -245,7 +245,7 @@
         "name": "Volume"
       },
       "startup_current_level": {
-        "name": "Level on mains power connect"
+        "name": "Start-up current level"
       },
       "temperature_offset": {
         "name": "Temperature offset"
