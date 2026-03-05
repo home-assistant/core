@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.loader import async_get_integration, async_get_loaded_integration
+from homeassistant.loader import async_get_loaded_integration
 
 from .const import CONF_UNIT_ID, DEFAULT_PORT, DOMAIN, PLATFORMS
 from .coordinator import QubeCoordinator
@@ -54,9 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
     version = "unknown"
     with contextlib.suppress(Exception):
         integration = async_get_loaded_integration(hass, DOMAIN)
-        if not integration:
-            integration = await async_get_integration(hass, DOMAIN)
-        if integration and getattr(integration, "version", None):
+        if getattr(integration, "version", None):
             version = str(integration.version)
 
     coordinator = QubeCoordinator(hass, hub, entry)

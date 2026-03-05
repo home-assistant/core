@@ -8,8 +8,19 @@ from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.qube_heatpump.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
+
+def get_entity_id_by_unique_id_suffix(
+    hass: HomeAssistant, entry_unique_id: str, key: str
+) -> str | None:
+    """Get entity_id from entity registry by unique_id suffix."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"{entry_unique_id}-{key}"
+    return entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
 
 
 @pytest.fixture

@@ -97,7 +97,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
                     previous_value,
                     previous_value,
                 )
-                # Set the attribute back to the previous value
+                # QubeState uses __slots__; bypass any setattr restrictions
                 object.__setattr__(data, key, previous_value)
             else:
                 # Update the stored previous value

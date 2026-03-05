@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_flow_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -176,16 +176,16 @@ async def test_form_with_existing_entries(
 
 
 async def test_reconfigure_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_flow_entry: MockConfigEntry
 ) -> None:
     """Test the reconfigure flow."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_flow_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
+            "entry_id": mock_config_flow_entry.entry_id,
         },
     )
 
@@ -195,17 +195,17 @@ async def test_reconfigure_flow(
 
 async def test_reconfigure_confirm(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_flow_entry: MockConfigEntry,
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test reconfigure confirmation updates entry."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_flow_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
+            "entry_id": mock_config_flow_entry.entry_id,
         },
     )
 
@@ -227,15 +227,15 @@ async def test_reconfigure_confirm(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_HOST] == "5.6.7.8"
-    assert mock_config_entry.data[CONF_NAME] == "qube 1"
+    assert mock_config_flow_entry.data[CONF_HOST] == "5.6.7.8"
+    assert mock_config_flow_entry.data[CONF_NAME] == "qube 1"
 
 
 async def test_reconfigure_duplicate_unique_id(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_flow_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure aborts when new unique_id conflicts."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_flow_entry.add_to_hass(hass)
 
     entry2 = MockConfigEntry(
         domain=DOMAIN,
@@ -248,7 +248,7 @@ async def test_reconfigure_duplicate_unique_id(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
+            "entry_id": mock_config_flow_entry.entry_id,
         },
     )
 
@@ -266,10 +266,10 @@ async def test_reconfigure_duplicate_unique_id(
 
 
 async def test_reconfigure_duplicate_ip(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_flow_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure shows error when new IP conflicts."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_flow_entry.add_to_hass(hass)
 
     entry2 = MockConfigEntry(
         domain=DOMAIN,
@@ -282,7 +282,7 @@ async def test_reconfigure_duplicate_ip(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
+            "entry_id": mock_config_flow_entry.entry_id,
         },
     )
 
@@ -300,16 +300,16 @@ async def test_reconfigure_duplicate_ip(
 
 
 async def test_reconfigure_cannot_connect(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_flow_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure shows error when cannot connect."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_flow_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
+            "entry_id": mock_config_flow_entry.entry_id,
         },
     )
 

@@ -439,8 +439,8 @@ homeassistant.components.pvoutput.*
 homeassistant.components.pyload.*
 homeassistant.components.python_script.*
 homeassistant.components.qbus.*
-homeassistant.components.qube_heatpump.*
 homeassistant.components.qnap_qsw.*
+homeassistant.components.qube_heatpump.*
 homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
 homeassistant.components.radio_browser.*

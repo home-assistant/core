@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
@@ -44,175 +43,149 @@ STATUS_MAP: dict[int, str] = {
 }
 
 
-@dataclass(frozen=True, kw_only=True)
-class QubeSensorEntityDescription(SensorEntityDescription):
-    """Describes Qube sensor entity."""
-
-    key_path: str
-
-
-SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
-    QubeSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="temp_supply",
-        key_path="temp_supply",
         translation_key="temp_supply",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_return",
-        key_path="temp_return",
         translation_key="temp_return",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_source_in",
-        key_path="temp_source_in",
         translation_key="temp_source_in",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_source_out",
-        key_path="temp_source_out",
         translation_key="temp_source_out",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_room",
-        key_path="temp_room",
         translation_key="temp_room",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_dhw",
-        key_path="temp_dhw",
         translation_key="temp_dhw",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_outside",
-        key_path="temp_outside",
         translation_key="temp_outside",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="power_thermic",
-        key_path="power_thermic",
         translation_key="power_thermic",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="power_electric",
-        key_path="power_electric",
         translation_key="power_electric",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="energy_total_electric",
-        key_path="energy_total_electric",
         translation_key="energy_total_electric",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="energy_total_thermic",
-        key_path="energy_total_thermic",
         translation_key="energy_total_thermic",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="cop_calc",
-        key_path="cop_calc",
         translation_key="cop_calc",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="compressor_speed",
-        key_path="compressor_speed",
         translation_key="compressor_speed",
         native_unit_of_measurement="rpm",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="flow_rate",
-        key_path="flow_rate",
         translation_key="flow_rate",
         native_unit_of_measurement="L/min",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="setpoint_room_heat_day",
-        key_path="setpoint_room_heat_day",
         translation_key="setpoint_room_heat_day",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="setpoint_room_heat_night",
-        key_path="setpoint_room_heat_night",
         translation_key="setpoint_room_heat_night",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="setpoint_room_cool_day",
-        key_path="setpoint_room_cool_day",
         translation_key="setpoint_room_cool_day",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="setpoint_room_cool_night",
-        key_path="setpoint_room_cool_night",
         translation_key="setpoint_room_cool_night",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    QubeSensorEntityDescription(
+    SensorEntityDescription(
         key="setpoint_dhw",
-        key_path="setpoint_dhw",
         translation_key="setpoint_dhw",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -263,7 +236,7 @@ async def async_setup_entry(
 class QubeSensor(QubeEntity, SensorEntity):
     """Qube generic sensor."""
 
-    entity_description: QubeSensorEntityDescription
+    entity_description: SensorEntityDescription
     _attr_should_poll = False
 
     def __init__(
@@ -273,7 +246,7 @@ class QubeSensor(QubeEntity, SensorEntity):
         entry: QubeConfigEntry,
         version: str,
         device_name: str,
-        description: QubeSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, hub, version, device_name)
@@ -289,7 +262,7 @@ class QubeSensor(QubeEntity, SensorEntity):
         data: QubeState = self.coordinator.data
         if not data:
             return None
-        return getattr(data, self.entity_description.key_path, None)
+        return getattr(data, self.entity_description.key, None)
 
 
 class QubeStatusSensor(QubeEntity, SensorEntity):
