@@ -403,7 +403,8 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in self.appliance.programs
-            if program.key != ProgramKey.UNKNOWN
+            if program.key
+            not in (ProgramKey.UNKNOWN, ProgramKey.BSH_COMMON_FAVORITE_001)
             and (
                 program.constraints is None
                 or program.constraints.execution
