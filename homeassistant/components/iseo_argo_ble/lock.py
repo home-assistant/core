@@ -11,7 +11,7 @@ from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockSt
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -65,6 +65,7 @@ class IseoLockEntity(LockEntity):
         self._relock_task: asyncio.Task[None] | None = None
         self._ble_lock = asyncio.Lock()
         self._door_status_supported: bool | None = None
+        self._poll_unsub: CALLBACK_TYPE | None = None
         self._fw_version_set = False
         self.client: IseoClient = client
 
@@ -86,10 +87,11 @@ class IseoLockEntity(LockEntity):
     async def async_added_to_hass(self) -> None:
         """Probe door-status support; start polling if the lock supports it."""
         await self._poll_state()
-        if self._door_status_supported:
-            self.async_on_remove(
-                async_track_time_interval(self.hass, self._poll_state, _POLL_INTERVAL)
+        if self._door_status_supported is not False:
+            self._poll_unsub = async_track_time_interval(
+                self.hass, self._poll_state, _POLL_INTERVAL
             )
+            self.async_on_remove(self._poll_unsub)
         self.async_on_remove(self._cancel_relock_task)
 
     def _cancel_relock_task(self) -> None:
@@ -100,6 +102,9 @@ class IseoLockEntity(LockEntity):
     async def _poll_state(self, _now: Any = None, force: bool = False) -> None:
         """Read door state via TLV_INFO and update HA state."""
         _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
+        if self._door_status_supported is False and _now is not None and not force:
+            return
+
         if self._ble_lock.locked():
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
             return
@@ -146,6 +151,9 @@ class IseoLockEntity(LockEntity):
             if self._door_status_supported is not False:
                 _LOGGER.debug("Door status not supported; polling disabled")
                 self._door_status_supported = False
+                if self._poll_unsub:
+                    self._poll_unsub()
+                    self._poll_unsub = None
             self.async_write_ha_state()
             return
 

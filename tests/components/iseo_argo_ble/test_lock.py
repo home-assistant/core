@@ -2,12 +2,14 @@
 
 import asyncio
 from datetime import UTC, datetime, timedelta
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 
 from homeassistant.components.iseo_argo_ble.const import DOMAIN
+from homeassistant.components.iseo_argo_ble.lock import _POLL_INTERVAL, IseoLockEntity
 from homeassistant.components.lock import LockState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -547,3 +549,109 @@ async def test_poll_state_status_updates(
     ):
         await lock_entity._poll_state()
     assert lock_entity.available is True
+
+
+async def test_polling_scheduled_even_if_initial_poll_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_derive_private_key: MagicMock,
+) -> None:
+    """Test that polling is scheduled even if the initial poll fails."""
+    # initial _poll_state will fail
+    mock_iseo_client.read_state = AsyncMock(side_effect=IseoConnectionError("offline"))
+
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_track_time_interval"
+        ) as mock_track,
+        patch(
+            "homeassistant.components.iseo_argo_ble.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        component: EntityComponent = hass.data["lock"]
+        lock_entity = next(iter(component.entities))
+        lock_entity = cast(IseoLockEntity, lock_entity)
+
+        # Currently this will fail because _door_status_supported is None
+        assert lock_entity._door_status_supported is None
+        # Verify if async_track_time_interval was called
+        # It should be called with (hass, lock_entity._poll_state, _POLL_INTERVAL)
+        mock_track.assert_called_once_with(hass, lock_entity._poll_state, _POLL_INTERVAL)
+
+
+async def test_polling_cancelled_if_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_derive_private_key: MagicMock,
+) -> None:
+    """Test that polling is cancelled if door status is unsupported."""
+    # initial _poll_state will fail, so it starts polling
+    mock_iseo_client.read_state = AsyncMock(side_effect=IseoConnectionError("offline"))
+
+    mock_config_entry.add_to_hass(hass)
+
+    mock_unsub = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_track_time_interval",
+            return_value=mock_unsub,
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        component: EntityComponent = hass.data["lock"]
+        lock_entity = next(iter(component.entities))
+        lock_entity = cast(IseoLockEntity, lock_entity)
+
+        assert lock_entity._poll_unsub == mock_unsub
+
+        # Now make _poll_state succeed but return door_closed=None (unsupported)
+        mock_iseo_client.read_state = AsyncMock(
+            return_value=MagicMock(door_closed=None, firmware_info=None)
+        )
+        await lock_entity._poll_state()
+
+        assert lock_entity._door_status_supported is False
+        assert lock_entity._poll_unsub is None
+        mock_unsub.assert_called_once()
+
+
+async def test_poll_state_ble_locked_manual_with_now(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_derive_private_key: MagicMock,
+) -> None:
+    """Test _poll_state early return when lock is already in use (coverage for line 106)."""
+    await _setup_integration(
+        hass, mock_config_entry, mock_iseo_client, mock_derive_private_key
+    )
+    component: EntityComponent = hass.data["lock"]
+    lock_entity = next(iter(component.entities))
+
+    mock_iseo_client.read_state.reset_mock()
+    with patch.object(lock_entity._ble_lock, "locked", return_value=True):
+        await lock_entity._poll_state(_now=datetime.now(tz=UTC))
+        mock_iseo_client.read_state.assert_not_called()
