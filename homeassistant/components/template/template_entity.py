@@ -266,17 +266,20 @@ class TemplateEntity(AbstractTemplateEntity):
 
     def _get_this_variable(self) -> TemplateStateFromEntityId:
         """Create a this variable for the entity."""
+        entity_id = self.entity_id
         if self._preview_callback:
-            if (
-                self.registry_entry
-                and (preview_entity_id := self.registry_entry.entity_id) is None
-            ) or not self.registry_entry:
-                preview_entity_id = async_generate_entity_id(
+            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # a temporary entity_id is created.
+            # During option flow, the preview entity_id will be None, however the registry entry
+            # will contain the target entity_id.
+            if self.registry_entry:
+                entity_id = self.registry_entry.entity_id
+            else:
+                entity_id = async_generate_entity_id(
                     self._entity_id_format, self._attr_name or "preview", hass=self.hass
                 )
-            return TemplateStateFromEntityId(self.hass, preview_entity_id)
 
-        return TemplateStateFromEntityId(self.hass, self.entity_id)
+        return TemplateStateFromEntityId(self.hass, entity_id)
 
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
