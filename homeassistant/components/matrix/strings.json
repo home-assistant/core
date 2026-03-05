@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "Account is already configured",
       "cannot_connect": "Failed to connect to the Matrix server during import",
+      "invalid_auth": "Invalid username or password during import",
       "reauth_successful": "Re-authentication was successful",
       "unknown": "An unexpected error occurred",
       "wrong_account": "You must use the same account that was originally configured"

@@ -14,14 +14,14 @@ from homeassistant.core import Event, HomeAssistant
 from .conftest import TEST_JOINABLE_ROOMS
 
 
-async def test_send_message(
+async def test_send_reaction(
     hass: HomeAssistant,
     matrix_bot: MatrixBot,
     image_path,
     matrix_events: list[Event],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the send_message service."""
+    """Test the react service."""
 
     await hass.async_start()
     assert len(matrix_events) == 0

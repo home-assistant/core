@@ -86,15 +86,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         login_response = await client.login(data[CONF_PASSWORD])
         if isinstance(login_response, LoginError):
             # Distinguish between auth failures and connection issues
-            # Check both status_code and errcode attributes
-            error_code = getattr(login_response, "status_code", None) or getattr(
-                login_response, "errcode", None
-            )
-            if error_code in ("M_FORBIDDEN", "M_UNKNOWN"):
+            if login_response.status_code == "M_FORBIDDEN":
                 raise InvalidAuth
             raise CannotConnect
 
-        # Get user info to validate connection
         whoami_response = await client.whoami()
         if hasattr(whoami_response, "user_id"):
             user_id = whoami_response.user_id
@@ -187,7 +182,6 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Merge existing config with new password
             reauth_data = {**reauth_entry.data, **user_input}
 
             try:
@@ -200,7 +194,6 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during reauth")
                 errors["base"] = "unknown"
             else:
-                # Verify the user ID matches to prevent account switching
                 if info["user_id"] != reauth_entry.unique_id:
                     return self.async_abort(reason="wrong_account")
 
@@ -233,15 +226,12 @@ class MatrixOptionsFlowHandler(OptionsFlow):
             rooms: list[str] = user_input.get(CONF_ROOMS) or []
             commands = user_input.get(CONF_COMMANDS) or []
 
-            # Validate rooms: TextSelector(multiple=True) always returns list[str],
-            # but still verify each value matches the expected room format.
             room_re = re.compile(CONF_ROOMS_REGEX)
             for room in rooms:
                 if not room_re.match(room):
                     errors[CONF_ROOMS] = "invalid_rooms"
                     break
 
-            # Validate commands: list of dicts with name + one trigger
             if not isinstance(commands, list):
                 errors[CONF_COMMANDS] = "invalid_commands"
             else:
@@ -252,9 +242,12 @@ class MatrixOptionsFlowHandler(OptionsFlow):
                     if not cmd.get(CONF_NAME):
                         errors[CONF_COMMANDS] = "invalid_commands"
                         break
-                    if not any(
-                        cmd.get(k) for k in (CONF_WORD, CONF_EXPRESSION, CONF_REACTION)
-                    ):
+                    triggers = [
+                        k
+                        for k in (CONF_WORD, CONF_EXPRESSION, CONF_REACTION)
+                        if cmd.get(k)
+                    ]
+                    if len(triggers) != 1:
                         errors[CONF_COMMANDS] = "invalid_commands"
                         break
 
@@ -266,7 +259,6 @@ class MatrixOptionsFlowHandler(OptionsFlow):
                     }
                 )
 
-        # Build suggested values from current options, falling back to data
         current_rooms: list[Any] = self.config_entry.options.get(
             CONF_ROOMS, self.config_entry.data.get(CONF_ROOMS, [])
         )
@@ -274,7 +266,6 @@ class MatrixOptionsFlowHandler(OptionsFlow):
             CONF_COMMANDS, self.config_entry.data.get(CONF_COMMANDS, [])
         )
 
-        # Serialize any compiled regex patterns back to strings for display
         serialized_commands = []
         for cmd in current_commands:
             serialized_cmd = dict(cmd)

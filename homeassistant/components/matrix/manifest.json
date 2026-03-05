@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "loggers": ["matrix_client"],
+  "loggers": ["nio"],
   "quality_scale": "legacy",
   "requirements": ["matrix-nio==0.25.2", "Pillow==12.1.1", "aiofiles==24.1.0"]
 }

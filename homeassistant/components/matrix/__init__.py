@@ -132,7 +132,6 @@ type MatrixConfigEntry = ConfigEntry[MatrixBot]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
-    # Register services once at integration setup
     async_setup_services(hass)
 
     if DOMAIN not in config:
@@ -140,7 +139,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     config = config[DOMAIN]
 
-    # Check if there are existing config entries for this user
     existing_entries = [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -148,7 +146,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ]
 
     if not existing_entries:
-        # No existing config entry, create one from YAML
         commands: list[dict[str, Any]] = []
         for command in config[CONF_COMMANDS]:
             serialized_command = dict(command)
@@ -198,7 +195,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
         _LOGGER.warning("Invalid rooms in config entry %s: %s", entry.entry_id, err)
         rooms = []
 
-    # Store session files in .storage/matrix directory for better organization
     matrix_storage_dir = os.path.join(hass.config.path(), ".storage", "matrix")
     await hass.async_add_executor_job(
         partial(os.makedirs, matrix_storage_dir, exist_ok=True)
@@ -319,7 +315,7 @@ class MatrixBot:
             self._client.sync_forever(
                 timeout=30_000,
                 loop_sleep_time=1_000,
-            ),  # milliseconds.
+            ),
             name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
         )
 
@@ -382,7 +378,6 @@ class MatrixBot:
         room_id = RoomID(room.room_id)
 
         if isinstance(message, ReactionEvent):
-            # Handle reactions
             reaction = message.key
             _LOGGER.debug("Handling reaction: %s", reaction)
             if command := self._reaction_commands.get(room_id, {}).get(reaction):
@@ -555,7 +550,6 @@ class MatrixBot:
         If that also fails, raises LocalProtocolError.
         """
 
-        # If we have an access token
         if (token := self._access_tokens.get(self._mx_id)) is not None:
             _LOGGER.debug("Restoring login from stored access token")
             self._client.restore_login(
@@ -580,7 +574,6 @@ class MatrixBot:
                     response.device_id,
                 )
 
-        # If the token login did not succeed
         if not self._client.logged_in:
             response = await self._client.login(password=self._password)
             _LOGGER.debug("Logging in using password")
@@ -750,8 +743,7 @@ class MatrixBot:
 
     async def async_close(self) -> None:
         """Close the Matrix client."""
-        if self._client is not None:
-            await self._client.close()
+        await self._client.close()
 
     async def handle_send_reaction(self, service: ServiceCall) -> None:
         """Handle the react service."""
