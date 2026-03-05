@@ -256,7 +256,7 @@
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
-          "medium": "Medium",
+          "medium": "[%key:common::state::medium%]",
           "moderate_high": "Moderate high",
           "moderate_low": "Moderate low"
         }
