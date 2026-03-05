@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
+import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -35,6 +36,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -62,10 +64,10 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
     # Alarm panel should be created
     assert hass.states.get("alarm_control_panel.alarm_panel")
 
-    # Client keepalive and update should be called after startup
+    # Client keepalive should be called after startup
     assert mock_nessclient.keepalive.call_count == 1
-    # update is called once during setup (connection test) and once after startup
-    assert mock_nessclient.update.call_count == 2
+    # update is called once during coordinator first refresh
+    assert mock_nessclient.update.call_count == 1
 
 
 async def test_config_entry_unload(hass: HomeAssistant, mock_nessclient) -> None:
@@ -628,3 +630,81 @@ async def test_yaml_import_triggers_flow(
         )
         assert issue is not None
         assert issue.severity == "warning"
+
+
+async def test_yaml_import_abort_creates_issue(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that YAML import abort creates an issue."""
+    mock_client = AsyncMock()
+    mock_client.update.side_effect = OSError("Connection refused")
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.Client",
+        return_value=mock_client,
+    ):
+        config = {
+            DOMAIN: {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1992,
+            }
+        }
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        # No config entry should be created
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 0
+
+        # Check that an import failure issue was created
+        issue = issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
+        assert issue is not None
+        assert issue.severity == "warning"
+
+
+async def test_panic_service_no_config_entry(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test panic service raises error when no config entry is loaded."""
+    # Set up the integration so services are registered, but then unload
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PANIC, blocking=True, service_data={ATTR_CODE: "1234"}
+        )
+
+
+async def test_aux_service_no_config_entry(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test aux service raises error when no config entry is loaded."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_AUX, blocking=True, service_data={ATTR_OUTPUT_ID: 1}
+        )
