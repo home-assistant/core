@@ -22,6 +22,8 @@ from .const import CONF_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 # Seconds the entity stays in "unlocked" state before reverting to "locked".
 _RELOCK_DELAY = 5
 

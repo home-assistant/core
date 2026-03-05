@@ -34,19 +34,15 @@ rules:
     status: exempt
     comment: This integration does not have any configuration parameters.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: todo
-    comment: Entity does not yet track availability.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable:
     status: todo
     comment: No unavailability logging implemented yet.
-  parallel-updates:
-    status: todo
-    comment: Not yet configured.
+  parallel-updates: done
   reauthentication-flow:
-    status: todo
-    comment: Not yet implemented.
+    status: exempt
+    comment: Uses a locally-generated cryptographic identity that does not expire.
   test-coverage: done
 
   # Gold
@@ -56,8 +52,8 @@ rules:
     comment: Not yet implemented.
   discovery: done
   discovery-update-info:
-    status: todo
-    comment: Not yet implemented.
+    status: exempt
+    comment: BLE address is both the unique ID and connection parameter.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -69,24 +65,24 @@ rules:
     status: exempt
     comment: This integration connects to a single device.
   entity-category:
-    status: todo
-    comment: Not yet evaluated.
+    status: exempt
+    comment: The lock is the primary entity; no secondary entities exist.
   entity-device-class:
-    status: todo
-    comment: Not yet evaluated.
+    status: exempt
+    comment: Lock entities do not have device classes.
   entity-disabled-by-default:
-    status: todo
-    comment: Not yet evaluated.
+    status: exempt
+    comment: The lock is the only entity and should be enabled by default.
   entity-translations:
     status: todo
     comment: Not yet implemented.
   exception-translations: done
   icon-translations:
-    status: todo
-    comment: Not yet implemented.
+    status: exempt
+    comment: Uses default platform icons; no custom icons defined.
   reconfiguration-flow:
-    status: todo
-    comment: Not yet implemented.
+    status: exempt
+    comment: Configuration is a BLE address and generated identity; nothing to reconfigure.
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
@@ -95,12 +91,8 @@ rules:
     comment: This integration connects to a single device.
 
   # Platinum
-  async-dependency:
-    status: todo
-    comment: Not yet evaluated.
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: This integration does not use HTTP sessions.
-  strict-typing:
-    status: todo
-    comment: Not yet implemented.
+  strict-typing: done
