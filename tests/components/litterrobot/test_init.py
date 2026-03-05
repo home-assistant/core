@@ -58,6 +58,9 @@ async def test_entry_not_setup(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -72,15 +75,20 @@ async def test_entry_not_setup(
 async def test_unique_id_migration(
     hass: HomeAssistant, mock_account: MagicMock
 ) -> None:
-    """Test that entries without unique_id get it set during setup."""
+    """Test that legacy entries get unique_id set during migration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
     )
     assert entry.unique_id is None
     entry.add_to_hass(hass)
 
     with patch(
+        "homeassistant.components.litterrobot.Account",
+        return_value=mock_account,
+    ), patch(
         "homeassistant.components.litterrobot.coordinator.Account",
         return_value=mock_account,
     ):
@@ -88,33 +96,13 @@ async def test_unique_id_migration(
         await hass.async_block_till_done()
 
     assert entry.unique_id == ACCOUNT_USER_ID
-
-
-async def test_unique_id_already_set(
-    hass: HomeAssistant, mock_account: MagicMock
-) -> None:
-    """Test that entries with unique_id are not modified during setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG[DOMAIN],
-        unique_id=ACCOUNT_USER_ID,
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.litterrobot.coordinator.Account",
-        return_value=mock_account,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.unique_id == ACCOUNT_USER_ID
+    assert entry.minor_version == 2
 
 
 async def test_unique_id_migration_conflict(
     hass: HomeAssistant, mock_account: MagicMock
 ) -> None:
-    """Test that migration skips backfill when another entry owns that unique_id."""
+    """Test that migration skips unique_id when another entry owns it."""
     # First entry already has the unique_id
     MockConfigEntry(
         domain=DOMAIN,
@@ -126,11 +114,16 @@ async def test_unique_id_migration_conflict(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
     )
     assert entry.unique_id is None
     entry.add_to_hass(hass)
 
     with patch(
+        "homeassistant.components.litterrobot.Account",
+        return_value=mock_account,
+    ), patch(
         "homeassistant.components.litterrobot.coordinator.Account",
         return_value=mock_account,
     ):
@@ -138,6 +131,34 @@ async def test_unique_id_migration_conflict(
         await hass.async_block_till_done()
 
     assert entry.unique_id is None
+    assert entry.minor_version == 2
+
+
+async def test_unique_id_migration_connection_failure(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that migration succeeds without unique_id when API is unreachable."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.litterrobot.Account.connect",
+        side_effect=LitterRobotException,
+    ), patch(
+        "homeassistant.components.litterrobot.coordinator.Account",
+        return_value=mock_account,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 2
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_device_remove_devices(

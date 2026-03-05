@@ -166,6 +166,8 @@ async def setup_integration(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
         unique_id=ACCOUNT_USER_ID,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
