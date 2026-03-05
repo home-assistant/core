@@ -206,6 +206,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM_IN_HUMIDITY_AQIN,
@@ -275,6 +276,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_EVENTRAININ,
@@ -289,6 +291,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_HOURLYRAININ,
@@ -523,6 +526,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP1F,
@@ -530,6 +534,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP2F,
@@ -537,6 +542,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP3F,
@@ -544,6 +550,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP4F,
@@ -551,6 +558,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP5F,
@@ -558,6 +566,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP6F,
@@ -565,6 +574,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP7F,
@@ -572,6 +582,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP8F,
@@ -579,6 +590,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP9F,
@@ -586,6 +598,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION,
@@ -605,6 +618,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP1F,
@@ -612,6 +626,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP2F,
@@ -619,6 +634,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP3F,
@@ -626,6 +642,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP4F,
@@ -633,6 +650,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP5F,
@@ -640,6 +658,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP6F,
@@ -647,6 +666,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP7F,
@@ -654,6 +674,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP8F,
@@ -661,6 +682,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP9F,
@@ -668,12 +690,14 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPF,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPINF,
@@ -681,6 +705,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_TOTALRAININ,
