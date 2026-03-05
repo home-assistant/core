@@ -55,6 +55,15 @@ async def async_setup_entry(
         GoogleWifiSensor(entry, description) for description in SENSOR_TYPES
     )
 
+    # Create the sensor objects
+    entities = [GoogleWifiSensor(entry, description) for description in SENSOR_TYPES]
+
+    # Trigger an initial update for all sensors immediately
+    # so they have data before they are added to HA
+    for entity in entities:
+        await entity.async_update()
+
+    async_add_entities(entities)
 
 class GoogleWifiSensor(SensorEntity):
     """Representation of a Google Wifi sensor."""
@@ -80,22 +89,13 @@ class GoogleWifiSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information the router."""
-
-        # Default model if data doesn't fetch
-        model_name = "Google/Nest Wifi"
-
-        # Extract model from local data: ['system']['modelId']
-        if system_data := self._attr_data.get("system"):
-            model_name = system_data.get("modelId", model_name)
-
         return DeviceInfo(
-            # Identifiers must be a set of tuples
             identifiers={(DOMAIN, self._entry.entry_id)},
             name=self._entry.title,
             manufacturer="Google",
-            model=model_name,
+            model=self._attr_data.get("system", {}).get("modelId", "Google Wifi"),
             # Use the current IP from the entry data for the link
-            configuration_url=f"http://{self._entry.data[CONF_IP_ADDRESS]}",
+            configuration_url=f"http://{self._entry.data[CONF_IP_ADDRESS]}/api/v1/status",
             # Pull software version from the last successful data fetch
             sw_version=self._attr_data.get("software", {}).get("softwareVersion"),
         )
@@ -105,16 +105,24 @@ class GoogleWifiSensor(SensorEntity):
         host = self._entry.data[CONF_IP_ADDRESS]
         url = f"http://{host}/api/v1/status"
 
-        def fetch():
-            return requests.get(url, timeout=5)
-
         try:
-            response = await self.hass.async_add_executor_job(fetch)
+            # short timeout to prevent hanging the event loop
+            # also if your own router isn't returning you data within 2 seconds... you aren't getting it.
+            response = await self.hass.async_add_executor_job(
+                lambda: requests.get(url, timeout=2)
+            )
             response.raise_for_status()
-            self._attr_data = response.json()
-        except (requests.exceptions.RequestException, ValueError) as err:
-            _LOGGER.debug("Error updating sensor: %s", err)
-            self._attr_data = {}
+            new_data = response.json()
+
+            # Only update if we actually got data to prevent "Unknown" flickers
+            if new_data:
+                self._attr_data = new_data
+                #mark as available to wipe any previous failure
+                self._attr_available = True
+        except Exception as err:
+            _LOGGER.error("Error updating %s: %s", self.name, err)
+            #mark as unavailable in case the router stonewalls us
+            self._attr_available = False
 
     @property
     def native_value(self) -> StateType:
@@ -172,7 +180,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2026.9.0",  # Set a future target version
+        breaks_in_ha_version="2026.9.0",  # Arbitrary future target version to tell user this support is going away
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
