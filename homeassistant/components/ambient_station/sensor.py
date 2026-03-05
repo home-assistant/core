@@ -424,6 +424,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
