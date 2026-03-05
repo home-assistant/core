@@ -48,7 +48,7 @@ async def test_setup_platform_valid_config(hass: HomeAssistant, mock_socket) -> 
 
 async def test_setup_platform_invalid_config(hass: HomeAssistant, mock_socket) -> None:
     """Check the invalid configuration."""
-    with assert_setup_component(0, "binary_sensor"):
+    with assert_setup_component(0):
         assert await async_setup_component(
             hass,
             "binary_sensor",

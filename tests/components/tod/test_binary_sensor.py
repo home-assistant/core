@@ -55,13 +55,13 @@ async def test_setup(hass: HomeAssistant) -> None:
             },
         ]
     }
-    with assert_setup_component(2, "binary_sensor"):
+    with assert_setup_component(2):
         assert await async_setup_component(hass, "binary_sensor", config)
 
 
 async def test_setup_no_sensors(hass: HomeAssistant) -> None:
     """Test setup with no sensors."""
-    with assert_setup_component(0, "binary_sensor"):
+    with assert_setup_component(0):
         assert await async_setup_component(
             hass, "binary_sensor", {"binary_sensor": {"platform": "tod"}}
         )
