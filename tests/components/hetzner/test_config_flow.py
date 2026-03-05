@@ -89,24 +89,6 @@ async def test_user_flow_unknown_error(
 
 
 @pytest.mark.usefixtures("mock_hcloud_config_flow")
-async def test_user_flow_duplicate_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test user flow aborts on duplicate entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_API_TOKEN: "test-api-token-12345"},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_hcloud_config_flow")
 async def test_reauth_flow_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

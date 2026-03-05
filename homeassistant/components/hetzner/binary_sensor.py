@@ -29,14 +29,19 @@ async def async_setup_entry(
     entities: list[HetznerLoadBalancerTargetHealthSensor] = []
     for lb_id, lb in coordinator.data.items():
         for target in lb.data_model.targets or []:
-            if target.type == "server" and target.server is not None:
-                server_name = target.server.name or str(target.server.id)
+            if (
+                target.type == "server"
+                and target.server is not None
+                and target.server.id is not None
+            ):
+                server_id = target.server.id
+                server_name = coordinator.server_names.get(server_id, str(server_id))
                 entities.append(
                     HetznerLoadBalancerTargetHealthSensor(
                         coordinator=coordinator,
                         lb_id=lb_id,
                         target_type="server",
-                        target_id=str(target.server.id),
+                        target_id=str(server_id),
                         target_name=server_name,
                     )
                 )

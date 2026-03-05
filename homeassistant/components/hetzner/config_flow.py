@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import hashlib
 from typing import Any
 
 from hcloud import APIException, Client
@@ -40,10 +39,6 @@ class HetznerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             token = user_input[CONF_API_TOKEN]
-            unique_id = hashlib.sha256(token.encode()).hexdigest()[:12]
-
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
 
             try:
                 client = Client(token=token)
