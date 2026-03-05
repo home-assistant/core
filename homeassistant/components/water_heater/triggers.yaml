@@ -1,0 +1,63 @@
+.trigger_common: &trigger_common
+  target: &trigger_water_heater_target
+    entity:
+      domain: water_heater
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+
+.number_or_entity: &number_or_entity
+  required: false
+  selector:
+    choose:
+      choices:
+        number:
+          selector:
+            number:
+              mode: box
+        entity:
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_number
+                  - number
+                  - sensor
+      translation_key: number_or_entity
+
+.trigger_threshold_type: &trigger_threshold_type
+  required: true
+  default: above
+  selector:
+    select:
+      options:
+        - above
+        - below
+        - between
+        - outside
+      translation_key: trigger_threshold_type
+
+turned_off: *trigger_common
+turned_on: *trigger_common
+
+target_temperature_changed:
+  target: *trigger_water_heater_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+target_temperature_crossed_threshold:
+  target: *trigger_water_heater_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
