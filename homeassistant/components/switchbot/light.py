@@ -52,6 +52,7 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
 
     _device: switchbot.SwitchbotAirPurifier
     _attr_translation_key = "light"
+    _attr_has_entity_name = False
     _attr_is_on: bool | None = None
 
     async def async_added_to_hass(self) -> None:

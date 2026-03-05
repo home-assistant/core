@@ -24,6 +24,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot button platform."""
     coordinator = entry.runtime_data
+    if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
+        async_add_entities([LightSensitiveButton(coordinator)])
 
     if isinstance(coordinator.device, switchbot.SwitchbotArtFrame):
         async_add_entities(
@@ -32,9 +34,26 @@ async def async_setup_entry(
                 SwitchBotArtFramePrevButton(coordinator, "previous_image"),
             ]
         )
-
     if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
         async_add_entities([SwitchBotMeterProCO2SyncDateTimeButton(coordinator)])
+
+
+class LightSensitiveButton(SwitchbotEntity, ButtonEntity):
+    """Representation of a Switchbot light sensitive button."""
+
+    _attr_translation_key = "light_sensitive"
+    _device: switchbot.SwitchbotAirPurifier
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Switchbot light sensitive button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_light_sensitive"
+
+    @exception_handler
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.debug("Toggling light sensitive mode for %s", self._address)
+        await self._device.open_light_sensitive_switch()
 
 
 class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):

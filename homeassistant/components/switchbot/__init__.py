@@ -114,24 +114,28 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.LIGHT,
+        Platform.BUTTON,
     ],
     SupportedModels.AIR_PURIFIER_US.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.LIGHT,
+        Platform.BUTTON,
     ],
     SupportedModels.AIR_PURIFIER_TABLE_JP.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.LIGHT,
+        Platform.BUTTON,
     ],
     SupportedModels.AIR_PURIFIER_TABLE_US.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.LIGHT,
+        Platform.BUTTON,
     ],
     SupportedModels.EVAPORATIVE_HUMIDIFIER.value: [
         Platform.HUMIDIFIER,

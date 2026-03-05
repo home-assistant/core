@@ -102,6 +102,9 @@
       }
     },
     "button": {
+      "light_sensitive": {
+        "name": "Light sensitive"
+      },
       "next_image": {
         "name": "Next image"
       },
@@ -326,9 +329,6 @@
       },
       "child_lock": {
         "name": "Child lock"
-      },
-      "light_sensitive": {
-        "name": "Light sensitive"
       },
       "wireless_charging": {
         "name": "Wireless charging"

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import switchbot
-from switchbot import AirQualityLevel, HumidifierWaterLevel, SwitchbotModel
+from switchbot import AirQualityLevel, HumidifierWaterLevel
 
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import AIRPURIFIER_PM25_MODELS, DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -154,11 +154,7 @@ async def async_setup_entry(
         sensors = list(coordinator.device.parsed_data)
         if (
             isinstance(coordinator.device, switchbot.SwitchbotAirPurifier)
-            and coordinator.model
-            in (
-                SwitchbotModel.AIR_PURIFIER_US,
-                SwitchbotModel.AIR_PURIFIER_TABLE_US,
-            )
+            and coordinator.model in AIRPURIFIER_PM25_MODELS
             and "pm25" not in sensors
         ):
             sensors.append("pm25")
