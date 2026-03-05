@@ -105,9 +105,8 @@ async def test_http_language_device_satellite_id(
         async def async_handle(self, intent_obj: intent.Intent):
             """Handle the intent."""
             assert intent_obj.context.user_id == hass_admin_user.id
-            assert intent_obj.language == language
-
             # Verify language, device id, and satellite id were passed through.
+            assert intent_obj.language == language
             assert intent_obj.device_id == device_id
             assert intent_obj.satellite_id == satellite_id
 
