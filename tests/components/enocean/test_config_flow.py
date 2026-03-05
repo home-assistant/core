@@ -289,7 +289,6 @@ async def test_usb_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-    # assert existing_entry.data[CONF_DEVICE] == MOCK_USB_SERVICE_INFO.device
 
 
 async def test_usb_discovery_already_in_progress(
