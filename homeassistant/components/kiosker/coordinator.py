@@ -20,12 +20,12 @@ from kiosker import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_TOKEN, DOMAIN, POLL_INTERVAL
+from .const import CONF_API_TOKEN, DOMAIN, POLL_INTERVAL, PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
         """Initialize."""
         self.api = KioskerAPI(
             host=config_entry.data[CONF_HOST],
-            port=config_entry.data[CONF_PORT],
+            port=PORT,
             token=config_entry.data[CONF_API_TOKEN],
             ssl=config_entry.data.get(CONF_SSL, False),
             verify=config_entry.data.get(CONF_VERIFY_SSL, False),

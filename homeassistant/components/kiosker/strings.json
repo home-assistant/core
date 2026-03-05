@@ -17,14 +17,12 @@
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
           "host": "The hostname or IP address of the device running the Kiosker App",
-          "port": "The port on which the Kiosker App is running. Default is 8081.",
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "verify_ssl": "Verify SSL certificate. Enable for valid certificates only."
         },
@@ -32,7 +30,7 @@
         "title": "Pair Kiosker App"
       },
       "zeroconf": {
-        "description": "Do you want to configure {name} at {host}:{port}?"
+        "description": "Do you want to configure {name} at {host}?"
       },
       "zeroconf_confirm": {
         "data": {
@@ -43,7 +41,7 @@
           "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
           "verify_ssl": "Verify SSL certificate. Enable for valid certificates only."
         },
-        "description": "You are about to pair `{name}` at `{host}:{port}` with Home Assistant.\n\nPlease provide the API token to complete setup.",
+        "description": "You are about to pair `{name}` at `{host}` with Home Assistant.\n\nPlease provide the API token to complete setup.",
         "submit": "Pair",
         "title": "Discovered Kiosker App"
       }

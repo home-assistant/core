@@ -17,18 +17,17 @@ from kiosker import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_API_TOKEN, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN
+from .const import CONF_API_TOKEN, DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN, PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_API_TOKEN): str,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
@@ -52,7 +51,7 @@ async def validate_input(
     """
     api = KioskerAPI(
         host=data[CONF_HOST],
-        port=data[CONF_PORT],
+        port=PORT,
         token=data[CONF_API_TOKEN],
         ssl=data[CONF_SSL],
         verify=data[CONF_VERIFY_SSL],
@@ -95,7 +94,6 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
 
         self._discovered_host: str | None = None
-        self._discovered_port: int | None = None
         self._discovered_device_id: str | None = None
         self._discovered_version: str | None = None
         self._discovered_ssl: bool | None = None
@@ -128,7 +126,6 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
-        port = discovery_info.port or DEFAULT_PORT
 
         # Extract device information from zeroconf properties
         properties = discovery_info.properties
@@ -153,13 +150,11 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": device_name,
             "host": host,
-            "port": str(port),
             "ssl": ssl,
         }
 
         # Store discovered information for later use
         self._discovered_host = host
-        self._discovered_port = port
         self._discovered_device_id = device_id
         self._discovered_version = version
         self._discovered_ssl = ssl
@@ -176,13 +171,11 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Use stored discovery info and user-provided token
             host = self._discovered_host
-            port = self._discovered_port
             ssl = self._discovered_ssl
 
-            # Create config with discovered host/port and user-provided token
+            # Create config with discovered host and user-provided token
             config_data = {
                 CONF_HOST: host,
-                CONF_PORT: port,
                 CONF_API_TOKEN: user_input[CONF_API_TOKEN],
                 CONF_SSL: ssl,
                 CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),

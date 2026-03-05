@@ -8,7 +8,7 @@ from kiosker import ConnectionError
 from homeassistant import config_entries
 from homeassistant.components.kiosker.config_flow import validate_input
 from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -75,7 +75,6 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8081,
                 CONF_API_TOKEN: "test-token",
                 CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
@@ -87,7 +86,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "Kiosker A98BE1CE"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
-        CONF_PORT: 8081,
         CONF_API_TOKEN: "test-token",
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
@@ -109,7 +107,6 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8081,
                 CONF_API_TOKEN: "test-token",
                 CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
@@ -134,7 +131,6 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8081,
                 CONF_API_TOKEN: "test-token",
                 CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
@@ -158,7 +154,6 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["description_placeholders"] == {
         "name": "Kiosker (A98BE1CE)",
         "host": "192.168.1.39",
-        "port": "8081",
         "ssl": True,
     }
 
@@ -226,7 +221,6 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
     assert result2["title"] == "Kiosker A98BE1CE"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.39",
-        CONF_PORT: 8081,
         CONF_API_TOKEN: "test-token",
         CONF_SSL: True,
         CONF_VERIFY_SSL: False,
@@ -263,7 +257,6 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
-            CONF_PORT: 8081,
             CONF_API_TOKEN: "test_token",
         },
         unique_id="A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
@@ -297,7 +290,6 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.200",
-                CONF_PORT: 8081,
                 CONF_API_TOKEN: "test-token",
                 CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
@@ -314,7 +306,6 @@ async def test_zeroconf_abort_if_already_configured(hass: HomeAssistant) -> None
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
-            CONF_PORT: 8081,
             CONF_API_TOKEN: "test_token",
         },
         unique_id="A98BE1CE-1234-1234-1234-123456789ABC",
@@ -355,7 +346,6 @@ async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8081,
                 CONF_API_TOKEN: "test-token",
                 CONF_SSL: False,
                 CONF_VERIFY_SSL: False,
@@ -377,7 +367,6 @@ async def test_validate_input_success(
 
     data = {
         CONF_HOST: "10.0.1.5",
-        CONF_PORT: 8081,
         CONF_API_TOKEN: "test_token",
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
@@ -400,7 +389,6 @@ async def test_validate_input_connection_error(
 
     data = {
         CONF_HOST: "192.168.1.100",
-        CONF_PORT: 8081,
         CONF_API_TOKEN: "test_token",
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
