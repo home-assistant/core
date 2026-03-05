@@ -7,11 +7,8 @@ import pytest
 from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.qube_heatpump.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 def get_entity_id_by_unique_id_suffix(
@@ -79,12 +76,3 @@ def mock_qube_client(mock_qube_state: QubeState) -> Generator[MagicMock]:
         yield client
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
-        unique_id=f"{DOMAIN}-1.2.3.4-502",
-        title="Qube Heat Pump (1.2.3.4)",
-    )

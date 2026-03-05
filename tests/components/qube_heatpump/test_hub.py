@@ -136,7 +136,7 @@ async def test_hub_connect_success_resets_backoff(hass: HomeAssistant) -> None:
 
         hub = QubeHub(hass, "1.2.3.4", 502, "test_entry_id", 1, "qube1")
         hub._connect_backoff_s = 30.0
-        hub._next_connect_ok_at = 100.0
+        hub._next_connect_ok_at = 0.0
 
         await hub.async_connect()
 

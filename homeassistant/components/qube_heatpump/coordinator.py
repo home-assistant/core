@@ -49,17 +49,17 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
 
     async def _async_update_data(self) -> QubeState:
         """Fetch data from the hub."""
-        # Ensure connection
-        if not self.hub.is_connected:
-            await self.hub.async_connect()
-
         try:
             data = await self.hub.async_get_all_data()
         except Exception as exc:
-            raise UpdateFailed(f"Error communicating with API: {exc}") from exc
+            raise UpdateFailed(
+                f"Error communicating with Qube heat pump: {exc}"
+            ) from exc
 
         if data is None:
-            raise UpdateFailed("Error communicating with API: No data received")
+            raise UpdateFailed(
+                "Error communicating with Qube heat pump: No data received"
+            )
 
         # Apply monotonic clamping for total_increasing sensors
         self._apply_monotonic_clamping(data)
