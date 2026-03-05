@@ -22,24 +22,13 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
-from .coordinator import NutConfigEntry, NutCoordinator
+from .coordinator import NutConfigEntry, NutCoordinator, NutRuntimeData
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class NutRuntimeData:
-    """Runtime data definition."""
-
-    coordinator: DataUpdateCoordinator
-    data: PyNUTData
-    unique_id: str
-    user_available_commands: set[str]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:

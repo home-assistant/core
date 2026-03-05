@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -16,9 +17,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import NutRuntimeData, PyNUTData
+    from . import PyNUTData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class NutRuntimeData:
+    """Runtime data definition."""
+
+    coordinator: DataUpdateCoordinator
+    data: PyNUTData
+    unique_id: str
+    user_available_commands: set[str]
+
 
 type NutConfigEntry = ConfigEntry[NutRuntimeData]
 
