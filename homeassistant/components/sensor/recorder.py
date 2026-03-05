@@ -520,10 +520,11 @@ def compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-    custom_units_for_entities: dict[str, dict[str, str]],
+    custom_units_for_entities: dict[str, dict[str, str]] | None = None,
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
-    custom_equivalent_units_per_entity.update(custom_units_for_entities)
+    if custom_units_for_entities:
+        custom_equivalent_units_per_entity.update(custom_units_for_entities)
 
     result: list[StatisticResult] = []
 
