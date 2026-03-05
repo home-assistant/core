@@ -43,11 +43,7 @@ class LutronBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        device_uuid = self._lutron_device.uuid
-        if not device_uuid:
-            legacy_uuid = getattr(self._lutron_device, "legacy_uuid", None)
-            if legacy_uuid:
-                device_uuid = legacy_uuid
+        device_uuid = self._lutron_device.uuid or self._lutron_device.legacy_uuid
         return f"{self._controller.guid}_{device_uuid}"
 
     def update(self) -> None:
