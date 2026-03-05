@@ -29,9 +29,9 @@
         }),
         'gps': dict({
           'accuracy': 1.5,
-          'altitude': 353.0,
-          'latitude': 47.0748,
-          'longitude': 15.4376,
+          'altitude': '**REDACTED**',
+          'latitude': '**REDACTED**',
+          'longitude': '**REDACTED**',
         }),
         'grid': dict({
           'frequency': 50.0,
