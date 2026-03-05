@@ -10,7 +10,7 @@ from homeassistant.components.iseo_argo_ble.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, setup_test_component_platform
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 

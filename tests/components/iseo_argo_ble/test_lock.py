@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 
-from homeassistant.components.iseo_argo_ble.const import CONF_ADDRESS, DOMAIN
+from homeassistant.components.iseo_argo_ble.const import DOMAIN
 from homeassistant.components.lock import LockState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
