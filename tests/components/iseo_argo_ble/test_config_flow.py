@@ -125,7 +125,7 @@ async def test_bluetooth_discovery_confirm_and_register(
 
 
 async def test_user_step_no_devices(hass: HomeAssistant) -> None:
-    """Test user step shows error when no ISEO locks found nearby."""
+    """Test user step aborts when no ISEO locks found nearby."""
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow._discover_locks",
         return_value=[],
@@ -135,9 +135,8 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "no_devices_found"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_step_with_device(hass: HomeAssistant) -> None:

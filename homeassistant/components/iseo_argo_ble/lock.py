@@ -11,13 +11,13 @@ from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockSt
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
+from . import IseoConfigEntry
 from .const import CONF_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,22 +31,17 @@ _POLL_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IseoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISEO lock entity from a config entry."""
-    from . import IseoRuntimeData  # noqa: PLC0415
-
-    runtime_data: IseoRuntimeData = entry.runtime_data
-
     async_add_entities(
         [
             IseoLockEntity(
                 entry,
-                runtime_data.client,
+                entry.runtime_data,
             )
         ],
-        update_before_add=False,
     )
 
 
@@ -59,8 +54,8 @@ class IseoLockEntity(LockEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        client: IseoClient | None = None,
+        entry: IseoConfigEntry,
+        client: IseoClient,
     ) -> None:
         """Initialize the lock entity."""
         self._entry = entry
@@ -68,9 +63,6 @@ class IseoLockEntity(LockEntity):
         self._ble_lock = asyncio.Lock()
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
-
-        if client is None:
-            raise ValueError("IseoLockEntity requires a client")
         self.client: IseoClient = client
 
         self._attr_unique_id = f"{entry.unique_id}_lock"
@@ -78,7 +70,8 @@ class IseoLockEntity(LockEntity):
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="ISEO",
-            model="X1R Smart Lock",
+            model="X1R Smart",
+            model_id="X1R",
         )
 
         self._attr_is_locked = True
@@ -129,7 +122,8 @@ class IseoLockEntity(LockEntity):
                 identifiers={(DOMAIN, self._entry.entry_id)},
                 name=self._entry.title,
                 manufacturer="ISEO",
-                model="X1R Smart Lock",
+                model="X1R Smart",
+                model_id="X1R",
                 sw_version=fw_version,
             )
             self._fw_version_set = True

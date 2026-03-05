@@ -6,7 +6,6 @@ import logging
 from typing import Any
 import uuid as uuid_module
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from iseo_argo_ble import (
     IseoAuthError,
@@ -44,10 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_identity() -> ec.EllipticCurvePrivateKey:
     """Generate a fresh SECP224R1 private key for use as an Argo BT identity."""
-    priv = ec.generate_private_key(ec.SECP224R1(), default_backend())
-    if not isinstance(priv, ec.EllipticCurvePrivateKey):
-        raise TypeError("Expected EllipticCurvePrivateKey")
-    return priv
+    return ec.generate_private_key(ec.SECP224R1())
 
 
 def _discover_locks(hass: HomeAssistant) -> list[BluetoothServiceInfoBleak]:
@@ -120,12 +116,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered = {info.address: info for info in found}
 
         if not self._discovered:
-            errors["base"] = "no_devices_found"
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema({}),
-                errors=errors,
-            )
+            return self.async_abort(reason="no_devices_found")
 
         configured = {
             entry.data.get(CONF_ADDRESS) for entry in self._async_current_entries()

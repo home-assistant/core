@@ -2,33 +2,21 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: |
-      This integration does not provide any service actions.
+    comment: This integration does not provide any service actions.
   appropriate-polling: done
   brands:
     status: exempt
-    comment: |
-      Brands repo entry will be submitted separately.
+    comment: Brands repo entry will be submitted separately.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: |
-      This integration does not provide any service actions.
-  docs-high-level-description:
-    status: exempt
-    comment: |
-      Documentation will be submitted separately.
-  docs-installation-instructions:
-    status: exempt
-    comment: |
-      Documentation will be submitted separately.
-  docs-removal-instructions:
-    status: exempt
-    comment: |
-      Documentation will be submitted separately.
+    comment: This integration does not provide any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -36,3 +24,83 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have any configuration parameters.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: todo
+    comment: Entity does not yet track availability.
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: No unavailability logging implemented yet.
+  parallel-updates:
+    status: todo
+    comment: Not yet configured.
+  reauthentication-flow:
+    status: todo
+    comment: Not yet implemented.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: Not yet implemented.
+  discovery: done
+  discovery-update-info:
+    status: todo
+    comment: Not yet implemented.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration connects to a single device.
+  entity-category:
+    status: todo
+    comment: Not yet evaluated.
+  entity-device-class:
+    status: todo
+    comment: Not yet evaluated.
+  entity-disabled-by-default:
+    status: todo
+    comment: Not yet evaluated.
+  entity-translations:
+    status: todo
+    comment: Not yet implemented.
+  exception-translations: done
+  icon-translations:
+    status: todo
+    comment: Not yet implemented.
+  reconfiguration-flow:
+    status: todo
+    comment: Not yet implemented.
+  repair-issues:
+    status: exempt
+    comment: This integration does not raise any repairable issues.
+  stale-devices:
+    status: exempt
+    comment: This integration connects to a single device.
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: Not yet evaluated.
+  inject-websession:
+    status: exempt
+    comment: This integration does not use HTTP sessions.
+  strict-typing:
+    status: todo
+    comment: Not yet implemented.

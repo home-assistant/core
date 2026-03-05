@@ -27,31 +27,23 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-type IseoConfigEntry = ConfigEntry[IseoRuntimeData]
-
-
-class IseoRuntimeData:
-    """Runtime data for an ISEO Argo BLE config entry."""
-
-    def __init__(self, client: IseoClient) -> None:
-        """Initialize runtime data."""
-        self.client = client
+type IseoConfigEntry = ConfigEntry[IseoClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:
     """Set up ISEO Argo BLE Lock from a config entry."""
-    priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)
-    priv = await hass.async_add_executor_job(
-        derive_private_key, priv_int, SECP224R1(), default_backend()
-    )
-    uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
-
     address = entry.data[CONF_ADDRESS]
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     if ble_device is None:
         raise ConfigEntryNotReady(
             f"Could not find ISEO lock {address} — is it powered on and in range?"
         )
+
+    priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)
+    priv = await hass.async_add_executor_job(
+        derive_private_key, priv_int, SECP224R1(), default_backend()
+    )
+    uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
 
     client = IseoClient(
         address=address,
@@ -61,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
         ble_device=ble_device,
     )
 
-    entry.runtime_data = IseoRuntimeData(client=client)
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

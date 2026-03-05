@@ -2,12 +2,12 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_iseo_device": "This device does not appear to be an ISEO lock."
     },
     "error": {
       "auth_failed": "The lock rejected the request. Make sure the Argo app is closed, then try again — scan a valid Master Card on the lock (the LED will blink green on success).",
       "cannot_connect": "Could not connect to the lock. Check it is powered on and within Bluetooth range.",
-      "no_devices_found": "No ISEO locks found nearby. Make sure the lock is powered on and within Bluetooth range, then click Submit to scan again.",
       "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
     },
     "flow_title": "{name}",
