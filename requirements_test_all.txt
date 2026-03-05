@@ -181,7 +181,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==12.0.2
+aioamazondevices==13.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -267,7 +267,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.28.0
+aiohomeconnect==0.30.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -794,7 +794,7 @@ energyid-webhooks==0.0.14
 energyzero==4.0.1
 
 # homeassistant.components.enocean
-enocean==0.50
+enocean-async==0.4.1
 
 # homeassistant.components.environment_canada
 env-canada==0.13.2
@@ -1084,7 +1084,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260302.0
+home-assistant-frontend==20260304.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
@@ -2029,7 +2029,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.28
+pyportainer==1.0.32
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2374,7 +2374,7 @@ renault-api==0.5.6
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.19.0
+reolink-aio==0.19.1
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2826,7 +2826,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.0.0
+zha==1.0.1
 
 # homeassistant.components.zinvolt
 zinvolt==0.3.0
