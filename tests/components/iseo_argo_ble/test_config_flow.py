@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.iseo_argo_ble import config_flow
 from homeassistant.components.iseo_argo_ble.const import CONF_ADDRESS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -17,7 +18,7 @@ from . import MOCK_ADDRESS, MOCK_SERVICE_INFO
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def _patch_identity() -> None:
     """Patch identity generation to avoid real crypto in config flow tests."""
     mock_priv = MagicMock()
@@ -37,6 +38,7 @@ def _patch_identity() -> None:
 
 async def test_bluetooth_discovery_abort_if_already_configured(
     hass: HomeAssistant,
+    _patch_identity: None,
 ) -> None:
     """Test bluetooth discovery aborts for already-configured locks."""
     entry = MockConfigEntry(
@@ -87,6 +89,7 @@ async def test_bluetooth_discovery_not_iseo(hass: HomeAssistant) -> None:
 
 async def test_bluetooth_discovery_confirm_and_register(
     hass: HomeAssistant,
+    _patch_identity: None,
 ) -> None:
     """Test full bluetooth discovery → confirm → gw_register flow."""
     with patch(
@@ -139,7 +142,10 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_step_with_device(hass: HomeAssistant) -> None:
+async def test_user_step_with_device(
+    hass: HomeAssistant,
+    _patch_identity: None,
+) -> None:
     """Test user step shows discovered devices and allows selection."""
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow._discover_locks",
@@ -164,7 +170,10 @@ async def test_user_step_with_device(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "gw_register"
 
 
-async def test_gw_register_connection_error(hass: HomeAssistant) -> None:
+async def test_gw_register_connection_error(
+    hass: HomeAssistant,
+    _patch_identity: None,
+) -> None:
     """Test gw_register handles connection error."""
 
     with patch(
@@ -198,7 +207,10 @@ async def test_gw_register_connection_error(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_gw_register_auth_error(hass: HomeAssistant) -> None:
+async def test_gw_register_auth_error(
+    hass: HomeAssistant,
+    _patch_identity: None,
+) -> None:
     """Test gw_register handles auth error."""
 
     with patch(
@@ -232,7 +244,10 @@ async def test_gw_register_auth_error(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "auth_failed"}
 
 
-async def test_gw_register_no_ble_device(hass: HomeAssistant) -> None:
+async def test_gw_register_no_ble_device(
+    hass: HomeAssistant,
+    _patch_identity: None,
+) -> None:
     """Test gw_register handles case where ble_device is None."""
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
@@ -262,7 +277,10 @@ async def test_gw_register_no_ble_device(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_gw_register_unknown_error(hass: HomeAssistant) -> None:
+async def test_gw_register_unknown_error(
+    hass: HomeAssistant,
+    _patch_identity: None,
+) -> None:
     """Test gw_register handles unknown error."""
     with patch(
         "homeassistant.components.iseo_argo_ble.config_flow.is_iseo_advertisement",
@@ -292,3 +310,37 @@ async def test_gw_register_unknown_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "unknown"}
+
+
+async def test_discover_locks(hass: HomeAssistant) -> None:
+    """Test the _discover_locks helper function."""
+    non_iseo_info = BluetoothServiceInfoBleak(
+        name="Other",
+        address="11:22:33:44:55:66",
+        rssi=-70,
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[],
+        source="local",
+        device=MagicMock(),
+        advertisement=MagicMock(),
+        connectable=True,
+        time=0,
+        tx_power=None,
+    )
+    with patch(
+        "homeassistant.components.iseo_argo_ble.config_flow.async_discovered_service_info",
+        return_value=[MOCK_SERVICE_INFO, non_iseo_info],
+    ):
+        found = config_flow._discover_locks(hass)
+
+    assert len(found) == 1
+    assert found[0].address == MOCK_ADDRESS
+
+
+async def test_generate_identity() -> None:
+    """Test the _generate_identity helper function."""
+    priv = config_flow._generate_identity()
+    assert priv is not None
+    # SECP224R1 is 224 bits
+    assert priv.key_size == 224
