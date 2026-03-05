@@ -8,7 +8,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from . import IseoConfigEntry
-
 from .const import CONF_PRIV_SCALAR, CONF_UUID
 
 TO_REDACT = {CONF_PRIV_SCALAR, CONF_UUID}

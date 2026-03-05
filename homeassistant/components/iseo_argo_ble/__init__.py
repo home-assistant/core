@@ -35,9 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
         )
 
     priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)
-    priv = await hass.async_add_executor_job(
-        derive_private_key, priv_int, SECP224R1()
-    )
+    priv = await hass.async_add_executor_job(derive_private_key, priv_int, SECP224R1())
     uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
 
     client = IseoClient(
