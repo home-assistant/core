@@ -190,18 +190,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
-        try:
-            self.permissions = self.proxmox.access.permissions.get()
-        except ResourceException as err:
-            if 400 <= err.status_code < 500:
-                raise ProxmoxPermissionsError from err
-            raise ProxmoxServerError from err
 
         try:
+            self.permissions = self.proxmox.access.permissions.get() or {}
             self.proxmox.nodes.get()
         except ResourceException as err:
             if 400 <= err.status_code < 500:
-                raise ProxmoxNodesNotFoundError from err
+                raise ProxmoxPermissionsError from err
             raise ProxmoxServerError from err
 
     def _fetch_all_nodes(
