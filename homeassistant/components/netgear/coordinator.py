@@ -57,4 +57,3 @@ class NetgearDataCoordinator[T](DataUpdateCoordinator[T]):
             update_interval=update_interval,
             update_method=update_method,
         )
-        self.router = router
