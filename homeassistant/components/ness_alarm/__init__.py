@@ -12,13 +12,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -142,7 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
     client = Client(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
-        update_interval=86400,  # Coordinator handles polling; disable internal loop
+        update_interval=86400,  # (1 day) Coordinator handles polling; disable internal loop
         infer_arming_state=entry.data.get(CONF_INFER_ARMING_STATE, False),
     )
 
@@ -174,10 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
     client.on_zone_change(on_zone_change)
     client.on_state_change(on_state_change)
 
-    async def _close(event: Event) -> None:
-        await client.close()
-
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
+    entry.async_on_unload(client.close)
 
     async def _started(hass: HomeAssistant) -> None:
         _LOGGER.debug("Invoking client keepalive()")
@@ -196,12 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        await entry.runtime_data.client.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
