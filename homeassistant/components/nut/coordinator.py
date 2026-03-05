@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class NutRuntimeData:
     """Runtime data definition."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: NutCoordinator
     data: PyNUTData
     unique_id: str
     user_available_commands: set[str]
