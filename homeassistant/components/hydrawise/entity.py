@@ -10,10 +10,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL_ZONE
-from .coordinator import HydrawiseDataUpdateCoordinator
+from .coordinator import (
+    HydrawiseMainDataUpdateCoordinator,
+    HydrawiseWaterUseDataUpdateCoordinator,
+)
 
 
-class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
+class HydrawiseEntity(
+    CoordinatorEntity[
+        HydrawiseMainDataUpdateCoordinator | HydrawiseWaterUseDataUpdateCoordinator
+    ]
+):
     """Entity class for Hydrawise devices."""
 
     _attr_attribution = "Data provided by hydrawise.com"
@@ -21,7 +28,8 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: HydrawiseDataUpdateCoordinator,
+        coordinator: HydrawiseMainDataUpdateCoordinator
+        | HydrawiseWaterUseDataUpdateCoordinator,
         description: EntityDescription,
         controller: Controller,
         *,
