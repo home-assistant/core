@@ -1,0 +1,14 @@
+{
+  "domain": "solarman",
+  "name": "SOLARMAN",
+  "codeowners": ["@solarmanpv"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": [
+    "solarman-opendata==0.0.2"
+  ],
+  "zeroconf": ["_solarman._tcp.local."]
+}

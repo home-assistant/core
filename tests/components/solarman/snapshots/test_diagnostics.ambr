@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_diagnostics[P1-2W]
+  dict({
+    'data': dict({
+      'Device_Type': 0,
+      'SN': '**REDACTED**',
+      'a_act_power': 0,
+      'a_act_ret_power': 2.95,
+      'a_current': 12,
+      'a_voltage': 237,
+      'b_act_power': 0,
+      'b_act_ret_power': 0,
+      'b_current': 0,
+      'b_voltage': 237,
+      'c_act_power': 0,
+      'c_act_ret_power': 0,
+      'c_current': 0,
+      'c_voltage': 236,
+      'device_version ': '50',
+      'total_act_energy_LT': 53754.58,
+      'total_act_energy_NT': 9818.93,
+      'total_act_power': 0,
+      'total_act_ret_energy_LT': 53754.58,
+      'total_act_ret_energy_NT': 9818.93,
+      'total_act_ret_power': 2.94,
+      'total_gas': 0,
+    }),
+    'entry': dict({
+      'fw_version': 'LSW3_01_E030_SS_00_00.00.00.03',
+      'host': '192.168.1.100',
+      'model': 'P1-2W',
+      'port': 8080,
+      'sn': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[SP-2W-EU]
+  dict({
+    'data': dict({
+      'electric_current': 0,
+      'positive_active_energy': 1.730654,
+      'power': 1.217517,
+      'reverse_active_energy': 0.0,
+      'voltage': 230,
+    }),
+    'entry': dict({
+      'fw_version': 'LSW3_01_E030_SS_00_00.00.00.03',
+      'host': '192.168.1.100',
+      'model': 'SP-2W-EU',
+      'port': 8080,
+      'sn': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[gl meter]
+  dict({
+    'data': dict({
+      'SN': '**REDACTED**',
+      'active power': 133.5,
+      'apparent power': 209.6,
+      'current': 0.66,
+      'frequency': 50.03,
+      'power factor': 0.63,
+      'reactive power': -29.8,
+      'total_act_energy': 3.53,
+      'total_act_ret_energy': 0.18,
+      'voltage': 229.87,
+    }),
+    'entry': dict({
+      'fw_version': 'LSW3_01_E030_SS_00_00.00.00.03',
+      'host': '192.168.1.100',
+      'model': 'gl meter',
+      'port': 8080,
+      'sn': '**REDACTED**',
+    }),
+  })
+# ---
