@@ -325,7 +325,6 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
         "heating",
         "start_fail",
         "heating_dhw",
-        "unknown",
     ]
 
     def __init__(
@@ -365,4 +364,4 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
             return None
 
         code = data.status_code
-        return STATUS_MAP.get(code, "unknown")
+        return STATUS_MAP.get(code)
