@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def platforms() -> AsyncGenerator[None]:
     """Return the platforms to be loaded for this test."""
     with patch(
-        "homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]
+        "homeassistant.components.laundrify.PLATFORMS", [Platform.SENSOR]
     ):
         yield
 
