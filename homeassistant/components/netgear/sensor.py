@@ -26,9 +26,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .coordinator import NetgearConfigEntry
+from .coordinator import (
+    NetgearConfigEntry,
+    NetgearDataCoordinator,
+    NetgearTrackerCoordinator,
+)
 from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -272,7 +275,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Netgear sensors from a config entry."""
     router = entry.runtime_data.router
-    coordinator = entry.runtime_data.coordinator
+    coordinator_tracker = entry.runtime_data.coordinator_tracker
     coordinator_traffic = entry.runtime_data.coordinator_traffic
     coordinator_speed = entry.runtime_data.coordinator_speed
     coordinator_utilization = entry.runtime_data.coordinator_utilization
@@ -298,7 +301,7 @@ async def async_setup_entry(
     @callback
     def new_device_callback() -> None:
         """Add new devices if needed."""
-        if not coordinator.data:
+        if not coordinator_tracker.data:
             return
 
         new_entities: list[NetgearSensorEntity] = []
@@ -308,16 +311,16 @@ async def async_setup_entry(
                 continue
 
             new_entities.extend(
-                NetgearSensorEntity(coordinator, router, device, attribute)
+                NetgearSensorEntity(coordinator_tracker, router, device, attribute)
                 for attribute in sensors
             )
             tracked.add(mac)
 
         async_add_entities(new_entities)
 
-    entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
+    entry.async_on_unload(coordinator_tracker.async_add_listener(new_device_callback))
 
-    coordinator.data = True
+    coordinator_tracker.data = True
     new_device_callback()
 
 
@@ -326,7 +329,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         device: dict,
         attribute: str,
@@ -365,7 +368,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
+        coordinator: NetgearDataCoordinator[dict[str, Any] | None],
         router: NetgearRouter,
         entity_description: NetgearSensorEntityDescription,
     ) -> None:

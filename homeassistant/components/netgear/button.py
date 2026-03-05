@@ -12,9 +12,8 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .coordinator import NetgearConfigEntry
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -43,9 +42,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up button for Netgear component."""
     router = entry.runtime_data.router
-    coordinator = entry.runtime_data.coordinator
+    coordinator_tracker = entry.runtime_data.coordinator_tracker
     async_add_entities(
-        NetgearRouterButtonEntity(coordinator, router, entity_description)
+        NetgearRouterButtonEntity(coordinator_tracker, router, entity_description)
         for entity_description in BUTTONS
     )
 
@@ -57,7 +56,7 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[bool],
+        coordinator: NetgearTrackerCoordinator,
         router: NetgearRouter,
         entity_description: NetgearButtonEntityDescription,
     ) -> None:
