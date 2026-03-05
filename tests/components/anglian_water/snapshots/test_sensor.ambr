@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.testsn_last_updated-entry]
+# name: test_sensor[sensor.testsn_last_meter_reading_processed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.testsn_last_updated',
+    'entity_id': 'sensor.testsn_last_meter_reading_processed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Last updated',
+    'object_id_base': 'Last meter reading processed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Last updated',
+    'original_name': 'Last meter reading processed',
     'platform': 'anglian_water',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,14 +35,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.testsn_last_updated-state]
+# name: test_sensor[sensor.testsn_last_meter_reading_processed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'TESTSN Last updated',
+      'friendly_name': 'TESTSN Last meter reading processed',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.testsn_last_updated',
+    'entity_id': 'sensor.testsn_last_meter_reading_processed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
