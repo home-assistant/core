@@ -56,6 +56,7 @@ def mock_smart_meter(freezer: FrozenDateTimeFactory) -> SmartMeter:
     ]
     return mock
 
+
 @pytest.fixture
 def mock_anglian_water_authenticator() -> Generator[MagicMock]:
     """Mock a Anglian Water authenticator."""
