@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components.knx.dpt import (
     _sensor_device_classes,
     _sensor_state_class_overrides,
+    _sensor_unit_overrides,
 )
 from homeassistant.components.knx.schema import _sensor_attribute_sub_validator
 
@@ -14,7 +15,10 @@ from homeassistant.components.knx.schema import _sensor_attribute_sub_validator
     {
         *_sensor_device_classes,
         *_sensor_state_class_overrides,
-        "7",  # generic numeric DPT without specific device and state class
+        *_sensor_unit_overrides,
+        # add generic numeric DPTs without specific device and state class
+        "7",
+        "2byte_float",
     },
 )
 def test_dpt_default_device_classes(dpt) -> None:
