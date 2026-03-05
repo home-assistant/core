@@ -140,8 +140,8 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
     """Set up Ness Alarm from a config entry."""
-    scan_interval = entry.options.get(
-        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
+    scan_interval = int(
+        entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds())
     )
 
     client = Client(

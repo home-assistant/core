@@ -68,6 +68,14 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
     # Alarm panel should be created
     assert hass.states.get("alarm_control_panel.alarm_panel")
 
+    # Client should be constructed with the configured scan interval
+    mock_nessclient._mock_factory.assert_called_once_with(
+        host="192.168.1.100",
+        port=1992,
+        update_interval=30,
+        infer_arming_state=False,
+    )
+
     # Client keepalive and update should be called after startup
     assert mock_nessclient.keepalive.call_count == 1
     # update is called once during setup (connection test) and once after startup

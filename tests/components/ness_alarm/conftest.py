@@ -59,6 +59,7 @@ def mock_nessclient():
     with patch(
         "homeassistant.components.ness_alarm.Client", new=_mock_factory, create=True
     ):
+        _mock_instance._mock_factory = _mock_factory
         yield _mock_instance
 
 

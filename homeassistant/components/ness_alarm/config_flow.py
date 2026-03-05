@@ -218,6 +218,7 @@ class NessAlarmOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            user_input[CONF_SCAN_INTERVAL] = int(user_input[CONF_SCAN_INTERVAL])
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
