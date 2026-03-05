@@ -116,7 +116,7 @@ class DaikinToggleSwitch(DaikinEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
-        await self.device.set({})
+        await self.device.set({DAIKIN_ATTR_MODE: "on"})
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
