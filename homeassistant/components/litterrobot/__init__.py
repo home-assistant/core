@@ -61,10 +61,11 @@ async def async_migrate_entry(
                 password=entry.data[CONF_PASSWORD],
             )
             user_id = account.user_id
-            await account.disconnect()
         except LitterRobotException:
             _LOGGER.debug("Could not connect to set unique_id during migration")
             user_id = None
+        finally:
+            await account.disconnect()
 
         if user_id and not hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, user_id

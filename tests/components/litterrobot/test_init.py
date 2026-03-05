@@ -97,6 +97,26 @@ async def test_unique_id_migration(
 
     assert entry.unique_id == ACCOUNT_USER_ID
     assert entry.minor_version == 2
+    mock_account.disconnect.assert_called_once()
+
+
+async def test_unique_id_migration_unsupported_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migration fails for entries with version > 1."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_unique_id_migration_conflict(
