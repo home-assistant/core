@@ -162,6 +162,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN_24H_AQIN,
@@ -169,6 +170,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="pm25_indoor_24h_aqin",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM10_IN_AQIN,
@@ -446,6 +448,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="pm25_24h_average",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN,
@@ -453,18 +456,21 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN_24H,
         translation_key="pm25_indoor_24h_average",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM10,
