@@ -297,6 +297,7 @@ async def test_schedule_state_trigger_back_to_back(
 
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+    service_calls.clear()
 
     # move time to after second block to ensure it turns off
     freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
@@ -308,5 +309,4 @@ async def test_schedule_state_trigger_back_to_back(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T22:00:00-07:00"
 
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+    assert len(service_calls) == 0
