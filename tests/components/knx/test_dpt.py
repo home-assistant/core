@@ -23,7 +23,7 @@ from homeassistant.components.knx.schema import _sensor_attribute_sub_validator
         }
     ),
 )
-def test_dpt_default_device_classes(dpt) -> None:
+def test_dpt_default_device_classes(dpt: str) -> None:
     """Test DPT default device and state classes and unit are valid."""
     assert _sensor_attribute_sub_validator(
         # YAML sensor config - only set type for this validation
