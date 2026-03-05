@@ -65,3 +65,7 @@ get_travel_times:
       selector:
         text:
           multiple: true
+    time_delta:
+      required: false
+      selector:
+        duration:

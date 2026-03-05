@@ -961,6 +961,11 @@ ZEROCONF = {
             "domain": "system_bridge",
         },
     ],
+    "_systemnexa2._tcp.local.": [
+        {
+            "domain": "systemnexa2",
+        },
+    ],
     "_technove-stations._tcp.local.": [
         {
             "domain": "technove",

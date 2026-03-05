@@ -61,6 +61,13 @@ DATASET_1_LARGER_TIMESTAMP = (
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
 
+# Same as DATASET_1 but with WAKEUP_CHANNEL (type 0x4A) appended, same timestamp
+DATASET_1_WITH_WAKEUP_CHANNEL = (
+    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F84A0300000B"
+)
+
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
@@ -252,6 +259,28 @@ async def test_update_dataset_older(
     assert (
         "Got dataset with same extended PAN ID and same or older active timestamp"
         in caplog.text
+    )
+
+
+async def test_update_dataset_wakeup_channel(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that adding WAKEUP_CHANNEL with the same timestamp is silently accepted.
+
+    WAKEUP_CHANNEL was added to OpenThread but the wake-up protocol isn't
+    defined yet. We treat a dataset that only adds this key as equivalent,
+    updating the stored TLV without logging a warning.
+    """
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1_WITH_WAKEUP_CHANNEL)
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_WITH_WAKEUP_CHANNEL
+
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        not in caplog.text
     )
 
 

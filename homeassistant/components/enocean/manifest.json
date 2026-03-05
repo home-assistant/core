@@ -3,10 +3,19 @@
   "name": "EnOcean",
   "codeowners": [],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/enocean",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["enocean"],
   "requirements": ["enocean==0.50"],
-  "single_config_entry": true
+  "single_config_entry": true,
+  "usb": [
+    {
+      "description": "*usb 300*",
+      "manufacturer": "*enocean*",
+      "pid": "6001",
+      "vid": "0403"
+    }
+  ]
 }

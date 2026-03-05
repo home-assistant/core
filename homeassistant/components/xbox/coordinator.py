@@ -213,10 +213,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 
-        batch = await self.client.people.get_friends_by_xuid(self.client.xuid)
+        me = await self.client.people.get_friend_by_xuid(self.client.xuid)
         friends = await self.client.people.get_friends_own()
 
-        presence_data = {self.client.xuid: batch.people[0]}
+        presence_data = {self.client.xuid: me.people[0]}
         presence_data.update(
             {
                 friend.xuid: friend
