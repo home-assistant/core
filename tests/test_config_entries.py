@@ -9949,11 +9949,20 @@ async def test_orphaned_ignored_entries_safe_recovery_mode(
     hass.config.safe_mode = safe_mode
     hass.config.recovery_mode = recovery_mode
 
-    await hass.config_entries.async_initialize()
     entry = MockConfigEntry(
         domain="ghost_orphan_domain", source=config_entries.SOURCE_IGNORE
     )
     entry.add_to_hass(hass)
+
+    async def _raise(_: HomeAssistant, domain: str) -> None:
+        raise loader.IntegrationNotFound(domain)
+
+    with patch(
+        "homeassistant.loader.async_get_integration", new=AsyncMock(side_effect=_raise)
+    ):
+        await hass.config_entries.async_initialize()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     # No issue is allowed to be made by now
     assert (
