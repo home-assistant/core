@@ -23,3 +23,10 @@ occupancy_detected:
     entity:
       domain: binary_sensor
       device_class: occupancy
+
+_door.opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      domain: binary_sensor
+      device_class: door

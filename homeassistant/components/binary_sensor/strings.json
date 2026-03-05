@@ -332,6 +332,16 @@
   },
   "title": "Binary sensor",
   "triggers": {
+    "_door.opened": {
+      "description": "Triggers after one or more occupancy doors open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_occupancy%]",
+          "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Door opened"
+    },
     "occupancy_cleared": {
       "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
       "fields": {

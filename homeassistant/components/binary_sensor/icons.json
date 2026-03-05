@@ -176,6 +176,9 @@
     }
   },
   "triggers": {
+    "_door.opened": {
+      "trigger": "mdi:door-open"
+    },
     "occupancy_cleared": {
       "trigger": "mdi:home-outline"
     },

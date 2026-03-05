@@ -66,6 +66,16 @@ async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
 
 async def test_trigger_subtype(hass: HomeAssistant) -> None:
     """Test trigger subtypes."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "subtype": Mock(),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await async_setup_component(hass, "test", {})
+
     with patch(
         "homeassistant.helpers.trigger.async_get_integration",
         return_value=MagicMock(async_get_platform=AsyncMock()),
@@ -530,6 +540,7 @@ async def test_platform_multiple_triggers(
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await async_setup_component(hass, "test", {})
 
     config_1 = [{"platform": "test"}]
     config_2 = [{"platform": "test.trig_2", "options": {"x": 1}}]
@@ -576,7 +587,9 @@ async def test_platform_multiple_triggers(
     }
     action_helper.action_calls.clear()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(
+        vol.Invalid, match="Invalid trigger 'test.unknown_trig' specified"
+    ):
         await async_initialize_triggers(
             hass, config_3, action_method, "test", "", log_cb
         )
@@ -617,6 +630,7 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await async_setup_component(hass, "test", {})
 
     config_1 = [{"platform": "test", "option_1": "value_1", "option_2": 2}]
     config_2 = [{"platform": "test", "option_1": "value_1"}]
@@ -646,6 +660,7 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", MockTriggerPlatform())
+    await async_setup_component(hass, "test", {})
 
     config_old_style = [{"platform": "test", "option_1": "value_1", "option_2": 2}]
     result = await async_validate_trigger_config(hass, config_old_style)
@@ -1255,6 +1270,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await async_setup_component(hass, "test", {})
 
     with expected_result:
         await async_validate_trigger_config(
@@ -1283,6 +1299,7 @@ async def test_numerical_state_attribute_changed_error_handling(
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await async_setup_component(hass, "test", {})
 
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 20})
 
@@ -1565,6 +1582,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    await async_setup_component(hass, "test", {})
 
     with expected_result:
         await async_validate_trigger_config(
