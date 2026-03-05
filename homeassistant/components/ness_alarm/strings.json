@@ -78,9 +78,11 @@
     "step": {
       "init": {
         "data": {
+          "scan_interval": "Scan interval",
           "show_home_mode": "Show arm home mode"
         },
         "data_description": {
+          "scan_interval": "Time in seconds between polling the alarm panel for updates.",
           "show_home_mode": "Enable this to show the arm home option on the alarm panel."
         }
       }

@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -35,6 +35,7 @@ from .const import (
     CONNECTION_TIMEOUT,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
     POST_CONNECTION_DELAY,
@@ -198,6 +199,13 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
                 ),
             },
+            options={
+                CONF_SCAN_INTERVAL: int(
+                    import_data.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ).total_seconds()
+                ),
+            },
             subentries=subentries,
         )
 
@@ -217,6 +225,17 @@ class NessAlarmOptionsFlowHandler(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
+                        vol.Required(
+                            CONF_SCAN_INTERVAL,
+                            default=int(DEFAULT_SCAN_INTERVAL.total_seconds()),
+                        ): selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1,
+                                max=300,
+                                unit_of_measurement="seconds",
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
                         vol.Required(CONF_SHOW_HOME_MODE, default=True): bool,
                     }
                 ),

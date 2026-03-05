@@ -1,5 +1,6 @@
 """Test the Ness Alarm config flow."""
 
+from datetime import timedelta
 from types import MappingProxyType
 from unittest.mock import AsyncMock
 
@@ -18,7 +19,7 @@ from homeassistant.components.ness_alarm.const import (
     SUBENTRY_TYPE_ZONE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSubentry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -153,6 +154,7 @@ async def test_import_yaml_config(
     hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test importing YAML configuration."""
+    scan_interval = timedelta(seconds=5)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -160,6 +162,7 @@ async def test_import_yaml_config(
             CONF_HOST: "192.168.1.72",
             CONF_PORT: 4999,
             CONF_INFER_ARMING_STATE: False,
+            CONF_SCAN_INTERVAL: scan_interval,
             CONF_ZONES: [
                 {CONF_ZONE_NAME: "Garage", CONF_ZONE_ID: 1},
                 {
@@ -177,6 +180,9 @@ async def test_import_yaml_config(
         CONF_HOST: "192.168.1.72",
         CONF_PORT: 4999,
         CONF_INFER_ARMING_STATE: False,
+    }
+    assert result["options"] == {
+        CONF_SCAN_INTERVAL: 5,
     }
 
     # Check that subentries were created for zones with names preserved
@@ -422,11 +428,13 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
+            CONF_SCAN_INTERVAL: 30,
             CONF_SHOW_HOME_MODE: False,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SCAN_INTERVAL] == 30
     assert entry.options[CONF_SHOW_HOME_MODE] is False
 
 
@@ -438,7 +446,10 @@ async def test_options_flow_enable_home_mode(hass: HomeAssistant) -> None:
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 1992,
         },
-        options={CONF_SHOW_HOME_MODE: False},
+        options={
+            CONF_SCAN_INTERVAL: 10,
+            CONF_SHOW_HOME_MODE: False,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -446,9 +457,11 @@ async def test_options_flow_enable_home_mode(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
+            CONF_SCAN_INTERVAL: 10,
             CONF_SHOW_HOME_MODE: True,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SCAN_INTERVAL] == 10
     assert entry.options[CONF_SHOW_HOME_MODE] is True

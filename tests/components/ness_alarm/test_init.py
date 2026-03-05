@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
+import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -27,6 +28,7 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_HOST,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
@@ -35,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -48,6 +51,9 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
         data={
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 1992,
+        },
+        options={
+            CONF_SCAN_INTERVAL: 30,
         },
     )
     entry.add_to_hass(hass)
@@ -628,3 +634,63 @@ async def test_yaml_import_triggers_flow(
         )
         assert issue is not None
         assert issue.severity == "warning"
+
+
+async def test_yaml_import_connection_error_creates_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that YAML import connection error creates a repair issue."""
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.Client",
+        return_value=AsyncMock(),
+    ) as mock_client:
+        mock_client.return_value.update.side_effect = OSError("Connection refused")
+        mock_client.return_value.close = AsyncMock()
+
+        config = {
+            DOMAIN: {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1992,
+            }
+        }
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        # Check that no config entry was created
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 0
+
+        # Check that a domain-specific repair issue was created
+        issue = issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
+        assert issue is not None
+        assert issue.severity == "warning"
+
+
+async def test_panic_service_no_config_entry(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test panic service raises error when no config entry is loaded."""
+    # Set up integration without a config entry to register services
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PANIC, blocking=True, service_data={ATTR_CODE: "1234"}
+        )
+
+
+async def test_aux_service_no_config_entry(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test aux service raises error when no config entry is loaded."""
+    # Set up integration without a config entry to register services
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_AUX, blocking=True, service_data={ATTR_OUTPUT_ID: 1}
+        )
