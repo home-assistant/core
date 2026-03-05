@@ -209,6 +209,9 @@
       }
     },
     "light": {
+      "air_purifier_light": {
+        "name": "Light"
+      },
       "light": {
         "state_attributes": {
           "effect": {

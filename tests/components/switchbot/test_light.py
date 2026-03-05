@@ -488,7 +488,7 @@ async def test_air_purifier_light_services(
 
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
-    entity_id = "light.test_name"
+    entity_id = "light.test_name_light"
 
     mocked_instance = AsyncMock(return_value=True)
     mocked_none_instance = AsyncMock(return_value=None)
@@ -521,7 +521,7 @@ async def test_air_purifier_light_restore_state(
 
     entry = mock_entry_encrypted_factory(sensor_type="air_purifier_jp")
     entry.add_to_hass(hass)
-    entity_id = "light.test_name"
+    entity_id = "light.test_name_light"
     mock_restore_cache(hass, [State(entity_id, "on")])
 
     mocked_info = AsyncMock(

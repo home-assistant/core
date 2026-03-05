@@ -43,16 +43,15 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
         async_add_entities([SwitchbotAirPurifierLightEntity(coordinator)])
-        return
-    async_add_entities([SwitchbotLightEntity(coordinator)])
+    else:
+        async_add_entities([SwitchbotLightEntity(coordinator)])
 
 
 class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntity):
     """Representation of a Switchbot air purifier light."""
 
     _device: switchbot.SwitchbotAirPurifier
-    _attr_translation_key = "light"
-    _attr_has_entity_name = False
+    _attr_translation_key = "air_purifier_light"
     _attr_is_on: bool | None = None
 
     async def async_added_to_hass(self) -> None:
