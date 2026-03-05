@@ -1,5 +1,6 @@
 """Test the Teslemetry init."""
 
+from copy import deepcopy
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,17 +9,26 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InvalidResponse,
     InvalidToken,
+    RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
 )
 
 from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+
+# Coordinator constants
+from homeassistant.components.teslemetry.coordinator import (
+    ENERGY_HISTORY_INTERVAL,
+    ENERGY_INFO_INTERVAL,
+    ENERGY_LIVE_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -29,9 +39,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import CONFIG_V1, PRODUCTS_MODERN, UNIQUE_ID, VEHICLE_DATA_ALT
+from .const import (
+    CONFIG_V1,
+    ENERGY_HISTORY,
+    LIVE_STATUS,
+    PRODUCTS_MODERN,
+    SITE_INFO,
+    UNIQUE_ID,
+    VEHICLE_DATA,
+    VEHICLE_DATA_ALT,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -319,9 +338,7 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        mock_migrate.assert_called_once_with(
-            CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
-        )
+        mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
 
     assert mock_entry is not None
     assert mock_entry.version == 2
@@ -356,9 +373,7 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        mock_migrate.assert_called_once_with(
-            CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
-        )
+        mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry is not None
@@ -430,3 +445,422 @@ async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
     assert entry is not None
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 3  # Version should remain unchanged
+
+
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that missing OAuth implementation triggers reauth."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": int(time.time()) + 3600,
+            },
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Mock the implementation lookup to raise ValueError
+    with patch(
+        "homeassistant.components.teslemetry.async_get_config_entry_implementation",
+        side_effect=ValueError("Implementation not available"),
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    # Should trigger reauth, not just fail silently
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+RETRY_EXCEPTIONS = [
+    (RateLimited(data={"after": 5}), 5.0),
+    (InvalidResponse(), 10.0),
+]
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_site_info_retry_exceptions(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test UpdateFailed with retry_after for site info coordinator."""
+    mock_site_info.side_effect = exception
+    entry = await setup_platform(hass)
+    # Retry exceptions during first refresh cause setup retry
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    # API should only be called once (no manual retries)
+    assert mock_site_info.call_count == 1
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_vehicle_data_retry_exceptions(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test UpdateFailed with retry_after for vehicle data coordinator."""
+    mock_vehicle_data.side_effect = exception
+    entry = await setup_platform(hass)
+    # Retry exceptions during first refresh cause setup retry
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    # API should only be called once (no manual retries)
+    assert mock_vehicle_data.call_count == 1
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_live_status_coordinator_retry_exceptions(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test live status coordinator raises UpdateFailed with retry_after."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)  # Initial call succeeds
+        if call_count == 2:
+            raise exception  # Second call raises exception
+        return deepcopy(LIVE_STATUS)  # Subsequent calls succeed
+
+    mock_live_status.side_effect = live_status_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert call_count == 1
+
+    # Trigger coordinator refresh - this will raise the exception
+    freezer.tick(ENERGY_LIVE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # API was called exactly once for this refresh (no manual retry loop)
+    assert call_count == 2
+    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_energy_history_coordinator_retry_exceptions(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
+) -> None:
+    """Test energy history coordinator raises UpdateFailed with retry_after."""
+    call_count = 0
+
+    def energy_history_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise exception  # First call raises exception
+        return ENERGY_HISTORY  # Subsequent calls succeed
+
+    mock_energy_history.side_effect = energy_history_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    # Energy history doesn't have first_refresh during setup
+    assert call_count == 0
+
+    # Trigger first coordinator refresh - this will raise the exception
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # API was called exactly once (no manual retry loop)
+    assert call_count == 1
+    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_live_status_auth_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live status coordinator handles auth errors."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise InvalidToken
+
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+        side_effect=live_status_side_effect,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Auth error triggers reauth flow
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_live_status_generic_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live status coordinator handles generic TeslaFleetError."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise TeslaFleetError
+
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+        side_effect=live_status_side_effect,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_missing_token_data(hass: HomeAssistant) -> None:
+    """Test that missing token data in config entry triggers auth failure."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            # token is intentionally missing
+        },
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_vehicle_streaming_version_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test vehicle sw_version is updated when streaming reports new version."""
+    # Track listen_Version calls
+    version_listeners: list = []
+
+    def mock_listen_version(callback):
+        version_listeners.append(callback)
+        return lambda: None  # Return unsubscribe function
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_Version",
+        side_effect=mock_listen_version,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+    # Check initial device sw_version
+    vin = "LRW3F7EK4NC700000"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    assert device is not None
+    assert device.sw_version == "2026.0.0"
+
+    # Simulate streaming version update
+    assert len(version_listeners) > 0
+    version_listeners[0]("2026.1.0 abc123")
+    await hass.async_block_till_done()
+
+    # Check device sw_version was updated (build hash removed)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    assert device is not None
+    assert device.sw_version == "2026.1.0"
+
+
+async def test_vehicle_streaming_version_update_ignores_none(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test vehicle sw_version is not updated when streaming reports None."""
+    version_listeners: list = []
+
+    def mock_listen_version(callback):
+        version_listeners.append(callback)
+        return lambda: None
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_Version",
+        side_effect=mock_listen_version,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+    vin = "LRW3F7EK4NC700000"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    assert device is not None
+    original_version = device.sw_version
+
+    # Simulate streaming version update with None
+    assert len(version_listeners) > 0
+    version_listeners[0](None)
+    await hass.async_block_till_done()
+
+    # Check device sw_version was not changed
+    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    assert device is not None
+    assert device.sw_version == original_version
+
+
+async def test_vehicle_polling_version_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test vehicle sw_version is updated when polling coordinator receives new version."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    vin = "LRW3F7EK4NC700000"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    assert device is not None
+    assert device.sw_version == "2026.0.0"
+
+    # Update mock to return new version on next poll
+    updated_vehicle_data = deepcopy(VEHICLE_DATA)
+    updated_vehicle_data["response"]["vehicle_state"]["car_version"] = "2026.2.0 def456"
+    mock_vehicle_data.return_value = updated_vehicle_data
+
+    # Trigger coordinator refresh
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check device sw_version was updated (build hash removed)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    assert device is not None
+    assert device.sw_version == "2026.2.0"
+
+
+async def test_energy_site_version_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_site_info: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test energy site sw_version is updated when info coordinator receives new version."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    site_id = "123456"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    assert device is not None
+    assert device.sw_version == "23.44.0 eb113390"
+
+    # Update mock to return new version on next poll
+    updated_site_info = deepcopy(SITE_INFO)
+    updated_site_info["response"]["version"] = "24.1.0 abc123"
+    mock_site_info.side_effect = lambda: updated_site_info
+
+    # Trigger coordinator refresh
+    freezer.tick(ENERGY_INFO_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check device sw_version was updated
+    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    assert device is not None
+    assert device.sw_version == "24.1.0 abc123"
+
+
+# Exception translation tests
+
+
+async def test_live_status_auth_failed_forbidden(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test Forbidden exception during live_status triggers auth failure."""
+    mock_live_status.side_effect = Forbidden
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [[deepcopy(LIVE_STATUS), TeslaFleetError]],
+)
+async def test_live_status_coordinator_refresh_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    side_effect: list,
+) -> None:
+    """Test live status coordinator handles errors during refresh."""
+    mock_live_status.side_effect = side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(ENERGY_LIVE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        [InvalidToken],
+        [TeslaFleetError],
+        [ENERGY_HISTORY, {"response": {}}],
+    ],
+)
+async def test_energy_history_coordinator_refresh_errors(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    side_effect: list,
+) -> None:
+    """Test energy history coordinator handles errors during refresh."""
+    mock_energy_history.side_effect = side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED

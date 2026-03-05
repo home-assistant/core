@@ -1,11 +1,15 @@
 """The Swing2Sleep Smarla integration."""
 
 from pysmarlaapi import Connection, Federwiege
+from pysmarlaapi.connection.exceptions import (
+    AuthenticationException,
+    ConnectionException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import HOST, PLATFORMS
 
@@ -17,16 +21,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -
     connection = Connection(HOST, token_b64=entry.data[CONF_ACCESS_TOKEN])
 
     # Check if token still has access
-    if not await connection.refresh_token():
-        raise ConfigEntryError("Invalid authentication")
+    try:
+        await connection.refresh_token()
+    except AuthenticationException as e:
+        raise ConfigEntryAuthFailed("Invalid authentication") from e
+    except ConnectionException as e:
+        raise ConfigEntryNotReady("Unable to connect to server") from e
 
-    federwiege = Federwiege(hass.loop, connection)
+    async def on_auth_failure():
+        entry.async_start_reauth(hass)
+
+    federwiege = Federwiege(hass.loop, connection, on_auth_failure)
     federwiege.register()
 
     entry.runtime_data = federwiege
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Starts a task to keep reconnecting, e.g. when device gets unreachable.
+    # When an authentication error occurs, it automatically stops and calls
+    # the on_auth_failure function.
     federwiege.connect()
 
     return True

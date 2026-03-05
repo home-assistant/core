@@ -35,7 +35,10 @@ def mock_expires_at() -> int:
 
 
 def create_config_entry(
-    expires_at: int, scopes: list[Scope], implementation: str = DOMAIN
+    expires_at: int,
+    scopes: list[Scope],
+    implementation: str = DOMAIN,
+    region: str = "NA",
 ) -> MockConfigEntry:
     """Create Tesla Fleet entry in Home Assistant."""
     access_token = jwt.encode(
@@ -43,7 +46,7 @@ def create_config_entry(
             "sub": UID,
             "aud": [],
             "scp": scopes,
-            "ou_code": "NA",
+            "ou_code": region,
         },
         key="",
         algorithm="none",

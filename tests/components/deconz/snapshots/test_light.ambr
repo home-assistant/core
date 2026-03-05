@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,9 +69,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
@@ -91,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -111,7 +111,6 @@
       'all_on': False,
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'effect': None,
       'effect_list': list([
@@ -124,9 +123,7 @@
       ),
       'is_deconz_group': True,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         68,
@@ -178,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -236,9 +234,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -258,6 +254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -277,7 +274,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'friendly_name': 'Tunable white light',
       'hs_color': tuple(
@@ -286,9 +282,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'rgb_color': tuple(
         255,
         68,
@@ -336,6 +330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -380,9 +375,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
@@ -403,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -423,7 +417,6 @@
       'all_on': False,
       'brightness': 50,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'effect': None,
       'effect_list': list([
@@ -436,9 +429,7 @@
       ),
       'is_deconz_group': True,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         68,
@@ -490,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -548,9 +540,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -570,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -589,7 +580,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'friendly_name': 'Tunable white light',
       'hs_color': tuple(
@@ -598,9 +588,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'rgb_color': tuple(
         255,
         68,
@@ -648,6 +636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,9 +681,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
@@ -715,6 +702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -735,7 +723,6 @@
       'all_on': False,
       'brightness': 50,
       'color_mode': <ColorMode.XY: 'xy'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -748,9 +735,7 @@
       ),
       'is_deconz_group': True,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         221,
@@ -802,6 +787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -860,9 +846,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -882,6 +866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -901,7 +886,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'friendly_name': 'Tunable white light',
       'hs_color': tuple(
@@ -910,9 +894,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'rgb_color': tuple(
         255,
         68,
@@ -945,9 +927,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -969,6 +949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Go',
     'options': dict({
     }),
     'original_device_class': None,
@@ -988,7 +969,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 254,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 375,
       'color_temp_kelvin': 2666,
       'effect': None,
       'effect_list': list([
@@ -1001,9 +981,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         165,
@@ -1038,9 +1016,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 7142,
-      'max_mireds': 650,
       'min_color_temp_kelvin': 1538,
-      'min_mireds': 140,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1062,6 +1038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Ensis',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1081,7 +1058,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 254,
       'color_mode': <ColorMode.XY: 'xy'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -1094,9 +1070,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 7142,
-      'max_mireds': 650,
       'min_color_temp_kelvin': 1538,
-      'min_mireds': 140,
       'rgb_color': tuple(
         255,
         206,
@@ -1164,6 +1138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LIDL xmas light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1237,9 +1212,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1259,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue White Ambiance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1278,7 +1252,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 254,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 396,
       'color_temp_kelvin': 2525,
       'friendly_name': 'Hue White Ambiance',
       'hs_color': tuple(
@@ -1287,9 +1260,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         160,
@@ -1337,6 +1308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Filament',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1396,6 +1368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Simple Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1444,9 +1417,7 @@
         <LightEffect.SUNRISE: 'sunrise'>,
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1468,6 +1439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gradient light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1487,7 +1459,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 184,
       'color_mode': <ColorMode.XY: 'xy'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -1505,9 +1476,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         135,
         255,

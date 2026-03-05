@@ -128,7 +128,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vacuum platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         MieleVacuum(coordinator, device_id, definition.description)

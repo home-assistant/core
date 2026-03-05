@@ -28,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 0',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -93,6 +94,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -158,6 +160,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -223,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -288,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -347,6 +352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -404,6 +410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud ceiling',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -461,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover',
     'options': dict({
     }),
     'original_device_class': None,
@@ -512,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -562,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -612,6 +622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -662,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -712,6 +724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -762,6 +775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -812,6 +826,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -862,6 +877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -912,6 +928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -962,6 +979,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1012,6 +1030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1061,6 +1080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1110,6 +1130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1159,6 +1180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1208,6 +1230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1257,6 +1280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1306,6 +1330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1355,6 +1380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1404,6 +1430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1453,6 +1480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1504,6 +1532,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1559,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1610,6 +1640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1661,6 +1692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1712,6 +1744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1763,6 +1796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1814,6 +1848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1864,6 +1899,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1914,6 +1950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1964,6 +2001,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2014,6 +2052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2066,6 +2105,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2118,6 +2158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2169,6 +2210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2220,6 +2262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2271,6 +2314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2322,6 +2366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2375,6 +2420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2433,6 +2479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2494,6 +2541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure tendency',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2549,6 +2597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2600,6 +2649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2651,6 +2701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2702,6 +2753,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2753,6 +2805,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2806,6 +2859,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2861,6 +2915,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2915,6 +2970,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2969,6 +3025,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3023,6 +3080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3077,6 +3135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3131,6 +3190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3185,6 +3245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3239,6 +3300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3293,6 +3355,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3347,6 +3410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3403,6 +3467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3458,6 +3523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3512,6 +3578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3566,6 +3633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3620,6 +3688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3674,6 +3743,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3728,6 +3798,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3782,6 +3853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3836,6 +3908,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3890,6 +3963,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3944,6 +4018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3998,6 +4073,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4052,6 +4128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4106,6 +4183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4160,6 +4238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4214,6 +4293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4268,6 +4348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4322,6 +4403,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4376,6 +4458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4430,6 +4513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4484,6 +4568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4540,6 +4625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4595,6 +4681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4645,6 +4732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4695,6 +4783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4745,6 +4834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4795,6 +4885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4845,6 +4936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4895,6 +4987,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4945,6 +5038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4995,6 +5089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5045,6 +5140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5095,6 +5191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5146,6 +5243,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5197,6 +5295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5248,6 +5347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5299,6 +5399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5352,6 +5453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5404,6 +5506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5455,6 +5558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5506,6 +5610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5557,6 +5662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5608,6 +5714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5661,6 +5768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wet bulb temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5718,6 +5826,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind chill temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5775,6 +5884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5830,6 +5940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5885,6 +5996,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5940,6 +6052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5995,6 +6108,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6050,6 +6164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6105,6 +6220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6160,6 +6276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6215,6 +6332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6270,6 +6388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6325,6 +6444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6382,6 +6502,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6437,6 +6558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6492,6 +6614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6547,6 +6670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6602,6 +6726,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6657,6 +6782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6712,6 +6838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6767,6 +6894,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6822,6 +6950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6877,6 +7006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6932,6 +7062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

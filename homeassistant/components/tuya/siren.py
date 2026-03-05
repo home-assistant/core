@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.siren import (
@@ -19,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
 
 SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
@@ -94,7 +95,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager)
@@ -106,6 +107,20 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""

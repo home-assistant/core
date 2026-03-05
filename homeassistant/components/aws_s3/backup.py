@@ -5,7 +5,7 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any
+from typing import Any, cast
 
 from botocore.exceptions import BotoCoreError
 
@@ -19,7 +19,8 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import S3ConfigEntry
-from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .helpers import async_list_backups_from_s3
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
@@ -93,12 +94,19 @@ class S3BackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: S3ConfigEntry) -> None:
         """Initialize the S3 agent."""
         super().__init__()
-        self._client = entry.runtime_data
+        self._client = entry.runtime_data.client
         self._bucket: str = entry.data[CONF_BUCKET]
         self.name = entry.title
         self.unique_id = entry.entry_id
         self._backup_cache: dict[str, AgentBackup] = {}
         self._cache_expiration = time()
+        self._prefix: str = entry.data.get(CONF_PREFIX, "")
+
+    def _with_prefix(self, key: str) -> str:
+        """Add prefix to a key if configured."""
+        if not self._prefix:
+            return key
+        return f"{self._prefix}/{key}"
 
     @handle_boto_errors
     async def async_download_backup(
@@ -114,7 +122,9 @@ class S3BackupAgent(BackupAgent):
         backup = await self._find_backup_by_id(backup_id)
         tar_filename, _ = suggested_filenames(backup)
 
-        response = await self._client.get_object(Bucket=self._bucket, Key=tar_filename)
+        response = await self._client.get_object(
+            Bucket=self._bucket, Key=self._with_prefix(tar_filename)
+        )
         return response["Body"].iter_chunks()
 
     async def async_upload_backup(
@@ -141,7 +151,7 @@ class S3BackupAgent(BackupAgent):
             metadata_content = json.dumps(backup.as_dict())
             await self._client.put_object(
                 Bucket=self._bucket,
-                Key=metadata_filename,
+                Key=self._with_prefix(metadata_filename),
                 Body=metadata_content,
             )
         except BotoCoreError as err:
@@ -168,7 +178,7 @@ class S3BackupAgent(BackupAgent):
 
         await self._client.put_object(
             Bucket=self._bucket,
-            Key=tar_filename,
+            Key=self._with_prefix(tar_filename),
             Body=bytes(file_data),
         )
 
@@ -185,54 +195,74 @@ class S3BackupAgent(BackupAgent):
         _LOGGER.debug("Starting multipart upload for %s", tar_filename)
         multipart_upload = await self._client.create_multipart_upload(
             Bucket=self._bucket,
-            Key=tar_filename,
+            Key=self._with_prefix(tar_filename),
         )
         upload_id = multipart_upload["UploadId"]
         try:
-            parts = []
+            parts: list[dict[str, Any]] = []
             part_number = 1
-            buffer_size = 0  # bytes
-            buffer: list[bytes] = []
+            buffer = bytearray()  # bytes buffer to store the data
+            offset = 0  # start index of unread data inside buffer
 
             stream = await open_stream()
             async for chunk in stream:
-                buffer_size += len(chunk)
-                buffer.append(chunk)
+                buffer.extend(chunk)
 
-                # If buffer size meets minimum part size, upload it as a part
-                if buffer_size >= MULTIPART_MIN_PART_SIZE_BYTES:
-                    _LOGGER.debug(
-                        "Uploading part number %d, size %d", part_number, buffer_size
-                    )
-                    part = await self._client.upload_part(
-                        Bucket=self._bucket,
-                        Key=tar_filename,
-                        PartNumber=part_number,
-                        UploadId=upload_id,
-                        Body=b"".join(buffer),
-                    )
-                    parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
-                    part_number += 1
-                    buffer_size = 0
-                    buffer = []
+                # Upload parts of exactly MULTIPART_MIN_PART_SIZE_BYTES to ensure
+                # all non-trailing parts have the same size (defensive implementation)
+                view = memoryview(buffer)
+                try:
+                    while len(buffer) - offset >= MULTIPART_MIN_PART_SIZE_BYTES:
+                        start = offset
+                        end = offset + MULTIPART_MIN_PART_SIZE_BYTES
+                        part_data = view[start:end]
+                        offset = end
+
+                        _LOGGER.debug(
+                            "Uploading part number %d, size %d",
+                            part_number,
+                            len(part_data),
+                        )
+                        part = await cast(Any, self._client).upload_part(
+                            Bucket=self._bucket,
+                            Key=self._with_prefix(tar_filename),
+                            PartNumber=part_number,
+                            UploadId=upload_id,
+                            Body=part_data.tobytes(),
+                        )
+                        parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
+                        part_number += 1
+                finally:
+                    view.release()
+
+                # Compact the buffer if the consumed offset has grown large enough. This
+                # avoids unnecessary memory copies when compacting after every part upload.
+                if offset and offset >= MULTIPART_MIN_PART_SIZE_BYTES:
+                    buffer = bytearray(buffer[offset:])
+                    offset = 0
 
             # Upload the final buffer as the last part (no minimum size requirement)
-            if buffer:
+            # Offset should be 0 after the last compaction, but we use it as the start
+            # index to be defensive in case the buffer was not compacted.
+            if offset < len(buffer):
+                remaining_data = memoryview(buffer)[offset:]
                 _LOGGER.debug(
-                    "Uploading final part number %d, size %d", part_number, buffer_size
+                    "Uploading final part number %d, size %d",
+                    part_number,
+                    len(remaining_data),
                 )
-                part = await self._client.upload_part(
+                part = await cast(Any, self._client).upload_part(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=self._with_prefix(tar_filename),
                     PartNumber=part_number,
                     UploadId=upload_id,
-                    Body=b"".join(buffer),
+                    Body=remaining_data.tobytes(),
                 )
                 parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
 
-            await self._client.complete_multipart_upload(
+            await cast(Any, self._client).complete_multipart_upload(
                 Bucket=self._bucket,
-                Key=tar_filename,
+                Key=self._with_prefix(tar_filename),
                 UploadId=upload_id,
                 MultipartUpload={"Parts": parts},
             )
@@ -241,7 +271,7 @@ class S3BackupAgent(BackupAgent):
             try:
                 await self._client.abort_multipart_upload(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=self._with_prefix(tar_filename),
                     UploadId=upload_id,
                 )
             except BotoCoreError:
@@ -262,8 +292,12 @@ class S3BackupAgent(BackupAgent):
         tar_filename, metadata_filename = suggested_filenames(backup)
 
         # Delete both the backup file and its metadata file
-        await self._client.delete_object(Bucket=self._bucket, Key=tar_filename)
-        await self._client.delete_object(Bucket=self._bucket, Key=metadata_filename)
+        await self._client.delete_object(
+            Bucket=self._bucket, Key=self._with_prefix(tar_filename)
+        )
+        await self._client.delete_object(
+            Bucket=self._bucket, Key=self._with_prefix(metadata_filename)
+        )
 
         # Reset cache after successful deletion
         self._cache_expiration = time()
@@ -296,35 +330,10 @@ class S3BackupAgent(BackupAgent):
         if time() <= self._cache_expiration:
             return self._backup_cache
 
-        backups = {}
-        response = await self._client.list_objects_v2(Bucket=self._bucket)
-
-        # Filter for metadata files only
-        metadata_files = [
-            obj
-            for obj in response.get("Contents", [])
-            if obj["Key"].endswith(".metadata.json")
-        ]
-
-        for metadata_file in metadata_files:
-            try:
-                # Download and parse metadata file
-                metadata_response = await self._client.get_object(
-                    Bucket=self._bucket, Key=metadata_file["Key"]
-                )
-                metadata_content = await metadata_response["Body"].read()
-                metadata_json = json.loads(metadata_content)
-            except (BotoCoreError, json.JSONDecodeError) as err:
-                _LOGGER.warning(
-                    "Failed to process metadata file %s: %s",
-                    metadata_file["Key"],
-                    err,
-                )
-                continue
-            backup = AgentBackup.from_dict(metadata_json)
-            backups[backup.backup_id] = backup
-
-        self._backup_cache = backups
+        backups_list = await async_list_backups_from_s3(
+            self._client, self._bucket, self._prefix
+        )
+        self._backup_cache = {b.backup_id: b for b in backups_list}
         self._cache_expiration = time() + CACHE_TTL
 
         return self._backup_cache

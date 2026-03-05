@@ -6,9 +6,7 @@ rules:
     comment: Service data APIs are polled every 5 minutes
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: "test_form_single_site is patching config flow internals, and should only patch external APIs. Must address feedback from #156697."
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency:
     status: done
@@ -39,9 +37,9 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done

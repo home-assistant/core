@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
+from .coordinator import NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
-class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
+class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     """Representation of a NuHeat Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
@@ -154,7 +155,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         return nuheat_to_fahrenheit(self._target_temperature)
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return current preset mode."""
         return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(self._schedule_mode, PRESET_RUN)
 

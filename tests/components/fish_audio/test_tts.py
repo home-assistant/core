@@ -14,7 +14,7 @@ from homeassistant.components import tts
 from homeassistant.components.fish_audio.const import CONF_BACKEND
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.config_entries import ConfigSubentryData
@@ -49,7 +49,7 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
 @pytest.fixture
 async def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock media player calls."""
-    return async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    return async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
 
 async def test_tts_service_success(

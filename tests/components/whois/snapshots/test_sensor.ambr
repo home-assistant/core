@@ -33,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -113,6 +114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -197,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Days until expiration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -277,6 +280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Expires',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -357,6 +361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -436,6 +441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
@@ -515,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,6 +601,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrar',
     'options': dict({
     }),
     'original_device_class': None,
@@ -673,6 +681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reseller',
     'options': dict({
     }),
     'original_device_class': None,
@@ -804,6 +813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -884,6 +894,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

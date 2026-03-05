@@ -28,7 +28,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
-SCAN_INTERVAL = timedelta(minutes=8)
+SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 PING_INTERVAL = 60
 

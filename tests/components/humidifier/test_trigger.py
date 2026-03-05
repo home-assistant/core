@@ -1,8 +1,6 @@
 """Test humidifier trigger."""
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -11,45 +9,19 @@ from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
     HumidifierAction,
 )
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ABOVE,
-    CONF_BELOW,
-    CONF_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
 
 
 @pytest.fixture
@@ -82,155 +54,13 @@ async def test_humidifier_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-def parametrize_humidifier_trigger_states(
-    *,
-    trigger: str,
-    trigger_options: dict | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None = None,
-    trigger_from_none: bool = True,
-    retrigger_on_target_state: bool = False,
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts."""
-    trigger_options = trigger_options or {}
-    return [
-        (s[0], trigger_options, *s[1:])
-        for s in parametrize_trigger_states(
-            trigger=trigger,
-            target_states=target_states,
-            other_states=other_states,
-            additional_attributes=additional_attributes,
-            trigger_from_none=trigger_from_none,
-            retrigger_on_target_state=retrigger_on_target_state,
-        )
-    ]
-
-
-def parametrize_xxx_changed_trigger_states(
-    trigger: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts for xxx_changed triggers."""
-    return [
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={},
-            target_states=[
-                (STATE_ON, {attribute: 0}),
-                (STATE_ON, {attribute: 50}),
-                (STATE_ON, {attribute: 100}),
-            ],
-            other_states=[(STATE_ON, {attribute: None})],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
-            target_states=[
-                (STATE_ON, {attribute: 50}),
-                (STATE_ON, {attribute: 100}),
-            ],
-            other_states=[
-                (STATE_ON, {attribute: None}),
-                (STATE_ON, {attribute: 0}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
-            target_states=[
-                (STATE_ON, {attribute: 0}),
-                (STATE_ON, {attribute: 50}),
-            ],
-            other_states=[
-                (STATE_ON, {attribute: None}),
-                (STATE_ON, {attribute: 100}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-    ]
-
-
-def parametrize_xxx_crossed_threshold_trigger_states(
-    trigger: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts for xxx_crossed_threshold triggers."""
-    return [
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-            },
-            target_states=[
-                (STATE_ON, {attribute: 50}),
-                (STATE_ON, {attribute: 60}),
-            ],
-            other_states=[
-                (STATE_ON, {attribute: None}),
-                (STATE_ON, {attribute: 0}),
-                (STATE_ON, {attribute: 100}),
-            ],
-        ),
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-            },
-            target_states=[
-                (STATE_ON, {attribute: 0}),
-                (STATE_ON, {attribute: 100}),
-            ],
-            other_states=[
-                (STATE_ON, {attribute: None}),
-                (STATE_ON, {attribute: 50}),
-                (STATE_ON, {attribute: 60}),
-            ],
-        ),
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-            },
-            target_states=[
-                (STATE_ON, {attribute: 50}),
-                (STATE_ON, {attribute: 100}),
-            ],
-            other_states=[
-                (STATE_ON, {attribute: None}),
-                (STATE_ON, {attribute: 0}),
-            ],
-        ),
-        *parametrize_humidifier_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-            },
-            target_states=[
-                (STATE_ON, {attribute: 0}),
-                (STATE_ON, {attribute: 50}),
-            ],
-            other_states=[
-                (STATE_ON, {attribute: None}),
-                (STATE_ON, {attribute: 100}),
-            ],
-        ),
-    ]
-
-
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="humidifier.turned_on",
@@ -252,7 +82,8 @@ async def test_humidifier_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -281,7 +112,7 @@ async def test_humidifier_state_trigger_behavior_any(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -289,18 +120,20 @@ async def test_humidifier_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_xxx_changed_trigger_states(
-            "humidifier.current_humidity_changed", ATTR_CURRENT_HUMIDITY
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "humidifier.current_humidity_changed", STATE_ON, ATTR_CURRENT_HUMIDITY
         ),
-        *parametrize_xxx_crossed_threshold_trigger_states(
-            "humidifier.current_humidity_crossed_threshold", ATTR_CURRENT_HUMIDITY
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "humidifier.current_humidity_crossed_threshold",
+            STATE_ON,
+            ATTR_CURRENT_HUMIDITY,
         ),
-        *parametrize_humidifier_trigger_states(
+        *parametrize_trigger_states(
             trigger="humidifier.started_drying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
         ),
-        *parametrize_humidifier_trigger_states(
+        *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
@@ -316,7 +149,7 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -345,13 +178,13 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="humidifier.turned_on",
@@ -373,7 +206,8 @@ async def test_humidifier_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when the first humidifier changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -401,7 +235,7 @@ async def test_humidifier_state_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -409,15 +243,17 @@ async def test_humidifier_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_xxx_crossed_threshold_trigger_states(
-            "humidifier.current_humidity_crossed_threshold", ATTR_CURRENT_HUMIDITY
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "humidifier.current_humidity_crossed_threshold",
+            STATE_ON,
+            ATTR_CURRENT_HUMIDITY,
         ),
-        *parametrize_humidifier_trigger_states(
+        *parametrize_trigger_states(
             trigger="humidifier.started_drying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
         ),
-        *parametrize_humidifier_trigger_states(
+        *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
@@ -463,13 +299,13 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="humidifier.turned_on",
@@ -491,7 +327,8 @@ async def test_humidifier_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when the last humidifier changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -518,7 +355,7 @@ async def test_humidifier_state_trigger_behavior_last(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -526,15 +363,17 @@ async def test_humidifier_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_xxx_crossed_threshold_trigger_states(
-            "humidifier.current_humidity_crossed_threshold", ATTR_CURRENT_HUMIDITY
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "humidifier.current_humidity_crossed_threshold",
+            STATE_ON,
+            ATTR_CURRENT_HUMIDITY,
         ),
-        *parametrize_humidifier_trigger_states(
+        *parametrize_trigger_states(
             trigger="humidifier.started_drying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
         ),
-        *parametrize_humidifier_trigger_states(
+        *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
             other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],

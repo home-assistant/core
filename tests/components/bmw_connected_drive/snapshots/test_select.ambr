@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -95,6 +96,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC charging limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -165,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -234,6 +237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC charging limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -304,6 +308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging mode',
     'options': dict({
     }),
     'original_device_class': None,

@@ -10,6 +10,7 @@ from asyncsleepiq import (
     CoreTemps,
     FootWarmingTemps,
     Side,
+    SleepData,
     SleepIQActuator,
     SleepIQBed,
     SleepIQCoreClimate,
@@ -76,6 +77,13 @@ def mock_bed() -> MagicMock:
     sleeper_l.sleep_number = 40
     sleeper_l.pressure = 1000
     sleeper_l.sleeper_id = SLEEPER_L_ID
+    sleeper_l.sleep_data = SleepData(
+        duration=28800,  # 8 hours in seconds
+        sleep_score=85,
+        heart_rate=60,
+        respiratory_rate=14,
+        hrv=68,
+    )
 
     sleeper_r.side = Side.RIGHT
     sleeper_r.name = SLEEPER_R_NAME
@@ -83,6 +91,13 @@ def mock_bed() -> MagicMock:
     sleeper_r.sleep_number = 80
     sleeper_r.pressure = 1400
     sleeper_r.sleeper_id = SLEEPER_R_ID
+    sleeper_r.sleep_data = SleepData(
+        duration=25200,  # 7 hours in seconds
+        sleep_score=78,
+        heart_rate=65,
+        respiratory_rate=15,
+        hrv=72,
+    )
 
     bed.foundation = create_autospec(SleepIQFoundation)
     light_1 = create_autospec(SleepIQLight)

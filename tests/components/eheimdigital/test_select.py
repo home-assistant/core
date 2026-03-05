@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from eheimdigital.types import FilterMode
+from eheimdigital.types import FilterMode, FilterModeProf
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,7 +20,6 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock")
 async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
@@ -49,7 +48,6 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("classic_vario_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -62,6 +60,28 @@ async def test_setup(
                     "pumpMode",
                     int(FilterMode.MANUAL),
                 ),
+            ],
+        ),
+        (
+            "filter_mock",
+            [
+                (
+                    "select.mock_filter_filter_mode",
+                    "constant_flow",
+                    "title",
+                    "START_FILTER_NORMAL_MODE_WITH_COMP",
+                ),
+                (
+                    "select.mock_filter_manual_speed",
+                    "61.5",
+                    "frequency",
+                    int(61.5 * 100),
+                ),
+                ("select.mock_filter_constant_flow_speed", "440", "flow_rate", 1),
+                ("select.mock_filter_day_speed", "480", "dfs_soll_day", 2),
+                ("select.mock_filter_night_speed", "860", "dfs_soll_night", 14),
+                ("select.mock_filter_high_pulse_speed", "620", "dfs_soll_high", 6),
+                ("select.mock_filter_low_pulse_speed", "770", "dfs_soll_low", 11),
             ],
         ),
     ],
@@ -108,6 +128,60 @@ async def test_set_value(
                     "pumpMode",
                     int(FilterMode.BIO),
                     "bio",
+                ),
+            ],
+        ),
+        (
+            "filter_mock",
+            [
+                (
+                    "select.mock_filter_filter_mode",
+                    "filter_data",
+                    "pumpMode",
+                    int(FilterModeProf.CONSTANT_FLOW),
+                    "constant_flow",
+                ),
+                (
+                    "select.mock_filter_manual_speed",
+                    "filter_data",
+                    "freqSoll",
+                    int(61.5 * 100),
+                    "61.5",
+                ),
+                (
+                    "select.mock_filter_constant_flow_speed",
+                    "filter_data",
+                    "sollStep",
+                    1,
+                    "440",
+                ),
+                (
+                    "select.mock_filter_day_speed",
+                    "filter_data",
+                    "nm_dfs_soll_day",
+                    2,
+                    "480",
+                ),
+                (
+                    "select.mock_filter_night_speed",
+                    "filter_data",
+                    "nm_dfs_soll_night",
+                    14,
+                    "860",
+                ),
+                (
+                    "select.mock_filter_high_pulse_speed",
+                    "filter_data",
+                    "pm_dfs_soll_high",
+                    6,
+                    "620",
+                ),
+                (
+                    "select.mock_filter_low_pulse_speed",
+                    "filter_data",
+                    "pm_dfs_soll_low",
+                    11,
+                    "770",
                 ),
             ],
         ),

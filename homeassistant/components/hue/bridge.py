@@ -79,7 +79,7 @@ class HueBridge:
             async with asyncio.timeout(10):
                 await self.api.initialize()
             setup_ok = True
-        except (LinkButtonNotPressed, Unauthorized):
+        except LinkButtonNotPressed, Unauthorized:
             # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the

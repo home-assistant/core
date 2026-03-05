@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current ozone level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -132,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current UV level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -243,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin type 1 safe exposure time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -295,6 +300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin type 2 safe exposure time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -347,6 +353,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin type 3 safe exposure time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -399,6 +406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin type 4 safe exposure time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -451,6 +459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin type 5 safe exposure time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -503,6 +512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin type 6 safe exposure time',
     'options': dict({
     }),
     'original_device_class': None,

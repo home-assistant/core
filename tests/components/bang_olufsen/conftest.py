@@ -5,19 +5,20 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from mozart_api.models import (
     Action,
+    BatteryState,
     BeolinkPeer,
     BeolinkSelf,
     ContentItem,
     ListeningMode,
     ListeningModeFeatures,
     ListeningModeRef,
+    ListeningModeTrigger,
     PairedRemote,
     PairedRemoteResponse,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
     PlayQueueSettings,
-    PowerLinkTrigger,
     ProductState,
     RemoteMenuItem,
     RenderingState,
@@ -34,6 +35,7 @@ from homeassistant.components.bang_olufsen.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    TEST_BATTERY,
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
     TEST_DATA_CREATE_ENTRY_3,
@@ -125,6 +127,7 @@ async def mock_websocket_connection(
     playback_metadata_callback = (
         mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
     )
+    battery_callback = mock_mozart_client.get_battery_notifications.call_args[0][0]
 
     # Trigger callbacks. Try to use existing data
     volume_callback(mock_mozart_client.get_product_state.return_value.volume)
@@ -137,6 +140,10 @@ async def mock_websocket_connection(
     playback_metadata_callback(
         mock_mozart_client.get_product_state.return_value.playback.metadata
     )
+
+    # This should not affect non-battery devices.
+    battery_callback(TEST_BATTERY)
+
     await hass.async_block_till_done()
 
 
@@ -365,19 +372,19 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id=TEST_SOUND_MODE,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[PowerLinkTrigger()],
+                triggers=[ListeningModeTrigger()],
             ),
             ListeningMode(
                 id=TEST_SOUND_MODE_2,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[PowerLinkTrigger()],
+                triggers=[ListeningModeTrigger()],
             ),
             ListeningMode(
                 id=345,
                 name=f"{TEST_SOUND_MODE_NAME} 2",
                 features=ListeningModeFeatures(),
-                triggers=[PowerLinkTrigger()],
+                triggers=[ListeningModeTrigger()],
             ),
         ]
         client.get_active_listening_mode = AsyncMock()
@@ -402,6 +409,14 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     name="BEORC",
                 )
             ]
+        )
+        client.get_battery_state = AsyncMock()
+        client.get_battery_state.return_value = BatteryState(
+            battery_level=0,
+            is_charging=False,
+            remaining_charging_time_minutes=0,
+            remaining_playing_time_minutes=0,
+            state="BatteryNotPresent",
         )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()

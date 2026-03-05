@@ -19,6 +19,10 @@
   selector:
     choose:
       choices:
+        number:
+          selector:
+            number:
+              mode: box
         entity:
           selector:
             entity:
@@ -27,14 +31,11 @@
                   - input_number
                   - number
                   - sensor
-        number:
-          selector:
-            number:
-              mode: box
       translation_key: number_or_entity
 
 .trigger_threshold_type: &trigger_threshold_type
   required: true
+  default: above
   selector:
     select:
       options:

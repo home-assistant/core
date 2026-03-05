@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active torrents',
     'options': dict({
     }),
     'original_device_class': None,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completed torrents',
     'options': dict({
     }),
     'original_device_class': None,
@@ -122,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -178,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Paused torrents',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Started torrents',
     'options': dict({
     }),
     'original_device_class': None,
@@ -287,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -342,6 +348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total torrents',
     'options': dict({
     }),
     'original_device_class': None,
@@ -393,6 +400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

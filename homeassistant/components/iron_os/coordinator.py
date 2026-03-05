@@ -84,7 +84,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             self.device_info = await self.device.get_device_info()
 
-        except (CommunicationError, TimeoutError):
+        except CommunicationError, TimeoutError:
             self.device_info = DeviceInfoResponse()
 
         self.v223_features = (

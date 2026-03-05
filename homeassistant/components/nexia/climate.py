@@ -225,7 +225,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._signal_thermostat_update()
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Preset that is active."""
         return self._zone.get_preset()
 

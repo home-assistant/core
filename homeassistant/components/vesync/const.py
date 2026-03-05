@@ -32,7 +32,6 @@ VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
 VS_FAN_MODE_AUTO = "auto"
 VS_FAN_MODE_SLEEP = "sleep"
-VS_FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
 VS_FAN_MODE_TURBO = "turbo"
 VS_FAN_MODE_PET = "pet"
 VS_FAN_MODE_MANUAL = "manual"
@@ -42,7 +41,6 @@ VS_FAN_MODE_NORMAL = "normal"
 VS_FAN_MODE_PRESET_LIST_HA = [
     VS_FAN_MODE_AUTO,
     VS_FAN_MODE_SLEEP,
-    VS_FAN_MODE_ADVANCED_SLEEP,
     VS_FAN_MODE_TURBO,
     VS_FAN_MODE_PET,
     VS_FAN_MODE_NORMAL,
@@ -62,3 +60,14 @@ OUTLET_NIGHT_LIGHT_LEVEL_ON = "on"
 PURIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
 PURIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
 PURIFIER_NIGHT_LIGHT_LEVEL_ON = "on"
+
+AIR_FRYER_MODE_MAP = {
+    "cookend": "cooking_end",
+    "cooking": "cooking",
+    "cookstop": "cooking_stop",
+    "heating": "heating",
+    "preheatend": "preheat_end",
+    "preheatstop": "preheat_stop",
+    "pullout": "pull_out",
+    "standby": "standby",
+}

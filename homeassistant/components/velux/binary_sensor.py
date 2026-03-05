@@ -74,6 +74,8 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
 
         self._attr_available = True
 
-        # Velux windows with rain sensors report an opening limitation of 93 or 100 (Velux GPU) when rain is detected.
-        # So far, only 93 and 100 have been observed in practice, documentation on this is non-existent AFAIK.
-        self._attr_is_on = limitation.min_value in {93, 100}
+        # Velux windows with rain sensors report an opening limitation when rain is detected.
+        # So far we've seen 89, 91, 93 (most cases) or 100 (Velux GPU). It probably makes sense to
+        # assume that any large enough limitation (we use >=89) means rain is detected.
+        # Documentation on this is non-existent AFAIK.
+        self._attr_is_on = limitation.min_value >= 89

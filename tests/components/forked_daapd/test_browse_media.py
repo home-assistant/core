@@ -284,7 +284,7 @@ async def test_async_browse_spotify(
                 media_class=MediaClass.APP,
                 media_content_id=f"{SPOTIFY_MEDIA_PLAYER_PREFIX}some_id",
                 media_content_type=f"{SPOTIFY_MEDIA_PLAYER_PREFIX}track",
-                thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                thumbnail="/api/brands/integration/spotify/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -294,7 +294,7 @@ async def test_async_browse_spotify(
             media_class=MediaClass.APP,
             media_content_id=SPOTIFY_MEDIA_PLAYER_PREFIX,
             media_content_type=f"{SPOTIFY_MEDIA_PLAYER_PREFIX}library",
-            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+            thumbnail="/api/brands/integration/spotify/logo.png",
             can_play=False,
             can_expand=True,
             children=children,

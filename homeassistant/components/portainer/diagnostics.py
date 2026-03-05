@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_API_TOKEN
+from homeassistant.const import CONF_API_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import PortainerConfigEntry
 from .coordinator import PortainerCoordinator
 
-TO_REDACT = [CONF_API_TOKEN]
+TO_REDACT = [CONF_API_TOKEN, CONF_URL]
 
 
 def _serialize_coordinator(coordinator: PortainerCoordinator) -> dict[str, Any]:

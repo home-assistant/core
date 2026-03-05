@@ -1,4 +1,4 @@
-"""Support for BSB-Lan services."""
+"""Support for BSB-LAN services."""
 
 from __future__ import annotations
 
@@ -7,13 +7,15 @@ import logging
 from typing import TYPE_CHECKING
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
+from .helpers import async_sync_device_time
 
 if TYPE_CHECKING:
     from . import BSBLanConfigEntry
@@ -29,32 +31,28 @@ ATTR_FRIDAY_SLOTS = "friday_slots"
 ATTR_SATURDAY_SLOTS = "saturday_slots"
 ATTR_SUNDAY_SLOTS = "sunday_slots"
 
-# Service name
-SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
+
+# Schema for a single time slot
+_SLOT_SCHEMA = vol.Schema(
+    {
+        vol.Required("start_time"): cv.time,
+        vol.Required("end_time"): cv.time,
+    }
+)
 
 
-def _parse_time_value(value: time | str) -> time:
-    """Parse a time value from either a time object or string.
-
-    Raises ServiceValidationError if the format is invalid.
-    """
-    if isinstance(value, time):
-        return value
-
-    if isinstance(value, str):
-        try:
-            parts = value.split(":")
-            return time(int(parts[0]), int(parts[1]))
-        except (ValueError, IndexError):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_time_format",
-            ) from None
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_time_format",
-    )
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(ATTR_MONDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_TUESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_WEDNESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_THURSDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_FRIDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_SATURDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_SUNDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+    }
+)
 
 
 def _convert_time_slots_to_day_schedule(
@@ -62,8 +60,8 @@ def _convert_time_slots_to_day_schedule(
 ) -> DaySchedule | None:
     """Convert list of time slot dicts to a DaySchedule object.
 
-    Example: [{"start_time": "06:00", "end_time": "08:00"},
-              {"start_time": "17:00", "end_time": "21:00"}]
+    Example: [{"start_time": time(6, 0), "end_time": time(8, 0)},
+              {"start_time": time(17, 0), "end_time": time(21, 0)}]
     becomes: DaySchedule with two TimeSlot objects
 
     None returns None (don't modify this day).
@@ -77,30 +75,26 @@ def _convert_time_slots_to_day_schedule(
 
     time_slots = []
     for slot in slots:
-        start = slot.get("start_time")
-        end = slot.get("end_time")
+        start_time = slot["start_time"]
+        end_time = slot["end_time"]
 
-        if start and end:
-            start_time = _parse_time_value(start)
-            end_time = _parse_time_value(end)
-
-            # Validate that end time is after start time
-            if end_time <= start_time:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="end_time_before_start_time",
-                    translation_placeholders={
-                        "start_time": start_time.strftime("%H:%M"),
-                        "end_time": end_time.strftime("%H:%M"),
-                    },
-                )
-
-            time_slots.append(TimeSlot(start=start_time, end=end_time))
-            LOGGER.debug(
-                "Created time slot: %s-%s",
-                start_time.strftime("%H:%M"),
-                end_time.strftime("%H:%M"),
+        # Validate that end time is after start time
+        if end_time <= start_time:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="end_time_before_start_time",
+                translation_placeholders={
+                    "start_time": start_time.strftime("%H:%M"),
+                    "end_time": end_time.strftime("%H:%M"),
+                },
             )
+
+        time_slots.append(TimeSlot(start=start_time, end=end_time))
+        LOGGER.debug(
+            "Created time slot: %s-%s",
+            start_time.strftime("%H:%M"),
+            end_time.strftime("%H:%M"),
+        )
 
     LOGGER.debug("Created DaySchedule with %d slots", len(time_slots))
     return DaySchedule(slots=time_slots)
@@ -194,7 +188,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     )
 
     try:
-        # Call the BSB-Lan API to set the schedule
+        # Call the BSB-LAN API to set the schedule
         await client.set_hot_water_schedule(dhw_schedule)
     except BSBLANError as err:
         raise HomeAssistantError(
@@ -207,11 +201,69 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     await entry.runtime_data.slow_coordinator.async_request_refresh()
 
 
+async def async_sync_time(service_call: ServiceCall) -> None:
+    """Synchronize BSB-LAN device time with Home Assistant."""
+    device_id: str = service_call.data[ATTR_DEVICE_ID]
+
+    # Get the device and config entry
+    device_registry = dr.async_get(service_call.hass)
+    device_entry = device_registry.async_get(device_id)
+
+    if device_entry is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device_id",
+            translation_placeholders={"device_id": device_id},
+        )
+
+    # Find the config entry for this device
+    matching_entries: list[BSBLanConfigEntry] = [
+        entry
+        for entry in service_call.hass.config_entries.async_entries(DOMAIN)
+        if entry.entry_id in device_entry.config_entries
+    ]
+
+    if not matching_entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry_for_device",
+            translation_placeholders={"device_id": device_entry.name or device_id},
+        )
+
+    entry = matching_entries[0]
+
+    # Verify the config entry is loaded
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_loaded",
+            translation_placeholders={"device_name": device_entry.name or device_id},
+        )
+
+    client = entry.runtime_data.client
+    await async_sync_device_time(client, device_entry.name or device_id)
+
+
+SYNC_TIME_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    }
+)
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the BSB-Lan services."""
+    """Register the BSB-LAN services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_HOT_WATER_SCHEDULE,
+        "set_hot_water_schedule",
         set_hot_water_schedule,
+        schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "sync_time",
+        async_sync_time,
+        schema=SYNC_TIME_SCHEMA,
     )

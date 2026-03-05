@@ -40,6 +40,8 @@ HVAC_ACTIONS = {
     "ON": HVACAction.HEATING,
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -72,6 +74,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_preset_modes = list(PRESET_MODES.values())
+    _attr_translation_key = "thermostat"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
