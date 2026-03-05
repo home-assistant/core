@@ -189,6 +189,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_CO2_IN_24H_AQIN,
@@ -196,6 +197,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_PM_IN_TEMP_AQIN,
@@ -256,6 +258,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key=TYPE_DAILYRAININ,
