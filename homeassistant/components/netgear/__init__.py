@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         return await router.async_get_link_status()
 
     # Create update coordinators
-    coordinator_tracker = NetgearDataCoordinator[bool](
+    coordinator_tracker = NetgearDataCoordinator(
         hass,
         router,
         entry,
@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         update_method=async_update_devices,
         update_interval=SCAN_INTERVAL,
     )
-    coordinator_traffic_meter = NetgearDataCoordinator[dict[str, Any] | None](
+    coordinator_traffic_meter = NetgearDataCoordinator(
         hass,
         router,
         entry,
@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         update_method=async_update_traffic_meter,
         update_interval=SCAN_INTERVAL,
     )
-    coordinator_speed_test = NetgearDataCoordinator[dict[str, Any] | None](
+    coordinator_speed_test = NetgearDataCoordinator(
         hass,
         router,
         entry,
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         update_method=async_update_speed_test,
         update_interval=SPEED_TEST_INTERVAL,
     )
-    coordinator_firmware = NetgearDataCoordinator[dict[str, Any] | None](
+    coordinator_firmware = NetgearDataCoordinator(
         hass,
         router,
         entry,
@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         update_method=async_check_firmware,
         update_interval=SCAN_INTERVAL_FIRMWARE,
     )
-    coordinator_utilization = NetgearDataCoordinator[dict[str, Any] | None](
+    coordinator_utilization = NetgearDataCoordinator(
         hass,
         router,
         entry,
@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         update_method=async_update_utilization,
         update_interval=SCAN_INTERVAL,
     )
-    coordinator_link = NetgearDataCoordinator[dict[str, Any] | None](
+    coordinator_link = NetgearDataCoordinator(
         hass,
         router,
         entry,
