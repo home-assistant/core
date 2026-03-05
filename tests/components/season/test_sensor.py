@@ -5,6 +5,8 @@ from datetime import datetime
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.util.dt import UTC
+
 from homeassistant.components.season.const import (
     DOMAIN,
     TYPE_ASTRONOMICAL,
@@ -44,25 +46,25 @@ HEMISPHERE_EMPTY = {
 }
 
 NORTHERN_PARAMETERS = [
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_SUMMER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_SUMMER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_AUTUMN),
-    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_AUTUMN),
-    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_WINTER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_WINTER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_SPRING),
-    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_SPRING),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0, tzinfo=UTC), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0, tzinfo=UTC), STATE_SPRING),
 ]
 
 SOUTHERN_PARAMETERS = [
-    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_SUMMER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_SUMMER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_AUTUMN),
-    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_AUTUMN),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_WINTER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_WINTER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_SPRING),
-    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_SPRING),
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0, tzinfo=UTC), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_SPRING),
 ]
 
 
@@ -154,7 +156,7 @@ async def test_season_equator(
     hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
 
-    with freeze_time(datetime(2017, 9, 3, 0, 0)):
+    with freeze_time(datetime(2017, 9, 3, 0, 0, tzinfo=UTC)):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
