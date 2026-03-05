@@ -589,3 +589,17 @@ async def test_async_update_preview_feature_not_found(hass: HomeAssistant) -> No
         ValueError, match="Preview feature nonexistent.feature not found"
     ):
         await async_update_preview_feature(hass, "nonexistent", "feature", enabled=True)
+
+
+async def test_async_subscribe_preview_feature_not_found(hass: HomeAssistant) -> None:
+    """Test subscribing to a preview feature that doesn't exist raises."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    async def listener(event_data: EventLabsUpdatedData) -> None:
+        """Test listener callback."""
+
+    with pytest.raises(
+        ValueError, match="Preview feature nonexistent.feature not found"
+    ):
+        async_subscribe_preview_feature(hass, "nonexistent", "feature", listener)
