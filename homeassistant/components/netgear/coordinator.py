@@ -16,6 +16,8 @@ from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL_FIRMWARE = timedelta(hours=5)
+
 
 @dataclass
 class NetgearRuntimeData:
@@ -25,7 +27,7 @@ class NetgearRuntimeData:
     coordinator_tracker: NetgearDataCoordinator[bool]
     coordinator_traffic: NetgearDataCoordinator[dict[str, Any] | None]
     coordinator_speed: NetgearDataCoordinator[dict[str, Any] | None]
-    coordinator_firmware: NetgearDataCoordinator[dict[str, Any] | None]
+    coordinator_firmware: NetgearFirmwareCoordinator
     coordinator_utilization: NetgearDataCoordinator[dict[str, Any] | None]
     coordinator_link: NetgearDataCoordinator[dict[str, Any] | None]
 
@@ -46,7 +48,7 @@ class NetgearDataCoordinator[T](DataUpdateCoordinator[T]):
         *,
         name: str,
         update_interval: timedelta,
-        update_method: Callable[[], Coroutine[Any, Any, T]],
+        update_method: Callable[[], Coroutine[Any, Any, T]] | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -57,3 +59,24 @@ class NetgearDataCoordinator[T](DataUpdateCoordinator[T]):
             update_interval=update_interval,
             update_method=update_method,
         )
+        self.router = router
+
+
+class NetgearFirmwareCoordinator(NetgearDataCoordinator[dict[str, Any] | None]):
+    """Coordinator for Netgear firmware updates."""
+
+    def __init__(
+        self, hass: HomeAssistant, router: NetgearRouter, entry: NetgearConfigEntry
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            router,
+            entry,
+            name="Firmware",
+            update_interval=SCAN_INTERVAL_FIRMWARE,
+        )
+
+    async def _async_update_data(self) -> dict[str, Any] | None:
+        """Check for new firmware of the router."""
+        return await self.router.async_check_new_firmware()

@@ -12,7 +12,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import PLATFORMS
-from .coordinator import NetgearConfigEntry, NetgearDataCoordinator, NetgearRuntimeData
+from .coordinator import (
+    NetgearConfigEntry,
+    NetgearDataCoordinator,
+    NetgearFirmwareCoordinator,
+    NetgearRuntimeData,
+)
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
@@ -20,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 SPEED_TEST_INTERVAL = timedelta(hours=2)
-SCAN_INTERVAL_FIRMWARE = timedelta(hours=5)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> bool:
@@ -62,10 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         """Fetch data from the router."""
         return await router.async_get_speed_test()
 
-    async def async_check_firmware() -> dict[str, Any] | None:
-        """Check for new firmware of the router."""
-        return await router.async_check_new_firmware()
-
     async def async_update_utilization() -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await router.async_get_utilization()
@@ -99,14 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
         update_method=async_update_speed_test,
         update_interval=SPEED_TEST_INTERVAL,
     )
-    coordinator_firmware = NetgearDataCoordinator(
-        hass,
-        router,
-        entry,
-        name="Firmware",
-        update_method=async_check_firmware,
-        update_interval=SCAN_INTERVAL_FIRMWARE,
-    )
+    coordinator_firmware = NetgearFirmwareCoordinator(hass, router, entry)
     coordinator_utilization = NetgearDataCoordinator(
         hass,
         router,

@@ -13,7 +13,7 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .coordinator import NetgearConfigEntry, NetgearFirmwareCoordinator
 from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
@@ -33,7 +33,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
+class NetgearUpdateEntity(
+    NetgearRouterCoordinatorEntity[NetgearFirmwareCoordinator], UpdateEntity
+):
     """Update entity for a Netgear device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -41,7 +43,7 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: NetgearDataCoordinator[dict[str, Any] | None],
+        coordinator: NetgearFirmwareCoordinator,
         router: NetgearRouter,
     ) -> None:
         """Initialize a Netgear device."""
