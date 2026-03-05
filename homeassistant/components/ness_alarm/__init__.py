@@ -142,6 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
     client = Client(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
+        update_interval=86400,  # Coordinator handles polling; disable internal loop
         infer_arming_state=entry.data.get(CONF_INFER_ARMING_STATE, False),
     )
 
