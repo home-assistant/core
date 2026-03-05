@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_private_key
 from iseo_argo_ble import IseoClient
 
@@ -25,8 +22,6 @@ from .const import (
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-_LOGGER = logging.getLogger(__name__)
-
 type IseoConfigEntry = ConfigEntry[IseoClient]
 
 
@@ -41,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
 
     priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)
     priv = await hass.async_add_executor_job(
-        derive_private_key, priv_int, SECP224R1(), default_backend()
+        derive_private_key, priv_int, SECP224R1()
     )
     uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
 

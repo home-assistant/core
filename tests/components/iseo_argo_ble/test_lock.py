@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components.iseo_argo_ble.const import DOMAIN
 from homeassistant.components.iseo_argo_ble.lock import _POLL_INTERVAL, IseoLockEntity
 from homeassistant.components.lock import LockState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -148,6 +149,10 @@ async def test_unlock_connection_error_raises_ha_error(
             {"entity_id": lock_entity_id},
             blocking=True,
         )
+
+    # Verify it was marked unavailable
+    state = hass.states.get(lock_entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_poll_state_no_ble_device(
@@ -298,6 +303,10 @@ async def test_unlock_no_ble_device(
     assert excinfo.value.translation_key == "cannot_connect"
     mock_iseo_client.gw_open.assert_not_called()
 
+    # Verify it was marked unavailable
+    state = hass.states.get(lock_entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
 
 async def test_auto_relock_fallback_when_poll_exits_early(
     hass: HomeAssistant,
@@ -429,11 +438,26 @@ async def test_poll_state_firmware_update(
 
     # Reset initial setup state
     lock_entity._fw_version_set = False
-    # firmware_info slicing logic: fw_version = state.firmware_info[5:].strip() or state.firmware_info.strip()
     mock_iseo_client.read_state = AsyncMock(
         return_value=MagicMock(door_closed=True, firmware_info="FW:  1.2.3")
     )
 
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.helpers.device_registry.DeviceRegistry.async_get_device",
+            return_value=None,
+        ),
+    ):
+        await lock_entity._poll_state()
+
+    # Should NOT be set because device was not found
+    assert lock_entity._fw_version_set is False
+
+    # Second poll with device present
     with patch(
         "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
         return_value=MagicMock(),
@@ -587,7 +611,9 @@ async def test_polling_scheduled_even_if_initial_poll_fails(
         assert lock_entity._door_status_supported is None
         # Verify if async_track_time_interval was called
         # It should be called with (hass, lock_entity._poll_state, _POLL_INTERVAL)
-        mock_track.assert_called_once_with(hass, lock_entity._poll_state, _POLL_INTERVAL)
+        mock_track.assert_called_once_with(
+            hass, lock_entity._poll_state, _POLL_INTERVAL
+        )
 
 
 async def test_polling_cancelled_if_unsupported(

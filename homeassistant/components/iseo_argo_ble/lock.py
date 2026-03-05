@@ -145,7 +145,7 @@ class IseoLockEntity(LockEntity):
                 identifiers={(DOMAIN, cast(str, self._entry.unique_id))}
             ):
                 dev_reg.async_update_device(device.id, sw_version=fw_version)
-            self._fw_version_set = True
+                self._fw_version_set = True
 
         if state.door_closed is None:
             if self._door_status_supported is not False:
@@ -177,25 +177,25 @@ class IseoLockEntity(LockEntity):
             self._attr_is_locked = new_locked
         self.async_write_ha_state()
 
-    def _set_unlocking(self) -> None:
+    def _set_unlocking(self, available: bool = True) -> None:
         self._attr_is_locked = False
         self._attr_is_unlocking = True
-        self._attr_available = True
+        self._attr_available = available
         self.async_write_ha_state()
 
-    def _set_unlocked(self) -> None:
+    def _set_unlocked(self, available: bool = True) -> None:
         self._attr_is_unlocking = False
         self._attr_is_locked = False
-        self._attr_available = True
+        self._attr_available = available
         self._poll_suppress_until = datetime.now(tz=UTC) + timedelta(
             seconds=_RELOCK_DELAY
         )
         self.async_write_ha_state()
 
-    def _set_locked(self) -> None:
+    def _set_locked(self, available: bool = True) -> None:
         self._attr_is_unlocking = False
         self._attr_is_locked = True
-        self._attr_available = True
+        self._attr_available = available
         self._poll_suppress_until = None
         self.async_write_ha_state()
 
@@ -208,11 +208,11 @@ class IseoLockEntity(LockEntity):
                 # If the poll exited early (BLE busy, device not found, error),
                 # the state was not updated — fall back to locked.
                 if not self._attr_is_locked:
-                    self._set_locked()
+                    self._set_locked(available=self._attr_available)
                 return
 
             await asyncio.sleep(_RELOCK_DELAY)
-            self._set_locked()
+            self._set_locked(available=self._attr_available)
         except asyncio.CancelledError:
             pass
 
@@ -237,7 +237,7 @@ class IseoLockEntity(LockEntity):
                 connectable=True,
             )
         ):
-            self._set_locked()
+            self._set_locked(available=False)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -254,7 +254,7 @@ class IseoLockEntity(LockEntity):
                 translation_key="lock_rejected_identity",
             ) from exc
         except (TimeoutError, IseoConnectionError) as exc:
-            self._set_locked()
+            self._set_locked(available=False)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",

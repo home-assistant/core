@@ -9,7 +9,9 @@ from homeassistant.core import HomeAssistant
 
 from . import IseoConfigEntry
 
-TO_REDACT = {"priv_scalar", "uuid"}
+from .const import CONF_PRIV_SCALAR, CONF_UUID
+
+TO_REDACT = {CONF_PRIV_SCALAR, CONF_UUID}
 
 
 async def async_get_config_entry_diagnostics(
