@@ -7,7 +7,6 @@ from typing import Any
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_SHUFFLE,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,

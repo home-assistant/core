@@ -27,7 +27,7 @@ from .media_player import JellyfinMediaPlayer
 JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
     k: v
     for k, v in MP_PLAY_MEDIA_SCHEMA.items()
-    if (k != ATTR_MEDIA_ANNOUNCE and k != ATTR_MEDIA_ENQUEUE)
+    if (k not in (ATTR_MEDIA_ANNOUNCE, ATTR_MEDIA_ENQUEUE))
 }
 
 
