@@ -1502,6 +1502,9 @@ oralb-ble==1.0.2
 # homeassistant.components.orvibo
 orvibo==1.1.2
 
+# homeassistant.components.sia
+osbornehoffman==2.2.1
+
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
 

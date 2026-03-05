@@ -8,32 +8,43 @@
       "invalid_account_length": "The account is not the right length, it has to be between 3 and 16 characters.",
       "invalid_key_format": "The key is not a hex value, please use only 0-9 and A-F.",
       "invalid_key_length": "The key is not the right length, it has to be 16, 24 or 32 hex characters.",
+      "invalid_panel_id_format": "The panel ID is not a hex value, please use only 0-9 and A-F.",
+      "invalid_panel_id_length": "The panel ID is not the right length, it has to be between 1 and 16 characters.",
       "invalid_ping": "The ping interval needs to be between 1 and 1440 minutes.",
       "invalid_zones": "There needs to be at least 1 zone.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "additional_account": {
-        "data": {
-          "account": "[%key:component::sia::config::step::user::data::account%]",
-          "additional_account": "[%key:component::sia::config::step::user::data::additional_account%]",
-          "encryption_key": "[%key:component::sia::config::step::user::data::encryption_key%]",
-          "ping_interval": "[%key:component::sia::config::step::user::data::ping_interval%]",
-          "zones": "[%key:component::sia::config::step::user::data::zones%]"
-        },
-        "title": "Add another account to the current port"
-      },
       "user": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "protocol": "Protocol"
+        },
+        "title": "Create a connection for SIA-based alarm systems"
+      },
+      "account": {
         "data": {
           "account": "Account ID",
           "additional_account": "Additional accounts",
           "encryption_key": "Encryption key",
+          "forward_heartbeat": "Forward heartbeat events",
+          "panel_id": "Panel ID (hex)",
           "ping_interval": "Ping interval (min)",
-          "port": "[%key:common::config_flow::data::port%]",
-          "protocol": "Protocol",
           "zones": "Number of zones for the account"
         },
-        "title": "Create a connection for SIA-based alarm systems"
+        "title": "Configure account"
+      },
+      "additional_account": {
+        "data": {
+          "account": "[%key:component::sia::config::step::account::data::account%]",
+          "additional_account": "[%key:component::sia::config::step::account::data::additional_account%]",
+          "encryption_key": "[%key:component::sia::config::step::account::data::encryption_key%]",
+          "forward_heartbeat": "[%key:component::sia::config::step::account::data::forward_heartbeat%]",
+          "panel_id": "[%key:component::sia::config::step::account::data::panel_id%]",
+          "ping_interval": "[%key:component::sia::config::step::account::data::ping_interval%]",
+          "zones": "[%key:component::sia::config::step::account::data::zones%]"
+        },
+        "title": "Add another account to the current port"
       }
     }
   },
@@ -42,7 +53,7 @@
       "options": {
         "data": {
           "ignore_timestamps": "Ignore the timestamp check of the SIA events",
-          "zones": "[%key:component::sia::config::step::user::data::zones%]"
+          "zones": "[%key:component::sia::config::step::account::data::zones%]"
         },
         "description": "Set the options for account: {account}",
         "title": "Options for the SIA setup"
