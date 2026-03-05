@@ -161,7 +161,6 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-
         self._attr_is_on = self.coordinator.data.get("power") == STATE_ON.upper()
         mode = self.coordinator.data.get("mode")
         self._attr_preset_mode = (
