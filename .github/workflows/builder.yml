@@ -194,18 +194,18 @@ jobs:
       - name: Build base image
         uses: home-assistant/builder/actions/build-image@gha-builder # zizmor: ignore[unpinned-uses]
         with:
-          image: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant
-          image-tag: ${{ needs.init.outputs.version }}
           arch: ${{ matrix.arch }}
-          context: .
-          version: ${{ needs.init.outputs.version }}
           build-args: |
             BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
-          push: true
-          docker-password: ${{ secrets.GITHUB_TOKEN }}
           cache-gha: false
-          verify-base: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          container-password: ${{ secrets.GITHUB_TOKEN }}
+          context: .
           cosign-base-identity: "https://github.com/home-assistant/docker/.*"
+          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          image: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant
+          image-tags: ${{ needs.init.outputs.version }}
+          push: true
+          version: ${{ needs.init.outputs.version }}
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -271,20 +271,21 @@ jobs:
       - name: Build machine image
         uses: home-assistant/builder/actions/build-image@gha-builder # zizmor: ignore[unpinned-uses]
         with:
-          image: ghcr.io/home-assistant/${{ matrix.machine }}-homeassistant
-          image-tag: ${{ needs.init.outputs.version }}
-          image-extra-tags: ${{ steps.tags.outputs.extra_tags }}
           arch: ${{ matrix.arch }}
-          context: machine/
-          file: machine/${{ matrix.machine }}
-          version: ${{ needs.init.outputs.version }}
           build-args: |
             BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
-          push: true
-          docker-password: ${{ secrets.GITHUB_TOKEN }}
           cache-gha: false
-          verify-base: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          container-password: ${{ secrets.GITHUB_TOKEN }}
+          context: machine/
           cosign-base-identity: "https://github.com/home-assistant/core/.*"
+          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          file: machine/${{ matrix.machine }}
+          image: ghcr.io/home-assistant/${{ matrix.machine }}-homeassistant
+          image-tags: |
+            ${{ needs.init.outputs.version }}
+            ${{ steps.tags.outputs.extra_tags }}
+          push: true
+          version: ${{ needs.init.outputs.version }}
 
   publish_ha:
     name: Publish version files
