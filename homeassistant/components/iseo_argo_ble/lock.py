@@ -13,6 +13,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -69,7 +70,7 @@ class IseoLockEntity(LockEntity):
 
         self._attr_unique_id = f"{entry.unique_id}_lock"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, entry.unique_id)},
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             name=entry.title,
             manufacturer="ISEO",
@@ -134,15 +135,11 @@ class IseoLockEntity(LockEntity):
 
         if not self._fw_version_set and state.firmware_info:
             fw_version = state.firmware_info[5:].strip() or state.firmware_info.strip()
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._entry.entry_id)},
-                connections={(CONNECTION_BLUETOOTH, self._entry.data[CONF_ADDRESS])},
-                name=self._entry.title,
-                manufacturer="ISEO",
-                model="X1R Smart",
-                model_id="X1R",
-                sw_version=fw_version,
-            )
+            dev_reg = dr.async_get(self.hass)
+            if device := dev_reg.async_get_device(
+                identifiers={(DOMAIN, self._entry.unique_id)}
+            ):
+                dev_reg.async_update_device(device.id, sw_version=fw_version)
             self._fw_version_set = True
 
         if state.door_closed is None:

@@ -7,9 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from iseo_argo_ble import IseoAuthError, IseoConnectionError
 import pytest
 
+from homeassistant.components.iseo_argo_ble.const import CONF_ADDRESS, DOMAIN
 from homeassistant.components.lock import LockState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_component import EntityComponent
 
 from tests.common import MockConfigEntry
@@ -436,7 +438,10 @@ async def test_poll_state_firmware_update(
     ):
         await lock_entity._poll_state()
 
-    assert lock_entity.device_info["sw_version"] == "1.2.3"
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, mock_config_entry.unique_id)})
+    assert device is not None
+    assert device.sw_version == "1.2.3"
     assert lock_entity._fw_version_set is True
 
 
