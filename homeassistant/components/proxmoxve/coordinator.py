@@ -193,10 +193,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
 
         try:
             self.permissions = self.proxmox.access.permissions.get() or {}
-            self.proxmox.nodes.get()
         except ResourceException as err:
             if 400 <= err.status_code < 500:
                 raise ProxmoxPermissionsError from err
+            raise ProxmoxServerError from err
+
+        try:
+            self.proxmox.nodes.get()
+        except ResourceException as err:
+            if 400 <= err.status_code < 500:
+                raise ProxmoxNodesNotFoundError from err
             raise ProxmoxServerError from err
 
     def _fetch_all_nodes(
