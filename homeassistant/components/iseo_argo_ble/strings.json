@@ -35,6 +35,9 @@
     "cannot_connect": {
       "message": "Could not connect to the lock."
     },
+    "lock_not_supported": {
+      "message": "Manual locking is not supported by this device. The lock will automatically re-latch after being opened."
+    },
     "lock_rejected_identity": {
       "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
     }

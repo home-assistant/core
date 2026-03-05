@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -65,12 +65,12 @@ class IseoLockEntity(LockEntity):
         self._ble_lock = asyncio.Lock()
         self._door_status_supported: bool | None = None
         self._fw_version_set = False
-        self._unavailable_logged = False
         self.client: IseoClient = client
 
         self._attr_unique_id = f"{entry.unique_id}_lock"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
+            connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             name=entry.title,
             manufacturer="ISEO",
             model="X1R Smart",
@@ -79,6 +79,7 @@ class IseoLockEntity(LockEntity):
 
         self._attr_is_locked = True
         self._attr_is_unlocking = False
+        self._attr_available = True
         self._poll_suppress_until: datetime | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -97,6 +98,7 @@ class IseoLockEntity(LockEntity):
 
     async def _poll_state(self, _now: Any = None, force: bool = False) -> None:
         """Read door state via TLV_INFO and update HA state."""
+        _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
         if self._ble_lock.locked():
             _LOGGER.debug("Skipping poll cycle — BLE operation already in progress")
             return
@@ -108,9 +110,10 @@ class IseoLockEntity(LockEntity):
                 connectable=True,
             )
         ):
-            if not self._unavailable_logged:
+            if self._attr_available:
                 _LOGGER.info("Lock is unavailable: device not found")
-                self._unavailable_logged = True
+                self._attr_available = False
+                self.async_write_ha_state()
             return
 
         try:
@@ -118,19 +121,22 @@ class IseoLockEntity(LockEntity):
                 self.client.update_ble_device(ble_device)
                 state: LockState = await self.client.read_state()
         except (TimeoutError, IseoConnectionError, IseoAuthError, OSError) as exc:
-            if not self._unavailable_logged:
+            if self._attr_available:
                 _LOGGER.info("Lock is unavailable: %s", exc)
-                self._unavailable_logged = True
+                self._attr_available = False
+                self.async_write_ha_state()
             return
 
-        if self._unavailable_logged:
+        if not self._attr_available:
             _LOGGER.info("Lock is back online")
-            self._unavailable_logged = False
+            self._attr_available = True
+            self.async_write_ha_state()
 
         if not self._fw_version_set and state.firmware_info:
             fw_version = state.firmware_info[5:].strip() or state.firmware_info.strip()
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._entry.entry_id)},
+                connections={(CONNECTION_BLUETOOTH, self._entry.data[CONF_ADDRESS])},
                 name=self._entry.title,
                 manufacturer="ISEO",
                 model="X1R Smart",
@@ -143,32 +149,39 @@ class IseoLockEntity(LockEntity):
             if self._door_status_supported is not False:
                 _LOGGER.debug("Door status not supported; polling disabled")
                 self._door_status_supported = False
+            self.async_write_ha_state()
             return
 
         self._door_status_supported = True
 
         if self._attr_is_unlocking:
+            # We updated availability, write it now.
+            self.async_write_ha_state()
             return
         if (
             not force
             and self._poll_suppress_until
             and datetime.now(tz=UTC) < self._poll_suppress_until
         ):
+            # We updated availability, write it now.
+            self.async_write_ha_state()
             return
 
         new_locked = state.door_closed
         if new_locked != self._attr_is_locked:
             self._attr_is_locked = new_locked
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     def _set_unlocking(self) -> None:
         self._attr_is_locked = False
         self._attr_is_unlocking = True
+        self._attr_available = True
         self.async_write_ha_state()
 
     def _set_unlocked(self) -> None:
         self._attr_is_unlocking = False
         self._attr_is_locked = False
+        self._attr_available = True
         self._poll_suppress_until = datetime.now(tz=UTC) + timedelta(
             seconds=_RELOCK_DELAY
         )
@@ -177,6 +190,7 @@ class IseoLockEntity(LockEntity):
     def _set_locked(self) -> None:
         self._attr_is_unlocking = False
         self._attr_is_locked = True
+        self._attr_available = True
         self._poll_suppress_until = None
         self.async_write_ha_state()
 
@@ -196,6 +210,13 @@ class IseoLockEntity(LockEntity):
             self._set_locked()
         except asyncio.CancelledError:
             pass
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock the door (not supported)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="lock_not_supported",
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Open the lock (momentary actuator — always re-latches automatically)."""
