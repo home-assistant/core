@@ -58,6 +58,6 @@ class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         value = bool(self.parsed_data.get(self._event, False))
-        if value and not self._previous_value and self.event_types:
-            self._trigger_event(self.event_types[0])
+        if value and not self._previous_value:
+            self._trigger_event("ring")
         self._previous_value = value
