@@ -1,7 +1,7 @@
 """Test Volvo services."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
@@ -174,8 +174,8 @@ async def test_async_image_exists(hass: HomeAssistant) -> None:
     """Test _async_image_exists returns True on successful response."""
     client = AsyncMock(spec=AsyncClient)
     response = AsyncMock()
-    response.raise_for_status.return_value = None
-    client.get.return_value = response
+    response.raise_for_status = MagicMock(return_value=None)
+    client.stream().__aenter__.return_value = response
 
     assert await _async_image_exists(client, "http://example.com/image.jpg")
 
