@@ -198,7 +198,7 @@ jobs:
           build-args: |
             BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
           cache-gha: false
-          container-password: ${{ secrets.GITHUB_TOKEN }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           context: .
           cosign-base-identity: "https://github.com/home-assistant/docker/.*"
           cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
@@ -275,7 +275,7 @@ jobs:
           build-args: |
             BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
           cache-gha: false
-          container-password: ${{ secrets.GITHUB_TOKEN }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           context: machine/
           cosign-base-identity: "https://github.com/home-assistant/core/.*"
           cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
