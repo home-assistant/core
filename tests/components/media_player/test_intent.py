@@ -78,12 +78,20 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
     # Test if not playing
     hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.STATE
+    assert match_failed_error.constraints.states
+    assert list(match_failed_error.constraints.states) == [MediaPlayerState.PLAYING]
 
     # Test feature not supported
     hass.states.async_set(
@@ -92,12 +100,19 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert match_failed_error.constraints.features == MediaPlayerEntityFeature.PAUSE
 
 
 async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
@@ -151,12 +166,20 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
     # Test if not playing
     hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_NEXT,
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.STATE
+    assert match_failed_error.constraints.states
+    assert list(match_failed_error.constraints.states) == [MediaPlayerState.PLAYING]
 
     # Test feature not supported
     hass.states.async_set(
@@ -165,13 +188,22 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_NEXT,
             {"name": {"value": "test media player"}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features == MediaPlayerEntityFeature.NEXT_TRACK
+    )
 
 
 async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
@@ -202,12 +234,20 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
     # Test if not playing
     hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_PREVIOUS,
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.STATE
+    assert match_failed_error.constraints.states
+    assert list(match_failed_error.constraints.states) == [MediaPlayerState.PLAYING]
 
     # Test feature not supported
     hass.states.async_set(
@@ -216,13 +256,23 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_PREVIOUS,
             {"name": {"value": "test media player"}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
@@ -257,13 +307,22 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features == MediaPlayerEntityFeature.VOLUME_SET
+    )
 
 
 async def test_media_player_mute_intent(hass: HomeAssistant) -> None:
@@ -298,13 +357,22 @@ async def test_media_player_mute_intent(hass: HomeAssistant) -> None:
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_PLAYER_MUTE,
             {},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features == MediaPlayerEntityFeature.VOLUME_MUTE
+    )
 
 
 async def test_media_player_unmute_intent(hass: HomeAssistant) -> None:
@@ -339,13 +407,22 @@ async def test_media_player_unmute_intent(hass: HomeAssistant) -> None:
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_PLAYER_UNMUTE,
             {},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features == MediaPlayerEntityFeature.VOLUME_MUTE
+    )
 
 
 async def test_multiple_media_players(
@@ -462,13 +539,23 @@ async def test_multiple_media_players(
     # -----
 
     # There are multiple TV's currently playing
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
             {"name": {"value": "TV"}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert (
+        match_failed_error.result.no_match_reason
+        == intent.MatchFailedReason.DUPLICATE_NAME
+    )
+    assert match_failed_error.result.no_match_name == "TV"
 
     # Pause the upstairs TV
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
@@ -826,7 +913,7 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
         STATE_IDLE,
         attributes={},
     )
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         await intent.async_handle(
             hass,
             "test",
@@ -834,19 +921,39 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
             {"search_query": {"value": "test query"}},
         )
 
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features
+        == MediaPlayerEntityFeature.SEARCH_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+    )
+
     # Test feature not supported (missing SEARCH_MEDIA)
     hass.states.async_set(
         entity_id,
         STATE_IDLE,
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY_MEDIA},
     )
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
             {"search_query": {"value": "test query"}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features
+        == MediaPlayerEntityFeature.SEARCH_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+    )
 
     # Test play media service errors
     search_results.append(search_result_item)
@@ -862,13 +969,23 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
         SERVICE_PLAY_MEDIA,
         raise_exception=HomeAssistantError("Play failed"),
     )
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
             {"search_query": {"value": "play error query"}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features
+        == MediaPlayerEntityFeature.SEARCH_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+    )
 
     # Test search service error
     hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
@@ -1105,13 +1222,21 @@ async def test_volume_relative_media_player_intent(
         attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET},
     )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_SET_VOLUME_RELATIVE,
             {"volume_step": {"value": direction}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.STATE
+    assert match_failed_error.constraints.states
+    assert list(match_failed_error.constraints.states) == [MediaPlayerState.PLAYING]
 
     # Test feature not supported
     for entity_id in (idle_entity.entity_id, playing_entity.entity_id):
@@ -1121,10 +1246,19 @@ async def test_volume_relative_media_player_intent(
             attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
         )
 
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as error_wrapper:
         await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_SET_VOLUME_RELATIVE,
             {"volume_step": {"value": direction}},
         )
+
+    # Verify match failure reason and info
+    match_failed_error = error_wrapper.value
+    assert isinstance(match_failed_error, intent.MatchFailedError)
+    assert not match_failed_error.result.is_match
+    assert match_failed_error.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert (
+        match_failed_error.constraints.features == MediaPlayerEntityFeature.VOLUME_SET
+    )

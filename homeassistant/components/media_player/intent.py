@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Iterable
+import dataclasses
 from dataclasses import dataclass, field
 import logging
 import time
@@ -481,7 +482,9 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
                     result=intent.MatchTargetsResult(
                         is_match=False, no_match_reason=intent.MatchFailedReason.STATE
                     ),
-                    constraints=match_constraints,
+                    constraints=dataclasses.replace(
+                        match_constraints, states=[MediaPlayerState.PLAYING]
+                    ),
                     preferences=match_preferences,
                 )
 
