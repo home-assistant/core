@@ -11,6 +11,7 @@ from homeassistant.components.iseo_argo_ble.const import (
     CONF_UUID,
     DOMAIN,
 )
+from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_ADDRESS, MOCK_PRIV_SCALAR, MOCK_UUID_HEX
 
@@ -23,6 +24,7 @@ def mock_bluetooth(
     enable_bluetooth: None,
 ) -> None:
     """Auto mock bluetooth for all tests — ensures history is patched first."""
+    return
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +42,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock ISEO Argo BLE config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=MOCK_ADDRESS.replace(":", ""),
+        unique_id=format_mac(MOCK_ADDRESS),
         data={
             CONF_ADDRESS: MOCK_ADDRESS,
             CONF_UUID: MOCK_UUID_HEX,

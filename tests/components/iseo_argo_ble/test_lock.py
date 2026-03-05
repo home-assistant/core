@@ -201,3 +201,68 @@ async def test_unlock_no_ble_device(
 
     assert excinfo.value.translation_key == "cannot_connect"
     mock_iseo_client.gw_open.assert_not_called()
+
+
+async def test_auto_relock_fallback_when_poll_exits_early(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_derive_private_key: MagicMock,
+) -> None:
+    """Test _auto_relock falls back to locked when _poll_state exits early."""
+    mock_iseo_client.read_state = AsyncMock(
+        return_value=MagicMock(door_closed=True, firmware_info=None)
+    )
+    await _setup_integration(
+        hass, mock_config_entry, mock_iseo_client, mock_derive_private_key
+    )
+
+    component: EntityComponent = hass.data["lock"]
+    lock_entity = next(iter(component.entities))
+    assert lock_entity._door_status_supported is True
+
+    # Simulate state after a successful unlock
+    lock_entity._attr_is_locked = False
+    lock_entity._attr_is_unlocking = False
+
+    # _poll_state exits early without updating _attr_is_locked
+    with (
+        patch("asyncio.sleep", new_callable=AsyncMock),
+        patch.object(lock_entity, "_poll_state", new_callable=AsyncMock),
+    ):
+        await lock_entity._auto_relock()
+
+    assert lock_entity._attr_is_locked is True
+
+
+async def test_auto_relock_no_fallback_when_poll_updates_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    mock_derive_private_key: MagicMock,
+) -> None:
+    """Test _auto_relock does not double-set state when _poll_state updates it."""
+    mock_iseo_client.read_state = AsyncMock(
+        return_value=MagicMock(door_closed=True, firmware_info=None)
+    )
+    await _setup_integration(
+        hass, mock_config_entry, mock_iseo_client, mock_derive_private_key
+    )
+
+    component: EntityComponent = hass.data["lock"]
+    lock_entity = next(iter(component.entities))
+    assert lock_entity._door_status_supported is True
+
+    lock_entity._attr_is_locked = False
+    lock_entity._attr_is_unlocking = False
+
+    async def poll_sets_locked(*args: object, **kwargs: object) -> None:
+        lock_entity._attr_is_locked = True
+
+    with (
+        patch("asyncio.sleep", new_callable=AsyncMock),
+        patch.object(lock_entity, "_poll_state", side_effect=poll_sets_locked),
+    ):
+        await lock_entity._auto_relock()
+
+    assert lock_entity._attr_is_locked is True

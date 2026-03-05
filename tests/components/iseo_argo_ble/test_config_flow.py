@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.iseo_argo_ble.const import CONF_ADDRESS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_ADDRESS, MOCK_SERVICE_INFO
 
@@ -40,7 +41,7 @@ async def test_bluetooth_discovery_abort_if_already_configured(
     """Test bluetooth discovery aborts for already-configured locks."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=MOCK_ADDRESS.replace(":", ""),
+        unique_id=format_mac(MOCK_ADDRESS),
         data={CONF_ADDRESS: MOCK_ADDRESS},
     )
     entry.add_to_hass(hass)

@@ -73,9 +73,7 @@ class IseoLockEntity(LockEntity):
             raise ValueError("IseoLockEntity requires a client")
         self.client: IseoClient = client
 
-        self._attr_unique_id = (
-            f"{entry.data[CONF_ADDRESS].replace(':', '').lower()}_lock"
-        )
+        self._attr_unique_id = f"{entry.unique_id}_lock"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -183,6 +181,10 @@ class IseoLockEntity(LockEntity):
             if self._door_status_supported:
                 await asyncio.sleep(2)
                 await self._poll_state(force=True)
+                # If the poll exited early (BLE busy, device not found, error),
+                # the state was not updated — fall back to locked.
+                if not self._attr_is_locked:
+                    self._set_locked()
                 return
 
             await asyncio.sleep(_RELOCK_DELAY)

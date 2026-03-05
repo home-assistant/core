@@ -23,6 +23,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -98,7 +99,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
 
-            await self.async_set_unique_id(address.replace(":", ""))
+            await self.async_set_unique_id(format_mac(address))
             self._abort_if_unique_id_configured()
 
             priv = _generate_identity()
@@ -163,7 +164,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Called by HA when a matching BLE advertisement is seen."""
-        await self.async_set_unique_id(discovery_info.address.replace(":", ""))
+        await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
 
         if not is_iseo_advertisement(list(discovery_info.service_uuids or [])):
