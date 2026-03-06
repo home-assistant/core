@@ -66,3 +66,6 @@ class WizData:
     coordinator: WizCoordinator
     bulb: wizlight
     scenes: list
+
+
+type WizConfigEntry = ConfigEntry[WizData]

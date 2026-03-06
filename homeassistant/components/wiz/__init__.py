@@ -8,7 +8,6 @@ from typing import Any
 from pywizlight import PilotParser, wizlight
 from pywizlight.bulb import PIR_SOURCE
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -24,10 +23,8 @@ from .const import (
     SIGNAL_WIZ_PIR,
     WIZ_CONNECT_EXCEPTIONS,
 )
-from .coordinator import WizCoordinator, WizData
+from .coordinator import WizConfigEntry, WizCoordinator, WizData
 from .discovery import async_discover_devices, async_trigger_discovery
-
-type WizConfigEntry = ConfigEntry[WizData]
 
 _LOGGER = logging.getLogger(__name__)
 

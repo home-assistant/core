@@ -11,8 +11,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WizConfigEntry
-from .coordinator import WizData
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizToggleEntity
 
 
