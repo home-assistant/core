@@ -83,6 +83,9 @@
           'type': 'node',
           'uptime': 86400,
         }),
+        'updates': list([
+        ]),
+        'version': '8.3.5',
         'vms': dict({
           '100': dict({
             'cpu': 0.15,

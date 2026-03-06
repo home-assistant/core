@@ -219,6 +219,9 @@
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
+    },
+    "update_failed": {
+      "message": "Failed to perform dist-upgrade on the Proxmox VE node."
     }
   },
   "issues": {

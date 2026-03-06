@@ -129,12 +129,12 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
         except asyncssh.DisconnectError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
+                translation_key="cannot_connect_no_details",
             ) from err
         except TimeoutError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="connect_timeout",
+                translation_key="timeout_connect_no_details",
             ) from err
         finally:
             self._attr_in_progress = False

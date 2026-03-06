@@ -2,10 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-)
+import asyncssh
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,8 +14,9 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.typing import WebSocketGenerator
 
-ENTITY_ID = "update.funny_chatelet_image_update_available"
+ENTITY_ID = "update.pve1_update"
 
 
 @pytest.fixture(autouse=True)
@@ -35,7 +33,7 @@ async def test_update_entities(
 ) -> None:
     """Snapshot test for all Proxmox VE update entities."""
     with patch(
-        "homeassistant.components.proxmoxve._PLATFORMS",
+        "homeassistant.components.proxmoxve.PLATFORMS",
         [Platform.UPDATE],
     ):
         await setup_integration(hass, mock_config_entry)
@@ -49,51 +47,29 @@ async def test_update_entities(
 
 async def test_update_install(
     hass: HomeAssistant,
-    mock_proxmox_client: AsyncMock,
+    mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful Proxmox VE node update installation."""
     with patch(
-        "homeassistant.components.proxmoxve._PLATFORMS",
+        "homeassistant.components.proxmoxve.PLATFORMS",
         [Platform.UPDATE],
     ):
         await setup_integration(hass, mock_config_entry)
 
-    await hass.services.async_call(
-        "update",
-        "install",
-        {"entity_id": ENTITY_ID},
-        blocking=True,
-    )
-
-    mock_proxmox_client.container_recreate.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    ("exception", "translation_key"),
-    [
-        (PortainerAuthenticationError("auth"), "invalid_auth_no_details"),
-        (PortainerConnectionError("conn"), "cannot_connect_no_details"),
-    ],
-)
-async def test_update_install_errors(
-    hass: HomeAssistant,
-    mock_portainer_client: AsyncMock,
-    mock_portainer_watcher: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    translation_key: str,
-) -> None:
-    """Test container image update install error handling."""
-    mock_portainer_client.container_recreate.side_effect = exception
+    # Dedicated mocks for the ssh connection
+    mock_result = MagicMock()
+    mock_result.exit_status = 0
+    mock_conn = MagicMock()
+    mock_conn.run = AsyncMock(return_value=mock_result)
+    mock_connect_cm = MagicMock()
+    mock_connect_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_connect_cm.__aexit__ = AsyncMock(return_value=False)
 
     with patch(
-        "homeassistant.components.portainer._PLATFORMS",
-        [Platform.UPDATE],
+        "homeassistant.components.proxmoxve.update.asyncssh.connect",
+        return_value=mock_connect_cm,
     ):
-        await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "update",
             "install",
@@ -102,38 +78,97 @@ async def test_update_install_errors(
         )
 
 
-async def test_update_using_cache(
+async def test_update_release_notes(
     hass: HomeAssistant,
-    mock_portainer_client: AsyncMock,
-    mock_portainer_watcher: MagicMock,
+    mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test that the update entity uses the cache and doesn't call the API."""
-    mock_portainer_watcher.last_check = 1234
-
-    with (
-        patch(
-            "homeassistant.components.portainer.coordinator.time.monotonic",
-            return_value=1235.0,
-        ),
-        patch(
-            "homeassistant.components.portainer._PLATFORMS",
-            [Platform.UPDATE],
-        ),
+    """Test that release notes return the expected pending update message."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
     ):
         await setup_integration(hass, mock_config_entry)
 
-    # Reset call counts, since it needs to be measured what happens in this sequence
-    mock_portainer_client.inspect_container.reset_mock()
-    mock_portainer_client.get_image.reset_mock()
-
-    # Trigger a refresh, but it should use the cache
-    await hass.services.async_call(
-        "update",
-        "install",
-        {"entity_id": ENTITY_ID},
-        blocking=True,
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {"id": 1, "type": "update/release_notes", "entity_id": ENTITY_ID}
     )
+    result = await ws_client.receive_json()
+    assert "2 update(s)" in result["result"]
 
-    mock_portainer_client.inspect_container.assert_not_called()
-    mock_portainer_client.get_image.assert_not_called()
+
+async def test_update_install_failed(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a non-zero exit status raises HomeAssistantError."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_result = MagicMock()
+    mock_result.exit_status = 1
+    mock_conn = MagicMock()
+    mock_conn.run = AsyncMock(return_value=mock_result)
+    mock_connect_cm = MagicMock()
+    mock_connect_cm.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_connect_cm.__aexit__ = AsyncMock(return_value=False)
+
+    with (
+        patch(
+            "homeassistant.components.proxmoxve.update.asyncssh.connect",
+            return_value=mock_connect_cm,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (asyncssh.DisconnectError(0, "Connection lost"), "cannot_connect_no_details"),
+        (TimeoutError(), "timeout_connect_no_details"),
+    ],
+)
+async def test_update_install_errors(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test node update install error handling."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_connect_cm = MagicMock()
+    mock_connect_cm.__aenter__ = AsyncMock(side_effect=exception)
+    mock_connect_cm.__aexit__ = AsyncMock(return_value=False)
+
+    with (
+        patch(
+            "homeassistant.components.proxmoxve.update.asyncssh.connect",
+            return_value=mock_connect_cm,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
