@@ -153,7 +153,6 @@ class RehlkoLoadshedBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
             entity_registry_enabled_default=False,
         )
         self._definition_id = definition_id
-        self._display_name = display_name
         super().__init__(
             coordinator,
             device_id,
