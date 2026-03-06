@@ -73,25 +73,23 @@
     }
   },
   "services": {
-    "set_vane_horizontal": {
-      "description": "Sets horizontal vane position.",
+    "set_holiday_mode": {
+      "name": "Set holiday mode",
+      "description": "Enable or disable holiday mode on a MELCloud ATW heat pump. Holiday mode requires a start and end date \u2014 it is a building-level setting not controllable via a simple switch. Omit start_date and end_date to disable.",
       "fields": {
-        "position": {
-          "description": "Horizontal vane position. Possible options can be found in the vane_horizontal_positions state attribute.",
-          "name": "Position"
+        "device_id": {
+          "name": "Device ID",
+          "description": "The MELCloud device ID (numeric). Find it in the MELCloud app or diagnostics."
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "Holiday start date (YYYY-MM-DD). Defaults to today if end_date is provided but start_date is omitted."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "Holiday end date (YYYY-MM-DD). Required to enable holiday mode. Omit to disable."
         }
-      },
-      "name": "Set vane horizontal"
-    },
-    "set_vane_vertical": {
-      "description": "Sets vertical vane position.",
-      "fields": {
-        "position": {
-          "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute.",
-          "name": "Position"
-        }
-      },
-      "name": "Set vane vertical"
+      }
     }
   }
 }
