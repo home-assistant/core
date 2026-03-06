@@ -1,17 +1,24 @@
 """Test Roborock Image platform."""
 
+from __future__ import annotations
+
 import copy
+import io
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 from unittest.mock import patch
 
 import pytest
+from PIL import Image
 from roborock import MultiMapsList, RoborockException
 from roborock.data import RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
-from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
+from homeassistant.components.roborock.const import (
+    CONF_MAP_ROTATION,
+    V1_LOCAL_NOT_CLEANING_INTERVAL,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -30,6 +37,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _png_bytes(width: int, height: int) -> bytes:
+    img = Image.new("RGB", (width, height))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 @pytest.fixture
@@ -68,11 +82,9 @@ async def test_floorplan_image(
         assert fake_vacuum.v1_properties.map_content
         fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-002"
 
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-            return_value=now,
-        ),
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         # This should call parse_map twice as the both devices are in cleaning.
         async_fire_time_changed(hass, now)
@@ -84,10 +96,134 @@ async def test_floorplan_image(
         resp = await client.get("/api/image_proxy/image.roborock_s7_2_upstairs")
         assert resp.status == HTTPStatus.OK
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
-    assert resp.status == HTTPStatus.OK
+        assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
 
+
+@pytest.mark.parametrize(
+    ("rotation", "expected_size"),
+    [
+        (0, (10, 20)),
+        (90, (20, 10)),
+        (180, (10, 20)),
+        (270, (20, 10)),
+    ],
+)
+async def test_floorplan_image_rotation_angles(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+    rotation: int,
+    expected_size: tuple[int, int],
+) -> None:
+    """Test map rotation option rotates the served image for all supported angles."""
+    setup_entry.options = {CONF_MAP_ROTATION: rotation}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    img = Image.open(io.BytesIO(body))
+    assert img.size == expected_size
+
+
+async def test_floorplan_image_rotation_cache_changes_on_rotation_change(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that served image updates when rotation option changes (cache behavior)."""
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+
+    setup_entry.options = {CONF_MAP_ROTATION: 90}
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+    body_90 = await resp.read()
+    img_90 = Image.open(io.BytesIO(body_90))
+    assert img_90.size == (20, 10)
+
+    # Change rotation without changing map bytes
+    setup_entry.options = {CONF_MAP_ROTATION: 180}
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+    body_180 = await resp.read()
+    img_180 = Image.open(io.BytesIO(body_180))
+    assert img_180.size == (10, 20)
+
+    # Ensure output changed (cache updated)
+    assert body_180 != body_90
+async def test_floorplan_image_rotation_invalid_value_falls_back_to_raw(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test invalid rotation value falls back to raw image."""
+    setup_entry.options = {CONF_MAP_ROTATION: "invalid"}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    img = Image.open(io.BytesIO(body))
+    assert img.size == (10, 20)
+async def test_floorplan_image_rotation_out_of_range_falls_back_to_raw(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test unsupported rotation value falls back to raw image."""
+    setup_entry.options = {CONF_MAP_ROTATION: 45}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    img = Image.open(io.BytesIO(body))
+    assert img.size == (10, 20)
+
+async def test_floorplan_image_rotation_corrupt_image_returns_original_bytes(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test corrupt image data returns original bytes when rotation fails."""
+    setup_entry.options = {CONF_MAP_ROTATION: 90}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = b"not-a-valid-png"
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    assert body == b"not-a-valid-png"
 
 async def test_fail_updating_image(
     hass: HomeAssistant,
@@ -106,11 +242,9 @@ async def test_fail_updating_image(
     fake_vacuum.v1_properties.status.in_cleaning = 1
 
     now = dt_util.utcnow() + timedelta(seconds=91)
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-            return_value=now,
-        ),
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         async_fire_time_changed(hass, now)
         # Refresh device in the background
@@ -142,7 +276,7 @@ async def test_map_status_change(
     _LOGGER.debug("First image fetch complete")
 
     # Call a second time. This interval does not directly trigger a map update, but does
-    # trigger a status update which detects the state has changed and uddates the map
+    # trigger a status update which detects the state has changed and updates the map
     now = dt_util.utcnow() + V1_LOCAL_NOT_CLEANING_INTERVAL
 
     assert fake_vacuum.v1_properties

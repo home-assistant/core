@@ -676,7 +676,8 @@
           "show_background": "Show background",
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
-          "zones": "Zones"
+          "zones": "Zones",
+          "map_rotation": "Map rotation"
         },
         "data_description": {
           "charger": "Show the charger on the map.",
@@ -696,7 +697,8 @@
           "show_background": "Add a background to the map.",
           "vacuum_position": "Show the vacuum position on the map.",
           "virtual_walls": "Show virtual walls on the map.",
-          "zones": "Show zones on the map."
+          "zones": "Show zones on the map.",
+          "map_rotation": "Rotate the floor plan image to match your Home Assistant layout orientation."
         },
         "description": "Specify which features to draw on the map."
       }
