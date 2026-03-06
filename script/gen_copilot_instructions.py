@@ -6,7 +6,6 @@ Necessary until copilot can handle skills.
 
 from __future__ import annotations
 
-import difflib
 from pathlib import Path
 import sys
 
@@ -103,14 +102,6 @@ def main(validate: bool = False) -> int:
         existing = OUTPUT_FILE.read_text()
         if existing != content:
             print(f"Error: {OUTPUT_FILE} is out of date")
-            diff = difflib.unified_diff(
-                existing.splitlines(),
-                content.splitlines(),
-                fromfile=str(OUTPUT_FILE),
-                tofile="generated",
-                lineterm="",
-            )
-            print("\n".join(diff))
             print("Please run: python -m script.gen_copilot_instructions")
             return 1
 
