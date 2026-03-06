@@ -145,15 +145,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             )
             is not None
         ):
-            # check if light supports color temperature, then choose color_mode depending on the light color
-            if ColorMode.RGB in color_modes and ColorMode.COLOR_TEMP in color_modes:
-                if color := self.coordinator.data.state.segments[self._segment].color:
-                    primary = tuple(color.primary)
-                    r, g, b, w = (*primary, 0, 0, 0, 0)[:4]
-                    if (r == g == b == 0 and w > 0) or (r == g == b and w == 0):
-                        self._attr_color_mode = ColorMode.COLOR_TEMP
-
-            self._attr_color_mode = self._attr_color_mode or color_modes[0]
+            self._attr_color_mode = color_modes[0]
             self._attr_supported_color_modes = set(color_modes)
 
     @property
@@ -162,6 +154,25 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return (
             super().available and self._segment in self.coordinator.data.state.segments
         )
+
+    @property
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode of the light."""
+        # check if light supports color temperature, then choose color_mode depending on the light color
+        if (
+            self._attr_supported_color_modes
+            and ColorMode.RGB in self._attr_supported_color_modes
+            and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
+        ):
+            if color := self.coordinator.data.state.segments[self._segment].color:
+                primary = tuple(color.primary)
+                r, g, b, w = (*primary, 0, 0, 0, 0)[:4]
+                if (r == g == b == 0 and w > 0) or (r == g == b and w == 0):
+                    self._attr_color_mode = ColorMode.COLOR_TEMP
+                else:
+                    self._attr_color_mode = ColorMode.RGB
+
+        return self._attr_color_mode
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
