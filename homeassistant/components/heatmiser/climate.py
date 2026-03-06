@@ -55,8 +55,6 @@ def setup_platform(
 ) -> None:
     """Set up the heatmiser thermostat."""
 
-    heatmiser_v3_thermostat = heatmiser.HeatmiserThermostat
-
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
@@ -65,10 +63,7 @@ def setup_platform(
     uh1_hub = connection.HeatmiserUH1(host, port)
 
     add_entities(
-        [
-            HeatmiserV3Thermostat(heatmiser_v3_thermostat, thermostat, uh1_hub)
-            for thermostat in thermostats
-        ],
+        [HeatmiserV3Thermostat(thermostat, uh1_hub) for thermostat in thermostats],
         True,
     )
 
@@ -83,44 +78,31 @@ class HeatmiserV3Thermostat(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, therm, device, uh1):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        uh1: connection.HeatmiserUH1,
+    ) -> None:
         """Initialize the thermostat."""
-        self.therm = therm(device[CONF_ID], "prt", uh1)
+        self.therm = heatmiser.HeatmiserThermostat(device[CONF_ID], "prt", uh1)
         self.uh1 = uh1
-        self._name = device[CONF_NAME]
-        self._current_temperature = None
-        self._target_temperature = None
+        self._attr_name = device[CONF_NAME]
         self._id = device
         self.dcb = None
         self._attr_hvac_mode = HVACMode.HEAT
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._name
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        self._target_temperature = int(temperature)
-        self.therm.set_target_temp(self._target_temperature)
+        self._attr_target_temperature = int(temperature)
+        self.therm.set_target_temp(self._attr_target_temperature)
 
     def update(self) -> None:
         """Get the latest data."""
         self.uh1.reopen()
         if not self.uh1.status:
-            _LOGGER.error("Failed to update device %s", self._name)
+            _LOGGER.error("Failed to update device %s", self.name)
             return
         self.dcb = self.therm.read_dcb()
         self._attr_temperature_unit = (
@@ -128,8 +110,8 @@ class HeatmiserV3Thermostat(ClimateEntity):
             if (self.therm.get_temperature_format() == "C")
             else UnitOfTemperature.FAHRENHEIT
         )
-        self._current_temperature = int(self.therm.get_floor_temp())
-        self._target_temperature = int(self.therm.get_target_temp())
+        self._attr_current_temperature = int(self.therm.get_floor_temp())
+        self._attr_target_temperature = int(self.therm.get_target_temp())
         self._attr_hvac_mode = (
             HVACMode.OFF
             if (int(self.therm.get_current_state()) == 0)

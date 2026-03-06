@@ -970,6 +970,30 @@ def format_ble_addr(ble_addr: str) -> str:
 
 
 @callback
+def async_migrate_rpc_sensor_description_unique_ids(
+    entity_entry: er.RegistryEntry,
+) -> dict[str, Any] | None:
+    """Migrate RPC sensor unique_ids after sensor description key rename."""
+    unique_id_map = {
+        "-temperature_0": "-temperature_tc",
+        "-humidity_0": "-humidity_rh",
+    }
+
+    for old_suffix, new_suffix in unique_id_map.items():
+        if entity_entry.unique_id.endswith(old_suffix):
+            new_unique_id = entity_entry.unique_id.removesuffix(old_suffix) + new_suffix
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+
+    return None
+
+
+@callback
 def async_migrate_rpc_virtual_components_unique_ids(
     config: dict[str, Any], entity_entry: er.RegistryEntry
 ) -> dict[str, Any] | None:
