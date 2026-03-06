@@ -7,7 +7,7 @@ from typing import Any
 import aiohttp
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -24,11 +24,22 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the cover platform."""
-    coordinators = entry.runtime_data
+    coordinator = entry.runtime_data
+    known_devices: set[str] = set()
 
-    async_add_entities(
-        AladdinCoverEntity(coordinator) for coordinator in coordinators.values()
-    )
+    @callback
+    def _async_add_new_devices() -> None:
+        """Detect and add entities for new doors."""
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AladdinCoverEntity(coordinator, door_id) for door_id in new_devices
+            )
+
+    _async_add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
@@ -38,10 +49,10 @@ class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
     _attr_supported_features = SUPPORTED_FEATURES
     _attr_name = None
 
-    def __init__(self, coordinator: AladdinConnectCoordinator) -> None:
+    def __init__(self, coordinator: AladdinConnectCoordinator, door_id: str) -> None:
         """Initialize the Aladdin Connect cover."""
-        super().__init__(coordinator)
-        self._attr_unique_id = coordinator.data.unique_id
+        super().__init__(coordinator, door_id)
+        self._attr_unique_id = door_id
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
@@ -66,16 +77,16 @@ class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Update is closed attribute."""
-        if (status := self.coordinator.data.status) is None:
+        if (status := self.door.status) is None:
             return None
         return status == "closed"
 
     @property
     def is_closing(self) -> bool | None:
         """Update is closing attribute."""
-        return self.coordinator.data.status == "closing"
+        return self.door.status == "closing"
 
     @property
     def is_opening(self) -> bool | None:
         """Update is opening attribute."""
-        return self.coordinator.data.status == "opening"
+        return self.door.status == "opening"
