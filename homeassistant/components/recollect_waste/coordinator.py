@@ -43,6 +43,13 @@ class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent
     async def _async_update_data(self) -> list[PickupEvent]:
         """Fetch data from ReCollect."""
         try:
+            # Retrieve today through to 35 days in the future, to get
+            # coverage across a full two months boundary so that no
+            # upcoming pickups are missed. The api.recollect.net base API
+            # call returns only the current month when no dates are passed.
+            # This ensures that data about when the next pickup is will be
+            # returned when the next pickup is the first day of the next month.
+            # Ex: Today is August 31st, tomorrow is a pickup on September 1st.
             today = date.today()
             return await self._client.async_get_pickup_events(
                 start_date=today,
