@@ -60,6 +60,7 @@ request_media:
           options:
             - movie
             - tv
+          translation_key: request_media_type
     tmdb_id:
       required: true
       selector:

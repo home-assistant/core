@@ -127,6 +127,12 @@
     }
   },
   "selector": {
+    "request_media_type": {
+      "options": {
+        "movie": "Movie",
+        "tv": "TV"
+      }
+    },
     "request_sort_order": {
       "options": {
         "added": "Added",
