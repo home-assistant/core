@@ -19,23 +19,31 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import CLIENT_ID, CONF_REPOSITORIES, DEFAULT_REPOSITORIES, DOMAIN, LOGGER
+from .const import (
+    CLIENT_ID,
+    CONF_REPOSITORY,
+    DEFAULT_REPOSITORIES,
+    DOMAIN,
+    LOGGER,
+    SUBENTRY_TYPE_REPOSITORY,
+)
 
 
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
     """Return a list of repositories that the user owns or has starred."""
     client = GitHubAPI(token=access_token, session=async_get_clientsession(hass))
-    repositories = set()
+    repositories: set[str] = set()
 
     async def _get_starred_repositories() -> None:
         response = await client.user.starred(params={"per_page": 100})
@@ -53,7 +61,7 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
             for result in results:
                 response.data.extend(result.data)
 
-        repositories.update(response.data)
+        repositories.update(repo.full_name for repo in response.data)
 
     async def _get_personal_repositories() -> None:
         response = await client.user.repos(params={"per_page": 100})
@@ -71,7 +79,7 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
             for result in results:
                 response.data.extend(result.data)
 
-        repositories.update(response.data)
+        repositories.update(repo.full_name for repo in response.data)
 
     try:
         await asyncio.gather(
@@ -82,21 +90,26 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
         )
 
     except GitHubException:
-        return DEFAULT_REPOSITORIES
+        repositories.update(DEFAULT_REPOSITORIES)
 
     if len(repositories) == 0:
-        return DEFAULT_REPOSITORIES
+        repositories.update(DEFAULT_REPOSITORIES)
 
-    return sorted(
-        (repo.full_name for repo in repositories),
-        key=str.casefold,
-    )
+    current_repositories = {
+        subentry.data[CONF_REPOSITORY]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_REPOSITORY
+    }
+    repositories = repositories - current_repositories
+
+    return sorted(repositories, key=str.casefold)
 
 
 class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GitHub."""
 
-    VERSION = 1
+    MINOR_VERSION = 2
 
     login_task: asyncio.Task | None = None
 
@@ -105,6 +118,14 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device: GitHubDeviceAPI | None = None
         self._login: GitHubLoginOauthModel | None = None
         self._login_device: GitHubLoginDeviceModel | None = None
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {SUBENTRY_TYPE_REPOSITORY: RepositoryFlowHandler}
 
     async def async_step_user(
         self,
@@ -153,7 +174,7 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.login_task.done():
             if self.login_task.exception():
                 return self.async_show_progress_done(next_step_id="could_not_register")
-            return self.async_show_progress_done(next_step_id="repositories")
+            return self.async_show_progress_done(next_step_id="done")
 
         if TYPE_CHECKING:
             # mypy is not aware that we can't get here without having this set already
@@ -169,33 +190,18 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
             progress_task=self.login_task,
         )
 
-    async def async_step_repositories(
+    async def async_step_done(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle repositories step."""
 
         if TYPE_CHECKING:
-            # mypy is not aware that we can't get here without having this set already
             assert self._login is not None
-
-        if not user_input:
-            repositories = await get_repositories(self.hass, self._login.access_token)
-            return self.async_show_form(
-                step_id="repositories",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_REPOSITORIES): cv.multi_select(
-                            {k: k for k in repositories}
-                        ),
-                    }
-                ),
-            )
 
         return self.async_create_entry(
             title="",
             data={CONF_ACCESS_TOKEN: self._login.access_token},
-            options={CONF_REPOSITORIES: user_input[CONF_REPOSITORIES]},
         )
 
     async def async_step_could_not_register(
@@ -205,46 +211,31 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle issues that need transition await from progress step."""
         return self.async_abort(reason="could_not_register")
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler()
 
+class RepositoryFlowHandler(ConfigSubentryFlow):
+    """Handle repository subentry flow."""
 
-class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle a option flow for GitHub."""
-
-    async def async_step_init(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
         """Handle options flow."""
         if not user_input:
-            configured_repositories: list[str] = self.config_entry.options[
-                CONF_REPOSITORIES
-            ]
             repositories = await get_repositories(
-                self.hass, self.config_entry.data[CONF_ACCESS_TOKEN]
+                self.hass, self._get_entry().data[CONF_ACCESS_TOKEN]
             )
 
-            # In case the user has removed a starred repository that is already tracked
-            for repository in configured_repositories:
-                if repository not in repositories:
-                    repositories.append(repository)
-
             return self.async_show_form(
-                step_id="init",
+                step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(
-                            CONF_REPOSITORIES,
-                            default=configured_repositories,
-                        ): cv.multi_select({k: k for k in repositories}),
+                        vol.Required(CONF_REPOSITORY): SelectSelector(
+                            SelectSelectorConfig(sort=True, options=repositories)
+                        ),
                     }
                 ),
             )
+        repository = user_input[CONF_REPOSITORY]
 
-        return self.async_create_entry(title="", data=user_input)
+        return self.async_create_entry(
+            title=repository, data=user_input, unique_id=repository
+        )
