@@ -19,6 +19,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SWITCH,
 ]
@@ -60,6 +61,11 @@ async def async_setup_entry(
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady(f"Error while refreshing from {host}") from err
 
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if entry.entry_id not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][entry.entry_id] = {}
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -69,4 +75,12 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if result and DOMAIN in hass.data:
+        if entry.entry_id in hass.data[DOMAIN]:
+            del hass.data[DOMAIN][entry.entry_id]
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
+
+    return result
