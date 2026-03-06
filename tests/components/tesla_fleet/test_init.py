@@ -21,6 +21,7 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
+from homeassistant.components.tesla_fleet import async_remove_entry
 from homeassistant.components.tesla_fleet.const import AUTHORIZE_URL
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
@@ -67,6 +68,39 @@ async def test_load_unload(
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hasattr(normal_config_entry, "runtime_data")
+
+
+async def test_remove_entry_without_runtime_data(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test remove entry when runtime_data is not set."""
+    with patch(
+        "homeassistant.components.tesla_fleet.get_recorder_instance"
+    ) as mock_get_recorder:
+        await async_remove_entry(hass, normal_config_entry)
+
+    mock_get_recorder.assert_not_called()
+
+
+async def test_remove_entry_clears_statistics(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test remove entry clears external statistics for energy sites."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.tesla_fleet.get_recorder_instance"
+    ) as mock_get_recorder:
+        await async_remove_entry(hass, normal_config_entry)
+
+    mock_get_recorder.return_value.async_clear_statistics.assert_called_once()
+    cleared_ids = mock_get_recorder.return_value.async_clear_statistics.call_args[0][0]
+    # Verify statistic IDs are generated for all energy sites and fields
+    assert any("123456" in sid for sid in cleared_ids)
+    assert any("solar_energy_exported" in sid for sid in cleared_ids)
 
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
@@ -461,6 +495,9 @@ async def test_energy_history_refresh_ratelimited(
     """Test coordinator refresh handles 429."""
 
     await setup_platform(hass, normal_config_entry)
+
+    # No call during setup since async_config_entry_first_refresh is not called
+    assert mock_energy_history.call_count == 0
 
     mock_energy_history.side_effect = RateLimited(
         {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
