@@ -34,18 +34,17 @@ class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent
             ),
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )
-        session = aiohttp_client.async_get_clientsession(hass)
-        self.client = Client(
+        self._client = Client(
             config_entry.data[CONF_PLACE_ID],
             config_entry.data[CONF_SERVICE_ID],
-            session=session,
+            session=aiohttp_client.async_get_clientsession(hass),
         )
 
     async def _async_update_data(self) -> list[PickupEvent]:
         """Fetch data from ReCollect."""
         try:
             today = date.today()
-            return await self.client.async_get_pickup_events(
+            return await self._client.async_get_pickup_events(
                 start_date=today,
                 end_date=today + timedelta(days=35),
             )
