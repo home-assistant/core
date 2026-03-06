@@ -14,10 +14,10 @@ from spotifyaio import (
     Item,
     ItemType,
     PlaybackState,
-    ProductType,
     RepeatMode as SpotifyRepeatMode,
     Track,
 )
+from spotifyaio.models import ProductType
 from yarl import URL
 
 from homeassistant.components.media_player import (
@@ -222,7 +222,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         if item.type == ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
-            return item.show.publisher
+            return item.show.name
 
         if TYPE_CHECKING:
             assert isinstance(item, Track)
@@ -230,12 +230,10 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
-    def media_album_name(self, item: Item) -> str:  # noqa: PLR0206
+    def media_album_name(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media album."""
         if item.type == ItemType.EPISODE:
-            if TYPE_CHECKING:
-                assert isinstance(item, Episode)
-            return item.show.name
+            return None
 
         if TYPE_CHECKING:
             assert isinstance(item, Track)
