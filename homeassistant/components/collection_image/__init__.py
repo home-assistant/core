@@ -1,4 +1,4 @@
-"""The Photo Album integration."""
+"""The Collection Image integration."""
 
 from __future__ import annotations
 

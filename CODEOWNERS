@@ -294,6 +294,8 @@ build.json @home-assistant/supervisor
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
 /tests/components/coinbase/ @tombrien
+/homeassistant/components/collection_image/ @karwosts
+/tests/components/collection_image/ @karwosts
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
 /homeassistant/components/comelit/ @chemelli74
@@ -1241,8 +1243,6 @@ build.json @home-assistant/supervisor
 /tests/components/pglab/ @pglab-electronics
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
-/homeassistant/components/photo_album/ @karwosts
-/tests/components/photo_album/ @karwosts
 /homeassistant/components/pi_hole/ @shenxn
 /tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl @codesalatdev

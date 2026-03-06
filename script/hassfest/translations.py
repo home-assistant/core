@@ -33,6 +33,7 @@ RE_URL = re.compile(
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
+    "collection_image",
     "cpuspeed",
     "emulated_roku",
     "energenie_power_sockets",
@@ -47,7 +48,6 @@ ALLOW_NAME_TRANSLATION = {
     "local_ip",
     "local_todo",
     "nmap_tracker",
-    "photo_album",
     "remote_calendar",
     "rpi_power",
     "swiss_public_transport",

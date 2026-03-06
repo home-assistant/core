@@ -14,10 +14,10 @@
           "media": "The media directory where images will be retrieved from.",
           "name": "Name of the image entity."
         },
-        "description": "The Photo Album integration creates a single image entity, by selecting an image from the selected media folder.",
+        "description": "The Collection Image integration creates a single image entity, by selecting an image from the selected media folder.",
         "submit": "Create"
       }
     }
   },
-  "title": "Photo Album"
+  "title": "Collection Image"
 }

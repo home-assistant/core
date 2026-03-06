@@ -1077,6 +1077,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "collection_image": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
@@ -5096,11 +5101,6 @@
         }
       }
     },
-    "photo_album": {
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
     "pi_hole": {
       "name": "Pi-hole",
       "integration_type": "device",
@@ -8110,6 +8110,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "collection_image",
     "counter",
     "cpuspeed",
     "demo",
@@ -8147,7 +8148,6 @@
     "moon",
     "nextbus",
     "nmap_tracker",
-    "photo_album",
     "plant",
     "proximity",
     "random",
