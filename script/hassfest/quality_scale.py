@@ -2211,26 +2211,14 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             and integration.domain not in NO_QUALITY_SCALE
             and integration.integration_type != "virtual"
         ):
-            if config.action == "generate":
-                _generate_quality_scale_file(iqs_file)
-                has_file = True
-            else:
-                integration.add_error(
-                    "quality_scale",
-                    (
-                        "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
-                        if integration.quality_scale == "internal"
-                        else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
-                    ),
-                )
-                return
-        if not has_file and declared_quality_scale is not None:
+            _generate_quality_scale_file(iqs_file)
+        elif declared_quality_scale is not None:
             integration.add_error(
                 "quality_scale",
                 "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
             )
             return
-        if not has_file:
+        else:
             return
     if integration.integration_type == "virtual":
         integration.add_error(
