@@ -141,6 +141,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     """Representation of a template update features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_LATEST_VERSION
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -150,15 +151,14 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         # Setup templates.
+        self.setup_state_template(
+            "_attr_latest_version",
+            template_validators.string(self, CONF_LATEST_VERSION),
+        )
         self.setup_template(
             CONF_INSTALLED_VERSION,
             "_attr_installed_version",
             template_validators.string(self, CONF_INSTALLED_VERSION),
-        )
-        self.setup_template(
-            CONF_LATEST_VERSION,
-            "_attr_latest_version",
-            template_validators.string(self, CONF_LATEST_VERSION),
         )
         self.setup_template(
             CONF_IN_PROGRESS,
