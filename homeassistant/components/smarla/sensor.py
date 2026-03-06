@@ -86,10 +86,12 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         service="analyser",
         property="spring_status",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.name.lower() for status in SpringStatus],
-        value_fn=lambda value: (
-            SpringStatus(value).name.lower() if value is not None else None
-        ),
+        options=[
+            status.name.lower()
+            for status in SpringStatus
+            if status != SpringStatus.UNKNOWN
+        ],
+        value_fn=lambda value: SpringStatus(value).name.lower() if value else None,
     ),
 ]
 

@@ -57,8 +57,7 @@
           "constellation_critical_too_low": "Critically too weak",
           "constellation_too_high": "Too strong",
           "constellation_too_low": "Too weak",
-          "normal": "Normal",
-          "unknown": "Unknown"
+          "normal": "Normal"
         }
       },
       "swing_count": {

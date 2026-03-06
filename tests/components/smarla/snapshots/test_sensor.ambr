@@ -172,7 +172,6 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'unknown',
         'normal',
         'constellation_too_high',
         'constellation_too_low',
@@ -216,7 +215,6 @@
       'device_class': 'enum',
       'friendly_name': 'Smarla Spring status',
       'options': list([
-        'unknown',
         'normal',
         'constellation_too_high',
         'constellation_too_low',
