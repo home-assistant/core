@@ -330,6 +330,7 @@ async def test_send_sticker_partial_error(
     with (
         patch(
             "homeassistant.components.telegram_bot.bot.load_data",
+            AsyncMock(return_value=io.BytesIO(b"mock data")),
         ) as mock_load_data,
         patch(
             "homeassistant.components.telegram_bot.bot.Bot.send_sticker"
@@ -351,7 +352,9 @@ async def test_send_sticker_partial_error(
 
     await hass.async_block_till_done()
 
-    assert mock_load_data.call_count == 2
+    # only 1 call count since load_data is cached
+    assert mock_load_data.call_count == 1
+
     assert mock_send_sticker.call_count == 2
     assert err.value.translation_key == "multiple_errors"
     assert err.value.translation_placeholders == {

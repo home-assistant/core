@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 from telegram import Bot
 from telegram.constants import InputMediaType
@@ -470,11 +470,13 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     service_responses: JsonValueType = []
     errors: list[tuple[Exception, str]] = []
 
+    cache: dict[str, Any] = {}
+
     # invoke the service for each target
     for target_config_entry, target_chat_id, target_notify_entity_id in targets:
         try:
             service_response = await _call_service(
-                service, target_config_entry.runtime_data, target_chat_id
+                service, target_config_entry.runtime_data, target_chat_id, cache
             )
 
             if service.service == SERVICE_DOWNLOAD_FILE:
@@ -527,7 +529,10 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
 
 
 async def _call_service(
-    service: ServiceCall, notify_service: TelegramNotificationService, chat_id: int
+    service: ServiceCall,
+    notify_service: TelegramNotificationService,
+    chat_id: int,
+    cache: dict[str, Any],
 ) -> dict[str, JsonValueType] | None:
     """Calls a Telegram bot service using the specified bot and chat_id."""
 
@@ -551,10 +556,15 @@ async def _call_service(
         SERVICE_SEND_DOCUMENT,
     ]:
         messages = await notify_service.send_file(
-            service_name, context=service.context, **kwargs
+            service_name,
+            cache,
+            context=service.context,
+            **kwargs,
         )
     elif service_name == SERVICE_SEND_STICKER:
-        messages = await notify_service.send_sticker(context=service.context, **kwargs)
+        messages = await notify_service.send_sticker(
+            cache, context=service.context, **kwargs
+        )
     elif service_name == SERVICE_SEND_LOCATION:
         messages = await notify_service.send_location(context=service.context, **kwargs)
     elif service_name == SERVICE_SEND_POLL:
