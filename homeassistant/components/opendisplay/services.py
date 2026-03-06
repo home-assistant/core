@@ -95,15 +95,17 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
         (conn[1] for conn in device.connections if conn[0] == CONNECTION_BLUETOOTH),
         None,
     )
-    entry: OpenDisplayConfigEntry | None = None
-    if mac_address:
-        entry = call.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, mac_address
+    if mac_address is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device_id",
+            translation_placeholders={"device_id": device_id},
         )
 
+    entry = call.hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, mac_address
+    )
     if entry is None or entry.state is not ConfigEntryState.LOADED:
-        if TYPE_CHECKING:
-            assert mac_address is not None
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
