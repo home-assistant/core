@@ -12,7 +12,7 @@ import struct
 from typing import Any, NamedTuple
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
+from aiohasupervisor.models import GreenOptions, YellowOptions
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -65,7 +65,7 @@ from . import (  # noqa: F401
     system_health,
     update,
 )
-from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
+from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .config import HassioConfig
@@ -126,6 +126,13 @@ from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
 
 __all__ = [
+    "AddonError",
+    "AddonInfo",
+    "AddonManager",
+    "AddonState",
+    "GreenOptions",
+    "SupervisorError",
+    "YellowOptions",
     "async_update_diagnostics",
     "get_addons_info",
     "get_addons_stats",
