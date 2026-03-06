@@ -32,14 +32,14 @@ class SuplaCoordinator(DataUpdateCoordinator[dict[int, dict]]):
             name=f"supla-{server_name}",
             update_interval=SCAN_INTERVAL,
         )
-        self.server = server
+        self._server = server
 
     async def _async_update_data(self) -> dict[int, dict]:
         """Fetch channels from the Supla API."""
         async with asyncio.timeout(SCAN_INTERVAL.total_seconds()):
             return {
                 channel["id"]: channel
-                for channel in await self.server.get_channels(
+                for channel in await self._server.get_channels(
                     include=["iodevice", "state", "connected"]
                 )
             }
