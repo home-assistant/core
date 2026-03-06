@@ -410,7 +410,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.1.0
+aioswitcher==6.1.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -434,7 +434,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.1.2
+aiovodafone==3.1.3
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -721,6 +721,9 @@ cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
 caldav==2.1.0
+
+# homeassistant.components.chess_com
+chess-com-api==1.1.0
 
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.9
@@ -1676,7 +1679,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.4
+onedrive-personal-sdk==0.1.5
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1812,7 +1815,7 @@ prometheus-client==0.21.0
 prowlpy==1.1.1
 
 # homeassistant.components.proxmoxve
-proxmoxer==2.0.1
+proxmoxer==2.3.0
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
@@ -1866,6 +1869,9 @@ py-nightscout==1.2.2
 
 # homeassistant.components.mta
 py-nymta==0.4.0
+
+# homeassistant.components.opendisplay
+py-opendisplay==5.2.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2049,7 +2055,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.2.1
+pyeconet==0.2.2
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0
