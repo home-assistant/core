@@ -414,7 +414,7 @@
     'object_id_base': 'Energy exported',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -426,7 +426,7 @@
     'supported_features': 0,
     'translation_key': 'energy_exported',
     'unique_id': '40580137858664_energy_exported',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_entities[sensor.homevolt_ems_energy_exported-state]
@@ -435,7 +435,7 @@
       'device_class': 'energy',
       'friendly_name': 'Homevolt EMS Energy exported',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homevolt_ems_energy_exported',
@@ -471,7 +471,7 @@
     'object_id_base': 'Energy imported',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -483,7 +483,7 @@
     'supported_features': 0,
     'translation_key': 'energy_imported',
     'unique_id': '40580137858664_energy_imported',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_entities[sensor.homevolt_ems_energy_imported-state]
@@ -492,7 +492,7 @@
       'device_class': 'energy',
       'friendly_name': 'Homevolt EMS Energy imported',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homevolt_ems_energy_imported',
