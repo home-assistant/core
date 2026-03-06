@@ -1,8 +1,7 @@
 """Tests for the SmartThings component init module."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientResponseError, RequestInfo
 from pysmartthings import (
     Attribute,
     Capability,
@@ -35,6 +34,10 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -326,15 +329,9 @@ async def test_refreshing_expired_token(
     """Test removing stale devices."""
     with patch(
         "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            request_info=RequestInfo(
-                url="http://example.com",
-                method="GET",
-                headers={},
-                real_url="http://example.com",
-            ),
-            status=400,
-            history=(),
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=MagicMock(),
+            domain=DOMAIN,
         ),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -349,18 +346,12 @@ async def test_error_refreshing_token(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test removing stale devices."""
+    """Test retrying setup after a transient token refresh error."""
     with patch(
         "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            request_info=RequestInfo(
-                url="http://example.com",
-                method="GET",
-                headers={},
-                real_url="http://example.com",
-            ),
-            status=500,
-            history=(),
+        side_effect=OAuth2TokenRequestTransientError(
+            request_info=MagicMock(),
+            domain=DOMAIN,
         ),
     ):
         await setup_integration(hass, mock_config_entry)
