@@ -18,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
-
 
 @pytest.fixture(name="platform_binary_sensor", autouse=True)
 async def platform_binary_sensor_fixture():
@@ -28,6 +26,7 @@ async def platform_binary_sensor_fixture():
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
