@@ -29,7 +29,7 @@ class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
             hass,
             LOGGER,
             config_entry=entry,
-            name=f"{DOMAIN}_APK",
+            name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
 
