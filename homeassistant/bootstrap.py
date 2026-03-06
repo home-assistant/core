@@ -834,11 +834,17 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+
+    def _log_stage_time(stage_name: str, stage_start_time: float) -> None:
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Stage %s elapsed time: %.2f seconds",
+                stage_name,
+                monotonic() - stage_start_time,
+            )
+
     watcher = _WatchPendingSetups(hass, _setup_started(hass))
     watcher.async_start()
-
-    stage_seconds: dict[str, float] = {}
-    wrap_up_seconds: float | None = None
 
     integrations, all_integrations = await _async_resolve_domains_and_preload(
         hass, config
@@ -875,6 +881,7 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
+        # we can't debug guard this because logging might not be set up yet
         t_stage = monotonic()
         stage_domains_unfiltered = domain_group & all_domains
         if not stage_domains_unfiltered:
@@ -908,7 +915,7 @@ async def _async_set_up_integrations(
 
         if timeout is None:
             await _async_setup_multi_components(hass, stage_all_domains, config)
-            stage_seconds[f"stage[{name}]"] = monotonic() - t_stage
+            _log_stage_time(name, t_stage)
             continue
         try:
             async with hass.timeout.async_timeout(
@@ -924,11 +931,12 @@ async def _async_set_up_integrations(
                 hass._active_tasks,  # noqa: SLF001
             )
         finally:
-            stage_seconds[f"stage[{name}]"] = monotonic() - t_stage
+            _log_stage_time(name, t_stage)
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
-    t_wrap = monotonic()
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        t_wrap = monotonic()
     try:
         async with hass.timeout.async_timeout(
             WRAP_UP_TIMEOUT,
@@ -942,19 +950,11 @@ async def _async_set_up_integrations(
             hass._active_tasks,  # noqa: SLF001
         )
     finally:
-        wrap_up_seconds = monotonic() - t_wrap
+        _log_stage_time("wrap-up", t_wrap)
 
     watcher.async_stop()
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        parts = [f"{name}={stage_seconds[name]:.2f}s" for name in sorted(stage_seconds)]
-
-        if wrap_up_seconds is not None:
-            parts.append(f"wrap_up={wrap_up_seconds:.2f}s")
-
-        rendered = " ".join(parts)
-        if parts:
-            _LOGGER.debug("Bootstrap phase timing (elapsed): %s", rendered)
         setup_time = async_get_setup_timings(hass)
         _LOGGER.debug(
             "Integration setup times: %s",
