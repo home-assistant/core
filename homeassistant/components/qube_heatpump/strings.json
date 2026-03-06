@@ -102,7 +102,7 @@
           "standby": "[%key:common::state::standby%]",
           "alarm": "Alarm",
           "keyboard_off": "Keyboard off",
-          "compressor_startup": "Compressor starting",
+          "compressor_startup": "Compressor startup",
           "compressor_shutdown": "Compressor stopping",
           "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
           "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
