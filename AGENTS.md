@@ -13,7 +13,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Python Syntax Notes
 
-- PEP 758, accepted for Python 3.14, explicitly allows `except TypeA, TypeB:` without parentheses.
+- Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses.
 
 ## Good practices
 
