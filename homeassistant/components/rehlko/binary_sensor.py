@@ -20,7 +20,7 @@ from .const import (
     DEVICE_DATA_IS_CONNECTED,
     GENERATOR_DATA_DEVICE,
 )
-from .coordinator import RehlkoConfigEntry
+from .coordinator import RehlkoConfigEntry, RehlkoUpdateCoordinator
 from .entity import RehlkoEntity
 
 # Coordinator is used to centralize the data updates
@@ -73,19 +73,42 @@ async def async_setup_entry(
     """Set up the binary sensor platform."""
     homes = config_entry.runtime_data.homes
     coordinators = config_entry.runtime_data.coordinators
-    async_add_entities(
-        RehlkoBinarySensorEntity(
-            coordinators[device_data[DEVICE_DATA_ID]],
-            device_data[DEVICE_DATA_ID],
-            device_data,
-            sensor_description,
-            document_key=sensor_description.document_key,
-            connectivity_key=sensor_description.connectivity_key,
-        )
-        for home_data in homes
-        for device_data in home_data[DEVICE_DATA_DEVICES]
-        for sensor_description in BINARY_SENSORS
-    )
+    entities: list[BinarySensorEntity] = []
+
+    for home_data in homes:
+        for device_data in home_data[DEVICE_DATA_DEVICES]:
+            device_id = device_data[DEVICE_DATA_ID]
+            coordinator = coordinators[device_id]
+
+            # Add standard binary sensors
+            entities.extend(
+                RehlkoBinarySensorEntity(
+                    coordinator,
+                    device_id,
+                    device_data,
+                    sensor_description,
+                    document_key=sensor_description.document_key,
+                    connectivity_key=sensor_description.connectivity_key,
+                )
+                for sensor_description in BINARY_SENSORS
+            )
+
+            # Add loadshed binary sensors if loadshed data is available
+            if coordinator.data and "loadShed" in coordinator.data:
+                loadshed_data = coordinator.data["loadShed"]
+                if loadshed_data.get("parameters"):
+                    entities.extend(
+                        RehlkoLoadshedBinarySensorEntity(
+                            coordinator,
+                            device_id,
+                            device_data,
+                            parameter["definitionId"],
+                            parameter["displayName"],
+                        )
+                        for parameter in loadshed_data["parameters"]
+                    )
+
+    async_add_entities(entities)
 
 
 class RehlkoBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
@@ -105,4 +128,53 @@ class RehlkoBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
             self.entity_description.key,
             self._rehlko_value,
         )
+        return None
+
+
+class RehlkoLoadshedBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
+    """Representation of a Loadshed Binary Sensor."""
+
+    def __init__(
+        self,
+        coordinator: RehlkoUpdateCoordinator,
+        device_id: int,
+        device_data: dict,
+        definition_id: int,
+        display_name: str,
+    ) -> None:
+        """Initialize the loadshed binary sensor."""
+        # Create a synthetic entity description for this loadshed parameter
+        description = BinarySensorEntityDescription(
+            key=f"loadshed_{definition_id}",
+            translation_key="loadshed_parameter",
+            icon="mdi:transmission-tower-off",
+            entity_registry_enabled_default=False,
+        )
+        self._definition_id = definition_id
+        self._display_name = display_name
+        super().__init__(
+            coordinator,
+            device_id,
+            device_data,
+            description,
+            document_key=None,
+            connectivity_key=DEVICE_DATA_IS_CONNECTED,
+        )
+        # Use translation placeholders for the dynamic display name
+        self._attr_translation_placeholders = {"display_name": display_name}
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the binary sensor."""
+        if not self.coordinator.data or "loadShed" not in self.coordinator.data:
+            return None
+
+        loadshed_data = self.coordinator.data["loadShed"]
+        if not loadshed_data.get("parameters"):
+            return None
+
+        for parameter in loadshed_data["parameters"]:
+            if parameter["definitionId"] == self._definition_id:
+                return parameter.get("value")
+
         return None
