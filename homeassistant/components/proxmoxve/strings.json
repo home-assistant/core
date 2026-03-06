@@ -194,7 +194,7 @@
       "message": "Authentication failed for the Proxmox VE instance."
     },
     "invalid_target_entity": {
-      "message": "The entity `{entity_id}` is not a valid Proxmox VE VM or container entity."
+      "message": "The selected target `{entity_id}` is not a valid Proxmox VE VM or container."
     },
     "invalid_target_not_vm_or_container": {
       "message": "The selected device is not a Proxmox VE VM or LXC container. Only VM and container devices are supported for snapshots."
