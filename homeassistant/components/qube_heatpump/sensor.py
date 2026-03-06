@@ -33,15 +33,17 @@ if TYPE_CHECKING:
 
 # Status code to state mapping
 STATUS_MAP: dict[int, str] = {
-    0: "standby",
-    1: "alarm",
-    2: "keyboard_off",
-    3: "compressor_startup",
-    4: "compressor_shutdown",
-    5: "cooling",
-    6: "heating",
-    7: "start_fail",
-    8: "heating_dhw",
+    1: "standby",
+    2: "alarm",
+    6: "keyboard_off",
+    8: "compressor_startup",
+    9: "compressor_shutdown",
+    14: "standby",
+    15: "cooling",
+    16: "heating",
+    17: "start_fail",
+    18: "standby",
+    22: "heating_dhw",
 }
 
 

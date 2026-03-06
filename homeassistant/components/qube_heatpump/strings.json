@@ -40,7 +40,7 @@
   "entity": {
     "sensor": {
       "temp_supply": {
-        "name": "Supply temperature"
+        "name": "Supply temperature CH"
       },
       "temp_return": {
         "name": "Return temperature"

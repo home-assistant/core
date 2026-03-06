@@ -151,8 +151,8 @@ async def test_computed_status_sensor(
         assert entity_id is not None
         state = hass.states.get(entity_id)
         assert state is not None
-        # status_code 1 maps to "alarm" in the implementation
-        assert state.state == "alarm"
+        # status_code 1 maps to "standby" in the implementation
+        assert state.state == "standby"
 
 
 async def test_device_info(
