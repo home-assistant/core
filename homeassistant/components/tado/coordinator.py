@@ -73,6 +73,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "geofence": {},
             "zone": {},
         }
+        self.ratelimit: dict[str, str] = {}
 
     @property
     def fallback(self) -> str:
@@ -81,8 +82,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch the (initial) latest data from Tado."""
-
         try:
+            _LOGGER.debug("Checking rate limit")
+            self.ratelimit = await self.hass.async_add_executor_job(
+                self._tado.rate_limit_info
+            )
             _LOGGER.debug("Preloading home data")
             tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
             _LOGGER.debug("Preloading zones and devices")
@@ -91,6 +95,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 self._tado.get_devices
             )
         except RequestException as err:
+            if self.ratelimit.get("remaining") == "0":
+                raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
         tado_home = tado_home_call["homes"][0]
