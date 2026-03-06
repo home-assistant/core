@@ -35,6 +35,7 @@ from .const import (
     ATTR_CURRENT_WEATHER,
     ATTR_FORECAST_DAILY,
     ATTR_FORECAST_HOURLY,
+    ATTR_FORECAST_NEXT_HOUR,
     ATTRIBUTION,
     DOMAIN,
 )
@@ -124,6 +125,14 @@ def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
     }
 
 
+def _map_next_hour_forecast(forecast: dict[str, Any]) -> Forecast:
+    return {
+        "datetime": forecast["startTime"],
+        "native_precipitation": forecast.get("precipitationIntensity"),
+        "precipitation_probability": forecast["precipitationChance"] * 100,
+    }
+
+
 class WeatherKitWeather(
     SingleCoordinatorWeatherEntity[WeatherKitDataUpdateCoordinator], WeatherKitEntity
 ):
@@ -159,6 +168,8 @@ class WeatherKitWeather(
             features |= WeatherEntityFeature.FORECAST_DAILY
         if DataSetType.HOURLY_FORECAST in self.coordinator.supported_data_sets:
             features |= WeatherEntityFeature.FORECAST_HOURLY
+        if DataSetType.NEXT_HOUR_FORECAST in self.coordinator.supported_data_sets:
+            features |= WeatherEntityFeature.FORECAST_MINUTELY
         return features
 
     @property
@@ -256,3 +267,13 @@ class WeatherKitWeather(
 
         forecast = hourly_forecast.get("hours")
         return [_map_hourly_forecast(f) for f in forecast]
+
+    @callback
+    def _async_forecast_minutely(self) -> list[Forecast] | None:
+        """Return the minutely forecast."""
+        minutely_forecast = self.data.get(ATTR_FORECAST_NEXT_HOUR)
+        if not minutely_forecast:
+            return None
+
+        forecast = minutely_forecast.get("minutes")
+        return [_map_next_hour_forecast(f) for f in forecast]

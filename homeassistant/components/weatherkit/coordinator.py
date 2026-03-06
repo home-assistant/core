@@ -18,6 +18,7 @@ REQUESTED_DATA_SETS = [
     DataSetType.CURRENT_WEATHER,
     DataSetType.DAILY_FORECAST,
     DataSetType.HOURLY_FORECAST,
+    DataSetType.NEXT_HOUR_FORECAST,
 ]
 
 STALE_DATA_THRESHOLD = timedelta(hours=1)

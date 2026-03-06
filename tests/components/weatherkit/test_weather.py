@@ -82,6 +82,19 @@ async def test_hourly_forecast_missing(hass: HomeAssistant) -> None:
     ) == 0
 
 
+async def test_minutely_forecast_missing(hass: HomeAssistant) -> None:
+    """Test that minutely forecast is not supported when WeatherKit doesn't support it."""
+    with mock_weather_response(has_minutely_forecast=False):
+        await init_integration(hass)
+
+    state = hass.states.get("weather.home")
+    assert state
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & WeatherEntityFeature.FORECAST_MINUTELY
+    ) == 0
+
+
 @pytest.mark.parametrize(
     ("service"),
     [SERVICE_GET_FORECASTS],
@@ -123,6 +136,30 @@ async def test_daily_forecast(
         {
             "entity_id": "weather.home",
             "type": "daily",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service"),
+    [SERVICE_GET_FORECASTS],
+)
+async def test_minutely_forecast(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
+) -> None:
+    """Test states of the minutely forecast."""
+    with mock_weather_response():
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        service,
+        {
+            "entity_id": "weather.home",
+            "type": "minutely",
         },
         blocking=True,
         return_response=True,

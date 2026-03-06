@@ -611,6 +611,7 @@ async def test_forecast_twice_daily_missing_is_daytime(
             "twice_daily",
             WeatherEntityFeature.FORECAST_TWICE_DAILY,
         ),
+        ("minutely", WeatherEntityFeature.FORECAST_MINUTELY),
     ],
 )
 async def test_get_forecast(
@@ -637,6 +638,10 @@ async def test_get_forecast(
 
         async def async_forecast_hourly(self) -> list[Forecast] | None:
             """Return the forecast_hourly."""
+            return self.forecast_list
+
+        async def async_forecast_minutely(self) -> list[Forecast] | None:
+            """Return the forecast_minutely."""
             return self.forecast_list
 
     kwargs = {
@@ -701,9 +706,10 @@ async def test_get_forecast_no_forecast(
 @pytest.mark.parametrize(
     ("supported_features", "forecast_types"),
     [
-        (WeatherEntityFeature.FORECAST_DAILY, ["hourly", "twice_daily"]),
-        (WeatherEntityFeature.FORECAST_HOURLY, ["daily", "twice_daily"]),
-        (WeatherEntityFeature.FORECAST_TWICE_DAILY, ["daily", "hourly"]),
+        (WeatherEntityFeature.FORECAST_DAILY, ["hourly", "twice_daily", "minutely"]),
+        (WeatherEntityFeature.FORECAST_HOURLY, ["daily", "twice_daily", "minutely"]),
+        (WeatherEntityFeature.FORECAST_TWICE_DAILY, ["daily", "hourly", "minutely"]),
+        (WeatherEntityFeature.FORECAST_MINUTELY, ["daily", "hourly", "twice_daily"]),
     ],
 )
 async def test_get_forecast_unsupported(
@@ -727,6 +733,10 @@ async def test_get_forecast_unsupported(
 
         async def async_forecast_hourly(self) -> list[Forecast] | None:
             """Return the forecast_hourly."""
+            return self.forecast_list
+
+        async def async_forecast_minutely(self) -> list[Forecast] | None:
+            """Return the forecast_minutely."""
             return self.forecast_list
 
     kwargs = {
