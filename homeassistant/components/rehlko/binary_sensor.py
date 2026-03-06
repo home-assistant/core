@@ -94,10 +94,8 @@ async def async_setup_entry(
             )
 
             # Add loadshed binary sensors if loadshed data is available
-            if (
-                coordinator.data
-                and (loadshed_data := coordinator.data.get("loadShed"))
-                and (parameters := loadshed_data.get("parameters"))
+            if (loadshed_data := coordinator.data.get("loadShed")) and (
+                parameters := loadshed_data.get("parameters")
             ):
                 entities.extend(
                     RehlkoLoadshedBinarySensorEntity(
@@ -166,10 +164,8 @@ class RehlkoLoadshedBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        if (
-            not self.coordinator.data
-            or not (loadshed_data := self.coordinator.data.get("loadShed"))
-            or not (parameters := loadshed_data.get("parameters"))
+        if not (loadshed_data := self.coordinator.data.get("loadShed")) or not (
+            parameters := loadshed_data.get("parameters")
         ):
             return None
 
