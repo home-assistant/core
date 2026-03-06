@@ -266,17 +266,20 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
 
 def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]:
     """Parse all possible inputs to "all" or a list of integers."""
-    seasons_input = str(seasons_input).strip()
-    if seasons_input == "":
+    if seasons_input is None:
+        return "all"
+
+    seasons_str = str(seasons_input).strip()
+    if seasons_str == "":
         return "all"
 
     try:
-        parsed = ast.literal_eval(seasons_input)
+        parsed = ast.literal_eval(seasons_str)
         if isinstance(parsed, int):
             return [parsed]
         return list(parsed)
-    except ValueError, SyntaxError:
-        LOGGER.error("Unable to cast input to a list '%s'", seasons_input)
+    except (ValueError, SyntaxError, TypeError):
+        LOGGER.error("Unable to cast input to a list '%s'", seasons_str)
         return "all"
 
 
