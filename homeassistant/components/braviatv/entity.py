@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_GENERATION, ATTR_MANUFACTURER, ATTR_MODEL, ATTR_SERIAL, DOMAIN
 from .coordinator import BraviaTVCoordinator
 
 
@@ -27,7 +27,7 @@ class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
             identifiers={(DOMAIN, unique_id)},
             connections={(CONNECTION_NETWORK_MAC, coordinator.client.mac)},
             manufacturer=ATTR_MANUFACTURER,
-            model_id=coordinator.system_info.get("model"),
-            hw_version=coordinator.system_info.get("generation"),
-            serial_number=coordinator.system_info.get("serial"),
+            model_id=coordinator.system_info.get(ATTR_MODEL),
+            hw_version=coordinator.system_info.get(ATTR_GENERATION),
+            serial_number=coordinator.system_info.get(ATTR_SERIAL),
         )
