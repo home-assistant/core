@@ -453,5 +453,6 @@ DISCOVERY_SCHEMAS = [
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
         allow_multi=True,  # also used for sensor entity
+        allow_none_value=True,
     ),
 ]
