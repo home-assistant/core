@@ -277,6 +277,14 @@ class MatrixBot:
         self._start_lock = asyncio.Lock()
         self._started = False
 
+    @property
+    def known_rooms(self) -> set[str]:
+        """Return all room IDs and aliases this bot knows about."""
+        rooms: set[str] = set(self._configured_rooms)
+        rooms |= set(self._listening_rooms)
+        rooms |= set(self._listening_rooms.values())
+        return rooms
+
     async def async_start(self) -> None:
         """Start the Matrix client."""
         async with self._start_lock:

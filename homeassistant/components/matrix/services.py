@@ -66,21 +66,9 @@ SERVICE_SCHEMA_REACT = vol.Schema(
 def _match_bots_for_rooms(
     bots: list[MatrixBot], target_rooms: list[str]
 ) -> list[MatrixBot]:
-    matches: list[MatrixBot] = []
-    for matrix_bot in bots:
-        known_rooms: set[str] = set()
-
-        configured_rooms = getattr(matrix_bot, "_configured_rooms", ())
-        if configured_rooms:
-            known_rooms |= set(configured_rooms)
-
-        listening_rooms = getattr(matrix_bot, "_listening_rooms", ())
-        if listening_rooms:
-            known_rooms |= set(listening_rooms) | set(listening_rooms.values())
-
-        if any(room in known_rooms for room in target_rooms):
-            matches.append(matrix_bot)
-    return matches
+    return [
+        bot for bot in bots if any(room in bot.known_rooms for room in target_rooms)
+    ]
 
 
 def _get_matrix_bot(

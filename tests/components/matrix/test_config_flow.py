@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from nio import LoginError, LoginResponse, WhoamiResponse
 
 from homeassistant import config_entries
-from homeassistant.components.matrix.config_flow import validate_input
+from homeassistant.components.matrix.config_flow import CannotConnect, validate_input
 from homeassistant.components.matrix.const import (
     CONF_COMMANDS,
     CONF_EXPRESSION,
@@ -198,7 +198,23 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test import flow with connection error."""
     with patch(
-        "homeassistant.components.matrix.config_flow.AsyncClient",
+        "homeassistant.components.matrix.config_flow.validate_input",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data=TEST_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_unexpected_error(hass: HomeAssistant) -> None:
+    """Test import flow with an unexpected error."""
+    with patch(
+        "homeassistant.components.matrix.config_flow.validate_input",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
