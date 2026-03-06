@@ -71,6 +71,126 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 307,
     },
     {
+        "domain": "bms_ble",
+        "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "0000fee7-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "0000ff00-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "0000ffd0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "0000ffe5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "service_uuid": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 770,
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 771,
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 258,
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 260,
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 1026,
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "ECO-WORTHY 02_*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "TBA-*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "DXB-*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "libatt*",
+        "manufacturer_id": 21320,
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "LT-*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "SV12V*",
+        "manufacturer_id": 33384,
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "L-12V???AH-*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "V-12V???Ah-*",
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 54976,
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "F10*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "F07*",
+    },
+    {
+        "domain": "bms_ble",
+        "manufacturer_id": 21330,
+        "service_uuid": "000003c1-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "RNG*",
+        "manufacturer_id": 57676,
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "TP_*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "Epsilon-*",
+    },
+    {
+        "domain": "bms_ble",
+        "local_name": "PC-????",
+    },
+    {
         "connectable": False,
         "domain": "bthome",
         "service_data_uuid": "0000181c-0000-1000-8000-00805f9b34fb",

@@ -234,6 +234,8 @@ build.json @home-assistant/supervisor
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
 /tests/components/bluetooth_adapters/ @bdraco
+/homeassistant/components/bms_ble/ @patman15
+/tests/components/bms_ble/ @patman15
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
