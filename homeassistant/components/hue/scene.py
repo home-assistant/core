@@ -11,7 +11,7 @@ from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 import voluptuous as vol
 
-from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
+from homeassistant.components.scene import ATTR_TRANSITION, Scene as BaseScene
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -31,7 +31,7 @@ ATTR_BRIGHTNESS = "brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -59,8 +59,12 @@ async def async_setup_entry(
         async_add_entity(EventType.RESOURCE_ADDED, item)
 
     # register listener for new items only
+    # (scene activation detection is handled by on_update() on existing entities)
     config_entry.async_on_unload(
-        api.scenes.subscribe(async_add_entity, event_filter=EventType.RESOURCE_ADDED)
+        api.scenes.subscribe(
+            async_add_entity,
+            event_filter=EventType.RESOURCE_ADDED,
+        )
     )
 
     # add platform service to turn_on/activate scene with advanced options
@@ -79,11 +83,11 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=1, max=255)
             ),
         },
-        "_async_activate",
+        "async_activate",
     )
 
 
-class HueSceneEntityBase(HueBaseEntity, SceneEntity):
+class HueSceneEntityBase(HueBaseEntity, BaseScene):
     """Base Representation of a Scene entity from Hue Scenes."""
 
     _attr_has_entity_name = True
@@ -125,6 +129,42 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
 
 class HueSceneEntity(HueSceneEntityBase):
     """Representation of a Scene entity from Hue Scenes."""
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: ScenesController,
+        resource: HueScene,
+    ) -> None:
+        """Initialize the scene entity."""
+        super().__init__(bridge, controller, resource)
+        # Track last_recall timestamp for scene activation detection
+        self._previous_last_recall = (
+            resource.status.last_recall if resource.status else None
+        )
+
+    def on_update(self) -> None:
+        """Handle EventStream updates for scene activation detection.
+
+        We track the last_recall timestamp to detect actual scene activations
+        (from Hue app, buttons, or automations) while avoiding false activations
+        when lights in an active scene are modified.
+
+        When a scene is recalled, the bridge updates last_recall timestamp.
+        When a light in an active scene is modified, last_recall stays unchanged.
+        """
+        # Only record activation if last_recall timestamp has changed
+        if (
+            current_last_recall := (
+                self.resource.status.last_recall if self.resource.status else None
+            )
+        ) is not None and current_last_recall != self._previous_last_recall:
+            self._async_record_activation()
+
+        # Update tracked timestamp
+        self._previous_last_recall = current_last_recall
+
+        super().on_update()
 
     @property
     def is_dynamic(self) -> bool:
@@ -197,14 +237,51 @@ class HueSceneEntity(HueSceneEntityBase):
 class HueSmartSceneEntity(HueSceneEntityBase):
     """Representation of a Smart Scene entity from Hue Scenes."""
 
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: ScenesController,
+        resource: HueSmartScene,
+    ) -> None:
+        """Initialize the smart scene entity."""
+        super().__init__(bridge, controller, resource)
+        # Track state for smart scene activation detection
+        self._previous_state = resource.state
+
     @property
     def is_active(self) -> bool:
         """Return if this smart scene is currently active."""
         return self.resource.state == SmartSceneState.ACTIVE
 
-    async def async_activate(self, **kwargs: Any) -> None:
-        """Activate Hue Smart scene."""
+    def on_update(self) -> None:
+        """Handle EventStream updates for smart scene activation detection.
 
+        Smart scenes use state transition detection to avoid false activations.
+        We only record activation when the state transitions TO active (not while
+        staying active), preventing false activations when lights are modified.
+
+        When a scene is activated, the state changes to ACTIVE.
+        When a light in an active scene is modified, the state stays ACTIVE.
+        """
+        current_state = self.resource.state
+
+        # Only record activation on state transition TO active
+        if (
+            current_state == SmartSceneState.ACTIVE
+            and self._previous_state != SmartSceneState.ACTIVE
+        ):
+            self._async_record_activation()
+
+        # Update tracked state
+        self._previous_state = current_state
+
+        super().on_update()
+
+    async def async_activate(self, **_: Any) -> None:
+        """Activate Hue Smart scene.
+
+        Note: kwargs accepted for BaseScene contract but not used for smart scenes.
+        """
         await self.bridge.async_request_call(
             self.controller.smart_scene.recall,
             self.resource.id,
@@ -225,12 +302,15 @@ class HueSmartSceneEntity(HueSceneEntityBase):
             # lookup active scene in timeslot
             active_scene = None
             count = 0
+            target_id = self.resource.active_timeslot.timeslot_id
             for day_timeslot in self.resource.week_timeslots:
                 for timeslot in day_timeslot.timeslots:
-                    if count != self.resource.active_timeslot.timeslot_id:
-                        count += 1
-                        continue
-                    active_scene = self.controller.get(timeslot.target.rid)
+                    if count == target_id:
+                        active_scene = self.controller.get(timeslot.target.rid)
+                        break
+                    count += 1
+                # break outer loop if we found the target
+                if active_scene is not None:
                     break
             if active_scene is not None:
                 res["active_scene"] = active_scene.metadata.name
