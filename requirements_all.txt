@@ -1985,6 +1985,9 @@ pybravia==0.4.1
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
 
+# homeassistant.components.casper_glow
+pycasperglow==1.0.1
+
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
 
