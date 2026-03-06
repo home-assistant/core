@@ -8,7 +8,7 @@
   "iot_class": "local_polling",
   "loggers": ["bsblan"],
   "quality_scale": "silver",
-  "requirements": ["python-bsblan==5.1.1"],
+  "requirements": ["python-bsblan==5.1.2"],
   "zeroconf": [
     {
       "name": "bsb-lan*",
