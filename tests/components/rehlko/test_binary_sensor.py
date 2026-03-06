@@ -85,7 +85,7 @@ async def test_loadshed_binary_sensor_states(
     hvac_a_param = generator["loadShed"]["parameters"][0]
     assert hvac_a_param["displayName"] == "HVAC A"
     assert hvac_a_param["value"] is False
-    state = hass.states.get("binary_sensor.generator_1_loadshed_hvac_a")
+    state = hass.states.get("binary_sensor.generator_1_load_shed_hvac_a")
     assert state.state == STATE_OFF
 
     # Change HVAC A to on (true)
@@ -93,7 +93,7 @@ async def test_loadshed_binary_sensor_states(
     freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.generator_1_loadshed_hvac_a")
+    state = hass.states.get("binary_sensor.generator_1_load_shed_hvac_a")
     assert state.state == STATE_ON
 
     # Remove loadShed data to test unavailable state
@@ -101,7 +101,7 @@ async def test_loadshed_binary_sensor_states(
     freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.generator_1_loadshed_hvac_a")
+    state = hass.states.get("binary_sensor.generator_1_load_shed_hvac_a")
     assert state.state == STATE_UNKNOWN
 
 

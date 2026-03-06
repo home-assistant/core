@@ -36,7 +36,7 @@
         "name": "Auto run"
       },
       "loadshed_parameter": {
-        "name": "Loadshed {display_name}"
+        "name": "Load shed {display_name}"
       },
       "oil_pressure": {
         "name": "Oil pressure"
