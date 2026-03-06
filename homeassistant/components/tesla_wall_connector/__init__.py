@@ -23,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hostname = entry.data[CONF_HOST]
 
     wall_connector = WallConnector(host=hostname, session=async_get_clientsession(hass))
+
     try:
         version_data = await wall_connector.async_get_version()
     except WallConnectorError as ex:
@@ -33,11 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = WallConnectorData(
         wall_connector_client=wall_connector,
-        update_coordinator=coordinator,
         hostname=hostname,
         part_number=version_data.part_number,
         firmware_version=version_data.firmware_version,
         serial_number=version_data.serial_number,
+        update_coordinator=coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
