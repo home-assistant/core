@@ -26,12 +26,11 @@ class RDWDataUpdateCoordinator(DataUpdateCoordinator[Vehicle]):
             name=f"{DOMAIN}_APK",
             update_interval=SCAN_INTERVAL,
         )
-        session = async_get_clientsession(hass)
-        self.rdw = RDW(
-            session=session,
+        self._rdw = RDW(
+            session=async_get_clientsession(hass),
             license_plate=config_entry.data[CONF_LICENSE_PLATE],
         )
 
     async def _async_update_data(self) -> Vehicle:
         """Fetch data from RDW."""
-        return await self.rdw.vehicle()
+        return await self._rdw.vehicle()
