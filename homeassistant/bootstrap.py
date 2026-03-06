@@ -935,8 +935,7 @@ async def _async_set_up_integrations(
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        t_wrap = monotonic()
+    t_wrap = monotonic()
     try:
         async with hass.timeout.async_timeout(
             WRAP_UP_TIMEOUT,
