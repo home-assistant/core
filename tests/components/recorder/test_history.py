@@ -6,11 +6,15 @@ from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
+import re
+from typing import Any
 from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
 import pytest
+import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.recorder.db_schema import (
@@ -21,8 +25,10 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -36,6 +42,7 @@ from .common import (
     db_state_to_native,
 )
 
+from tests.common import MockUser
 from tests.typing import RecorderInstanceContextManager
 
 
@@ -1041,3 +1048,300 @@ async def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty
 ) -> None:
     """Test get_last_state_changes returns an empty dict when entities not in the db."""
     assert history.get_last_state_changes(hass, 1, "nonexistent.entity") == {}
+
+
+@pytest.mark.parametrize(
+    ("service_args", "expected_result"),
+    [
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "history_ids": ["sensor.i_dont_exist"],
+            },
+            {"history": {}},
+        ),
+        (
+            {
+                "start_time": "2023-05-08 06:30:00Z",
+                "history_ids": [
+                    "sensor.total_energy_import1",
+                    "sensor.total_energy_import2",
+                ],
+            },
+            {
+                "history": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:30:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                    "sensor.total_energy_import2": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:30:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service_args: dict[str, Any],
+    expected_result: dict[str, Any],
+) -> None:
+    """Test the get_history service."""
+
+    assert hass.config.time_zone == "US/Pacific"
+
+    times: list[tuple[datetime, float]] = [
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00")), 2.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00")), 3.0),
+    ]
+    now = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+
+    for time, value in times:
+        hass.states.async_set(
+            entity_id="sensor.total_energy_import1",
+            new_state=value,
+            timestamp=time.timestamp(),
+        )
+        hass.states.async_set(
+            entity_id="sensor.total_energy_import2",
+            new_state=value,
+            timestamp=time.timestamp(),
+        )
+    await async_recorder_block_till_done(hass)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=now,
+    ):
+        result = await hass.services.async_call(
+            "recorder", "get_history", service_args, return_response=True, blocking=True
+        )
+        assert result == expected_result
+
+    with pytest.raises(exceptions.Unauthorized):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_history",
+            service_args,
+            return_response=True,
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "missing_key"),
+    [
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+            },
+            "start_time",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+            },
+            "history_ids",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_missing_mandatory_keys(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    missing_key: str,
+) -> None:
+    """Test the get_history service with missing mandatory keys."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            service_args,
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "error_key"),
+    [
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+                "start_time": "2026-02-03 07:00:00Z",
+            },
+            "start_time_before_now",
+        ),
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+                "start_time": "2026-02-01 07:00:00Z",
+                "end_time": "2026-01-01 07:00:00Z",
+            },
+            "end_time_before_start_time",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2026-02-01 08:00:00-00:00")
+async def test_get_history_service_invalid_times(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    error_key: str,
+) -> None:
+    """Test the get_history service with invalid timestamps."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            service_args,
+            return_response=True,
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == error_key
+
+
+@pytest.mark.parametrize(
+    ("service_args", "expected_result"),
+    [
+        (
+            {
+                "start_time": "2023-05-08 06:30:00Z",
+                "history_ids": [
+                    "sensor.sensor",
+                ],
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:30:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                    ],
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_max_records(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service_args: dict[str, Any],
+    expected_result: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the get_history service."""
+
+    monkeypatch.setattr(
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS", 3
+    )
+
+    assert hass.config.time_zone == "US/Pacific"
+
+    times: list[tuple[datetime, float]] = [
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00")), 2.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00")), 3.0),
+    ]
+    now = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+
+    for time, value in times:
+        hass.states.async_set(
+            entity_id="sensor.sensor",
+            new_state=value,
+            timestamp=time.timestamp(),
+        )
+    await async_recorder_block_till_done(hass)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=now,
+    ):
+        result = await hass.services.async_call(
+            "recorder", "get_history", service_args, return_response=True, blocking=True
+        )
+        assert result == expected_result
