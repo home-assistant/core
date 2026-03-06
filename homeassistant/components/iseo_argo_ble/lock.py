@@ -99,7 +99,9 @@ class IseoLockEntity(LockEntity):
         if self._relock_task and not self._relock_task.done():
             self._relock_task.cancel()
 
-    async def _poll_state(self, _now: datetime | None = None, force: bool = False) -> None:
+    async def _poll_state(
+        self, _now: datetime | None = None, force: bool = False
+    ) -> None:
         """Read door state via TLV_INFO and update HA state."""
         _LOGGER.debug("Polling lock state, current available: %s", self._attr_available)
         if self._door_status_supported is False and _now is not None and not force:
