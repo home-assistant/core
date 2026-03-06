@@ -28,14 +28,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ness Alarm binary sensor from config entry."""
-    # Get zone subentries
-    zone_subentries = filter(
-        lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_ZONE,
-        entry.subentries.values(),
-    )
-
     # Create entities from zone subentries
-    for subentry in zone_subentries:
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type != SUBENTRY_TYPE_ZONE:
+            continue
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
         zone_type: BinarySensorDeviceClass = subentry.data.get(
             CONF_TYPE, DEFAULT_ZONE_TYPE
@@ -58,7 +54,9 @@ async def async_setup_entry(
 class NessZoneBinarySensor(BinarySensorEntity):
     """Representation of an Ness alarm zone as a binary sensor."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_name = None
 
     def __init__(
         self,
@@ -70,12 +68,11 @@ class NessZoneBinarySensor(BinarySensorEntity):
         """Initialize the binary_sensor."""
         self._zone_id = zone_id
         self._attr_device_class = zone_type
-        self._attr_is_on = False
         self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
-        self._attr_name = f"Zone {zone_id}"
         self._attr_device_info = DeviceInfo(
             name=zone_name or f"Zone {zone_id}",
             identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, f"{entry_id}_alarm_panel"),
         )
 
     async def async_added_to_hass(self) -> None:
