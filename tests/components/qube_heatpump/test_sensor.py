@@ -36,8 +36,8 @@ async def test_sensor_setup(
     # Assert entity state via core state machine
     states = hass.states.async_all()
     sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
-    # Should have sensors (19 regular + 1 status = 20)
-    assert len(sensor_states) == 20
+    # Should have sensors (18 regular + 1 status = 19)
+    assert len(sensor_states) == 19
 
 
 async def test_temperature_sensors(

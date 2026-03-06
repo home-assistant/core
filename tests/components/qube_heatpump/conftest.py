@@ -51,7 +51,6 @@ def mock_qube_state() -> QubeState:
     state.setpoint_room_heat_night = 18.0
     state.setpoint_room_cool_day = 25.0
     state.setpoint_room_cool_night = 23.0
-    state.setpoint_dhw = 55.0
     state.status_code = 1
     return state
 

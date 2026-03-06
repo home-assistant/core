@@ -91,9 +91,6 @@
       "setpoint_room_cool_night": {
         "name": "Room setpoint cooling (night)"
       },
-      "setpoint_dhw": {
-        "name": "DHW setpoint"
-      },
       "status_heatpump": {
         "name": "Heat pump status",
         "state": {

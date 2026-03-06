@@ -22,6 +22,8 @@ from homeassistant.helpers.typing import StateType
 
 from .entity import QubeEntity
 
+PARALLEL_UPDATES = 0
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -188,14 +190,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    SensorEntityDescription(
-        key="setpoint_dhw",
-        translation_key="setpoint_dhw",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
-    ),
 )
 
 
@@ -241,7 +235,6 @@ class QubeSensor(QubeEntity, SensorEntity):
     """Qube generic sensor."""
 
     entity_description: SensorEntityDescription
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -269,7 +262,6 @@ class QubeSensor(QubeEntity, SensorEntity):
 class QubeStatusSensor(QubeEntity, SensorEntity):
     """Heat pump status sensor with enum device class."""
 
-    _attr_should_poll = False
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_translation_key = "status_heatpump"
     _attr_options = [

@@ -43,7 +43,6 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
     def __init__(self, hass: HomeAssistant, hub: QubeHub, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
         self.hub = hub
-        self.entry = entry
         self._previous_values: dict[str, float] = {}
         super().__init__(
             hass,
