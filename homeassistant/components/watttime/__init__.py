@@ -2,28 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from aiowatttime import Client
-from aiowatttime.emissions import RealTimeEmissionsResponseType
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
-
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
+from .coordinator import WattTimeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -42,27 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Error while authenticating with WattTime: %s", err)
         return False
 
-    async def async_update_data() -> RealTimeEmissionsResponseType:
-        """Get the latest realtime emissions data."""
-        try:
-            return await client.emissions.async_get_realtime_emissions(
-                entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
-            )
-        except InvalidCredentialsError as err:
-            raise ConfigEntryAuthFailed("Invalid username/password") from err
-        except WattTimeError as err:
-            raise UpdateFailed(
-                f"Error while requesting data from WattTime: {err}"
-            ) from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        config_entry=entry,
-        name=entry.title,
-        update_interval=DEFAULT_UPDATE_INTERVAL,
-        update_method=async_update_data,
-    )
+    coordinator = WattTimeCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
