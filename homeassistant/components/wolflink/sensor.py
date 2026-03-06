@@ -160,7 +160,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         self,
         coordinator: WolfLinkCoordinator,
         wolf_object: Parameter,
-        device_id: str,
+        device_id: int,
         description: WolflinkSensorEntityDescription,
     ) -> None:
         """Initialize."""
