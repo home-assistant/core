@@ -27,12 +27,11 @@ async def test_form_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flowId = result["flow_id"]
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        flowId, user_input=USER_INPUT
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -61,11 +60,10 @@ async def test_form_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    flowId = result["flow_id"]
 
     mock_freshr_client.login.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
-        flowId, user_input=USER_INPUT
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -74,7 +72,7 @@ async def test_form_error(
     # Ensure the flow can recover after providing correct credentials
     mock_freshr_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        flowId, user_input=USER_INPUT
+        result["flow_id"], user_input=USER_INPUT
     )
     await hass.async_block_till_done()
 
@@ -93,10 +91,9 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    flowId = result["flow_id"]
 
     result = await hass.config_entries.flow.async_configure(
-        flowId, user_input=USER_INPUT
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
