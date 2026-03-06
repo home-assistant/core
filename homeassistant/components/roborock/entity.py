@@ -1,5 +1,6 @@
 """Support for Roborock device base class."""
 
+import logging
 from typing import Any
 
 from roborock.devices.traits.v1.command import CommandTrait
@@ -18,6 +19,8 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RoborockEntity(Entity):
@@ -106,7 +109,15 @@ class RoborockCoordinatedEntityV1(
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
         res = await super().send(command, params)
-        await self.coordinator.async_refresh()
+
+        try:
+            await self.coordinator.properties_api.status.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh status after command: %s", err)
+        else:
+            self.async_write_ha_state()
+
+        await self.coordinator.async_request_refresh()
         return res
 
 
