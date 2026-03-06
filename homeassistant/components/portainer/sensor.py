@@ -30,7 +30,7 @@ from .entity import (
     PortainerStackEntity,
 )
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
