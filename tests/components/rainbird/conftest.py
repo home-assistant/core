@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from http import HTTPStatus
 import json
+import re
 from typing import Any
 from unittest.mock import patch
 
@@ -278,4 +279,4 @@ def handle_responses(
     async def handle(method, url, data) -> AiohttpClientMockResponse:
         return responses.pop(0)
 
-    aioclient_mock.post(URL, side_effect=handle)
+    aioclient_mock.post(re.compile(r"^https?://[^/]+/stick$"), side_effect=handle)
