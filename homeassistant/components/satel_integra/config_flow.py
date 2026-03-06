@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -170,19 +169,12 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         """Test a connection to the Satel alarm."""
         controller = AsyncSatel(host, port, self.hass.loop)
 
-        try:
-            async with asyncio.timeout(5):
-                return bool(await controller.connect())
-        except TimeoutError:
-            _LOGGER.debug("Connection to %s:%s timed out", host, port)
-            return False
+        result = await controller.connect()
 
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("Connection to %s:%s failed: %s", host, port, err)
-            return False
+        # Make sure we close the connection again
+        controller.close()
 
-        finally:
-            controller.close()
+        return result
 
 
 class SatelOptionsFlow(OptionsFlow):
