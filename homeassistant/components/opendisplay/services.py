@@ -130,7 +130,7 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
         url = get_url(hass) + async_sign_path(
             hass, url, timedelta(minutes=5), use_content_user=True
         )
-    session = async_get_clientsession(hass, verify_ssl=False)
+    session = async_get_clientsession(hass)
     try:
         async with session.get(url) as resp:
             resp.raise_for_status()
