@@ -102,6 +102,9 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
+        # Don't add 'v' prefix for nightly versions
+        if version.lower() == "nightly":
+            return f"https://github.com/wled/WLED/releases/tag/{version}"
         return f"https://github.com/wled/WLED/releases/tag/v{version}"
 
     @wled_exception_handler
