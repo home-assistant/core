@@ -94,19 +94,21 @@ async def async_setup_entry(
             )
 
             # Add loadshed binary sensors if loadshed data is available
-            if coordinator.data and "loadShed" in coordinator.data:
-                loadshed_data = coordinator.data["loadShed"]
-                if loadshed_data.get("parameters"):
-                    entities.extend(
-                        RehlkoLoadshedBinarySensorEntity(
-                            coordinator,
-                            device_id,
-                            device_data,
-                            parameter["definitionId"],
-                            parameter["displayName"],
-                        )
-                        for parameter in loadshed_data["parameters"]
+            if (
+                coordinator.data
+                and (loadshed_data := coordinator.data.get("loadShed"))
+                and (parameters := loadshed_data.get("parameters"))
+            ):
+                entities.extend(
+                    RehlkoLoadshedBinarySensorEntity(
+                        coordinator,
+                        device_id,
+                        device_data,
+                        parameter["definitionId"],
+                        parameter["displayName"],
                     )
+                    for parameter in parameters
+                )
 
     async_add_entities(entities)
 
