@@ -12,6 +12,109 @@
         "data": {
           "model": "Receiver model",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "model": "Select the receiver model",
+          "port": "Serial port path to connect to"
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "sound_mode": {
+            "name": "Sound mode",
+            "state": {
+              "auro2dsurr": "Auro 2D Surround",
+              "auro3d": "Auro 3D",
+              "auto": "Auto",
+              "classic_concert": "Classic Concert",
+              "direct": "Direct",
+              "dolby_atmos": "Dolby Atmos",
+              "dolby_d_ex": "Dolby Digital EX",
+              "dolby_digital": "Dolby Digital",
+              "dolby_digital_plus": "Dolby Digital+",
+              "dolby_hd": "Dolby HD",
+              "dolby_pl2": "Dolby PL2",
+              "dolby_pl2x": "Dolby PL2x",
+              "dolby_pro_logic": "Dolby Pro Logic",
+              "dolby_surround": "Dolby Surround",
+              "dts96_24": "DTS96/24",
+              "dts_es_dscrt6_1": "DTS ES Discrete 6.1",
+              "dts_es_mtrx6_1": "DTS ES Matrix 6.1",
+              "dts_hd": "DTS HD",
+              "dts_hd_mstr": "DTS HD Master",
+              "dts_neo_6": "DTS Neo:6",
+              "dts_surround": "DTS Surround",
+              "dts_x": "DTS:X",
+              "dts_x_mstr": "DTS:X Master",
+              "jazz_club": "Jazz Club",
+              "matrix": "Matrix",
+              "mch_stereo": "Multichannel Stereo",
+              "mode_5ch_stereo": "5ch Stereo",
+              "mode_7ch_stereo": "7ch Stereo",
+              "mono_movie": "Mono Movie",
+              "multi_ch_direct": "Multi Ch Direct",
+              "multi_ch_in": "Multi Ch In",
+              "multi_ch_pure_d": "Multi Ch Pure Direct",
+              "pure_direct": "Pure Direct",
+              "rock_arena": "Rock Arena",
+              "stereo": "Stereo",
+              "super_stadium": "Super Stadium",
+              "video_game": "Video Game",
+              "virtual": "Virtual",
+              "wide_screen": "Wide Screen"
+            }
+          },
+          "source": {
+            "name": "Source",
+            "state": {
+              "aux1": "Aux 1",
+              "aux2": "Aux 2",
+              "bd": "BD Player",
+              "bt": "Bluetooth",
+              "cd": "CD",
+              "cdr_tape1": "CDR/Tape 1",
+              "dab": "DAB",
+              "dbs_sat": "DBS/Sat",
+              "dock": "Dock",
+              "dvd": "DVD",
+              "dvr": "DVR",
+              "eight_k": "8K",
+              "favorites": "Favorites",
+              "flickr": "Flickr",
+              "game": "Game",
+              "hdp": "HDP",
+              "hdradio": "HD Radio",
+              "ipod": "iPod",
+              "iradio": "Internet Radio",
+              "lastfm": "Last.fm",
+              "md_tape2": "MD/Tape 2",
+              "mplay": "Media Player",
+              "net": "HEOS Music",
+              "net_usb": "Network/USB",
+              "pandora": "Pandora",
+              "phono": "Phono",
+              "sat": "Sat",
+              "sat_cbl": "Satellite/Cable",
+              "server": "Server",
+              "sirius": "Sirius",
+              "siriusxm": "SiriusXM",
+              "spotify": "Spotify",
+              "tuner": "Tuner",
+              "tv": "TV Audio",
+              "tv_cbl": "TV/Cable",
+              "usb_ipod": "USB/iPod",
+              "v_aux": "V. Aux",
+              "vcr_1": "VCR 1",
+              "vcr_2": "VCR 2",
+              "vcr_3": "VCR 3",
+              "vdp": "VDP",
+              "xm": "XM"
+            }
+          }
         }
       }
     }

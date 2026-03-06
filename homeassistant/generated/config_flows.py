@@ -139,6 +139,7 @@ FLOWS = {
         "deako",
         "deconz",
         "deluge",
+        "denon_rs232",
         "denonavr",
         "devialet",
         "devolo_home_control",

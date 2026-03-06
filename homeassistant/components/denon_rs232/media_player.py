@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+import re
 
 from denon_rs232 import (
     MIN_VOLUME_DB,
@@ -13,6 +14,7 @@ from denon_rs232 import (
     InputSource,
     PowerState,
 )
+from denon_rs232.models import MODELS
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -31,7 +33,29 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-SOURCE_BY_NAME: dict[str, InputSource] = {s.value: s for s in InputSource}
+_INVALID_KEY_CHARS = re.compile(r"[^a-z0-9]+")
+
+
+def _source_state_key(source: InputSource) -> str:
+    """Return a translation-safe state key for a source."""
+    return source.name.lower()
+
+
+SOURCE_BY_NAME: dict[str, InputSource] = {
+    _source_state_key(source): source for source in InputSource
+}
+# Backwards compatibility for direct service calls using raw protocol values.
+SOURCE_BY_NAME.update({source.value: source for source in InputSource})
+
+
+def _sound_mode_state_key(sound_mode: str) -> str:
+    """Return a translation-safe state key for a sound mode."""
+    key = _INVALID_KEY_CHARS.sub("_", sound_mode.replace("+", " plus ").lower()).strip(
+        "_"
+    )
+    if key and not key[0].isdigit():
+        return key
+    return f"mode_{key}"
 
 
 async def async_setup_entry(
@@ -59,6 +83,7 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "receiver"
     _attr_should_poll = False
 
     def __init__(
@@ -79,12 +104,34 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             name="Denon Receiver",
         )
 
+        known_sound_modes = (
+            model.surround_modes
+            if model
+            else tuple(
+                sorted(
+                    {
+                        surround_mode
+                        for receiver_model in MODELS.values()
+                        for surround_mode in receiver_model.surround_modes
+                    }
+                )
+            )
+        )
+        self._sound_mode_by_state: dict[str, str] = {
+            _sound_mode_state_key(sound_mode): sound_mode
+            for sound_mode in known_sound_modes
+        }
+
         if model:
-            self._attr_source_list = sorted(s.value for s in model.input_sources)
-            self._attr_sound_mode_list = list(model.surround_modes)
+            self._attr_source_list = sorted(
+                _source_state_key(source) for source in model.input_sources
+            )
+            self._attr_sound_mode_list = list(self._sound_mode_by_state)
         else:
-            self._attr_source_list = sorted(s.value for s in InputSource)
-            self._attr_sound_mode_list = None
+            self._attr_source_list = sorted(
+                _source_state_key(source) for source in InputSource
+            )
+            self._attr_sound_mode_list = list(self._sound_mode_by_state)
 
         self._unsub: Callable[[], None] | None = None
         self._update_from_state(receiver.state)
@@ -126,11 +173,14 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
         self._attr_is_volume_muted = state.mute
 
         if state.input_source is not None:
-            self._attr_source = state.input_source.value
+            self._attr_source = _source_state_key(state.input_source)
         else:
             self._attr_source = None
 
-        self._attr_sound_mode = state.surround_mode
+        if state.surround_mode is not None:
+            self._attr_sound_mode = _sound_mode_state_key(state.surround_mode)
+        else:
+            self._attr_sound_mode = None
 
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
@@ -167,4 +217,6 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        await self._receiver.set_surround_mode(sound_mode)
+        await self._receiver.set_surround_mode(
+            self._sound_mode_by_state.get(sound_mode, sound_mode)
+        )
