@@ -172,13 +172,6 @@ async def _async_upload_image(call: ServiceCall) -> None:
             translation_placeholders={"address": address},
         )
 
-    media = await async_resolve_media(call.hass, image_data["media_content_id"], None)
-
-    if media.path is not None:
-        pil_image = await call.hass.async_add_executor_job(_load_image, str(media.path))
-    else:
-        pil_image = await _async_download_image(call.hass, media.url)
-
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
@@ -187,6 +180,17 @@ async def _async_upload_image(call: ServiceCall) -> None:
     entry.runtime_data.upload_task = current
 
     try:
+        media = await async_resolve_media(
+            call.hass, image_data["media_content_id"], None
+        )
+
+        if media.path is not None:
+            pil_image = await call.hass.async_add_executor_job(
+                _load_image, str(media.path)
+            )
+        else:
+            pil_image = await _async_download_image(call.hass, media.url)
+
         async with OpenDisplayDevice(
             mac_address=address,
             ble_device=ble_device,
