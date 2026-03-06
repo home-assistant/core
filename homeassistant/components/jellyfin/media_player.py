@@ -248,7 +248,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        # from jellyfin api docs: command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
         command = "PlayNow"
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
         if enqueue == MediaPlayerEnqueue.NEXT:

@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
-from .media_player import JellyfinMediaPlayer
 
 # customize media player input schema adding 'shuffle' and removing uneeded fields
 JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
@@ -68,23 +67,17 @@ def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Jellyfin component."""
-    # only setup once
-    if hass.services.has_service(DOMAIN, "play_media"):
-        return
 
     async def play_media_shuffle_service_handler(
         entity: MediaPlayerEntity, call: ServiceCall
     ) -> None:
-        if not isinstance(entity, JellyfinMediaPlayer):
-            return
 
-        def _play(e=entity) -> None:
-            e.play_media_shuffle(
+        await hass.async_add_executor_job(
+            lambda: entity.play_media_shuffle(
                 media_type=call.data["media_type"],
                 media_id=call.data["media_id"],
             )
-
-        await hass.async_add_executor_job(_play)
+        )
 
     service.async_register_platform_entity_service(
         hass,
