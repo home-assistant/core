@@ -53,7 +53,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
             ):
                 self._refetch_parameters = True
                 raise UpdateFailed(
-                    "Could not fetch values from server because device is Offline."
+                    "Could not fetch values from server because device is offline."
                 )
             if self._refetch_parameters:
                 self._parameters = await fetch_parameters(
