@@ -1,14 +1,18 @@
 """Support for the Swing2Sleep Smarla sensor entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from pysmarlaapi.federwiege.services.classes import Property
+from pysmarlaapi.federwiege.services.types import SpringStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
 from homeassistant.const import UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -24,6 +28,7 @@ PARALLEL_UPDATES = 0
 class SmarlaSensorEntityDescription(SmarlaEntityDescription, SensorEntityDescription):
     """Class describing Swing2Sleep Smarla sensor entities."""
 
+    value_fn: Callable[[Any], StateType] = lambda value: value
     multiple: bool = False
     value_pos: int = 0
 
@@ -75,6 +80,19 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SmarlaSensorEntityDescription(
+        key="spring_status",
+        translation_key="spring_status",
+        service="analyser",
+        property="spring_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            status.name.lower()
+            for status in SpringStatus
+            if status != SpringStatus.UNKNOWN
+        ],
+        value_fn=lambda value: SpringStatus(value).name.lower() if value else None,
+    ),
 ]
 
 
@@ -103,9 +121,10 @@ class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
     _property: Property[int]
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the entity value to represent the entity state."""
-        return self._property.get()
+        value = self._property.get()
+        return self.entity_description.value_fn(value)
 
 
 class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
@@ -116,7 +135,8 @@ class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
     _property: Property[list[int]]
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the entity value to represent the entity state."""
-        v = self._property.get()
-        return v[self.entity_description.value_pos] if v is not None else None
+        raw = self._property.get()
+        value = raw[self.entity_description.value_pos] if raw is not None else None
+        return self.entity_description.value_fn(value)

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,6 +50,13 @@ SENSOR_ENTITIES = [
         "initial_state": "0.0",
         "test": (3600, "1.0"),
     },
+    {
+        "entity_id": "sensor.smarla_spring_status",
+        "service": "analyser",
+        "property": "spring_status",
+        "initial_state": STATE_UNKNOWN,
+        "test": (1, "normal"),
+    },
 ]
 
 
@@ -87,6 +94,7 @@ async def test_sensor_state_update(
 
     entity_id = entity_info["entity_id"]
 
+    # Verify initial state
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == entity_info["initial_state"]
@@ -95,9 +103,12 @@ async def test_sensor_state_update(
 
     mock_sensor_property.get.return_value = test_value
 
+    # Set new value and trigger update
+    mock_sensor_property.get.return_value = test_value
     await update_property_listeners(mock_sensor_property)
     await hass.async_block_till_done()
 
+    # Verify updated state
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
