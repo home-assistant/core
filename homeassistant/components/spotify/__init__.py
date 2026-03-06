@@ -22,9 +22,9 @@ from .const import DOMAIN, SPOTIFY_SCOPES
 from .coordinator import (
     SpotifyConfigEntry,
     SpotifyCoordinator,
+    SpotifyData,
     SpotifyDeviceCoordinator,
 )
-from .models import SpotifyData
 from .util import (
     is_spotify_media_type,
     resolve_spotify_media_type,

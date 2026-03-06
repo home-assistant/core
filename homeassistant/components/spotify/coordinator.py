@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from spotifyaio import (
     ContextType,
@@ -20,19 +19,26 @@ from spotifyaio import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from .models import SpotifyData
-
 _LOGGER = logging.getLogger(__name__)
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
+
+
+@dataclass
+class SpotifyData:
+    """Class to hold Spotify data."""
+
+    coordinator: SpotifyCoordinator
+    session: OAuth2Session
+    devices: SpotifyDeviceCoordinator
 
 
 UPDATE_INTERVAL = timedelta(seconds=30)
