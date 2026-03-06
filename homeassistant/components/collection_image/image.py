@@ -31,7 +31,7 @@ async def async_setup_entry(
     if media := entry.data.get("media"):
         async_add_entities(
             [
-                PhotoAlbumImageEntity(
+                CollectionImageImageEntity(
                     name=entry.title,
                     media_content_id=media.get("media_content_id"),
                     unique_id=entry.entry_id,
@@ -41,7 +41,7 @@ async def async_setup_entry(
         )
 
 
-class PhotoAlbumImageEntity(ImageEntity):
+class CollectionImageImageEntity(ImageEntity):
     """Implement the image entity for Collection Image."""
 
     path: Path | None

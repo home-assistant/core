@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PhotoAlbumConfigFlow(ConfigFlow, domain=DOMAIN):
+class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Collection Image."""
 
     VERSION = 1
