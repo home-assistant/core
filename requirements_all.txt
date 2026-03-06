@@ -2969,7 +2969,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==1.0.0
+spotifyaio==2.0.2
 
 # homeassistant.components.sql
 sqlparse==0.5.5
