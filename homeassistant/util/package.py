@@ -146,11 +146,12 @@ def install_package(
         "install",
         "--quiet",
         package,
-        # We need to use unsafe-first-match for custom components
-        # which can use a different version of a package than the one
-        # we have built the wheel for.
+        # We need to use unsafe-best-match for custom components
+        # which can use a different version of a package or a
+        # different wheel tags (e.g. different Python version)
+        # than the one we have built the wheel for.
         "--index-strategy",
-        "unsafe-first-match",
+        "unsafe-best-match",
     ]
     if timeout:
         env["HTTP_TIMEOUT"] = str(timeout)
