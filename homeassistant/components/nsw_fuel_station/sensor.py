@@ -15,12 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DATA_NSW_FUEL_STATION, StationPriceData
+from .const import DATA_NSW_FUEL_STATION
+from .coordinator import NSWFuelStationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +63,7 @@ def setup_platform(
     station_id = config[CONF_STATION_ID]
     fuel_types = config[CONF_FUEL_TYPES]
 
-    coordinator = hass.data[DATA_NSW_FUEL_STATION]
+    coordinator: NSWFuelStationCoordinator = hass.data[DATA_NSW_FUEL_STATION]
 
     if coordinator.data is None:
         _LOGGER.error("Initial fuel station price data not available")
@@ -86,16 +84,14 @@ def setup_platform(
     add_entities(entities)
 
 
-class StationPriceSensor(
-    CoordinatorEntity[DataUpdateCoordinator[StationPriceData]], SensorEntity
-):
+class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEntity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
     _attr_attribution = "Data provided by NSW Government FuelCheck"
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[StationPriceData],
+        coordinator: NSWFuelStationCoordinator,
         station_id: int,
         fuel_type: str,
     ) -> None:
