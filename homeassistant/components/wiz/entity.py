@@ -13,8 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import WizCoordinator
-from .models import WizData
+from .coordinator import WizCoordinator, WizData
 
 
 class WizEntity(CoordinatorEntity[WizCoordinator], Entity):

@@ -24,9 +24,8 @@ from .const import (
     SIGNAL_WIZ_PIR,
     WIZ_CONNECT_EXCEPTIONS,
 )
-from .coordinator import WizCoordinator
+from .coordinator import WizCoordinator, WizData
 from .discovery import async_discover_devices, async_trigger_discovery
-from .models import WizData
 
 type WizConfigEntry = ConfigEntry[WizData]
 

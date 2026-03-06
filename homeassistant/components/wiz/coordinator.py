@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -43,16 +44,25 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self.bulb = bulb
+        self._bulb = bulb
 
     async def _async_update_data(self) -> float | None:
         """Update the WiZ device."""
-        ip_address = self.bulb.ip
+        ip_address = self._bulb.ip
         try:
-            await self.bulb.updateState()
-            if self.bulb.power_monitoring is not False:
-                power: float | None = await self.bulb.get_power()
+            await self._bulb.updateState()
+            if self._bulb.power_monitoring is not False:
+                power: float | None = await self._bulb.get_power()
                 return power
         except WIZ_EXCEPTIONS as ex:
             raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
         return None
+
+
+@dataclass
+class WizData:
+    """Data for the wiz integration."""
+
+    coordinator: WizCoordinator
+    bulb: wizlight
+    scenes: list
