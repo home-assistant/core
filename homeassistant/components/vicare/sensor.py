@@ -730,7 +730,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-     ),
+    ),
     ViCareSensorEntityDescription(
         key="energy_consumption_dhw_this_year",
         translation_key="energy_consumption_dhw_this_year",
