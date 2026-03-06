@@ -93,7 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, address)},
-        name=entry.title,
         manufacturer=manufacturer.manufacturer_name,
         model=f"{size} {color_scheme}",
         hw_version=f"{board_type} rev. {manufacturer.board_revision}",
