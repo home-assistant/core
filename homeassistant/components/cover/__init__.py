@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -96,6 +97,7 @@ ATTR_POSITION = "position"
 ATTR_TILT_POSITION = "tilt_position"
 
 
+@deprecated_function("code which checks the state", breaks_in_ha_version="2027.4")
 @bind_hass
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
