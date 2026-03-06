@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -328,7 +328,7 @@ def async_device_wan_value_fn(
     device: Device,
 ) -> float | str | None:
     """Retrieve a WAN interface field value."""
-    wan_data = device.raw.get(wan_key)  # type: ignore[typeddict-item]
+    wan_data = cast(dict[str, Any], device.raw).get(wan_key)
     if isinstance(wan_data, dict):
         return wan_data.get(field)
     return None
