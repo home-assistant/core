@@ -123,7 +123,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Load shed HVAC A',
     'platform': 'rehlko',
     'previous_unique_id': None,
@@ -138,7 +138,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Load shed HVAC A',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_hvac_a',
@@ -173,7 +172,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Load shed HVAC B',
     'platform': 'rehlko',
     'previous_unique_id': None,
@@ -188,7 +187,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Load shed HVAC B',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_hvac_b',
@@ -223,7 +221,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Load shed Load A',
     'platform': 'rehlko',
     'previous_unique_id': None,
@@ -238,7 +236,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Load shed Load A',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_a',
@@ -273,7 +270,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Load shed Load B',
     'platform': 'rehlko',
     'previous_unique_id': None,
@@ -288,7 +285,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Load shed Load B',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_b',
@@ -323,7 +319,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Load shed Load C',
     'platform': 'rehlko',
     'previous_unique_id': None,
@@ -338,7 +334,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Load shed Load C',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_c',
@@ -373,7 +368,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower-off',
+    'original_icon': None,
     'original_name': 'Load shed Load D',
     'platform': 'rehlko',
     'previous_unique_id': None,
@@ -388,7 +383,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Load shed Load D',
-      'icon': 'mdi:transmission-tower-off',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_d',
