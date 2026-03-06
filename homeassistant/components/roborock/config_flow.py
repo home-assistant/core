@@ -188,7 +188,9 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         assert self._username
         self._client = RoborockApiClient(
-            self._username, session=async_get_clientsession(self.hass)
+            self._username,
+            base_url=entry_data[CONF_BASE_URL],
+            session=async_get_clientsession(self.hass),
         )
         return await self.async_step_reauth_confirm()
 
