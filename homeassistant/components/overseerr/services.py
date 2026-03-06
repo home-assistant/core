@@ -74,11 +74,7 @@ SERVICE_SEARCH_AND_REQUEST_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_QUERY): str,
-        vol.Optional(ATTR_SEASONS): vol.Any(
-            vol.Coerce(int),
-            [vol.Coerce(int)],
-            "all",
-        ),
+        vol.Optional(ATTR_SEASONS): str,
     }
 )
 
