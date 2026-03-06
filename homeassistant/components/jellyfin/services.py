@@ -9,12 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA,
-    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     DOMAIN as MP_DOMAIN,
-    MEDIA_PLAYER_PLAY_MEDIA_SCHEMA as MP_PLAY_MEDIA_SCHEMA,
     MediaPlayerEntity,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -23,9 +21,9 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import DOMAIN
 
 JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
-    k: v
-    for k, v in MP_PLAY_MEDIA_SCHEMA.items()
-    if (k not in (ATTR_MEDIA_ANNOUNCE, ATTR_MEDIA_ENQUEUE))
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
 
