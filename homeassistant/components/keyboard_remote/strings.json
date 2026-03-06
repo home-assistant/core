@@ -1,0 +1,55 @@
+{
+  "config": {
+    "abort": {
+      "all_devices_configured": "All available input devices are already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_identify_device": "Could not identify the device from the YAML configuration. Ensure the device is connected and the configuration is correct.",
+      "no_devices": "No input devices found in /dev/input/by-id/. Ensure input devices are connected and accessible."
+    },
+    "error": {
+      "cannot_connect": "Could not open the selected input device. Check permissions and that the device is connected."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_path": "Input device"
+        },
+        "data_description": {
+          "device_path": "Select the input device from the list of detected devices."
+        },
+        "description": "Choose an input device to use as a keyboard remote.",
+        "title": "Select input device"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_identify_device": {
+      "description": "Configuring Keyboard Remote using YAML is being removed but there was an error importing one of your device configurations: the device could not be identified.\n\nTo fix this issue:\n\n1. Ensure the device is connected\n2. Correct your YAML configuration\n3. Restart Home Assistant to try the import again\n\nAlternatively, remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
+      "title": "Keyboard Remote YAML import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring Keyboard Remote using YAML is being removed but an unknown error occurred while importing your configuration.\n\nTo fix this issue:\n\n1. Review and correct your YAML configuration\n2. Restart Home Assistant to try the import again\n\nAlternatively, remove the `keyboard_remote` key from your `configuration.yaml` and configure the integration via the [UI]({url}).",
+      "title": "Keyboard Remote YAML import failed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "emulate_key_hold": "Emulate key hold",
+          "emulate_key_hold_delay": "Key hold delay",
+          "emulate_key_hold_repeat": "Key hold repeat interval",
+          "key_types": "Key event types"
+        },
+        "data_description": {
+          "emulate_key_hold": "Enable software emulation of key hold events.",
+          "emulate_key_hold_delay": "Delay in seconds before key hold emulation starts.",
+          "emulate_key_hold_repeat": "Repeat interval in seconds for emulated key hold events.",
+          "key_types": "Select which key events to listen for."
+        },
+        "description": "Device path: `{device_path}`",
+        "title": "Keyboard Remote options"
+      }
+    }
+  }
+}
