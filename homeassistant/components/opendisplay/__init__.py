@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -107,9 +108,9 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: OpenDisplayConfigEntry
 ) -> bool:
     """Unload a config entry."""
-
-    # Cancel any ongoing upload tasks
     if (task := entry.runtime_data.upload_task) and not task.done():
         task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
 
     return True
