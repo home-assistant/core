@@ -43,9 +43,10 @@ async def test_recovery_from_reopen(
         {"r phase current": 5, "t phase current": 6},
     ]
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch("homeassistant.components.route_b_smart_meter.coordinator.time.sleep"):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(
         "sensor.route_b_smart_meter_01234567890123456789012345f789"
@@ -117,5 +118,37 @@ async def test_recovery_exhausted(
     )
     assert entity is not None
     assert entity.state == STATE_UNAVAILABLE
-    # open() at setup + 3 exhausted reopen attempts
-    assert client.open.call_count == 4
+    # open() at setup + 5 exhausted reopen attempts
+    assert client.open.call_count == 6
+
+
+async def test_recovery_from_serial_error(
+    hass: HomeAssistant,
+    mock_momonga: Mock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test recovery when USB disconnect causes OSError instead of MomongaError."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = mock_momonga.return_value
+    client.get_instantaneous_current.side_effect = [
+        OSError("device disconnected"),
+        {"r phase current": 10, "t phase current": 11},
+    ]
+
+    with patch("homeassistant.components.route_b_smart_meter.coordinator.time.sleep"):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(
+        "sensor.route_b_smart_meter_01234567890123456789012345f789"
+        "_instantaneous_current_r_phase"
+    )
+    assert entity is not None
+    assert entity.state != STATE_UNAVAILABLE
+    assert entity.state == "10"
+    # open() called once at setup + once for reopen
+    assert client.open.call_count == 2
