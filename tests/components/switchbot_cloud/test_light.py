@@ -576,7 +576,7 @@ async def test_air_purifier(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "light.light_1"
+    entity_id = "light.light_1_light_control"
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(

@@ -145,7 +145,8 @@ class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
 class SwitchBotCloudAirPurifierChildLock(SwitchBotCloudSwitch):
     """Representation of a SwitchBot AirPurifier ChildLock."""
 
-    _attr_name = "air_purifier_child_lock"
+    _attr_name = "Child lock"
+    _attr_translation_key = "air_purifier_child_lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

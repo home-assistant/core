@@ -75,6 +75,11 @@
         "name": "Display"
       }
     },
+    "light": {
+      "air_purifier_light_control": {
+        "name": "Light control"
+      }
+    },
     "sensor": {
       "light_level": {
         "name": "Light level"

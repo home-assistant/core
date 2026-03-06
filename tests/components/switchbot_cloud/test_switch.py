@@ -125,7 +125,7 @@ async def test_switchmode_air_purifier_child_lock(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = "switch.switch_1_air_purifier_child_lock"
+    entity_id = "switch.switch_1_child_lock"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     with patch.object(SwitchBotAPI, "send_command"):
