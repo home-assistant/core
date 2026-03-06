@@ -27,7 +27,7 @@
   },
   "exceptions": {
     "device_not_found": {
-      "message": "Could not find Bluetooth device with address `{device_id}`."
+      "message": "Could not find Bluetooth device with address `{address}`."
     },
     "invalid_device_id": {
       "message": "Device `{device_id}` is not a valid OpenDisplay device."
