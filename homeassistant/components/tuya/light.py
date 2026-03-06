@@ -33,7 +33,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads_object
 
 from . import TuyaConfigEntry
@@ -130,7 +129,7 @@ class _ColorTempWrapper(DPCodeIntegerWrapper[int]):
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self._remap_helper = RemapHelper.from_type_information(
-            type_information, MIN_MIREDS, MAX_MIREDS
+            type_information, MIN_KELVIN, MAX_KELVIN
         )
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
@@ -138,17 +137,11 @@ class _ColorTempWrapper(DPCodeIntegerWrapper[int]):
         if (temperature := device.status.get(self.dpcode)) is None:
             return None
 
-        return color_util.color_temperature_mired_to_kelvin(
-            self._remap_helper.remap_value_to(temperature, reverse=True)
-        )
+        return round(self._remap_helper.remap_value_to(temperature))
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value (Kelvin) back to a raw device value."""
-        return round(
-            self._remap_helper.remap_value_from(
-                color_util.color_temperature_kelvin_to_mired(value), reverse=True
-            )
-        )
+        return round(self._remap_helper.remap_value_from(value))
 
 
 DEFAULT_H_TYPE = RemapHelper(source_min=1, source_max=360, target_min=0, target_max=360)
@@ -200,8 +193,8 @@ class _ColorDataWrapper(DPCodeJsonWrapper[tuple[float, float, float]]):
         )
 
 
-MAX_MIREDS = 500  # 2000 K
-MIN_MIREDS = 153  # 6500 K
+MIN_KELVIN = 2000  # 500 mireds
+MAX_KELVIN = 6500  # 153 mireds
 
 
 class FallbackColorDataMode(StrEnum):
@@ -672,8 +665,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     _white_color_mode = ColorMode.COLOR_TEMP
     _fixed_color_mode: ColorMode | None = None
-    _attr_min_color_temp_kelvin = 2000  # 500 Mireds
-    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
+    _attr_min_color_temp_kelvin = MIN_KELVIN
+    _attr_max_color_temp_kelvin = MAX_KELVIN
 
     def __init__(
         self,
