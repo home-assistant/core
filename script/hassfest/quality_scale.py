@@ -873,7 +873,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smarty",
     "smhi",
     "sms",
-    "smtp",
     "snapcast",
     "snmp",
     "snooz",
