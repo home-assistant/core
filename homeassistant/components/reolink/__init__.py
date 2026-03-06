@@ -54,7 +54,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -150,6 +150,7 @@ async def async_setup_entry(
 
     async def first_firmware_check(*args: Any) -> None:
         """Start first firmware check delayed to continue 24h schedule."""
+        firmware_coordinator.update_interval = FIRMWARE_UPDATE_INTERVAL
         await firmware_coordinator.async_refresh()
         host.cancel_first_firmware_check = None
 

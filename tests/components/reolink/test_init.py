@@ -14,6 +14,7 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
+from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL
 from homeassistant.components.reolink.const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
@@ -23,7 +24,6 @@ from homeassistant.components.reolink.const import (
 )
 from homeassistant.components.reolink.coordinator import (
     DEVICE_UPDATE_INTERVAL_MIN,
-    FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
 from homeassistant.config_entries import ConfigEntryState

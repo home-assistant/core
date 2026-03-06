@@ -25,7 +25,6 @@ NUM_CRED_ERRORS = 3
 
 DEVICE_UPDATE_INTERVAL_MIN = timedelta(seconds=60)
 DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 
 
 class ReolinkCoordinator(DataUpdateCoordinator[None]):
@@ -125,7 +124,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
             self._host.api.new_devices
             and self.config_entry.state == ConfigEntryState.LOADED
         ):
-            # Their are new cameras/chimes connected, reload to add them.
+            # There are new cameras/chimes connected, reload to add them.
             _LOGGER.debug(
                 "Reloading Reolink %s to add new device (capabilities)",
                 self._host.api.nvr_name,
