@@ -9,8 +9,8 @@ from typing import Any
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import WallConnectorData
 from .const import DOMAIN, WALLCONNECTOR_DEVICE_NAME
+from .coordinator import WallConnectorCoordinator, WallConnectorData
 
 
 @dataclass(frozen=True)
@@ -25,7 +25,7 @@ def _get_unique_id(serial_number: str, key: str) -> str:
     return f"{serial_number}-{key}"
 
 
-class WallConnectorEntity(CoordinatorEntity):
+class WallConnectorEntity(CoordinatorEntity[WallConnectorCoordinator]):
     """Base class for Wall Connector entities."""
 
     _attr_has_entity_name = True
@@ -36,7 +36,7 @@ class WallConnectorEntity(CoordinatorEntity):
         self._attr_unique_id = _get_unique_id(
             wall_connector_data.serial_number, self.entity_description.key
         )
-        super().__init__(wall_connector_data.update_coordinator)
+        super().__init__(wall_connector_data.coordinator)
 
     @property
     def device_info(self) -> DeviceInfo:
