@@ -346,7 +346,7 @@ async def test_error_refreshing_token(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test removing stale devices."""
+    """Test retrying setup after a transient token refresh error."""
     with patch(
         "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
         side_effect=OAuth2TokenRequestTransientError(
