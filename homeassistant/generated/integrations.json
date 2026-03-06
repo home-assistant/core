@@ -1867,9 +1867,20 @@
     },
     "esphome": {
       "name": "ESPHome",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "integrations": {
+        "esphome": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "ESPHome"
+        },
+        "esphome_dashboard": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "ESPHome Dashboard"
+        }
+      }
     },
     "essent": {
       "name": "Essent",

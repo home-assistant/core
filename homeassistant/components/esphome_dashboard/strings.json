@@ -1,0 +1,57 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This dashboard is already configured.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the dashboard. Please check the URL and ensure the dashboard is accessible.",
+      "invalid_auth": "Authentication failed. Please check your username and password.",
+      "invalid_dashboard": "The URL does not appear to be a valid ESPHome Dashboard.",
+      "invalid_url": "The provided URL is invalid. Please enter a valid HTTP or HTTPS URL."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::esphome_dashboard::config::step::user::data_description::password%]",
+          "username": "[%key:component::esphome_dashboard::config::step::user::data_description::username%]"
+        },
+        "description": "The authentication credentials for {url} are no longer valid. Please enter updated credentials.",
+        "title": "Reauthenticate ESPHome Dashboard"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "Dashboard URL",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::esphome_dashboard::config::step::user::data_description::password%]",
+          "url": "[%key:component::esphome_dashboard::config::step::user::data_description::url%]",
+          "username": "[%key:component::esphome_dashboard::config::step::user::data_description::username%]"
+        },
+        "description": "Update the URL or authentication credentials for your ESPHome Dashboard instance.",
+        "title": "Reconfigure ESPHome Dashboard"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "Dashboard URL",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for dashboard authentication",
+          "url": "The full URL to your ESPHome Dashboard (e.g., {local_url} or {remote_url})",
+          "username": "Username for dashboard authentication (leave blank if not required)"
+        },
+        "description": "Enter the URL of your ESPHome Dashboard instance and authentication credentials if required.",
+        "title": "Connect to ESPHome Dashboard"
+      }
+    }
+  }
+}
