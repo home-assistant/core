@@ -1,7 +1,15 @@
 {
   "alerts": {
     "warnings": {
-      "value": [],
+      "value": [
+        {
+          "title": "Winter Storm Warning",
+          "date": "2022-10-03T20:00:00+00:00",
+          "alertColourLevel": "red",
+          "expiryTime": "2022-10-04T12:00:00+00:00",
+          "url": "https://weather.gc.ca/warnings/report_e.html?on61"
+        }
+      ],
       "label": "Warnings"
     },
     "watches": {
@@ -12,7 +20,16 @@
       "value": [
         {
           "title": "Frost Advisory",
-          "date": "Monday October 03, 2022 at 15:05 EDT"
+          "date": "2022-10-03T19:05:00+00:00",
+          "alertColourLevel": "yellow",
+          "expiryTime": "2022-10-04T08:00:00+00:00",
+          "url": "https://weather.gc.ca/warnings/report_e.html?on61",
+          "text": "Frost advisory in effect. Near zero temperatures expected.",
+          "area": "Ottawa (Kanata - Orléans)",
+          "status": "active",
+          "confidence": "High",
+          "impact": "Frost may damage crops and plants.",
+          "alert_code": "frost_advisory"
         }
       ],
       "label": "Advisories"
