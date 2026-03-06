@@ -22,7 +22,6 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-# customize media player input schema adding 'shuffle' and removing uneeded fields
 JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
     k: v
     for k, v in MP_PLAY_MEDIA_SCHEMA.items()
