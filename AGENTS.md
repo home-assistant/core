@@ -11,6 +11,10 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 .vscode/tasks.json contains useful commands used for development.
 
+## Python Syntax Notes
+
+- PEP 758, accepted for Python 3.14, explicitly allows `except TypeA, TypeB:` without parentheses.
+
 ## Good practices
 
 Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
