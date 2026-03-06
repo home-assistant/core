@@ -38,6 +38,7 @@ class OpenDisplayRuntimeData:
 
     firmware: FirmwareVersion
     device_config: GlobalConfig
+    is_flex: bool
     upload_task: asyncio.Task | None = None
 
 
@@ -67,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             mac_address=address, ble_device=ble_device
         ) as device:
             fw = await device.read_firmware_version()
+            is_flex = device.is_flex
     except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to OpenDisplay device: {err}"
@@ -78,12 +80,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     entry.runtime_data = OpenDisplayRuntimeData(
         firmware=fw,
         device_config=device_config,
+        is_flex=is_flex,
     )
 
     # Will be moved to DeviceInfo object in entity.py once entities are added
     manufacturer = device_config.manufacturer
     display = device_config.displays[0]
-    board_type = manufacturer.board_type_name or str(manufacturer.board_type)
     color_scheme = getattr(display.color_scheme_enum, "name", str(display.color_scheme))
     size = (
         f'{display.screen_diagonal_inches:.1f}"'
@@ -96,9 +98,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         connections={(CONNECTION_BLUETOOTH, address)},
         manufacturer=manufacturer.manufacturer_name,
         model=f"{size} {color_scheme}",
-        hw_version=f"{board_type} rev. {manufacturer.board_revision}",
         sw_version=f"{fw['major']}.{fw['minor']}",
-        configuration_url="https://opendisplay.org/firmware/config/",
+        hw_version=f"{manufacturer.board_type_name or manufacturer.board_type} rev. {manufacturer.board_revision}"
+        if is_flex
+        else None,
+        configuration_url="https://opendisplay.org/firmware/config/"
+        if is_flex
+        else None,
     )
 
     return True

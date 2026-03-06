@@ -60,6 +60,7 @@ def mock_opendisplay_device() -> Generator[MagicMock]:
         mock_device.__aenter__.return_value = mock_device
         mock_device.read_firmware_version.return_value = FIRMWARE_VERSION
         mock_device.config = DEVICE_CONFIG
+        mock_device.is_flex = True
         yield mock_device
 
 

@@ -1,7 +1,7 @@
 """Test the OpenDisplay integration setup and unload."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from opendisplay import BLEConnectionError, BLETimeoutError, OpenDisplayError
 import pytest
@@ -87,6 +87,38 @@ async def test_setup_device_registered(
         device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 1
+
+
+@pytest.mark.parametrize(
+    ("is_flex", "expect_hw_version", "expect_config_url"),
+    [
+        (True, True, True),
+        (False, False, False),
+    ],
+)
+async def test_setup_device_registry_fields(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    is_flex: bool,
+    expect_hw_version: bool,
+    expect_config_url: bool,
+) -> None:
+    """Test that hw_version and configuration_url are only set for Flex devices."""
+    mock_opendisplay_device.is_flex = is_flex
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 1
+    device = devices[0]
+    assert (device.hw_version is not None) == expect_hw_version
+    assert (device.configuration_url is not None) == expect_config_url
 
 
 async def test_unload_cancels_active_upload_task(
