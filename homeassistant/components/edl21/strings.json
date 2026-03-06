@@ -12,6 +12,15 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval": "Minimum update interval (seconds)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "absolute_active_instantaneous_power": {
