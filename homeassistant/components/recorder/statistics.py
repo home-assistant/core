@@ -80,6 +80,7 @@ from .const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
+    INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
     INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
@@ -704,6 +705,14 @@ def _compile_statistics(
         _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
         return modified_statistic_ids
 
+    # Check whether any integration supplies custom equivalent units for its entities
+    custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
+    for platform in instance.hass.data[DATA_RECORDER].recorder_platforms.values():
+        if custom_equivalent_units := getattr(
+            platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
+        ):
+            custom_equivalent_units_per_entity |= custom_equivalent_units()
+
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
@@ -718,7 +727,7 @@ def _compile_statistics(
         ):
             continue
         compiled: PlatformCompiledStatistics = platform_compile_statistics(
-            instance.hass, session, start, end
+            instance.hass, session, start, end, custom_equivalent_units_per_entity
         )
         _LOGGER.debug(
             "Statistics for %s during %s-%s: %s",
