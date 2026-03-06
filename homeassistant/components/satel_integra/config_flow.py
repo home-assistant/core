@@ -157,10 +157,15 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "cannot_connect"
 
+        suggested_values: dict[str, Any] = {
+            **reconfigure_entry.data,
+            **(user_input or {}),
+        }
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                CONNECTION_SCHEMA, reconfigure_entry.data
+                CONNECTION_SCHEMA, suggested_values
             ),
             errors=errors,
         )
