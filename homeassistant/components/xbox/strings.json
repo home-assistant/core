@@ -67,6 +67,32 @@
           "title": "Friend online status"
         }
       }
+    },
+    "game": {
+      "abort": {
+        "config_entry_not_loaded": "Cannot add game titles when the account is disabled or not loaded.",
+        "no_game_titles": "There are currently no games available to add."
+      },
+      "entry_type": "Game",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add game title"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "title_id": "Game title"
+          },
+          "data_description": {
+            "title_id": "Select a title from your played games to track your progress."
+          },
+          "description": "Track the progress in a game you are playing on Xbox Network.",
+          "title": "Game title progress"
+        }
+      }
     }
   },
   "entity": {
@@ -98,6 +124,20 @@
       }
     },
     "sensor": {
+      "current_achievements": {
+        "name": "Earned achievements",
+        "state_attributes": {
+          "total_achievements": { "name": "Total achievements" }
+        },
+        "unit_of_measurement": "achievements"
+      },
+      "current_gamerscore": {
+        "name": "Earned Gamerscore",
+        "state_attributes": {
+          "total_gamerscore": { "name": "Total Gamerscore" }
+        },
+        "unit_of_measurement": "points"
+      },
       "follower": {
         "name": "Follower",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
@@ -131,6 +171,9 @@
       "last_online": {
         "name": "Last online"
       },
+      "last_time_played": {
+        "name": "Last time played"
+      },
       "now_playing": {
         "name": "Now playing",
         "state_attributes": {
@@ -146,6 +189,9 @@
           "release_date": { "name": "Release date" },
           "short_description": { "name": "Short description" }
         }
+      },
+      "progress": {
+        "name": "Progress"
       },
       "status": {
         "name": "Status"
