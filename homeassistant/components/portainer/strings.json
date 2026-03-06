@@ -196,6 +196,20 @@
     }
   },
   "services": {
+    "pause_container": {
+      "description": "Pauses a container on a Portainer endpoint.",
+      "fields": {
+        "container_id": {
+          "description": "The container to pause.",
+          "name": "Container"
+        },
+        "device_id": {
+          "description": "The endpoint where the container is located.",
+          "name": "Endpoint"
+        }
+      },
+      "name": "Pause container"
+    },
     "prune_images": {
       "description": "Prunes unused images on a Portainer endpoint.",
       "fields": {
@@ -213,6 +227,20 @@
         }
       },
       "name": "Prune unused images"
+    },
+    "unpause_container": {
+      "description": "Unpauses a container on a Portainer endpoint.",
+      "fields": {
+        "container_id": {
+          "description": "The container to unpause.",
+          "name": "Container"
+        },
+        "device_id": {
+          "description": "The endpoint where the container is located.",
+          "name": "Endpoint"
+        }
+      },
+      "name": "Unpause container"
     }
   }
 }

@@ -16,3 +16,33 @@ prune_images:
       required: false
       selector:
         boolean: {}
+
+pause_container:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Endpoint
+    container_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Container
+
+unpause_container:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Endpoint
+    container_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Container

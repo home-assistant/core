@@ -96,8 +96,14 @@
     }
   },
   "services": {
+    "pause_container": {
+      "service": "mdi:pause-circle"
+    },
     "prune_images": {
       "service": "mdi:delete-sweep"
+    },
+    "unpause_container": {
+      "service": "mdi:play-circle"
     }
   }
 }
