@@ -1533,6 +1533,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "earn_e_p1": {
+      "name": "EARN-E P1 Meter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "eastron": {
       "name": "Eastron",
       "integration_type": "virtual",
