@@ -109,6 +109,7 @@ def _map_daily_forecast(forecast: dict[str, Any]) -> Forecast:
 
 
 def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
+    snowfall_amount = forecast.get("snowfallAmount", 0)
     return {
         "datetime": forecast["forecastStart"],
         "condition": condition_code_to_hass[forecast["conditionCode"]],
@@ -120,8 +121,8 @@ def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
         "native_wind_speed": forecast["windSpeed"],
         "wind_bearing": forecast.get("windDirection"),
         "humidity": forecast["humidity"] * 100,
-        "native_precipitation": forecast.get("snowfallAmount", 0)
-        if forecast.get("snowfallAmount", 0) > 0
+        "native_precipitation": snowfall_amount
+        if snowfall_amount > 0
         else forecast.get("precipitationAmount"),
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "cloud_coverage": forecast["cloudCover"] * 100,
