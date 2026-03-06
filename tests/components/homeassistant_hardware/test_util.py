@@ -28,7 +28,9 @@ from homeassistant.components.homeassistant_hardware.util import (
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
     get_otbr_addon_firmware_info,
+    get_z2m_addon_firmware_info,
     guess_firmware_info,
+    guess_hardware_owners,
     probe_silabs_firmware_info,
     probe_silabs_firmware_type,
 )
@@ -68,6 +70,10 @@ ZHA_CONFIG_ENTRY2 = MockConfigEntry(
     },
     version=4,
 )
+
+TEST_Z2M_ADDON_SLUG_1 = "486e6e9b_zigbee2mqtt"
+TEST_Z2M_ADDON_SLUG_2 = "45df7312_zigbee2mqtt_edge"
+TEST_Z2M_ADDON_SLUG_3 = "b0107004_zigbee2mqtt"
 
 
 async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
@@ -166,6 +172,101 @@ async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
     assert (
         await guess_firmware_info(hass, "/dev/serial/by-id/device1")
     ) == otbr_firmware_info1
+
+
+async def test_guess_hardware_owners_z2m(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test fetching adapter info for a complex Z2M scenario."""
+    await async_setup_component(hass, DOMAIN, {})
+
+    multipan_addon_manager = AsyncMock(spec_set=AddonManager)
+    multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
+
+    def mock_addon_info(slug: str) -> AddonInfo:
+        if slug == TEST_Z2M_ADDON_SLUG_1:
+            return AddonInfo(
+                available=True,
+                hostname=f"core_{TEST_Z2M_ADDON_SLUG_1}",
+                options={"serial": {"port": "/dev/ttyUSB1"}},
+                state=AddonState.RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
+
+        if slug == TEST_Z2M_ADDON_SLUG_2:
+            return AddonInfo(
+                available=True,
+                hostname=f"core_{TEST_Z2M_ADDON_SLUG_2}",
+                options={"serial": {"port": "/dev/ttyUSB2"}},
+                state=AddonState.NOT_RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
+
+        if slug == "unrelated_addon":
+            return AddonInfo(
+                available=True,
+                hostname="core_unrelated_addon",
+                options={},
+                state=AddonState.RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
+
+        raise AddonError
+
+    supervisor_client.addons.addon_info.side_effect = mock_addon_info
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.is_hassio",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
+            return_value=AsyncMock(spec_set=AddonManager),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_firmware_info",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
+            return_value=multipan_addon_manager,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_supervisor_info",
+            return_value={
+                "addons": [
+                    {"slug": TEST_Z2M_ADDON_SLUG_1, "state": "started"},
+                    {"slug": TEST_Z2M_ADDON_SLUG_2, "state": "stopped"},
+                    {"slug": TEST_Z2M_ADDON_SLUG_3, "state": "stopped"},
+                    {"slug": "unrelated_addon", "state": "started"},
+                ]
+            },
+        ),
+    ):
+        assert (await guess_hardware_owners(hass, "/dev/ttyUSB1")) == [
+            FirmwareInfo(
+                device="/dev/ttyUSB1",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source=f"zigbee2mqtt ({TEST_Z2M_ADDON_SLUG_1})",
+                owners=[OwningAddon(slug=TEST_Z2M_ADDON_SLUG_1)],
+            )
+        ]
+        assert (await guess_hardware_owners(hass, "/dev/ttyUSB2")) == [
+            FirmwareInfo(
+                device="/dev/ttyUSB2",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source=f"zigbee2mqtt ({TEST_Z2M_ADDON_SLUG_2})",
+                owners=[OwningAddon(slug=TEST_Z2M_ADDON_SLUG_2)],
+            )
+        ]
+        assert (await guess_hardware_owners(hass, "/dev/ttyUSB3")) == []
 
 
 async def test_owning_addon(hass: HomeAssistant) -> None:
@@ -444,6 +545,33 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
     )
 
     assert (await get_otbr_addon_firmware_info(hass, otbr_addon_manager)) is None
+
+
+async def test_get_z2m_addon_firmware_info_failure(hass: HomeAssistant) -> None:
+    """Test getting Z2M addon firmware info failure due to bad API call."""
+
+    z2m_addon_manager = AsyncMock(spec_set=AddonManager)
+    z2m_addon_manager.async_get_addon_info.side_effect = AddonError()
+
+    assert (await get_z2m_addon_firmware_info(hass, z2m_addon_manager)) is None
+
+
+async def test_get_z2m_addon_firmware_info_failure_bad_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test getting Z2M addon firmware info failure due to bad addon options."""
+
+    z2m_addon_manager = AsyncMock(spec_set=AddonManager)
+    z2m_addon_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname="core_some_addon_slug",
+        options={},  # `serial` is missing
+        state=AddonState.RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+    assert (await get_z2m_addon_firmware_info(hass, z2m_addon_manager)) is None
 
 
 @pytest.mark.parametrize(
