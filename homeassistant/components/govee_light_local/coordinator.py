@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CONF_DISCOVERY_INTERVAL_DEFAULT,
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
@@ -49,7 +50,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 broadcast_port=CONF_TARGET_PORT_DEFAULT,
                 listening_port=CONF_LISTENING_PORT_DEFAULT,
                 discovery_enabled=True,
-                discovery_interval=1,
+                discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
                 update_enabled=False,
             )
             for source_ip in source_ips

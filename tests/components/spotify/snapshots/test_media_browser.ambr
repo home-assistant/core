@@ -204,7 +204,7 @@
         'media_class': <MediaClass.APP: 'app'>,
         'media_content_id': 'spotify://01J5TX5A0FF6G5V0QJX6HBC94T',
         'media_content_type': 'spotify://library',
-        'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
+        'thumbnail': '/api/brands/integration/spotify/logo.png',
         'title': 'spotify_1',
       }),
       dict({
@@ -215,7 +215,7 @@
         'media_class': <MediaClass.APP: 'app'>,
         'media_content_id': 'spotify://32oesphrnacjcf7vw5bf6odx3',
         'media_content_type': 'spotify://library',
-        'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
+        'thumbnail': '/api/brands/integration/spotify/logo.png',
         'title': 'spotify_2',
       }),
     ]),
@@ -224,7 +224,7 @@
     'media_content_id': 'spotify://',
     'media_content_type': 'spotify',
     'not_shown': 0,
-    'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
+    'thumbnail': '/api/brands/integration/spotify/logo.png',
     'title': 'Spotify',
   })
 # ---

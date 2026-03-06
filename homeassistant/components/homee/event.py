@@ -20,6 +20,7 @@ PARALLEL_UPDATES = 0
 
 REMOTE_PROFILES = [
     NodeProfile.REMOTE,
+    NodeProfile.ONE_BUTTON_REMOTE,
     NodeProfile.TWO_BUTTON_REMOTE,
     NodeProfile.THREE_BUTTON_REMOTE,
     NodeProfile.FOUR_BUTTON_REMOTE,

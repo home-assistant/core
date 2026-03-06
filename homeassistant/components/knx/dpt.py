@@ -8,6 +8,7 @@ from xknx.dpt import DPTBase, DPTComplex, DPTEnum, DPTNumeric
 from xknx.dpt.dpt_16 import DPTString
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfReactiveEnergy
 
 HaDptClass = Literal["numeric", "enum", "complex", "string"]
 
@@ -36,7 +37,7 @@ def get_supported_dpts() -> Mapping[str, DPTInfo]:
             main=dpt_class.dpt_main_number,  # type: ignore[typeddict-item] # checked in xknx unit tests
             sub=dpt_class.dpt_sub_number,
             name=dpt_class.value_type,
-            unit=dpt_class.unit,
+            unit=_sensor_unit_overrides.get(dpt_number_str, dpt_class.unit),
             sensor_device_class=_sensor_device_classes.get(dpt_number_str),
             sensor_state_class=_get_sensor_state_class(ha_dpt_class, dpt_number_str),
         )
@@ -77,13 +78,13 @@ _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
     "12.1200": SensorDeviceClass.VOLUME,
     "12.1201": SensorDeviceClass.VOLUME,
     "13.002": SensorDeviceClass.VOLUME_FLOW_RATE,
-    "13.010": SensorDeviceClass.ENERGY,
-    "13.012": SensorDeviceClass.REACTIVE_ENERGY,
-    "13.013": SensorDeviceClass.ENERGY,
-    "13.015": SensorDeviceClass.REACTIVE_ENERGY,
-    "13.016": SensorDeviceClass.ENERGY,
-    "13.1200": SensorDeviceClass.VOLUME,
-    "13.1201": SensorDeviceClass.VOLUME,
+    "13.010": SensorDeviceClass.ENERGY,  # DPTActiveEnergy
+    "13.012": SensorDeviceClass.REACTIVE_ENERGY,  # DPTReactiveEnergy
+    "13.013": SensorDeviceClass.ENERGY,  # DPTActiveEnergykWh
+    "13.015": SensorDeviceClass.REACTIVE_ENERGY,  # DPTReactiveEnergykVARh
+    "13.016": SensorDeviceClass.ENERGY,  # DPTActiveEnergyMWh
+    "13.1200": SensorDeviceClass.VOLUME,  # DPTDeltaVolumeLiquidLitre
+    "13.1201": SensorDeviceClass.VOLUME,  # DPTDeltaVolumeM3
     "14.010": SensorDeviceClass.AREA,
     "14.019": SensorDeviceClass.CURRENT,
     "14.027": SensorDeviceClass.VOLTAGE,
@@ -91,7 +92,7 @@ _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
     "14.030": SensorDeviceClass.VOLTAGE,
     "14.031": SensorDeviceClass.ENERGY,
     "14.033": SensorDeviceClass.FREQUENCY,
-    "14.037": SensorDeviceClass.ENERGY_STORAGE,
+    "14.037": SensorDeviceClass.ENERGY_STORAGE,  # DPTHeatQuantity
     "14.039": SensorDeviceClass.DISTANCE,
     "14.051": SensorDeviceClass.WEIGHT,
     "14.056": SensorDeviceClass.POWER,
@@ -101,7 +102,7 @@ _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
     "14.068": SensorDeviceClass.TEMPERATURE,
     "14.069": SensorDeviceClass.TEMPERATURE,
     "14.070": SensorDeviceClass.TEMPERATURE_DELTA,
-    "14.076": SensorDeviceClass.VOLUME,
+    "14.076": SensorDeviceClass.VOLUME,  # DPTVolume
     "14.077": SensorDeviceClass.VOLUME_FLOW_RATE,
     "14.080": SensorDeviceClass.APPARENT_POWER,
     "14.1200": SensorDeviceClass.VOLUME_FLOW_RATE,
@@ -121,15 +122,26 @@ _sensor_state_class_overrides: Mapping[str, SensorStateClass | None] = {
     "13.010": SensorStateClass.TOTAL,  # DPTActiveEnergy
     "13.011": SensorStateClass.TOTAL,  # DPTApparantEnergy
     "13.012": SensorStateClass.TOTAL,  # DPTReactiveEnergy
+    "13.013": SensorStateClass.TOTAL,  # DPTActiveEnergykWh
+    "13.015": SensorStateClass.TOTAL,  # DPTReactiveEnergykVARh
+    "13.016": SensorStateClass.TOTAL,  # DPTActiveEnergyMWh
+    "13.1200": SensorStateClass.TOTAL,  # DPTDeltaVolumeLiquidLitre
+    "13.1201": SensorStateClass.TOTAL,  # DPTDeltaVolumeM3
     "14.007": SensorStateClass.MEASUREMENT_ANGLE,  # DPTAngleDeg
-    "14.037": SensorStateClass.TOTAL,  # DPTHeatQuantity
     "14.051": SensorStateClass.TOTAL,  # DPTMass
     "14.055": SensorStateClass.MEASUREMENT_ANGLE,  # DPTPhaseAngleDeg
     "14.031": SensorStateClass.TOTAL_INCREASING,  # DPTEnergy
+    "14.076": SensorStateClass.TOTAL,  # DPTVolume
     "17.001": None,  # DPTSceneNumber
     "29.010": SensorStateClass.TOTAL,  # DPTActiveEnergy8Byte
     "29.011": SensorStateClass.TOTAL,  # DPTApparantEnergy8Byte
     "29.012": SensorStateClass.TOTAL,  # DPTReactiveEnergy8Byte
+}
+
+_sensor_unit_overrides: Mapping[str, str] = {
+    "13.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,  # DPTReactiveEnergy (VARh in KNX)
+    "13.015": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,  # DPTReactiveEnergykVARh (kVARh in KNX)
+    "29.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,  # DPTReactiveEnergy8Byte (VARh in KNX)
 }
 
 

@@ -23,6 +23,10 @@ from homeassistant.components.camera import (
     async_register_webrtc_provider,
     get_camera_from_entity_id,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,
@@ -430,15 +434,15 @@ async def test_camera_generic_update(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
     ufp.api.update = AsyncMock(return_value=None)
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )

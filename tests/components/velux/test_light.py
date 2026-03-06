@@ -1,6 +1,6 @@
 """Test Velux light entities."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -107,14 +107,14 @@ async def test_entity_availability(
     await update_callback_entity(hass, mock_light)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
 
     # Simulate disconnection
     mock_light.pyvlx.get_connected.return_value = False
     await update_callback_entity(hass, mock_light)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
     assert caplog.text.count(f"Entity {entity_id} is unavailable") == 1
 
     # Simulate disconnection, check we don't log again
@@ -122,7 +122,7 @@ async def test_entity_availability(
     await update_callback_entity(hass, mock_light)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
     assert caplog.text.count(f"Entity {entity_id} is unavailable") == 1
 
     # Simulate reconnection
@@ -130,7 +130,7 @@ async def test_entity_availability(
     await update_callback_entity(hass, mock_light)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
     assert caplog.text.count(f"Entity {entity_id} is back online") == 1
 
     # Simulate reconnection, check we don't log again
@@ -138,7 +138,7 @@ async def test_entity_availability(
     await update_callback_entity(hass, mock_light)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
     assert caplog.text.count(f"Entity {entity_id} is back online") == 1
 
 
@@ -160,15 +160,15 @@ async def test_light_brightness_and_is_on(
     state = hass.states.get(entity_id)
     assert state is not None
     # brightness = int(20 * 255 / 100) = int(51)
-    assert state.attributes.get("brightness") == 51
-    assert state.state == "on"
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 51
+    assert state.state == STATE_ON
 
     # Mark as off
     mock_light.intensity.off = True
     await update_callback_entity(hass, mock_light)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_light_turn_on_with_brightness_uses_set_intensity(
@@ -198,12 +198,16 @@ async def test_light_turn_on_with_brightness_uses_set_intensity(
     assert kwargs.get("wait_for_completion") is True
 
 
+@pytest.mark.parametrize(
+    "mock_pyvlx", ["mock_light", "mock_onoff_light"], indirect=True
+)
 async def test_light_turn_on_without_brightness_calls_turn_on(
-    hass: HomeAssistant, mock_light: AsyncMock
+    hass: HomeAssistant, mock_pyvlx: MagicMock
 ) -> None:
-    """Turning on without brightness uses device.turn_on."""
+    """Turning on without brightness uses node.turn_on."""
 
-    entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
+    node = mock_pyvlx.nodes[0]
+    entity_id = f"light.{node.name.lower().replace(' ', '_')}"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -212,16 +216,20 @@ async def test_light_turn_on_without_brightness_calls_turn_on(
         blocking=True,
     )
 
-    mock_light.turn_on.assert_awaited_once_with(wait_for_completion=True)
-    assert mock_light.set_intensity.await_count == 0
+    node.turn_on.assert_awaited_once_with(wait_for_completion=True)
+    assert node.set_intensity.await_count == 0
 
 
+@pytest.mark.parametrize(
+    "mock_pyvlx", ["mock_light", "mock_onoff_light"], indirect=True
+)
 async def test_light_turn_off_calls_turn_off(
-    hass: HomeAssistant, mock_light: AsyncMock
+    hass: HomeAssistant, mock_pyvlx: MagicMock
 ) -> None:
     """Turning off calls device.turn_off with wait_for_completion."""
 
-    entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
+    node = mock_pyvlx.nodes[0]
+    entity_id = f"light.{node.name.lower().replace(' ', '_')}"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -230,4 +238,5 @@ async def test_light_turn_off_calls_turn_off(
         blocking=True,
     )
 
-    mock_light.turn_off.assert_awaited_once_with(wait_for_completion=True)
+    node.turn_off.assert_awaited_once_with(wait_for_completion=True)
+    assert node.set_intensity.await_count == 0

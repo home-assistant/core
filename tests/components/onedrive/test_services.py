@@ -123,7 +123,7 @@ async def test_upload_service_config_entry_not_found(
 ) -> None:
     """Test upload service call with a config entry that does not exist."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -135,6 +135,7 @@ async def test_upload_service_config_entry_not_found(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_config_entry_not_loaded(
@@ -148,7 +149,7 @@ async def test_config_entry_not_loaded(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -160,6 +161,7 @@ async def test_config_entry_not_loaded(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize("upload_file", [MockUploadFile(is_allowed_path=False)])

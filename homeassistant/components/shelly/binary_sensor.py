@@ -8,7 +8,7 @@ from typing import Final, cast
 from aioshelly.const import MODEL_FLOOD_G4, RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_PLATFORM,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -292,7 +292,7 @@ RPC_SENSORS: Final = {
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, BINARY_SENSOR_PLATFORM)
+            not is_view_for_platform(config, key, BINARY_SENSOR_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
@@ -424,7 +424,7 @@ def _async_setup_rpc_entry(
             hass,
             config_entry.entry_id,
             coordinator.mac,
-            BINARY_SENSOR_PLATFORM,
+            BINARY_SENSOR_DOMAIN,
             coordinator.device.status,
         )
 

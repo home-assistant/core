@@ -126,6 +126,14 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
+        key="battery_percent",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
+    ),
+    WeatherFlowSensorEntityDescription(
         key="illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,

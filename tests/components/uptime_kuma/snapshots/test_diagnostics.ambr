@@ -13,6 +13,10 @@
       'monitor_response_time_seconds_30d': 0.0993296843901052,
       'monitor_response_time_seconds_365d': 0.1043971646081903,
       'monitor_status': 1,
+      'monitor_tags': list([
+        'tag1',
+        'tag2:value',
+      ]),
       'monitor_type': 'http',
       'monitor_uptime_ratio_1d': 1,
       'monitor_uptime_ratio_30d': 0.9993369956431142,
@@ -31,6 +35,10 @@
       'monitor_response_time_seconds_30d': 0.3371273224043715,
       'monitor_response_time_seconds_365d': 0.34270098747886596,
       'monitor_status': 1,
+      'monitor_tags': list([
+        'tag1',
+        'tag2:value',
+      ]),
       'monitor_type': 'port',
       'monitor_uptime_ratio_1d': 0.9992223950233281,
       'monitor_uptime_ratio_30d': 0.9990979870869731,
@@ -49,6 +57,8 @@
       'monitor_response_time_seconds_30d': None,
       'monitor_response_time_seconds_365d': None,
       'monitor_status': 0,
+      'monitor_tags': list([
+      ]),
       'monitor_type': 'json-query',
       'monitor_uptime_ratio_1d': None,
       'monitor_uptime_ratio_30d': None,

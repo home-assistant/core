@@ -82,10 +82,7 @@ async def test_send_reaction_exception(
 
     assert bring_config_entry.state is ConfigEntryState.LOADED
     mock_bring_client.notify.side_effect = BringRequestException
-    with pytest.raises(
-        HomeAssistantError,
-        match="Failed to send reaction for Bring! due to a connection error, try again later",
-    ):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ACTIVITY_STREAM_REACTION,
@@ -95,6 +92,7 @@ async def test_send_reaction_exception(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "reaction_request_failed"
 
 
 @pytest.mark.usefixtures("mock_bring_client")
@@ -143,10 +141,7 @@ async def test_send_reaction_unknown_entity(
     entity_registry.async_update_entity(
         "event.einkauf_activities", disabled_by=er.RegistryEntryDisabler.USER
     )
-    with pytest.raises(
-        ServiceValidationError,
-        match="Failed to send reaction for Bring! — Unknown entity event.einkauf_activities",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ACTIVITY_STREAM_REACTION,
@@ -156,6 +151,11 @@ async def test_send_reaction_unknown_entity(
             },
             blocking=True,
         )
+
+    assert err.value.translation_key == "entity_not_found"
+    assert err.value.translation_placeholders == {
+        "entity_id": "event.einkauf_activities"
+    }
 
 
 async def test_send_reaction_not_found(
@@ -174,10 +174,7 @@ async def test_send_reaction_not_found(
 
     assert bring_config_entry.state is ConfigEntryState.LOADED
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Failed to send reaction for Bring! — No recent activity found",
-    ):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ACTIVITY_STREAM_REACTION,
@@ -187,3 +184,4 @@ async def test_send_reaction_not_found(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "activity_not_found"

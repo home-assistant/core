@@ -30,6 +30,7 @@ from homematicip.device import (
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
     SmokeDetector,
+    SoilMoistureSensorInterface,
     SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
@@ -285,6 +286,10 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         EnergySensorsInterface: lambda device: _handle_energy_sensor_interface(
             hap, device
         ),
+        SoilMoistureSensorInterface: lambda device: [
+            HomematicipSoilMoistureSensor(hap, device),
+            HomematicipSoilTemperatureSensor(hap, device),
+        ],
     }
 
 
@@ -622,6 +627,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
     _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_suggested_display_precision = 1
     _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -636,7 +642,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
         if value is None or value == "":
             return None
 
-        return round(value, 3)
+        return value
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
@@ -1029,6 +1035,48 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._device)
+
+
+class HomematicipSoilMoistureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP soil moisture sensor."""
+
+    _attr_device_class = SensorDeviceClass.MOISTURE
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the soil moisture sensor device."""
+        super().__init__(
+            hap, device, post="Soil Moisture", channel=1, is_multi_channel=True
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+        return self.functional_channel.soilMoisture
+
+
+class HomematicipSoilTemperatureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP soil temperature sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the soil temperature sensor device."""
+        super().__init__(
+            hap, device, post="Soil Temperature", channel=1, is_multi_channel=True
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+        return self.functional_channel.soilTemperature
 
 
 def _get_wind_direction(wind_direction_degree: float) -> str:
