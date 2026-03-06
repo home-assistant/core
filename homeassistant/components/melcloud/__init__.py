@@ -86,11 +86,16 @@ async def _async_set_holiday_mode(
     Endpoint confirmed via browser traffic interception:
         POST /Mitsubishi.Wifi.Client/HolidayMode/Update
 
+    IMPORTANT: StartDate/EndDate must be DateTimeComponents objects (Year/Month/Day/
+    Hour/Minute/Second), NOT ISO strings. The API returns HTTP 200 for both formats
+    but silently ignores ISO strings without saving. Confirmed by intercepting actual
+    browser traffic from the MELCloud web app.
+
     Payload (enabled):
         {
             "Enabled": true,
-            "StartDate": "2026-03-06T08:00:00",
-            "EndDate": "2026-03-20T18:00:00",
+            "StartDate": {"Year": 2026, "Month": 3, "Day": 6, "Hour": 9, "Minute": 0, "Second": 0},
+            "EndDate":   {"Year": 2026, "Month": 5, "Day": 6, "Hour": 23, "Minute": 59, "Second": 0},
             "HMTimeZones": [{"TimeZone": 118, "Buildings": [872887],
                              "Floors": [], "Areas": [], "Devices": []}],
             "SkipPage1": true
@@ -104,13 +109,24 @@ async def _async_set_holiday_mode(
     # Fetch building timezone (needed for HMTimeZones payload)
     building_tz = await _async_get_building_timezone(session, token, building_id)
 
-    def _iso(d: date) -> str:
-        return f"{d.isoformat()}T00:00:00"
+    def _date_components(d: date, *, hour: int = 0, minute: int = 0) -> dict:
+        """Convert a date to MelCloud DateTimeComponents format.
+
+        The API requires this object format — ISO strings are silently ignored.
+        """
+        return {
+            "Year": d.year,
+            "Month": d.month,
+            "Day": d.day,
+            "Hour": hour,
+            "Minute": minute,
+            "Second": 0,
+        }
 
     payload = {
         "Enabled": enabled,
-        "StartDate": _iso(start_date) if enabled and start_date else None,
-        "EndDate": _iso(end_date) if enabled and end_date else None,
+        "StartDate": _date_components(start_date) if enabled and start_date else None,
+        "EndDate": _date_components(end_date, hour=23, minute=59) if enabled and end_date else None,
         "HMTimeZones": [
             {
                 "TimeZone": building_tz,
@@ -131,7 +147,15 @@ async def _async_set_holiday_mode(
                 headers={"X-MitsContextKey": token},
             )
             resp.raise_for_status()
-            result = await resp.json()
+            # API returns empty body on success (Enabled=true) or JSON on disable
+            text = await resp.text()
+            result = None
+            if text.strip():
+                try:
+                    import json as _json
+                    result = _json.loads(text)
+                except ValueError:
+                    pass
     except (aiohttp.ClientError, TimeoutError) as err:
         raise ServiceValidationError(
             f"Failed to contact MelCloud API: {err}"
