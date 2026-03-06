@@ -53,7 +53,7 @@ async def test_set_target(
         patch("homeassistant.components.senz.PLATFORMS", [Platform.CLIMATE]),
         patch(
             "homeassistant.components.senz.coordinator.Thermostat.manual",
-            return_value=None
+            return_value=None,
         ) as mock_manual,
     ):
         await setup_integration(hass, mock_config_entry)
@@ -111,11 +111,11 @@ async def test_set_hvac_mode(
         patch("homeassistant.components.senz.PLATFORMS", [Platform.CLIMATE]),
         patch(
             "homeassistant.components.senz.coordinator.Thermostat.manual",
-            return_value=None
+            return_value=None,
         ) as mock_manual,
         patch(
             "homeassistant.components.senz.coordinator.Thermostat.auto",
-            return_value=None
+            return_value=None,
         ) as mock_auto,
     ):
         await setup_integration(hass, mock_config_entry)
