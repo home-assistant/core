@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Integrationen er allerede konfigureret. Kun én instans tilladt.",
+      "cannot_connect": "Kan ikke forbinde til API'et. Prøv igen senere.",
+      "invalid_api_key": "Ugyldig API-nøgle angivet!",
+      "rate_limit_exceeded": "For mange forespørgsler mod API - prøv igen senere",
+      "reauth_successful": "API-nøgle blev opdateret.",
+      "station_already_configured": "Den valgte station ved dette selskab er allerede konfigureret!"
+    },
+    "error": {
+      "cannot_connect": "Kan ikke forbinde til API'et. Prøv igen senere.",
+      "invalid_api_key": "Ugyldig API-nøgle angivet!",
+      "rate_limit_exceeded": "For mange forespørgsler mod API - prøv igen senere"
+    },
+    "step": {
+      "company_selection": {
+        "data": {
+          "company": "Vælg selskab"
+        },
+        "data_description": {
+          "company": "Selskabet du vil hente priser fra"
+        },
+        "description": "Vælg selskab"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "Indtast ny API-nøgle"
+        },
+        "data_description": {
+          "api_key": "Din personlige API-nøgle"
+        },
+        "description": "Din API-nøgle skal opdateres."
+      },
+      "station_selection": {
+        "data": {
+          "station": "Vælg station"
+        },
+        "data_description": {
+          "station": "Stationen du vil oprette sensorer for"
+        },
+        "description": "Vælg station som du vil vise priser for"
+      },
+      "user": {
+        "data": {
+          "api_key": "Indtast API-nøgle"
+        },
+        "data_description": {
+          "api_key": "Din personlige API-nøgle"
+        },
+        "description": "Indtast din API-nøgle til Fuelprices.dk\nHvis du ikke har en API-nøgle, kan du få en gratis på {website_url}"
+      }
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "abort": {
+        "already_configured": "Integrationen er allerede konfigureret. Kun én instans tilladt.",
+        "station_already_configured": "Den valgte station ved dette selskab er allerede konfigureret!"
+      },
+      "entry_type": "Station",
+      "error": {
+        "cannot_connect": "Kan ikke forbinde til API'et. Prøv igen senere.",
+        "invalid_api_key": "Ugyldig API-nøgle angivet!",
+        "rate_limit_exceeded": "For mange forespørgsler mod API - prøv igen senere"
+      },
+      "initiate_flow": {
+        "user": "Tilføj station"
+      },
+      "step": {
+        "company_selection": {
+          "data": {
+            "company": "Vælg selskab"
+          },
+          "data_description": {
+            "company": "Selskabet du vil hente priser fra"
+          },
+          "description": "Vælg selskab"
+        },
+        "station_selection": {
+          "data": {
+            "station": "Vælg station"
+          },
+          "data_description": {
+            "station": "Stationen du vil oprette sensorer for"
+          },
+          "description": "Vælg station som du vil vise priser for"
+        }
+      }
+    }
+  }
+}
