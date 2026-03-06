@@ -102,7 +102,8 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
         )
 
     if entry is None or entry.state is not ConfigEntryState.LOADED:
-        assert mac_address is not None
+        if TYPE_CHECKING:
+            assert mac_address is not None
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
