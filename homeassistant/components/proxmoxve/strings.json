@@ -254,15 +254,27 @@
   },
   "services": {
     "create_snapshot": {
-      "description": "Creates a snapshot on a VM or LXC container. The snapshot is named using the `Home_Assistant_` prefix followed by the Home Assistant version. Use this before upgrading Home Assistant to create a restore point.",
+      "description": "Creates a snapshot on a VM or LXC container. The snapshot name is built from the VM name and the current date. Set `version_entity` to use a version string instead of the date — useful before upgrading.",
       "fields": {
+        "description": {
+          "description": "Description stored with the snapshot. Defaults to 'Snapshot triggered from Home Assistant on YYYY-MM-DD' if left empty.",
+          "name": "Description"
+        },
         "include_ram": {
           "description": "Save the VM's RAM state in the snapshot. Only works for running VMs — stopped VMs and LXC containers do not support RAM snapshots.",
           "name": "Include RAM"
         },
+        "snapshot_name": {
+          "description": "Override the full snapshot name. If left empty, the name is built automatically from the VM name and the current date. Use only letters, numbers, underscores, and hyphens.",
+          "name": "Snapshot name"
+        },
         "version_entity": {
-          "description": "Optional sensor entity that provides the version string to include in the snapshot name (for example the Version integration `Local installation` sensor). If not set, the current Home Assistant version is used.",
+          "description": "Optional sensor entity whose state is used as the version string in the snapshot name (for example the Version integration `Local installation` sensor). If not set, the current date is used.",
           "name": "Version entity"
+        },
+        "vm_name": {
+          "description": "Name of the VM used in the snapshot name. Leave empty to use the device name from Proxmox. Spaces and special characters are automatically replaced with underscores.",
+          "name": "VM name"
         }
       },
       "name": "Create snapshot"

@@ -104,6 +104,7 @@ def mock_proxmox_client():
                     "status": vm["status"],
                 }
                 snapshot_mock = MagicMock()
+                snapshot_mock.get.return_value = []
                 snapshot_mock.post.return_value = (
                     "UPID:pve1:00000001:1234:5678ABCD:qmsnapshot:100:root@pam:"
                 )
@@ -121,6 +122,7 @@ def mock_proxmox_client():
                     "status": ct["status"],
                 }
                 snapshot_mock = MagicMock()
+                snapshot_mock.get.return_value = []
                 snapshot_mock.post.return_value = (
                     "UPID:pve1:00000001:1234:5678ABCD:lxcsnapshot:200:root@pam:"
                 )

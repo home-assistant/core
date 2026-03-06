@@ -20,7 +20,6 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     ENTITY_MATCH_NONE,
-    __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -33,6 +32,7 @@ from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_CREATE_SNAPSHOT
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
@@ -42,6 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 # Proxmox snapshot names only allow alphanumeric characters and hyphens/underscores.
 # Dots are NOT valid despite appearing in Proxmox docs — the API rejects them.
 _SNAPSHOT_NAME_RE = re.compile(r"[^a-zA-Z0-9_-]+")
+
+# Maximum length for the base snapshot name before conflict suffix (_a … _z, 2 chars).
+_SNAPNAME_MAX_BASE_LEN = 37
 
 CREATE_SNAPSHOT_SCHEMA = vol.Schema(
     {
@@ -64,6 +67,9 @@ CREATE_SNAPSHOT_SCHEMA = vol.Schema(
             ENTITY_MATCH_NONE,
             vol.All(cv.ensure_list, [str]),
         ),
+        vol.Optional("vm_name", default=""): vol.All(cv.string, str.strip),
+        vol.Optional("snapshot_name", default=""): vol.All(cv.string, str.strip),
+        vol.Optional("description", default=""): vol.All(cv.string, str.strip),
         vol.Optional("version_entity"): cv.entity_id,
         vol.Optional("include_ram", default=False): cv.boolean,
     }
@@ -82,16 +88,49 @@ def _sanitize_snapshot_version(version: str) -> str:
     return _SNAPSHOT_NAME_RE.sub("_", version.strip())
 
 
+def _build_base_snapname(
+    snapshot_name_input: str,
+    vm_name_input: str,
+    device_name: str,
+    vmid: int,
+    version: str | None,
+    today: str,
+) -> str:
+    """Build the base snapshot name (before conflict-resolution suffix).
+
+    Priority for the name source:
+    1. User-supplied ``snapshot_name`` — used verbatim (sanitized) as the full name.
+    2. User-supplied ``vm_name`` combined with version or date.
+    3. Device registry name combined with version or date.
+    4. VM ID as string combined with version or date.
+
+    The result is truncated to ``_SNAPNAME_MAX_BASE_LEN`` characters to leave
+    room for the ``_a`` … ``_z`` conflict suffix.
+    """
+    if snapshot_name_input:
+        base = _sanitize_snapshot_version(snapshot_name_input)
+    else:
+        vm_part = _sanitize_snapshot_version(vm_name_input or device_name or str(vmid))
+        suffix = _sanitize_snapshot_version(version) if version is not None else today
+        base = f"{vm_part}_{suffix}"
+
+    if len(base) > _SNAPNAME_MAX_BASE_LEN:
+        base = base[:_SNAPNAME_MAX_BASE_LEN].rstrip("_")
+
+    return base
+
+
 def _parse_device_identifier(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
     label: str,
-) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType]:
-    """Return config entry, node name, vmid, and resource type for a Proxmox device.
+) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType, str]:
+    """Return config entry, node name, vmid, resource type, and device name.
 
     Inspects the device's domain-specific identifier to determine whether it is
     a VM (``{entry_id}_vm_{vmid}``) or LXC container
     (``{entry_id}_container_{vmid}``), then resolves the parent node device.
+    The device name (fifth element) is the VM or container name from the registry.
     """
     raw_identifier = next(
         (ident[1] for ident in device.identifiers if ident[0] == DOMAIN),
@@ -156,14 +195,20 @@ def _parse_device_identifier(
             translation_placeholders={"entity_id": label},
         )
 
-    return cast(ProxmoxConfigEntry, entry), node_device.name, vmid, resource_type
+    return (
+        cast(ProxmoxConfigEntry, entry),
+        node_device.name,
+        vmid,
+        resource_type,
+        device.name or "",
+    )
 
 
 def _resolve_from_device(
     hass: HomeAssistant,
     device_id: str,
-) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType]:
-    """Resolve config entry, node name, vmid, and resource type from a device ID."""
+) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType, str]:
+    """Resolve config entry, node name, vmid, resource type, and device name from a device ID."""
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(device_id)
     if device is None:
@@ -178,8 +223,8 @@ def _resolve_from_device(
 def _resolve_from_entity(
     hass: HomeAssistant,
     entity_id: str,
-) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType]:
-    """Resolve config entry, node name, vmid, and resource type from an entity ID."""
+) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType, str]:
+    """Resolve config entry, node name, vmid, resource type, and device name from an entity ID."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(entity_id)
     if entity_entry is None or entity_entry.device_id is None:
@@ -205,14 +250,30 @@ def _create_snapshot_blocking(
     node: str,
     vmid: int,
     resource_type: _ResourceType,
-    snapname: str,
+    base_snapname: str,
     description: str,
     include_ram: bool,
-) -> None:
-    """Call the Proxmox snapshot API synchronously.
+) -> str:
+    """Call the Proxmox snapshot API synchronously with conflict resolution.
 
-    VMs support saving RAM state (vmstate); LXC containers do not.
+    Lists existing snapshots and appends ``_a``, ``_b``, … if the base name is
+    already taken.  VMs support saving RAM state (vmstate); LXC containers do
+    not.  Returns the final snapshot name that was created.
     """
+    if resource_type is _ResourceType.VM:
+        existing = coordinator.proxmox.nodes(node).qemu(vmid).snapshot.get()
+    else:
+        existing = coordinator.proxmox.nodes(node).lxc(vmid).snapshot.get()
+
+    existing_names = {s["name"] for s in existing if s.get("name") != "current"}
+
+    # Try the base name first, then _a, _b, … until a free slot is found.
+    snapname = base_snapname
+    for letter in "abcdefghijklmnopqrstuvwxyz":
+        if snapname not in existing_names:
+            break
+        snapname = f"{base_snapname}_{letter}"
+
     if resource_type is _ResourceType.VM:
         _LOGGER.debug(
             "Creating VM snapshot %s on %s/%s (include_ram=%s)",
@@ -233,6 +294,8 @@ def _create_snapshot_blocking(
             snapname=snapname,
             description=description,
         )
+
+    return snapname
 
 
 def _build_target(data: dict) -> dict:
@@ -261,20 +324,23 @@ async def _call_snapshot(
     node_name: str,
     vmid: int,
     resource_type: _ResourceType,
-    snapname: str,
+    base_snapname: str,
     description: str,
     include_ram: bool,
-) -> None:
-    """Run the snapshot API call and translate Proxmox exceptions to HA errors."""
+) -> str:
+    """Run the snapshot API call and translate Proxmox exceptions to HA errors.
+
+    Returns the final snapshot name used after conflict resolution.
+    """
     coordinator: ProxmoxCoordinator = entry.runtime_data
     try:
-        await hass.async_add_executor_job(
+        return await hass.async_add_executor_job(
             _create_snapshot_blocking,
             coordinator,
             node_name,
             vmid,
             resource_type,
-            snapname,
+            base_snapname,
             description,
             include_ram,
         )
@@ -308,16 +374,23 @@ async def _call_snapshot(
 
 
 async def async_create_snapshot(call: ServiceCall) -> None:
-    """Create a snapshot named ``Home_Assistant_{version}`` on a VM or container.
+    """Create a snapshot on a VM or LXC container.
 
-    The snapshot name is derived from the running Home Assistant version by
-    default, or from an optional sensor entity when ``version_entity`` is set.
-    Snapshot creation is supported on both QEMU VMs and LXC containers.
+    The snapshot name defaults to ``{vm_name}_{YYYY_MM_DD}``, derived from the
+    device registry name and the current date.  When ``version_entity`` is set,
+    the date is replaced by the version string from that entity.  If the
+    generated name conflicts with an existing snapshot, a letter suffix
+    (``_a``, ``_b``, …) is appended automatically.
     """
     hass = call.hass
     target = _build_target(call.data)
     version_entity_id: str | None = call.data.get("version_entity")
+    vm_name_input: str = call.data["vm_name"]
+    snapshot_name_input: str = call.data["snapshot_name"]
+    description_input: str = call.data["description"]
+    include_ram: bool = call.data["include_ram"]
 
+    version: str | None = None
     if version_entity_id:
         state = hass.states.get(version_entity_id)
         if state is None or state.state in ("unknown", "unavailable", ""):
@@ -327,12 +400,13 @@ async def async_create_snapshot(call: ServiceCall) -> None:
                 translation_placeholders={"entity_id": version_entity_id},
             )
         version = state.state.strip()
-    else:
-        version = HA_VERSION
 
-    snapname = f"Home_Assistant_{_sanitize_snapshot_version(version)}"
-    description = version
-    include_ram: bool = call.data["include_ram"]
+    now = dt_util.now()
+    today = now.strftime("%Y_%m_%d")
+    description = (
+        description_input
+        or f"Snapshot triggered from Home Assistant on {now.strftime('%Y-%m-%d')}"
+    )
 
     # Prefer device targeting when a single device_id is provided, as it
     # unambiguously identifies the VM or container.
@@ -347,16 +421,24 @@ async def async_create_snapshot(call: ServiceCall) -> None:
                 translation_key="invalid_target_single",
             )
         if len(device_ids) == 1:
-            entry, node_name, vmid, resource_type = _resolve_from_device(
+            entry, node_name, vmid, resource_type, device_name = _resolve_from_device(
                 hass, device_ids[0]
             )
-            await _call_snapshot(
+            base_snapname = _build_base_snapname(
+                snapshot_name_input,
+                vm_name_input,
+                device_name,
+                vmid,
+                version,
+                today,
+            )
+            snapname = await _call_snapshot(
                 hass,
                 entry,
                 node_name,
                 vmid,
                 resource_type,
-                snapname,
+                base_snapname,
                 description,
                 include_ram,
             )
@@ -381,9 +463,26 @@ async def async_create_snapshot(call: ServiceCall) -> None:
         )
 
     entity_id = next(iter(all_entities))
-    entry, node_name, vmid, resource_type = _resolve_from_entity(hass, entity_id)
-    await _call_snapshot(
-        hass, entry, node_name, vmid, resource_type, snapname, description, include_ram
+    entry, node_name, vmid, resource_type, device_name = _resolve_from_entity(
+        hass, entity_id
+    )
+    base_snapname = _build_base_snapname(
+        snapshot_name_input,
+        vm_name_input,
+        device_name,
+        vmid,
+        version,
+        today,
+    )
+    snapname = await _call_snapshot(
+        hass,
+        entry,
+        node_name,
+        vmid,
+        resource_type,
+        base_snapname,
+        description,
+        include_ram,
     )
     _LOGGER.debug(
         "Created snapshot %s on %s %s/%s",

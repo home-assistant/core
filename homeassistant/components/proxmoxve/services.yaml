@@ -7,6 +7,15 @@ create_snapshot:
         - button
         - sensor
   fields:
+    vm_name:
+      selector:
+        text:
+    snapshot_name:
+      selector:
+        text:
+    description:
+      selector:
+        text:
     version_entity:
       selector:
         entity:
