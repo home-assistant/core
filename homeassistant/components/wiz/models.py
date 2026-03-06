@@ -6,13 +6,13 @@ from dataclasses import dataclass
 
 from pywizlight import wizlight
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from .coordinator import WizCoordinator
 
 
 @dataclass
 class WizData:
     """Data for the wiz integration."""
 
-    coordinator: DataUpdateCoordinator[float | None]
+    coordinator: WizCoordinator
     bulb: wizlight
     scenes: list

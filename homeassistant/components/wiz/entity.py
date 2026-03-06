@@ -11,15 +11,13 @@ from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .coordinator import WizCoordinator
 from .models import WizData
 
 
-class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
+class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
     """Representation of WiZ entity."""
 
     _attr_has_entity_name = True
