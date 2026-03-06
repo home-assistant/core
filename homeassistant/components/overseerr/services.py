@@ -101,7 +101,7 @@ async def _get_media(
 
 
 async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
-    """Get requests made to Overseerr."""
+    """Get requests made to Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -144,7 +144,7 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
 async def _search_media(
     client: OverseerrClient, query: str, limit: int | None = None
 ) -> list[Any]:
-    """Search for media in Overseerr."""
+    """Search for media in Seerr."""
     try:
         LOGGER.debug("Searching for '%s'", query)
         search_results = await client.search(query)
@@ -163,8 +163,10 @@ async def _search_media(
 
 
 async def _async_search_media(call: ServiceCall) -> ServiceResponse:
-    """Search for media in Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    """Search for media in Seerr."""
+    entry: OverseerrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     client = entry.runtime_data.client
     query = call.data[ATTR_QUERY]
     limit = call.data.get(ATTR_LIMIT)
@@ -184,13 +186,13 @@ async def _request_media(
     tmdb_id: int,
     seasons: list[int] | Literal["all"],
 ) -> Any:
-    """Request media in Overseerr."""
+    """Request media in Seerr."""
     try:
         LOGGER.debug(
             "Requesting %s with TMDB ID %s (seasons: %s)",
             media_type,
             tmdb_id,
-            seasons if seasons else "none",
+            seasons or "none",
         )
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, tmdb_id, seasons)
@@ -211,8 +213,10 @@ async def _request_media(
 
 
 async def _async_request_media(call: ServiceCall) -> ServiceResponse:
-    """Request media in Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    """Request media in Seerr."""
+    entry: OverseerrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     client = entry.runtime_data.client
     media_type = MediaType(call.data[ATTR_MEDIA_TYPE])
     tmdb_id = call.data[ATTR_TMDB_ID]
@@ -224,8 +228,10 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
 
 
 async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
-    """Search for media and request the first result in Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    """Search for media and request the first result in Seerr."""
+    entry: OverseerrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     client = entry.runtime_data.client
     query = call.data[ATTR_QUERY]
     requested_seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
@@ -270,14 +276,14 @@ def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]
         if isinstance(parsed, int):
             return [parsed]
         return list(parsed)
-    except (ValueError, SyntaxError):
+    except ValueError, SyntaxError:
         LOGGER.error("Unable to cast input to a list '%s'", seasons_input)
         return "all"
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up the services for the Overseerr integration."""
+    """Set up the services for the Seerr integration."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_REQUESTS,
