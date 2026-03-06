@@ -58,18 +58,14 @@ rules:
     comment: There is no physical device which can be supported. We can add a link to the supported countries.
   icon-translations: done
   docs-known-limitations: done
-  stale-devices:
-    status: exempt
-    comment: There are no device which can get stale.
+  stale-devices: done
   docs-supported-functions: done
   repair-issues:
     status: exempt
     comment: There is nothing to repair right now.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   entity-category: done
-  dynamic-devices:
-    status: exempt
-    comment: There are no device which can be added.
+  dynamic-devices: done
   docs-troubleshooting: done
   diagnostics: todo
   docs-use-cases: todo
