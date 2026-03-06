@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from spotifyaio import (
     ContextType,
+    Device,
     PlaybackState,
     Playlist,
     SpotifyClient,
@@ -164,3 +165,31 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             playlist=self._playlist,
             dj_playlist=dj_playlist,
         )
+
+
+class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
+    """Class to manage fetching Spotify data."""
+
+    config_entry: SpotifyConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SpotifyConfigEntry,
+        client: SpotifyClient,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{config_entry.title} Devices",
+            update_interval=timedelta(minutes=5),
+        )
+        self._client = client
+
+    async def _async_update_data(self) -> list[Device]:
+        try:
+            return await self._client.get_devices()
+        except SpotifyConnectionError as err:
+            raise UpdateFailed from err
