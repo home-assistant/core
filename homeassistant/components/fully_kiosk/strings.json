@@ -88,6 +88,9 @@
       },
       "to_foreground": {
         "name": "Bring to foreground"
+      },
+      "trigger_motion": {
+        "name": "Trigger motion activity"
       }
     },
     "image": {

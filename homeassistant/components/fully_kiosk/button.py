@@ -68,6 +68,12 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.clearCache(),
     ),
+    FullyButtonEntityDescription(
+        key="triggerMotion",
+        translation_key="trigger_motion",
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda fully: fully.triggerMotion(),
+    ),
 )
 
 
