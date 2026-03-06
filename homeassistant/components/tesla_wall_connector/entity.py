@@ -36,7 +36,7 @@ class WallConnectorEntity(CoordinatorEntity[WallConnectorCoordinator]):
         self._attr_unique_id = _get_unique_id(
             wall_connector_data.serial_number, self.entity_description.key
         )
-        super().__init__(wall_connector_data.coordinator)
+        super().__init__(wall_connector_data.update_coordinator)
 
     @property
     def device_info(self) -> DeviceInfo:
