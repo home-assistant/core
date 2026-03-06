@@ -258,9 +258,9 @@ class MatterFan(MatterEntity, FanEntity):
         # if kMultiSpeed is present in the current feature map.
         self._attr_speed_count = None
 
-        # FIX: PercentSetting/PercentCurrent are MANDATORY on all FanControl clusters
-        # per the Matter spec. Enable SET_SPEED unconditionally so the percentage
-        # slider is always shown regardless of whether kMultiSpeed is set.
+        # NOTE: PercentSetting/PercentCurrent are mandatory on all FanControl clusters
+        # per the Matter specification, so enable SET_SPEED unconditionally so the
+        # percentage slider is always shown regardless of whether kMultiSpeed is set.
         self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
         if feature_map & FanControlFeature.kMultiSpeed:
