@@ -1,5 +1,6 @@
 """Test sensor platform for Swing2Sleep Smarla integration."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -75,7 +76,7 @@ async def test_sensor_state_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
-    entity_info: dict[str, str],
+    entity_info: dict[str, Any],
 ) -> None:
     """Test Smarla Sensor callback."""
     assert await setup_integration(hass, mock_config_entry)
