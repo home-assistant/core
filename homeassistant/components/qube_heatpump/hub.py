@@ -114,4 +114,9 @@ class QubeHub:
             await self.async_connect()
         if not self.is_connected:
             return None
-        return await self.client.get_all_data()
+        try:
+            return await self.client.get_all_data()
+        except (OSError, TimeoutError):
+            # Connection broke mid-read; close so the next call reconnects
+            await self.async_close()
+            raise

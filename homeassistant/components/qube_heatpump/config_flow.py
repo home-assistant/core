@@ -155,9 +155,9 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             new_host = user_input[CONF_HOST]
-            new_port = user_input[CONF_PORT]
             new_name = user_input[CONF_NAME]
-            new_unique_id = f"{DOMAIN}-{new_host}-{new_port}"
+            port = DEFAULT_PORT
+            new_unique_id = f"{DOMAIN}-{new_host}-{port}"
 
             # Check for duplicate unique_id with other entries
             for entry in self._async_current_entries():
@@ -175,7 +175,7 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Validate connectivity
                 try:
                     _, writer = await asyncio.wait_for(
-                        asyncio.open_connection(new_host, new_port), timeout=5
+                        asyncio.open_connection(new_host, port), timeout=5
                     )
                     writer.close()
                     with contextlib.suppress(Exception):
@@ -188,7 +188,7 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     reconfigure_entry,
                     data={
                         CONF_HOST: new_host,
-                        CONF_PORT: new_port,
+                        CONF_PORT: port,
                         CONF_NAME: new_name,
                     },
                     unique_id=new_unique_id,
@@ -200,7 +200,6 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=data.get(CONF_HOST)): str,
-                vol.Required(CONF_PORT, default=data.get(CONF_PORT, DEFAULT_PORT)): int,
                 vol.Required(
                     CONF_NAME, default=data.get(CONF_NAME, reconfigure_entry.title)
                 ): str,

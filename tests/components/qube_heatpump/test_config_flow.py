@@ -221,7 +221,7 @@ async def test_reconfigure_confirm(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "5.6.7.8", CONF_PORT: 502, CONF_NAME: "qube 1"},
+            {CONF_HOST: "5.6.7.8", CONF_NAME: "qube 1"},
         )
         await hass.async_block_till_done()
 
@@ -258,7 +258,7 @@ async def test_reconfigure_duplicate_unique_id(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "5.6.7.8", CONF_PORT: 502, CONF_NAME: "qube 1"},
+            {CONF_HOST: "5.6.7.8", CONF_NAME: "qube 1"},
         )
 
     assert result2["type"] is FlowResultType.ABORT
@@ -273,8 +273,8 @@ async def test_reconfigure_duplicate_ip(
 
     entry2 = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "otherhost.local", CONF_PORT: 503, CONF_NAME: "qube 2"},
-        unique_id=f"{DOMAIN}-otherhost.local-503",
+        data={CONF_HOST: "otherhost.local", CONF_PORT: 502, CONF_NAME: "qube 2"},
+        unique_id=f"{DOMAIN}-otherhost.local-502",
     )
     entry2.add_to_hass(hass)
 
@@ -292,7 +292,7 @@ async def test_reconfigure_duplicate_ip(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "newhost.local", CONF_PORT: 503, CONF_NAME: "qube 1"},
+            {CONF_HOST: "newhost.local", CONF_NAME: "qube 1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -325,7 +325,7 @@ async def test_reconfigure_cannot_connect(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "5.6.7.8", CONF_PORT: 502, CONF_NAME: "qube 1"},
+            {CONF_HOST: "5.6.7.8", CONF_NAME: "qube 1"},
         )
 
     assert result2["type"] is FlowResultType.FORM

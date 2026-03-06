@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.qube_heatpump.hub import QubeHub
 from homeassistant.core import HomeAssistant
 
@@ -237,3 +239,26 @@ async def test_hub_resolve_ip(hass: HomeAssistant) -> None:
         await hub.async_resolve_ip()
 
         # This is a no-op in current implementation, just verify no exception
+
+
+async def test_hub_get_all_data_resets_connection_on_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test hub closes connection when get_all_data raises."""
+    with patch(
+        "homeassistant.components.qube_heatpump.hub.QubeClient", autospec=True
+    ) as mock_client_cls:
+        client = mock_client_cls.return_value
+        client.host = "1.2.3.4"
+        client.port = 502
+        client.unit = 1
+        client.is_connected = True
+        client.close = AsyncMock(return_value=None)
+        client.get_all_data = AsyncMock(side_effect=OSError("Connection lost"))
+
+        hub = QubeHub(hass, "1.2.3.4", 502, "test_entry_id", 1, "qube1")
+
+        with pytest.raises(OSError, match="Connection lost"):
+            await hub.async_get_all_data()
+
+        client.close.assert_called_once()
