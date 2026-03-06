@@ -139,6 +139,16 @@
         }
       },
       "name": "Lawn mower started mowing"
+    },
+    "started_returning": {
+      "description": "Triggers after one or more lawn mowers start returning to dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower started returning to dock"
     }
   }
 }
