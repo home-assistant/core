@@ -22,6 +22,11 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.components.http import (
+    CONF_CARES_INIT_FLAGS,
+    CONF_NAMESERVERS,
+    DOMAIN as HTTP_DOMAIN,
+)
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
@@ -509,4 +514,14 @@ def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
 
 @callback
 def _async_make_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    return HassAsyncDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
+    http_conf = hass.data.get(HTTP_DOMAIN, {})
+    kwargs: dict[str, Any] = {
+        "async_zeroconf": zeroconf.async_get_async_zeroconf(hass),
+    }
+    if (nameservers := http_conf.get(CONF_NAMESERVERS)) is not None:
+        kwargs["nameservers"] = [str(nameserver) for nameserver in nameservers]
+
+    if (cares_init_flags := http_conf.get(CONF_CARES_INIT_FLAGS)) is not None:
+        kwargs["flags"] = cares_init_flags
+
+    return HassAsyncDNSResolver(**kwargs)
