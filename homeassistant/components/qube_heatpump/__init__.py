@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +13,9 @@ from homeassistant.loader import async_get_loaded_integration
 from .const import CONF_UNIT_ID, DEFAULT_PORT, DOMAIN, PLATFORMS
 from .coordinator import QubeCoordinator
 from .hub import QubeHub
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 @dataclass
@@ -27,11 +29,6 @@ class QubeData:
 
 
 type QubeConfigEntry = ConfigEntry[QubeData]
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:

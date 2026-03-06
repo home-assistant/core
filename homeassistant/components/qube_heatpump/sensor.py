@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 from python_qube_heatpump.models import QubeState
@@ -31,8 +30,6 @@ if TYPE_CHECKING:
     from . import QubeConfigEntry
     from .coordinator import QubeCoordinator
     from .hub import QubeHub
-
-_LOGGER = logging.getLogger(__name__)
 
 # Status code to state mapping
 STATUS_MAP: dict[int, str] = {

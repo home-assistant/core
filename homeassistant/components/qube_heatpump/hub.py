@@ -90,9 +90,10 @@ class QubeHub:
             self._err_connect += 1
             return
 
-        # Reset backoff after success
+        # Reset backoff and error counter after success
         self._connect_backoff_s = 0.0
         self._next_connect_ok_at = 0.0
+        self._err_connect = 0
 
     async def async_close(self) -> None:
         """Close the connection."""
