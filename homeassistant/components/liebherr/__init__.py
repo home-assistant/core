@@ -86,19 +86,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
 
         # Remove stale devices no longer returned by the API
         current_device_ids = {device.device_id for device in devices}
-        stale_device_ids = set(data.coordinators) - current_device_ids
-        if stale_device_ids:
-            device_registry = dr.async_get(hass)
-            for device_id in stale_device_ids:
-                coordinator = data.coordinators.pop(device_id)
-                await coordinator.async_shutdown()
-                if device_entry := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
-                ):
-                    device_registry.async_update_device(
-                        device_id=device_entry.id,
-                        remove_config_entry_id=entry.entry_id,
-                    )
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if device_ids - current_device_ids:
+                # Shut down coordinator if one exists
+                for device_id in device_ids:
+                    if coordinator := data.coordinators.pop(device_id, None):
+                        await coordinator.async_shutdown()
+                device_registry.async_update_device(
+                    device_id=device_entry.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []

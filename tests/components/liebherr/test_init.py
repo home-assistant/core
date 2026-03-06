@@ -370,3 +370,43 @@ async def test_stale_device_removal(
     # Original device should still work
     assert hass.states.get("sensor.test_fridge_top_zone") is not None
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_stale_device_removal_without_coordinator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_liebherr_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test stale devices removed before startup are cleaned up on scan."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device registry entry for a device that was previously known
+    # but is no longer returned by the API (removed while HA was offline).
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "old_device_id")},
+        name="Old Appliance",
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "old_device_id")})
+
+    # Start integration — only MOCK_DEVICE is returned, so no coordinator
+    # is created for "old_device_id".
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The orphaned device still exists in the registry after setup
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "old_device_id")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+
+    # Trigger the periodic device scan
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The orphaned device should now be removed from the registry
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "old_device_id")})
+    # The active device should still be present
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    assert mock_config_entry.state is ConfigEntryState.LOADED
