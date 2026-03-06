@@ -202,130 +202,57 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-        with:
-          cosign-release: "v2.5.3"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
       - name: Build variables
         id: vars
         shell: bash
         env:
           ARCH: ${{ matrix.arch }}
+          MATRIX_ARCH: ${{ matrix.arch }}
         run: |
-          echo "base_image=ghcr.io/home-assistant/${ARCH}-homeassistant-base:${BASE_IMAGE_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "cache_image=ghcr.io/home-assistant/${ARCH}-homeassistant:latest" >> "$GITHUB_OUTPUT"
-          echo "created=$(date --rfc-3339=seconds --utc)" >> "$GITHUB_OUTPUT"
-
-      - name: Verify base image signature
-        env:
-          BASE_IMAGE: ${{ steps.vars.outputs.base_image }}
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp "https://github.com/home-assistant/docker/.*" \
-            "${BASE_IMAGE}"
-
-      - name: Verify cache image signature
-        id: cache
-        continue-on-error: true
-        env:
-          CACHE_IMAGE: ${{ steps.vars.outputs.cache_image }}
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp "https://github.com/home-assistant/core/.*" \
-            "${CACHE_IMAGE}"
+          echo "base_image=ghcr.io/home-assistant/${MATRIX_ARCH}-homeassistant-base:${BASE_IMAGE_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Build base image
-        id: build
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: ./.github/actions/builder/generic
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: ${{ steps.vars.outputs.platform }}
-          push: true
-          cache-from: ${{ steps.cache.outcome == 'success' && steps.vars.outputs.cache_image || '' }}
-          build-args: |
-            BUILD_FROM=${{ steps.vars.outputs.base_image }}
+          base-image: ${{ steps.vars.outputs.base_image }}
           tags: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
-          outputs: type=image,push=true,compression=zstd,compression-level=9,force-compression=true,oci-mediatypes=true
-          labels: |
-            io.hass.arch=${{ matrix.arch }}
-            io.hass.version=${{ needs.init.outputs.version }}
-            org.opencontainers.image.created=${{ steps.vars.outputs.created }}
-            org.opencontainers.image.version=${{ needs.init.outputs.version }}
-
-      - name: Sign image
-        env:
-          ARCH: ${{ matrix.arch }}
-          VERSION: ${{ needs.init.outputs.version }}
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "ghcr.io/home-assistant/${ARCH}-homeassistant:${VERSION}@${DIGEST}"
+          arch: ${{ matrix.arch }}
+          version: ${{ needs.init.outputs.version }}
+          dockerfile: ./Dockerfile
+          cosign-base-identity: "https://github.com/home-assistant/docker/.*"
 
   build_machine:
-    name: Build ${{ matrix.machine }} machine core image
+    name: Build ${{ matrix.machine.name }} machine core image
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.machine.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     permissions:
       contents: read # To check out the repository
       packages: write # To push to GHCR
       id-token: write # For cosign signing
     strategy:
+      fail-fast: false
       matrix:
         machine:
-          - generic-x86-64
-          - intel-nuc
-          - khadas-vim3
-          - odroid-c2
-          - odroid-c4
-          - odroid-m1
-          - odroid-n2
-          - qemuarm-64
-          - qemux86-64
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - raspberrypi5-64
-          - yellow
-          - green
-        include:
-          # Default: aarch64 on native ARM runner
-          - arch: aarch64
-            runs-on: ubuntu-24.04-arm
-          # Overrides for amd64 machines
-          - machine: generic-x86-64
-            arch: amd64
-            runs-on: ubuntu-24.04
-          - machine: qemux86-64
-            arch: amd64
-            runs-on: ubuntu-24.04
-          # TODO: remove, intel-nuc is a legacy name for x86-64, renamed in 2021
-          - machine: intel-nuc
-            arch: amd64
-            runs-on: ubuntu-24.04
+          - { name: generic-x86-64, arch: amd64 }
+          - { name: intel-nuc, arch: amd64 }
+          - { name: qemux86-64, arch: amd64 }
+          - { name: khadas-vim3, arch: aarch64 }
+          - { name: odroid-c2, arch: aarch64 }
+          - { name: odroid-c4, arch: aarch64 }
+          - { name: odroid-m1, arch: aarch64 }
+          - { name: odroid-n2, arch: aarch64 }
+          - { name: qemuarm-64, arch: aarch64 }
+          - { name: raspberrypi3-64, arch: aarch64 }
+          - { name: raspberrypi4-64, arch: aarch64 }
+          - { name: raspberrypi5-64, arch: aarch64 }
+          - { name: yellow, arch: aarch64 }
+          - { name: green, arch: aarch64 }
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-
-      - name: Set build additional args
-        env:
-          VERSION: ${{ needs.init.outputs.version }}
-        run: |
-          # Create general tags
-          if [[ "${VERSION}" =~ d ]]; then
-            echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
-          elif [[ "${VERSION}" =~ b ]]; then
-            echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
-          else
-            echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
-          fi
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -334,15 +261,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build base image
-        uses: home-assistant/builder@6cb4fd3d1338b6e22d0958a4bcb53e0965ea63b4 # 2026.02.1
+      - name: Build machine image
+        uses: ./.github/actions/builder/machine
         with:
-          image: ${{ matrix.arch }}
-          args: |
-            $BUILD_ARGS \
-            --target /data/machine \
-            --cosign \
-            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
+          machine: ${{ matrix.machine.name }}
+          version: ${{ needs.init.outputs.version }}
+          arch: ${{ matrix.machine.arch }}
 
   publish_ha:
     name: Publish version files
