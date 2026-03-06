@@ -11,6 +11,7 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
@@ -123,11 +124,11 @@ async def test_platform_setup_and_discovery(
             SERVICE_TURN_ON,
             {
                 ATTR_BRIGHTNESS: 255,
-                ATTR_HS_COLOR: (10.1, 20.2),
+                ATTR_COLOR_TEMP_KELVIN: 5000,
             },
             [
                 {"code": "switch_led", "value": True},
-                {"code": "temp_value", "value": 162},
+                {"code": "temp_value", "value": 220},
                 {"code": "bright_value", "value": 255},
             ],
         ),
