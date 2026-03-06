@@ -89,7 +89,7 @@ class GhostConfigFlow(ConfigFlow, domain=DOMAIN):
 
         site_title = site["title"]
 
-        await self.async_set_unique_id(site["uuid"])
+        await self.async_set_unique_id(site["site_uuid"])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(

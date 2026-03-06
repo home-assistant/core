@@ -413,7 +413,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.1.0
+aioswitcher==6.1.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -437,7 +437,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.1.2
+aiovodafone==3.1.3
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -556,7 +556,7 @@ async-upnp-client==0.46.2
 asyncarve==0.1.1
 
 # homeassistant.components.keyboard_remote
-asyncinotify==4.2.0
+asyncinotify==4.4.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -939,7 +939,7 @@ eternalegypt==0.0.18
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.keyboard_remote
-# evdev==1.6.1
+# evdev==1.9.3
 
 # homeassistant.components.evohome
 evohome-async==1.1.3
@@ -1676,7 +1676,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.4
+onedrive-personal-sdk==0.1.5
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -2530,7 +2530,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==5.1.0
+python-bsblan==5.1.2
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2969,7 +2969,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==1.0.0
+spotifyaio==2.0.2
 
 # homeassistant.components.sql
 sqlparse==0.5.5
@@ -3038,7 +3038,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.1.3
+teltasync==0.2.0
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
