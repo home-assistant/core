@@ -339,7 +339,6 @@ DISCOVERY_SCHEMAS = [
             clusters.FanControl.Attributes.PercentSetting,
         ),
         optional_attributes=(
-            clusters.FanControl.Attributes.PercentSetting,
             clusters.FanControl.Attributes.SpeedMax,
             clusters.FanControl.Attributes.SpeedSetting,
             clusters.FanControl.Attributes.RockSetting,
