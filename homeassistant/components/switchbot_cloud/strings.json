@@ -87,7 +87,7 @@
     },
     "switch": {
       "air_purifier_child_lock": {
-        "name": "Child Lock"
+        "name": "Child lock"
       }
     }
   }
