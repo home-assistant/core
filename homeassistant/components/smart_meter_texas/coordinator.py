@@ -3,7 +3,7 @@
 import logging
 import ssl
 
-from smart_meter_texas import Account, Client
+from smart_meter_texas import Account, Client, Meter
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -35,14 +35,14 @@ class SmartMeterTexasData:
         self.account = account
         websession = aiohttp_client.async_get_clientsession(hass)
         self.client = Client(websession, account, ssl_context=ssl_context)
-        self.meters: list = []
+        self.meters: list[Meter] = []
 
     async def setup(self) -> None:
         """Fetch all of the user's meters."""
         self.meters = await self.account.fetch_meters(self.client)
         _LOGGER.debug("Discovered %s meter(s)", len(self.meters))
 
-    async def read_meters(self) -> list:
+    async def read_meters(self) -> list[Meter]:
         """Read each meter."""
         for meter in self.meters:
             try:
@@ -74,10 +74,10 @@ class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
                 hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=True
             ),
         )
-        self.smart_meter_texas_data = smart_meter_texas_data
+        self._smart_meter_texas_data = smart_meter_texas_data
 
     async def _async_update_data(self) -> SmartMeterTexasData:
         """Fetch latest data."""
         _LOGGER.debug("Fetching latest data")
-        await self.smart_meter_texas_data.read_meters()
-        return self.smart_meter_texas_data
+        await self._smart_meter_texas_data.read_meters()
+        return self._smart_meter_texas_data
