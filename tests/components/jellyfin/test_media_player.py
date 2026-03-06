@@ -149,7 +149,7 @@ async def test_services(
     assert state
 
     await hass.services.async_call(
-        DOMAIN,
+        MP_DOMAIN,
         "play_media",
         {
             ATTR_ENTITY_ID: state.entity_id,
@@ -274,7 +274,7 @@ async def test_services_enqueue(
     for enqueue_val, expected_command in cases:
         mock_api.remote_play_media.reset_mock()
         await hass.services.async_call(
-            DOMAIN,
+            MP_DOMAIN,
             "play_media",
             {
                 ATTR_ENTITY_ID: state.entity_id,
@@ -346,7 +346,7 @@ async def test_browse_media(
         "media_class": MediaClass.DIRECTORY.value,
         "media_content_type": "collection",
         "media_content_id": "COLLECTION-FOLDER-UUID",
-        "can_play": True,
+        "can_play": False,
         "can_expand": True,
         "can_search": False,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
@@ -463,7 +463,7 @@ async def test_search_media(
             "media_content_type": "string",
             "media_content_id": "FOLDER-UUID",
             "children_media_class": None,
-            "can_play": True,
+            "can_play": False,
             "can_expand": True,
             "can_search": False,
             "not_shown": 0,
