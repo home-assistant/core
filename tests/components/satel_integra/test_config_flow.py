@@ -369,6 +369,21 @@ async def test_reconfigure_connection_failed(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_satel.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 1234,
+    }
+
 
 async def test_same_host_config_disallowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
