@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import RoomID
+from . import RoomAnyID
 from .const import CONF_CONFIG_ENTRY_ID, CONF_ROOMS_REGEX, DOMAIN, SERVICE_SEND_MESSAGE
 
 CONF_DEFAULT_ROOM = "default_room"
@@ -44,14 +44,14 @@ def get_service(
 class MatrixNotificationService(BaseNotificationService):
     """Send notifications to a Matrix room."""
 
-    def __init__(self, default_room: RoomID, config_entry_id: str | None) -> None:
+    def __init__(self, default_room: RoomAnyID, config_entry_id: str | None) -> None:
         """Set up the Matrix notification service."""
         self._default_room = default_room
         self._config_entry_id = config_entry_id
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message to the Matrix server."""
-        target_rooms: list[RoomID] = kwargs.get(ATTR_TARGET) or [self._default_room]
+        target_rooms: list[RoomAnyID] = kwargs.get(ATTR_TARGET) or [self._default_room]
         service_data = {ATTR_TARGET: target_rooms, ATTR_MESSAGE: message}
         if self._config_entry_id:
             service_data[CONF_CONFIG_ENTRY_ID] = self._config_entry_id

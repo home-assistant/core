@@ -213,16 +213,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
     entry.runtime_data = matrix_bot
     entry.async_on_unload(matrix_bot.async_close)
 
+    async def _async_start_bot() -> None:
+        try:
+            await matrix_bot.async_start()
+        except ConfigEntryAuthFailed:
+            entry.async_start_reauth(hass)
+
     if hass.is_running:
         entry.async_create_background_task(
             hass,
-            matrix_bot.async_start(),
+            _async_start_bot(),
             name=f"{matrix_bot.__class__.__name__}: start for '{entry.unique_id}'",
         )
     else:
 
         async def _async_startup(_: HassEvent) -> None:
-            await matrix_bot.async_start()
+            await _async_start_bot()
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
