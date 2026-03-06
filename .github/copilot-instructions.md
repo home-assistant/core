@@ -21,5 +21,4 @@ Integrations with Platinum or Gold level in the Integration Quality Scale reflec
 
 # Skills
 
-- github-pr-commenter: .claude/skills/github-pr-commenter/SKILL.md
 - Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
