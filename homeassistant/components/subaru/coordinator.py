@@ -45,14 +45,14 @@ class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=COORDINATOR_NAME,
             update_interval=timedelta(seconds=FETCH_INTERVAL),
         )
-        self.controller = controller
-        self.vehicle_info = vehicle_info
+        self._controller = controller
+        self._vehicle_info = vehicle_info
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Subaru API."""
         try:
             return await _refresh_subaru_data(
-                self.config_entry, self.vehicle_info, self.controller
+                self.config_entry, self._vehicle_info, self._controller
             )
         except SubaruException as err:
             raise UpdateFailed(err.message) from err
