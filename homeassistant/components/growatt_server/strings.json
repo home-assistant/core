@@ -22,8 +22,8 @@
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
+          "region": "Server region",
           "token": "API Token",
-          "url": "Server region",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Re-enter your credentials to continue using this integration.",

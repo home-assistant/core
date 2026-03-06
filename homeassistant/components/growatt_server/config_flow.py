@@ -64,7 +64,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
+        self, _: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
         return await self.async_step_reauth_confirm()
@@ -96,12 +96,9 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 except (ValueError, KeyError, TypeError, AttributeError):
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
-                    if (
-                        not login_response.get("success")
-                        and login_response.get("msg") == LOGIN_INVALID_AUTH_CODE
-                    ):
-                        errors["base"] = ERROR_INVALID_AUTH
-                    else:
+                    if not isinstance(login_response, dict):
+                        errors["base"] = ERROR_CANNOT_CONNECT
+                    elif login_response.get("success"):
                         return self.async_update_reload_and_abort(
                             reauth_entry,
                             data_updates={
@@ -110,6 +107,10 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_URL: server_url,
                             },
                         )
+                    elif login_response.get("msg") == LOGIN_INVALID_AUTH_CODE:
+                        errors["base"] = ERROR_INVALID_AUTH
+                    else:
+                        errors["base"] = ERROR_CANNOT_CONNECT
 
             elif auth_type == AUTH_API_TOKEN:
                 server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
@@ -117,10 +118,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 api.server_url = server_url
 
                 try:
-                    plant_response = await self.hass.async_add_executor_job(
-                        api.plant_list
-                    )
-                    plant_response.get("plants", [])
+                    await self.hass.async_add_executor_job(api.plant_list)
                 except requests.exceptions.RequestException:
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except growattServer.GrowattV1ApiError:
@@ -136,9 +134,13 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
 
-        # Determine the current region key from the stored URL
+        # Determine the current region key from the stored config value.
+        # Legacy entries may store the region key directly; newer entries store the URL.
         stored_url = reauth_entry.data.get(CONF_URL, "")
-        current_region = _URL_TO_REGION.get(stored_url, DEFAULT_URL)
+        if stored_url in SERVER_URLS_NAMES:
+            current_region = stored_url
+        else:
+            current_region = _URL_TO_REGION.get(stored_url, DEFAULT_URL)
 
         auth_type = reauth_entry.data.get(CONF_AUTH_TYPE)
         if auth_type == AUTH_PASSWORD:
@@ -157,7 +159,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             )
-        else:
+        elif auth_type == AUTH_API_TOKEN:
             data_schema = vol.Schema(
                 {
                     vol.Required(CONF_TOKEN): str,
@@ -169,6 +171,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             )
+        else:
+            return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
         return self.async_show_form(
             step_id="reauth_confirm",

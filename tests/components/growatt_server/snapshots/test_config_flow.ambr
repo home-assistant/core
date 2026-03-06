@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_reauth_password_success
+  dict({
+    'auth_type': 'password',
+    'name': 'Test Plant',
+    'password': 'password',
+    'plant_id': '123456',
+    'url': 'https://openapi.growatt.com/',
+    'username': 'username',
+  })
+# ---
+# name: test_reauth_token_success
+  dict({
+    'auth_type': 'api_token',
+    'name': 'Test Plant',
+    'plant_id': '123456',
+    'token': 'test_api_token_12345',
+    'url': 'https://openapi.growatt.com/',
+    'user_id': '12345',
+  })
+# ---
