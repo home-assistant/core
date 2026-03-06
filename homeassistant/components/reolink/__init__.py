@@ -54,9 +54,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-DEVICE_UPDATE_INTERVAL_MIN = timedelta(seconds=60)
-DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
+
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -134,19 +132,14 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
-    update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
 
     device_coordinator = ReolinkDeviceCoordinator(
         hass,
         config_entry,
         host,
-        update_timeout=update_timeout,
         min_timeout=min_timeout,
     )
-    device_coordinator.update_interval = max(
-        DEVICE_UPDATE_INTERVAL_MIN,
-        DEVICE_UPDATE_INTERVAL_PER_CAM * host.api.num_cameras,
-    )
+
     firmware_coordinator = ReolinkFirmwareCoordinator(
         hass,
         config_entry,
@@ -157,7 +150,6 @@ async def async_setup_entry(
 
     async def first_firmware_check(*args: Any) -> None:
         """Start first firmware check delayed to continue 24h schedule."""
-        firmware_coordinator.update_interval = FIRMWARE_UPDATE_INTERVAL
         await firmware_coordinator.async_refresh()
         host.cancel_first_firmware_check = None
 
