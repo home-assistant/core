@@ -552,6 +552,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
             avm_wrapper.mesh_role is not MeshRoles.SLAVE
         )
         self._network_num = network_num
+        self._skip_next_update = False
 
         switch_info = SwitchInfo(
             description=f"Wi-Fi {network_data['switch_name']}",
@@ -563,6 +564,14 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
             init_state=network_data["enabled"],
         )
         super().__init__(self._avm_wrapper, device_friendly_name, switch_info)
+
+    async def async_update(self) -> None:
+        """Update data."""
+        if self._skip_next_update:
+            self._skip_next_update = False
+            return
+
+        await super().async_update()
 
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
@@ -591,3 +600,4 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
         await self._avm_wrapper.async_set_wlan_configuration(self._network_num, turn_on)
+        self._skip_next_update = True
