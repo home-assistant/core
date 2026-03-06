@@ -1202,6 +1202,8 @@ build.json @home-assistant/supervisor
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/open_router/ @joostlek
 /tests/components/open_router/ @joostlek
+/homeassistant/components/opendisplay/ @g4bri3lDev
+/tests/components/opendisplay/ @g4bri3lDev
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
 /homeassistant/components/openevse/ @c00w @firstof9
