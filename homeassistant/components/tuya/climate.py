@@ -12,6 +12,7 @@ from tuya_device_handlers.device_wrapper.common import (
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
 )
+from tuya_device_handlers.device_wrapper.extended import DPCodeRoundedIntegerWrapper
 from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
@@ -52,16 +53,6 @@ TUYA_HVAC_TO_HA = {
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
-
-
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
-    """An integer that always rounds its value."""
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Read and round the device status."""
-        if (value := self._read_dpcode_value(device)) is None:
-            return None
-        return round(value)
 
 
 @dataclass(kw_only=True)
@@ -358,7 +349,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         CLIMATE_DESCRIPTIONS[device.category],
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                        current_humidity_wrapper=DPCodeRoundedIntegerWrapper.find_dpcode(
                             device, DPCode.HUMIDITY_CURRENT
                         ),
                         current_temperature_wrapper=temperature_wrappers[0],
@@ -378,7 +369,7 @@ async def async_setup_entry(
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
+                        target_humidity_wrapper=DPCodeRoundedIntegerWrapper.find_dpcode(
                             device, DPCode.HUMIDITY_SET, prefer_function=True
                         ),
                         temperature_unit=temperature_wrappers[2],
