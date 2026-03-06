@@ -88,7 +88,7 @@ async def _get_media(
 
 
 async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
-    """Get requests made to Overseerr."""
+    """Get requests made to Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -129,7 +129,7 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
 
 
 async def _async_search_media(call: ServiceCall) -> ServiceResponse:
-    """Search for media in Overseerr."""
+    """Search for media in Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -158,7 +158,7 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
 
 
 async def _async_request_media(call: ServiceCall) -> ServiceResponse:
-    """Request media in Overseerr."""
+    """Request media in Seerr."""
     entry: OverseerrConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -210,7 +210,7 @@ def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up the services for the Overseerr integration."""
+    """Set up the services for the Seerr integration."""
 
     hass.services.async_register(
         DOMAIN,
