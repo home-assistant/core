@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.overseerr.const import (
     ATTR_LIMIT,
     ATTR_MEDIA_TYPE,
+    ATTR_QUERY,
     ATTR_REQUESTED_BY,
     ATTR_SEASONS,
     ATTR_SORT_ORDER,
@@ -19,7 +20,6 @@ from homeassistant.components.overseerr.const import (
     DOMAIN,
 )
 from homeassistant.components.overseerr.services import (
-    ATTR_QUERY,
     SERVICE_GET_REQUESTS,
     SERVICE_REQUEST_MEDIA,
     SERVICE_SEARCH_AND_REQUEST,

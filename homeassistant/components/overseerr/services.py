@@ -149,7 +149,6 @@ async def _search_media(
         LOGGER.debug("Searching for '%s'", query)
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
-        LOGGER.info("Error searching for '%s': %s", query, str(err))
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="connection_error",
