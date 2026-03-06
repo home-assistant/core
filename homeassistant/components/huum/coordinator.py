@@ -50,9 +50,11 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
 
     async def _async_update_data(self) -> HuumStatusResponse:
         """Get the latest status data."""
+
         try:
             return await self.huum.status()
         except (Forbidden, NotAuthenticated) as err:
+            _LOGGER.error("Could not log in to Huum with given credentials")
             raise UpdateFailed(
                 "Could not log in to Huum with given credentials"
             ) from err
