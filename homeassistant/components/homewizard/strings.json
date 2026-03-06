@@ -41,6 +41,16 @@
         },
         "description": "Update configuration for {title}."
       },
+      "usage": {
+        "data": {
+          "usage": "Usage"
+        },
+        "data_description": {
+          "usage": "This will enable either a power consumption or power production sensor the first time this device is set up."
+        },
+        "description": "What are you going to monitor with your {product_name} ({product_type} {serial} at {ip_address})?",
+        "title": "Usage"
+      },
       "user": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
@@ -198,6 +208,14 @@
         }
       },
       "title": "Update the authentication method for {title}"
+    }
+  },
+  "selector": {
+    "usage": {
+      "options": {
+        "consumption": "Monitoring consumed energy",
+        "generation": "Monitoring generated energy"
+      }
     }
   }
 }

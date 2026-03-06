@@ -1,5 +1,6 @@
 """Tests for the homewizard component."""
 
+from collections.abc import Iterable
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 import weakref
@@ -11,8 +12,14 @@ import pytest
 from homeassistant.components.homewizard import get_main_device
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_platform import EntityRegistry
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -254,3 +261,203 @@ async def test_disablederror_reloads_integration(
     flow = flows[0]
     assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+@pytest.mark.parametrize(
+    ("device_fixture", "mock_config_entry", "enabled", "disabled"),
+    [
+        (
+            "HWE-SKT-21-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "consumption",
+                },
+                unique_id="HWE-SKT_5c2fafabcdef",
+            ),
+            ("sensor.device_power",),
+            ("sensor.device_production_power",),
+        ),
+        (
+            "HWE-SKT-21-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "generation",
+                },
+                unique_id="HWE-SKT_5c2fafabcdef",
+            ),
+            # we explicitly indicated that the device was monitoring
+            # generated energy, so we ignore power sensor to avoid confusion
+            ("sensor.device_production_power",),
+            ("sensor.device_power",),
+        ),
+        (
+            "HWE-SKT-21",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "consumption",
+                },
+                unique_id="HWE-SKT_5c2fafabcdef",
+            ),
+            # device has a non zero export, so both sensors are enabled
+            (
+                "sensor.device_power",
+                "sensor.device_production_power",
+            ),
+            (),
+        ),
+        (
+            "HWE-SKT-21",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "generation",
+                },
+                unique_id="HWE-SKT_5c2fafabcdef",
+            ),
+            # we explicitly indicated that the device was monitoring
+            # generated energy, so we ignore power sensor to avoid confusion
+            ("sensor.device_production_power",),
+            ("sensor.device_power",),
+        ),
+    ],
+    ids=[
+        "consumption_intital",
+        "generation_initial",
+        "consumption_used",
+        "generation_used",
+    ],
+)
+async def test_setup_device_energy_monitoring_v1(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    enabled: Iterable[str],
+    disabled: Iterable[str],
+) -> None:
+    """Test correct entities are enabled by default."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for enabled_item in enabled:
+        assert (entry := entity_registry.async_get(enabled_item))
+        assert not entry.disabled
+
+    for disabled_item in disabled:
+        assert (entry := entity_registry.async_get(disabled_item))
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+@pytest.mark.parametrize(
+    ("device_fixture", "mock_config_entry", "enabled", "disabled"),
+    [
+        (
+            "HWE-KWH1-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "consumption",
+                },
+                unique_id="HWE-KWH1_5c2fafabcdef",
+            ),
+            ("sensor.device_power",),
+            ("sensor.device_production_power",),
+        ),
+        (
+            "HWE-KWH1-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "generation",
+                },
+                unique_id="HWE-KWH1_5c2fafabcdef",
+            ),
+            # we explicitly indicated that the device was monitoring
+            # generated energy, so we ignore power sensor to avoid confusion
+            ("sensor.device_production_power",),
+            ("sensor.device_power",),
+        ),
+        (
+            "HWE-KWH1",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "consumption",
+                },
+                unique_id="HWE-KWH1_5c2fafabcdef",
+            ),
+            # device has a non zero export, so both sensors are enabled
+            (
+                "sensor.device_power",
+                "sensor.device_production_power",
+            ),
+            (),
+        ),
+        (
+            "HWE-KWH1",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "generation",
+                },
+                unique_id="HWE-KWH1_5c2fafabcdef",
+            ),
+            # we explicitly indicated that the device was monitoring
+            # generated energy, so we ignore power sensor to avoid confusion
+            ("sensor.device_production_power",),
+            ("sensor.device_power",),
+        ),
+    ],
+    ids=[
+        "consumption_intital",
+        "generation_initial",
+        "consumption_used",
+        "generation_used",
+    ],
+)
+async def test_setup_device_energy_monitoring_v2(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    enabled: Iterable[str],
+    disabled: Iterable[str],
+) -> None:
+    """Test correct entities are enabled by default."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homewizard.config_flow.has_v2_api", return_value=True
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    for enabled_item in enabled:
+        assert (entry := entity_registry.async_get(enabled_item))
+        assert not entry.disabled
+
+    for disabled_item in disabled:
+        assert (entry := entity_registry.async_get(disabled_item))
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

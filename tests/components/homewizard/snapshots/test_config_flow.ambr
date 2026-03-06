@@ -92,56 +92,7 @@
     'version': 1,
   })
 # ---
-# name: test_discovery_flow_works
-  FlowResultSnapshot({
-    'context': dict({
-      'confirm_only': True,
-      'dismiss_protected': True,
-      'source': 'zeroconf',
-      'title_placeholders': dict({
-        'name': 'Energy Socket (5c2fafabcdef)',
-      }),
-      'unique_id': 'HWE-SKT_5c2fafabcdef',
-    }),
-    'data': dict({
-      'ip_address': '127.0.0.1',
-    }),
-    'description': None,
-    'description_placeholders': None,
-    'flow_id': <ANY>,
-    'handler': 'homewizard',
-    'minor_version': 1,
-    'options': dict({
-    }),
-    'result': ConfigEntrySnapshot({
-      'data': dict({
-        'ip_address': '127.0.0.1',
-      }),
-      'disabled_by': None,
-      'discovery_keys': dict({
-      }),
-      'domain': 'homewizard',
-      'entry_id': <ANY>,
-      'minor_version': 1,
-      'options': dict({
-      }),
-      'pref_disable_new_entities': False,
-      'pref_disable_polling': False,
-      'source': 'zeroconf',
-      'subentries': list([
-      ]),
-      'title': 'Energy Socket',
-      'unique_id': 'HWE-SKT_5c2fafabcdef',
-      'version': 1,
-    }),
-    'subentries': tuple(
-    ),
-    'title': 'Energy Socket',
-    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
-    'version': 1,
-  })
-# ---
-# name: test_manual_flow_works
+# name: test_manual_flow_works[HWE-P1]
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
@@ -181,6 +132,241 @@
     'subentries': tuple(
     ),
     'title': 'P1 meter',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_manual_flow_works_device_energy_monitoring[consumption-HWE-SKT-21]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+    }),
+    'data': dict({
+      'ip_address': '2.2.2.2',
+      'usage': 'consumption',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'homewizard',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'ip_address': '2.2.2.2',
+        'usage': 'consumption',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'homewizard',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Energy Socket',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Energy Socket',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_manual_flow_works_device_energy_monitoring[generation-HWE-SKT-21]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+    }),
+    'data': dict({
+      'ip_address': '2.2.2.2',
+      'usage': 'generation',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'homewizard',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'ip_address': '2.2.2.2',
+        'usage': 'generation',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'homewizard',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Energy Socket',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Energy Socket',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_power_monitoring_discovery_flow_works[consumption]
+  FlowResultSnapshot({
+    'context': dict({
+      'dismiss_protected': True,
+      'source': 'zeroconf',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+    }),
+    'data': dict({
+      'ip_address': '127.0.0.1',
+      'usage': 'consumption',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'homewizard',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'ip_address': '127.0.0.1',
+        'usage': 'consumption',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'homewizard',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'zeroconf',
+      'subentries': list([
+      ]),
+      'title': 'Energy Socket',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Energy Socket',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_power_monitoring_discovery_flow_works[generation]
+  FlowResultSnapshot({
+    'context': dict({
+      'dismiss_protected': True,
+      'source': 'zeroconf',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+    }),
+    'data': dict({
+      'ip_address': '127.0.0.1',
+      'usage': 'generation',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'homewizard',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'ip_address': '127.0.0.1',
+        'usage': 'generation',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'homewizard',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'zeroconf',
+      'subentries': list([
+      ]),
+      'title': 'Energy Socket',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Energy Socket',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_water_monitoring_discovery_flow_works
+  FlowResultSnapshot({
+    'context': dict({
+      'confirm_only': True,
+      'dismiss_protected': True,
+      'source': 'zeroconf',
+      'title_placeholders': dict({
+        'name': 'Watermeter',
+      }),
+      'unique_id': 'HWE-WTR_3c39efabcdef',
+    }),
+    'data': dict({
+      'ip_address': '127.0.0.1',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'homewizard',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'ip_address': '127.0.0.1',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'homewizard',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'zeroconf',
+      'subentries': list([
+      ]),
+      'title': 'Watermeter',
+      'unique_id': 'HWE-WTR_3c39efabcdef',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Watermeter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
   })

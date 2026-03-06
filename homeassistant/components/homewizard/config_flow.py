@@ -27,15 +27,36 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import instance_id
-from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN, LOGGER
+from .const import (
+    CONF_PRODUCT_NAME,
+    CONF_PRODUCT_TYPE,
+    CONF_SERIAL,
+    CONF_USAGE,
+    DOMAIN,
+    ENERGY_MONITORING_DEVICES,
+    LOGGER,
+)
+
+USAGE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["consumption", "generation"],
+        translation_key="usage",
+        mode=SelectSelectorMode.LIST,
+    )
+)
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for P1 meter."""
+    """Handle a config flow for HomeWizard devices."""
 
     VERSION = 1
 
@@ -43,6 +64,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     product_name: str | None = None
     product_type: str | None = None
     serial: str | None = None
+    token: str | None = None
+    usage: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,6 +87,12 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"{device_info.product_type}_{device_info.serial}"
                 )
                 self._abort_if_unique_id_configured(updates=user_input)
+                if device_info.product_type in ENERGY_MONITORING_DEVICES:
+                    self.ip_address = user_input[CONF_IP_ADDRESS]
+                    self.product_name = device_info.product_name
+                    self.product_type = device_info.product_type
+                    self.serial = device_info.serial
+                    return await self.async_step_usage()
                 return self.async_create_entry(
                     title=f"{device_info.product_name}",
                     data=user_input,
@@ -80,6 +109,45 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_usage(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Step where we ask how the energy monitor is used."""
+        assert self.ip_address
+        assert self.product_name
+        assert self.product_type
+        assert self.serial
+
+        data: dict[str, Any] = {CONF_IP_ADDRESS: self.ip_address}
+        if self.token:
+            data[CONF_TOKEN] = self.token
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"{self.product_name}",
+                data=data | user_input,
+            )
+
+        return self.async_show_form(
+            step_id="usage",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USAGE,
+                        default=user_input.get(CONF_USAGE)
+                        if user_input is not None
+                        else "consumption",
+                    ): USAGE_SELECTOR,
+                }
+            ),
+            description_placeholders={
+                CONF_PRODUCT_NAME: self.product_name,
+                CONF_PRODUCT_TYPE: self.product_type,
+                CONF_SERIAL: self.serial,
+                CONF_IP_ADDRESS: self.ip_address,
+            },
         )
 
     async def async_step_authorize(
@@ -101,8 +169,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Now we got a token, we can ask for some more info
 
-        async with HomeWizardEnergyV2(self.ip_address, token=token) as api:
-            device_info = await api.device()
+        device_info = await HomeWizardEnergyV2(self.ip_address, token=token).device()
 
         data = {
             CONF_IP_ADDRESS: self.ip_address,
@@ -113,6 +180,14 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             f"{device_info.product_type}_{device_info.serial}"
         )
         self._abort_if_unique_id_configured(updates=data)
+        self.product_name = device_info.product_name
+        self.product_type = device_info.product_type
+        self.serial = device_info.serial
+
+        if device_info.product_type in ENERGY_MONITORING_DEVICES:
+            self.token = token
+            return await self.async_step_usage()
+
         return self.async_create_entry(
             title=f"{device_info.product_name}",
             data=data,
@@ -139,6 +214,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: discovery_info.host}
         )
+        if self.product_type in ENERGY_MONITORING_DEVICES:
+            return await self.async_step_usage()
 
         return await self.async_step_discovery_confirm()
 
