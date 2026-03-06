@@ -262,8 +262,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._last_toggled_time = dt_util.utcnow() - self.cycle_cooldown
         self._cycle_callback: CALLBACK_TYPE | None = None
         self._check_callback: CALLBACK_TYPE | None = None
-        # Context used to detect our own toggles
-        self._context: Context | None = None
+        # Context ID used to detect our own toggles
         self._last_context_id: str | None = None
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
@@ -511,8 +510,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._last_toggled_time = new_state.last_changed
 
         # Clear any lingering timers if the state change didn't originate from us
-        origin_id = getattr(event.context, "id", None)
-        if origin_id != self._last_context_id:
+        if new_state.context.id != self._last_context_id:
             _LOGGER.debug("External switch change detected, clearing timers")
             self._last_context_id = None
             self._cancel_timers()
@@ -628,10 +626,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         # Create a new context for this service call so we can identify
         # the resulting state change event as originating from us
-        self._context = Context()
-        self._last_context_id = self._context.id
+        new_context = Context(parent_id=self._context.id if self._context else None)
+        self.async_set_context(new_context)
+        self._last_context_id = new_context.id
         await self.hass.services.async_call(
-            HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=new_context
         )
         if not keepalive:
             # Update timestamp on turn on
@@ -654,10 +653,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         # Create a new context for this service call so we can identify
         # the resulting state change event as originating from us
-        self._context = Context()
-        self._last_context_id = self._context.id
+        new_context = Context(parent_id=self._context.id if self._context else None)
+        self.async_set_context(new_context)
+        self._last_context_id = new_context.id
         await self.hass.services.async_call(
-            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=new_context
         )
         if not keepalive:
             # Update timestamp on turn off
