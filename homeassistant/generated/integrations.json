@@ -5997,6 +5997,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "school_holiday": {
+      "name": "School Holiday",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "scl": {
       "name": "Seattle City Light (SCL)",
       "integration_type": "virtual",
