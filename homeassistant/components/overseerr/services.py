@@ -260,11 +260,8 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
 
 def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]:
     """Parse all possible inputs to "all" or a list of integers."""
-    if seasons_input is None:
-        return "all"
-
     seasons_str = str(seasons_input).strip()
-    if seasons_str == "":
+    if seasons_str == "" or seasons_input is None:
         return "all"
 
     try:

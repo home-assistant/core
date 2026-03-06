@@ -374,6 +374,7 @@ async def test_service_entry_availability(
         ("[  1  , 2 ,    3]", [1, 2, 3]),
         ("", "all"),
         ("  ", "all"),
+        (None, "all"),
         ("Not a valid input", "all"),
         ("-", "all"),
     ],
