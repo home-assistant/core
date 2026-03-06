@@ -37,6 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await smart_meter_texas_data.setup()
 
+    # Use a DataUpdateCoordinator to manage the updates. This is due to the
+    # Smart Meter Texas API which takes around 30 seconds to read a meter.
+    # This avoids Home Assistant from complaining about the component taking
+    # too long to update.
     coordinator = SmartMeterTexasCoordinator(hass, entry, smart_meter_texas_data)
 
     hass.data.setdefault(DOMAIN, {})
