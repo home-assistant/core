@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -23,11 +24,63 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADMIN_API_KEY): str,
+    }
+)
+
 
 class GhostConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ghost."""
 
     VERSION = 1
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            admin_api_key = user_input[CONF_ADMIN_API_KEY]
+
+            if ":" not in admin_api_key:
+                errors["base"] = "invalid_api_key"
+            else:
+                try:
+                    await self._validate_credentials(
+                        reauth_entry.data[CONF_API_URL], admin_api_key
+                    )
+                except GhostAuthError:
+                    errors["base"] = "invalid_auth"
+                except GhostError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error during Ghost reauth")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates=user_input,
+                    )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "title": reauth_entry.title,
+                "docs_url": "https://account.ghost.org/?r=settings/integrations/new",
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -89,7 +142,7 @@ class GhostConfigFlow(ConfigFlow, domain=DOMAIN):
 
         site_title = site["title"]
 
-        await self.async_set_unique_id(site["uuid"])
+        await self.async_set_unique_id(site["site_uuid"])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(

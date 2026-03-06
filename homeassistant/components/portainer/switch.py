@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN, STACK_STATUS_ACTIVE
+from .const import DOMAIN, StackStatus
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
@@ -99,7 +99,7 @@ STACK_SWITCHES: tuple[PortainerStackSwitchEntityDescription, ...] = (
         key="stack",
         translation_key="stack",
         device_class=SwitchDeviceClass.SWITCH,
-        is_on_fn=lambda data: data.stack.status == STACK_STATUS_ACTIVE,
+        is_on_fn=lambda data: data.stack.status == StackStatus.ACTIVE,
         turn_on_fn=lambda portainer: portainer.start_stack,
         turn_off_fn=lambda portainer: portainer.stop_stack,
     ),

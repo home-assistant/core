@@ -111,7 +111,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bo
             # Migrate unique_id from `xbox` to account xuid and
             # change generic entry name to user's gamertag
             try:
-                own = await client.people.get_friends_by_xuid(client.xuid)
+                own = await client.people.get_friend_by_xuid(client.xuid)
             except TimeoutException as e:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
