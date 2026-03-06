@@ -49,6 +49,8 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
     ) -> None:
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(service_info)
+        if self._was_unavailable:
+            return
         self._was_unavailable = True
         _LOGGER.info("%s: Device is unavailable", service_info.address)
 
