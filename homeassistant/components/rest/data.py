@@ -23,6 +23,15 @@ DEFAULT_TIMEOUT = 10
 _LOGGER = logging.getLogger(__name__)
 
 
+def _payload_looks_like_xml(payload: str) -> bool:
+    """Return True if the payload looks like XML.
+
+    Some devices incorrectly label JSON responses as `application/x-javascript`.
+    Avoid attempting XML parsing unless the payload starts with an XML tag.
+    """
+    return payload.lstrip("\ufeff \t\r\n").startswith("<")
+
+
 class RestData:
     """Class for handling the data retrieval."""
 
@@ -80,10 +89,8 @@ class RestData:
         self._resource = url
 
     def _is_expected_content_type(self, content_type: str) -> bool:
-        """Check if the content type is one we expect (JSON or XML)."""
-        return content_type.startswith(
-            ("application/json", "text/json", *XML_MIME_TYPES)
-        )
+        """Check if the content type is one we expect (JSON, XML, or related types)."""
+        return content_type.startswith(("application/json", "text/json", *XML_MIME_TYPES))
 
     def data_without_xml(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
@@ -95,6 +102,11 @@ class RestData:
             and (content_type := headers.get(hdrs.CONTENT_TYPE))
             and content_type.startswith(XML_MIME_TYPES)
         ):
+            # `application/x-javascript` is commonly used for JSON/JS/JSONP payloads.
+            # Only attempt XML conversion if the payload itself looks like XML.
+            if content_type.startswith("application/x-javascript") and not _payload_looks_like_xml(value):
+                return value
+
             value = json_dumps(xmltodict.parse(value))
             _LOGGER.debug("JSON converted from XML: %s", value)
         return value
