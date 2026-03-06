@@ -8,7 +8,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice
+from aioamazondevices.structures import AmazonDevice, AmazonMediaState
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,12 +55,17 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_LOGIN_DATA],
         )
         self.previous_devices: set[str] = set()
+        self._media_state: dict[str, AmazonMediaState] = {}
+
+        self.api.on_media_state_event.append(self.media_state_event_handler)
+        self.api.on_media_state_event.freeze()
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:
             await self.api.login.login_mode_stored_data()
             data = await self.api.get_devices_data()
+            await self.sync_media_state()
         except CannotConnect as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -107,3 +112,19 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
+
+    async def sync_media_state(self) -> None:
+        """Sync media state."""
+        await self.api.sync_media_state()
+
+    async def media_state_event_handler(
+        self, media_state: dict[str, AmazonMediaState]
+    ) -> None:
+        """Handle pushed media state changed events."""
+        self._media_state = media_state
+        self.async_update_listeners()
+
+    @property
+    def media_state(self) -> dict[str, AmazonMediaState]:
+        """Media state of devices."""
+        return self._media_state

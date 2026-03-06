@@ -8,5 +8,7 @@
   "iot_class": "cloud_polling",
   "loggers": ["aioamazondevices"],
   "quality_scale": "platinum",
-  "requirements": ["aioamazondevices==13.0.1"]
+  "requirements": [
+    "aioamazondevices@git+https://github.com/chemelli74/aioamazondevices.git@refs/pull/726/head#aioamazondevices==13.1.1"
+  ]
 }
