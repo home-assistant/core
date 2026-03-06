@@ -39,31 +39,31 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )
-        self.wolf_client = wolf_client
-        self.parameters = parameters
-        self.gateway_id = gateway_id
-        self.device_id = device_id
+        self._wolf_client = wolf_client
+        self._parameters = parameters
+        self._gateway_id = gateway_id
+        self._device_id = device_id
         self._refetch_parameters = False
 
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
         """Update all stored entities for Wolf SmartSet."""
         try:
-            if not await self.wolf_client.fetch_system_state_list(
-                self.device_id, self.gateway_id
+            if not await self._wolf_client.fetch_system_state_list(
+                self._device_id, self._gateway_id
             ):
                 self._refetch_parameters = True
                 raise UpdateFailed(
                     "Could not fetch values from server because device is Offline."
                 )
             if self._refetch_parameters:
-                self.parameters = await fetch_parameters(
-                    self.wolf_client, self.gateway_id, self.device_id
+                self._parameters = await fetch_parameters(
+                    self._wolf_client, self._gateway_id, self._device_id
                 )
                 self._refetch_parameters = False
             values = {
                 v.value_id: v.value
-                for v in await self.wolf_client.fetch_value(
-                    self.gateway_id, self.device_id, self.parameters
+                for v in await self._wolf_client.fetch_value(
+                    self._gateway_id, self._device_id, self._parameters
                 )
             }
             return {
@@ -71,7 +71,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
                     parameter.value_id,
                     values[parameter.value_id],
                 )
-                for parameter in self.parameters
+                for parameter in self._parameters
                 if parameter.value_id in values
             }
         except RequestError as exception:
