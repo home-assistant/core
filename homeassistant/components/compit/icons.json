@@ -279,6 +279,38 @@
           "no_alarm": "mdi:check-circle"
         }
       }
+    },
+    "switch": {
+      "device_on_off": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      },
+      "force_dhw": {
+        "default": "mdi:water-boiler",
+        "state": {
+          "off": "mdi:water-boiler-off"
+        }
+      },
+      "holiday_mode": {
+        "default": "mdi:beach"
+      },
+      "out_of_home_mode": {
+        "default": "mdi:home-export-outline",
+        "state": {
+          "off": "mdi:home-outline"
+        }
+      },
+      "party_mode": {
+        "default": "mdi:party-popper"
+      },
+      "summer_mode": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "off": "mdi:weather-sunny-off"
+        }
+      }
     }
   }
 }
