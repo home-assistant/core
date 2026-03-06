@@ -254,9 +254,9 @@ class MatterFan(MatterEntity, FanEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = FanEntityFeature(0)
-        # Reset speed_count to the FanEntity default; it will be re-set below
+        # Reset speed_count to the FanEntity default (100 = 1% steps); re-set below
         # if kMultiSpeed is present in the current feature map.
-        self._attr_speed_count = None
+        self._attr_speed_count = 100
 
         # NOTE: PercentSetting/PercentCurrent are mandatory on all FanControl clusters
         # per the Matter specification, so enable SET_SPEED unconditionally so the
@@ -268,12 +268,7 @@ class MatterFan(MatterEntity, FanEntity):
             speed_max_attr = self.get_matter_attribute_value(
                 clusters.FanControl.Attributes.SpeedMax
             )
-            speed_max = 0
-            if speed_max_attr is not None:
-                try:
-                    speed_max = int(speed_max_attr)
-                except (TypeError, ValueError):
-                    speed_max = 0
+            speed_max = int(speed_max_attr) if speed_max_attr is not None else 0
             if speed_max > 0:
                 self._attr_speed_count = speed_max
 
