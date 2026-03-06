@@ -205,7 +205,7 @@ async def test_send_message(
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
-    assert events[0].data["bot"]["username"] == "mock username"
+    assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert response == {
         "chats": [
@@ -813,7 +813,7 @@ async def test_polling_platform_message_text_update(
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
-    assert events[0].data["bot"]["username"] == "mock username"
+    assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert isinstance(events[0].context, Context)
 
@@ -1502,7 +1502,7 @@ async def test_send_video(
                 {
                     ATTR_URL: "https://mock",
                     ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                    ATTR_USERNAME: "mock username",
+                    ATTR_USERNAME: "mock_bot",
                     ATTR_PASSWORD: "mock password",
                 },
                 blocking=True,
@@ -1614,7 +1614,7 @@ async def test_send_video(
             {
                 ATTR_URL: "https://mock",
                 ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-                ATTR_USERNAME: "mock username",
+                ATTR_USERNAME: "mock_bot",
                 ATTR_PASSWORD: "mock password",
             },
             blocking=True,

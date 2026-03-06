@@ -107,6 +107,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -591,7 +592,8 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
                 if "burner" in component:
                     burner_id = int(component.split("-")[-1])
                     component = f"burner-0{burner_id}"
-                if component in status:
+                # Don't delete 'lamp' component even when disabled
+                if component in status and component != "lamp":
                     del status[component]
     for component_status in status.values():
         process_component_status(component_status)
