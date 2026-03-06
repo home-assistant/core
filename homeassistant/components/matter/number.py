@@ -393,6 +393,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(
             clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
+            clusters.OccupancySensing.Attributes.HoldTime,  # This attribute is mandatory when the PIRUnoccupiedToOccupiedDelay is present
         ),
         featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
     ),
@@ -409,6 +410,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(
             clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedThreshold,
+            clusters.OccupancySensing.Attributes.HoldTime,
         ),
         featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
     ),
