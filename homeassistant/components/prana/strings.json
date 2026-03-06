@@ -25,6 +25,41 @@
     }
   },
   "entity": {
+    "fan": {
+      "bounded": {
+        "name": "Bounded Air Flow",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "boost": "Boost",
+              "night": "Night"
+            }
+          }
+        }
+      },
+      "extract": {
+        "name": "Extract Air Flow",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "boost": "Boost",
+              "night": "Night"
+            }
+          }
+        }
+      },
+      "supply": {
+        "name": "Supply Air Flow",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "boost": "Boost",
+              "night": "Night"
+            }
+          }
+        }
+      }
+    },
     "switch": {
       "auto": {
         "name": "Auto"
