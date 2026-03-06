@@ -79,7 +79,7 @@
         "name": "Compressor speed"
       },
       "flow_rate": {
-        "name": "Flow rate"
+        "name": "Measured flow"
       },
       "setpoint_room_heat_day": {
         "name": "Room setpoint heating (day)"

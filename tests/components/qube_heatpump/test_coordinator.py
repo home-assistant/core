@@ -188,3 +188,31 @@ async def test_coordinator_handles_no_data(
 
         # Entry should still be loaded
         assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_clamps_negative_flow_rate(
+    hass: HomeAssistant, mock_qube_client: MagicMock, mock_qube_state: QubeState
+) -> None:
+    """Test coordinator clamps negative flow rate to zero."""
+    mock_qube_state.flow_rate = -0.3
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        title="Qube Heat Pump",
+        unique_id=f"{DOMAIN}-1.2.3.4-502",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = get_entity_id_by_unique_id_suffix(
+        hass, entry.unique_id, "flow_rate"
+    )
+    assert entity_id is not None
+    sensor_state = hass.states.get(entity_id)
+    assert sensor_state is not None
+    assert float(sensor_state.state) == 0.0

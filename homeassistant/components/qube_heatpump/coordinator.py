@@ -29,6 +29,13 @@ MONOTONIC_KEYS = frozenset(
     }
 )
 
+# Keys that should be clamped to a minimum of 0 (flow rates, percentages)
+CLAMP_MIN_ZERO_KEYS = frozenset(
+    {
+        "flow_rate",
+    }
+)
+
 
 class QubeCoordinator(DataUpdateCoordinator[QubeState]):
     """Qube Heat Pump custom coordinator."""
@@ -63,6 +70,9 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
 
         # Apply monotonic clamping for total_increasing sensors
         self._apply_monotonic_clamping(data)
+
+        # Clamp sensors that should never be negative
+        self._apply_min_zero_clamping(data)
 
         return data
 
@@ -102,3 +112,14 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
             else:
                 # Update the stored previous value
                 self._previous_values[key] = current_value
+
+    def _apply_min_zero_clamping(self, data: QubeState) -> None:
+        """Clamp values to a minimum of 0.
+
+        Some sensors (e.g. flow rate) can report small negative values
+        due to measurement noise. These are clamped to 0.
+        """
+        for key in CLAMP_MIN_ZERO_KEYS:
+            current_value = getattr(data, key, None)
+            if current_value is not None and current_value < 0:
+                object.__setattr__(data, key, 0.0)
