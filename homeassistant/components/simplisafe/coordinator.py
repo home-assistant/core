@@ -38,8 +38,8 @@ class SimpliSafeDataUpdateCoordinator(DataUpdateCoordinator[None]):
             config_entry=config_entry,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self.simplisafe = simplisafe
+        self._simplisafe = simplisafe
 
     async def _async_update_data(self) -> None:
         """Fetch data from SimpliSafe."""
-        await self.simplisafe.async_update()
+        await self._simplisafe.async_update()
