@@ -1145,3 +1145,32 @@ async def test_restore_option_entity(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
     assert not state.attributes.get(ATTR_RESTORED)
+
+
+async def test_favorite_001_program_not_exposed_as_option(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test that favorite 001 program is not exposed as an option."""
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(
+                    key=ProgramKey.BSH_COMMON_FAVORITE_001,
+                    raw_key=ProgramKey.BSH_COMMON_FAVORITE_001.value,
+                    constraints=EnumerateProgramConstraints(
+                        execution=Execution.SELECT_AND_START,
+                    ),
+                ),
+            ]
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get("select.dishwasher_selected_program")
+    assert entity_state
+    assert entity_state.attributes[ATTR_OPTIONS] == []

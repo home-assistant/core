@@ -190,7 +190,7 @@ class BitcoinSensor(SensorEntity):
         elif sensor_type == "miners_revenue_usd":
             self._attr_native_value = f"{stats.miners_revenue_usd:.0f}"
         elif sensor_type == "btc_mined":
-            self._attr_native_value = str(stats.btc_mined * 0.00000001)
+            self._attr_native_value = str(stats.btc_mined * 1e-8)
         elif sensor_type == "trade_volume_usd":
             self._attr_native_value = f"{stats.trade_volume_usd:.1f}"
         elif sensor_type == "difficulty":
@@ -208,13 +208,13 @@ class BitcoinSensor(SensorEntity):
         elif sensor_type == "blocks_size":
             self._attr_native_value = f"{stats.blocks_size:.1f}"
         elif sensor_type == "total_fees_btc":
-            self._attr_native_value = f"{stats.total_fees_btc * 0.00000001:.2f}"
+            self._attr_native_value = f"{stats.total_fees_btc * 1e-8:.2f}"
         elif sensor_type == "total_btc_sent":
-            self._attr_native_value = f"{stats.total_btc_sent * 0.00000001:.2f}"
+            self._attr_native_value = f"{stats.total_btc_sent * 1e-8:.2f}"
         elif sensor_type == "estimated_btc_sent":
-            self._attr_native_value = f"{stats.estimated_btc_sent * 0.00000001:.2f}"
+            self._attr_native_value = f"{stats.estimated_btc_sent * 1e-8:.2f}"
         elif sensor_type == "total_btc":
-            self._attr_native_value = f"{stats.total_btc * 0.00000001:.2f}"
+            self._attr_native_value = f"{stats.total_btc * 1e-8:.2f}"
         elif sensor_type == "total_blocks":
             self._attr_native_value = f"{stats.total_blocks:.0f}"
         elif sensor_type == "next_retarget":
@@ -222,7 +222,7 @@ class BitcoinSensor(SensorEntity):
         elif sensor_type == "estimated_transaction_volume_usd":
             self._attr_native_value = f"{stats.estimated_transaction_volume_usd:.2f}"
         elif sensor_type == "miners_revenue_btc":
-            self._attr_native_value = f"{stats.miners_revenue_btc * 0.00000001:.1f}"
+            self._attr_native_value = f"{stats.miners_revenue_btc * 1e-8:.1f}"
         elif sensor_type == "market_price_usd":
             self._attr_native_value = f"{stats.market_price_usd:.2f}"
 

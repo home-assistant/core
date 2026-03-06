@@ -149,7 +149,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},

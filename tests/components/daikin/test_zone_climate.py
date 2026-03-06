@@ -112,6 +112,27 @@ async def test_setup_entry_skips_zone_climates_without_support(
     assert _zone_entity_id(entity_registry, zone_device, 0) is None
 
 
+async def test_setup_entry_handles_missing_zone_temperature_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zone_device: ZoneDevice,
+) -> None:
+    """Missing zone temperature keys do not break climate setup."""
+    configure_zone_device(zone_device, zones=[["Living", "1", 22]])
+    zone_device.values.pop("lztemp_h")
+
+    await _async_setup_daikin(hass, zone_device)
+
+    assert _zone_entity_id(entity_registry, zone_device, 0) is None
+    main_entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        zone_device.mac,
+    )
+    assert main_entity_id is not None
+    assert hass.states.get(main_entity_id) is not None
+
+
 @pytest.mark.parametrize(
     ("mode", "expected_zone_key"),
     [("hot", "lztemp_h"), ("cool", "lztemp_c")],
