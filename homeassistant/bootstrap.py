@@ -881,7 +881,7 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
-        # we can't debug guard this because logging might not be set up yet
+        # We cannot debug guard this because logging might not be set up yet
         t_stage = monotonic()
         stage_domains_unfiltered = domain_group & all_domains
         if not stage_domains_unfiltered:
