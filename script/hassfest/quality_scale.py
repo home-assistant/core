@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -2185,6 +2186,16 @@ SCHEMA = vol.Schema(
 )
 
 
+def _generate_quality_scale_file(iqs_file: Path) -> None:
+    """Generate a quality scale YAML file with all rules set to todo."""
+    lines = ["rules:"]
+    for tier in ScaledQualityScaleTiers:
+        lines.append(f"  # {tier.name.capitalize()}")
+        lines.extend(f"  {rule_name}: todo" for rule_name in SCALE_RULES[tier])
+        lines.append("")
+    iqs_file.write_text("\n".join(lines))
+
+
 def validate_iqs_file(config: Config, integration: Integration) -> None:
     """Validate quality scale file for integration."""
     if not integration.core:
@@ -2200,22 +2211,27 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             and integration.domain not in NO_QUALITY_SCALE
             and integration.integration_type != "virtual"
         ):
-            integration.add_error(
-                "quality_scale",
-                (
-                    "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
-                    if integration.quality_scale == "internal"
-                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
-                ),
-            )
-            return
-        if declared_quality_scale is not None:
+            if config.action == "generate":
+                _generate_quality_scale_file(iqs_file)
+                has_file = True
+            else:
+                integration.add_error(
+                    "quality_scale",
+                    (
+                        "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
+                        if integration.quality_scale == "internal"
+                        else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                    ),
+                )
+                return
+        if not has_file and declared_quality_scale is not None:
             integration.add_error(
                 "quality_scale",
                 "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
             )
             return
-        return
+        if not has_file:
+            return
     if integration.integration_type == "virtual":
         integration.add_error(
             "quality_scale",
