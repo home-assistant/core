@@ -13,15 +13,22 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
+from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DEFAULT_PORT, DOMAIN
 
 
 class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLAN config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
@@ -32,6 +39,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username: str | None = None
         self.password: str | None = None
         self._auth_required = True
+        self._available_circuits: list[int] = [1]
+        self._bsblan_client: BSBLAN | None = None
+        self._reconfigure_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -168,7 +178,63 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             return self._show_setup_form({"base": "cannot_connect"})
 
+        # Discover available heating circuits after successful connection
+        await self._discover_circuits()
+
+        # If multiple circuits found, ask user which to enable
+        if len(self._available_circuits) > 1:
+            return await self.async_step_heating_circuits()
+
         return self._async_create_entry()
+
+    async def _discover_circuits(self) -> None:
+        """Discover available heating circuits on the device."""
+        if self._bsblan_client is None:
+            return
+        try:
+            self._available_circuits = (
+                await self._bsblan_client.get_available_circuits()
+            )
+        except BSBLANError:
+            # Discovery failed, default to single circuit
+            self._available_circuits = [1]
+
+    async def async_step_heating_circuits(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle heating circuit selection step."""
+        if user_input is not None:
+            self._available_circuits = [
+                int(c) for c in user_input[CONF_HEATING_CIRCUITS]
+            ]
+            return self._async_create_entry()
+
+        circuit_options: list[SelectOptionDict] = [
+            SelectOptionDict(
+                value=str(circuit),
+                label=f"Heating circuit {circuit}",
+            )
+            for circuit in self._available_circuits
+        ]
+
+        return self.async_show_form(
+            step_id="heating_circuits",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HEATING_CIRCUITS,
+                        default=[str(c) for c in self._available_circuits],
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=circuit_options,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    ),
+                }
+            ),
+            description_placeholders={"count": str(len(self._available_circuits))},
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -183,90 +249,184 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         existing_entry = self._get_reauth_entry()
 
         if user_input is None:
-            # Preserve existing values as defaults
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=existing_entry.data.get(
-                                CONF_PASSKEY, vol.UNDEFINED
-                            ),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=existing_entry.data.get(
-                                CONF_USERNAME, vol.UNDEFINED
-                            ),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
+                data_schema=self._build_credentials_schema(existing_entry.data),
             )
 
-        # Combine existing data with the user's new input for validation.
-        # This correctly handles adding, changing, and clearing credentials.
-        config_data = existing_entry.data.copy()
-        config_data.update(user_input)
+        # Merge existing data with user input for validation
+        validate_data = {**existing_entry.data, **user_input}
+        errors = await self._async_validate_credentials(validate_data)
 
-        self.host = config_data[CONF_HOST]
-        self.port = config_data[CONF_PORT]
-        self.passkey = config_data.get(CONF_PASSKEY)
-        self.username = config_data.get(CONF_USERNAME)
-        self.password = config_data.get(CONF_PASSWORD)
+        if errors:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=self._build_credentials_schema(user_input),
+                errors=errors,
+            )
 
+        return self.async_update_reload_and_abort(
+            existing_entry, data_updates=user_input, reason="reauth_successful"
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration flow."""
+        existing_entry = self._get_reconfigure_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self._build_connection_schema(existing_entry.data),
+            )
+
+        # Merge existing data with user input for validation
+        validate_data = {**existing_entry.data, **user_input}
+        errors = await self._async_validate_credentials(validate_data)
+
+        if errors:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self._build_connection_schema(user_input),
+                errors=errors,
+            )
+
+        # Prevent reconfiguring to a different physical device
+        # it gets the unique ID from the device info when it validates credentials
+        self._abort_if_unique_id_mismatch()
+
+        # Discover available heating circuits
+        await self._discover_circuits()
+
+        # If multiple circuits found, ask user which to enable
+        if len(self._available_circuits) > 1:
+            # Store connection data for later use after circuit selection
+            self._reconfigure_data = user_input
+            return await self.async_step_heating_circuits_reconfigure()
+
+        return self.async_update_reload_and_abort(
+            existing_entry,
+            data_updates={
+                **user_input,
+                CONF_HEATING_CIRCUITS: self._available_circuits,
+            },
+            reason="reconfigure_successful",
+        )
+
+    async def async_step_heating_circuits_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle heating circuit selection during reconfigure."""
+        existing_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            selected_circuits = [int(c) for c in user_input[CONF_HEATING_CIRCUITS]]
+            return self.async_update_reload_and_abort(
+                existing_entry,
+                data_updates={
+                    **self._reconfigure_data,
+                    CONF_HEATING_CIRCUITS: selected_circuits,
+                },
+                reason="reconfigure_successful",
+            )
+
+        # Pre-select circuits that were previously configured
+        existing_circuits = existing_entry.data.get(CONF_HEATING_CIRCUITS, [1])
+        default_selection = [
+            str(c) for c in self._available_circuits if c in existing_circuits
+        ] or [str(self._available_circuits[0])]
+
+        circuit_options: list[SelectOptionDict] = [
+            SelectOptionDict(
+                value=str(circuit),
+                label=f"Heating circuit {circuit}",
+            )
+            for circuit in self._available_circuits
+        ]
+
+        return self.async_show_form(
+            step_id="heating_circuits_reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HEATING_CIRCUITS,
+                        default=default_selection,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=circuit_options,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    ),
+                }
+            ),
+            description_placeholders={"count": str(len(self._available_circuits))},
+        )
+
+    async def _async_validate_credentials(self, data: dict[str, Any]) -> dict[str, str]:
+        """Validate connection credentials and return errors dict."""
+        self.host = data[CONF_HOST]
+        self.port = data.get(CONF_PORT, DEFAULT_PORT)
+        self.passkey = data.get(CONF_PASSKEY)
+        self.username = data.get(CONF_USERNAME)
+        self.password = data.get(CONF_PASSWORD)
+
+        errors: dict[str, str] = {}
         try:
             await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
         except BSBLANAuthError:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
-                errors={"base": "invalid_auth"},
-            )
+            errors["base"] = "invalid_auth"
         except BSBLANError:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PASSKEY,
-                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_USERNAME,
-                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
-                        ): str,
-                        vol.Optional(
-                            CONF_PASSWORD,
-                            default=vol.UNDEFINED,
-                        ): str,
-                    }
-                ),
-                errors={"base": "cannot_connect"},
-            )
+            errors["base"] = "cannot_connect"
+        return errors
 
-        # Update only the fields that were provided by the user
-        return self.async_update_reload_and_abort(
-            existing_entry, data_updates=user_input, reason="reauth_successful"
+    @callback
+    def _build_credentials_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+        """Build schema for credentials-only forms (reauth)."""
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_PASSKEY,
+                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_USERNAME,
+                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD,
+                    default=vol.UNDEFINED,
+                ): str,
+            }
+        )
+
+    @callback
+    def _build_connection_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+        """Build schema for full connection forms (user and reconfigure)."""
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST,
+                    default=defaults.get(CONF_HOST, vol.UNDEFINED),
+                ): str,
+                vol.Optional(
+                    CONF_PORT,
+                    default=defaults.get(CONF_PORT, DEFAULT_PORT),
+                ): int,
+                vol.Optional(
+                    CONF_PASSKEY,
+                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_USERNAME,
+                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD,
+                    default=vol.UNDEFINED,
+                ): str,
+            }
         )
 
     @callback
@@ -274,32 +434,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self, errors: dict | None = None, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
-        # Preserve user input if provided, otherwise use defaults
-        defaults = user_input or {}
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=defaults.get(CONF_HOST, vol.UNDEFINED)
-                    ): str,
-                    vol.Optional(
-                        CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
-                    ): int,
-                    vol.Optional(
-                        CONF_PASSKEY, default=defaults.get(CONF_PASSKEY, vol.UNDEFINED)
-                    ): str,
-                    vol.Optional(
-                        CONF_USERNAME,
-                        default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
-                    ): str,
-                    vol.Optional(
-                        CONF_PASSWORD,
-                        default=defaults.get(CONF_PASSWORD, vol.UNDEFINED),
-                    ): str,
-                }
-            ),
+            data_schema=self._build_connection_schema(user_input or {}),
             errors=errors or {},
         )
 
@@ -314,6 +451,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSKEY: self.passkey,
                 CONF_USERNAME: self.username,
                 CONF_PASSWORD: self.password,
+                CONF_HEATING_CIRCUITS: [int(c) for c in self._available_circuits],
             },
         )
 
@@ -332,6 +470,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         session = async_get_clientsession(self.hass)
         bsblan = BSBLAN(config, session)
+        self._bsblan_client = bsblan
         device = await bsblan.device()
         retrieved_mac = device.MAC
 

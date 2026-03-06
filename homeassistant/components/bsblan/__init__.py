@@ -28,11 +28,16 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PASSKEY, DOMAIN
+from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
@@ -52,7 +57,33 @@ class BSBLanData:
     client: BSBLAN
     device: Device
     info: Info
-    static: StaticState
+    static: dict[int, StaticState]
+    available_circuits: list[int]
+
+
+def get_bsblan_device_info(device: Device, info: Info, host: str) -> DeviceInfo:
+    """Build DeviceInfo for the main BSB-LAN controller device."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.MAC)},
+        connections={(CONNECTION_NETWORK_MAC, format_mac(device.MAC))},
+        name=device.name,
+        manufacturer="BSBLAN Inc.",
+        model=(
+            info.device_identification.value
+            if info.device_identification and info.device_identification.value
+            else None
+        ),
+        model_id=(
+            f"{info.controller_family.value}_{info.controller_variant.value}"
+            if info.controller_family
+            and info.controller_variant
+            and info.controller_family.value
+            and info.controller_variant.value
+            else None
+        ),
+        sw_version=device.version,
+        configuration_url=f"http://{host}",
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -82,12 +113,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         # the connection by fetching firmware version
         await bsblan.initialize()
 
+        # Read configured heating circuits from config entry (discovered in config flow)
+        circuits: list[int] = entry.data.get(CONF_HEATING_CIRCUITS, [1])
+
         # Fetch device metadata in parallel for faster startup
-        device, info, static = await asyncio.gather(
+        device, info = await asyncio.gather(
             bsblan.device(),
             bsblan.info(),
-            bsblan.static_values(),
         )
+
+        # Fetch static values per configured circuit
+        static_per_circuit: dict[int, StaticState] = {}
+        for circuit in circuits:
+            static_per_circuit[circuit] = await bsblan.static_values(circuit=circuit)
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -128,7 +166,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         slow_coordinator=slow_coordinator,
         device=device,
         info=info,
-        static=static,
+        static=static_per_circuit,
+        available_circuits=circuits,
+    )
+
+    # Register main device before forwarding platforms, so sub-devices
+    # (heating circuits, water heater) can reference it via via_device
+    device_registry = dr.async_get(hass)
+    main_device_info = get_bsblan_device_info(device, info, entry.data[CONF_HOST])
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers=main_device_info["identifiers"],
+        connections=main_device_info["connections"],
+        name=main_device_info["name"],
+        manufacturer=main_device_info["manufacturer"],
+        model=main_device_info.get("model"),
+        model_id=main_device_info.get("model_id"),
+        sw_version=main_device_info.get("sw_version"),
+        configuration_url=main_device_info.get("configuration_url"),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

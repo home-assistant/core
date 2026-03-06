@@ -48,17 +48,14 @@ rules:
   dynamic-devices:
     status: exempt
     comment: |
-      This integration has a fixed single device.
+      Devices and sub-devices are determined at config entry setup and do not change at runtime.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      This integration provides a limited number of entities, all of which are useful to users.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
@@ -66,7 +63,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This integration has a fixed single device.
+      Devices and sub-devices are determined at config entry setup and do not change at runtime.
 
   # Platinum
   async-dependency: done

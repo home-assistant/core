@@ -3,7 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device you are trying to reconfigure is not the same as the one previously configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -25,6 +27,26 @@
         "description": "A BSB-LAN device was discovered at {host}. Please provide credentials if required.",
         "title": "BSB-LAN device discovered"
       },
+      "heating_circuits": {
+        "data": {
+          "heating_circuits": "Heating circuits"
+        },
+        "data_description": {
+          "heating_circuits": "Select which heating circuits to enable."
+        },
+        "description": "Your BSB-LAN device has {count} heating circuits available. Select which circuits you want to control.",
+        "title": "Select heating circuits"
+      },
+      "heating_circuits_reconfigure": {
+        "data": {
+          "heating_circuits": "[%key:component::bsblan::config::step::heating_circuits::data::heating_circuits%]"
+        },
+        "data_description": {
+          "heating_circuits": "[%key:component::bsblan::config::step::heating_circuits::data_description::heating_circuits%]"
+        },
+        "description": "[%key:component::bsblan::config::step::heating_circuits::description%]",
+        "title": "[%key:component::bsblan::config::step::heating_circuits::title%]"
+      },
       "reauth_confirm": {
         "data": {
           "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
@@ -38,6 +60,24 @@
         },
         "description": "The BSB-LAN integration needs to re-authenticate with {name}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::bsblan::config::step::user::data_description::host%]",
+          "passkey": "[%key:component::bsblan::config::step::user::data_description::passkey%]",
+          "password": "[%key:component::bsblan::config::step::user::data_description::password%]",
+          "port": "[%key:component::bsblan::config::step::user::data_description::port%]",
+          "username": "[%key:component::bsblan::config::step::user::data_description::username%]"
+        },
+        "description": "Update connection settings for your BSB-LAN device.",
+        "title": "Reconfigure BSB-LAN"
       },
       "user": {
         "data": {
@@ -59,10 +99,35 @@
       }
     }
   },
+  "device": {
+    "heating_circuit_1": {
+      "name": "Heating circuit 1"
+    },
+    "heating_circuit_2": {
+      "name": "Heating circuit 2"
+    },
+    "heating_circuit_3": {
+      "name": "Heating circuit 3"
+    },
+    "water_heater": {
+      "name": "Water heater"
+    }
+  },
   "entity": {
     "button": {
       "sync_time": {
         "name": "Sync time"
+      }
+    },
+    "climate": {
+      "heating_circuit_1": {
+        "name": "Heating circuit 1"
+      },
+      "heating_circuit_2": {
+        "name": "Heating circuit 2"
+      },
+      "heating_circuit_3": {
+        "name": "Heating circuit 3"
       }
     },
     "sensor": {

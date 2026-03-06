@@ -29,7 +29,7 @@ from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "climate.bsb_lan"
+ENTITY_ID = "climate.heating_circuit_1"
 
 
 async def test_celsius_fahrenheit(
@@ -255,7 +255,7 @@ async def test_async_set_hvac_mode(
 
     # Assert that the thermostat method was called with integer value
     expected_int = HA_TO_BSBLAN_HVAC_MODE_TEST[mode]
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=expected_int)
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=expected_int, circuit=1)
     mock_bsblan.thermostat.reset_mock()
 
 
@@ -317,7 +317,9 @@ async def test_async_set_temperature(
         blocking=True,
     )
     # Assert that the thermostat method was called with the correct temperature
-    mock_bsblan.thermostat.assert_called_once_with(target_temperature=target_temp)
+    mock_bsblan.thermostat.assert_called_once_with(
+        target_temperature=target_temp, circuit=1
+    )
 
 
 async def test_async_set_data(
@@ -335,7 +337,7 @@ async def test_async_set_data(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(target_temperature=19)
+    mock_bsblan.thermostat.assert_called_once_with(target_temperature=19, circuit=1)
     mock_bsblan.thermostat.reset_mock()
 
     # Test setting HVAC mode - should convert to integer (3=heat)
@@ -345,7 +347,7 @@ async def test_async_set_data(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=3)  # 3 = heat
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=3, circuit=1)  # 3 = heat
     mock_bsblan.thermostat.reset_mock()
 
     # Patch HVAC mode to AUTO (integer 1)
@@ -360,7 +362,9 @@ async def test_async_set_data(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=2)  # 2 = eco/reduced
+    mock_bsblan.thermostat.assert_called_once_with(
+        hvac_mode=2, circuit=1
+    )  # 2 = eco/reduced
     mock_bsblan.thermostat.reset_mock()
 
     # Test setting preset mode to NONE - should use integer 1 (auto)
@@ -370,7 +374,7 @@ async def test_async_set_data(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=1)  # 1 = auto
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=1, circuit=1)  # 1 = auto
     mock_bsblan.thermostat.reset_mock()
 
     # Test error handling
@@ -383,3 +387,22 @@ async def test_async_set_data(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
+
+
+async def test_dual_circuit_climate_entities(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry_dual_circuit: MockConfigEntry,
+) -> None:
+    """Test that dual-circuit config creates two climate entities with correct IDs."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry_dual_circuit, [Platform.CLIMATE]
+    )
+
+    # Circuit 1 entity should exist
+    state1 = hass.states.get("climate.heating_circuit_1")
+    assert state1 is not None
+
+    # Circuit 2 entity should exist
+    state2 = hass.states.get("climate.heating_circuit_2")
+    assert state2 is not None

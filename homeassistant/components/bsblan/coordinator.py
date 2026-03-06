@@ -22,7 +22,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL_FAST, SCAN_INTERVAL_SLOW
+from .const import (
+    CONF_HEATING_CIRCUITS,
+    DOMAIN,
+    LOGGER,
+    SCAN_INTERVAL_FAST,
+    SCAN_INTERVAL_SLOW,
+)
 
 if TYPE_CHECKING:
     from . import BSBLanConfigEntry
@@ -48,7 +54,7 @@ DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
 class BSBLanFastData:
     """BSBLan fast-polling data."""
 
-    state: State
+    states: dict[int, State]
     sensor: Sensor
     dhw: HotWaterState
 
@@ -102,6 +108,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             name=f"{DOMAIN}_fast_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_FAST,
         )
+        self.circuits: list[int] = config_entry.data.get(CONF_HEATING_CIRCUITS, [1])
 
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
@@ -109,7 +116,11 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             # Client is already initialized in async_setup_entry
             # Use include filtering to only fetch parameters we actually use
             # This reduces response time significantly (~0.2s per parameter)
-            state = await self.client.state(include=STATE_INCLUDE)
+            states: dict[int, State] = {}
+            for circuit in self.circuits:
+                states[circuit] = await self.client.state(
+                    include=STATE_INCLUDE, circuit=circuit
+                )
             sensor = await self.client.sensor(include=SENSOR_INCLUDE)
             dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
 
@@ -127,7 +138,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             ) from err
 
         return BSBLanFastData(
-            state=state,
+            states=states,
             sensor=sensor,
             dhw=dhw,
         )

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_water_heater_states[dhw_state.json][water_heater.bsb_lan-entry]
+# name: test_water_heater_states[dhw_state.json][water_heater.water_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'water_heater',
     'entity_category': None,
-    'entity_id': 'water_heater.bsb_lan',
+    'entity_id': 'water_heater.water_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,11 +43,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_water_heater_states[dhw_state.json][water_heater.bsb_lan-state]
+# name: test_water_heater_states[dhw_state.json][water_heater.water_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 48.5,
-      'friendly_name': 'BSB-LAN',
+      'friendly_name': 'Water heater',
       'max_temp': 65.0,
       'min_temp': 35.0,
       'operation_list': list([
@@ -62,7 +62,7 @@
       'temperature': 50.0,
     }),
     'context': <ANY>,
-    'entity_id': 'water_heater.bsb_lan',
+    'entity_id': 'water_heater.water_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

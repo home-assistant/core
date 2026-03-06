@@ -20,11 +20,17 @@ async def async_get_config_entry_diagnostics(
         "info": data.info.model_dump(),
         "device": data.device.model_dump(),
         "fast_coordinator_data": {
-            "state": data.fast_coordinator.data.state.model_dump(),
+            "states": {
+                str(circuit): state.model_dump()
+                for circuit, state in data.fast_coordinator.data.states.items()
+            },
             "sensor": data.fast_coordinator.data.sensor.model_dump(),
             "dhw": data.fast_coordinator.data.dhw.model_dump(),
         },
-        "static": data.static.model_dump(),
+        "static": {
+            str(circuit): static.model_dump() for circuit, static in data.static.items()
+        },
+        "available_circuits": data.available_circuits,
     }
 
     # Add DHW config and schedule from slow coordinator if available
