@@ -311,6 +311,64 @@ async def test_cannot_create_same_subentry(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reconfigure updates host/port."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "10.0.0.2",
+            CONF_PORT: 4321,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "10.0.0.2",
+        CONF_PORT: 4321,
+    }
+
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_connection_failed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Failure path for the reconfigure flow."""
+    mock_satel.connect.return_value = False
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_same_host_config_disallowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
