@@ -196,12 +196,6 @@ async def _request_media(
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, tmdb_id, seasons)
     except OverseerrConnectionError as err:
-        LOGGER.error(
-            "Error requesting %s with TMDB ID %s: %s",
-            media_type,
-            tmdb_id,
-            str(err),
-        )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="connection_error",
@@ -278,8 +272,8 @@ def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]
         if isinstance(parsed, int):
             return [parsed]
         return list(parsed)
-    except (ValueError, SyntaxError, TypeError):
-        LOGGER.error("Unable to cast input to a list '%s'", seasons_str)
+    except ValueError, SyntaxError, TypeError:
+        LOGGER.error("Unable to cast input to a list '%s'", seasons_input)
         return "all"
 
 
