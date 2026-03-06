@@ -94,13 +94,19 @@ def get_monitor_callbacks(
     mock_satel: AsyncMock,
 ) -> tuple[
     Callable[[], None],
-    Callable[[dict[str, dict[int, int]]], None],
-    Callable[[dict[str, dict[int, int]]], None],
+    Callable[[dict[int, int]], None],
+    Callable[[dict[int, int]], None],
 ]:
-    """Return (partitions_cb, zones_cb, outputs_cb) passed to monitor_status."""
-    if not mock_satel.monitor_status.call_args_list:
-        pytest.fail("monitor_status was not called")
+    """Return callbacks passed to `register_callbacks`."""
+    if not mock_satel.register_callbacks.call_args_list:
+        pytest.fail("register_callbacks was not called")
 
-    call = mock_satel.monitor_status.call_args_list[-1]
-    partitions_cb, zones_cb, outputs_cb = call.args
+    call = mock_satel.register_callbacks.call_args_list[-1]
+    if call.kwargs:
+        partitions_cb = call.kwargs["alarm_status_callback"]
+        zones_cb = call.kwargs["zone_changed_callback"]
+        outputs_cb = call.kwargs["output_changed_callback"]
+    else:
+        partitions_cb, zones_cb, outputs_cb = call.args
+
     return partitions_cb, zones_cb, outputs_cb
