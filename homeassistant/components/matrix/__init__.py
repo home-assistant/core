@@ -66,8 +66,6 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-SESSION_FILE = ".matrix.conf"
-
 CONF_USERNAME_REGEX = "^@[^:]*:.*"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
@@ -216,7 +214,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
     entry.async_on_unload(matrix_bot.async_close)
 
     if hass.is_running:
-        hass.async_create_background_task(
+        entry.async_create_background_task(
+            hass,
             matrix_bot.async_start(),
             name=f"{matrix_bot.__class__.__name__}: start for '{entry.unique_id}'",
         )
@@ -276,6 +275,7 @@ class MatrixBot:
         self._unparsed_commands = commands
         self._start_lock = asyncio.Lock()
         self._started = False
+        self._sync_task: asyncio.Task[None] | None = None
 
     @property
     def known_rooms(self) -> set[str]:
@@ -319,7 +319,7 @@ class MatrixBot:
         )
 
         _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
-        self.hass.async_create_background_task(
+        self._sync_task = self.hass.async_create_background_task(
             self._client.sync_forever(
                 timeout=30_000,
                 loop_sleep_time=1_000,
@@ -751,6 +751,8 @@ class MatrixBot:
 
     async def async_close(self) -> None:
         """Close the Matrix client."""
+        if self._sync_task is not None:
+            self._sync_task.cancel()
         await self._client.close()
 
     async def handle_send_reaction(self, service: ServiceCall) -> None:
