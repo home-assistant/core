@@ -1,5 +1,7 @@
 """Ruckus DataUpdateCoordinator."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -15,14 +17,19 @@ from .const import API_CLIENT_MAC, DOMAIN, KEY_SYS_CLIENTS, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__package__)
 
+type RuckusUnleashedConfigEntry = ConfigEntry[RuckusDataUpdateCoordinator]
 
-class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
+
+class RuckusDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator to manage data from Ruckus client."""
 
-    config_entry: ConfigEntry
+    config_entry: RuckusUnleashedConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, ruckus: AjaxSession
+        self,
+        hass: HomeAssistant,
+        config_entry: RuckusUnleashedConfigEntry,
+        ruckus: AjaxSession,
     ) -> None:
         """Initialize global Ruckus data updater."""
         self.ruckus = ruckus

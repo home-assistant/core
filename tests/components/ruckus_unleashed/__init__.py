@@ -10,20 +10,13 @@ from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
     API_AP_MAC,
     API_AP_MODEL,
-    API_AP_SERIALNUMBER,
-    API_CLIENT_AP_MAC,
     API_CLIENT_HOSTNAME,
     API_CLIENT_IP,
     API_CLIENT_MAC,
     API_MESH_NAME,
-    API_MESH_PSK,
-    API_SYS_IDENTITY,
-    API_SYS_IDENTITY_NAME,
     API_SYS_SYSINFO,
     API_SYS_SYSINFO_SERIAL,
     API_SYS_SYSINFO_VERSION,
-    API_SYS_UNLEASHEDNETWORK,
-    API_SYS_UNLEASHEDNETWORK_TOKEN,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -33,19 +26,17 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 DEFAULT_SYSTEM_INFO = {
-    API_SYS_IDENTITY: {API_SYS_IDENTITY_NAME: "RuckusUnleashed"},
+    "identity": {"name": "RuckusUnleashed"},
     API_SYS_SYSINFO: {
         API_SYS_SYSINFO_SERIAL: "123456789012",
         API_SYS_SYSINFO_VERSION: "200.7.10.202 build 141",
     },
-    API_SYS_UNLEASHEDNETWORK: {
-        API_SYS_UNLEASHEDNETWORK_TOKEN: "un1234567890121680060227001"
-    },
+    "unleashed-network": {"unleashed-network-token": "un1234567890121680060227001"},
 }
 
 DEFAULT_MESH_INFO = {
     API_MESH_NAME: "Ruckus Mesh",
-    API_MESH_PSK: "",
+    "psk": "",
 }
 
 DEFAULT_AP_INFO = [
@@ -53,9 +44,7 @@ DEFAULT_AP_INFO = [
         API_AP_MAC: "00:11:22:33:44:55",
         API_AP_DEVNAME: "Test Device",
         API_AP_MODEL: "r510",
-        API_AP_SERIALNUMBER: DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][
-            API_SYS_SYSINFO_SERIAL
-        ],
+        "serial": DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL],
     }
 ]
 
@@ -70,21 +59,31 @@ TEST_CLIENT = {
     API_CLIENT_IP: "1.1.1.2",
     API_CLIENT_MAC: "AA:BB:CC:DD:EE:FF",
     API_CLIENT_HOSTNAME: "Ruckus Test Device",
-    API_CLIENT_AP_MAC: DEFAULT_AP_INFO[0][API_AP_MAC],
+    "ap": DEFAULT_AP_INFO[0][API_AP_MAC],
+}
+
+TEST_CLIENT_2_ENTITY_ID = "device_tracker.ruckus_test_device_2"
+TEST_CLIENT_2 = {
+    API_CLIENT_IP: "1.1.1.3",
+    API_CLIENT_MAC: "11:22:33:44:55:66",
+    API_CLIENT_HOSTNAME: "Ruckus Test Device 2",
+    "ap": DEFAULT_AP_INFO[0][API_AP_MAC],
 }
 
 DEFAULT_TITLE = DEFAULT_MESH_INFO[API_MESH_NAME]
 DEFAULT_UNIQUEID = DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
 
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(
+    options: dict | None = None,
+) -> MockConfigEntry:
     """Return a Ruckus mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_TITLE,
         unique_id=DEFAULT_UNIQUEID,
         data=CONFIG,
-        options=None,
+        options=options,
     )
 
 
