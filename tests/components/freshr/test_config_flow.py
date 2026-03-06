@@ -38,8 +38,7 @@ async def test_form_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fresh-r (test-user)"
     assert result["data"] == USER_INPUT
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == "test-user"
+    assert result["result"].unique_id == "test-user"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
