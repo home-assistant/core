@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "player_not_found": "Player not found.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "initiate_flow": {
+      "user": "Add player"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "username": "The Chess.com username of the player to monitor."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "chess_daily_rating": {
+        "name": "Daily chess rating"
+      },
+      "followers": {
+        "name": "Followers",
+        "unit_of_measurement": "followers"
+      },
+      "total_daily_draw": {
+        "name": "Total chess games drawn",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::total_daily_won::unit_of_measurement%]"
+      },
+      "total_daily_lost": {
+        "name": "Total chess games lost",
+        "unit_of_measurement": "[%key:component::chess_com::entity::sensor::total_daily_won::unit_of_measurement%]"
+      },
+      "total_daily_won": {
+        "name": "Total chess games won",
+        "unit_of_measurement": "games"
+      }
+    }
+  }
+}
