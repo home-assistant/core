@@ -16,8 +16,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: |
-      The integration does not provide any entities.
+    comment: Entities do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -69,24 +68,20 @@ rules:
     comment: There is always one device per config entry.
   entity-category:
     status: exempt
-    comment: |
-      Entities do not require a specific category.
+    comment: Entities do not require a specific category.
   entity-device-class:
     status: exempt
-    comment: |
-      Entities do not have a specific device class.
+    comment: Entities do not have a specific device class.
   entity-disabled-by-default:
     status: exempt
-    comment: |
-      No noisy/non-essential entities.
+    comment: No noisy/non-essential entities.
   entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
-    comment: |
-      Integration does not raise repair issues.
+    comment: Integration does not raise repair issues.
   stale-devices:
     status: exempt
     comment: only one device per entry, is deleted with the entry.
