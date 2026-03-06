@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 import switchbot
-from switchbot import AirPurifierMode, FanMode
+from switchbot import AirPurifierMode, FanMode, StandingFanMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -27,6 +27,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
         async_add_entities([SwitchBotAirPurifierEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
+        async_add_entities([SwitchBotStandingFanEntity(coordinator)])
     else:
         async_add_entities([SwitchBotFanEntity(coordinator)])
 
@@ -121,6 +123,13 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         _LOGGER.debug("Switchbot fan to set turn off %s", self._address)
         self._last_run_success = bool(await self._device.turn_off())
         self.async_write_ha_state()
+
+
+class SwitchBotStandingFanEntity(SwitchBotFanEntity):
+    """Representation of a Switchbot Standing Fan."""
+
+    _device: switchbot.SwitchbotStandingFan
+    _attr_preset_modes = StandingFanMode.get_modes()
 
 
 class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):

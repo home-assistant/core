@@ -33,6 +33,14 @@ async def async_setup_entry(
 
     if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
         async_add_entities([SwitchBotMeterProCO2TimeFormatSelect(coordinator)], True)
+    elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
+        async_add_entities(
+            [
+                SwitchBotStandingFanHorizontalOscillationSelect(coordinator),
+                SwitchBotStandingFanVerticalOscillationSelect(coordinator),
+                SwitchBotStandingFanNightLightSelect(coordinator),
+            ]
+        )
 
 
 class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
@@ -71,3 +79,84 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
         self._attr_current_option = (
             TIME_FORMAT_12H if device_time["12h_mode"] else TIME_FORMAT_24H
         )
+
+
+OSCILLATION_ANGLE_OPTIONS = ["30", "60", "90"]
+
+NIGHT_LIGHT_OPTIONS = ["off", "level_1", "level_2"]
+NIGHT_LIGHT_TO_CMD = {"off": 3, "level_1": 1, "level_2": 2}
+NIGHT_LIGHT_FROM_STATE = {3: "off", 1: "level_1", 2: "level_2"}
+
+
+class SwitchBotStandingFanHorizontalOscillationSelect(SwitchbotEntity, SelectEntity):
+    """Select entity for horizontal oscillation angle on Standing Fan."""
+
+    _device: switchbot.SwitchbotStandingFan
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "horizontal_oscillation_angle"
+    _attr_options = OSCILLATION_ANGLE_OPTIONS
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.base_unique_id}_horizontal_oscillation_angle"
+        )
+
+    @exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set horizontal oscillation angle."""
+        await self._device.set_horizontal_oscillation_angle(int(option))
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+
+class SwitchBotStandingFanVerticalOscillationSelect(SwitchbotEntity, SelectEntity):
+    """Select entity for vertical oscillation angle on Standing Fan."""
+
+    _device: switchbot.SwitchbotStandingFan
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "vertical_oscillation_angle"
+    _attr_options = OSCILLATION_ANGLE_OPTIONS
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.base_unique_id}_vertical_oscillation_angle"
+        )
+
+    @exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set vertical oscillation angle."""
+        await self._device.set_vertical_oscillation_angle(int(option))
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+
+class SwitchBotStandingFanNightLightSelect(SwitchbotEntity, SelectEntity):
+    """Select entity for night light on Standing Fan."""
+
+    _device: switchbot.SwitchbotStandingFan
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "night_light"
+    _attr_options = NIGHT_LIGHT_OPTIONS
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_night_light"
+
+    @property
+    def current_option(self) -> str | None:
+        """Return current night light state."""
+        state = self._device.get_night_light_state()
+        if state is None:
+            return None
+        return NIGHT_LIGHT_FROM_STATE.get(state)
+
+    @exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set night light state."""
+        await self._device.set_night_light(NIGHT_LIGHT_TO_CMD[option])
+        self.async_write_ha_state()

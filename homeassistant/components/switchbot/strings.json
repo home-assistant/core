@@ -281,6 +281,30 @@
       }
     },
     "select": {
+      "horizontal_oscillation_angle": {
+        "name": "Horizontal oscillation angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "vertical_oscillation_angle": {
+        "name": "Vertical oscillation angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "night_light": {
+        "name": "Night light",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level_1": "Level 1",
+          "level_2": "Level 2"
+        }
+      },
       "time_format": {
         "name": "Time format",
         "state": {
@@ -328,6 +352,12 @@
       }
     },
     "switch": {
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
+      },
       "bot": {
         "state_attributes": {
           "last_run_success": {
