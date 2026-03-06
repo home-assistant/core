@@ -100,7 +100,7 @@ def make_service_info(
         service_data={},
         service_uuids=[],
         source="local",
-        connectable=False,
+        connectable=True,
         time=time(),
         device=generate_ble_device(address, name=name),
         advertisement=AdvertisementData(
