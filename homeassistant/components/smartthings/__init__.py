@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
+        raise ConfigEntryAuthFailed from err
     except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
 
