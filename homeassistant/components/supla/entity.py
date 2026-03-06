@@ -14,8 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
     """Base class of a SUPLA Channel (an equivalent of HA's Entity)."""
 
-    def __init__(self, config, server, coordinator: SuplaCoordinator) -> None:
-        """Init from config, hookup server and coordinator."""
+    def __init__(self, config, server, coordinator):
+        """Init from config, hookup[ server and coordinator."""
         super().__init__(coordinator)
         self.server_name = config["server_name"]
         self.channel_id = config["channel_id"]
