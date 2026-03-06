@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.util.ssl import get_default_context
 
 from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
 from .coordinator import SmartMeterTexasCoordinator, SmartMeterTexasData
@@ -27,9 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     account = Account(username, password)
 
-    ssl_context = get_default_context()
-
-    smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, ssl_context)
+    smart_meter_texas_data = SmartMeterTexasData(hass, account)
     try:
         await smart_meter_texas_data.client.authenticate()
     except SmartMeterTexasAuthError:

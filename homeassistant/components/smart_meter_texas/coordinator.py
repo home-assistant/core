@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for the Smart Meter Texas integration."""
 
 import logging
-import ssl
 
 from smart_meter_texas import Account, Client, Meter
 from smart_meter_texas.exceptions import (
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import get_default_context
 
 from .const import DEBOUNCE_COOLDOWN, SCAN_INTERVAL
 
@@ -26,15 +26,15 @@ class SmartMeterTexasData:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
         account: Account,
-        ssl_context: ssl.SSLContext,
     ) -> None:
         """Initialize the data coordinator."""
-        self._entry = entry
         self.account = account
-        websession = aiohttp_client.async_get_clientsession(hass)
-        self.client = Client(websession, account, ssl_context=ssl_context)
+        self.client = Client(
+            aiohttp_client.async_get_clientsession(hass),
+            account,
+            ssl_context=get_default_context(),
+        )
         self.meters: list[Meter] = []
 
     async def setup(self) -> None:
