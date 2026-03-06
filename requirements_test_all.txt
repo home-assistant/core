@@ -395,7 +395,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.1.0
+aioswitcher==6.1.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -645,6 +645,9 @@ cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
 caldav==2.1.0
+
+# homeassistant.components.chess_com
+chess-com-api==1.1.0
 
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2
@@ -1618,6 +1621,9 @@ py-nightscout==1.2.2
 
 # homeassistant.components.mta
 py-nymta==0.4.0
+
+# homeassistant.components.opendisplay
+py-opendisplay==5.2.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
