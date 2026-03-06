@@ -254,6 +254,9 @@ class MatterFan(MatterEntity, FanEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = FanEntityFeature(0)
+        # Reset speed_count to the FanEntity default; it will be re-set below
+        # if kMultiSpeed is present in the current feature map.
+        self._attr_speed_count = None
 
         # FIX: PercentSetting/PercentCurrent are MANDATORY on all FanControl clusters
         # per the Matter spec. Enable SET_SPEED unconditionally so the percentage
