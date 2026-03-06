@@ -341,6 +341,7 @@ async def test_reconfigure_flow_success(
         CONF_PORT: 4321,
     }
 
+    await hass.async_block_till_done()
     assert mock_setup_entry.call_count == 1
 
 
