@@ -16,7 +16,7 @@ upload_image:
       fields:
         rotation:
           required: false
-          default: "0"
+          default: 0
           selector:
             number:
               min: 0
