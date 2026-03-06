@@ -105,7 +105,7 @@ class WebDavBackupAgent(BackupAgent):
         super().__init__()
         self._hass = hass
         self._entry = entry
-        self._client = entry.runtime_data
+        self._client = entry.runtime_data.client
         self.name = entry.title
         self.unique_id = entry.entry_id
         self._cache_metadata_files: dict[str, AgentBackup] = {}
