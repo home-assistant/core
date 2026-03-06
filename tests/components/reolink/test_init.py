@@ -17,7 +17,6 @@ from reolink_aio.exceptions import (
 from homeassistant.components.reolink import (
     DEVICE_UPDATE_INTERVAL_MIN,
     FIRMWARE_UPDATE_INTERVAL,
-    NUM_CRED_ERRORS,
 )
 from homeassistant.components.reolink.const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
@@ -26,6 +25,7 @@ from homeassistant.components.reolink.const import (
     CONF_FIRMWARE_CHECK_TIME,
     DOMAIN,
 )
+from homeassistant.components.reolink.coordinator import NUM_CRED_ERRORS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
