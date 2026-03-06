@@ -50,7 +50,7 @@ async def async_setup_entry(
 
 
 def get_season(
-    current_date: datetime, hemisphere: str, season_tracking_type: str
+    current_datetime: datetime, hemisphere: str, season_tracking_type: str
 ) -> str | None:
     """Calculate the current season."""
 
@@ -59,12 +59,12 @@ def get_season(
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
         spring_start = (
-            ephem.next_equinox(str(current_date.year))
+            ephem.next_equinox(str(current_datetime.year))
             .datetime()
             .replace(tzinfo=dt_util.UTC)
         )
         summer_start = (
-            ephem.next_solstice(str(current_date.year))
+            ephem.next_solstice(str(current_datetime.year))
             .datetime()
             .replace(tzinfo=dt_util.UTC)
         )
@@ -75,7 +75,7 @@ def get_season(
             ephem.next_solstice(summer_start).datetime().replace(tzinfo=dt_util.UTC)
         )
     else:
-        spring_start = current_date.replace(
+        spring_start = current_datetime.replace(
             month=3, day=1, hour=0, minute=0, second=0, microsecond=0
         )
         summer_start = spring_start.replace(month=6)
@@ -83,11 +83,11 @@ def get_season(
         winter_start = spring_start.replace(month=12)
 
     season = STATE_WINTER
-    if spring_start <= current_date < summer_start:
+    if spring_start <= current_datetime < summer_start:
         season = STATE_SPRING
-    elif summer_start <= current_date < autumn_start:
+    elif summer_start <= current_datetime < autumn_start:
         season = STATE_SUMMER
-    elif autumn_start <= current_date < winter_start:
+    elif autumn_start <= current_datetime < winter_start:
         season = STATE_AUTUMN
 
     # If user is located in the southern hemisphere swap the season
