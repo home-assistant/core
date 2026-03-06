@@ -8,10 +8,8 @@ from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
 )
-from tuya_device_handlers.type_information import IntegerTypeInformation
-from tuya_device_handlers.utils import RemapHelper
+from tuya_device_handlers.device_wrapper.extended import DPCodeNonZeroPercentageWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
@@ -94,30 +92,11 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper[int]):
         return percentage_to_ordered_list_item(self.options, value)
 
 
-class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper[int]):
-    """Wrapper for fan speed DP code (from an integer)."""
-
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._remap_helper = RemapHelper.from_type_information(type_information, 1, 100)
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Get the current speed as a percentage."""
-        if (value := self._read_dpcode_value(device)) is None:
-            return None
-        return round(self._remap_helper.remap_value_to(value))
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Convert a Home Assistant value back to a raw device value."""
-        return round(self._remap_helper.remap_value_from(value))
-
-
 def _get_speed_wrapper(
     device: CustomerDevice,
-) -> _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None:
+) -> DeviceWrapper[int] | None:
     """Get the speed wrapper for the device."""
-    if int_wrapper := _FanSpeedIntegerWrapper.find_dpcode(
+    if int_wrapper := DPCodeNonZeroPercentageWrapper.find_dpcode(
         device, _SPEED_DPCODES, prefer_function=True
     ):
         return int_wrapper
