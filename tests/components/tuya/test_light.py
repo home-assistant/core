@@ -42,13 +42,11 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["dj_mki13ie507rlry4r"],
-)
-@pytest.mark.parametrize(
-    ("service", "service_data", "expected_commands"),
+    ("mock_device_code", "entity_id", "service", "service_data", "expected_commands"),
     [
         (
+            "dj_mki13ie507rlry4r",
+            "light.garage_light",
             SERVICE_TURN_ON,
             {
                 ATTR_WHITE: True,
@@ -60,6 +58,8 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "dj_mki13ie507rlry4r",
+            "light.garage_light",
             SERVICE_TURN_ON,
             {
                 ATTR_BRIGHTNESS: 150,
@@ -70,6 +70,8 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "dj_mki13ie507rlry4r",
+            "light.garage_light",
             SERVICE_TURN_ON,
             {
                 ATTR_WHITE: True,
@@ -82,6 +84,8 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "dj_mki13ie507rlry4r",
+            "light.garage_light",
             SERVICE_TURN_ON,
             {
                 ATTR_WHITE: 150,
@@ -93,6 +97,8 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "dj_mki13ie507rlry4r",
+            "light.garage_light",
             SERVICE_TURN_ON,
             {
                 ATTR_BRIGHTNESS: 255,
@@ -105,9 +111,25 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "dj_mki13ie507rlry4r",
+            "light.garage_light",
             SERVICE_TURN_OFF,
             {},
             [{"code": "switch_led", "value": False}],
+        ),
+        (
+            "dj_ilddqqih3tucdk68",
+            "light.ieskas",
+            SERVICE_TURN_ON,
+            {
+                ATTR_BRIGHTNESS: 255,
+                ATTR_HS_COLOR: (10.1, 20.2),
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "temp_value", "value": 162},
+                {"code": "bright_value", "value": 255},
+            ],
         ),
     ],
 )
@@ -116,12 +138,12 @@ async def test_action(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    entity_id: str,
     service: str,
     service_data: dict[str, Any],
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test light action."""
-    entity_id = "light.garage_light"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
