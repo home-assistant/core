@@ -24,7 +24,7 @@ class BinarySensorOnOffTrigger(EntityTargetStateTriggerBase):
     """Class for binary sensor on/off triggers."""
 
     _device_class: BinarySensorDeviceClass | None
-    _domain: str = DOMAIN
+    _domains = {DOMAIN}
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain."""
