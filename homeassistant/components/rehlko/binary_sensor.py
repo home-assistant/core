@@ -168,15 +168,18 @@ class RehlkoLoadshedBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        if not self.coordinator.data or "loadShed" not in self.coordinator.data:
+        if (
+            not self.coordinator.data
+            or not (loadshed_data := self.coordinator.data.get("loadShed"))
+            or not (parameters := loadshed_data.get("parameters"))
+        ):
             return None
 
-        loadshed_data = self.coordinator.data["loadShed"]
-        if not loadshed_data.get("parameters"):
-            return None
-
-        for parameter in loadshed_data["parameters"]:
-            if parameter["definitionId"] == self._definition_id:
-                return parameter.get("value")
-
-        return None
+        return next(
+            (
+                parameter.get("value")
+                for parameter in parameters
+                if parameter["definitionId"] == self._definition_id
+            ),
+            None,
+        )
