@@ -262,9 +262,10 @@ class MatterFan(MatterEntity, FanEntity):
 
         if feature_map & FanControlFeature.kMultiSpeed:
             # kMultiSpeed devices also expose SpeedMax for step granularity
-            speed_max = int(
-                self.get_matter_attribute_value(clusters.FanControl.Attributes.SpeedMax)
+            speed_max_attr = self.get_matter_attribute_value(
+                clusters.FanControl.Attributes.SpeedMax
             )
+            speed_max = int(speed_max_attr) if speed_max_attr is not None else 0
             if speed_max > 0:
                 self._attr_speed_count = speed_max
 
