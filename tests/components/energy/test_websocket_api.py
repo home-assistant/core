@@ -47,6 +47,26 @@ def mock_energy_platform(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture
+def mock_wind_energy_platform(hass: HomeAssistant) -> None:
+    """Mock a wind energy platform."""
+    hass.config.components.add("some_wind_domain")
+    mock_platform(
+        hass,
+        "some_wind_domain.energy",
+        Mock(
+            async_get_wind_forecast=AsyncMock(
+                return_value={
+                    "wh_hours": {
+                        "2021-06-27T13:00:00+00:00": 6,
+                        "2021-06-27T14:00:00+00:00": 4,
+                    }
+                }
+            )
+        ),
+    )
+
+
 async def test_get_preferences_no_data(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -141,6 +161,11 @@ async def test_save_preferences(
                 "config_entry_solar_forecast": ["predicted_config_entry"],
             },
             {
+                "type": "wind",
+                "stat_energy_from": "my_wind_production",
+                "config_entry_wind_forecast": None,
+            },
+            {
                 "type": "battery",
                 "stat_energy_from": "my_battery_draining",
                 "stat_energy_to": "my_battery_charging",
@@ -194,6 +219,7 @@ async def test_save_preferences(
             ),
         },
         "solar_forecast_domains": ["some_domain"],
+        "wind_forecast_domains": [],
     }
 
     # Prefs with limited options (defaults will be applied by schema)
@@ -314,6 +340,60 @@ async def test_get_solar_forecast(
             }
         }
     }
+
+
+async def test_get_wind_forecast(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_wind_energy_platform
+) -> None:
+    """Test we get wind forecast."""
+    entry = MockConfigEntry(domain="some_wind_domain")
+    entry.add_to_hass(hass)
+
+    manager = await data.async_get_manager(hass)
+
+    manager.data = data.EnergyManager.default_preferences()
+    manager.data["energy_sources"].append(
+        {
+            "type": "wind",
+            "stat_energy_from": "my_wind_production",
+            "config_entry_wind_forecast": [entry.entry_id],
+        }
+    )
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 5, "type": "energy/wind_forecast"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {
+        entry.entry_id: {
+            "wh_hours": {
+                "2021-06-27T13:00:00+00:00": 6,
+                "2021-06-27T14:00:00+00:00": 4,
+            }
+        }
+    }
+
+
+async def test_get_wind_forecast_no_data(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we get empty wind forecast when no data available."""
+    manager = await data.async_get_manager(hass)
+    manager.data = data.EnergyManager.default_preferences()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "energy/wind_forecast"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {}
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")

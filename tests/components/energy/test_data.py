@@ -451,15 +451,26 @@ async def test_async_update_when_data_is_none(hass: HomeAssistant) -> None:
                     "type": "solar",
                     "stat_energy_from": "sensor.solar_energy",
                     "config_entry_solar_forecast": None,
-                }
+                },
+                {
+                    "type": "wind",
+                    "stat_energy_from": "sensor.wind_production",
+                    "config_entry_wind_forecast": None,
+                },
             ],
         }
     )
 
     # Verify data was created with the update and default fields
     assert manager.data is not None
-    assert len(manager.data["energy_sources"]) == 1
+    assert len(manager.data["energy_sources"]) == 2
     assert manager.data["energy_sources"][0]["type"] == "solar"
+    assert manager.data["energy_sources"][1]["type"] == "wind"
+    assert (
+        manager.data["energy_sources"][1]["stat_energy_from"]
+        == "sensor.wind_production"
+    )
+    assert manager.data["energy_sources"][1]["config_entry_wind_forecast"] is None
     # Default fields should be present
     assert manager.data["device_consumption"] == []
     assert manager.data["device_consumption_water"] == []
