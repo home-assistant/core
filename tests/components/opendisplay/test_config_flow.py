@@ -80,7 +80,7 @@ async def test_bluetooth_discovery_already_in_progress(hass: HomeAssistant) -> N
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_error"),
+    ("exception", "expected_reason"),
     [
         (BLEConnectionError("test"), "cannot_connect"),
         (BLETimeoutError("test"), "cannot_connect"),
@@ -92,57 +92,37 @@ async def test_bluetooth_confirm_connection_error(
     hass: HomeAssistant,
     mock_opendisplay_device: MagicMock,
     exception: Exception,
-    expected_error: str,
+    expected_reason: str,
 ) -> None:
-    """Test confirm step handles connection and unexpected errors."""
+    """Test confirm step aborts when connection fails before showing the form."""
+    mock_opendisplay_device.__aenter__.side_effect = exception
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VALID_SERVICE_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
 
-    mock_opendisplay_device.__aenter__.side_effect = exception
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": expected_error}
-
-    mock_opendisplay_device.__aenter__.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 async def test_bluetooth_confirm_ble_device_not_found(
     hass: HomeAssistant,
 ) -> None:
-    """Test confirm step when BLE device is not found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=VALID_SERVICE_INFO,
-    )
-    assert result["type"] is FlowResultType.FORM
-
+    """Test confirm step aborts when BLE device is not found."""
     with patch(
         "homeassistant.components.opendisplay.config_flow.async_ble_device_from_address",
         return_value=None,
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=VALID_SERVICE_INFO,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_user_step_with_devices(hass: HomeAssistant) -> None:
