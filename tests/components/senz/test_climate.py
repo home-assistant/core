@@ -51,9 +51,7 @@ async def test_set_target(
 
     with (
         patch("homeassistant.components.senz.PLATFORMS", [Platform.CLIMATE]),
-        patch(
-            "homeassistant.components.senz.Thermostat.manual", return_value=None
-        ) as mock_manual,
+        patch("pysenz.Thermostat.manual", return_value=None) as mock_manual,
     ):
         await setup_integration(hass, mock_config_entry)
         await hass.services.async_call(
@@ -75,7 +73,7 @@ async def test_set_target_fail(
     with (
         patch("homeassistant.components.senz.PLATFORMS", [Platform.CLIMATE]),
         patch(
-            "homeassistant.components.senz.Thermostat.manual",
+            "pysenz.Thermostat.manual",
             side_effect=RequestError("API error"),
         ) as mock_manual,
     ):
@@ -108,12 +106,8 @@ async def test_set_hvac_mode(
 
     with (
         patch("homeassistant.components.senz.PLATFORMS", [Platform.CLIMATE]),
-        patch(
-            "homeassistant.components.senz.Thermostat.manual", return_value=None
-        ) as mock_manual,
-        patch(
-            "homeassistant.components.senz.Thermostat.auto", return_value=None
-        ) as mock_auto,
+        patch("pysenz.Thermostat.manual", return_value=None) as mock_manual,
+        patch("pysenz.Thermostat.auto", return_value=None) as mock_auto,
     ):
         await setup_integration(hass, mock_config_entry)
         await hass.services.async_call(
@@ -136,7 +130,7 @@ async def test_set_hvac_mode_fail(
     with (
         patch("homeassistant.components.senz.PLATFORMS", [Platform.CLIMATE]),
         patch(
-            "homeassistant.components.senz.Thermostat.manual",
+            "pysenz.Thermostat.manual",
             side_effect=RequestError("API error"),
         ) as mock_manual,
     ):
