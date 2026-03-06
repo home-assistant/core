@@ -1,7 +1,7 @@
 """OpenDisplay test fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -40,7 +40,7 @@ def mock_ble_device() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_opendisplay_device() -> Generator[None]:
+def mock_opendisplay_device() -> Generator[MagicMock]:
     """Mock the OpenDisplayDevice for setup entry."""
     with (
         patch(
@@ -60,7 +60,7 @@ def mock_opendisplay_device() -> Generator[None]:
         mock_device.__aenter__.return_value = mock_device
         mock_device.read_firmware_version.return_value = FIRMWARE_VERSION
         mock_device.config = DEVICE_CONFIG
-        yield
+        yield mock_device
 
 
 @pytest.fixture

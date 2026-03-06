@@ -1,6 +1,7 @@
 """Test the OpenDisplay config flow."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from opendisplay import BLEConnectionError, BLETimeoutError, OpenDisplayError
 import pytest
@@ -13,6 +14,16 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import NOT_OPENDISPLAY_SERVICE_INFO, VALID_SERVICE_INFO
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[None]:
+    """Prevent the integration from actually setting up after config flow."""
+    with patch(
+        "homeassistant.components.opendisplay.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
@@ -35,13 +46,11 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
-async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> None:
+async def test_bluetooth_discovery_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test discovery aborts when device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="AA:BB:CC:DD:EE:FF",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -71,13 +80,21 @@ async def test_bluetooth_discovery_already_in_progress(hass: HomeAssistant) -> N
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [BLEConnectionError("test"), BLETimeoutError("test"), OpenDisplayError("test")],
+    ("exception", "expected_error"),
+    [
+        (BLEConnectionError("test"), "cannot_connect"),
+        (BLETimeoutError("test"), "cannot_connect"),
+        (OpenDisplayError("test"), "cannot_connect"),
+        (RuntimeError("test"), "unknown"),
+    ],
 )
 async def test_bluetooth_confirm_connection_error(
-    hass: HomeAssistant, exception: Exception
+    hass: HomeAssistant,
+    mock_opendisplay_device: MagicMock,
+    exception: Exception,
+    expected_error: str,
 ) -> None:
-    """Test confirm step handles connection errors."""
+    """Test confirm step handles connection and unexpected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -85,17 +102,15 @@ async def test_bluetooth_confirm_connection_error(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
-        return_value=AsyncMock(__aenter__=AsyncMock(side_effect=exception)),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+    mock_opendisplay_device.__aenter__.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
+    mock_opendisplay_device.__aenter__.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
@@ -186,13 +201,21 @@ async def test_user_step_filters_unsupported(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [BLEConnectionError("test"), BLETimeoutError("test"), OpenDisplayError("test")],
+    ("exception", "expected_error"),
+    [
+        (BLEConnectionError("test"), "cannot_connect"),
+        (BLETimeoutError("test"), "cannot_connect"),
+        (OpenDisplayError("test"), "cannot_connect"),
+        (RuntimeError("test"), "unknown"),
+    ],
 )
 async def test_user_step_connection_error(
-    hass: HomeAssistant, exception: Exception
+    hass: HomeAssistant,
+    mock_opendisplay_device: MagicMock,
+    exception: Exception,
+    expected_error: str,
 ) -> None:
-    """Test user step handles connection errors."""
+    """Test user step handles connection and unexpected errors."""
     with patch(
         "homeassistant.components.opendisplay.config_flow.async_discovered_service_info",
         return_value=[VALID_SERVICE_INFO],
@@ -204,18 +227,16 @@ async def test_user_step_connection_error(
 
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
-        return_value=AsyncMock(__aenter__=AsyncMock(side_effect=exception)),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"address": "AA:BB:CC:DD:EE:FF"},
-        )
+    mock_opendisplay_device.__aenter__.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address": "AA:BB:CC:DD:EE:FF"},
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
+    mock_opendisplay_device.__aenter__.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": "AA:BB:CC:DD:EE:FF"},
@@ -223,75 +244,11 @@ async def test_user_step_connection_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_bluetooth_confirm_unknown_error(hass: HomeAssistant) -> None:
-    """Test confirm step shows error for unexpected exceptions."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=VALID_SERVICE_INFO,
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
-        return_value=AsyncMock(
-            __aenter__=AsyncMock(side_effect=RuntimeError("unexpected"))
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_step_unknown_error(hass: HomeAssistant) -> None:
-    """Test user step shows error for unexpected exceptions."""
-    with patch(
-        "homeassistant.components.opendisplay.config_flow.async_discovered_service_info",
-        return_value=[VALID_SERVICE_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
-        return_value=AsyncMock(
-            __aenter__=AsyncMock(side_effect=RuntimeError("unexpected"))
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"address": "AA:BB:CC:DD:EE:FF"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"address": "AA:BB:CC:DD:EE:FF"},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_step_already_configured(hass: HomeAssistant) -> None:
+async def test_user_step_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test user step aborts when device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="AA:BB:CC:DD:EE:FF",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.opendisplay.config_flow.async_discovered_service_info",
