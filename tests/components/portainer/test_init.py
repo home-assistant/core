@@ -7,6 +7,7 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.stacks import StackType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -183,3 +184,33 @@ async def test_device_registry(
         device_registry, mock_config_entry.entry_id
     )
     assert device_entries == snapshot
+
+
+async def test_coordinator_stack_type_assignment(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that containers are linked to the correct stack and stack type."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    endpoint_data = coordinator.data[1]
+
+    # Swarm container should be linked to the dashy stack
+    swarm_container = endpoint_data.containers[
+        "dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05"
+    ]
+    assert swarm_container.stack is not None
+    assert swarm_container.stack.name == "dashy"
+    assert swarm_container.stack.stack_type == StackType.SWARM
+
+    # Compose containers should be linked to the webstack stack
+    compose_container = endpoint_data.containers["serene_banach"]
+    assert compose_container.stack is not None
+    assert compose_container.stack.name == "webstack"
+    assert compose_container.stack.stack_type == StackType.COMPOSE
+
+    # Standalone container should have no stack association
+    standalone_container = endpoint_data.containers["focused_einstein"]
+    assert standalone_container.stack is None
