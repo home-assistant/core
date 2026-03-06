@@ -3,7 +3,7 @@
 from copy import deepcopy
 import json
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -30,6 +30,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     help_custom_config,
@@ -63,7 +64,11 @@ from .common import (
 
 from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from tests.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 COMMAND_TOPIC = "vacuum/command"
 SEND_COMMAND_TOPIC = "vacuum/send_command"
@@ -78,6 +83,27 @@ DEFAULT_CONFIG = {
             CONF_STATE_TOPIC: STATE_TOPIC,
             mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: "vacuum/set_fan_speed",
             mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
+        }
+    }
+}
+
+CONFIG_CLEAN_SEGMENTS_1 = {
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            "name": "test",
+            "unique_id": "veryunique",
+            "segments": ["Livingroom", "Kitchen"],
+            "clean_segments_command_topic": "vacuum/clean_segment",
+        }
+    }
+}
+CONFIG_CLEAN_SEGMENTS_2 = {
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            "name": "test",
+            "unique_id": "veryunique",
+            "segments": ["1.Livingroom", "2.Kitchen"],
+            "clean_segments_command_topic": "vacuum/clean_segment",
         }
     }
 }
@@ -292,6 +318,131 @@ async def test_command_without_command_topic(
     await common.async_send_command(hass, "some command", entity_id="vacuum.test")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])
+async def test_clean_segments_command_without_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test status updates from the vacuum."""
+    mqtt_mock = await mqtt_mock_entry()
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Nabu Casa": ["Kitchen", "Livingroom"]},
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+    await common.async_clean_area(hass, ["Nabu Casa"], entity_id="vacuum.test")
+    assert (
+        call("vacuum/clean_segment", "['Kitchen', 'Livingroom']", 0, False)
+        in mqtt_mock.async_publish.mock_calls
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "Livingroom", "name": "Livingroom", "group": None},
+        {"id": "Kitchen", "name": "Kitchen", "group": None},
+    ]
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_2])
+async def test_clean_segments_command_with_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test status updates from the vacuum."""
+    mqtt_mock = await mqtt_mock_entry()
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Kitchen": ["1"], "Livingroom": ["2"]},
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+    await common.async_clean_area(hass, ["Kitchen"], entity_id="vacuum.test")
+    assert (
+        call("vacuum/clean_segment", "['1']", 0, False)
+        in mqtt_mock.async_publish.mock_calls
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+    ]
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            vacuum.DOMAIN,
+            CONFIG_CLEAN_SEGMENTS_2,
+            ({"clean_segments_command_template": "{{ ';'.join(value) }}"},),
+        )
+    ],
+)
+async def test_clean_segments_command_with_id_and_command_template(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test status updates from the vacuum."""
+    mqtt_mock = await mqtt_mock_entry()
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Kitchen": ["1"], "Livingroom": ["2"]},
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+    await common.async_clean_area(
+        hass, ["Kitchen", "Livingroom"], entity_id="vacuum.test"
+    )
+    assert (
+        call("vacuum/clean_segment", "1;2", 0, False)
+        in mqtt_mock.async_publish.mock_calls
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])

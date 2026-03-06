@@ -10,6 +10,7 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_PARAMS,
     DOMAIN,
+    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -80,6 +81,26 @@ async def async_locate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -
     """Locate all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     await hass.services.async_call(DOMAIN, SERVICE_LOCATE, data, blocking=True)
+
+
+@bind_hass
+def clean_area(
+    hass: HomeAssistant, segments: list[str], entity_id: str = ENTITY_MATCH_ALL
+) -> None:
+    """Tell all or specified vacuum to perform an area clean."""
+    hass.add_job(async_clean_area, hass, segments, entity_id)
+
+
+async def async_clean_area(
+    hass: HomeAssistant,
+    segments: list[str],
+    entity_id: str = ENTITY_MATCH_ALL,
+) -> None:
+    """Tell all or specified vacuum to perform an area clean."""
+    data = (
+        {ATTR_ENTITY_ID: entity_id, "cleaning_area_id": segments} if entity_id else None
+    )
+    await hass.services.async_call(DOMAIN, SERVICE_CLEAN_AREA, data, blocking=True)
 
 
 @bind_hass
