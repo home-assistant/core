@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "Connection timeout": "Connection timeout",
+      "Invalid credentials": "Invalid credentials",
+      "appIdOrSecret_invalid": "Invalid appId or appSecret",
+      "connect_failed": "[%key:common::config_flow::error::cannot_connect%]",
+      "request_failed": "Request failed"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_url": "Server region",
+          "app_id": "App ID",
+          "app_secret": "App secret"
+        },
+        "data_description": {
+          "api_url": "Select the server region closest to your location",
+          "app_id": "The App ID obtained from IMOU Cloud platform",
+          "app_secret": "The App Secret obtained from IMOU Cloud platform"
+        },
+        "title": "Login to IMOU Cloud"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mute": {
+        "name": "Mute"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      },
+      "ptz_up": {
+        "name": "PTZ up"
+      },
+      "restart_device": {
+        "name": "Restart device"
+      }
+    }
+  },
+  "selector": {
+    "api_url": {
+      "options": {
+        "cn": "China",
+        "eu": "Europe",
+        "na": "North America",
+        "sg": "Singapore (Asia-Pacific)"
+      }
+    }
+  }
+}
