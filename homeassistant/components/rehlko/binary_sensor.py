@@ -149,7 +149,6 @@ class RehlkoLoadshedBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
         description = BinarySensorEntityDescription(
             key=f"loadshed_{definition_id}",
             translation_key="loadshed_parameter",
-            icon="mdi:transmission-tower-off",
             entity_registry_enabled_default=False,
         )
         self._definition_id = definition_id
