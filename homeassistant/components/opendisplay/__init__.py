@@ -86,7 +86,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     # Will be moved to DeviceInfo object in entity.py once entities are added
     manufacturer = device_config.manufacturer
     display = device_config.displays[0]
-    color_scheme = getattr(display.color_scheme_enum, "name", str(display.color_scheme))
+    color_scheme_enum = display.color_scheme_enum
+    color_scheme = (
+        str(color_scheme_enum)
+        if isinstance(color_scheme_enum, int)
+        else color_scheme_enum.name
+    )
     size = (
         f'{display.screen_diagonal_inches:.1f}"'
         if display.screen_diagonal_inches is not None
