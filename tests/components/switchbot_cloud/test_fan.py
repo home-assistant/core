@@ -243,6 +243,16 @@ async def test_air_purifier(
                 {"mode": 1, "fanGear": 1},
             ),
         ),
+        (
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 0},
+            (
+                "air-purifier-id-1",
+                switchbot_api.CommonCommands.OFF,
+                "command",
+                "default",
+            ),
+        ),
     ],
 )
 async def test_air_purifier_controller(
