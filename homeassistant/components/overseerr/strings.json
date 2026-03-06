@@ -25,8 +25,8 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "api_key": "The API key of the Overseerr instance.",
-          "url": "The URL of the Overseerr instance."
+          "api_key": "The API key of the Seerr instance.",
+          "url": "The URL of the Seerr instance."
         }
       }
     }
@@ -168,11 +168,11 @@
       "name": "Get requests"
     },
     "request_media": {
-      "description": "Creates a media request in Overseerr.",
+      "description": "Creates a media request in Seerr.",
       "fields": {
         "config_entry_id": {
-          "description": "The Overseerr instance to create the request on.",
-          "name": "Overseerr instance"
+          "description": "The Seerr instance to create the request on.",
+          "name": "Seerr instance"
         },
         "media_type": {
           "description": "Type of media to request.",
@@ -193,8 +193,8 @@
       "description": "Searches for media and creates a request for the best match.",
       "fields": {
         "config_entry_id": {
-          "description": "The Overseerr instance to use.",
-          "name": "Overseerr instance"
+          "description": "The Seerr instance to use.",
+          "name": "Seerr instance"
         },
         "query": {
           "description": "The search query.",
@@ -208,11 +208,11 @@
       "name": "Search and request"
     },
     "search_media": {
-      "description": "Searches for media in Overseerr.",
+      "description": "Searches for media in Seerr.",
       "fields": {
         "config_entry_id": {
-          "description": "The Overseerr instance to search.",
-          "name": "Overseerr instance"
+          "description": "The Seerr instance to search.",
+          "name": "Seerr instance"
         },
         "limit": {
           "description": "Maximum number of results to return.",
