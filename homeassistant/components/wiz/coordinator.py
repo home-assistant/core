@@ -20,15 +20,27 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_REFRESH_DELAY = 0.35
 
 
+type WizConfigEntry = ConfigEntry[WizData]
+
+
+@dataclass
+class WizData:
+    """Data for the wiz integration."""
+
+    coordinator: WizCoordinator
+    bulb: wizlight
+    scenes: list
+
+
 class WizCoordinator(DataUpdateCoordinator[float | None]):
     """Class to manage fetching WiZ data."""
 
-    config_entry: ConfigEntry
+    config_entry: WizConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WizConfigEntry,
         bulb: wizlight,
     ) -> None:
         """Initialize the coordinator."""
@@ -57,15 +69,3 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
         except WIZ_EXCEPTIONS as ex:
             raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
         return None
-
-
-@dataclass
-class WizData:
-    """Data for the wiz integration."""
-
-    coordinator: WizCoordinator
-    bulb: wizlight
-    scenes: list
-
-
-type WizConfigEntry = ConfigEntry[WizData]
