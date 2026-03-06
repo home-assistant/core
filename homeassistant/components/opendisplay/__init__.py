@@ -20,7 +20,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
 
 if TYPE_CHECKING:
@@ -82,6 +83,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         assert device_config is not None
 
     coordinator = OpenDisplayCoordinator(hass, address)
+
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(CONNECTION_BLUETOOTH, address)},
+        name=entry.title,
+    )
 
     entry.runtime_data = OpenDisplayRuntimeData(
         coordinator=coordinator,
