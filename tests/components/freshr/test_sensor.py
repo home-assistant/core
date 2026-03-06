@@ -5,15 +5,12 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pyfreshr.exceptions import ApiResponseError
-from pyfreshr.models import DeviceReadings, DeviceSummary
+from pyfreshr.models import DeviceReadings
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freshr.const import DOMAIN
-from homeassistant.components.freshr.coordinator import (
-    DEVICES_SCAN_INTERVAL,
-    READINGS_SCAN_INTERVAL,
-)
+from homeassistant.components.freshr.coordinator import READINGS_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -85,22 +82,3 @@ async def test_readings_connection_error_makes_unavailable(
     state = hass.states.get("sensor.fresh_r_inside_temperature")
     assert state is not None
     assert state.state == "unavailable"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_dynamic_device_addition(
-    hass: HomeAssistant,
-    mock_freshr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that a device added to the account after setup is discovered dynamically."""
-    mock_freshr_client.fetch_devices.return_value = [
-        DeviceSummary(id=DEVICE_ID),
-        DeviceSummary(id="SN002"),
-    ]
-
-    freezer.tick(DEVICES_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()  # wait for the readings coordinator task
-
-    assert len(hass.states.async_all("sensor")) == 12

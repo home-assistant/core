@@ -3,7 +3,7 @@
 import asyncio
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from .coordinator import (
     FreshrConfigEntry,
@@ -36,23 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bo
     entry.runtime_data = FreshrData(
         devices=devices_coordinator,
         readings=readings,
-    )
-
-    @callback
-    def _async_handle_new_devices() -> None:
-        """Create readings coordinators for newly discovered devices."""
-        if not devices_coordinator.data:
-            return
-        for device in devices_coordinator.data:
-            if device.id not in entry.runtime_data.readings:
-                coordinator = FreshrReadingsCoordinator(
-                    hass, entry, device, devices_coordinator.client
-                )
-                entry.runtime_data.readings[device.id] = coordinator
-                hass.async_create_task(coordinator.async_refresh())
-
-    entry.async_on_unload(
-        devices_coordinator.async_add_listener(_async_handle_new_devices)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
