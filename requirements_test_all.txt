@@ -1622,6 +1622,9 @@ py-nightscout==1.2.2
 # homeassistant.components.mta
 py-nymta==0.4.0
 
+# homeassistant.components.opendisplay
+py-opendisplay==5.2.0
+
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
 
