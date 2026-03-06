@@ -1623,7 +1623,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unique_id': '00000000000004D2-0000000000000062-MatterNodeDevice-1-OccupancySensor-1030-0',
     'unit_of_measurement': None,
   })
 # ---
