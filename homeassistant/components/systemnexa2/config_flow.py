@@ -9,7 +9,12 @@ import aiohttp
 from sn2.device import Device
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -18,7 +23,6 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_NAME,
 )
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
@@ -32,18 +36,6 @@ _SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
     }
 )
-
-
-def _is_valid_host(ip_or_hostname: str) -> bool:
-    if not ip_or_hostname:
-        return False
-    if is_ip_address(ip_or_hostname):
-        return True
-    try:
-        socket.gethostbyname(ip_or_hostname)
-    except socket.gaierror:
-        return False
-    return True
 
 
 @dataclass(kw_only=True)
@@ -67,70 +59,77 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle user-initiated flow."""
+        """Handle user-initiated configuration and reconfiguration."""
         errors: dict[str, str] = {}
 
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=_SCHEMA)
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            if not await self._async_is_valid_host(host):
+                errors["base"] = "invalid_host"
+            else:
+                try:
+                    temp_dev = await Device.initiate_device(
+                        host=host,
+                        session=async_get_clientsession(self.hass),
+                    )
+                    info = await temp_dev.get_info()
+                except TimeoutError, aiohttp.ClientError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    device_id = info.information.unique_id
+                    device_model = info.information.model
+                    device_version = info.information.sw_version
+                    supported, error = Device.is_device_supported(
+                        model=device_model,
+                        device_version=device_version,
+                    )
+                    if device_id is None or device_version is None or not supported:
+                        _LOGGER.error("Unsupported model: %s", error)
+                        return self.async_abort(
+                            reason="unsupported_model",
+                            description_placeholders={
+                                ATTR_MODEL: str(device_model),
+                                ATTR_SW_VERSION: str(device_version),
+                            },
+                        )
 
-        host_or_ip = user_input[CONF_HOST]
+                    await self.async_set_unique_id(info.information.unique_id)
 
-        if not _is_valid_host(host_or_ip):
-            errors["base"] = "invalid_host"
-        else:
-            temp_dev = await Device.initiate_device(
-                host=host_or_ip,
-                session=async_get_clientsession(self.hass),
-            )
+                    if self.source == SOURCE_USER:
+                        self._abort_if_unique_id_configured()
+                    if self.source == SOURCE_RECONFIGURE:
+                        self._abort_if_unique_id_mismatch(reason="wrong_device")
 
-            try:
-                info = await temp_dev.get_info()
-            except TimeoutError, aiohttp.ClientError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                        return self.async_update_reload_and_abort(
+                            self._get_reconfigure_entry(),
+                            data_updates={CONF_HOST: host},
+                        )
+                    self._discovered_device = _DiscoveryInfo(
+                        name=info.information.name,
+                        host=host,
+                        device_id=device_id,
+                        model=device_model,
+                        device_version=device_version,
+                    )
+                    return await self._async_create_device_entry()
 
-        if errors:
+        if self.source == SOURCE_RECONFIGURE:
             return self.async_show_form(
-                step_id="user", data_schema=_SCHEMA, errors=errors
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    _SCHEMA,
+                    user_input or self._get_reconfigure_entry().data,
+                ),
+                errors=errors,
             )
-
-        device_id = info.information.unique_id
-        device_model = info.information.model
-        device_version = info.information.sw_version
-        if device_id is None or device_model is None or device_version is None:
-            return self.async_abort(
-                reason="unsupported_model",
-                description_placeholders={
-                    ATTR_MODEL: str(device_model),
-                    ATTR_SW_VERSION: str(device_version),
-                },
-            )
-
-        self._discovered_device = _DiscoveryInfo(
-            name=info.information.name,
-            host=host_or_ip,
-            device_id=device_id,
-            model=device_model,
-            device_version=device_version,
+        return self.async_show_form(
+            step_id="user",
+            data_schema=_SCHEMA,
+            errors=errors,
         )
-        supported, error = Device.is_device_supported(
-            model=self._discovered_device.model,
-            device_version=self._discovered_device.device_version,
-        )
-        if not supported:
-            _LOGGER.error("Unsupported model: %s", error)
-            raise AbortFlow(
-                reason="unsupported_model",
-                description_placeholders={
-                    ATTR_MODEL: str(self._discovered_device.model),
-                    ATTR_SW_VERSION: str(self._discovered_device.device_version),
-                },
-            )
-        await self._async_set_unique_id()
-
-        return await self._async_create_device_entry()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -198,3 +197,22 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_ID: self._discovered_device.device_id,
             },
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user(user_input)
+
+    async def _async_is_valid_host(self, ip_or_hostname: str) -> bool:
+
+        if not ip_or_hostname:
+            return False
+        if is_ip_address(ip_or_hostname):
+            return True
+        try:
+            await self.hass.async_add_executor_job(socket.gethostbyname, ip_or_hostname)
+
+        except socket.gaierror:
+            return False
+        return True
