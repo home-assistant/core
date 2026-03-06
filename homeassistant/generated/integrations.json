@@ -996,6 +996,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "chess_com": {
+      "name": "Chess.com",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cisco": {
       "name": "Cisco",
       "integrations": {
@@ -4868,6 +4874,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "opendisplay": {
+      "name": "OpenDisplay",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "openerz": {
       "name": "Open ERZ",
