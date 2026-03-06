@@ -40,12 +40,12 @@ class SENZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
             name=name,
             update_interval=UPDATE_INTERVAL,
         )
-        self.senz_api = senz_api
+        self._senz_api = senz_api
 
     async def _async_update_data(self) -> dict[str, Thermostat]:
         """Fetch data from SENZ."""
         try:
-            thermostats = await self.senz_api.get_thermostats()
+            thermostats = await self._senz_api.get_thermostats()
         except RequestError as err:
             raise UpdateFailed from err
         return {thermostat.serial_number: thermostat for thermostat in thermostats}
