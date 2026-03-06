@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    REVOLUTIONS_PER_MINUTE,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
@@ -145,7 +144,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="compressor_speed",
         translation_key="compressor_speed",
-        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        native_unit_of_measurement="rps",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
