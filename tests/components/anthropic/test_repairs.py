@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.anthropic import AnthropicRuntimeData
 from homeassistant.components.anthropic.const import CONF_CHAT_MODEL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
@@ -38,7 +39,7 @@ def _make_entry(
     )
     entry.add_to_hass(hass)
     object.__setattr__(entry, "state", ConfigEntryState.LOADED)
-    entry.runtime_data = MagicMock()
+    entry.runtime_data = AnthropicRuntimeData(hass, entry, MagicMock())
     return entry
 
 

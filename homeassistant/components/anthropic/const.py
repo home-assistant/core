@@ -5,6 +5,8 @@ import logging
 DOMAIN = "anthropic"
 LOGGER = logging.getLogger(__package__)
 
+AVAILABILITY_CHECK_PERIOD = 60
+
 DEFAULT_CONVERSATION_NAME = "Claude conversation"
 DEFAULT_AI_TASK_NAME = "Claude AI Task"
 
