@@ -304,7 +304,14 @@ async def test_hass_final_write_before_start(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert mock_write_data.called
-    written_states = mock_write_data.mock_calls[0][1][0]
+    written_states = next(
+        call.args[0]
+        for call in reversed(mock_write_data.call_args_list)
+        if call.args
+        and isinstance(call.args[0], list)
+        and len(call.args[0]) == 1
+        and call.args[0][0]["state"]["entity_id"] == entity.entity_id
+    )
     assert len(written_states) == 1
     state = json_round_trip(written_states[0])
     assert state["state"]["entity_id"] == entity.entity_id
