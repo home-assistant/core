@@ -2329,3 +2329,22 @@ async def test_yaml_config_without_entry(
         issue.learn_more_url == "https://www.home-assistant.io/integrations/mqtt/"
         "#configuration"
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{mqtt.DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
+)
+async def test_yaml_config_with_entry_(
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test no repair issue is created for YAML setup with an active config entry."""
+    await mqtt_mock_entry()
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        mqtt.DOMAIN, "yaml_setup_without_active_setup"
+    )
+    state = hass.states.get("sensor.mqtt_sensor")
+    assert state is not None
+    assert issue is None
