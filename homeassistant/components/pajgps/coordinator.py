@@ -5,7 +5,6 @@ Responsibilities:
 - Drive two update tiers at different frequencies:
     Tier 1 — device list       every DEVICES_INTERVAL seconds
     Tier 2 — positions every POSITIONS_INTERVAL seconds
-- Delegate per-device call serialization to DeviceRequestQueue (device_queue.py).
 - Push CoordinatorData snapshots to entities as soon as each response arrives.
 """
 
