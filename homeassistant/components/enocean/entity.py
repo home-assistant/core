@@ -1,7 +1,9 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
-from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
+from enocean_async import EURID, BaseAddress, SenderAddress
+from enocean_async.address import Address
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3Packet, ESP3PacketType
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -66,3 +68,21 @@ class EnOceanEntity(Entity):
             LOGGER.warning(
                 "Failed to send command: invalid data or optional bytes: %s", err
             )
+
+
+class NewEnOceanEntity(Entity):
+    """New representation of an EnOcean device."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, eurid: EURID, enocean_entity_id: str, sender: SenderAddress | None = None
+    ) -> None:
+        """Initialize the device."""
+        super().__init__()
+        self.eurid = eurid
+        self.enocean_entity_id = enocean_entity_id
+        self._attr_unique_id = f"{eurid.to_string()}.{enocean_entity_id}"
+
+        # legacy naming; to be removed once all entities have been migrated to the new format
+        self._attr_name = f"EnOcean {eurid.to_string()} {enocean_entity_id}"
