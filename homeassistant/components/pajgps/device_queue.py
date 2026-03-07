@@ -52,17 +52,18 @@ class DeviceRequestQueue:
         callers can still await it safely without blocking.
         """
         self._ensure_device(device_id)
+        loop = asyncio.get_running_loop()
 
         # Duplicate-protection: skip if the same job type is already in-flight
         if (
             job_type in self._queued_types[device_id]
             or self._running.get(device_id) == job_type
         ):
-            fut: asyncio.Future = asyncio.get_event_loop().create_future()
+            fut: asyncio.Future = loop.create_future()
             fut.set_result(None)
             return fut
 
-        fut = asyncio.get_event_loop().create_future()
+        fut = loop.create_future()
         self._queued_types[device_id].add(job_type)
         await self._queues[device_id].put((job_type, coro_factory, fut))
         return fut
