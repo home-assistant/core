@@ -243,11 +243,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             default_password = self._config_entry.options["password"]
 
         if user_input is not None:
-            # If email is null or empty string, add error
-            if not user_input["email"] or user_input["email"] == "":
+            # Validate required fields in priority order to avoid overwriting errors["base"]
+            if not user_input.get("entry_name"):
+                errors["base"] = "entry_name_required"
+            elif not user_input.get("email"):
                 errors["base"] = "email_required"
-            # If password is null or empty string, add error
-            if not user_input["password"] or user_input["password"] == "":
+            elif not user_input.get("password"):
                 errors["base"] = "password_required"
             if not errors:
                 error_key = await _validate_credentials(
