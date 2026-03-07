@@ -28,8 +28,8 @@ async def async_get_config_entry_diagnostics(
                     "id": device.id,
                     "name": device.name,
                     "model": (
-                        device.device_models[0]["model"]
-                        if device.device_models
+                        device.device_models[0].get("model")
+                        if device.device_models and isinstance(device.device_models[0], dict)
                         else None
                     ),
                 }
