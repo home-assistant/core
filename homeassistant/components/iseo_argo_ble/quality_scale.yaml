@@ -3,7 +3,9 @@ rules:
   action-setup:
     status: exempt
     comment: This integration does not provide any service actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: This integration uses passive scanning (local push) and does not poll.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
