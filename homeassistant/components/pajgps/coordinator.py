@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICES_INTERVAL, DOMAIN, POSITIONS_INTERVAL, VERSION
+from .const import DEVICES_INTERVAL, DOMAIN, POSITIONS_INTERVAL
 from .device_queue import DeviceRequestQueue
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,7 +197,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
                         else None
                     )
                     or "Unknown",
-                    sw_version=VERSION,
                 )
         return None
 

@@ -166,7 +166,6 @@ class TestGetDeviceInfo:
         assert "name" in info
         assert info["manufacturer"] == "PAJ GPS"
         assert "model" in info
-        assert "sw_version" in info
 
     def test_returns_none_for_unknown_device(self):
         """Test that get_device_info returns None for an unknown device ID."""
