@@ -19,6 +19,8 @@ from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockParamContentParam,
     Container,
     ContentBlockParam,
     DocumentBlockParam,
@@ -61,15 +63,16 @@ from anthropic.types import (
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
+    WebSearchTool20260209Param,
     WebSearchToolResultBlock,
     WebSearchToolResultBlockParamContentParam,
 )
 from anthropic.types.bash_code_execution_tool_result_block_param import (
-    Content as BashCodeExecutionToolResultContentParam,
+    Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
-    Content as TextEditorCodeExecutionToolResultContentParam,
+    Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -105,6 +108,7 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
 
@@ -224,12 +228,22 @@ def _convert_content(
                         },
                     ),
                 }
+            elif content.tool_name == "code_execution":
+                tool_result_block = {
+                    "type": "code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        CodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
             elif content.tool_name == "bash_code_execution":
                 tool_result_block = {
                     "type": "bash_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        BashCodeExecutionToolResultContentParam, content.tool_result
+                        BashCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
                     ),
                 }
             elif content.tool_name == "text_editor_code_execution":
@@ -237,7 +251,7 @@ def _convert_content(
                     "type": "text_editor_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        TextEditorCodeExecutionToolResultContentParam,
+                        TextEditorCodeExecutionToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -368,6 +382,7 @@ def _convert_content(
                             name=cast(
                                 Literal[
                                     "web_search",
+                                    "code_execution",
                                     "bash_code_execution",
                                     "text_editor_code_execution",
                                 ],
@@ -379,6 +394,7 @@ def _convert_content(
                         and tool_call.tool_name
                         in [
                             "web_search",
+                            "code_execution",
                             "bash_code_execution",
                             "text_editor_code_execution",
                         ]
@@ -464,7 +480,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
@@ -526,13 +542,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
             elif isinstance(
                 response.content_block,
                 (
                     WebSearchToolResultBlock,
+                    CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
                     TextEditorCodeExecutionToolResultBlock,
                 ),
@@ -588,7 +605,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     current_tool_block = None
                     continue
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                current_tool_block["input"] = tool_args
+                current_tool_block["input"] |= tool_args
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
@@ -725,19 +742,34 @@ class AnthropicBaseLLMEntity(Entity):
             ]
 
         if options.get(CONF_CODE_EXECUTION):
-            tools.append(
-                CodeExecutionTool20250825Param(
-                    name="code_execution",
-                    type="code_execution_20250825",
-                ),
-            )
+            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_WEB_SEARCH):
+                tools.append(
+                    CodeExecutionTool20250825Param(
+                        name="code_execution",
+                        type="code_execution_20250825",
+                    ),
+                )
 
         if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20250305Param(
-                name="web_search",
-                type="web_search_20250305",
-                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
-            )
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_CODE_EXECUTION):
+                web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
+                    WebSearchTool20250305Param(
+                        name="web_search",
+                        type="web_search_20250305",
+                        max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                    )
+                )
+            else:
+                web_search = WebSearchTool20260209Param(
+                    name="web_search",
+                    type="web_search_20260209",
+                    max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                )
             if options.get(CONF_WEB_SEARCH_USER_LOCATION):
                 web_search["user_location"] = {
                     "type": "approximate",
