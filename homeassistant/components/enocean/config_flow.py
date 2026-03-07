@@ -1,20 +1,23 @@
 """Config flows for the EnOcean integration."""
 
-import glob
 from typing import Any
 
 from enocean_async import Gateway
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.components.usb import (
+    USBDevice,
+    get_serial_by_id,
     human_readable_device_name,
+    scan_serial_ports,
+    usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -30,22 +33,18 @@ MANUAL_SCHEMA = vol.Schema(
 )
 
 
-def _detect_usb_dongle() -> list[str]:
-    """Return a list of candidate paths for USB EnOcean dongles.
-
-    This method is currently a bit simplistic, it may need to be
-    improved to support more configurations and OS.
-    """
-    globs_to_test = [
-        "/dev/tty*FTOA2PV*",
-        "/dev/serial/by-id/*EnOcean*",
-        "/dev/tty.usbserial-*",
-    ]
-    found_paths = []
-    for current_glob in globs_to_test:
-        found_paths.extend(glob.glob(current_glob))
-
-    return found_paths
+def get_human_readable_device_name(
+    info: UsbServiceInfo,
+) -> str:
+    """Return a human readable device name."""
+    return human_readable_device_name(
+        info.device,
+        info.serial_number,
+        info.manufacturer,
+        info.description,
+        info.vid,
+        info.pid,
+    )
 
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -57,30 +56,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
         self.data: dict[str, Any] = {}
+        self._ports: list[USBDevice] | None = None
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        unique_id = usb_unique_id_from_service_info(discovery_info)
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: discovery_info.device}
-        )
-
-        discovery_info.device = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
+        await self._async_update_device_and_set_unique_id(discovery_info)
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
-            CONF_NAME: human_readable_device_name(
-                discovery_info.device,
-                discovery_info.serial_number,
-                discovery_info.manufacturer,
-                discovery_info.description,
-                discovery_info.vid,
-                discovery_info.pid,
-            )
+            CONF_NAME: get_human_readable_device_name(discovery_info)
         }
         return await self.async_step_usb_confirm()
 
@@ -115,24 +99,52 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle an EnOcean config flow start."""
-        return await self.async_step_detect()
+        if self._ports is None:
+            self._ports = []
+            self._ports.extend(
+                await self.hass.async_add_executor_job(scan_serial_ports)
+            )
 
-    async def async_step_detect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Propose a list of detected dongles."""
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
+
+            selected_device = next(
+                (
+                    port
+                    for port in self._ports
+                    if port.device == user_input[CONF_DEVICE]
+                ),
+                None,
+            )
+            if selected_device is None:
+                return self.async_abort(reason="unknown_device")
+            selected_service = usb_service_info_from_device(selected_device)
+
+            await self._async_update_device_and_set_unique_id(selected_service)
+            user_input[CONF_DEVICE] = selected_service.device
+
             return await self.async_step_manual(user_input)
 
-        devices = await self.hass.async_add_executor_job(_detect_usb_dongle)
-        if len(devices) == 0:
+        if len(self._ports) == 0:
+            # Move on to manual step if no ports are found
             return await self.async_step_manual()
-        devices.append(self.MANUAL_PATH_VALUE)
+
+        devices = [
+            SelectOptionDict(
+                value=port.device,
+                label=get_human_readable_device_name(
+                    usb_service_info_from_device(port)
+                ),
+            )
+            for port in self._ports
+        ]
+        devices.append(
+            SelectOptionDict(value=self.MANUAL_PATH_VALUE, label=self.MANUAL_PATH_VALUE)
+        )
 
         return self.async_show_form(
-            step_id="detect",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE): SelectSelector(
@@ -180,3 +192,18 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
+
+    async def _async_update_device_and_set_unique_id(
+        self, usb_service_info: UsbServiceInfo
+    ) -> None:
+        """Normalize the USB device serial and set unique ID depending on it."""
+        # normalize device path
+        usb_service_info.device = await self.hass.async_add_executor_job(
+            get_serial_by_id, usb_service_info.device
+        )
+        # set unique id
+        unique_id = usb_unique_id_from_service_info(usb_service_info)
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: usb_service_info.device}
+        )
