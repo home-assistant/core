@@ -72,7 +72,11 @@
         "name": "Display"
       }
     },
-
+    "select": {
+      "keypad": {
+        "name": "Key list"
+      }
+    },
     "sensor": {
       "light_level": {
         "name": "Light level"
