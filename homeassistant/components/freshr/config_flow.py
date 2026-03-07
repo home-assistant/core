@@ -46,7 +46,7 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"Fresh-r ({user_input[CONF_USERNAME]})",
