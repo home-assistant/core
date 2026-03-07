@@ -583,84 +583,106 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
-- names: '1'
+- entity_id: light.1
+  names: '1'
   domain: light
   state: unavailable
   areas: Test Area 2
-- names: Kitchen
+- entity_id: light.kitchen
+  names: Kitchen
   domain: light
   state: 'on'
   attributes:
     temperature: '0.9'
     humidity: '65'
-- names: Living Room
+- entity_id: light.living_room
+  names: Living Room
   domain: light
   state: 'on'
   areas: Test Area, Alternative name
-- names: Test Device, my test light
+- entity_id: light.test_device
+  names: Test Device, my test light
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Test Device 2
+- entity_id: light.test_device_2
+  names: Test Device 2
   domain: light
   state: unavailable
   areas: Test Area 2
-- names: Test Device 3
+- entity_id: light.test_device_3
+  names: Test Device 3
   domain: light
   state: unavailable
   areas: Test Area 2
-- names: Test Device 4
+- entity_id: light.test_device_4
+  names: Test Device 4
   domain: light
   state: unavailable
   areas: Test Area 2
-- names: Test Service
+- entity_id: light.test_service
+  names: Test Service
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Test Service
+- entity_id: light.test_service_2
+  names: Test Service
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Test Service
+- entity_id: light.test_service_3
+  names: Test Service
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Unnamed Device
+- entity_id: light.unnamed_device
+  names: Unnamed Device
   domain: light
   state: unavailable
   areas: Test Area 2
 """
     stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
-- names: '1'
+- entity_id: light.1
+  names: '1'
   domain: light
   areas: Test Area 2
-- names: Kitchen
+- entity_id: light.kitchen
+  names: Kitchen
   domain: light
-- names: Living Room
+- entity_id: light.living_room
+  names: Living Room
   domain: light
   areas: Test Area, Alternative name
-- names: Test Device, my test light
+- entity_id: light.test_device
+  names: Test Device, my test light
   domain: light
   areas: Test Area, Alternative name
-- names: Test Device 2
+- entity_id: light.test_device_2
+  names: Test Device 2
   domain: light
   areas: Test Area 2
-- names: Test Device 3
+- entity_id: light.test_device_3
+  names: Test Device 3
   domain: light
   areas: Test Area 2
-- names: Test Device 4
+- entity_id: light.test_device_4
+  names: Test Device 4
   domain: light
   areas: Test Area 2
-- names: Test Service
+- entity_id: light.test_service
+  names: Test Service
   domain: light
   areas: Test Area, Alternative name
-- names: Test Service
+- entity_id: light.test_service_2
+  names: Test Service
   domain: light
   areas: Test Area, Alternative name
-- names: Test Service
+- entity_id: light.test_service_3
+  names: Test Service
   domain: light
   areas: Test Area, Alternative name
-- names: Unnamed Device
+- entity_id: light.unnamed_device
+  names: Unnamed Device
   domain: light
   areas: Test Area 2
 """

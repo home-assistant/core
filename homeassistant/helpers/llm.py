@@ -681,6 +681,7 @@ def _get_exposed_entities(
                     area_names.extend(area.aliases)
 
         info: dict[str, Any] = {
+            "entity_id": state.entity_id,
             "names": ", ".join(names),
             "domain": state.domain,
         }
