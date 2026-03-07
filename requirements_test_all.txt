@@ -797,7 +797,7 @@ energyid-webhooks==0.0.14
 energyzero==4.0.1
 
 # homeassistant.components.enocean
-enocean-async==0.4.1
+enocean-async==0.5.2
 
 # homeassistant.components.environment_canada
 env-canada==0.13.2

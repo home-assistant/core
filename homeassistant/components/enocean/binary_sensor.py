@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from enocean_async import ERP1Telegram
+from enocean_async import EEP, EURID, Gateway
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -11,12 +12,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import DOMAIN, LOGGER
 from .entity import EnOceanEntity, combine_hex
 
 DEFAULT_NAME = "EnOcean binary sensor"
@@ -32,7 +34,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
@@ -44,6 +46,24 @@ def setup_platform(
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
+
+    # register the device with the gateway
+    gateway: Gateway = hass.data.get(DOMAIN)
+    if gateway is None:
+        LOGGER.error("EnOcean gateway not found, cannot set up binary sensor")
+        return
+
+    try:
+        eurid = EURID.from_bytelist(dev_id)
+        gateway.add_device(address=eurid, eep=EEP.from_string("F6-02-01"))
+    except ValueError as err:
+        LOGGER.error("Invalid device ID %s: %s", dev_id, err)
+        return
+
+    # Trigger the event platform with the same config so button event entities
+    # are created automatically without requiring separate user configuration.
+    if discovery_info is None:
+        await discovery.async_load_platform(hass, Platform.EVENT, DOMAIN, config, {})
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):

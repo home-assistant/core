@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
-from enocean_async.esp3.packet import ESP3PacketType
+from enocean_async import EEP
+from enocean_async.eep import EEP_SPECIFICATIONS
+from enocean_async.eep.handler import EEPHandler, EEPMessage
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.switch import (

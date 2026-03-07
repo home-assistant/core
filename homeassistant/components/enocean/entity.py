@@ -1,7 +1,9 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
-from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
+from enocean_async import EURID, BaseAddress, SenderAddress
+from enocean_async.address import Address
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3Packet, ESP3PacketType
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -66,3 +68,26 @@ class EnOceanEntity(Entity):
             LOGGER.warning(
                 "Failed to send command: invalid data or optional bytes: %s", err
             )
+
+
+class NewEnOceanEntity(Entity):
+    """New representation of an EnOcean device."""
+
+    def __init__(
+        self, eurid: EURID, entity_id: str, sender: SenderAddress | None = None
+    ) -> None:
+        """Initialize the device."""
+        super().__init__()
+        self.__eurid = eurid
+        self.__entity_id = entity_id
+        self._attr_unique_id = f"{eurid.to_string()}.{entity_id}"
+
+    @property
+    def eurid(self) -> EURID:
+        """Return the EURID of this entity's device."""
+        return self.__eurid
+
+    @property
+    def eep_entity_id(self) -> str:
+        """Return the EEP entity ID (e.g. 'a0', 'b1')."""
+        return self.__entity_id
