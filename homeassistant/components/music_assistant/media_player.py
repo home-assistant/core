@@ -140,6 +140,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._prev_time: float = 0
         self._source_list_mapping: dict[str, str] = {}
+        self._sound_mode_list_mapping: dict[str, str] = {}
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -217,6 +218,17 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_source_list = list(source_mappings.keys())
         self._source_list_mapping = source_mappings
         self._attr_source = active_source_name
+
+        sound_mode_mappings: dict[str, str] = {}
+        for sound_mode in player.sound_mode_list:
+            if sound_mode.passive:
+                # ignore passive sound_mode because HA does not differentiate between
+                # active and passive sound mode
+                continue
+            sound_mode_mappings[sound_mode.name] = sound_mode.id
+        self._attr_sound_mode_list = list(sound_mode_mappings.keys())
+        self._sound_mode_list_mapping = sound_mode_mappings
+        self._attr_sound_mode = player.active_sound_mode
 
         group_members: list[str] = []
         if player.group_members:
@@ -396,6 +408,16 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 f"Source '{source}' not found for player {self.name}"
             )
         await self.mass.players.player_command_select_source(self.player_id, source_id)
+
+    @catch_musicassistant_error
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select sound mode."""
+        sound_mode_id = self._sound_mode_list_mapping.get(sound_mode)
+        if sound_mode_id is None:
+            raise ServiceValidationError(
+                f"Source '{sound_mode}' not found for player {self.name}"
+            )
+        await self.mass.players.select_sound_mode(self.player_id, sound_mode_id)
 
     @catch_musicassistant_error
     async def _async_handle_play_media(
@@ -680,4 +702,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             supported_features |= MediaPlayerEntityFeature.TURN_OFF
         if PlayerFeature.SELECT_SOURCE in self.player.supported_features:
             supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        if PlayerFeature.SELECT_SOUND_MODE in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_supported_features = supported_features
