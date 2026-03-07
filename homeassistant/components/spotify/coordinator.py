@@ -11,12 +11,15 @@ from spotifyaio import (
     Playlist,
     SpotifyClient,
     SpotifyConnectionError,
+    SpotifyForbiddenError,
     SpotifyNotFoundError,
     UserProfile,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -32,6 +35,11 @@ type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 UPDATE_INTERVAL = timedelta(seconds=30)
+
+FREE_API_BLOGPOST = (
+    "https://developer.spotify.com/blog/"
+    "2026-02-06-update-on-developer-access-and-platform-security"
+)
 
 
 @dataclass
@@ -78,6 +86,19 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         """Set up the coordinator."""
         try:
             self.current_user = await self.client.get_current_user()
+        except SpotifyForbiddenError as err:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"user_not_premium_{self.config_entry.unique_id}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.ERROR,
+                translation_key="user_not_premium",
+                translation_placeholders={"entry_title": self.config_entry.title},
+                learn_more_url=FREE_API_BLOGPOST,
+            )
+            raise ConfigEntryError("User is not subscribed to Spotify") from err
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
 
