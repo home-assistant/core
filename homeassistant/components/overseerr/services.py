@@ -139,8 +139,8 @@ async def _search_media(
     client: OverseerrClient, query: str
 ) -> list[Any]:
     """Search for media in Seerr."""
+    LOGGER.debug("Searching for '%s'", query)
     try:
-        LOGGER.debug("Searching for '%s'", query)
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
         raise HomeAssistantError(
@@ -177,13 +177,13 @@ async def _request_media(
     seasons: list[int] | Literal["all"],
 ) -> Any:
     """Request media in Seerr."""
+    LOGGER.debug(
+        "Requesting %s with TMDB ID %s (seasons: %s)",
+        media_type,
+        tmdb_id,
+        seasons or "none",
+    )
     try:
-        LOGGER.debug(
-            "Requesting %s with TMDB ID %s (seasons: %s)",
-            media_type,
-            tmdb_id,
-            seasons or "none",
-        )
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, tmdb_id, seasons)
     except OverseerrConnectionError as err:
