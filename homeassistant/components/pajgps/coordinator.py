@@ -91,6 +91,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
         self._entry_data = entry_data
         self._queue = DeviceRequestQueue()
+        self._owns_websession = websession is None
 
         # Tier timestamps — initialized to 0 so every tier fires on first call
         self._last_devices_fetch: float = 0.0
@@ -207,7 +208,8 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def async_shutdown(self) -> None:
         """Clean up all resources owned by this coordinator."""
         await self._queue.shutdown()
-        await self.api.close()
+        if self._owns_websession:
+            await self.api.close()
 
     @property
     def entry_data(self) -> dict:

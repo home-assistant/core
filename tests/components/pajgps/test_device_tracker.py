@@ -1,4 +1,4 @@
-"""Tests for device_tracker.py — PajGPSPositionSensor and async_setup_entry."""
+"""Tests for device_tracker.py — PajGPSDeviceTracker and async_setup_entry."""
 
 from __future__ import annotations
 
