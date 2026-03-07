@@ -18,6 +18,7 @@ Coverage:
 
 from __future__ import annotations
 
+from typing import Any
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
@@ -31,7 +32,6 @@ from homeassistant.components.pajgps.config_flow import (
     _validate_credentials,
 )
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers.device_registry import Any
 
 # ---------------------------------------------------------------------------
 # Helpers
