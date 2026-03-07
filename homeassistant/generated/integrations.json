@@ -254,6 +254,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "aws_bedrock": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "AWS Bedrock"
+        },
         "aws_s3": {
           "integration_type": "service",
           "config_flow": true,

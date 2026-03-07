@@ -189,6 +189,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/avea/ @pattyland
 /homeassistant/components/awair/ @ahayworth @ricohageman
 /tests/components/awair/ @ahayworth @ricohageman
+/homeassistant/components/aws_bedrock/ @jflatten
+/tests/components/aws_bedrock/ @jflatten
 /homeassistant/components/aws_s3/ @tomasbedrich
 /tests/components/aws_s3/ @tomasbedrich
 /homeassistant/components/axis/ @Kane610
