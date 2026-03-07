@@ -1,3 +1,4 @@
+exclude: ^homeassistant/components/nest_legacy/pynest/protobuf_gen
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.1

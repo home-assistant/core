@@ -653,6 +653,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "neato",
     "nederlandse_spoorwegen",
     "ness_alarm",
+    "nest_legacy",
     "netatmo",
     "netdata",
     "netgear",

@@ -1,0 +1,12 @@
+{
+  "domain": "nest_legacy",
+  "name": "Nest Legacy",
+  "after_dependencies": ["media_source"],
+  "codeowners": ["@tronikos"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/nest_legacy",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "requirements": ["protobuf==6.32.0"]
+}

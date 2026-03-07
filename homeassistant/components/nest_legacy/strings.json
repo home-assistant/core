@@ -1,0 +1,284 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "google_account": {
+        "data": {
+          "cookies": "Cookies",
+          "issue_token": "Issue token"
+        },
+        "description": "To get your `issue_token` and `cookies`, follow the instructions in the integration documentation. Please paste them below.",
+        "title": "Google account authentication"
+      },
+      "nest_account": {
+        "data": {
+          "access_token": "Access token"
+        },
+        "description": "To get your `access_token`, follow the instructions in the integration documentation for legacy Nest accounts. Please paste it below.",
+        "title": "Nest account authentication"
+      },
+      "user": {
+        "data": {
+          "account_type": "Account type",
+          "field_test": "Use Field Test environment"
+        },
+        "description": "Select your Nest account type.\n\n- **Google Account**: For accounts migrated to Google, or created after August 2019.\n- **Nest Account**: For older, non-migrated legacy Nest accounts.\n\nSelect 'Field Test' if you are part of the Google Field Test program.",
+        "title": "Nest account type"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "battery_health": {
+        "name": "Battery health"
+      },
+      "buzzer_test": {
+        "name": "Buzzer test"
+      },
+      "co_status": {
+        "name": "Carbon monoxide"
+      },
+      "co_test": {
+        "name": "CO test"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "filter_replacement_needed": {
+        "name": "Filter replacement needed"
+      },
+      "heat_status": {
+        "name": "Heat"
+      },
+      "humidity_test": {
+        "name": "Humidity test"
+      },
+      "led_test": {
+        "name": "LED test"
+      },
+      "line_power": {
+        "name": "Line power"
+      },
+      "occupancy": {
+        "name": "Occupancy"
+      },
+      "pir_test": {
+        "name": "PIR test"
+      },
+      "removed_from_base": {
+        "name": "Removed from base"
+      },
+      "smoke_status": {
+        "name": "Smoke"
+      },
+      "smoke_test": {
+        "name": "Smoke test"
+      },
+      "speaker_test": {
+        "name": "Speaker test"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "wifi_test": {
+        "name": "WiFi test"
+      }
+    },
+    "event": {
+      "chime": {
+        "name": "Chime",
+        "state_attributes": {
+          "event_type": {
+            "name": "Event type",
+            "state": {
+              "doorbell_chime": "Chime"
+            }
+          }
+        }
+      },
+      "motion": {
+        "name": "Motion",
+        "state_attributes": {
+          "event_type": {
+            "name": "Event type",
+            "state": {
+              "camera_face": "Face",
+              "camera_motion": "Motion",
+              "camera_person": "Person",
+              "camera_sound": "Sound"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "Fan"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "Lock"
+      }
+    },
+    "number": {
+      "auto_relock_duration": {
+        "name": "Auto-relock duration"
+      }
+    },
+    "select": {
+      "home_away_mode": {
+        "name": "Mode",
+        "state": {
+          "away": "Away",
+          "home": "Home",
+          "sleep": "Sleep",
+          "vacation": "Vacation"
+        }
+      },
+      "night_light_brightness": {
+        "name": "Night light brightness",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium"
+        }
+      }
+    },
+    "sensor": {
+      "backplate_temperature": {
+        "name": "Backplate temperature"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "fan_duration_config": {
+        "name": "Fan duration configuration"
+      },
+      "fan_timer_timeout": {
+        "name": "Fan timer timeout"
+      },
+      "filter_runtime": {
+        "name": "Filter runtime"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "last_action": {
+        "name": "Last action",
+        "state": {
+          "implicit": "Automatic",
+          "keypad": "Keypad",
+          "physical": "Physical",
+          "remote": "Remote",
+          "unknown": "Unknown",
+          "voice": "Voice assistant"
+        }
+      },
+      "last_audio_self_test": {
+        "name": "Last audio self test"
+      },
+      "last_manual_test": {
+        "name": "Last manual test"
+      },
+      "replace_by": {
+        "name": "Replace by"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "temperature": {
+        "name": "Temperature"
+      }
+    },
+    "switch": {
+      "active_sensor": {
+        "name": "Control thermostat"
+      },
+      "audio": {
+        "name": "Audio"
+      },
+      "auto_relock": {
+        "name": "Auto-relock"
+      },
+      "camera_streaming": {
+        "name": "Streaming"
+      },
+      "dehumidifier": {
+        "name": "Dehumidifier"
+      },
+      "heads_up": {
+        "name": "Heads-up"
+      },
+      "humidifier": {
+        "name": "Humidifier"
+      },
+      "image_rotation": {
+        "name": "Image rotation"
+      },
+      "indoor_chime": {
+        "name": "Indoor chime"
+      },
+      "night_vision": {
+        "name": "Night vision"
+      },
+      "nightly_promise": {
+        "name": "Nightly promise"
+      },
+      "pathlight": {
+        "name": "Pathlight"
+      },
+      "status_led": {
+        "name": "Status LED"
+      },
+      "steam_check": {
+        "name": "Steam check"
+      },
+      "temperature_lock": {
+        "name": "Temperature lock"
+      },
+      "visitor_announcements": {
+        "name": "Visitor announcements"
+      }
+    },
+    "water_heater": {
+      "heat_link": {
+        "state": {
+          "boost": "Boost",
+          "boost_1h": "Boost (1h)",
+          "boost_2h": "Boost (2h)",
+          "boost_30m": "Boost (30m)",
+          "off": "Off",
+          "schedule": "Schedule"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "enable_protobuf_camera": "Enable Protobuf for cameras (recommended for Google accounts)",
+          "enable_protobuf_lock": "Enable Protobuf for locks (recommended)",
+          "enable_protobuf_protect": "Enable Protobuf for Protects (experimental)",
+          "enable_protobuf_structure": "Enable Protobuf for structure (experimental)",
+          "enable_protobuf_thermostat": "Enable Protobuf for thermostats (recommended)",
+          "event_poll_interval": "Camera event poll interval (seconds)"
+        }
+      }
+    }
+  }
+}
