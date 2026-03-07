@@ -26,7 +26,7 @@ from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
 _MCP_TOOL_NAME_MAX_LENGTH = 64
-_MCP_TOOL_NAME_HASH_LENGTH = 8
+_MCP_TOOL_NAME_HASH_BYTES = 4
 
 
 def _format_tool(
@@ -52,9 +52,11 @@ def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
     digest_input = tool_name
     if collision_index:
         digest_input = f"{tool_name}:{collision_index}"
-    digest = blake2s(digest_input.encode(), digest_size=4).hexdigest()
+    digest = blake2s(
+        digest_input.encode(), digest_size=_MCP_TOOL_NAME_HASH_BYTES
+    ).hexdigest()
     # Keep the alias readable while making truncation and collision handling stable.
-    prefix_length = _MCP_TOOL_NAME_MAX_LENGTH - _MCP_TOOL_NAME_HASH_LENGTH - 1
+    prefix_length = _MCP_TOOL_NAME_MAX_LENGTH - (_MCP_TOOL_NAME_HASH_BYTES * 2) - 1
     return f"{tool_name[:prefix_length]}_{digest}"
 
 
