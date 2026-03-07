@@ -1,1 +1,1 @@
-"""Tests for the google_wifi component."""
+"""Tests for the google_wifi integration."""
