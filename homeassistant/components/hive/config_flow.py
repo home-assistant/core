@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from apyhiveapi import Auth
@@ -25,8 +26,6 @@ from homeassistant.core import callback
 
 from . import HiveConfigEntry
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
-
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,11 +70,12 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             except HiveApiError:
                 errors["base"] = "no_internet_available"
 
-            if (auth_result := self.tokens.get("AuthenticationResult")) and auth_result.get("NewDeviceMetadata"):
+            if (
+                auth_result := self.tokens.get("AuthenticationResult")
+            ) and auth_result.get("NewDeviceMetadata"):
                 _LOGGER.debug("Login successful, New device detected.")
                 self.device_registration = True
                 return await self.async_step_configuration()
-
 
             if self.tokens.get("ChallengeName") == "SMS_MFA":
                 _LOGGER.debug("Login successful, SMS 2FA required")
@@ -83,7 +83,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
 
             if not errors:
-                _LOGGER.debug("Login successful, no new device detected, no 2FA required")
+                _LOGGER.debug(
+                    "Login successful, no new device detected, no 2FA required"
+                )
                 # Complete the entry.
                 try:
                     return await self.async_setup_hive_entry()
@@ -163,7 +165,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._get_reauth_entry(),
                 title=self.data["username"],
                 data=self.data,
-                reason="reauth_successful", 
+                reason="reauth_successful",
             )
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
