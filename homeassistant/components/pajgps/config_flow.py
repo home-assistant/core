@@ -101,7 +101,11 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif not self.data["password"] or self.data["password"] == "":
                 errors["base"] = "password_required"
             if not errors:
-                self._async_abort_entries_match({"email": self.data["email"]})
+                # Normalize email for duplicate protection and storage
+                normalized_email = self.data["email"].strip().lower()
+                self.data["email"] = normalized_email
+                await self.async_set_unique_id(normalized_email)
+                self._abort_if_unique_id_configured()
                 error_key = await _validate_credentials(
                     self.data["email"], self.data["password"], self.hass
                 )
