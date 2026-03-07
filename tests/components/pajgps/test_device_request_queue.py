@@ -15,12 +15,12 @@ async def test_single_job_executed() -> None:
     """Test that a single enqueued job is executed."""
     queue = DeviceRequestQueue()
     called: list[int] = []
-    await queue.enqueue(
+    fut = await queue.enqueue(
         1,
         "sensor",
         AsyncMock(return_value="ok", side_effect=lambda: called.append(1) or "ok"),
     )
-    await asyncio.sleep(0.05)
+    await asyncio.wait_for(fut, timeout=2)
     assert 1 in called
     await queue.shutdown()
 
