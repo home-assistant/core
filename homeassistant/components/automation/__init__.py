@@ -159,6 +159,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "text",
     "update",
     "vacuum",
+    "water_heater",
 }
 
 
