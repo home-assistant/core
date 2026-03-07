@@ -46,7 +46,7 @@ class RepairsFlow(
         description_placeholders: Mapping[str, str] | None = None,
         next_flow: tuple[FlowType, str] | None = None,
     ) -> RepairsFlowResult:
-        """Do stuff."""
+        """Finish a repair flow."""
         result: RepairsFlowResult = super().async_create_entry(
             title=title,
             data=data,
