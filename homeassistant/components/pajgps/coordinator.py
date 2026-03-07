@@ -109,7 +109,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_update_data(self) -> CoordinatorData:
         """Called by HA on every update_interval tick.
 
-        First call: runs all three tiers sequentially and returns a fully
+        First call: runs all tiers sequentially and returns a fully
         populated snapshot (so async_config_entry_first_refresh() succeeds).
 
         Subsequent calls: fires due tiers as independent background tasks and
