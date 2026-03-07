@@ -219,7 +219,7 @@ async def test_query_service_invalid_db_url(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.sql.util._validate_and_get_session_maker_for_db_url",
+            "homeassistant.components.sql.util._async_validate_and_get_session_maker_for_db_url",
             return_value=None,
         ),
         pytest.raises(
