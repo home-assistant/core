@@ -61,7 +61,6 @@ def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, str]:
     """Return a mapping of exposed MCP tool names to their underlying tool names."""
     exposed_names: dict[str, str] = {}
 
-    exposed_names: dict[str, str] = {}
     for tool in tools:
         for collision_index in count():
             mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
