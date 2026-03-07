@@ -53,7 +53,6 @@ def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
     digest = blake2s(
         digest_input.encode(), digest_size=_MCP_TOOL_NAME_HASH_BYTES
     ).hexdigest()
-    # Keep the alias readable while making truncation and collision handling stable.
     prefix_length = _MCP_TOOL_NAME_MAX_LENGTH - (_MCP_TOOL_NAME_HASH_BYTES * 2) - 1
     return f"{tool_name[:prefix_length]}_{digest}"
 
