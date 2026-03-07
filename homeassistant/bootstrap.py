@@ -90,6 +90,7 @@ from .helpers import (
     trigger,
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
+from .helpers.start import async_at_started
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
@@ -503,6 +504,17 @@ async def async_from_config_dict(
     """
     start = monotonic()
 
+    @core.callback
+    def _log_started(_: core.HomeAssistant) -> None:
+        if not _LOGGER.isEnabledFor(logging.DEBUG):
+            return
+        _LOGGER.debug(
+            "Home Assistant started in %.2fs",
+            monotonic() - start,
+        )
+
+    async_at_started(hass, _log_started)
+
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     # Prime custom component cache early so we know if registry entries are tied
     # to a custom integration
@@ -856,6 +868,15 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+
+    def _log_stage_time(stage_name: str, stage_start_time: float) -> None:
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Stage %s elapsed time: %.2f seconds",
+                stage_name,
+                monotonic() - stage_start_time,
+            )
+
     watcher = _WatchPendingSetups(hass, _setup_started(hass))
     watcher.async_start()
 
@@ -894,6 +915,8 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
+        # We cannot debug guard this because logging might not be set up yet
+        t_stage = monotonic()
         stage_domains_unfiltered = domain_group & all_domains
         if not stage_domains_unfiltered:
             _LOGGER.info("Nothing to set up in stage %s: %s", name, domain_group)
@@ -926,6 +949,7 @@ async def _async_set_up_integrations(
 
         if timeout is None:
             await _async_setup_multi_components(hass, stage_all_domains, config)
+            _log_stage_time(name, t_stage)
             continue
         try:
             async with hass.timeout.async_timeout(
@@ -940,9 +964,12 @@ async def _async_set_up_integrations(
                 name,
                 hass._active_tasks,  # noqa: SLF001
             )
+        finally:
+            _log_stage_time(name, t_stage)
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
+    t_wrap = monotonic()
     try:
         async with hass.timeout.async_timeout(
             WRAP_UP_TIMEOUT,
@@ -955,6 +982,8 @@ async def _async_set_up_integrations(
             "Setup timed out for bootstrap waiting on %s - moving forward",
             hass._active_tasks,  # noqa: SLF001
         )
+    finally:
+        _log_stage_time("wrap-up", t_wrap)
 
     watcher.async_stop()
 
