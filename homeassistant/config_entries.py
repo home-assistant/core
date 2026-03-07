@@ -1595,7 +1595,7 @@ class ConfigEntriesFlowManager(
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
         result: ConfigFlowResult,
     ) -> ConfigFlowResult:
-        """Finish a config flow and add axn entry.
+        """Finish a config flow and add an entry.
 
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
