@@ -20,7 +20,6 @@ from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    ATTR_LIMIT,
     ATTR_MEDIA_TYPE,
     ATTR_QUERY,
     ATTR_REQUESTED_BY,
@@ -52,7 +51,6 @@ SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_QUERY): str,
-        vol.Optional(ATTR_LIMIT): vol.All(vol.Coerce(int), vol.Range(min=1)),
     }
 )
 
@@ -135,7 +133,6 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     )
     client = entry.runtime_data.client
     query = call.data[ATTR_QUERY]
-    limit = call.data.get(ATTR_LIMIT)
     try:
         LOGGER.debug("Searching for '%s'", query)
         search_results = await client.search(query)
@@ -145,9 +142,6 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
             translation_key="connection_error",
             translation_placeholders={"error": str(err)},
         ) from err
-
-    if limit is not None and limit > 0:
-        search_results = search_results[:limit]
 
     return {
         "results": cast(
