@@ -10,6 +10,7 @@ from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
+from pathlib import Path
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
@@ -69,7 +70,7 @@ from .headers import setup_headers
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .web_runner import HomeAssistantTCPSite
+from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -235,6 +236,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
+    unix_socket_path: Path | None = None
+    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
+        socket_path = Path(socket_env)
+        if socket_path.is_absolute():
+            unix_socket_path = socket_path
+        else:
+            _LOGGER.error(
+                "Invalid unix socket path %s: path must be absolute", socket_env
+            )
+
     server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
@@ -244,6 +255,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
+        unix_socket_path=unix_socket_path,
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -366,6 +378,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
+        unix_socket_path: Path | None = None,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -384,8 +397,10 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.ssl_profile = ssl_profile
+        self.unix_socket_path = unix_socket_path
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
+        self.unix_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
 
     async def async_initialize(
@@ -623,6 +638,20 @@ class HomeAssistantHTTP:
         )
         await self.runner.setup()
 
+        if self.unix_socket_path is not None:
+            self.unix_site = HomeAssistantUnixSite(self.runner, self.unix_socket_path)
+            try:
+                await self.unix_site.start()
+            except OSError as error:
+                _LOGGER.error(
+                    "Failed to create HTTP server on unix socket %s: %s",
+                    self.unix_socket_path,
+                    error,
+                )
+                self.unix_site = None
+            else:
+                _LOGGER.info("Now listening on unix socket %s", self.unix_socket_path)
+
         self.site = HomeAssistantTCPSite(
             self.runner, self.server_host, self.server_port, ssl_context=self.context
         )
@@ -637,6 +666,10 @@ class HomeAssistantHTTP:
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""
+        if self.unix_site is not None:
+            await self.unix_site.stop()
+            if self.unix_socket_path is not None:
+                self.unix_socket_path.unlink(missing_ok=True)
         if self.site is not None:
             await self.site.stop()
         if self.runner is not None:

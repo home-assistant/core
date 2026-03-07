@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from ssl import SSLContext
 
 from aiohttp import web
@@ -68,3 +69,49 @@ class HomeAssistantTCPSite(web.BaseSite):
             reuse_address=self._reuse_address,
             reuse_port=self._reuse_port,
         )
+
+
+class HomeAssistantUnixSite(web.BaseSite):
+    """HomeAssistant specific aiohttp UnixSite.
+
+    Listens on a Unix socket for local inter-process communication,
+    used for Supervisor to Core communication.
+    """
+
+    __slots__ = ("_path",)
+
+    def __init__(
+        self,
+        runner: web.BaseRunner,
+        path: Path,
+        *,
+        backlog: int = 128,
+    ) -> None:
+        """Initialize HomeAssistantUnixSite."""
+        super().__init__(
+            runner,
+            backlog=backlog,
+        )
+        self._path = path
+
+    @property
+    def name(self) -> str:
+        """Return server URL."""
+        return f"http://unix:{self._path}:"
+
+    async def start(self) -> None:
+        """Start server."""
+        await super().start()
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        self._path.unlink(missing_ok=True)
+        loop = asyncio.get_running_loop()
+        server = self._runner.server
+        assert server is not None
+        self._server = await loop.create_unix_server(
+            server,
+            self._path,
+            backlog=self._backlog,
+            start_serving=False,
+        )
+        self._path.chmod(0o600)
+        await self._server.start_serving()
