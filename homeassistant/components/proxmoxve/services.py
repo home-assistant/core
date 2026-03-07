@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 import logging
 import re
 from typing import cast
@@ -34,7 +33,7 @@ from homeassistant.helpers.target import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, SERVICE_CREATE_SNAPSHOT
+from .const import DOMAIN, SERVICE_CREATE_SNAPSHOT, ResourceType
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,18 +75,6 @@ CREATE_SNAPSHOT_SCHEMA = vol.Schema(
 )
 
 
-class _ResourceType(StrEnum):
-    """Proxmox resource types that support snapshots."""
-
-    VM = "vm"
-    CONTAINER = "container"
-
-
-def _sanitize_snapshot_version(version: str) -> str:
-    """Replace characters invalid in a Proxmox snapshot name with underscores."""
-    return _SNAPSHOT_NAME_RE.sub("_", version.strip())
-
-
 def _build_base_snapname(
     snapshot_name_input: str,
     vm_name_input: str,
@@ -99,7 +86,7 @@ def _build_base_snapname(
     """Build the base snapshot name (before conflict-resolution suffix).
 
     Priority for the name source:
-    1. User-supplied ``snapshot_name`` — used verbatim (sanitized) as the full name.
+    1. User-supplied ``snapshot_name`` — used as the base name (sanitized and may be truncated).
     2. User-supplied ``vm_name`` combined with version or date.
     3. Device registry name combined with version or date.
     4. VM ID as string combined with version or date.
@@ -108,10 +95,16 @@ def _build_base_snapname(
     room for the ``_a`` … ``_z`` conflict suffix.
     """
     if snapshot_name_input:
-        base = _sanitize_snapshot_version(snapshot_name_input)
+        base = _SNAPSHOT_NAME_RE.sub("_", snapshot_name_input.strip())
     else:
-        vm_part = _sanitize_snapshot_version(vm_name_input or device_name or str(vmid))
-        suffix = _sanitize_snapshot_version(version) if version is not None else today
+        vm_part = _SNAPSHOT_NAME_RE.sub(
+            "_", (vm_name_input or device_name or str(vmid)).strip()
+        )
+        suffix = (
+            _SNAPSHOT_NAME_RE.sub("_", version.strip())
+            if version is not None
+            else today
+        )
         base = f"{vm_part}_{suffix}"
 
     if len(base) > _SNAPNAME_MAX_BASE_LEN:
@@ -124,7 +117,7 @@ def _parse_device_identifier(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
     label: str,
-) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType, str]:
+) -> tuple[ProxmoxConfigEntry, str, int, ResourceType, str]:
     """Return config entry, node name, vmid, resource type, and device name.
 
     Inspects the device's domain-specific identifier to determine whether it is
@@ -144,10 +137,10 @@ def _parse_device_identifier(
         )
 
     if "_vm_" in raw_identifier:
-        resource_type = _ResourceType.VM
+        resource_type = ResourceType.VM
         entry_id, vmid_str = raw_identifier.rsplit("_vm_", 1)
     elif "_container_" in raw_identifier:
-        resource_type = _ResourceType.CONTAINER
+        resource_type = ResourceType.CONTAINER
         entry_id, vmid_str = raw_identifier.rsplit("_container_", 1)
     else:
         raise ServiceValidationError(
@@ -177,8 +170,6 @@ def _parse_device_identifier(
             translation_placeholders={"entity_id": label},
         )
 
-    # The parent device of every VM/container device is the Proxmox node device,
-    # and its name is the node name used in Proxmox API calls.
     if device.via_device_id is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -207,7 +198,7 @@ def _parse_device_identifier(
 def _resolve_from_device(
     hass: HomeAssistant,
     device_id: str,
-) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType, str]:
+) -> tuple[ProxmoxConfigEntry, str, int, ResourceType, str]:
     """Resolve config entry, node name, vmid, resource type, and device name from a device ID."""
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(device_id)
@@ -223,7 +214,7 @@ def _resolve_from_device(
 def _resolve_from_entity(
     hass: HomeAssistant,
     entity_id: str,
-) -> tuple[ProxmoxConfigEntry, str, int, _ResourceType, str]:
+) -> tuple[ProxmoxConfigEntry, str, int, ResourceType, str]:
     """Resolve config entry, node name, vmid, resource type, and device name from an entity ID."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(entity_id)
@@ -249,7 +240,7 @@ def _create_snapshot_blocking(
     coordinator: ProxmoxCoordinator,
     node: str,
     vmid: int,
-    resource_type: _ResourceType,
+    resource_type: ResourceType,
     base_snapname: str,
     description: str,
     include_ram: bool,
@@ -260,21 +251,28 @@ def _create_snapshot_blocking(
     already taken.  VMs support saving RAM state (vmstate); LXC containers do
     not.  Returns the final snapshot name that was created.
     """
-    if resource_type is _ResourceType.VM:
+    if resource_type is ResourceType.VM:
         existing = coordinator.proxmox.nodes(node).qemu(vmid).snapshot.get()
     else:
         existing = coordinator.proxmox.nodes(node).lxc(vmid).snapshot.get()
 
     existing_names = {s["name"] for s in existing if s.get("name") != "current"}
 
-    # Try the base name first, then _a, _b, … until a free slot is found.
+    # Try the base name first, then append _a … _z until a free slot is found.
     snapname = base_snapname
     for letter in "abcdefghijklmnopqrstuvwxyz":
         if snapname not in existing_names:
             break
         snapname = f"{base_snapname}_{letter}"
 
-    if resource_type is _ResourceType.VM:
+    if snapname in existing_names:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="snapshot_name_conflict",
+            translation_placeholders={"base_name": base_snapname},
+        )
+
+    if resource_type is ResourceType.VM:
         _LOGGER.debug(
             "Creating VM snapshot %s on %s/%s (include_ram=%s)",
             snapname,
@@ -323,7 +321,7 @@ async def _call_snapshot(
     entry: ProxmoxConfigEntry,
     node_name: str,
     vmid: int,
-    resource_type: _ResourceType,
+    resource_type: ResourceType,
     base_snapname: str,
     description: str,
     include_ram: bool,
@@ -347,12 +345,12 @@ async def _call_snapshot(
     except AuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
+            translation_key="invalid_auth_no_details",
         ) from err
     except SSLError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
+            translation_key="cannot_connect_no_details",
         ) from err
     except (ConnectTimeout, ReadTimeout) as err:
         raise HomeAssistantError(

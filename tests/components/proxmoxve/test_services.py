@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from proxmoxer.core import ResourceException
 import pytest
 
@@ -17,20 +17,20 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
-# Freeze to UTC noon on 2026-03-06 so dt_util.now() gives March 6 in all timezones.
 _FROZEN_DATETIME_UTC = "2026-03-06T12:00:00+00:00"
 _FROZEN_DATE = "2026-03-06"
 _FROZEN_DATE_SNAPNAME = "2026_03_06"
 _DEFAULT_DESCRIPTION = f"Snapshot triggered from Home Assistant on {_FROZEN_DATE}"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_vm_default_name_uses_date(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that create_snapshot on a VM builds a date-based name by default."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -48,13 +48,14 @@ async def test_create_snapshot_vm_default_name_uses_date(
     assert "vmstate" not in call_kwargs
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_vm_include_ram(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that include_ram=True passes vmstate=1 to the Proxmox API."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -68,13 +69,14 @@ async def test_create_snapshot_vm_include_ram(
     assert call_kwargs["vmstate"] == 1
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_container_default_name_uses_date(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that create_snapshot on a container builds a date-based name by default."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -92,13 +94,14 @@ async def test_create_snapshot_container_default_name_uses_date(
     assert "vmstate" not in call_kwargs
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_version_mode(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that create_snapshot uses version_entity state when provided."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     hass.states.async_set("sensor.local_version", "2026.3.0")
@@ -120,13 +123,14 @@ async def test_create_snapshot_version_mode(
     assert call_kwargs["description"] == _DEFAULT_DESCRIPTION
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_custom_vm_name(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a custom vm_name replaces the device name in the snapshot name."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -143,13 +147,14 @@ async def test_create_snapshot_custom_vm_name(
     assert call_kwargs["snapname"] == f"My_VM_{_FROZEN_DATE_SNAPNAME}"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_snapshot_name_override(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that snapshot_name is used verbatim as the full snapshot name."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -166,13 +171,14 @@ async def test_create_snapshot_snapshot_name_override(
     assert call_kwargs["snapname"] == "before_upgrade"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_description_override(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a custom description is passed through to Proxmox."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -189,13 +195,14 @@ async def test_create_snapshot_description_override(
     assert call_kwargs["description"] == "my custom description"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_default_description(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the default description includes the current date."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -209,16 +216,17 @@ async def test_create_snapshot_default_description(
     assert call_kwargs["description"] == _DEFAULT_DESCRIPTION
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_conflict_appends_letter(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that _a is appended when the base snapshot name already exists."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
-    # Make one call to initialize the lazy qemu mock for vmid 100.
+    # Initialize the lazy qemu mock for vmid 100 before overriding its return value.
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CREATE_SNAPSHOT,
@@ -241,16 +249,17 @@ async def test_create_snapshot_conflict_appends_letter(
     assert call_kwargs["snapname"] == f"{base}_a"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_conflict_multiple(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that _b is used when both base and _a are already taken."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
-    # Make one call to initialize the lazy qemu mock for vmid 100.
+    # Initialize the lazy qemu mock for vmid 100 before overriding its return value.
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CREATE_SNAPSHOT,
@@ -276,13 +285,14 @@ async def test_create_snapshot_conflict_multiple(
     assert call_kwargs["snapname"] == f"{base}_b"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_by_vm_device_id(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test create_snapshot resolves correctly when targeting a VM device directly."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     dev_reg = dr.async_get(hass)
@@ -315,13 +325,14 @@ async def test_create_snapshot_by_vm_device_id(
     assert "vmstate" not in call_kwargs
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_by_container_device_id(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test create_snapshot resolves correctly when targeting a container device."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
     dev_reg = dr.async_get(hass)
@@ -402,16 +413,17 @@ async def test_create_snapshot_version_entity_unavailable(
     assert exc_info.value.translation_key == "version_entity_unavailable"
 
 
-@freeze_time(_FROZEN_DATETIME_UTC)
 async def test_create_snapshot_api_error(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a Proxmox API failure raises HomeAssistantError."""
+    freezer.move_to(_FROZEN_DATETIME_UTC)
     await setup_integration(hass, mock_config_entry)
 
-    # Trigger lazy initialisation of the qemu mock for vmid 100.
+    # Initialize the lazy qemu mock for vmid 100 before injecting the side effect.
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CREATE_SNAPSHOT,

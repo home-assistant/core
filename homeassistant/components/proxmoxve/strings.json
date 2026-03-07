@@ -217,6 +217,9 @@
     "snapshot_failed": {
       "message": "Creating the snapshot failed while communicating with the Proxmox VE instance."
     },
+    "snapshot_name_conflict": {
+      "message": "Could not create snapshot: all name variants for `{base_name}` are already taken."
+    },
     "ssl_error": {
       "message": "An SSL error occurred: {error}"
     },
