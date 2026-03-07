@@ -52,7 +52,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 TEST_NOTIFIER_NAME = "matrix_notify"
 
@@ -310,14 +310,21 @@ async def matrix_bot(
 
     The resulting MatrixBot will have a mocked _client.
     """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA[DOMAIN],
+        unique_id=TEST_MXID,
+        title=TEST_MXID,
+    )
+    config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG_DATA)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
 
-    # Accessing hass.data in tests is not desirable, but all the tests here
-    # currently do this.
-    assert isinstance(matrix_bot := hass.data[DOMAIN], MatrixBot)
+    assert isinstance(matrix_bot := config_entry.runtime_data, MatrixBot)
 
     await hass.async_start()
 
