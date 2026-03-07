@@ -1,0 +1,11 @@
+{
+  "domain": "hetzner",
+  "name": "Hetzner Cloud",
+  "codeowners": ["@Bre77"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hetzner",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["hcloud==2.16.0"]
+}

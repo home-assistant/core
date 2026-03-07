@@ -1058,6 +1058,9 @@ hass-splunk==0.1.4
 # homeassistant.components.conversation
 hassil==3.5.0
 
+# homeassistant.components.hetzner
+hcloud==2.16.0
+
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
 
