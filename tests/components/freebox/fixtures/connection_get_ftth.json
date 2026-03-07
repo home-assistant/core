@@ -1,0 +1,9 @@
+{
+  "sfp_present": true,
+  "sfp_alim_ok": true,
+  "sfp_has_power_report": true,
+  "sfp_has_signal": true,
+  "link": true,
+  "sfp_pwr_tx": -366,
+  "sfp_pwr_rx": -2225
+}
