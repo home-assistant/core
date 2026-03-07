@@ -9,7 +9,13 @@ from homeassistant.core import HomeAssistant
 
 from . import PajGpsConfigEntry
 
-TO_REDACT = {"email", "password"}
+TO_REDACT = {
+    "email",
+    "password",
+    "latitude",
+    "longitude",
+    "timestamp",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -29,21 +35,23 @@ async def async_get_config_entry_diagnostics(
                     "name": device.name,
                     "model": (
                         device.device_models[0].get("model")
-                        if device.device_models and isinstance(device.device_models[0], dict)
+                        if device.device_models
+                        and isinstance(device.device_models[0], dict)
                         else None
                     ),
                 }
                 for device in data.devices
             ],
-            "positions": {
-                str(device_id): {
-                    "latitude": tp.lat,
-                    "longitude": tp.lng,
-                    "speed": tp.speed,
-                    "heading": tp.direction,
-                    "timestamp": str(tp.dateunix) if tp.dateunix else None,
-                }
-                for device_id, tp in data.positions.items()
-            },
+            "positions": async_redact_data(
+                {
+                    str(device_id): {
+                        "latitude": tp.lat,
+                        "longitude": tp.lng,
+                        "timestamp": str(tp.dateunix) if tp.dateunix else None,
+                    }
+                    for device_id, tp in data.positions.items()
+                },
+                TO_REDACT,
+            ),
         },
     }
