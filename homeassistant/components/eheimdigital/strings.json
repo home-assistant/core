@@ -38,7 +38,7 @@
         "name": "Light"
       },
       "is_uvc_connected": {
-        "name": "UVC Lamp connected"
+        "name": "UVC lamp connected"
       }
     },
     "climate": {

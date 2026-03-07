@@ -82,7 +82,7 @@ async def async_setup_entry(
 class EheimDigitalBinarySensor[_DeviceT: EheimDigitalDevice](
     EheimDigitalEntity[_DeviceT], BinarySensorEntity
 ):
-    """Represent a EHEIM Digital binary sensor entity."""
+    """Represent an EHEIM Digital binary sensor entity."""
 
     entity_description: EheimDigitalBinarySensorDescription[_DeviceT]
 

@@ -21,7 +21,7 @@ async def test_setup(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test binary sensor platform setup for the filter."""
+    """Test binary sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
 
     with (
