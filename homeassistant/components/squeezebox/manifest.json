@@ -13,5 +13,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pysqueezebox"],
+  "quality_scale": "silver",
   "requirements": ["pysqueezebox==0.13.0"]
 }

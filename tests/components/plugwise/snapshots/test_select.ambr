@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gateway mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -87,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Regulation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,7 +143,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.bathroom_thermostat_schedule',
     'has_entity_name': True,
     'hidden_by': None,
@@ -150,6 +152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -211,6 +214,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone profile',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,7 +267,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.living_room_thermostat_schedule',
     'has_entity_name': True,
     'hidden_by': None,
@@ -272,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -333,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone profile',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,7 +392,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.badkamer_thermostat_schedule',
     'has_entity_name': True,
     'hidden_by': None,
@@ -395,6 +401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -451,7 +458,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.bios_thermostat_schedule',
     'has_entity_name': True,
     'hidden_by': None,
@@ -460,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -516,7 +524,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.jessie_thermostat_schedule',
     'has_entity_name': True,
     'hidden_by': None,
@@ -525,6 +533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -581,7 +590,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.woonkamer_thermostat_schedule',
     'has_entity_name': True,
     'hidden_by': None,
@@ -590,6 +599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,

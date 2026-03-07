@@ -1,5 +1,7 @@
 """Helpers for the cloud component."""
 
+from __future__ import annotations
+
 from collections import deque
 import logging
 

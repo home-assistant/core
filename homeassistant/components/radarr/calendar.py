@@ -4,15 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    CalendarEntity,
+    CalendarEntityDescription,
+    CalendarEvent,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import CalendarUpdateCoordinator, RadarrConfigEntry, RadarrEvent
 from .entity import RadarrEntity
 
-CALENDAR_TYPE = EntityDescription(
+CALENDAR_TYPE = CalendarEntityDescription(
     key="calendar",
     name=None,
 )

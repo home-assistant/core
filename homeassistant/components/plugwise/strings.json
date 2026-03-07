@@ -319,7 +319,10 @@
     "failed_to_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "invalid_xml_data": {
+    "invalid_setup": {
+      "message": "Add your Adam instead of your Anna, see the documentation"
+    },
+    "response_error": {
       "message": "[%key:component::plugwise::config::error::response_error%]"
     },
     "set_schedule_first": {

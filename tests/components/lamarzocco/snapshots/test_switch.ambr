@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -55,6 +56,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,6 +136,7 @@
 # name: test_switches[switch.gs012345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
       'friendly_name': 'GS012345',
     }),
     'context': <ANY>,
@@ -164,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam boiler',
     'options': dict({
     }),
     'original_device_class': None,

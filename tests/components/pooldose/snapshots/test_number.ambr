@@ -1,0 +1,535 @@
+# serializer version: 1
+# name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_lower_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_chlorine_overfeed_alarm_lower_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine overfeed alarm lower limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chlorine overfeed alarm lower limit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ofa_cl_lower',
+    'unique_id': 'TEST123456789_ofa_cl_lower',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_lower_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Chlorine overfeed alarm lower limit',
+      'max': 10,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_chlorine_overfeed_alarm_lower_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_upper_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_chlorine_overfeed_alarm_upper_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine overfeed alarm upper limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chlorine overfeed alarm upper limit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ofa_cl_upper',
+    'unique_id': 'TEST123456789_ofa_cl_upper',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_upper_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Chlorine overfeed alarm upper limit',
+      'max': 10,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_chlorine_overfeed_alarm_upper_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.9',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_chlorine_target-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65535,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.01,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_chlorine_target',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine target',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chlorine target',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cl_target',
+    'unique_id': 'TEST123456789_cl_target',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_chlorine_target-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Chlorine target',
+      'max': 65535,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.01,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_chlorine_target',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_orp_overfeed_alarm_lower_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_orp_overfeed_alarm_lower_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ORP overfeed alarm lower limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'ORP overfeed alarm lower limit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ofa_orp_lower',
+    'unique_id': 'TEST123456789_ofa_orp_lower',
+    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+  })
+# ---
+# name: test_all_numbers[number.pool_device_orp_overfeed_alarm_lower_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Pool Device ORP overfeed alarm lower limit',
+      'max': 1000,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_orp_overfeed_alarm_lower_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '600',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_orp_overfeed_alarm_upper_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_orp_overfeed_alarm_upper_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ORP overfeed alarm upper limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'ORP overfeed alarm upper limit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ofa_orp_upper',
+    'unique_id': 'TEST123456789_ofa_orp_upper',
+    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+  })
+# ---
+# name: test_all_numbers[number.pool_device_orp_overfeed_alarm_upper_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Pool Device ORP overfeed alarm upper limit',
+      'max': 1000,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_orp_overfeed_alarm_upper_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '800',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_orp_target-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 850,
+      'min': 400,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_orp_target',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ORP target',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'ORP target',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'orp_target',
+    'unique_id': 'TEST123456789_orp_target',
+    'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+  })
+# ---
+# name: test_all_numbers[number.pool_device_orp_target-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Pool Device ORP target',
+      'max': 850,
+      'min': 400,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_orp_target',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '680',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_ph_overfeed_alarm_lower_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 14,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_ph_overfeed_alarm_lower_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH overfeed alarm lower limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'pH overfeed alarm lower limit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ofa_ph_lower',
+    'unique_id': 'TEST123456789_ofa_ph_lower',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_numbers[number.pool_device_ph_overfeed_alarm_lower_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'ph',
+      'friendly_name': 'Pool Device pH overfeed alarm lower limit',
+      'max': 14,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_ph_overfeed_alarm_lower_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_ph_overfeed_alarm_upper_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 14,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_ph_overfeed_alarm_upper_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH overfeed alarm upper limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'pH overfeed alarm upper limit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ofa_ph_upper',
+    'unique_id': 'TEST123456789_ofa_ph_upper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_numbers[number.pool_device_ph_overfeed_alarm_upper_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'ph',
+      'friendly_name': 'Pool Device pH overfeed alarm upper limit',
+      'max': 14,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_ph_overfeed_alarm_upper_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_all_numbers[number.pool_device_ph_target-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 8,
+      'min': 6,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pool_device_ph_target',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH target',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'pH target',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_target',
+    'unique_id': 'TEST123456789_ph_target',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_numbers[number.pool_device_ph_target-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'ph',
+      'friendly_name': 'Pool Device pH target',
+      'max': 8,
+      'min': 6,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pool_device_ph_target',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.5',
+  })
+# ---

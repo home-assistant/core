@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.humidifier import (
@@ -20,16 +26,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """An integer that always rounds its value."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Read and round the device status."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(value)
 
@@ -49,9 +54,9 @@ def _has_a_valid_dpcode(
     device: CustomerDevice, description: TuyaHumidifierEntityDescription
 ) -> bool:
     """Check if the device has at least one valid DP code."""
-    properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
+    properties_to_check: list[str | tuple[str, ...] | None] = [
         # Main control switch
-        description.dpcode or DPCode(description.key),
+        description.dpcode or description.key,
         # Other humidity properties
         description.current_humidity,
         description.humidity,
@@ -107,7 +112,7 @@ async def async_setup_entry(
                         ),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device,
-                            description.dpcode or DPCode(description.key),
+                            description.dpcode or description.key,
                             prefer_function=True,
                         ),
                         target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
@@ -136,10 +141,10 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device_manager: Manager,
         description: TuyaHumidifierEntityDescription,
         *,
-        current_humidity_wrapper: _RoundedIntegerWrapper | None = None,
-        mode_wrapper: DPCodeEnumWrapper | None = None,
-        switch_wrapper: DPCodeBooleanWrapper | None = None,
-        target_humidity_wrapper: _RoundedIntegerWrapper | None = None,
+        current_humidity_wrapper: DeviceWrapper[int] | None = None,
+        mode_wrapper: DeviceWrapper[str] | None = None,
+        switch_wrapper: DeviceWrapper[bool] | None = None,
+        target_humidity_wrapper: DeviceWrapper[int] | None = None,
     ) -> None:
         """Init Tuya (de)humidifier."""
         super().__init__(device, device_manager)
@@ -153,17 +158,13 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Determine humidity parameters
         if target_humidity_wrapper:
-            self._attr_min_humidity = round(
-                target_humidity_wrapper.type_information.min_scaled
-            )
-            self._attr_max_humidity = round(
-                target_humidity_wrapper.type_information.max_scaled
-            )
+            self._attr_min_humidity = round(target_humidity_wrapper.min_value)
+            self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 
         # Determine mode support and provided modes
         if mode_wrapper:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
-            self._attr_available_modes = mode_wrapper.type_information.range
+            self._attr_available_modes = mode_wrapper.options
 
     @property
     def is_on(self) -> bool | None:
@@ -192,7 +193,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.dpcode or self.entity_description.key,
             )
-        await self._async_send_dpcode_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -201,7 +202,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.dpcode or self.entity_description.key,
             )
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -210,8 +211,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.humidity,
             )
-        await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
+        await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
-        await self._async_send_dpcode_update(self._mode_wrapper, mode)
+        await self._async_send_wrapper_updates(self._mode_wrapper, mode)

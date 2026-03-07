@@ -93,4 +93,7 @@ COLLABORATORS: Final = "collaborators"
 
 DOMAIN: Final = "todoist"
 
+# Maximum number of items per page for Todoist API requests
+MAX_PAGE_SIZE: Final = 200
+
 SERVICE_NEW_TASK: Final = "new_task"

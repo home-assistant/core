@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -18,7 +21,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     ResetTarget,
 )
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -50,23 +53,8 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.mark.parametrize(
-    ("country", "expected_tx_power"),
-    [
-        ("US", 8),
-        ("NL", 10),
-        ("JP", 8),
-        ("DE", 10),
-    ],
-)
-async def test_config_flow_zigbee(
-    hass: HomeAssistant,
-    country: str,
-    expected_tx_power: int,
-) -> None:
+async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     """Test Zigbee config flow for Connect ZBT-2."""
-    hass.config.country = country
-
     fw_type = ApplicationType.EZSP
     fw_version = "7.4.4.0 build 0"
     model = "Home Assistant Connect ZBT-2"
@@ -160,7 +148,6 @@ async def test_config_flow_zigbee(
             "flow_control": "hardware",
         },
         "radio_type": fw_type.value,
-        "tx_power": expected_tx_power,
     }
 
 
@@ -400,7 +387,6 @@ async def test_options_flow(
             "flow_control": "hardware",
         },
         "radio_type": "ezsp",
-        "tx_power": 8,
     }
 
 
@@ -459,8 +445,8 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
     """Test that firmware notification triggers import flow that auto-creates config entry."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
-    await async_setup_component(hass, "usb", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
+    await async_setup_component(hass, USB_DOMAIN, {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
@@ -516,8 +502,8 @@ async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None
 
 async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> None:
     """Test that firmware notification updates existing config entry device path."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
-    await async_setup_component(hass, "usb", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
+    await async_setup_component(hass, USB_DOMAIN, {})
 
     # Create existing config entry with old device path
     config_entry = MockConfigEntry(

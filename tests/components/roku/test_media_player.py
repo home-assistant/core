@@ -30,12 +30,11 @@ from homeassistant.components.media_player import (
 from homeassistant.components.roku.const import (
     ATTR_CONTENT_ID,
     ATTR_FORMAT,
-    ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DEFAULT_PLAY_MEDIA_APP_ID,
     DOMAIN,
-    SERVICE_SEARCH,
 )
+from homeassistant.components.roku.services import ATTR_KEYWORD, SERVICE_SEARCH
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (

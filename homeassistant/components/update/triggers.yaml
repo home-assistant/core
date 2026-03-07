@@ -1,0 +1,17 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: update
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+update_became_available: *trigger_common

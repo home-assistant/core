@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTP/3 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTP/3 queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTPS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTPS queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -230,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-QUIC queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -282,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-QUIC queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -334,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-TLS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-TLS queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -438,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -490,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries relayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -646,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC not validated queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -698,6 +711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC validated queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -750,6 +764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC validated queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Encrypted queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -854,6 +870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Encrypted queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -906,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv4 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -958,6 +976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv6 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1010,6 +1029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv6 queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1062,6 +1082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TCP queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1114,6 +1135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TCP queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1166,6 +1188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UDP queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1218,6 +1241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UDP queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1270,6 +1294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unencrypted queries',
     'options': dict({
     }),
     'original_device_class': None,

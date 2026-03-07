@@ -568,6 +568,7 @@ async def test_wall_display_relay_mode(
     """Test Wall Display in relay mode."""
     climate_entity_id = "climate.test_name"
     switch_entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
 
     config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
@@ -577,7 +578,6 @@ async def test_wall_display_relay_mode(
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
     new_status.pop("thermostat:0")
-    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await hass.config_entries.async_reload(config_entry.entry_id)

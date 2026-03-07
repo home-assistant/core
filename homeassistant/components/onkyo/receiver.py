@@ -28,11 +28,13 @@ class Callbacks:
     """Receiver callbacks."""
 
     connect: list[Callable[[bool], Awaitable[None]]] = field(default_factory=list)
+    disconnect: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
     update: list[Callable[[Status], Awaitable[None]]] = field(default_factory=list)
 
     def clear(self) -> None:
         """Clear all callbacks."""
         self.connect.clear()
+        self.disconnect.clear()
         self.update.clear()
 
 
@@ -43,6 +45,7 @@ class ReceiverManager:
     entry: OnkyoConfigEntry
     info: ReceiverInfo
     receiver: Receiver | None = None
+    connected: bool = False
     callbacks: Callbacks
 
     _started: asyncio.Event
@@ -83,6 +86,7 @@ class ReceiverManager:
         while True:
             try:
                 async with connect(self.info, retry=reconnect) as self.receiver:
+                    self.connected = True
                     if not reconnect:
                         self._started.set()
                     else:
@@ -96,7 +100,9 @@ class ReceiverManager:
                 reconnect = True
 
             finally:
+                self.connected = False
                 _LOGGER.info("Disconnected: %s", self.info)
+                await self.on_disconnect()
 
     async def on_connect(self, reconnect: bool) -> None:
         """Receiver (re)connected."""
@@ -109,8 +115,13 @@ class ReceiverManager:
         for callback in self.callbacks.connect:
             await callback(reconnect)
 
+    async def on_disconnect(self) -> None:
+        """Receiver disconnected."""
+        for callback in self.callbacks.disconnect:
+            await callback()
+
     async def on_update(self, message: Status) -> None:
-        """Process new message from the receiver."""
+        """New message from the receiver."""
         for callback in self.callbacks.update:
             await callback(message)
 

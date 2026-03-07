@@ -1,7 +1,5 @@
 """Constants for the Home Connect integration."""
 
-from typing import cast
-
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
@@ -76,9 +74,9 @@ AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
-    bsh_key_to_translation_key(program.value): cast(ProgramKey, program)
+    bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program != ProgramKey.UNKNOWN
+    if program not in (ProgramKey.UNKNOWN, ProgramKey.BSH_COMMON_FAVORITE_001)
 }
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {
@@ -270,6 +268,10 @@ WARMING_LEVEL_OPTIONS = {
     )
 }
 
+RINSE_PLUS_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in ("LaundryCare.Washer.EnumType.RinsePlus.Off",)
+}
 TEMPERATURE_OPTIONS = {
     bsh_key_to_translation_key(option): option
     for option in (
@@ -308,6 +310,12 @@ SPIN_SPEED_OPTIONS = {
         "LaundryCare.Washer.EnumType.SpinSpeed.UlHigh",
     )
 }
+
+STAINS_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in ("LaundryCare.Washer.EnumType.Stains.Off",)
+}
+
 
 VARIO_PERFECT_OPTIONS = {
     bsh_key_to_translation_key(option): option
@@ -363,8 +371,10 @@ PROGRAM_ENUM_OPTIONS = {
         (OptionKey.COOKING_COMMON_HOOD_VENTING_LEVEL, VENTING_LEVEL_OPTIONS),
         (OptionKey.COOKING_COMMON_HOOD_INTENSIVE_LEVEL, INTENSIVE_LEVEL_OPTIONS),
         (OptionKey.COOKING_OVEN_WARMING_LEVEL, WARMING_LEVEL_OPTIONS),
+        (OptionKey.LAUNDRY_CARE_WASHER_RINSE_PLUS, RINSE_PLUS_OPTIONS),
         (OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, TEMPERATURE_OPTIONS),
         (OptionKey.LAUNDRY_CARE_WASHER_SPIN_SPEED, SPIN_SPEED_OPTIONS),
+        (OptionKey.LAUNDRY_CARE_WASHER_STAINS, STAINS_OPTIONS),
         (OptionKey.LAUNDRY_CARE_COMMON_VARIO_PERFECT, VARIO_PERFECT_OPTIONS),
     )
 }

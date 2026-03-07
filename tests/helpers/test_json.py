@@ -237,9 +237,7 @@ def test_save_bad_data() -> None:
     with pytest.raises(SerializationError) as excinfo:
         save_json("test4", {"hello": CannotSerializeMe()})
 
-    assert "Failed to serialize to JSON: test4. Bad data at $.hello=" in str(
-        excinfo.value
-    )
+    assert "Bad data at $.hello=" in str(excinfo.value)
 
 
 def test_custom_encoder(tmp_path: Path) -> None:

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Attachment bandwidth limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -76,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Attachment expiry duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -132,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Attachment file size limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -188,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Attachment storage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -244,6 +248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Attachment storage limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -300,6 +305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Attachment storage remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -356,6 +362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Email usage limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -405,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Emails remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -454,6 +462,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Emails sent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -503,6 +512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Messages expiry duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -559,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Messages published',
     'options': dict({
     }),
     'original_device_class': None,
@@ -608,6 +619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Messages remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -657,6 +669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Messages usage limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -706,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone calls made',
     'options': dict({
     }),
     'original_device_class': None,
@@ -755,6 +769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone calls remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -804,6 +819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone calls usage limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -853,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserved topics',
     'options': dict({
     }),
     'original_device_class': None,
@@ -902,6 +919,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserved topics limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -951,6 +969,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserved topics remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1000,6 +1019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscription tier',
     'options': dict({
     }),
     'original_device_class': None,

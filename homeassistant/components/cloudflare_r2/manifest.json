@@ -1,0 +1,12 @@
+{
+  "domain": "cloudflare_r2",
+  "name": "Cloudflare R2",
+  "codeowners": ["@corrreia"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cloudflare_r2",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["aiobotocore"],
+  "quality_scale": "bronze",
+  "requirements": ["aiobotocore==2.21.1"]
+}

@@ -16,6 +16,7 @@
   "homekit": {
     "models": ["PowerView"]
   },
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aiopvapi"],
   "requirements": ["aiopvapi==3.3.0"],

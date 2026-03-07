@@ -4,6 +4,20 @@ To update, run python3 -m script.hassfest
 """
 
 LABS_PREVIEW_FEATURES = {
+    "analytics": {
+        "snapshots": {
+            "feedback_url": "https://forms.gle/GqvRmgmghSDco8M46",
+            "learn_more_url": "https://www.home-assistant.io/blog/2026/02/02/about-device-database/",
+            "report_issue_url": "https://github.com/OHF-Device-Database/device-database/issues/new",
+        },
+    },
+    "automation": {
+        "new_triggers_conditions": {
+            "feedback_url": "https://forms.gle/fWFZqf5MzuwWTsCH8",
+            "learn_more_url": "https://www.home-assistant.io/blog/2025/12/03/release-202512/#purpose-specific-triggers-and-conditions",
+            "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/automation&integration_name=Automation",
+        },
+    },
     "frontend": {
         "winter_mode": {
             "feedback_url": "",

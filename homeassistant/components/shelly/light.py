@@ -44,7 +44,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
 )
 from .utils import (
@@ -72,8 +72,8 @@ BLOCK_LIGHTS = {
     ),
     ("relay", "output"): BlockLightDescription(
         key="relay|output",
-        removal_condition=lambda settings, block: not is_block_channel_type_light(
-            settings, block
+        removal_condition=lambda settings, block: (
+            not is_block_channel_type_light(settings, block)
         ),
     ),
 }
@@ -101,7 +101,7 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_LIGHTS, BlockShellyLight
     )
 
@@ -110,7 +110,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
 
     entity_description: BlockLightDescription
-    _attr_supported_color_modes: set[str]
+    _attr_supported_color_modes: set[ColorMode]
 
     def __init__(
         self,
@@ -538,8 +538,8 @@ LIGHTS: Final = {
     "switch": RpcEntityDescription(
         key="switch",
         sub_key="output",
-        removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
-            config, get_rpc_key_id(key)
+        removal_condition=lambda config, _status, key: (
+            not is_rpc_channel_type_light(config, get_rpc_key_id(key))
         ),
         entity_class=RpcShellySwitchAsLight,
     ),

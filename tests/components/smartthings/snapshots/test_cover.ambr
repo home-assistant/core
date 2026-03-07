@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -40,6 +41,7 @@
       'current_position': 100,
       'device_class': 'shade',
       'friendly_name': 'Curtain 1A',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -71,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -92,6 +95,7 @@
       'current_position': 32,
       'device_class': 'shade',
       'friendly_name': 'Kitchen IKEA KADRILJ Window blind',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,

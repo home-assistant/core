@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -205,6 +206,12 @@
       "core_temperature": {
         "name": "Core temperature"
       },
+      "degreasing_counter": {
+        "name": "Degreasing cycles"
+      },
+      "descaling_counter": {
+        "name": "Descaling cycles"
+      },
       "drying_step": {
         "name": "Drying step",
         "state": {
@@ -229,6 +236,9 @@
       },
       "finish": {
         "name": "Finish"
+      },
+      "milk_cleaning_counter": {
+        "name": "Milk pipework cleaning cycles"
       },
       "plate": {
         "name": "Plate {plate_no}",
@@ -257,6 +267,9 @@
           "plate_step_warm": "Warming"
         }
       },
+      "power_disk_level": {
+        "name": "PowerDisk level"
+      },
       "program_id": {
         "name": "Program",
         "state": {
@@ -284,6 +297,7 @@
           "auto": "[%key:common::state::auto%]",
           "auto_roast": "Auto roast",
           "automatic": "Automatic",
+          "automatic_maintenance": "Automatic maintenance",
           "automatic_plus": "Automatic plus",
           "baguettes": "Baguettes",
           "barista_assistant": "BaristaAssistant",
@@ -411,6 +425,7 @@
           "cook_bacon": "Cook bacon",
           "cool_air": "Cool air",
           "corn_on_the_cob": "Corn on the cob",
+          "cottonrepair": "CottonRepair",
           "cottons": "Cottons",
           "cottons_eco": "Cottons ECO",
           "cottons_hygiene": "Cottons hygiene",
@@ -440,9 +455,12 @@
           "custom_program_8": "Custom program 8",
           "custom_program_9": "Custom program 9",
           "dark_garments": "Dark garments",
+          "dark_jeans": "Dark/jeans",
           "dark_mixed_grain_bread": "Dark mixed grain bread",
           "decrystallise_honey": "Decrystallize honey",
           "defrost": "Defrost",
+          "defrost_meat": "Defrost meat",
+          "defrost_vegetables": "Defrost vegetables",
           "defrosting_with_microwave": "Defrosting with microwave",
           "defrosting_with_steam": "Defrosting with steam",
           "delicates": "Delicates",
@@ -452,11 +470,14 @@
           "dissolve_gelatine": "Dissolve gelatine",
           "down_duvets": "Down duvets",
           "down_filled_items": "Down-filled items",
+          "downs_duvets": "Downs/Duvets",
           "drain_spin": "Drain/spin",
           "drop_cookies_1_tray": "Drop cookies (1 tray)",
           "drop_cookies_2_trays": "Drop cookies (2 trays)",
+          "drying": "Drying",
           "duck": "Duck",
           "dutch_hash": "Dutch hash",
+          "easy_care": "Easy care",
           "eco": "ECO",
           "eco_40_60": "ECO 40-60",
           "eco_fan_heat": "ECO fan heat",
@@ -487,6 +508,7 @@
           "fruit_streusel_cake": "Fruit streusel cake",
           "fruit_tea": "Fruit tea",
           "full_grill": "Full grill",
+          "game_pieces": "Game pieces",
           "gentle": "Gentle",
           "gentle_denim": "Gentle denim",
           "gentle_minimum_iron": "Gentle minimum iron",
@@ -514,10 +536,13 @@
           "green_split_peas": "Green split peas",
           "green_tea": "Green tea",
           "greenage_plums": "Greenage plums",
+          "grill": "Grill",
           "halibut_fillet_2_cm": "Halibut (fillet, 2 cm)",
           "halibut_fillet_3_cm": "Halibut (fillet, 3 cm)",
           "ham_roast": "Ham roast",
+          "heating_bakes_gratins": "Heating bakes/gratins",
           "heating_damp_flannels": "Heating damp flannels",
+          "heating_vegetables": "Heating vegetables",
           "hens_eggs_size_l_hard": "Hen’s eggs (size „L“, hard)",
           "hens_eggs_size_l_medium": "Hen’s eggs (size „L“, medium)",
           "hens_eggs_size_l_soft": "Hen’s eggs (size „L“, soft)",
@@ -538,6 +563,7 @@
           "hygiene": "Hygiene",
           "intensive": "Intensive",
           "intensive_bake": "Intensive bake",
+          "intermediate_rinsing": "Intermediate rinsing",
           "iridescent_shark_fillet": "Iridescent shark (fillet)",
           "japanese_tea": "Japanese tea",
           "jasmine_rice_rapid_steam_cooking": "Jasmine rice (rapid steam cooking)",
@@ -577,6 +603,9 @@
           "melt_chocolate": "Melt chocolate",
           "menu_cooking": "Menu cooking",
           "microwave": "Microwave",
+          "microwave_auto_roast": "Microwave + Auto roast",
+          "microwave_fan_grill": "Microwave + Fan grill",
+          "microwave_fan_plus": "Microwave + Fan plus",
           "milk_foam": "Milk foam",
           "milk_pipework_clean": "Milk pipework clean",
           "milk_pipework_rinse": "Milk pipework rinse",
@@ -607,6 +636,7 @@
           "oats_cracked": "Oats (cracked)",
           "oats_whole": "Oats (whole)",
           "osso_buco": "Osso buco",
+          "outdoor_garments": "Outdoor garments",
           "outerwear": "Outerwear",
           "oyster_mushroom_diced": "Oyster mushroom (diced)",
           "oyster_mushroom_strips": "Oyster mushroom (strips)",
@@ -646,6 +676,7 @@
           "pike_fillet": "Pike (fillet)",
           "pike_piece": "Pike (piece)",
           "pillows": "Pillows",
+          "pillows_sanitize": "Pillows sanitize",
           "pinto_beans": "Pinto beans",
           "pizza_oil_cheese_dough_baking_tray": "Pizza, oil cheese dough (baking tray)",
           "pizza_oil_cheese_dough_round_baking_tine": "Pizza, oil cheese dough (round baking tine)",
@@ -714,7 +745,9 @@
           "poularde_breast": "Poularde breast",
           "poularde_whole": "Poularde (whole)",
           "power_wash": "PowerWash",
+          "powerfresh": "PowerFresh",
           "prawns": "Prawns",
+          "pre_ironing": "Pre-ironing",
           "proofing": "Proofing",
           "prove_15_min": "Prove for 15 min",
           "prove_30_min": "Prove for 30 min",
@@ -725,7 +758,9 @@
           "pumpkin_soup": "Pumpkin soup",
           "pyrolytic": "Pyrolytic",
           "quiche_lorraine": "Quiche Lorraine",
+          "quick_hygiene": "QuickHygiene",
           "quick_mw": "Quick MW",
+          "quick_power_dry": "QuickPowerDry",
           "quick_power_wash": "QuickPowerWash",
           "quinces_diced": "Quinces (diced)",
           "quinoa": "Quinoa",
@@ -807,6 +842,7 @@
           "simiao_rapid_steam_cooking": "Simiao (rapid steam cooking)",
           "simiao_steam_cooking": "Simiao (steam cooking)",
           "small_shrimps": "Small shrimps",
+          "smartmatic": "SmartMatic",
           "smoothing": "Smoothing",
           "snow_pea": "Snow pea",
           "soak": "Soak",
@@ -833,6 +869,7 @@
           "sterilize_crockery": "Sterilize crockery",
           "stollen": "Stollen",
           "stuffed_cabbage": "Stuffed cabbage",
+          "stuffed_toys": "Stuffed toys",
           "sweat_onions": "Sweat onions",
           "swede_cut_into_batons": "Swede (cut into batons)",
           "swede_diced": "Swede (diced)",
@@ -855,6 +892,7 @@
           "top_heat": "Top heat",
           "tortellini_fresh": "Tortellini (fresh)",
           "trainers": "Trainers",
+          "trainers_refresh": "Trainers refresh",
           "treacle_sponge_pudding_one_large": "Treacle sponge pudding (one large)",
           "treacle_sponge_pudding_several_small": "Treacle sponge pudding (several small)",
           "trout": "Trout",
@@ -935,12 +973,14 @@
           "2nd_grinding": "2nd grinding",
           "2nd_pre_brewing": "2nd pre-brewing",
           "anti_crease": "Anti-crease",
+          "automatic_start": "Automatic start",
           "blocked_brushes": "Brushes blocked",
           "blocked_drive_wheels": "Drive wheels blocked",
           "blocked_front_wheel": "Front wheel blocked",
           "cleaning": "Cleaning",
           "comfort_cooling": "Comfort cooling",
           "cooling_down": "Cooling down",
+          "cooling_phase": "Cooling phase",
           "dirty_sensors": "Dirty sensors",
           "disinfecting": "Disinfecting",
           "dispensing": "Dispensing",
@@ -954,6 +994,7 @@
           "extra_dry": "Extra dry",
           "final_rinse": "Final rinse",
           "finished": "Finished",
+          "flex_load_active": "FlexLoad active",
           "freshen_up_and_moisten": "Freshen up & moisten",
           "going_to_target_area": "Going to target area",
           "grinding": "Grinding",
@@ -977,6 +1018,7 @@
           "normal": "Normal",
           "normal_plus": "Normal plus",
           "not_running": "Not running",
+          "perfect_dry_active": "PerfectDry active",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
           "pre_heating": "Pre-heating",
@@ -991,7 +1033,9 @@
           "rinse_hold": "Rinse hold",
           "rinse_out_lint": "Rinse out lint",
           "rinses": "Rinses",
+          "roasting": "Roasting",
           "safety_cooling": "Safety cooling",
+          "searing": "Searing",
           "slightly_dry": "Slightly dry",
           "slow_roasting": "Slow roasting",
           "smoothing": "Smoothing",
@@ -1026,6 +1070,12 @@
       "remaining_time": {
         "name": "Remaining time"
       },
+      "rinse_aid_level": {
+        "name": "Rinse aid level"
+      },
+      "salt_level": {
+        "name": "Salt level"
+      },
       "spin_speed": {
         "name": "Spin speed"
       },
@@ -1049,6 +1099,7 @@
           "program_ended": "Program ended",
           "program_interrupted": "Program interrupted",
           "programmed": "Programmed",
+          "reserved": "Reserved",
           "rinse_hold": "Rinse hold",
           "service": "Service",
           "supercooling": "Supercooling",
@@ -1066,6 +1117,12 @@
       },
       "temperature_zone_3": {
         "name": "Temperature zone 3"
+      },
+      "twin_dos_1_level": {
+        "name": "TwinDos 1 level"
+      },
+      "twin_dos_2_level": {
+        "name": "TwinDos 2 level"
       },
       "water_consumption": {
         "name": "Water consumption"

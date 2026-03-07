@@ -37,9 +37,21 @@
         "name": "Max screentime today"
       }
     },
+    "select": {
+      "timer_mode": {
+        "name": "Restriction mode",
+        "state": {
+          "daily": "Same for all days",
+          "each_day_of_the_week": "Different for each day"
+        }
+      }
+    },
     "sensor": {
       "playing_time": {
         "name": "Used screen time"
+      },
+      "time_extended": {
+        "name": "Extended screen time"
       },
       "time_remaining": {
         "name": "Screen time remaining"
@@ -53,6 +65,9 @@
     "time": {
       "bedtime_alarm": {
         "name": "Bedtime alarm"
+      },
+      "bedtime_end_time": {
+        "name": "Bedtime end time"
       }
     }
   },
@@ -63,14 +78,23 @@
     "bedtime_alarm_out_of_range": {
       "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
     },
+    "bedtime_end_time_out_of_range": {
+      "message": "{value} not accepted. Bedtime End Time must be between {bedtime_end_time_min} and {bedtime_end_time_max}. To disable, set to {bedtime_alarm_disable}."
+    },
     "config_entry_not_found": {
       "message": "Config entry not found."
     },
     "device_not_found": {
       "message": "Device not found."
     },
+    "invalid_device": {
+      "message": "The specified device is not a Nintendo device."
+    },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
+    },
+    "update_required": {
+      "message": "The Nintendo Switch parental controls integration requires an update due to changes in Nintendo's API."
     }
   },
   "services": {

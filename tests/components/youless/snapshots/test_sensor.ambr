@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy export tariff 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy export tariff 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total gas usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average peak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -414,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current power usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -470,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy import tariff 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -526,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy import tariff 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -582,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Month peak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -638,6 +649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -694,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -750,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -809,6 +823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tariff',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -864,6 +879,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy import',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -920,6 +936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -976,6 +993,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1032,6 +1050,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1088,6 +1107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1144,6 +1164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1200,6 +1221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total water usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

@@ -11,11 +11,13 @@ from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import Execution
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import setup_home_connect_entry
+from .common import setup_home_connect_entry, should_add_option_entity
 from .const import (
     AVAILABLE_MAPS_ENUM,
     BEAN_AMOUNT_OPTIONS,
@@ -29,7 +31,9 @@ from .const import (
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
     PROGRAMS_TRANSLATION_KEYS_MAP,
+    RINSE_PLUS_OPTIONS,
     SPIN_SPEED_OPTIONS,
+    STAINS_OPTIONS,
     SUCTION_POWER_OPTIONS,
     TEMPERATURE_OPTIONS,
     TRANSLATION_KEYS_PROGRAMS_MAP,
@@ -37,11 +41,7 @@ from .const import (
     VENTING_LEVEL_OPTIONS,
     WARMING_LEVEL_OPTIONS,
 )
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
@@ -280,6 +280,16 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         },
     ),
     HomeConnectSelectEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_RINSE_PLUS,
+        translation_key="rinse_plus",
+        options=list(RINSE_PLUS_OPTIONS),
+        translation_key_values=RINSE_PLUS_OPTIONS,
+        values_translation_key={
+            value: translation_key
+            for translation_key, value in RINSE_PLUS_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
         translation_key="washer_temperature",
         options=list(TEMPERATURE_OPTIONS),
@@ -300,6 +310,15 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         },
     ),
     HomeConnectSelectEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_STAINS,
+        translation_key="auto_stain",
+        options=list(STAINS_OPTIONS),
+        translation_key_values=STAINS_OPTIONS,
+        values_translation_key={
+            value: translation_key for translation_key, value in STAINS_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
         key=OptionKey.LAUNDRY_CARE_COMMON_VARIO_PERFECT,
         translation_key="vario_perfect",
         options=list(VARIO_PERFECT_OPTIONS),
@@ -313,36 +332,37 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         *(
             [
-                HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
+                HomeConnectProgramSelectEntity(appliance_coordinator, desc)
                 for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
             ]
-            if appliance.programs
+            if appliance_coordinator.data.programs
             else []
         ),
         *[
-            HomeConnectSelectEntity(entry.runtime_data, appliance, desc)
+            HomeConnectSelectEntity(appliance_coordinator, desc)
             for desc in SELECT_ENTITY_DESCRIPTIONS
-            if desc.key in appliance.settings
+            if desc.key in appliance_coordinator.data.settings
         ],
     ]
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
+    entity_registry: er.EntityRegistry,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectSelectOptionEntity(entry.runtime_data, appliance, desc)
+        HomeConnectSelectOptionEntity(appliance_coordinator, desc)
         for desc in PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS
-        if desc.key in appliance.options
+        if should_add_option_entity(
+            desc, appliance_coordinator.data, entity_registry, Platform.SELECT
+        )
     ]
 
 
@@ -353,6 +373,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect select entities."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
@@ -367,14 +388,12 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectProgramSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
         self.set_options()
@@ -384,7 +403,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in self.appliance.programs
-            if program.key != ProgramKey.UNKNOWN
+            if program.key in PROGRAMS_TRANSLATION_KEYS_MAP
             and (
                 program.constraints is None
                 or program.constraints.execution
@@ -404,7 +423,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self.refresh_options,
-                (self.appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_CONNECTED),
+                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
             )
         )
 
@@ -445,15 +464,13 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
 
@@ -522,15 +539,13 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
 

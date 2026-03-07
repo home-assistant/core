@@ -211,7 +211,7 @@ class XiaomiMiioRemote(RemoteEntity):
         return self._timeout
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return False if device is unreachable, else True."""
         try:
             self.device.info()

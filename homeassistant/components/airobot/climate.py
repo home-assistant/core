@@ -29,6 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirobotConfigEntry
 from .const import DOMAIN
+from .coordinator import AirobotDataUpdateCoordinator
 from .entity import AirobotEntity
 
 PARALLEL_UPDATES = 1
@@ -63,6 +64,11 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
     _attr_min_temp = SETPOINT_TEMP_MIN
     _attr_max_temp = SETPOINT_TEMP_MAX
 
+    def __init__(self, coordinator: AirobotDataUpdateCoordinator) -> None:
+        """Initialize the climate entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.data.status.device_id
+
     @property
     def _status(self) -> ThermostatStatus:
         """Get status from coordinator data."""
@@ -75,8 +81,18 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        """Return the current temperature."""
+        """Return the current temperature.
+
+        If floor temperature is available, thermostat is set up for floor heating.
+        """
+        if self._status.temp_floor is not None:
+            return self._status.temp_floor
         return self._status.temp_air
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._status.hum_air
 
     @property
     def target_temperature(self) -> float | None:
@@ -125,6 +141,13 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
             ) from err
 
         await self.coordinator.async_request_refresh()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set HVAC mode.
+
+        This thermostat only supports HEAT mode. The climate platform validates
+        that only supported modes are passed, so this method is a no-op.
+        """
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

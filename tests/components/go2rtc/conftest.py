@@ -1,6 +1,7 @@
 """Go2rtc test configuration."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from awesomeversion import AwesomeVersion
@@ -228,3 +229,15 @@ async def init_test_integration(
         await hass.async_block_till_done()
 
     return test_camera
+
+
+@pytest.fixture
+def server_dir(tmp_path: Path) -> Generator[Path]:
+    """Fixture to provide a temporary directory for the server."""
+    server_dir = tmp_path / "go2rtc"
+    server_dir.mkdir()
+    with patch(
+        "homeassistant.components.go2rtc.mkdtemp",
+        return_value=str(server_dir),
+    ):
+        yield server_dir

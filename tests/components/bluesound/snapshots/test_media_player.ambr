@@ -3,6 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'player-name1111',
+      'group_members': None,
       'is_volume_muted': False,
       'master': False,
       'media_album_name': 'album',
@@ -19,7 +20,7 @@
         'input3',
         '4',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 196157>,
+      'supported_features': <MediaPlayerEntityFeature: 720445>,
       'volume_level': 0.1,
     }),
     'context': <ANY>,

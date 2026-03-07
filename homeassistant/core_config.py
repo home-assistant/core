@@ -249,7 +249,7 @@ def _validate_currency(data: Any) -> Any:
         raise
 
 
-def _validate_stun_or_turn_url(value: Any) -> str:
+def validate_stun_or_turn_url(value: Any) -> str:
     """Validate an URL."""
     url_in = str(value)
     url = urlparse(url_in)
@@ -331,7 +331,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                             vol.Schema(
                                 {
                                     vol.Required(CONF_URL): vol.All(
-                                        cv.ensure_list, [_validate_stun_or_turn_url]
+                                        cv.ensure_list, [validate_stun_or_turn_url]
                                     ),
                                     vol.Optional(CONF_USERNAME): cv.string,
                                     vol.Optional(CONF_CREDENTIAL): cv.string,
@@ -630,6 +630,16 @@ class Config:
         """
         return os.path.join(self.config_dir, *path)
 
+    def cache_path(self, *path: str) -> str:
+        """Generate path to the file within the cache directory.
+
+        The cache directory is used for temporary data that can be
+        regenerated and is not included in backups.
+
+        Async friendly.
+        """
+        return self.path(".cache", *path)
+
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
         parsed_url = f"{yarl.URL(url)!s}/"
@@ -655,7 +665,7 @@ class Config:
                 thepath = thepath.resolve()
             else:
                 thepath = thepath.parent.resolve()
-        except (FileNotFoundError, RuntimeError, PermissionError):
+        except FileNotFoundError, RuntimeError, PermissionError:
             return False
 
         for allowed_path in self.allowlist_external_dirs:

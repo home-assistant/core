@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from pylamarzocco.const import (
+    DoseMode,
     ModelName,
     PreExtractionMode,
     SmartStandByType,
@@ -193,3 +194,40 @@ async def test_select_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == "select_option_error"
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("device_fixture", [ModelName.LINEA_MINI])
+async def test_bbw_dose_mode(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lamarzocco: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the La Marzocco Brew By Weight Mode Select (only for Mini R Models)."""
+
+    serial_number = mock_lamarzocco.serial_number
+
+    state = hass.states.get(f"select.{serial_number}_brew_by_weight_dose_mode")
+
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry == snapshot
+
+    # on/off service calls
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: f"select.{serial_number}_brew_by_weight_dose_mode",
+            ATTR_OPTION: "dose2",
+        },
+        blocking=True,
+    )
+
+    mock_lamarzocco.set_brew_by_weight_dose_mode.assert_called_once_with(
+        mode=DoseMode.DOSE_2
+    )

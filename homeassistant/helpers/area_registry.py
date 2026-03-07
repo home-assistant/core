@@ -40,7 +40,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 8
+STORAGE_VERSION_MINOR = 9
 
 
 class _AreaStoreData(TypedDict):
@@ -156,6 +156,13 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 for area in old_data["areas"]:
                     area["humidity_entity_id"] = None
                     area["temperature_entity_id"] = None
+
+            if old_minor_version < 9:
+                # Version 1.9 sorts the areas by name
+                old_data["areas"] = sorted(
+                    old_data["areas"],
+                    key=lambda area: area["name"].casefold(),
+                )
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -440,7 +447,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             EventAreaRegistryUpdatedData(action="reorder", area_id=None),
         )
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()
 
@@ -509,9 +516,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
-            floor_id = event.data.get("floor_id")
-            if floor_id is None:
-                return
+            if TYPE_CHECKING:
+                assert event.data["action"] == "remove"
+            floor_id = event.data["floor_id"]
             for area in self.areas.get_areas_for_floor(floor_id):
                 self.async_update(area.id, floor_id=None)
 
@@ -542,10 +549,10 @@ def async_get(hass: HomeAssistant) -> AreaRegistry:
     return AreaRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

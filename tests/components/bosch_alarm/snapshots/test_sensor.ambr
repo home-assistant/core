@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -213,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -310,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -358,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -406,6 +414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -454,6 +463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -503,6 +513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -551,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
     'original_device_class': None,

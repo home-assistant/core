@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.binary_sensor import DPCodeBitmapBitWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.binary_sensor import (
@@ -19,7 +25,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBitmapBitWrapper, DPCodeBooleanWrapper, DPCodeWrapper
 
 
 @dataclass(frozen=True)
@@ -101,6 +106,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             key=DPCode.FEED_STATE,
             translation_key="feeding",
             on_value="feeding",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     DeviceCategory.DGNBJ: (
@@ -366,13 +376,13 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
 }
 
 
-class _CustomDPCodeWrapper(DPCodeWrapper):
+class _CustomDPCodeWrapper(DPCodeWrapper[bool]):
     """Custom DPCode Wrapper to check for values in a set."""
 
     _valid_values: set[bool | float | int | str]
 
     def __init__(
-        self, dpcode: DPCode, valid_values: set[bool | float | int | str]
+        self, dpcode: str, valid_values: set[bool | float | int | str]
     ) -> None:
         """Init CustomDPCodeBooleanWrapper."""
         super().__init__(dpcode)
@@ -380,7 +390,7 @@ class _CustomDPCodeWrapper(DPCodeWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
         """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return raw_value in self._valid_values
 
@@ -390,7 +400,7 @@ def _get_dpcode_wrapper(
     description: TuyaBinarySensorEntityDescription,
 ) -> DPCodeWrapper | None:
     """Get DPCode wrapper for an entity description."""
-    dpcode = description.dpcode or DPCode(description.key)
+    dpcode = description.dpcode or description.key
     if description.bitmap_key is not None:
         return DPCodeBitmapBitWrapper.find_dpcode(
             device, dpcode, bitmap_key=description.bitmap_key
@@ -450,7 +460,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        dpcode_wrapper: DPCodeWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)
@@ -461,4 +471,18 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )

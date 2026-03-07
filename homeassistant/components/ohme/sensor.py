@@ -49,6 +49,7 @@ SENSORS = [
         key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.amps,
     ),
     OhmeSensorDescription(
@@ -57,6 +58,7 @@ SENSORS = [
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.power.watts,
     ),
     OhmeSensorDescription(
@@ -81,13 +83,15 @@ SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client: client.battery,
     ),
     OhmeSensorDescription(
         key="slot_list",
         translation_key="slot_list",
-        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
-        or STATE_UNKNOWN,
+        value_fn=lambda client: (
+            ", ".join(str(x) for x in client.slots) or STATE_UNKNOWN
+        ),
     ),
 ]
 

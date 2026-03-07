@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -45,7 +48,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     config_entry = mock_config_entry(unique_id="switch_handle_coordinator_update_test")
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["lot123v1"]
     diffuser.is_on = False
 
@@ -56,7 +59,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     call_count_before_update = diffuser.update_data.call_count
 
     await hass.services.async_call(
-        "homeassistant",
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["switch.genie"]},
         blocking=True,

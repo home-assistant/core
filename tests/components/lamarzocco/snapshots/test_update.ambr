@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gateway firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -40,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
+      'entity_picture': '/api/brands/integration/lamarzocco/icon.png',
       'friendly_name': 'GS012345 Gateway firmware',
       'in_progress': False,
       'installed_version': 'v5.0.9',
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -101,7 +103,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
+      'entity_picture': '/api/brands/integration/lamarzocco/icon.png',
       'friendly_name': 'GS012345 Machine firmware',
       'in_progress': False,
       'installed_version': 'v1.17',

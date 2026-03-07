@@ -215,6 +215,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GV5140*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -318,6 +323,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             6,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "hue_ble",
+        "service_data_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": True,
@@ -608,6 +619,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "motionblinds_ble",
         "local_name": "MOTION_*",
+    },
+    {
+        "connectable": True,
+        "domain": "opendisplay",
+        "manufacturer_id": 9286,
     },
     {
         "domain": "oralb",

@@ -82,11 +82,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the client entities."""
 
-    async_add_entities(
-        ThermostatEntity(device)
-        for device in entry.runtime_data.device_manager.devices.values()
-        if ThermostatHvacTrait.NAME in device.traits
-    )
+    def devices_added(devices: list[Device]) -> None:
+        async_add_entities(
+            ThermostatEntity(device)
+            for device in devices
+            if ThermostatHvacTrait.NAME in device.traits
+        )
+
+    entry.runtime_data.register_devices_listener(devices_added)
 
 
 class ThermostatEntity(ClimateEntity):

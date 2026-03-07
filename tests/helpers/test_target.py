@@ -461,12 +461,16 @@ def registries_mock(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "selection_class", [target.TargetSelection, target.TargetSelectorData]
+)
 @pytest.mark.usefixtures("registries_mock")
 async def test_extract_referenced_entity_ids(
     hass: HomeAssistant,
     selector_config: ConfigType,
     expand_group: bool,
     expected_selected: target.SelectedEntities,
+    selection_class,
 ) -> None:
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -486,10 +490,10 @@ async def test_extract_referenced_entity_ids(
         order=None,
     )
 
-    target_data = target.TargetSelectorData(selector_config)
+    target_selection = selection_class(selector_config)
     assert (
         target.async_extract_referenced_entity_ids(
-            hass, target_data, expand_group=expand_group
+            hass, target_selection, expand_group=expand_group
         )
         == expected_selected
     )

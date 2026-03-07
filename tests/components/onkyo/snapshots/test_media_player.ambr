@@ -29,6 +29,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX-NR7100',
     'options': dict({
     }),
     'original_device_class': None,
@@ -105,6 +106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX-NR7100 Zone 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -169,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX-NR7100 Zone 3',
     'options': dict({
     }),
     'original_device_class': None,

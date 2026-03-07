@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from soco.exceptions import SoCoException
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -189,3 +190,35 @@ async def test_zgs_avtransport_group_speakers(
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
     assert soco_br.play.call_count == 0
+
+
+async def test_async_offline_without_subscription_lock(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+) -> None:
+    """Test unloading entry works when subscription lock was never created.
+
+    This can happen when a speaker is discovered but setup() fails early
+    before async_setup() is scheduled. The integration should handle this
+    gracefully during unload.
+    """
+    # Make play_mode raise an exception to cause setup() to fail early.
+    # The speaker is added to discovered before setup() is called in _add_speaker,
+    # so this creates a speaker in discovered without _subscription_lock being created.
+    # Using PropertyMock to only affect this specific test's soco instance.
+    with patch.object(
+        type(soco),
+        "play_mode",
+        new_callable=lambda: property(
+            fget=lambda self: (_ for _ in ()).throw(SoCoException("Connection failed"))
+        ),
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Unload should succeed without AssertionError even though
+        # _subscription_lock was never created
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
