@@ -117,7 +117,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[no_data][number.probe_1_minimum_temperature-entry]
@@ -178,7 +178,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[no_data][number.probe_1_target_temperature-entry]
@@ -239,7 +239,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[no_data][number.probe_2_maximum_temperature-entry]
@@ -300,7 +300,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[no_data][number.probe_2_minimum_temperature-entry]
@@ -361,7 +361,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[no_data][number.probe_2_target_temperature-entry]
@@ -422,7 +422,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.pro_05_alarm_interval-entry]
@@ -543,7 +543,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_1_minimum_temperature-entry]
@@ -604,7 +604,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-entry]
@@ -726,7 +726,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_2_minimum_temperature-entry]
@@ -787,7 +787,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-entry]
@@ -848,6 +848,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
