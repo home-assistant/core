@@ -9,7 +9,6 @@ LOGGER = logging.getLogger(__package__)
 
 REQUESTS = "requests"
 
-ATTR_LIMIT = "limit"
 ATTR_MEDIA_TYPE = "media_type"
 ATTR_QUERY = "query"
 ATTR_REQUESTED_BY = "requested_by"

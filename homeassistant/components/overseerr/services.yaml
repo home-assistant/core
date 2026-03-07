@@ -40,11 +40,6 @@ search_media:
       required: true
       selector:
         text:
-    limit:
-      selector:
-        number:
-          min: 1
-          mode: box
 
 request_media:
   fields:

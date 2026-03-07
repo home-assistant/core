@@ -220,10 +220,6 @@
           "description": "The Seerr instance to search.",
           "name": "Seerr instance"
         },
-        "limit": {
-          "description": "Maximum number of results to return.",
-          "name": "Limit"
-        },
         "query": {
           "description": "The search query.",
           "name": "Query"

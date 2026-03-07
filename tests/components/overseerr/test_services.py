@@ -9,7 +9,6 @@ from python_overseerr.models import MediaType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr.const import (
-    ATTR_LIMIT,
     ATTR_MEDIA_TYPE,
     ATTR_QUERY,
     ATTR_REQUESTED_BY,
@@ -113,41 +112,6 @@ async def test_service_search_media(
     )
     assert response == {"results": []}
     mock_overseerr_client.search.assert_called_once_with("test query with spaces")
-
-
-async def test_service_search_media_with_limit(
-    hass: HomeAssistant,
-    mock_overseerr_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the "limit" function of the search_media service."""
-
-    @dataclasses.dataclass
-    class SearchResultMock:
-        name: str
-
-    mock_overseerr_client.search.return_value = [
-        SearchResultMock(name="Result 1"),
-        SearchResultMock(name="Result 2"),
-        SearchResultMock(name="Result 3"),
-    ]
-
-    await setup_integration(hass, mock_config_entry)
-
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH_MEDIA,
-        {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_QUERY: "test",
-            ATTR_LIMIT: 2,
-        },
-        blocking=True,
-        return_response=True,
-    )
-
-    assert response == {"results": [{"name": "Result 1"}, {"name": "Result 2"}]}
 
 
 async def test_service_request_media(
@@ -318,7 +282,7 @@ async def test_services_connection_error(
     ("service", "payload"),
     [
         (SERVICE_GET_REQUESTS, {}),
-        (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test", ATTR_LIMIT: 3}),
+        (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test"}),
         (
             SERVICE_REQUEST_MEDIA,
             {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: "123456789", ATTR_SEASONS: "1"},
