@@ -40,6 +40,49 @@ class HydrawiseData:
     )
 
 
+class HydrawiseWaterUseData:
+    """Container for data fetched from the Hydrawise water use data.
+
+    Proxies the main data through the main coordinator to make sure water use
+    sensors have access to updated main data without needing to be updated at
+    the same frequency as the main data.
+    """
+
+    def __init__(
+        self,
+        main_coordinator: HydrawiseMainDataUpdateCoordinator,
+        daily_water_summary: dict[int, ControllerWaterUseSummary],
+    ) -> None:
+        """Initialize the HydrawiseWaterUseData."""
+        self._main_coordinator = main_coordinator
+        self.daily_water_summary = daily_water_summary
+
+    @property
+    def user(self) -> User:
+        """Return the Hydrawise user."""
+        return self._main_coordinator.data.user
+
+    @property
+    def controllers(self) -> dict[int, Controller]:
+        """Return the Hydrawise controllers."""
+        return self._main_coordinator.data.controllers
+
+    @property
+    def zones(self) -> dict[int, Zone]:
+        """Return the Hydrawise zones."""
+        return self._main_coordinator.data.zones
+
+    @property
+    def zone_id_to_controller(self) -> dict[int, Controller]:
+        """Return a mapping of zone ID to controller."""
+        return self._main_coordinator.data.zone_id_to_controller
+
+    @property
+    def sensors(self) -> dict[int, Sensor]:
+        """Return the Hydrawise sensors."""
+        return self._main_coordinator.data.sensors
+
+
 @dataclass
 class HydrawiseUpdateCoordinators:
     """Container for all Hydrawise DataUpdateCoordinator instances."""
@@ -48,20 +91,16 @@ class HydrawiseUpdateCoordinators:
     water_use: HydrawiseWaterUseDataUpdateCoordinator
 
 
-class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
-    """Base class for Hydrawise Data Update Coordinators."""
-
-    api: HydrawiseBase
-    config_entry: HydrawiseConfigEntry
-
-
-class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
+class HydrawiseMainDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     """The main Hydrawise Data Update Coordinator.
 
     This fetches the primary state data for Hydrawise controllers and zones
     at a relatively frequent interval so that the primary functions of the
     integration are updated in a timely manner.
     """
+
+    api: HydrawiseBase
+    config_entry: HydrawiseConfigEntry
 
     def __init__(
         self,
@@ -173,12 +212,17 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                 new_zone_callback(new_zones)
 
 
-class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
+class HydrawiseWaterUseDataUpdateCoordinator(
+    DataUpdateCoordinator[HydrawiseWaterUseData]
+):
     """Data Update Coordinator for Hydrawise Water Use.
 
     This fetches data that is more expensive for the Hydrawise API to compute
     at a less frequent interval as to not overload the Hydrawise servers.
     """
+
+    api: HydrawiseBase
+    config_entry: HydrawiseConfigEntry
 
     _main_coordinator: HydrawiseMainDataUpdateCoordinator
 
@@ -200,7 +244,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self.api = api
         self._main_coordinator = main_coordinator
 
-    async def _async_update_data(self) -> HydrawiseData:
+    async def _async_update_data(self) -> HydrawiseWaterUseData:
         """Fetch the latest data from Hydrawise."""
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}
         for controller in self._main_coordinator.data.controllers.values():
@@ -209,11 +253,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                 now().replace(hour=0, minute=0, second=0, microsecond=0),
                 now(),
             )
-        main_data = self._main_coordinator.data
-        return HydrawiseData(
-            user=main_data.user,
-            controllers=main_data.controllers,
-            zones=main_data.zones,
-            sensors=main_data.sensors,
+        return HydrawiseWaterUseData(
+            main_coordinator=self._main_coordinator,
             daily_water_summary=daily_water_summary,
         )
