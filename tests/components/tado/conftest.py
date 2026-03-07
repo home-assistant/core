@@ -27,6 +27,10 @@ def mock_tado_api() -> Generator[MagicMock]:
         client.device_activation_status.return_value = DeviceActivationStatus.COMPLETED
         client.get_me.return_value = load_json_object_fixture("me.json", DOMAIN)
         client.get_refresh_token.return_value = "refresh"
+        client.rate_limit_info.return_value = {
+            "per-day": 1000,
+            "remaining": 100,
+        }
         yield client
 
 
@@ -99,7 +103,13 @@ async def init_integration(hass: HomeAssistant):
     # Zone Default Overlay
     zone_def_overlay = "zone_default_overlay.json"
 
-    with requests_mock.mock() as m:
+    with (
+        requests_mock.mock() as m,
+        patch(
+            "PyTado.interface.Tado.rate_limit_info",
+            return_value={"per-day": 1000, "remaining": 100},
+        ),
+    ):
         m.post(
             "https://auth.tado.com/oauth/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),
@@ -224,6 +234,7 @@ async def init_integration(hass: HomeAssistant):
             "https://login.tado.com/oauth2/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),
         )
+
         entry = MockConfigEntry(
             domain=DOMAIN,
             version=2,
