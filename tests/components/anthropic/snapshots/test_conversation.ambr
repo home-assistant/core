@@ -1248,6 +1248,7 @@
       intent_targets=list([
       ]),
       language='en',
+      match_failed_error=None,
       matched_states=list([
       ]),
       reprompt=dict({
