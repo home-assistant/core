@@ -205,7 +205,7 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Smart Fan Controls
+    # GE/Jasco - In-Wall Smart Fan Controls - 14287 / 55258 / ZW4002 and 14314 / ZW4002
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
         hint="has_fan_value_mapping",
@@ -213,13 +213,24 @@ DISCOVERY_SCHEMAS = [
         product_id={
             0x3131,
             0x3337,  # 14287 / 55258 / ZW4002
-            0x3533,  # 58446 / ZWA4013
             0x3138,  # 14314 / ZW4002
         },
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=FixedFanValueMappingDataTemplate(
             FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Controls - 58446 / ZWA4013
+    ZWaveDiscoverySchema(
+        platform=Platform.FAN,
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x0063},
+        product_id={0x3533},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 25), (26, 50), (51, 75), (76, 99)]),
         ),
     ),
     # Leviton ZW4SF fan controllers using switch multilevel CC
