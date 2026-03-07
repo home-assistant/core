@@ -2,7 +2,7 @@
   "domain": "open_router",
   "name": "OpenRouter",
   "after_dependencies": ["assist_pipeline", "intent"],
-  "codeowners": ["@joostlek"],
+  "codeowners": ["@joostlek", "@ab3lson"],
   "config_flow": true,
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/open_router",

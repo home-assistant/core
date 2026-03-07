@@ -43,9 +43,11 @@ rules:
   log-when-unavailable:
     status: exempt
     comment: the integration only integrates state-less entities
-  parallel-updates: todo
+  parallel-updates:
+    status: exempt
+    comment: conversation and AI task entities do not poll
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
@@ -63,8 +65,12 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
+  dynamic-devices:
+    status: exempt
+    comment: devices are created via subentries, not discovered dynamically
+  entity-category:
+    status: exempt
+    comment: conversation and AI task entities do not use entity categories
   entity-device-class:
     status: exempt
     comment: no suitable device class for the conversation entity
@@ -74,7 +80,9 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: main entry only stores API key; reconfiguration is handled via subentries
   repair-issues:
     status: exempt
     comment: the integration has no repairs
