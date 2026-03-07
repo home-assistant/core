@@ -125,8 +125,8 @@ async def test_image_entity(
         "friendly_name": "Mock Title GuestWifi",
     }
 
-    entity_entry = entity_registry.async_get("image.mock_title_guestwifi")
-    assert entity_entry.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
+    assert (state := entity_registry.async_get("image.mock_title_guestwifi"))
+    assert state.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
 
     # test image download
     client = await hass_client()
@@ -187,6 +187,8 @@ async def test_image_update_unavailable(
 ) -> None:
     """Test image update when fritzbox is unavailable."""
 
+    entity_id = "image.mock_title_guestwifi"
+
     # setup component with image platform only
     with patch(
         "homeassistant.components.fritz.PLATFORMS",
@@ -199,8 +201,7 @@ async def test_image_update_unavailable(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("image.mock_title_guestwifi")
-    assert state
+    assert hass.states.get(entity_id)
 
     # fritzbox becomes unavailable
     fc_class_mock().call_action_side_effect(ReadTimeout)
@@ -209,7 +210,7 @@ async def test_image_update_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("image.mock_title_guestwifi")
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
     # fritzbox is available again
@@ -219,5 +220,5 @@ async def test_image_update_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("image.mock_title_guestwifi")
+    assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNKNOWN

@@ -19,22 +19,23 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize(
-    ("node_fixture", "name"),
+    ("node_fixture", "unique_id", "name"),
     [
-        ("mock_onoff_light", "Mock OnOff Light"),
-        ("mock_onoff_light_alt_name", "Mock OnOff Light"),
-        ("mock_onoff_light_no_name", "Mock Light"),
+        ("mock_onoff_light", "000000000000001E", "Mock OnOff Light"),
+        ("mock_onoff_light_alt_name", "000000000000001B", "Mock OnOff Light"),
+        ("mock_onoff_light_no_name", "000000000000001C", "Mock Light"),
     ],
 )
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    unique_id: str,
     name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -60,7 +61,7 @@ async def test_device_registry_single_node_device_alt(
     """Test additional device with different attribute values."""
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001A-MatterNodeDevice")
         }
     )
     assert entry is not None

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime, timedelta
-from functools import partial
 from http import HTTPStatus
 import json
 import logging
@@ -13,11 +12,11 @@ from typing import TYPE_CHECKING, Any, NotRequired, TypedDict, cast
 from urllib.parse import urlparse
 import uuid
 
-from aiohttp import web
+from aiohttp import ClientError, ClientResponse, ClientSession, web
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
 from py_vapid import Vapid
-from pywebpush import WebPusher
+from pywebpush import WebPusher, WebPushException, webpush_async
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -29,12 +28,18 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityFeature,
 )
 from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
@@ -72,6 +77,9 @@ ATTR_PRIORITY = "priority"
 DEFAULT_PRIORITY = "normal"
 ATTR_TTL = "ttl"
 DEFAULT_TTL = 86400
+
+DEFAULT_BADGE = "/static/images/notification-badge.png"
+DEFAULT_ICON = "/static/icons/favicon-192x192.png"
 
 ATTR_JWT = "jwt"
 
@@ -203,8 +211,9 @@ async def async_get_service(
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
 
+    session = async_get_clientsession(hass)
     return HTML5NotificationService(
-        hass, vapid_prv_key, vapid_email, registrations, json_path
+        hass, session, vapid_prv_key, vapid_email, registrations, json_path
     )
 
 
@@ -420,12 +429,14 @@ class HTML5NotificationService(BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
+        session: ClientSession,
         vapid_prv: str,
         vapid_email: str,
         registrations: dict[str, Registration],
         json_path: str,
     ) -> None:
         """Initialize the service."""
+        self.session = session
         self._vapid_prv = vapid_prv
         self._vapid_email = vapid_email
         self.registrations = registrations
@@ -456,29 +467,25 @@ class HTML5NotificationService(BaseNotificationService):
         """Return a dictionary of registered targets."""
         return {registration: registration for registration in self.registrations}
 
-    def dismiss(self, **kwargs: Any) -> None:
-        """Dismisses a notification."""
-        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
-        tag: str = data.get(ATTR_TAG, "") if data else ""
-        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
-
-        self._push_message(payload, **kwargs)
-
-    async def async_dismiss(self, **kwargs) -> None:
+    async def async_dismiss(self, **kwargs: Any) -> None:
         """Dismisses a notification.
 
         This method must be run in the event loop.
         """
-        await self.hass.async_add_executor_job(partial(self.dismiss, **kwargs))
+        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
+        tag: str = data.get(ATTR_TAG, "") if data else ""
+        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+        await self._push_message(payload, **kwargs)
+
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         tag = str(uuid.uuid4())
         payload: dict[str, Any] = {
-            "badge": "/static/images/notification-badge.png",
+            "badge": DEFAULT_BADGE,
             "body": message,
             ATTR_DATA: {},
-            "icon": "/static/icons/favicon-192x192.png",
+            "icon": DEFAULT_ICON,
             ATTR_TAG: tag,
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
         }
@@ -503,9 +510,9 @@ class HTML5NotificationService(BaseNotificationService):
         ):
             payload[ATTR_DATA][ATTR_URL] = URL_ROOT
 
-        self._push_message(payload, **kwargs)
+        await self._push_message(payload, **kwargs)
 
-    def _push_message(self, payload: dict[str, Any], **kwargs: Any) -> None:
+    async def _push_message(self, payload: dict[str, Any], **kwargs: Any) -> None:
         """Send the message."""
 
         timestamp = int(time.time())
@@ -535,7 +542,9 @@ class HTML5NotificationService(BaseNotificationService):
                 subscription["keys"]["auth"],
             )
 
-            webpusher = WebPusher(cast(dict[str, Any], info["subscription"]))
+            webpusher = WebPusher(
+                cast(dict[str, Any], info["subscription"]), aiohttp_session=self.session
+            )
 
             endpoint = urlparse(subscription["endpoint"])
             vapid_claims = {
@@ -545,28 +554,31 @@ class HTML5NotificationService(BaseNotificationService):
             }
             vapid_headers = Vapid.from_string(self._vapid_prv).sign(vapid_claims)
             vapid_headers.update({"urgency": priority, "priority": priority})
-            response = webpusher.send(
+
+            response = await webpusher.send_async(
                 data=json.dumps(payload), headers=vapid_headers, ttl=ttl
             )
 
             if TYPE_CHECKING:
                 assert not isinstance(response, str)
 
-            if response.status_code == HTTPStatus.GONE:
+            if response.status == HTTPStatus.GONE:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 try:
-                    save_json(self.registrations_json_path, self.registrations)
+                    await self.hass.async_add_executor_job(
+                        save_json, self.registrations_json_path, self.registrations
+                    )
                 except HomeAssistantError:
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
                 else:
                     _LOGGER.info("Configuration saved")
-            elif response.status_code >= HTTPStatus.BAD_REQUEST:
+            elif response.status >= HTTPStatus.BAD_REQUEST:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status_code,
-                    response.text,
+                    response.status,
+                    await response.text(),
                 )
 
 
@@ -582,3 +594,128 @@ def add_jwt(timestamp: int, target: str, tag: str, jwt_secret: str) -> str:
         ATTR_TAG: tag,
     }
     return jwt.encode(jwt_claims, jwt_secret)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the notification entity platform."""
+
+    json_path = hass.config.path(REGISTRATIONS_FILE)
+    registrations = await hass.async_add_executor_job(_load_config, json_path)
+
+    session = async_get_clientsession(hass)
+    async_add_entities(
+        HTML5NotifyEntity(config_entry, target, registrations, session, json_path)
+        for target in registrations
+    )
+
+
+class HTML5NotifyEntity(NotifyEntity):
+    """Representation of a notification entity."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    _attr_supported_features = NotifyEntityFeature.TITLE
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        target: str,
+        registrations: dict[str, Registration],
+        session: ClientSession,
+        json_path: str,
+    ) -> None:
+        """Initialize the entity."""
+        self.config_entry = config_entry
+        self.target = target
+        self.registrations = registrations
+        self.registration = registrations[target]
+        self.session = session
+        self.json_path = json_path
+
+        self._attr_unique_id = f"{config_entry.entry_id}_{target}_device"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            name=target,
+            model=self.registration["browser"].capitalize(),
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{target}")},
+        )
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to a device."""
+        timestamp = int(time.time())
+        tag = str(uuid.uuid4())
+
+        payload: dict[str, Any] = {
+            "badge": DEFAULT_BADGE,
+            "body": message,
+            "icon": DEFAULT_ICON,
+            ATTR_TAG: tag,
+            ATTR_TITLE: title or ATTR_TITLE_DEFAULT,
+            "timestamp": timestamp * 1000,
+            ATTR_DATA: {
+                ATTR_JWT: add_jwt(
+                    timestamp,
+                    self.target,
+                    tag,
+                    self.registration["subscription"]["keys"]["auth"],
+                )
+            },
+        }
+
+        endpoint = urlparse(self.registration["subscription"]["endpoint"])
+        vapid_claims = {
+            "sub": f"mailto:{self.config_entry.data[ATTR_VAPID_EMAIL]}",
+            "aud": f"{endpoint.scheme}://{endpoint.netloc}",
+            "exp": timestamp + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
+        }
+
+        try:
+            response = await webpush_async(
+                cast(dict[str, Any], self.registration["subscription"]),
+                json.dumps(payload),
+                self.config_entry.data[ATTR_VAPID_PRV_KEY],
+                vapid_claims,
+                aiohttp_session=self.session,
+            )
+            cast(ClientResponse, response).raise_for_status()
+        except WebPushException as e:
+            if cast(ClientResponse, e.response).status == HTTPStatus.GONE:
+                reg = self.registrations.pop(self.target)
+                try:
+                    await self.hass.async_add_executor_job(
+                        save_json, self.json_path, self.registrations
+                    )
+                except HomeAssistantError:
+                    self.registrations[self.target] = reg
+                    _LOGGER.error("Error saving registration")
+
+                self.async_write_ha_state()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="channel_expired",
+                    translation_placeholders={"target": self.target},
+                ) from e
+
+            _LOGGER.debug("Full exception", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_error",
+                translation_placeholders={"target": self.target},
+            ) from e
+        except ClientError as e:
+            _LOGGER.debug("Full exception", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"target": self.target},
+            ) from e
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.target in self.registrations

@@ -7,6 +7,15 @@ from enum import StrEnum
 import json
 from typing import Any, cast
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeJsonWrapper,
+)
+from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
@@ -30,18 +39,9 @@ from homeassistant.util.json import json_loads_object
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeJsonWrapper,
-)
-from .type_information import IntegerTypeInformation
-from .util import RemapHelper
 
 
-class _BrightnessWrapper(DPCodeIntegerWrapper):
+class _BrightnessWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for brightness DP code.
 
     Handles brightness value conversion between device scale and Home Assistant's
@@ -59,7 +59,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
         super().__init__(dpcode, type_information)
         self._remap_helper = RemapHelper.from_type_information(type_information, 0, 255)
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Return the brightness of this light between 0..255."""
         if (brightness := device.status.get(self.dpcode)) is None:
             return None
@@ -123,7 +123,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
         return round(self._remap_helper.remap_value_from(value))
 
 
-class _ColorTempWrapper(DPCodeIntegerWrapper):
+class _ColorTempWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for color temperature DP code."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -133,7 +133,7 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
             type_information, MIN_MIREDS, MAX_MIREDS
         )
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Return the color temperature value in Kelvin."""
         if (temperature := device.status.get(self.dpcode)) is None:
             return None
@@ -167,7 +167,7 @@ DEFAULT_V_TYPE_V2 = RemapHelper(
 )
 
 
-class _ColorDataWrapper(DPCodeJsonWrapper):
+class _ColorDataWrapper(DPCodeJsonWrapper[tuple[float, float, float]]):
     """Wrapper for color data DP code."""
 
     h_type = DEFAULT_H_TYPE
@@ -178,7 +178,7 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
         self, device: CustomerDevice
     ) -> tuple[float, float, float] | None:
         """Return a tuple (H, S, V) from this color data."""
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return (
             self.h_type.remap_value_to(status["h"]),

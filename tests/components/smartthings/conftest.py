@@ -164,6 +164,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_thermostat",
         "ecobee_thermostat_offline",
         "sensi_thermostat",
+        "siemens_washer",
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",

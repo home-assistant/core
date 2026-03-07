@@ -255,7 +255,7 @@ class OneDriveBackupAgent(BackupAgent):
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
                 # Check if corresponding backup file exists
-                backup_filename = item.name.replace(".metadata.json", ".tar")
+                backup_filename = f"{item.name[: -len('.metadata.json')]}.tar"
                 if backup_filename not in backup_filenames:
                     _LOGGER.warning(
                         "Backup file %s not found for metadata %s",

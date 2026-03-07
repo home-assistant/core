@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-import hashlib
 import json
 import logging
 from pathlib import Path
@@ -38,17 +37,6 @@ class RestoreBackupFileContent:
     remove_after_restore: bool
     restore_database: bool
     restore_homeassistant: bool
-
-
-def password_to_key(password: str) -> bytes:
-    """Generate a AES Key from password.
-
-    Matches the implementation in supervisor.backups.utils.password_to_key.
-    """
-    key: bytes = password.encode()
-    for _ in range(100):
-        key = hashlib.sha256(key).digest()
-    return key[:16]
 
 
 def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | None:
@@ -96,15 +84,14 @@ def _extract_backup(
     """Extract the backup file to the config directory."""
     with (
         TemporaryDirectory() as tempdir,
-        securetar.SecureTarFile(
+        securetar.SecureTarArchive(
             restore_content.backup_file_path,
-            gzip=False,
             mode="r",
         ) as ostf,
     ):
-        ostf.extractall(
+        ostf.tar.extractall(
             path=Path(tempdir, "extracted"),
-            members=securetar.secure_path(ostf),
+            members=securetar.secure_path(ostf.tar),
             filter="fully_trusted",
         )
         backup_meta_file = Path(tempdir, "extracted", "backup.json")
@@ -126,10 +113,7 @@ def _extract_backup(
                 f"homeassistant.tar{'.gz' if backup_meta['compressed'] else ''}",
             ),
             gzip=backup_meta["compressed"],
-            key=password_to_key(restore_content.password)
-            if restore_content.password is not None
-            else None,
-            mode="r",
+            password=restore_content.password,
         ) as istf:
             istf.extractall(
                 path=Path(tempdir, "homeassistant"),

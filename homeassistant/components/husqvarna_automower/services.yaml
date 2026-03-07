@@ -10,6 +10,7 @@ override_schedule:
       selector:
         duration:
           enable_day: true
+          enable_second: false
     override_mode:
       required: true
       example: "mow"
@@ -32,6 +33,7 @@ override_schedule_work_area:
       selector:
         duration:
           enable_day: true
+          enable_second: false
     work_area_id:
       required: true
       example: "123"

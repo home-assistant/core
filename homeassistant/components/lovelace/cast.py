@@ -42,7 +42,7 @@ async def async_get_media_browser_root_object(
             media_class=MediaClass.APP,
             media_content_id="",
             media_content_type=DOMAIN,
-            thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+            thumbnail="/api/brands/integration/lovelace/logo.png",
             can_play=False,
             can_expand=True,
         )
@@ -72,7 +72,7 @@ async def async_browse_media(
                 media_class=MediaClass.APP,
                 media_content_id=DEFAULT_DASHBOARD,
                 media_content_type=DOMAIN,
-                thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+                thumbnail="/api/brands/integration/lovelace/logo.png",
                 can_play=True,
                 can_expand=False,
             )
@@ -104,7 +104,7 @@ async def async_browse_media(
                 media_class=MediaClass.APP,
                 media_content_id=f"{info['url_path']}/{view['path']}",
                 media_content_type=DOMAIN,
-                thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+                thumbnail="/api/brands/integration/lovelace/logo.png",
                 can_play=True,
                 can_expand=False,
             )
@@ -213,7 +213,7 @@ def _item_from_info(info: dict) -> BrowseMedia:
         media_class=MediaClass.APP,
         media_content_id=info["url_path"],
         media_content_type=DOMAIN,
-        thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
+        thumbnail="/api/brands/integration/lovelace/logo.png",
         can_play=True,
         can_expand=len(info["views"]) > 1,
     )

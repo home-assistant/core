@@ -6,6 +6,7 @@ import datetime
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 from urllib.parse import urljoin
 
 import requests
@@ -123,11 +124,9 @@ class SigfoxDevice(SensorEntity):
         """Initialise the device object."""
         self._device_id = device_id
         self._auth = auth
-        self._message_data = {}
-        self._name = f"{name}_{device_id}"
-        self._state = None
+        self._attr_name = f"{name}_{device_id}"
 
-    def get_last_message(self):
+    def get_last_message(self) -> dict[str, Any]:
         """Return the last message from a device."""
         device_url = f"devices/{self._device_id}/messages?limit=1"
         url = urljoin(API_URL, device_url)
@@ -148,20 +147,5 @@ class SigfoxDevice(SensorEntity):
 
     def update(self) -> None:
         """Fetch the latest device message."""
-        self._message_data = self.get_last_message()
-        self._state = self._message_data["payload"]
-
-    @property
-    def name(self):
-        """Return the HA name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the payload of the last message."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return other details about the last message."""
-        return self._message_data
+        self._attr_extra_state_attributes = self.get_last_message()
+        self._attr_native_value = self._attr_extra_state_attributes["payload"]

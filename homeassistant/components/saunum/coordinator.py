@@ -47,5 +47,4 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
             ) from err

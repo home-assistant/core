@@ -1,5 +1,6 @@
 """Common stuff for Fritz!Tools tests."""
 
+from collections.abc import Generator
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -86,13 +87,13 @@ class FritzConnectionMock:
 
 
 @pytest.fixture(name="fc_data")
-def fc_data_mock():
+def fc_data_mock() -> dict[str, dict]:
     """Fixture for default fc_data."""
     return MOCK_FB_SERVICES
 
 
 @pytest.fixture
-def fc_class_mock(fc_data):
+def fc_class_mock(fc_data: dict[str, dict]) -> Generator[FritzConnectionMock]:
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
         "homeassistant.components.fritz.coordinator.FritzConnectionCached",
@@ -103,7 +104,7 @@ def fc_class_mock(fc_data):
 
 
 @pytest.fixture
-def fh_class_mock():
+def fh_class_mock() -> Generator[type[FritzHosts]]:
     """Fixture that sets up a mocked FritzHosts class."""
     with (
         patch(
@@ -125,7 +126,7 @@ def fh_class_mock():
 
 
 @pytest.fixture
-def fs_class_mock():
+def fs_class_mock() -> Generator[type[FritzStatus]]:
     """Fixture that sets up a mocked FritzStatus class."""
     with (
         patch(
