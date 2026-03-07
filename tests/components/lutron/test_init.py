@@ -217,4 +217,3 @@ async def test_keypad_integer_to_uuid_migration(
     device = device_registry.async_get_device(identifiers={(DOMAIN, new_unique_id)})
     assert device is not None
     assert device.name == "Test Keypad"
-
