@@ -88,7 +88,4 @@ class EnOceanButtonEvent(NewEnOceanEntity, EventEntity):
             return
 
         self._trigger_event(push_button_value)
-        LOGGER.warning(
-            f"Triggered event '{push_button_value}' for {self.entity_id} based on observation: {observation}"
-        )
         self.async_write_ha_state()
