@@ -14,6 +14,16 @@
   },
   "title": "Door",
   "triggers": {
+    "closed": {
+      "description": "Triggers after one or more doors close.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::door::common::trigger_behavior_description%]",
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Door closed"
+    },
     "opened": {
       "description": "Triggers after one or more doors open.",
       "fields": {
