@@ -314,10 +314,8 @@ def async_device_wan_status_supported_fn(
     hub: UnifiHub,
     obj_id: str,
 ) -> bool:
-    """Determine if device has WAN status data."""
-    device = hub.api.devices[obj_id]
-    last_wan_status = device.last_wan_status
-    return last_wan_status is not None and wan_name in last_wan_status
+    """Determine if device has WAN interfaces."""
+    return any(f"wan{i}" in hub.api.devices[obj_id].raw for i in range(1, 7))
 
 
 @callback
@@ -359,7 +357,7 @@ def async_device_active_wan_value_fn(hub: UnifiHub, device: Device) -> str | Non
     if not last_wan_ip:
         return None
     for i in range(1, 7):
-        wan_data = device.raw.get(f"wan{i}")
+        wan_data = cast(dict[str, Any], device.raw).get(f"wan{i}")
         if isinstance(wan_data, dict) and wan_data.get("ip") == last_wan_ip:
             return "WAN" if i == 1 else f"WAN{i}"
     return None
