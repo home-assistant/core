@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.capabilities.events:
         device.platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-    if device.capabilities.imaging:
+    if device.capabilities.imaging or device.capabilities.deviceio:
         device.platforms += [Platform.SWITCH]
 
     _async_migrate_camera_entities_unique_ids(hass, entry, device)
