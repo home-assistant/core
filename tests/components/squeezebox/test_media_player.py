@@ -42,6 +42,7 @@ from homeassistant.components.squeezebox.const import (
 )
 from homeassistant.components.squeezebox.services import (
     ATTR_PARAMETERS,
+    ATTR_TIMEOUT,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
 )
@@ -779,6 +780,31 @@ async def test_squeezebox_call_query(
         blocking=True,
     )
     configured_player.async_query.assert_called_with("test_command", "param1", "param2")
+
+
+@pytest.mark.parametrize("timeout", [30, "30"])
+async def test_squeezebox_call_query_with_timeout(
+    hass: HomeAssistant, configured_player: MagicMock, timeout: int | str
+) -> None:
+    """Test call_query service with an optional timeout."""
+    # The service call to squeezebox.call_query triggers async_call_query
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALL_QUERY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "test_command",
+            ATTR_PARAMETERS: ["param1", "param2"],
+            ATTR_TIMEOUT: timeout,
+        },
+        blocking=True,
+    )
+
+    # Verify that the underlying library's async_query was called
+    # with the correct positional arguments and the timeout in kwargs
+    configured_player.async_query.assert_called_with(
+        "test_command", "param1", "param2", timeout=float(timeout)
+    )
 
 
 async def test_squeezebox_call_method(

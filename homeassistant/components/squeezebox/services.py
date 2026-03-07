@@ -15,6 +15,7 @@ SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
 
 ATTR_PARAMETERS = "parameters"
+ATTR_TIMEOUT = "timeout"
 
 
 @callback
@@ -43,6 +44,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_PARAMETERS): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
+            vol.Optional(ATTR_TIMEOUT): vol.All(vol.Coerce(float), vol.Range(min=0)),
         },
         func="async_call_query",
     )
