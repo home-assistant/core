@@ -578,6 +578,85 @@ async def test_mcp_duplicate_tool_names_keep_first_tool(
     assert "Skipping duplicate MCP tool name duplicate_tool" in caplog.text
 
 
+async def test_mcp_tool_alias_cache_refreshes_when_tools_change(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test cached MCP aliases refresh when the tool list changes."""
+
+    class DynamicTool(llm.Tool):
+        """Tool used to verify MCP alias cache invalidation."""
+
+        description = "Dynamic tool"
+        parameters = vol.Schema({})
+
+        def __init__(self, name: str) -> None:
+            """Initialize the tool."""
+            self.name = name
+
+        async def async_call(
+            self,
+            _hass: HomeAssistant,
+            _tool_input: llm.ToolInput,
+            _llm_context: llm.LLMContext,
+        ) -> dict[str, str]:
+            """Return the active tool name."""
+            return {"tool_name": self.name}
+
+    initial_tool = DynamicTool("scene_name_that_is_far_too_long_for_mcp_alpha_alpha")
+    updated_tool = DynamicTool("scene_name_that_is_far_too_long_for_mcp_beta_beta")
+
+    def make_api_instance(tool: llm.Tool) -> llm.APIInstance:
+        """Build an API instance for the given tool."""
+        return llm.APIInstance(
+            api=SimpleNamespace(hass=hass, name="Assist"),
+            api_prompt="Prompt",
+            llm_context=llm.LLMContext(
+                platform="mcp_server",
+                context=None,
+                language=None,
+                assistant=None,
+                device_id=None,
+            ),
+            tools=[tool],
+        )
+
+    with (
+        patch("homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock) as mock_get_api,
+        patch(
+            "homeassistant.components.mcp_server.server._get_exposed_tool_names",
+            wraps=mcp_server._get_exposed_tool_names,
+        ) as mock_get_exposed_tool_names,
+    ):
+        mock_get_api.side_effect = [
+            make_api_instance(initial_tool),
+            make_api_instance(updated_tool),
+            make_api_instance(updated_tool),
+        ]
+        async with mcp_client(
+            hass, mcp_url, hass_supervisor_access_token
+        ) as session:
+            initial_result = await session.list_tools()
+            updated_result = await session.list_tools()
+
+            assert len(initial_result.tools) == 1
+            assert len(updated_result.tools) == 1
+            assert initial_result.tools[0].name != updated_result.tools[0].name
+
+            tool_result = await session.call_tool(
+                name=updated_result.tools[0].name, arguments={}
+            )
+
+    assert not tool_result.isError
+    assert json.loads(tool_result.content[0].text) == {
+        "tool_name": updated_tool.name
+    }
+    assert mock_get_exposed_tool_names.call_count == 2
+
+
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_prompt_list(
     hass: HomeAssistant,

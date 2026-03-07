@@ -60,16 +60,16 @@ def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
     return f"{tool_name[:prefix_length]}_{digest}"
 
 
-def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, llm.Tool]:
-    """Return a mapping of exposed MCP tool names to their underlying tools."""
-    exposed_names: dict[str, llm.Tool] = {}
+def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, str]:
+    """Return a mapping of exposed MCP tool names to their underlying tool names."""
+    exposed_names: dict[str, str] = {}
 
     for tool in tools:
         collision_index = 0
         mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
         while (
             existing_tool := exposed_names.get(mcp_tool_name)
-        ) is not None and existing_tool.name != tool.name:
+        ) is not None and existing_tool != tool.name:
             collision_index += 1
             mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
 
@@ -81,7 +81,7 @@ def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, llm.Tool]:
             )
             continue
 
-        exposed_names[mcp_tool_name] = tool
+        exposed_names[mcp_tool_name] = tool.name
 
     return exposed_names
 
@@ -98,22 +98,30 @@ async def create_server(
         llm_api_id = llm.LLM_API_ASSIST
 
     server = Server[Any]("home-assistant")
-    exposed_tools: dict[str, llm.Tool] | None = None
+    exposed_tool_names: dict[str, str] | None = None
+    exposed_tool_aliases: dict[str, str] | None = None
+    exposed_tool_signature: tuple[str, ...] | None = None
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
 
-    async def get_exposed_tools() -> tuple[llm.APIInstance, dict[str, llm.Tool]]:
+    async def get_exposed_tools() -> tuple[llm.APIInstance, dict[str, str], dict[str, str]]:
         """Get the selected API instance and cached MCP tool aliases."""
-        nonlocal exposed_tools
+        nonlocal exposed_tool_aliases, exposed_tool_names, exposed_tool_signature
 
         llm_api = await get_api_instance()
-        if exposed_tools is None:
-            exposed_tools = _get_exposed_tool_names(llm_api.tools)
+        current_signature = tuple(tool.name for tool in llm_api.tools)
+        if exposed_tool_signature != current_signature:
+            exposed_tool_names = _get_exposed_tool_names(llm_api.tools)
+            exposed_tool_aliases = {
+                tool_name: exposed_name
+                for exposed_name, tool_name in exposed_tool_names.items()
+            }
+            exposed_tool_signature = current_signature
 
-        return llm_api, exposed_tools
+        return llm_api, exposed_tool_names, exposed_tool_aliases
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
@@ -149,19 +157,28 @@ async def create_server(
     @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available MCP tools for the selected LLM API."""
-        llm_api, exposed_tools = await get_exposed_tools()
-        return [
-            _format_tool(name, tool, llm_api.custom_serializer)
-            for name, tool in exposed_tools.items()
-        ]
+        llm_api, _, exposed_tool_aliases = await get_exposed_tools()
+        listed_tool_names: set[str] = set()
+        formatted_tools: list[types.Tool] = []
+        for tool in llm_api.tools:
+            if tool.name in listed_tool_names:
+                continue
+            listed_tool_names.add(tool.name)
+            formatted_tools.append(
+                _format_tool(
+                    exposed_tool_aliases[tool.name], tool, llm_api.custom_serializer
+                )
+            )
+
+        return formatted_tools
 
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
-        llm_api, exposed_tools = await get_exposed_tools()
-        tool = exposed_tools.get(name)
+        llm_api, exposed_tool_names, _ = await get_exposed_tools()
+        tool_name = exposed_tool_names.get(name, name)
         tool_input = llm.ToolInput(
-            tool_name=tool.name if tool is not None else name,
+            tool_name=tool_name,
             tool_args=arguments,
         )
         _LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
