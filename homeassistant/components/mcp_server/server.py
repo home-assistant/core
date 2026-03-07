@@ -49,9 +49,7 @@ def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
     if len(tool_name) <= _MCP_TOOL_NAME_MAX_LENGTH:
         return tool_name
 
-    digest_input = tool_name
-    if collision_index:
-        digest_input = f"{tool_name}:{collision_index}"
+    digest_input = f"{tool_name}:{collision_index}"
     digest = blake2s(
         digest_input.encode(), digest_size=_MCP_TOOL_NAME_HASH_BYTES
     ).hexdigest()
