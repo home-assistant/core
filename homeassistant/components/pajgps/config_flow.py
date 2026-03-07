@@ -49,7 +49,7 @@ async def _validate_credentials(email: str, password: str) -> str | None:
     try:
         api = PajGpsApi(email=email, password=password)
         await api.login()
-    except AuthenticationError, TokenRefreshError:
+    except (AuthenticationError, TokenRefreshError):
         return "invalid_auth"
     except Exception:  # noqa: BLE001
         return "cannot_connect"
