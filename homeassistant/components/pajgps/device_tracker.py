@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class PajGPSPositionSensor(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
+class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
     """Tracker entity that reads position from the coordinator snapshot."""
 
     _attr_has_entity_name = True
@@ -85,7 +85,7 @@ async def async_setup_entry(
         new_ids = current_ids - known_device_ids
         if new_ids:
             async_add_entities(
-                PajGPSPositionSensor(coordinator, device_id) for device_id in new_ids
+                PajGPSDeviceTracker(coordinator, device_id) for device_id in new_ids
             )
             known_device_ids.update(new_ids)
 

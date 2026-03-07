@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.pajgps import device_tracker as dt_module
 from homeassistant.components.pajgps.coordinator import CoordinatorData
-from homeassistant.components.pajgps.device_tracker import PajGPSPositionSensor
+from homeassistant.components.pajgps.device_tracker import PajGPSDeviceTracker
 
 from .test_common import make_coordinator, make_device, make_trackpoint
 
@@ -22,13 +22,13 @@ def _make_hass_and_config_entry(coordinator):
 
 
 def _make_sensor(device_id: int = 1, positions=None):
-    """Create a PajGPSPositionSensor for testing."""
+    """Create a PajGPSDeviceTracker for testing."""
     coord = make_coordinator()
     coord.data = CoordinatorData(
         devices=[make_device(device_id)],
         positions=positions or {},
     )
-    return PajGPSPositionSensor(coord, device_id)
+    return PajGPSDeviceTracker(coord, device_id)
 
 
 def test_unique_id_is_set() -> None:
@@ -103,7 +103,7 @@ async def test_entities_added_for_each_device() -> None:
     )
 
     assert len(added) == 2
-    assert isinstance(added[0], PajGPSPositionSensor)
+    assert isinstance(added[0], PajGPSDeviceTracker)
 
 
 async def test_no_entities_added_and_warning_logged_when_no_devices() -> None:
@@ -182,7 +182,7 @@ async def test_available_false_when_device_removed_from_coordinator() -> None:
     """Available must be False once a device disappears from coordinator.data.devices."""
     coord = make_coordinator()
     coord.data = CoordinatorData(devices=[make_device(1)])
-    sensor = PajGPSPositionSensor(coord, 1)
+    sensor = PajGPSDeviceTracker(coord, 1)
 
     assert sensor.available is True
 
@@ -195,7 +195,7 @@ async def test_available_true_when_device_present_in_coordinator() -> None:
     """Available must be True when the device is in coordinator.data.devices."""
     coord = make_coordinator()
     coord.data = CoordinatorData(devices=[make_device(1), make_device(2)])
-    sensor = PajGPSPositionSensor(coord, 2)
+    sensor = PajGPSDeviceTracker(coord, 2)
 
     assert sensor.available is True
 
@@ -204,7 +204,7 @@ async def test_available_recovers_when_device_reappears() -> None:
     """Available must return to True if a previously missing device comes back."""
     coord = make_coordinator()
     coord.data = CoordinatorData(devices=[make_device(1)])
-    sensor = PajGPSPositionSensor(coord, 1)
+    sensor = PajGPSDeviceTracker(coord, 1)
 
     coord.data = CoordinatorData(devices=[])
     assert sensor.available is False
