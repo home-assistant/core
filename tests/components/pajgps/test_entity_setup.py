@@ -1,20 +1,10 @@
-"""Tests for entity setup of alert switches and binary sensors, and for device model resolution in get_device_info.
-
-Three-layer alert model:
-  Layer 1 — Hardware support:   device.device_models[0][model_field] == 1
-  Layer 2 — Currently enabled:  device.<root_field> is not None  (0 = supported but off,
-                                                                   1 = supported and on,
-                                                                   None = not present on device)
-  Layer 3 — Currently triggered: unread notification of matching meldungtyp exists
+"""Tests for device model resolution in get_device_info and related helpers.
 
 Covers:
 - get_device_info reads model from device.device_models[0]["model"]
 - get_device_info falls back to "Unknown" when device_models is empty or None
-- async_setup_entry (switch + binary_sensor):
-    * creates an entity only when BOTH model support is 1 AND root field is not None
-    * creates an entity when root field is 0 (supported but disabled) — not just truthy
-    * does NOT create an entity when model field is 0 (hardware unsupported)
-    * does NOT create an entity when root field is None (field absent on device)
+- get_device_info falls back to "Unknown" when the model entry is None
+- the helper used to build a hass/config_entry pair around a coordinator
 """
 
 from __future__ import annotations
