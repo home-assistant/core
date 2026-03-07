@@ -6,13 +6,15 @@ This is a pure asyncio concurrency primitive with no HA or network dependencies.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from .const import REQUEST_DELAY
 
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 class DeviceRequestQueue:
@@ -27,7 +29,7 @@ class DeviceRequestQueue:
     def __init__(self) -> None:
         """Initialize the device request queue with empty state."""
         # device_id → asyncio.Queue of (job_type, coro_factory, Future) triples
-        self._queues: dict[int, asyncio.Queue] = {}
+        self._queues: dict[int, asyncio.Queue[Any]] = {}
         # device_id → worker Task
         self._workers: dict[int, asyncio.Task] = {}
         # device_id → job_type currently being executed
@@ -43,8 +45,8 @@ class DeviceRequestQueue:
         self,
         device_id: int,
         job_type: str,
-        coro_factory: Callable[[], Any],
-    ) -> asyncio.Future:
+        coro_factory: Callable[[], Awaitable[_T]],
+    ) -> asyncio.Future[_T | None]:
         """Schedule coro_factory() on the queue for device_id.
 
         If a job with the same job_type is already queued or currently running
@@ -59,7 +61,7 @@ class DeviceRequestQueue:
             job_type in self._queued_types[device_id]
             or self._running.get(device_id) == job_type
         ):
-            fut: asyncio.Future = loop.create_future()
+            fut: asyncio.Future[_T | None] = loop.create_future()
             fut.set_result(None)
             return fut
 
