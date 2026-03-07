@@ -180,3 +180,41 @@ async def test_keypad_uuid_migration(
     )
     assert device is not None
     assert device.name == "Test Keypad"
+
+
+async def test_keypad_integer_to_uuid_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from integer keypad ID directly to proper UUID."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device with the old integer-based identifier
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, cast(Any, 1))},
+        manufacturer="Lutron",
+        name="Test Keypad",
+    )
+
+    # Mock keypad data with a proper UUID
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad.id = 1
+    keypad.uuid = "proper-keypad-uuid"
+    keypad.legacy_uuid = "1-0"
+    controller_guid = mock_lutron.guid
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the device identifier has been updated to the proper UUID
+    device = device_registry.async_get_device(identifiers={(DOMAIN, cast(Any, 1))})
+    assert device is None
+
+    new_unique_id = f"{controller_guid}_{keypad.uuid}"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, new_unique_id)})
+    assert device is not None
+    assert device.name == "Test Keypad"
+

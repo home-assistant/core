@@ -252,7 +252,7 @@ def _async_check_keypad_identifiers(
         identifiers={(DOMAIN, cast(Any, keypad_id))}
     )
     if device:
-        new_unique_id = f"{controller_guid}_{legacy_uuid}"
+        new_unique_id = f"{controller_guid}_{uuid or legacy_uuid}"
         _LOGGER.debug("Updating keypad id from %d to %s", keypad_id, new_unique_id)
         device_registry.async_update_device(
             device.id, new_identifiers={(DOMAIN, new_unique_id)}
