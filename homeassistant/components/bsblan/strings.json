@@ -3,7 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device you are trying to reconfigure is not the same as the one previously configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -38,6 +40,24 @@
         },
         "description": "The BSB-LAN integration needs to re-authenticate with {name}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::bsblan::config::step::user::data_description::host%]",
+          "passkey": "[%key:component::bsblan::config::step::user::data_description::passkey%]",
+          "password": "[%key:component::bsblan::config::step::user::data_description::password%]",
+          "port": "[%key:component::bsblan::config::step::user::data_description::port%]",
+          "username": "[%key:component::bsblan::config::step::user::data_description::username%]"
+        },
+        "description": "Update connection settings for your BSB-LAN device.",
+        "title": "Reconfigure BSB-LAN"
       },
       "user": {
         "data": {
