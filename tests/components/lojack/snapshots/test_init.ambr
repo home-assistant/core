@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceEntry(
+    area_id=None,
+    config_entries=frozenset(
+      {
+        '**mock_id**',
+      },
+    ),
+    configuration_url=None,
+    connections=frozenset(),
+    disabled_by=None,
+    entry_type=None,
+    hw_version=None,
+    id='**test_device_id**',
+    identifiers=frozenset(
+      {
+        (
+          'lojack',
+          '12345',
+        ),
+      },
+    ),
+    is_new=False,
+    manufacturer='Spireon LoJack',
+    model='Accord',
+    name='My Car',
+    name_by_user=None,
+    serial_number='1HGBH41JXMN109186',
+    sw_version=None,
+    via_device_id=None,
+  )
+# ---
