@@ -9,7 +9,12 @@ from switchbot_api import (
     Remote,
     SwitchBotAPI,
 )
-from switchbot_api.commands import ArtFrameCommands, BotCommands, CommonCommands
+from switchbot_api.commands import (
+    AirPurifierCommands,
+    ArtFrameCommands,
+    BotCommands,
+    CommonCommands,
+)
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +51,13 @@ ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
     command=ArtFrameCommands.PREVIOUS,
 )
 
+AIR_PURIFIER_LIGHT_SENSOR_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
+    key="light_sensor",
+    translation_key="air_purifier_light_sensor",
+    command=AirPurifierCommands.SET_LIGHT_SENSOR,
+    parameters="on",
+)
+
 
 BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BOT_BUTTON_DESCRIPTION,),
@@ -53,6 +65,10 @@ BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES = {
         ART_FRAME_NEXT_BUTTON_DESCRIPTION,
         ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION,
     ),
+    "Air Purifier VOC": (AIR_PURIFIER_LIGHT_SENSOR_BUTTON_DESCRIPTION,),
+    "Air Purifier Table VOC": (AIR_PURIFIER_LIGHT_SENSOR_BUTTON_DESCRIPTION,),
+    "Air Purifier PM2.5": (AIR_PURIFIER_LIGHT_SENSOR_BUTTON_DESCRIPTION,),
+    "Air Purifier Table PM2.5": (AIR_PURIFIER_LIGHT_SENSOR_BUTTON_DESCRIPTION,),
 }
 
 

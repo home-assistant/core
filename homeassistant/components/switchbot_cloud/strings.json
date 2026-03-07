@@ -19,6 +19,9 @@
   },
   "entity": {
     "button": {
+      "air_purifier_light_sensor": {
+        "name": "Light sensor"
+      },
       "art_frame_next_picture": {
         "name": "Next"
       },
@@ -72,10 +75,19 @@
         "name": "Display"
       }
     },
-
+    "light": {
+      "air_purifier_light_control": {
+        "name": "Light control"
+      }
+    },
     "sensor": {
       "light_level": {
         "name": "Light level"
+      }
+    },
+    "switch": {
+      "air_purifier_child_lock": {
+        "name": "Child lock"
       }
     }
   }

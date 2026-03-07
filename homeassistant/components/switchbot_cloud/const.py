@@ -31,6 +31,14 @@ HUMIDITY_LEVELS = {
 }
 
 
+AirPurifierFanSpeedMapGear = {
+    0: 0,
+    33: 1,
+    66: 2,
+    100: 3,
+}
+
+
 class AirPurifierMode(Enum):
     """Air Purifier Modes."""
 
