@@ -115,9 +115,24 @@
     },
     "connection_error": {
       "message": "Error connecting to the Seerr instance: {error}"
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_results": {
+      "message": "The provided query \"{query}\" did not yield any results."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
     }
   },
   "selector": {
+    "request_media_type": {
+      "options": {
+        "movie": "Movie",
+        "tv": "TV"
+      }
+    },
     "request_sort_order": {
       "options": {
         "added": "Added",
@@ -157,6 +172,60 @@
         }
       },
       "name": "Get requests"
+    },
+    "request_media": {
+      "description": "Creates a media request in Seerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Seerr instance to create the request on.",
+          "name": "Seerr instance"
+        },
+        "media_type": {
+          "description": "Type of media to request.",
+          "name": "Media type"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
+          "name": "Seasons"
+        },
+        "media_id": {
+          "description": "The TMDB ID or TVDB ID of the media to request.",
+          "name": "Media ID"
+        }
+      },
+      "name": "Request media"
+    },
+    "search_and_request": {
+      "description": "Searches for media and creates a request for the best match.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Seerr instance to use.",
+          "name": "Seerr instance"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
+          "name": "Seasons"
+        }
+      },
+      "name": "Search and request"
+    },
+    "search_media": {
+      "description": "Searches for media in Seerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Seerr instance to search.",
+          "name": "Seerr instance"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        }
+      },
+      "name": "Search media"
     }
   }
 }
