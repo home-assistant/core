@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
 from caldav.objects import Event
@@ -349,9 +349,10 @@ def get_api_events(
     async def api_call(entity_id: str) -> dict[str, Any]:
         client = await hass_client()
         response = await client.get(
-            # The start/end times are arbitrary since they are ignored by `_mock_calendar`
-            # which just returns all events for the calendar.
-            f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
+            # Use a date range that includes all test events (mostly from 2017-11-27)
+            # Note: the mock calendar returns all events but all-day events are
+            # filtered by the coordinator based on the date range
+            f"/api/calendars/{entity_id}?start=2015-01-01&end=2023-01-01"
         )
         assert response.status == HTTPStatus.OK
         return await response.json()
@@ -1160,6 +1161,86 @@ async def test_config_entry_supported_components(
     # No entity created when no components exist
     state = hass.states.get("calendar.calendar_4")
     assert not state
+
+
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+async def test_get_events_all_day_timezone_filtering(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that all-day events outside the local date range are filtered out.
+
+    This is a regression test for https://github.com/home-assistant/core/issues/124884
+    where all-day events from adjacent days were incorrectly returned when the user's
+    timezone differs from UTC. The CalDAV server may return all-day events based on
+    UTC comparison, which can include events from adjacent days.
+    """
+    # Create a calendar with an all-day event on 2024-08-30
+    # When user is in UTC-4 timezone and queries for 2024-08-29, the server may
+    # return the 2024-08-30 event because midnight UTC on 2024-08-30 falls within
+    # the 2024-08-29 date range when converted to UTC (2024-08-29 04:00:00 UTC to
+    # 2024-08-30 03:59:59 UTC includes 2024-08-30 00:00:00 UTC)
+    all_day_event_aug_30 = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:test-aug30
+DTSTAMP:20240801T000000Z
+DTSTART:20240830
+DTEND:20240831
+SUMMARY:No School
+LOCATION:School
+END:VEVENT
+END:VCALENDAR
+"""
+    all_day_event_aug_29 = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:test-aug29
+DTSTAMP:20240801T000000Z
+DTSTART:20240829
+DTEND:20240830
+SUMMARY:Event on Aug 29
+LOCATION:Home
+END:VEVENT
+END:VCALENDAR
+"""
+
+    calendar = Mock()
+    # The server returns both events (simulating the server's UTC-based filtering)
+    events = [
+        Event(None, "aug29.ics", all_day_event_aug_29, calendar, "aug29"),
+        Event(None, "aug30.ics", all_day_event_aug_30, calendar, "aug30"),
+    ]
+    calendar.search = MagicMock(return_value=events)
+    calendar.name = "Family"
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient"
+    ) as mock_client:
+        mock_client.return_value.principal.return_value.calendars.return_value = [
+            calendar
+        ]
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": {**CALDAV_CONFIG}}
+        )
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    # Query for events on 2024-08-29 in user's local timezone (America/New_York, UTC-4)
+    response = await client.get(
+        "/api/calendars/calendar.family"
+        "?start=2024-08-29T00:00:00-04:00"
+        "&end=2024-08-29T23:59:59-04:00"
+    )
+    assert response.status == HTTPStatus.OK
+    events_response = await response.json()
+
+    # Should only include the Aug 29 event, not the Aug 30 event
+    assert len(events_response) == 1
+    assert events_response[0]["summary"] == "Event on Aug 29"
 
 
 @pytest.mark.parametrize("tz", [UTC])
