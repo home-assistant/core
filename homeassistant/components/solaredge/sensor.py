@@ -248,9 +248,27 @@ async def async_setup_entry(
         await service.coordinator.async_refresh()
 
     # Set up storage sensors only if inventory shows batteries are present
-    # This addresses the dependency on successful inventory fetch
-    if sensor_factory.setup_storage_sensors():
+    # Returns: True (set up), False (no batteries), None (inventory failed)
+    storage_result = sensor_factory.setup_storage_sensors()
+    if storage_result is True:
         await sensor_factory._storage_service.coordinator.async_refresh()
+    elif storage_result is None:
+        # Inventory fetch failed, register listener to retry when data arrives
+        def on_inventory_update() -> None:
+            """Handle inventory update to set up storage sensors."""
+            result = sensor_factory.setup_storage_sensors()
+            if result is True:
+                hass.async_create_task(
+                    sensor_factory._storage_service.coordinator.async_refresh()
+                )
+            if result is not None:
+                # Either success or confirmed no batteries - stop listening
+                unsub()
+
+        unsub = sensor_factory._inventory_service.coordinator.async_add_listener(
+            on_inventory_update
+        )
+        entry.async_on_unload(unsub)
 
     entities = []
     for sensor_type in SENSOR_TYPES:
@@ -324,18 +342,21 @@ class SolarEdgeSensorFactory:
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
-    def setup_storage_sensors(self) -> bool:
+    def setup_storage_sensors(self) -> bool | None:
         """Set up storage sensors if batteries are available.
 
         This should be called after inventory data has been fetched to check
         if the site has batteries before enabling storage data polling.
 
-        Returns True if storage sensors were set up, False otherwise.
+        Returns:
+            True: Storage sensors were set up successfully
+            False: Inventory confirmed no batteries present (don't retry)
+            None: Inventory fetch failed, should retry later
         """
-        # Check if inventory data was successfully fetched and has batteries
+        # Check if inventory data was successfully fetched
         if not self._inventory_service.coordinator.last_update_success:
-            LOGGER.debug("Inventory data not available, skipping storage sensors")
-            return False
+            LOGGER.debug("Inventory data not available, will retry later")
+            return None
 
         battery_count = self._inventory_service.data.get("batteries", 0)
         if battery_count == 0:
