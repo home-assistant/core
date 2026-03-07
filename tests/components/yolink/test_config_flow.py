@@ -277,9 +277,7 @@ async def test_uac_flow_success(
     assert result["step_id"] == "uac"
 
     # Enter credentials
-    with patch(
-        "homeassistant.components.yolink.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.yolink.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_UAID: TEST_UAID, CONF_SECRET_KEY: TEST_SECRET_KEY},
@@ -449,9 +447,7 @@ async def test_multiple_uac_entries_different_homes(
     )
 
     # Enter credentials for second home
-    with patch(
-        "homeassistant.components.yolink.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.yolink.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_UAID: "second-uaid", CONF_SECRET_KEY: "second-secret"},
@@ -637,9 +633,7 @@ async def test_uac_reauthentication(
     assert result["step_id"] == "uac"
 
     # Enter new credentials
-    with patch(
-        "homeassistant.components.yolink.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.yolink.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_UAID: "new-uaid", CONF_SECRET_KEY: "new-secret"},

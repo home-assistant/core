@@ -138,6 +138,8 @@ class UACAuth(YoLinkAuthMgr):
                 # Calculate expiry: use expires_in from response, default to 2 hours
                 expires_in = result.get("expires_in", 7200)
                 self._token_expiry = time.time() + expires_in
-                _LOGGER.debug("Fetched UAC access token, expires in %s seconds", expires_in)
+                _LOGGER.debug(
+                    "Fetched UAC access token, expires in %s seconds", expires_in
+                )
         except ClientError as err:
             raise YoLinkClientError(f"Failed to fetch token: {err}") from err
