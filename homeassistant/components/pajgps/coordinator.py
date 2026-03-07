@@ -205,7 +205,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     name=device.name or f"PAJ GPS {device_id}",
                     manufacturer="PAJ GPS",
                     model=(
-                        device.device_models[0]["model"]
+                        device.device_models[0].get("model")
                         if device.device_models
                         else None
                     )
