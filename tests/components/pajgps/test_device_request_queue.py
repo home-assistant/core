@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.pajgps.coordinator import DeviceRequestQueue
+from homeassistant.components.pajgps.device_queue import DeviceRequestQueue
 
 
 async def test_single_job_executed() -> None:
