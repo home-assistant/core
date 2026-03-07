@@ -303,10 +303,10 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             )
             try:
                 await self._current_group.add_client(identifier)
-            except KeyError:
+            except KeyError as e:
                 raise ServiceValidationError(
                     f"Client with identifier '{identifier}' does not exist on the server."
-                ) from None
+                ) from e
 
         self.async_write_ha_state()
 
