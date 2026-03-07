@@ -187,16 +187,16 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
         """Return the HA DeviceInfo dict for the given device_id."""
         for device in self.data.devices:
             if device.id == device_id:
+                model = "Unknown"
+                device_models = getattr(device, "device_models", None)
+                if device_models and isinstance(device_models[0], dict):
+                    model = device_models[0].get("model") or "Unknown"
+
                 return DeviceInfo(
                     identifiers={(DOMAIN, f"{self._entry_data['guid']}_{device_id}")},
                     name=device.name or f"PAJ GPS {device_id}",
                     manufacturer="PAJ GPS",
-                    model=(
-                        device.device_models[0].get("model")
-                        if device.device_models
-                        else None
-                    )
-                    or "Unknown",
+                    model=model,
                 )
         return None
 

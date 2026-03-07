@@ -175,22 +175,31 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif not user_input.get("password"):
                 errors["base"] = "password_required"
             else:
-                error_key = await _validate_credentials(
-                    user_input["email"], user_input["password"], self.hass
-                )
-                if error_key:
-                    errors["base"] = error_key
+                # Prevent changing to an email that is already configured
+                email = user_input["email"]
+                if any(
+                    entry.entry_id != reconfigure_entry.entry_id
+                    and entry.data.get("email") == email
+                    for entry in self._async_current_entries()
+                ):
+                    errors["base"] = "already_configured"
                 else:
-                    return self.async_update_reload_and_abort(
-                        reconfigure_entry,
-                        data={
-                            **reconfigure_entry.data,
-                            "entry_name": user_input["entry_name"],
-                            "email": user_input["email"],
-                            "password": user_input["password"],
-                        },
-                        title=user_input["entry_name"],
+                    error_key = await _validate_credentials(
+                        email, user_input["password"], self.hass
                     )
+                    if error_key:
+                        errors["base"] = error_key
+                    else:
+                        return self.async_update_reload_and_abort(
+                            reconfigure_entry,
+                            data={
+                                **reconfigure_entry.data,
+                                "entry_name": user_input["entry_name"],
+                                "email": email,
+                                "password": user_input["password"],
+                            },
+                            title=user_input["entry_name"],
+                        )
 
         return self.async_show_form(
             step_id="reconfigure",
