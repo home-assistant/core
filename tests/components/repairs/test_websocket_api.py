@@ -11,7 +11,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.fan import ConfigType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.config_entries import (
