@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 import json
 import logging
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -15,6 +16,7 @@ import mcp.client.sse
 import mcp.client.streamable_http
 from mcp.shared.exceptions import McpError
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -425,6 +427,78 @@ async def test_mcp_tool_call_failed(
     assert len(result.content) == 1
     assert result.content[0].type == "text"
     assert "Error calling tool" in result.content[0].text
+
+
+async def test_mcp_tool_names_are_shortened(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test long tool names are exposed with stable MCP-safe aliases."""
+
+    class LongNameTool(llm.Tool):
+        """Tool with a long name for MCP compatibility testing."""
+
+        description = "Long name tool"
+        parameters = vol.Schema({})
+
+        def __init__(self, name: str) -> None:
+            """Initialize the tool."""
+            self.name = name
+
+        async def async_call(
+            self,
+            _hass: HomeAssistant,
+            _tool_input: llm.ToolInput,
+            _llm_context: llm.LLMContext,
+        ) -> dict[str, str]:
+            """Return the original tool name for alias mapping assertions."""
+            return {"tool_name": self.name}
+
+    shared_prefix = "scene_name_that_is_far_too_long_for_mcp_" * 2
+    original_tools = [
+        LongNameTool(f"{shared_prefix}alpha"),
+        LongNameTool(f"{shared_prefix}beta"),
+    ]
+    api_instance = llm.APIInstance(
+        api=SimpleNamespace(hass=hass, name="Assist"),
+        api_prompt="Prompt",
+        llm_context=llm.LLMContext(
+            platform="mcp_server",
+            context=None,
+            language=None,
+            assistant=None,
+            device_id=None,
+        ),
+        tools=original_tools,
+    )
+
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
+        mock_get_api.return_value = api_instance
+        async with mcp_client(
+            hass, mcp_url, hass_supervisor_access_token
+        ) as session:
+            result = await session.list_tools()
+            assert len(result.tools) == len(original_tools)
+            assert len({tool.name for tool in result.tools}) == len(original_tools)
+
+            returned_tool_names: set[str] = set()
+            for exposed_tool in result.tools:
+                assert len(exposed_tool.name) <= 64
+
+                tool_result = await session.call_tool(
+                    name=exposed_tool.name, arguments={}
+                )
+                assert not tool_result.isError
+                returned_tool_names.add(
+                    json.loads(tool_result.content[0].text)["tool_name"]
+                )
+
+            assert returned_tool_names == {tool.name for tool in original_tools}
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
