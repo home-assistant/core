@@ -33,7 +33,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er, template
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    template,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.typing import ConfigType
@@ -2304,3 +2309,23 @@ async def test_multi_platform_discovery(
 async def test_mqtt_integration_level_imports(attr: str) -> None:
     """Test mqtt integration level public published imports are available."""
     assert hasattr(mqtt, attr)
+
+
+@pytest.mark.usefixtures("mqtt_client_mock")
+@pytest.mark.parametrize(
+    "hass_config", [{mqtt.DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
+)
+async def test_yaml_config_without_entry(
+    hass: HomeAssistant, hass_config: ConfigType
+) -> None:
+    """Test the service call if topic is missing."""
+    await async_setup_component(hass, mqtt.DOMAIN, hass_config)
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        mqtt.DOMAIN, "yaml_setup_without_active_setup"
+    )
+    assert issue is not None
+    assert (
+        issue.learn_more_url == "https://www.home-assistant.io/integrations/mqtt/"
+        "#configuration"
+    )

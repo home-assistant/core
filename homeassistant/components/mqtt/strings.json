@@ -1141,6 +1141,10 @@
         }
       },
       "title": "MQTT device \"{name}\" subentry migration to YAML"
+    },
+    "yaml_setup_without_active_setup": {
+      "description": "Home Assistant detected manual configured MQTT items, but these items cannot be loaded, because MQTT is not setup correctly. Make sure the MQTT broker is set up correctly, or remove mqtt configuration from your `configuration.yaml` and restart Home Assistant to fix this issue.",
+      "title": "MQTT is not set up correctly"
     }
   },
   "options": {
