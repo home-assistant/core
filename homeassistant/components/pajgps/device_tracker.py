@@ -38,6 +38,13 @@ class PajGPSPositionSensor(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return False when the device has been removed from the account."""
+        return super().available and any(
+            d.id == self._device_id for d in self.coordinator.data.devices
+        )
+
+    @property
     def device_info(self) -> DeviceInfo | None:
         """Return device information for this tracker."""
         return self.coordinator.get_device_info(self._device_id)
@@ -68,13 +75,25 @@ async def async_setup_entry(
     """Set up PAJ GPS tracker entities from a config entry."""
     coordinator: PajGpsCoordinator = config_entry.runtime_data
 
-    entities = [
-        PajGPSPositionSensor(coordinator, device.id)
-        for device in coordinator.data.devices
-        if device.id is not None
-    ]
+    known_device_ids: set[int] = set()
 
-    if entities:
-        async_add_entities(entities)
-    else:
+    def _async_add_new_devices() -> None:
+        """Add entities for any device IDs not yet tracked."""
+        current_ids = {
+            device.id for device in coordinator.data.devices if device.id is not None
+        }
+        new_ids = current_ids - known_device_ids
+        if new_ids:
+            async_add_entities(
+                PajGPSPositionSensor(coordinator, device_id) for device_id in new_ids
+            )
+            known_device_ids.update(new_ids)
+
+    # Initial population
+    _async_add_new_devices()
+
+    if not known_device_ids:
         _LOGGER.warning("No PAJ GPS devices found to add as trackers")
+
+    # Subscribe to future coordinator updates to pick up newly discovered devices
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
