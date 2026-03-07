@@ -303,9 +303,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     data=new_data,
                     title=new_data["entry_name"],
                 )
-                return self.async_create_entry(
-                    title=new_data["entry_name"], data=new_data
-                )
+                # Entry data and title have been updated above.
+                # Do not duplicate credentials in config_entry.options.
+                return self.async_create_entry(title="", data={})
 
             return self.async_show_form(
                 step_id="init",
