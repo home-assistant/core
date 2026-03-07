@@ -6,6 +6,8 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
@@ -42,6 +44,7 @@ from tests.common import (
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
 PLATFORM = "test_platform"
+pytestmark = pytest.mark.usefixtures("hass_storage")
 
 
 async def test_caching_data(hass: HomeAssistant) -> None:
