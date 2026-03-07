@@ -81,8 +81,9 @@ class LutronKeypad(LutronBaseEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(area_name, lutron_device, controller)
+        device_uuid = keypad.uuid or keypad.legacy_uuid
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(keypad.id))},
+            identifiers={(DOMAIN, f"{controller.guid}_{device_uuid}")},
             manufacturer="Lutron",
             name=keypad.name,
         )
