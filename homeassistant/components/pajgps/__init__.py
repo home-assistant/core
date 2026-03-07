@@ -6,7 +6,7 @@ from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -24,9 +24,9 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: PajGpsConfigEntry) 
     """Set up platform from a ConfigEntry."""
     error_key = await _validate_credentials(entry.data["email"], entry.data["password"])
     if error_key == "cannot_connect":
-        raise ConfigEntryNotReady("Unable to reach the PAJ GPS API.")
+        raise ConfigEntryAuthFailed("Unable to reach the PAJ GPS API.")
     if error_key == "invalid_auth":
-        raise ConfigEntryNotReady("Invalid PAJ GPS credentials.")
+        raise ConfigEntryAuthFailed("Invalid PAJ GPS credentials.")
 
     pajgps_coordinator = PajGpsCoordinator(
         hass, dict(entry.data), entry, async_get_clientsession(hass)
