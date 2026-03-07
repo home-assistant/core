@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+import json
 import logging
 from typing import Any
 
@@ -11,8 +12,9 @@ from yarl import URL
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DATE_FORMAT, DOMAIN
 from .entities import TRANSLATION_TABLE
 from .state_report import async_enable_proactive_mode
 
@@ -21,17 +23,36 @@ STORE_AUTHORIZED = "authorized"
 _LOGGER = logging.getLogger(__name__)
 
 
+class AlexaSampleState:
+    """Keeps track for the 'timeOfSampe' computation."""
+
+    sampled_value: str | None = None
+    time_of_sample: str
+
+    def update(self, value: Any) -> bool:
+        """Updates the internal value and returns true, if value was dirty."""
+        json_value = json.dumps(value)
+
+        if self.sampled_value is None or self.sampled_value != json_value:
+            self.sampled_value = json_value
+            self.time_of_sample = dt_util.utcnow().strftime(DATE_FORMAT)
+            return True
+        return False
+
+
 class AbstractConfig(ABC):
     """Hold the configuration for Alexa."""
 
     _store: AlexaConfigStore
     _unsub_proactive_report: CALLBACK_TYPE | None = None
+    _sample_states: dict[tuple[str, str, str], AlexaSampleState]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize abstract config."""
         self.hass = hass
         self._enable_proactive_mode_lock = asyncio.Lock()
         self._on_deinitialize: list[CALLBACK_TYPE] = []
+        self._sample_states = {}
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
@@ -74,6 +95,22 @@ class AbstractConfig(ABC):
     def is_reporting_states(self) -> bool:
         """Return if proactive mode is enabled."""
         return self._unsub_proactive_report is not None
+
+    def inject_time_of_sample(self, entity_id: str, prop: dict[str, Any]) -> bool:
+        """Injects the timeOfSample and uncertainly value for a given property reported to the alexa API.
+
+        This method returns True, if the update was successful, i.e.
+        the value was dirty.
+
+        The old state is currently stored in memory in the config.
+        """
+        sample_state = self._sample_states.setdefault(
+            (entity_id, prop["namespace"], prop["name"]), AlexaSampleState()
+        )
+        dirty = sample_state.update(prop["value"])
+        prop["timeOfSample"] = sample_state.time_of_sample
+        prop["uncertaintyInMilliseconds"] = 1000
+        return dirty
 
     @callback
     @abstractmethod
