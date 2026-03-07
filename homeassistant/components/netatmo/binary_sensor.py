@@ -15,11 +15,15 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_EVENT_TYPE,
     CONF_URL_SECURITY,
+    DATA_DEVICE_IDS,
+    DOMAIN,
     DOORTAG_CATEGORY_DOOR,
     DOORTAG_CATEGORY_FURNITURE,
     DOORTAG_CATEGORY_GARAGE,
@@ -34,9 +38,12 @@ from .const import (
     DOORTAG_STATUS_OPEN,
     DOORTAG_STATUS_UNDEFINED,
     DOORTAG_STATUS_WEAK_SIGNAL,
+    EVENT_TYPE_TAG_BIG_MOVE,
+    EVENT_TYPE_TAG_SMALL_MOVE,
     NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
+    NETATMO_OPENING_STATUS,
 )
 from .data_handler import SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity, NetatmoWeatherModuleEntity
@@ -374,6 +381,34 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
         if translation_key is not None:
             self._attr_translation_key = translation_key
 
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        if self.device.device_type.name == "NACamDoorTag":
+            for event_type in (
+                EVENT_TYPE_TAG_BIG_MOVE,
+                EVENT_TYPE_TAG_SMALL_MOVE,
+            ):
+                _LOGGER.debug(
+                    "Subscribing to event %s for module %s",
+                    event_type,
+                    self.device.name,
+                )
+                self.async_on_remove(
+                    async_dispatcher_connect(
+                        self.hass,
+                        f"signal-{DOMAIN}-webhook-{event_type}",
+                        self.handle_event,
+                    )
+                )
+
+        registry = dr.async_get(self.hass)
+        if device := registry.async_get_device(
+            identifiers={(DOMAIN, self.device.entity_id)}
+        ):
+            self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = device.id
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
@@ -402,6 +437,60 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
             self._attr_is_on = cast(bool, value) if value is not None else None
 
         self.async_write_ha_state()
+
+    @callback
+    def handle_event(self, event: dict) -> None:
+        """Handle webhook events."""
+        data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
+        is_update_needed = False
+
+        if not event_type:
+            _LOGGER.debug("Event has no type, returning")
+            return
+
+        if not data.get("device_id"):
+            _LOGGER.debug("Event %s has no device ID, returning", event_type)
+            return
+
+        device_id = data.get("device_id")
+        module_id = data.get(
+            "module_id", device_id
+        )  # In case of module event from gateway, device_id is actually the gateway ID, and module_id is the device_id we need
+
+        home_id = data.get("home_id")
+
+        # Check module related events only for NACamDoorTag as we want to avoid any risk of interference
+        # with other opening sensors (even if currently we only have this type of device with opening sensors,
+        # we want to be safe in case we add more in the future)
+        if self.device.device_type.name == "NACamDoorTag":
+            # Module related events (where we need home_id and module_id check)
+            if home_id == self.home.entity_id and module_id == self.device.entity_id:
+                # Event for this module
+                if event_type in [
+                    EVENT_TYPE_TAG_SMALL_MOVE,
+                    EVENT_TYPE_TAG_BIG_MOVE,
+                ]:
+                    # Interpret move as open event only if actually closed
+                    # (to avoid false open events when the tag is moved while already open)
+                    if (
+                        self.available
+                        and self._attr_is_on is not None
+                        and not self._attr_is_on
+                    ):
+                        self._attr_is_on = True
+                        self._attr_available = True
+                        # Push new state to API
+                        setattr(
+                            self.device,
+                            NETATMO_OPENING_STATUS,
+                            DOORTAG_STATUS_OPEN,
+                        )
+
+                        is_update_needed = True
+
+        if is_update_needed:
+            self.async_write_ha_state()
 
 
 class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
