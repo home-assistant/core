@@ -240,6 +240,42 @@ async def test_shelly_001p10_disabled_entities(
     assert state
 
 
+async def test_qubino_shutter_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    qubino_shutter,
+    integration,
+) -> None:
+    """Test that Qubino Flush Shutter entity created by endpoint 2 is disabled."""
+
+    entity_id = "cover.flush_shutter_2"
+    state = hass.states.get(entity_id)
+    assert state is None
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # Test enabling entity
+    updated_entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=None
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+    client.async_send_command.reset_mock()
+
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
+
+    # Test if the main entity from endpoint 1 was created.
+    state = hass.states.get("cover.flush_shutter")
+    assert state
+
+
 async def test_merten_507801_disabled_enitites(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
