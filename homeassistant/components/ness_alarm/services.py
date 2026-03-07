@@ -31,7 +31,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="no_config_entry",
             )
-        client = entries[0].runtime_data
+        client = entries[0].runtime_data.client
         await client.panic(call.data[ATTR_CODE])
 
     async def handle_aux(call: ServiceCall) -> None:
@@ -42,7 +42,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="no_config_entry",
             )
-        client = entries[0].runtime_data
+        client = entries[0].runtime_data.client
         await client.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
 
     hass.services.async_register(
