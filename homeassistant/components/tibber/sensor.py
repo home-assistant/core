@@ -878,7 +878,9 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             return
         if self.entity_description.key in (
             "accumulatedConsumption",
+            "accumulatedCost",
             "accumulatedProduction",
+            "accumulatedReward",
         ):
             # Value is reset to 0 at midnight, but not always strictly increasing
             # due to hourly corrections.
