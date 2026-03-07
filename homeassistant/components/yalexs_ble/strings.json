@@ -42,6 +42,11 @@
     }
   },
   "entity": {
+    "event": {
+      "operation": {
+        "name": "Operation"
+      }
+    },
     "lock": {
       "secure_mode": {
         "name": "Secure mode"
