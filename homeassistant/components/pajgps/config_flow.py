@@ -104,8 +104,7 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Normalize email for duplicate protection and storage
                 normalized_email = self.data["email"].strip().lower()
                 self.data["email"] = normalized_email
-                await self.async_set_unique_id(normalized_email)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({"email": normalized_email})
                 error_key = await _validate_credentials(
                     self.data["email"], self.data["password"], self.hass
                 )
@@ -303,9 +302,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     data=new_data,
                     title=new_data["entry_name"],
                 )
-                # Entry data and title have been updated above.
-                # Do not duplicate credentials in config_entry.options.
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(
+                    title=new_data["entry_name"], data=new_data
+                )
 
             return self.async_show_form(
                 step_id="init",
