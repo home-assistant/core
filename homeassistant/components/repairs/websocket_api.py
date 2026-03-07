@@ -133,12 +133,12 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
                 data["handler"],
                 data={"issue_id": data["issue_id"]},
             )
-        except data_entry_flow.UnknownHandler:
-            return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
         except data_entry_flow.UnknownStep:
             return self.json_message(
                 "Handler does not support user", HTTPStatus.BAD_REQUEST
             )
+        except data_entry_flow.FlowError as ex:
+            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
 
         return self.json(
             self._prepare_result_json(result),

@@ -14,9 +14,18 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.fan import ConfigType
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
-from homeassistant.config_entries import ConfigFlowResult, FlowType
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlowResult,
+    ConfigSubentry,
+    ConfigSubentryFlow,
+    FlowType,
+    OptionsFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import __version__ as ha_version
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -96,7 +105,7 @@ EXPECTED_DATA = {
     "issue_1": None,
     "issue_2": {"blah": "bleh"},
     "abort_issue1": None,
-    "create_entry_issue1": {"blah": "bleh"},
+    "create_entry_issue1": {"test": ANY},
 }
 
 
@@ -136,10 +145,31 @@ class MockFixFlowAbort(RepairsFlow):
 class MockFixFlowCreateEntry(RepairsFlow):
     """Handler for an issue fixing flow that creates an entry (fixes an issue)."""
 
+    def __init__(
+        self,
+        init_step: str = SOURCE_RECONFIGURE,
+        flow_type: str = FlowType.CONFIG_FLOW,
+        invalid_next_flow: bool = False,
+    ) -> None:
+        """Initialize the flow."""
+        super().__init__()
+        self.test_step = init_step
+        self.flow_type = flow_type
+        self.invalid_next_flow = invalid_next_flow
+
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
+
+        if self.invalid_next_flow:
+            return self.async_create_entry(
+                data={},
+                next_flow=(
+                    self.flow_type,
+                    "fake_flow_id",
+                ),
+            )
 
         async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             """Mock setup."""
@@ -156,8 +186,53 @@ class MockFixFlowCreateEntry(RepairsFlow):
         )
         mock_platform(self.hass, "comp.config_flow", None)
 
+        class TestOptionsFlow(OptionsFlow):
+            async def async_step_init(
+                self, user_input: dict[str, Any] | None = None
+            ) -> ConfigFlowResult:
+                """Init options flow."""
+                if user_input is not None:
+                    return self.async_create_entry(reason="updated")
+                return self.async_show_form(step_id="init", data_schema=vol.Schema({}))
+
+            async def async_step_fake(
+                self, user_input: dict[str, Any] | None = None
+            ) -> ConfigFlowResult:
+                """Init options flow."""
+                if user_input is not None:
+                    return self.async_create_entry(reason="fake")
+                return self.async_show_form(step_id="fake", data_schema=vol.Schema({}))
+
+        class TestSubentryFlow(ConfigSubentryFlow):
+            async def async_step_reconfigure(
+                self, user_input: dict[str, Any] | None = None
+            ) -> SubentryFlowResult:
+                if user_input is not None:
+                    return await self.async_update_and_abort(
+                        self._get_entry(), self._get_reconfigure_subentry()
+                    )
+                return self.async_show_form(
+                    step_id="reconfigure", data_schema=vol.Schema({})
+                )
+
         class TestFlow(config_entries.ConfigFlow):
             """Test flow."""
+
+            @staticmethod
+            @callback
+            def async_get_options_flow(
+                config_entry: ConfigEntry,
+            ) -> TestOptionsFlow:
+                """Create the options flow."""
+                return TestOptionsFlow()
+
+            @classmethod
+            @callback
+            def async_get_supported_subentry_types(
+                cls, config_entry: ConfigEntry
+            ) -> dict[str, type[ConfigSubentryFlow]]:
+                """Return subentries supported by this integration."""
+                return {"test_subentry": TestSubentryFlow}
 
             async def async_step_reconfigure(
                 self, user_input: dict[str, Any] | None = None
@@ -169,18 +244,61 @@ class MockFixFlowCreateEntry(RepairsFlow):
                     step_id="reconfigure", data_schema=vol.Schema({})
                 )
 
+            async def async_step_fake(
+                self, user_input: dict[str, Any] | None = None
+            ) -> ConfigFlowResult:
+                """Handle a fake step."""
+                if user_input is not None:
+                    return self.async_update_and_abort(reason="fake")
+                return self.async_show_form(step_id="fake", data_schema=vol.Schema({}))
+
         entries = self.hass.config_entries.async_entries("comp")
         assert len(entries) == 1
         mock_entry: MockConfigEntry = entries[0]
+        subentries = mock_entry.subentries
+        assert len(list(subentries.keys())) == 1
+        mock_subentry_id = list(subentries.keys())[0]
 
         with mock_config_flow("comp", TestFlow):
-            next_flow: ConfigFlowResult = await mock_entry.start_reconfigure_flow(
-                self.hass
+            next_flow: ConfigFlowResult = (
+                await mock_entry.start_reconfigure_flow(self.hass)
+                if self.test_step == SOURCE_RECONFIGURE
+                and self.flow_type
+                in [FlowType.CONFIG_FLOW, "fake"]  # to allow "fake" flow_type
+                else (
+                    await self.hass.config_entries.flow.async_init(
+                        "comp",
+                        context={
+                            "source": self.test_step,
+                            "entry_id": mock_entry.entry_id,
+                        },
+                    )
+                    if self.flow_type == FlowType.CONFIG_FLOW
+                    else (
+                        await self.hass.config_entries.options.async_init(
+                            mock_entry.entry_id
+                        )
+                        if self.flow_type == FlowType.OPTIONS_FLOW
+                        else (
+                            await mock_entry.start_subentry_reconfigure_flow(
+                                self.hass, mock_subentry_id
+                            )
+                            if self.test_step == SOURCE_RECONFIGURE
+                            else await self.hass.config_entries.subentries.async_init(
+                                (mock_entry.entry_id, "test_subentry"),
+                                context={
+                                    "source": self.test_step,
+                                    "subentry_id": mock_subentry_id,
+                                },
+                            )
+                        )
+                    )
+                )
             )
             return self.async_create_entry(
                 data={},
                 next_flow=(
-                    FlowType.CONFIG_FLOW,
+                    self.flow_type,
                     next_flow["flow_id"],
                 ),
             )
@@ -202,7 +320,20 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
         if issue_id == "abort_issue1":
             return MockFixFlowAbort()
         if issue_id == "create_entry_issue1":
-            return MockFixFlowCreateEntry()
+            if data["test"] == "next_flow":
+                return MockFixFlowCreateEntry()
+            if data["test"] == "invalid_source":
+                return MockFixFlowCreateEntry(init_step="fake")
+            if data["test"] == "invalid_flow_type":
+                return MockFixFlowCreateEntry(flow_type="fake")
+            if data["test"] == "invalid_next_flow":
+                return MockFixFlowCreateEntry(invalid_next_flow=True)
+            if data["test"] == FlowType.OPTIONS_FLOW:
+                return MockFixFlowCreateEntry(flow_type=FlowType.OPTIONS_FLOW)
+            if data["test"] == FlowType.CONFIG_SUBENTRIES_FLOW:
+                return MockFixFlowCreateEntry(flow_type=FlowType.CONFIG_SUBENTRIES_FLOW)
+            if data["test"] == f"{FlowType.CONFIG_SUBENTRIES_FLOW}_invalid_source":
+                return MockFixFlowCreateEntry(init_step="fake")
         return MockFixFlow()
 
     mock_platform(
@@ -443,11 +574,26 @@ async def test_fix_issue(
     assert msg["result"] == {"issues": []}
 
 
-@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
+@pytest.mark.parametrize(
+    (
+        "test",
+        "ignore_translations_for_mock_domains",
+    ),
+    [
+        ("next_flow", ["fake_integration"]),
+        ("invalid_source", ["fake_integration"]),
+        ("invalid_flow_type", ["fake_integration"]),
+        ("invalid_next_flow", ["fake_integration"]),
+        (FlowType.OPTIONS_FLOW, ["fake_integration"]),
+        (FlowType.CONFIG_SUBENTRIES_FLOW, ["fake_integration"]),
+        (f"{FlowType.CONFIG_SUBENTRIES_FLOW}_invalid_source", ["fake_integration"]),
+    ],
+)
 async def test_fix_issue_next_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    test,
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
@@ -459,14 +605,24 @@ async def test_fix_issue_next_flow(
     issues = [
         {
             **DEFAULT_ISSUES[0],
-            "data": {"blah": "bleh"},
-            "domain": "fake_integration",
+            "data": {"test": test},
             "issue_id": "create_entry_issue1",
         },
     ]
     await create_issues(hass, ws_client, issues=issues)
 
-    mock_entry = MockConfigEntry(domain="comp", data={})
+    mock_entry = MockConfigEntry(
+        domain="comp",
+        data={},
+        subentries_data=[
+            ConfigSubentry(
+                title="Mock Subentry",
+                unique_id="mock_subentry1",
+                subentry_type="test_subentry",
+                data={},
+            ).as_dict()
+        ],
+    )
     mock_entry.add_to_hass(hass)
 
     url = "/api/repairs/issues/fix"
@@ -475,28 +631,93 @@ async def test_fix_issue_next_flow(
         url, json={"handler": "fake_integration", "issue_id": "create_entry_issue1"}
     )
 
-    assert resp.status == HTTPStatus.OK
     data = await resp.json()
+    if test == "next_flow":
+        assert resp.status == HTTPStatus.OK
 
-    next_flow = hass.config_entries.flow.async_get(data["next_flow"][1])
+        next_flow = hass.config_entries.flow.async_get(data["next_flow"][1])
 
-    assert data == (
-        {
-            "description_placeholders": None,
-            "flow_id": ANY,
-            "handler": "fake_integration",
-            "description": None,
-            "type": "create_entry",
-            "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
-            "next_flow": ["config_flow", next_flow["flow_id"]],
-        }
-    )
+        assert data == (
+            {
+                "description_placeholders": None,
+                "flow_id": ANY,
+                "handler": "fake_integration",
+                "description": None,
+                "type": "create_entry",
+                "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
+                "next_flow": ["config_flow", next_flow["flow_id"]],
+            }
+        )
 
-    await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
+        await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
+        msg = await ws_client.receive_json()
 
-    assert msg["success"]
-    assert msg["result"] == {"issues": []}
+        assert msg["success"]
+        assert msg["result"] == {"issues": []}
+
+    if test == "invalid_source":
+        assert resp.status == HTTPStatus.BAD_REQUEST
+
+        assert data == {"message": "Next flow must be a reconfigure flow"}
+
+    if test == "invalid_flow_type":
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        assert data == {"message": "Invalid next_flow type"}
+
+    if test == "invalid_next_flow":
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        assert data == {"message": "Unknown next flow: config_flow: fake_flow_id"}
+
+    if test in {FlowType.OPTIONS_FLOW, f"{FlowType.OPTIONS_FLOW}_fake_step"}:
+        assert resp.status == HTTPStatus.OK
+
+        next_flow = hass.config_entries.options.async_get(data["next_flow"][1])
+
+        assert data == (
+            {
+                "description_placeholders": None,
+                "flow_id": ANY,
+                "handler": "fake_integration",
+                "description": None,
+                "type": "create_entry",
+                "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
+                "next_flow": ["options_flow", next_flow["flow_id"]],
+            }
+        )
+
+        await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
+        msg = await ws_client.receive_json()
+
+        assert msg["success"]
+        assert msg["result"] == {"issues": []}
+
+    if test == FlowType.CONFIG_SUBENTRIES_FLOW:
+        assert resp.status == HTTPStatus.OK
+
+        next_flow = hass.config_entries.subentries.async_get(data["next_flow"][1])
+
+        assert data == (
+            {
+                "description_placeholders": None,
+                "flow_id": ANY,
+                "handler": "fake_integration",
+                "description": None,
+                "type": "create_entry",
+                "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
+                "next_flow": [FlowType.CONFIG_SUBENTRIES_FLOW, next_flow["flow_id"]],
+            }
+        )
+
+        await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
+        msg = await ws_client.receive_json()
+
+        assert msg["success"]
+        assert msg["result"] == {"issues": []}
+
+    if test == f"{FlowType.CONFIG_SUBENTRIES_FLOW}_invalid_source":
+        assert resp.status == HTTPStatus.BAD_REQUEST
+
+        assert data == {"message": "Next flow must be a reconfigure flow"}
 
 
 async def test_fix_issue_unauth(

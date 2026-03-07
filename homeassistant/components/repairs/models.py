@@ -14,7 +14,6 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 
 
 class RepairsFlowResult(
@@ -69,20 +68,32 @@ class RepairsFlow(
             return
         flow_type, flow_id = next_flow
         if flow_type not in FlowType:
-            raise HomeAssistantError("Invalid next_flow type")
-        # Raises UnknownFlow if the flow does not exist.
+            raise data_entry_flow.FlowError("Invalid next_flow type")
         flow: ConfigFlowResult | SubentryFlowResult
-        if flow_type == FlowType.CONFIG_FLOW:
-            flow = self.hass.config_entries.flow.async_get(flow_id)
-        elif flow_type == FlowType.OPTIONS_FLOW:
-            flow = self.hass.config_entries.options.async_get(flow_id)
-        elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
-            flow = self.hass.config_entries.subentries.async_get(flow_id)
-        if "context" not in flow and flow["context"]["source"] != SOURCE_RECONFIGURE:
-            raise HomeAssistantError("Next flow must be a reconfigure flow")
-        result["result"] = self.hass.config_entries.async_get_known_entry(
-            flow["context"]["entry_id"]
-        )
+        entry_id: str
+        try:
+            if flow_type in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
+                if flow_type == FlowType.CONFIG_FLOW:
+                    flow = self.hass.config_entries.flow.async_get(flow_id)
+                    entry_id = flow["context"]["entry_id"]
+                else:  # subentry flow
+                    flow = self.hass.config_entries.subentries.async_get(flow_id)
+                    entry_id, _ = flow["handler"]
+                if (
+                    "context" not in flow
+                    or flow["context"]["source"] != SOURCE_RECONFIGURE
+                ):  # check if reconfigure flow
+                    raise data_entry_flow.FlowError(
+                        "Next flow must be a reconfigure flow"
+                    )
+            else:
+                flow = self.hass.config_entries.options.async_get(flow_id)
+                entry_id = flow["handler"]
+        except data_entry_flow.UnknownFlow as ex:
+            raise data_entry_flow.UnknownFlow(
+                f"Unknown next flow: {flow_type}: {flow_id}"
+            ) from ex
+        result["result"] = self.hass.config_entries.async_get_known_entry(entry_id)
         result["next_flow"] = next_flow
 
 
