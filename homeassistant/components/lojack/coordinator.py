@@ -101,10 +101,16 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
             if resp is not None:
                 headers = getattr(resp, "headers", None)
 
-        if headers and "Retry-After" in headers:
-            val = headers.get("Retry-After")
-            if val is None:
-                return None
+        val = None
+        if headers:
+            # HTTP header names are case-insensitive; perform a
+            # case-insensitive lookup for maximum compatibility.
+            for key in headers:
+                if isinstance(key, str) and key.lower() == "retry-after":
+                    val = headers.get(key)
+                    break
+
+        if val is not None:
             try:
                 return int(val)
             except (ValueError, TypeError):
