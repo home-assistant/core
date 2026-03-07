@@ -655,6 +655,8 @@ filterwarnings = [
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
   # https://pypi.org/project/rxv/ - v0.7.0 - 2021-10-10
   "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
+  # https://github.com/ProCern/asyncinotify/blob/20204dcf9361a5cf3b52bc8e16dabfeb36aeb0a8/src/asyncinotify/_ffi.py#L71
+  "ignore:inotify is a Linux-only API.  You can package this library on other platforms, but not run it.",
 ]
 
 [tool.coverage.run]

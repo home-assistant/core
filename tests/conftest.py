@@ -2203,3 +2203,14 @@ def disable_http_server() -> Generator[None]:
     """
     with patch("homeassistant.components.http.start_http_server_and_save_config"):
         yield
+
+
+@pytest.fixture(autouse=True)
+def disable_usb_monitor() -> Generator[None]:
+    """Disable USB device discovery during tests.
+
+    This prevents the USB component to start up monitoring during tests.
+    """
+
+    with patch("homeassistant.components.usb.AIOUSBWatcher"):
+        yield
