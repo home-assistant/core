@@ -290,17 +290,23 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             and entity.unique_id != self.unique_id
         ]
 
+        # Get unique ID prefix for this host
+        unique_id_prefix = self.get_unique_id(self.coordinator.host_id, "")
         for client in clients:
-            # Valid entity is a snapcast client
+            # Validate entity is a snapcast client
             if not client.unique_id.startswith(CLIENT_PREFIX):
                 raise ServiceValidationError(
                     f"Entity '{client.entity_id}' is not a Snapcast client device."
                 )
 
+            # Validate client belongs to the same server
+            if not client.unique_id.startswith(unique_id_prefix):
+                raise ServiceValidationError(
+                    f"Entity '{client.entity_id}' does not belong to the same Snapcast server."
+                )
+
             # Extract client ID and join it to the current group
-            identifier = client.unique_id.removeprefix(
-                self.get_unique_id(self.coordinator.host_id, "")
-            )
+            identifier = client.unique_id.removeprefix(unique_id_prefix)
             try:
                 await self._current_group.add_client(identifier)
             except KeyError as e:
