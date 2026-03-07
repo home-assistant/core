@@ -133,7 +133,7 @@ class RestoreStateData:
         self.store.set_load_empty()
 
     async def async_setup(self) -> None:
-        """Set up up the instance of this data helper."""
+        """Set up the instance of this data helper."""
         await self.async_load()
         self.async_setup_final_write_dump()
 
