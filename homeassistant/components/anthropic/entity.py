@@ -79,12 +79,11 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from homeassistant.util.json import JsonObjectType
 
-from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
@@ -107,6 +106,7 @@ from .const import (
     NON_THINKING_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -633,7 +633,7 @@ def _create_token_stats(
     }
 
 
-class AnthropicBaseLLMEntity(Entity):
+class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     """Anthropic base LLM entity."""
 
     _attr_has_entity_name = True
@@ -641,6 +641,7 @@ class AnthropicBaseLLMEntity(Entity):
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
         self._attr_unique_id = subentry.subentry_id
@@ -835,7 +836,8 @@ class AnthropicBaseLLMEntity(Entity):
         if tools:
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -856,17 +858,20 @@ class AnthropicBaseLLMEntity(Entity):
                     ]
                 )
                 messages.extend(new_messages)
-            except anthropic.AuthenticationError as err:
-                self.entry.async_start_reauth(self.hass)
+            except (anthropic.APIConnectionError, anthropic.AuthenticationError) as err:
+                coordinator.async_set_update_error(err)
                 raise HomeAssistantError(
-                    "Authentication error with Anthropic API, reauthentication required"
+                    f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
             except anthropic.AnthropicError as err:
+                # Non-connection error, mark connection as healthy
+                coordinator.async_set_updated_data(coordinator.data)
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(coordinator.data)
                 break
 
 
