@@ -84,6 +84,11 @@ SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.connection_data: dict[str, Any] = {}
+
     VERSION = 2
     MINOR_VERSION = 1
 
@@ -118,21 +123,34 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST],
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                    },
-                    options={CONF_CODE: user_input.get(CONF_CODE)},
-                )
+                self.connection_data = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+                return await self.async_step_code()
 
             errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=CONNECTION_SCHEMA.extend(CODE_SCHEMA.schema),
+            data_schema=CONNECTION_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle code configuration."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.connection_data[CONF_HOST],
+                data=self.connection_data,
+                options={CONF_CODE: user_input.get(CONF_CODE)},
+            )
+
+        return self.async_show_form(
+            step_id="code",
+            data_schema=CODE_SCHEMA,
         )
 
     async def async_step_reconfigure(
