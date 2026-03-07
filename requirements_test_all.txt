@@ -242,7 +242,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.1.0
+aioesphomeapi==44.3.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -395,7 +395,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.1.0
+aioswitcher==6.1.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -575,7 +575,7 @@ beautifulsoup4==4.13.3
 bimmer-connected[china]==0.17.3
 
 # homeassistant.components.esphome
-bleak-esphome==3.6.0
+bleak-esphome==3.7.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -1622,6 +1622,9 @@ py-nightscout==1.2.2
 # homeassistant.components.mta
 py-nymta==0.4.0
 
+# homeassistant.components.opendisplay
+py-opendisplay==5.2.0
+
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
 
@@ -2053,7 +2056,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.1.0
+pyrainbird==6.1.1
 
 # homeassistant.components.playstation_network
 pyrate-limiter==3.9.0
@@ -2162,7 +2165,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.5
 
 # homeassistant.components.bsblan
-python-bsblan==5.1.1
+python-bsblan==5.1.2
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2511,7 +2514,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==1.0.0
+spotifyaio==2.0.2
 
 # homeassistant.components.sql
 sqlparse==0.5.5
@@ -2559,7 +2562,7 @@ tailscale==0.6.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.1.3
+teltasync==0.2.0
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
