@@ -2,19 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import (
-    TEST_DEVICE_ID,
-    TEST_LATITUDE,
-    TEST_LONGITUDE,
-    TEST_ACCURACY,
-    TEST_HEADING,
-    TEST_ADDRESS,
-    TEST_TIMESTAMP,
-)
 
 from tests.common import MockConfigEntry
 
@@ -154,11 +145,11 @@ async def test_coordinator_multiple_devices_mixed_failures(
         assert coordinator.data is not None
         # Both devices should be in data, even if one failed location fetch
         assert len(coordinator.data) == 2
-        
+
         # device1 should have location
         device1_data = coordinator.data["device1"]
         assert device1_data.latitude == 37.7749
-        
+
         # device2 should not have location
         device2_data = coordinator.data["device2"]
         assert device2_data.latitude is None

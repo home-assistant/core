@@ -17,23 +17,23 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "description": "Please enter your password to re-authenticate.",
         "title": "Re-authenticate LoJack"
       },
       "reconfigure": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Update your LoJack/Spireon account credentials.",
         "title": "Reconfigure LoJack"
       },
       "user": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Enter your LoJack/Spireon account credentials.",
         "title": "LoJack account"

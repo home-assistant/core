@@ -6,7 +6,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry
 
@@ -42,19 +41,19 @@ async def test_device_tracker_vehicle_no_longer_available(
             await setup_integration(hass, mock_config_entry)
 
         coordinator = mock_config_entry.runtime_data
-        
+
         # Verify entity is initially available
         state = hass.states.get("device_tracker.2021_honda_accord")
         assert state is not None
         assert state.state != "unavailable"
-        
+
         # Simulate vehicle removed from account - client returns empty list
         client.list_devices = AsyncMock(return_value=[])
-        
+
         # Trigger coordinator update
         await coordinator.async_refresh()
         await hass.async_block_till_done()
-        
+
         # Entity should now be unavailable
         state = hass.states.get("device_tracker.2021_honda_accord")
         assert state is not None

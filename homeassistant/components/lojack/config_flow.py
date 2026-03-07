@@ -36,7 +36,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
         finally:
             try:
                 await client.close()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.debug("Error closing client during validation", exc_info=True)
     except AuthenticationError as err:
         raise InvalidAuth(f"Invalid username or password: {err}") from err
@@ -68,7 +68,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -102,7 +102,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -135,7 +135,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
