@@ -176,7 +176,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         uuid: str | None = None
         if raw_udn := discovery_info.upnp.get(ATTR_UPNP_UDN):
             uuid = raw_udn.removeprefix("uuid:").strip() or None
-        unique_id_for_flow = uuid if uuid else host
+        unique_id_for_flow = uuid or host
         await self.async_set_unique_id(unique_id_for_flow)
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
