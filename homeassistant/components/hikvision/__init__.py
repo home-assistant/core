@@ -130,7 +130,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
                     else:
                         mapped_events[friendly_name] = list(channels)
                 _LOGGER.debug("Mapped NVR events: %s", mapped_events)
-                camera.inject_events(mapped_events)
+                if mapped_events:
+                    camera.inject_events(mapped_events)
             else:
                 _LOGGER.debug(
                     "No event triggers returned from %s. "
