@@ -6,7 +6,13 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+import pytest
+
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
@@ -38,6 +44,7 @@ from tests.common import (
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
 PLATFORM = "test_platform"
+pytestmark = pytest.mark.usefixtures("hass_storage")
 
 
 async def test_caching_data(hass: HomeAssistant) -> None:
@@ -129,6 +136,14 @@ async def test_periodic_write(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
+    assert not mock_write_data.called
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
+
     assert mock_write_data.called
 
     with patch(
@@ -194,6 +209,15 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
     ) as mock_write_data:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
+
+    assert not mock_write_data.called
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
+
     # Verify normal shutdown
     assert mock_write_data.called
 
@@ -251,6 +275,71 @@ async def test_hass_starting(hass: HomeAssistant) -> None:
 
     # Assert that this session states were written
     assert mock_write_data.called
+
+
+async def test_hass_final_write_before_start(hass: HomeAssistant) -> None:
+    """Test that we persist states if Home Assistant stops before start."""
+    hass.set_state(CoreState.not_running)
+
+    data = async_get(hass)
+    await hass.async_block_till_done()
+    await data.store.async_save([])
+
+    hass.data.pop(DATA_RESTORE_STATE)
+    await async_load(hass)
+
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+    entity = RestoreEntity()
+    entity.hass = hass
+    entity.entity_id = "input_boolean.b1"
+    await platform.async_add_entities([entity])
+
+    hass.states.async_set(entity.entity_id, "on")
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        hass.set_state(CoreState.final_write)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
+
+    assert mock_write_data.call_count == 1
+    written_states = mock_write_data.call_args.args[0]
+    assert len(written_states) == 1
+    state = json_round_trip(written_states[0])
+    assert state["state"]["entity_id"] == entity.entity_id
+    assert state["state"]["state"] == "on"
+
+
+async def test_hass_final_write_after_entity_removed(hass: HomeAssistant) -> None:
+    """Test that final write persists states captured during entity removal."""
+    data = async_get(hass)
+    await hass.async_block_till_done()
+    await data.store.async_save([])
+    data.last_states = {}
+
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+    entity = RestoreEntity()
+    entity.hass = hass
+    entity.entity_id = "input_boolean.b1"
+    await platform.async_add_entities([entity])
+
+    hass.states.async_set(entity.entity_id, "on")
+    await entity.async_remove()
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        hass.set_state(CoreState.final_write)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
+
+    assert mock_write_data.call_count == 1
+    written_states = mock_write_data.call_args.args[0]
+    assert len(written_states) == 1
+    state = json_round_trip(written_states[0])
+    assert state["state"]["entity_id"] == entity.entity_id
+    assert state["state"]["state"] == "on"
 
 
 async def test_dump_data(hass: HomeAssistant) -> None:
