@@ -15,7 +15,7 @@ ATTR_REQUESTED_BY = "requested_by"
 ATTR_SEASONS = "seasons"
 ATTR_STATUS = "status"
 ATTR_SORT_ORDER = "sort_order"
-ATTR_TMDB_ID = "tmdb_id"
+ATTR_MEDIA_ID = "media_id"
 
 
 EVENT_KEY = f"{DOMAIN}_event"

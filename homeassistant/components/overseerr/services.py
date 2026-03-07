@@ -26,11 +26,12 @@ from .const import (
     ATTR_SEASONS,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
-    ATTR_TMDB_ID,
+    ATTR_MEDIA_ID,
     DOMAIN,
     LOGGER,
 )
 from .coordinator import OverseerrConfigEntry
+from ..music_assistant.const import ATTR_MEDIA_ID
 
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
@@ -59,7 +60,7 @@ SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(["movie", "tv"]),
-        vol.Required(ATTR_TMDB_ID): vol.Coerce(int),
+        vol.Required(ATTR_MEDIA_ID): vol.Coerce(int),
         vol.Optional(ATTR_SEASONS): vol.Any(
             vol.Coerce(int),
             [vol.Coerce(int)],
@@ -173,19 +174,19 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
 async def _request_media(
     client: OverseerrClient,
     media_type: MediaType,
-    tmdb_id: int,
+    media_id: int,
     seasons: list[int] | Literal["all"],
 ) -> Any:
     """Request media in Seerr."""
     LOGGER.debug(
-        "Requesting %s with TMDB ID %s (seasons: %s)",
+        "Requesting %s with media ID %s (seasons: %s)",
         media_type,
-        tmdb_id,
+        media_id,
         seasons or "none",
     )
     try:
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
-        request = await client.create_request(media_type, tmdb_id, seasons)
+        request = await client.create_request(media_type, media_id, seasons)
     except OverseerrConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -203,10 +204,10 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     )
     client = entry.runtime_data.client
     media_type = MediaType(call.data[ATTR_MEDIA_TYPE])
-    tmdb_id = call.data[ATTR_TMDB_ID]
+    media_id = call.data[ATTR_MEDIA_ID]
     seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
 
-    request = await _request_media(client, media_type, tmdb_id, seasons)
+    request = await _request_media(client, media_type, media_id, seasons)
 
     return {"request": cast(JsonValueType, asdict(request))}
 
@@ -233,15 +234,15 @@ async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
     first_result = search_results[0]
 
     media_type = first_result.media_type
-    tmdb_id = first_result.id
+    media_id = first_result.id
 
-    request = await _request_media(client, media_type, tmdb_id, requested_seasons)
+    request = await _request_media(client, media_type, media_id, requested_seasons)
 
     return {
         "request": cast(JsonValueType, asdict(request)),
         "media": {
             "type": media_type,
-            "id": tmdb_id,
+            "id": media_id,
             "title": first_result.title
             if hasattr(first_result, "title")
             else getattr(first_result, "name", "Unknown"),

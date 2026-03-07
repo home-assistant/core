@@ -15,7 +15,7 @@ from homeassistant.components.overseerr.const import (
     ATTR_SEASONS,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
-    ATTR_TMDB_ID,
+    ATTR_MEDIA_ID,
     DOMAIN,
 )
 from homeassistant.components.overseerr.services import (
@@ -138,7 +138,7 @@ async def test_service_request_media(
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             ATTR_MEDIA_TYPE: "tv",
-            ATTR_TMDB_ID: "123456789",
+            ATTR_MEDIA_ID: "123456789",
             ATTR_SEASONS: "1",
         },
         blocking=True,
@@ -243,7 +243,7 @@ async def test_service_search_and_request_with_no_results(
         ),
         (
             SERVICE_REQUEST_MEDIA,
-            {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: "123456789", ATTR_SEASONS: "1"},
+            {ATTR_MEDIA_TYPE: "tv", ATTR_MEDIA_ID: "123456789", ATTR_SEASONS: "1"},
             "create_request",
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
@@ -285,7 +285,7 @@ async def test_services_connection_error(
         (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test"}),
         (
             SERVICE_REQUEST_MEDIA,
-            {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: "123456789", ATTR_SEASONS: "1"},
+            {ATTR_MEDIA_TYPE: "tv", ATTR_MEDIA_ID: "123456789", ATTR_SEASONS: "1"},
         ),
         (SERVICE_SEARCH_AND_REQUEST, {ATTR_QUERY: "test", ATTR_SEASONS: "1"}),
     ],

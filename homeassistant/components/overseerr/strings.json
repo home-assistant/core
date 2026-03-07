@@ -188,9 +188,9 @@
           "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
           "name": "Seasons"
         },
-        "tmdb_id": {
-          "description": "The TMDB ID of the media to request.",
-          "name": "TMDB ID"
+        "media_id": {
+          "description": "The TMDB ID or TVDB ID of the media to request.",
+          "name": "Media ID"
         }
       },
       "name": "Request media"
