@@ -16,7 +16,13 @@ from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
-from aiowithings.exceptions import WithingsError
+from aiowithings.exceptions import (
+    WithingsAuthenticationFailedError,
+    WithingsError,
+    WithingsInvalidParamsError,
+    WithingsTooManyRequestsError,
+    WithingsUnauthorizedError,
+)
 from aiowithings.util import to_enum
 from yarl import URL
 
@@ -62,6 +68,8 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
+WEBHOOK_REGISTER_DELAY = 30
+WEBHOOK_RETRY_DELAY = 1800
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 type WithingsConfigEntry = ConfigEntry[WithingsData]
 
@@ -162,14 +170,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             entry.async_on_unload(
-                async_call_later(hass, 1, webhook_manager.register_webhook)
+                async_call_later(
+                    hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
+                )
             )
         entry.async_on_unload(
             cloud.async_listen_connection_change(hass, manage_cloudhook)
         )
     else:
         entry.async_on_unload(
-            async_call_later(hass, 1, webhook_manager.register_webhook)
+            async_call_later(
+                hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
+            )
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -214,6 +226,7 @@ class WithingsWebhookManager:
     """Manager that manages the Withings webhooks."""
 
     _webhooks_registered = False
+    _ha_webhook_registered = False
     _register_lock = asyncio.Lock()
 
     def __init__(self, hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
@@ -226,6 +239,12 @@ class WithingsWebhookManager:
         """Return Withings data."""
         return self.entry.runtime_data
 
+    def _schedule_retry(self, delay: int) -> None:
+        """Schedule a webhook registration retry."""
+        self.entry.async_on_unload(
+            async_call_later(self.hass, delay, self.register_webhook)
+        )
+
     async def unregister_webhook(
         self,
         _: Any,
@@ -236,6 +255,7 @@ class WithingsWebhookManager:
                 "Unregister Withings webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
             )
             webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+            self._ha_webhook_registered = False
             for coordinator in self.withings_data.coordinators:
                 coordinator.webhook_subscription_listener(False)
             self._webhooks_registered = False
@@ -272,21 +292,101 @@ class WithingsWebhookManager:
                 )
                 return
 
-            webhook_name = "Withings"
-            if self.entry.title != DEFAULT_TITLE:
-                webhook_name = f"{DEFAULT_TITLE} {self.entry.title}"
+            if not self._ha_webhook_registered:
+                webhook_name = "Withings"
+                if self.entry.title != DEFAULT_TITLE:
+                    webhook_name = f"{DEFAULT_TITLE} {self.entry.title}"
 
-            webhook_register(
-                self.hass,
-                DOMAIN,
-                webhook_name,
-                self.entry.data[CONF_WEBHOOK_ID],
-                get_webhook_handler(self.withings_data),
-                allowed_methods=[METH_POST],
-            )
-            LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
+                webhook_register(
+                    self.hass,
+                    DOMAIN,
+                    webhook_name,
+                    self.entry.data[CONF_WEBHOOK_ID],
+                    get_webhook_handler(self.withings_data),
+                    allowed_methods=[METH_POST],
+                )
+                self._ha_webhook_registered = True
+                LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
 
-            await async_subscribe_webhooks(self.withings_data.client, webhook_url)
+            max_retries = 5
+            base_delay = 30
+
+            for attempt in range(max_retries):
+                try:
+                    await async_subscribe_webhooks(
+                        self.withings_data.client, webhook_url
+                    )
+                    break
+                except (
+                    WithingsUnauthorizedError,
+                    WithingsAuthenticationFailedError,
+                ) as err:
+                    LOGGER.error(
+                        "Authentication failed while subscribing to webhooks: %s. "
+                        "Please reauthenticate the integration",
+                        err,
+                    )
+                    return
+                except WithingsTooManyRequestsError as err:
+                    delay = 300 * (attempt + 1)
+                    LOGGER.warning(
+                        "Rate limited by Withings API (attempt %d/%d): %s. "
+                        "Retrying in %d seconds",
+                        attempt + 1,
+                        max_retries,
+                        err,
+                        delay,
+                    )
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(delay)
+                    else:
+                        self._schedule_retry(WEBHOOK_RETRY_DELAY)
+                        return
+                except WithingsInvalidParamsError as err:
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2**attempt)
+                        LOGGER.warning(
+                            "Invalid webhook URL (attempt %d/%d): %s. "
+                            "Retrying in %d seconds",
+                            attempt + 1,
+                            max_retries,
+                            err,
+                            delay,
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        LOGGER.warning(
+                            "Webhook URL rejected by Withings after %d "
+                            "attempts: %s. Will retry in %d minutes",
+                            max_retries,
+                            err,
+                            WEBHOOK_RETRY_DELAY // 60,
+                        )
+                        self._schedule_retry(WEBHOOK_RETRY_DELAY)
+                        return
+                except WithingsError as err:
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2**attempt)
+                        LOGGER.warning(
+                            "Failed to subscribe to Withings webhooks "
+                            "(attempt %d/%d): %s. Retrying in %d seconds",
+                            attempt + 1,
+                            max_retries,
+                            err,
+                            delay,
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        LOGGER.warning(
+                            "Failed to subscribe to Withings webhooks after %d "
+                            "attempts: %s. Will retry in %d minutes",
+                            max_retries,
+                            err,
+                            WEBHOOK_RETRY_DELAY // 60,
+                        )
+                        self._schedule_retry(WEBHOOK_RETRY_DELAY)
+                        return
+
             for coordinator in self.withings_data.coordinators:
                 coordinator.webhook_subscription_listener(True)
             LOGGER.debug("Registered Withings webhook at Withings: %s", webhook_url)
