@@ -399,6 +399,8 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         if TYPE_CHECKING:
             assert isinstance(self.coordinator, ShellyRpcCoordinator)
 
+        if not self.coordinator.device.initialized:
+            await self.coordinator.device.initialize()
         await self.coordinator.device.smoke_mute_alarm(get_rpc_key_id(self.key))
 
     @property
