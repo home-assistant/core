@@ -1,0 +1,14 @@
+{
+  "domain": "midea_lan",
+  "name": "Midea LAN",
+  "codeowners": ["@chemelli74", "@rokam", "@wuwentao"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/midea_lan",
+  "homekit": {},
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["midea-local==6.4.0"],
+  "ssdp": [],
+  "zeroconf": []
+}
