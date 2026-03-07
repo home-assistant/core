@@ -26,7 +26,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: PajGpsConfigEntry) 
         entry.data["email"], entry.data["password"], hass
     )
     if error_key == "cannot_connect":
-        raise ConfigEntryAuthFailed("Unable to reach the PAJ GPS API.")
+        raise ConfigEntryNotReady("Unable to reach the PAJ GPS API.")
     if error_key == "invalid_auth":
         raise ConfigEntryAuthFailed("Invalid PAJ GPS credentials.")
 

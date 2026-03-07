@@ -2,9 +2,9 @@
 
 Coverage:
 - cannot_connect → raises ConfigEntryNotReady before coordinator is created
-- invalid_auth   → raises ConfigEntryNotReady before coordinator is created
+- invalid_auth   → raises ConfigEntryAuthFailed before coordinator is created
 - valid credentials + coordinator success → returns True, runtime_data set
-- valid credentials + coordinator first-refresh fails → raises ConfigEntryNotReady
+- valid credentials + coordinator first-refresh fails → raises ConfigEntryAuthFailed
 """
 
 from __future__ import annotations
@@ -42,8 +42,8 @@ def _make_mock_entry(
 class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
     """Tests for async_setup_entry in __init__.py."""
 
-    async def test_cannot_connect_raises_config_entry_auth_failed(self):
-        """When API is unreachable, setup must raise ConfigEntryAuthFailed immediately."""
+    async def test_cannot_connect_raises_config_entry_not_ready(self):
+        """When API is unreachable, setup must raise ConfigEntryNotReady immediately."""
         hass = MagicMock()
         entry = _make_mock_entry()
 
@@ -52,13 +52,13 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 "homeassistant.components.pajgps._validate_credentials",
                 new=AsyncMock(return_value="cannot_connect"),
             ),
-            pytest.raises(ConfigEntryAuthFailed) as ctx,
+            pytest.raises(ConfigEntryNotReady) as ctx,
         ):
             await async_setup_entry(hass, entry)
 
         assert "PAJ GPS API" in str(ctx.value)
 
-    async def test_invalid_auth_raises_config_entry_not_ready(self):
+    async def test_invalid_auth_raises_config_entry_auth_failed(self):
         """When credentials are wrong, setup must raise ConfigEntryAuthFailed immediately."""
         hass = MagicMock()
         entry = _make_mock_entry()
@@ -75,7 +75,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
         assert "credentials" in str(ctx.value)
 
     async def test_coordinator_not_created_on_cannot_connect(self):
-        """PajGpsCoordinator must never be instantiated when credentials fail."""
+        """PajGpsCoordinator must never be instantiated when the API is unreachable."""
         hass = MagicMock()
         entry = _make_mock_entry()
 
@@ -85,7 +85,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value="cannot_connect"),
             ),
             patch("homeassistant.components.pajgps.PajGpsCoordinator") as MockCoord,
-            pytest.raises(ConfigEntryAuthFailed),
+            pytest.raises(ConfigEntryNotReady),
         ):
             await async_setup_entry(hass, entry)
 
