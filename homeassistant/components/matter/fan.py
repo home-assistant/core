@@ -254,11 +254,24 @@ class MatterFan(MatterEntity, FanEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = FanEntityFeature(0)
+        # Reset speed_count to the FanEntity default (100 = 1% steps); re-set below
+        # if kMultiSpeed is present in the current feature map.
+        self._attr_speed_count = 100
+
+        # NOTE: PercentSetting/PercentCurrent are mandatory on all FanControl clusters
+        # per the Matter specification, so enable SET_SPEED unconditionally so the
+        # percentage slider is always shown regardless of whether kMultiSpeed is set.
+        self._attr_supported_features |= FanEntityFeature.SET_SPEED
+
         if feature_map & FanControlFeature.kMultiSpeed:
-            self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            self._attr_speed_count = int(
-                self.get_matter_attribute_value(clusters.FanControl.Attributes.SpeedMax)
+            # kMultiSpeed devices also expose SpeedMax for step granularity
+            speed_max_attr = self.get_matter_attribute_value(
+                clusters.FanControl.Attributes.SpeedMax
             )
+            speed_max = int(speed_max_attr) if speed_max_attr is not None else 0
+            if speed_max > 0:
+                self._attr_speed_count = speed_max
+
         if feature_map & FanControlFeature.kRocking:
             # NOTE: the Matter model allows that a device can have multiple/different
             # rock directions while HA doesn't allow this in the entity model.
@@ -325,6 +338,8 @@ DISCOVERY_SCHEMAS = [
             clusters.FanControl.Attributes.PercentCurrent,
         ),
         optional_attributes=(
+            clusters.FanControl.Attributes.PercentSetting,
+            clusters.FanControl.Attributes.SpeedMax,
             clusters.FanControl.Attributes.SpeedSetting,
             clusters.FanControl.Attributes.RockSetting,
             clusters.FanControl.Attributes.WindSetting,
