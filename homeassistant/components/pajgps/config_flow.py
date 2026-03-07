@@ -39,6 +39,17 @@ def _build_config_schema(
     )
 
 
+def _build_options_schema(
+    entry_name: str = "",
+) -> vol.Schema:
+    """Build options schema without password (credentials managed via reconfigure/reauth)."""
+    return vol.Schema(
+        {
+            vol.Required("entry_name", default=entry_name): cv.string,
+        }
+    )
+
+
 async def _validate_credentials(
     email: str, password: str, hass: HomeAssistant | None = None
 ) -> str | None:
@@ -245,24 +256,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Handle options flow."""
         errors: dict[str, str] = {}
 
-        default_entry_name = ""
-        if "entry_name" in self._config_entry.data:
-            default_entry_name = self._config_entry.data["entry_name"]
-        if "entry_name" in self._config_entry.options:
-            default_entry_name = self._config_entry.options["entry_name"]
-        default_email = ""
-        if "email" in self._config_entry.data:
-            default_email = self._config_entry.data["email"]
-        if "email" in self._config_entry.options:
-            default_email = self._config_entry.options["email"]
-        default_password = ""
-        if "password" in self._config_entry.data:
-            default_password = self._config_entry.data["password"]
-        if "password" in self._config_entry.options:
-            default_password = self._config_entry.options["password"]
+        default_entry_name = self._config_entry.options.get(
+            "entry_name", self._config_entry.data.get("entry_name", "")
+        )
+        default_email = self._config_entry.options.get(
+            "email", self._config_entry.data.get("email", "")
+        )
+        default_password = self._config_entry.options.get(
+            "password", self._config_entry.data.get("password", "")
+        )
 
         if user_input is not None:
-            # Validate required fields in priority order to avoid overwriting errors["base"]
             if not user_input.get("entry_name"):
                 errors["base"] = "entry_name_required"
             elif not user_input.get("email"):
@@ -270,27 +274,31 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             elif not user_input.get("password"):
                 errors["base"] = "password_required"
             if not errors:
+                email = user_input["email"]
+                if any(
+                    entry.entry_id != self._config_entry.entry_id
+                    and entry.data.get("email") == email
+                    for entry in self.hass.config_entries.async_entries(DOMAIN)
+                ):
+                    errors["base"] = "already_configured"
+            if not errors:
                 error_key = await _validate_credentials(
                     user_input["email"], user_input["password"], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
             if not errors:
-                # Update the config entry with the new data and let the
-                # _async_update_listener in __init__.py reload the coordinator.
                 new_data = {
                     "guid": self._config_entry.data["guid"],
                     "entry_name": user_input["entry_name"],
                     "email": user_input["email"],
                     "password": user_input["password"],
                 }
-
                 self.hass.config_entries.async_update_entry(
                     self._config_entry,
                     data=new_data,
                     title=new_data["entry_name"],
                 )
-
                 return self.async_create_entry(
                     title=new_data["entry_name"], data=new_data
                 )
