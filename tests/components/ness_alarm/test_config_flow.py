@@ -86,17 +86,8 @@ async def test_user_flow_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 1992,
-            CONF_INFER_ARMING_STATE: False,
-        },
-    )
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 @pytest.mark.parametrize(
@@ -250,7 +241,7 @@ async def test_import_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 @pytest.mark.parametrize(
