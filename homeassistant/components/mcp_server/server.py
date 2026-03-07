@@ -45,7 +45,7 @@ def _format_tool(
 
 
 def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
-    """Return an MCP-compatible tool name."""
+    """Return an MCP-compatible tool name that handles truncation and collisions."""
     if len(tool_name) <= _MCP_TOOL_NAME_MAX_LENGTH:
         return tool_name
 
