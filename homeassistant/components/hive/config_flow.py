@@ -71,7 +71,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if (
-                auth_result := self.tokens.get("AuthenticationResult")
+                auth_result := self.tokens.get("AuthenticationResult", {})
             ) and auth_result.get("NewDeviceMetadata"):
                 _LOGGER.debug("Login successful, New device detected")
                 self.device_registration = True
