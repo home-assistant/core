@@ -8,6 +8,7 @@ See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-ex
 """
 
 from collections.abc import Callable, Sequence
+from hashlib import blake2s
 import json
 import logging
 from typing import Any
@@ -24,21 +25,55 @@ from homeassistant.helpers import llm
 from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
+_MCP_TOOL_NAME_MAX_LENGTH = 64
+_MCP_TOOL_NAME_HASH_LENGTH = 8
 
 
 def _format_tool(
-    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+    name: str, tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
     input_schema = convert(tool.parameters, custom_serializer=custom_serializer)
     return types.Tool(
-        name=tool.name,
+        name=name,
         description=tool.description or "",
         inputSchema={
             "type": "object",
             "properties": input_schema["properties"],
         },
     )
+
+
+def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
+    """Return an MCP-compatible tool name."""
+    if len(tool_name) <= _MCP_TOOL_NAME_MAX_LENGTH:
+        return tool_name
+
+    digest_input = tool_name
+    if collision_index:
+        digest_input = f"{tool_name}:{collision_index}"
+    digest = blake2s(digest_input.encode(), digest_size=4).hexdigest()
+    # Keep the alias readable while making truncation and collision handling stable.
+    prefix_length = _MCP_TOOL_NAME_MAX_LENGTH - _MCP_TOOL_NAME_HASH_LENGTH - 1
+    return f"{tool_name[:prefix_length]}_{digest}"
+
+
+def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, llm.Tool]:
+    """Return a mapping of exposed MCP tool names to their underlying tools."""
+    exposed_names: dict[str, llm.Tool] = {}
+
+    for tool in tools:
+        collision_index = 0
+        mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
+        while (
+            existing_tool := exposed_names.get(mcp_tool_name)
+        ) is not None and existing_tool.name != tool.name:
+            collision_index += 1
+            mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
+
+        exposed_names[mcp_tool_name] = tool
+
+    return exposed_names
 
 
 async def create_server(
@@ -94,13 +129,21 @@ async def create_server(
     async def list_tools() -> list[types.Tool]:
         """List available time tools."""
         llm_api = await get_api_instance()
-        return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
+        exposed_tools = _get_exposed_tool_names(llm_api.tools)
+        return [
+            _format_tool(name, tool, llm_api.custom_serializer)
+            for name, tool in exposed_tools.items()
+        ]
 
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
         llm_api = await get_api_instance()
-        tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
+        tool = _get_exposed_tool_names(llm_api.tools).get(name)
+        tool_input = llm.ToolInput(
+            tool_name=tool.name if tool is not None else name,
+            tool_args=arguments,
+        )
         _LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
 
         try:
