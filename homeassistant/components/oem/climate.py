@@ -76,13 +76,11 @@ class ThermostatDevice(ClimateEntity):
 
     def __init__(self, thermostat, name):
         """Initialize the device."""
-        self._name = name
+        self._attr_name = name
         self.thermostat = thermostat
 
         # set up internal state varS
         self._state = None
-        self._temperature = None
-        self._setpoint = None
         self._mode = None
 
     @property
@@ -98,11 +96,6 @@ class ThermostatDevice(ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def name(self):
-        """Return the name of this Thermostat."""
-        return self._name
-
-    @property
     def hvac_action(self) -> HVACAction:
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
@@ -110,16 +103,6 @@ class ThermostatDevice(ClimateEntity):
         if self._state:
             return HVACAction.HEATING
         return HVACAction.IDLE
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._setpoint
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -137,7 +120,7 @@ class ThermostatDevice(ClimateEntity):
 
     def update(self) -> None:
         """Update local state."""
-        self._setpoint = self.thermostat.setpoint
-        self._temperature = self.thermostat.temperature
+        self._attr_target_temperature = self.thermostat.setpoint
+        self._attr_current_temperature = self.thermostat.temperature
         self._state = self.thermostat.state
         self._mode = self.thermostat.mode
