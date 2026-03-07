@@ -117,7 +117,7 @@ async def test_shutdown_cancels_workers() -> None:
     """Test that shutdown cancels all active workers."""
     queue = DeviceRequestQueue()
     # Ensure a worker is created
-    await queue.enqueue(1, "sensor", AsyncMock(return_value=None))
-    await asyncio.sleep(0.05)
+    fut = await queue.enqueue(1, "sensor", AsyncMock(return_value=None))
+    await asyncio.wait_for(fut, timeout=2)
     await queue.shutdown()
     assert len(queue._workers) == 0
