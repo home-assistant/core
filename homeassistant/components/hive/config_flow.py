@@ -39,7 +39,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self.tokens: dict[str, str] = {}
+        self.tokens: dict[str, Any] = {}
         self.device_registration: bool = False
         self.device_name = "Home Assistant"
 
@@ -73,7 +73,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             if (
                 auth_result := self.tokens.get("AuthenticationResult")
             ) and auth_result.get("NewDeviceMetadata"):
-                _LOGGER.debug("Login successful, New device detected.")
+                _LOGGER.debug("Login successful, New device detected")
                 self.device_registration = True
                 return await self.async_step_configuration()
 
