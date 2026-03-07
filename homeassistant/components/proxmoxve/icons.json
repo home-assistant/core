@@ -82,7 +82,7 @@
   },
   "services": {
     "create_snapshot": {
-      "service": "mdi:camera"
+      "service": "mdi:archive"
     }
   }
 }
