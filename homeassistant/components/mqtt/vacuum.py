@@ -294,7 +294,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Check vacuum segments with registry entry."""
         if (
             self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA
-            and self.last_seen_segments != self._segments
+            and (last_seen := self.last_seen_segments) is not None
+            and {s.id: s for s in last_seen} != {s.id: s for s in self._segments}
         ):
             self.async_create_segments_issue()
 

@@ -321,20 +321,14 @@ async def test_command_without_command_topic(
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])
-async def test_clean_segments_initial_setup_registers_repair_issue(
+async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test cleanable segments initial setup fires repair flow."""
+    """Test cleanable segments initial setup does not fires repair flow."""
     await mqtt_mock_entry()
     issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1
-    issue = next(iter(issue_registry.issues.values()))
-    assert issue.domain == vacuum.DOMAIN
-    assert issue.translation_key == "segments_changed"
-    assert issue.translation_placeholders == {"entity_id": "vacuum.test"}
+    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])
