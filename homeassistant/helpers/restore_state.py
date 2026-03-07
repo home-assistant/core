@@ -8,7 +8,13 @@ import logging
 from typing import Any, Self, cast
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback, valid_entity_id
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    State,
+    callback,
+    valid_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
