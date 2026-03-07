@@ -74,10 +74,10 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.data["entry_name"] or self.data["entry_name"] == "":
                 errors["base"] = "entry_name_required"
             # If email is null or empty string, add error
-            if not self.data["email"] or self.data["email"] == "":
+            elif not self.data["email"] or self.data["email"] == "":
                 errors["base"] = "email_required"
             # If password is null or empty string, add error
-            if not self.data["password"] or self.data["password"] == "":
+            elif not self.data["password"] or self.data["password"] == "":
                 errors["base"] = "password_required"
             if not errors:
                 self._async_abort_entries_match({"email": self.data["email"]})
