@@ -127,7 +127,7 @@ async def create_server(
 
     @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
-        """List available time tools."""
+        """List available MCP tools for the selected LLM API."""
         llm_api = await get_api_instance()
         exposed_tools = _get_exposed_tool_names(llm_api.tools)
         return [
