@@ -20,10 +20,7 @@ from simplipy.websocket import (
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SimpliSafe
 from .const import (
@@ -36,6 +33,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import SimpliSafeDataUpdateCoordinator
 from .typing import SystemType
 
 DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
@@ -49,7 +47,7 @@ WEBSOCKET_EVENTS_REQUIRING_SERIAL = [
 ]
 
 
-class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True
