@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  appropriate-polling:
+    status: exempt
+    comment: This integration uses passive scanning (local push) and does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have any configuration parameters.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Uses a locally-generated cryptographic identity that does not expire.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery: done
+  discovery-update-info:
+    status: exempt
+    comment: BLE address is both the unique ID and connection parameter.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration connects to a single device.
+  entity-category:
+    status: exempt
+    comment: The lock is the primary entity; no secondary entities exist.
+  entity-device-class:
+    status: exempt
+    comment: Lock entities do not have device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The lock is the only entity and should be enabled by default.
+  entity-translations:
+    status: exempt
+    comment: The only entity uses the device name directly via _attr_name = None.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Uses default platform icons; no custom icons defined.
+  reconfiguration-flow:
+    status: exempt
+    comment: Configuration is a BLE address and generated identity; nothing to reconfigure.
+  repair-issues:
+    status: exempt
+    comment: This integration does not raise any repairable issues.
+  stale-devices:
+    status: exempt
+    comment: This integration connects to a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration does not use HTTP sessions.
+  strict-typing: done
