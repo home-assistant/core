@@ -90,11 +90,22 @@ async def create_server(
         llm_api_id = llm.LLM_API_ASSIST
 
     server = Server[Any]("home-assistant")
+    exposed_tools: dict[str, llm.Tool] | None = None
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
+
+    async def get_exposed_tools() -> tuple[llm.APIInstance, dict[str, llm.Tool]]:
+        """Get the selected API instance and cached MCP tool aliases."""
+        nonlocal exposed_tools
+
+        llm_api = await get_api_instance()
+        if exposed_tools is None:
+            exposed_tools = _get_exposed_tool_names(llm_api.tools)
+
+        return llm_api, exposed_tools
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
@@ -130,8 +141,7 @@ async def create_server(
     @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available MCP tools for the selected LLM API."""
-        llm_api = await get_api_instance()
-        exposed_tools = _get_exposed_tool_names(llm_api.tools)
+        llm_api, exposed_tools = await get_exposed_tools()
         return [
             _format_tool(name, tool, llm_api.custom_serializer)
             for name, tool in exposed_tools.items()
@@ -140,8 +150,8 @@ async def create_server(
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
-        llm_api = await get_api_instance()
-        tool = _get_exposed_tool_names(llm_api.tools).get(name)
+        llm_api, exposed_tools = await get_exposed_tools()
+        tool = exposed_tools.get(name)
         tool_input = llm.ToolInput(
             tool_name=tool.name if tool is not None else name,
             tool_args=arguments,
