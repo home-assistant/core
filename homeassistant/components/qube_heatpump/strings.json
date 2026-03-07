@@ -1,0 +1,110 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check the host address.",
+      "duplicate_ip": "A Qube heat pump using this IP address already exists."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50).",
+          "name": "Name for this heat pump (e.g. 'qube 1'). This determines entity IDs."
+        },
+        "description": "Enter the heat pump IP or host.",
+        "title": "Qube heat pump"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "[%key:component::qube_heatpump::config::step::user::data_description::host%]",
+          "name": "[%key:component::qube_heatpump::config::step::user::data_description::name%]"
+        },
+        "description": "Update the connection settings for your Qube heat pump.",
+        "title": "Reconfigure Qube heat pump"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temp_supply": {
+        "name": "Supply temperature CH"
+      },
+      "temp_return": {
+        "name": "Return temperature"
+      },
+      "temp_source_in": {
+        "name": "Source temperature in"
+      },
+      "temp_source_out": {
+        "name": "Source temperature out"
+      },
+      "temp_room": {
+        "name": "Room temperature"
+      },
+      "temp_dhw": {
+        "name": "DHW temperature"
+      },
+      "temp_outside": {
+        "name": "Outside temperature"
+      },
+      "power_thermic": {
+        "name": "Thermal power"
+      },
+      "power_electric": {
+        "name": "Electric power"
+      },
+      "energy_total_electric": {
+        "name": "Total electric consumption"
+      },
+      "energy_total_thermic": {
+        "name": "Total thermal yield"
+      },
+      "cop_calc": {
+        "name": "COP"
+      },
+      "compressor_speed": {
+        "name": "Compressor speed"
+      },
+      "flow_rate": {
+        "name": "Measured PVT flow"
+      },
+      "setpoint_room_heat_day": {
+        "name": "Room setpoint heating (day)"
+      },
+      "setpoint_room_heat_night": {
+        "name": "Room setpoint heating (night)"
+      },
+      "setpoint_room_cool_day": {
+        "name": "Room setpoint cooling (day)"
+      },
+      "setpoint_room_cool_night": {
+        "name": "Room setpoint cooling (night)"
+      },
+      "status_heatpump": {
+        "name": "Heat pump status",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "alarm": "Alarm",
+          "keyboard_off": "Keyboard off",
+          "compressor_startup": "Compressor startup",
+          "compressor_shutdown": "Compressor stopping",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "start_fail": "Start failed",
+          "heating_dhw": "Heating DHW"
+        }
+      }
+    }
+  }
+}
