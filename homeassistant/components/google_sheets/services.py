@@ -12,7 +12,6 @@ from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import (
     HomeAssistant,
@@ -21,8 +20,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util.json import JsonObjectType
 
@@ -31,6 +30,7 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from . import GoogleSheetsConfigEntry
 
+ADD_CREATED_COLUMN = "add_created_column"
 DATA = "data"
 DATA_CONFIG_ENTRY = "config_entry"
 ROWS = "rows"
@@ -43,6 +43,7 @@ SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(WORKSHEET): cv.string,
+        vol.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
         vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },
 )
@@ -58,9 +59,9 @@ get_SHEET_SERVICE_SCHEMA = vol.All(
 
 def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     """Run append in the executor."""
-    service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
+    client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     try:
-        sheet = service.open_by_key(entry.unique_id)
+        sheet = client.open_by_key(entry.unique_id)
     except RefreshError:
         entry.async_start_reauth(call.hass)
         raise
@@ -69,10 +70,11 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
 
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
     columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
+    add_created_column = call.data[ADD_CREATED_COLUMN]
     now = str(datetime.now())
     rows = []
     for d in call.data[DATA]:
-        row_data = {"created": now} | d
+        row_data = ({"created": now} | d) if add_created_column else d
         row = [row_data.get(column, "") for column in columns]
         for key, value in row_data.items():
             if key not in columns:
@@ -87,9 +89,9 @@ def _get_from_sheet(
     call: ServiceCall, entry: GoogleSheetsConfigEntry
 ) -> JsonObjectType:
     """Run get in the executor."""
-    service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
+    client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     try:
-        sheet = service.open_by_key(entry.unique_id)
+        sheet = client.open_by_key(entry.unique_id)
     except RefreshError:
         entry.async_start_reauth(call.hass)
         raise
@@ -103,27 +105,18 @@ def _get_from_sheet(
 
 async def _async_append_to_sheet(call: ServiceCall) -> None:
     """Append new line of data to a Google Sheets document."""
-    entry: GoogleSheetsConfigEntry | None = call.hass.config_entries.async_get_entry(
-        call.data[DATA_CONFIG_ENTRY]
+    entry: GoogleSheetsConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[DATA_CONFIG_ENTRY]
     )
-    if not entry or not hasattr(entry, "runtime_data"):
-        raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
     await entry.runtime_data.async_ensure_token_valid()
     await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
 
 
 async def _async_get_from_sheet(call: ServiceCall) -> ServiceResponse:
     """Get lines of data from a Google Sheets document."""
-    entry: GoogleSheetsConfigEntry | None = call.hass.config_entries.async_get_entry(
-        call.data[DATA_CONFIG_ENTRY]
+    entry: GoogleSheetsConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[DATA_CONFIG_ENTRY]
     )
-    if entry is None:
-        raise ServiceValidationError(
-            f"Invalid config entry id: {call.data[DATA_CONFIG_ENTRY]}"
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise HomeAssistantError(f"Config entry {entry.entry_id} is not loaded")
-
     await entry.runtime_data.async_ensure_token_valid()
     return await call.hass.async_add_executor_job(_get_from_sheet, call, entry)
 

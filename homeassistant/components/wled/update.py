@@ -102,7 +102,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
-        return f"https://github.com/Aircoookie/WLED/releases/tag/v{version}"
+        return f"https://github.com/wled/WLED/releases/tag/v{version}"
 
     @wled_exception_handler
     async def async_install(

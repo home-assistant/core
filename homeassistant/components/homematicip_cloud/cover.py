@@ -283,19 +283,23 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self.functional_channel.doorState == DoorState.CLOSED
+        channel = self.get_channel_or_raise()
+        return channel.doorState == DoorState.CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.functional_channel.async_send_door_command(DoorCommand.OPEN)
+        channel = self.get_channel_or_raise()
+        await channel.async_send_door_command(DoorCommand.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.functional_channel.async_send_door_command(DoorCommand.CLOSE)
+        channel = self.get_channel_or_raise()
+        await channel.async_send_door_command(DoorCommand.CLOSE)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.functional_channel.async_send_door_command(DoorCommand.STOP)
+        channel = self.get_channel_or_raise()
+        await channel.async_send_door_command(DoorCommand.STOP)
 
 
 class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
@@ -307,6 +311,17 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
         super().__init__(hap, device, post, is_multi_channel=False)
+
+    @property
+    def available(self) -> bool:
+        """Cover shutter group available.
+
+        A cover shutter group must be available, and should not be affected by
+        the individual availability of group members.
+        This allows controlling the shutters even when individual group
+        members are not available.
+        """
+        return True
 
     @property
     def current_cover_position(self) -> int | None:

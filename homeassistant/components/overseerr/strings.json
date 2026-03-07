@@ -25,8 +25,8 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "api_key": "The API key of the Overseerr instance.",
-          "url": "The URL of the Overseerr instance."
+          "api_key": "The API key of the Seerr instance.",
+          "url": "The URL of the Seerr instance."
         }
       }
     }
@@ -50,8 +50,20 @@
       }
     },
     "sensor": {
+      "audio_issues": {
+        "name": "Audio issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
       "available_requests": {
         "name": "Available requests"
+      },
+      "closed_issues": {
+        "name": "Closed issues",
+        "state": {
+          "measurement": "issues"
+        }
       },
       "declined_requests": {
         "name": "Declined requests"
@@ -59,17 +71,41 @@
       "movie_requests": {
         "name": "Movie requests"
       },
+      "open_issues": {
+        "name": "Open issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
       "pending_requests": {
         "name": "Pending requests"
       },
       "processing_requests": {
         "name": "Processing requests"
       },
+      "subtitle_issues": {
+        "name": "Subtitle issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
+      "total_issues": {
+        "name": "Total issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
       "total_requests": {
         "name": "Total requests"
       },
       "tv_requests": {
         "name": "TV requests"
+      },
+      "video_issues": {
+        "name": "Video issues",
+        "state": {
+          "measurement": "issues"
+        }
       }
     }
   },
@@ -78,13 +114,7 @@
       "message": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "connection_error": {
-      "message": "Error connecting to the Overseerr instance: {error}"
-    },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
+      "message": "Error connecting to the Seerr instance: {error}"
     }
   },
   "selector": {
@@ -107,11 +137,11 @@
   },
   "services": {
     "get_requests": {
-      "description": "Retrieves a list of media requests from Overseerr.",
+      "description": "Retrieves a list of media requests from Seerr.",
       "fields": {
         "config_entry_id": {
-          "description": "The Overseerr instance to get requests from.",
-          "name": "Overseerr instance"
+          "description": "The Seerr instance to get requests from.",
+          "name": "Seerr instance"
         },
         "requested_by": {
           "description": "Filter the requests by the user ID that requested them.",

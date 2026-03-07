@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button brightness (active)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button brightness (dimmed)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness (active)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness (dimmed)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -257,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Down-movement duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -316,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Down position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -374,6 +380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Down slat position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -432,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -489,6 +497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External temperature offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -547,6 +556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Floor temperature offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -605,6 +615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum slat angle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -663,6 +674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum slat angle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,6 +733,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion alarm delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -780,6 +793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Polling interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -839,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Slat steps',
     'options': dict({
     }),
     'original_device_class': None,
@@ -896,6 +911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Slat turn duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -955,6 +971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1013,6 +1030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature report interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1072,6 +1090,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Threshold for wind trigger',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
@@ -1131,6 +1150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Up-movement duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1190,6 +1210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wake-up interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1249,6 +1270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window open sensibility',
     'options': dict({
     }),
     'original_device_class': None,

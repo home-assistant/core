@@ -222,7 +222,7 @@ WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"5\x00d"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-    address="AA:BB:CC:DD:EE:AA",
+    address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
     source="local",
     advertisement=generate_advertisement_data(
@@ -233,7 +233,7 @@ WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"5\x00d"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("AA:BB:CC:DD:EE:AA", "WoTHPc"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoTHPc"),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -1196,6 +1196,153 @@ CLIMATE_PANEL_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Climate Panel"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+SMART_THERMOSTAT_RADIATOR_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Smart Thermostat Radiator",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xa2T|6\xe4\x00\x9c\xa3A\x00"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x116@",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Smart Thermostat Radiator",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xa2T|6\xe4\x00\x9c\xa3A\x00"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x116@"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Smart Thermostat Radiator"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+S20_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="S20 Vacuum",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xc3\x1a!:\x01\x11\x1e\x00\x00d\x03"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x10\xe0P",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="S20 Vacuum",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xc3\x1a!:\x01\x11\x1e\x00\x00d\x03"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x10\xe0P",
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "S20 Vacuum"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+PRESENCE_SENSOR_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Presence Sensor",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xb8r\x9c\xbe\xcc\x00\x1a\x00\x82"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x10\xcc\xc8",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Presence Sensor",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xb8r\x9c\xbe\xcc\x00\x1a\x00\x82"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 d\x00\x10\xcc\xc8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Presence Sensor"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
+ART_FRAME_INFO = BluetoothServiceInfoBleak(
+    name="Art Frame",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xe2\xfa8\x157\x03\x08"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x007\x01\x11>\x10",
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Art Frame",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\xe2\xfa8\x157\x03\x08"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x007\x01\x11>\x10"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Art Frame"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+KEYPAD_VISION_INFO = BluetoothServiceInfoBleak(
+    name="Keypad Vision",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\xe5\x04\x1e\xac\xdf\x00\x00\x00\x00\x00\x02"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00_\x01\x11\x03x"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Keypad Vision",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\xe5\x04\x1e\xac\xdf\x00\x00\x00\x00\x00\x02"
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00_\x01\x11\x03x"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Keypad Vision"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
+    name="Keypad Vision Pro",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Keypad Vision Pro",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Keypad Vision Pro"),
     time=0,
     connectable=True,
     tx_power=-127,

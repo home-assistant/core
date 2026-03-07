@@ -83,7 +83,7 @@ async def try_connect(
     finally:
         await panel.disconnect()
 
-    return (panel.model, panel.serial_number)
+    return (panel.model.name, panel.serial_number)
 
 
 class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):

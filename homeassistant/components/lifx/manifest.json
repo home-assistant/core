@@ -49,6 +49,7 @@
       "LIFX Z"
     ]
   },
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [

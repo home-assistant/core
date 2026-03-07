@@ -67,12 +67,10 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
-    REQUIRED_NEXT_PYTHON_HA_RELEASE,
-    REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
-from .exceptions import HomeAssistantError
+from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from .helpers import (
     area_registry,
     category_registry,
@@ -176,6 +174,8 @@ FRONTEND_INTEGRATIONS = {
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup labs for preview features
+    ("labs", {"labs"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
@@ -210,8 +210,10 @@ DEFAULT_INTEGRATIONS = {
     "analytics",  # Needed for onboarding
     "application_credentials",
     "backup",
+    "brands",
     "frontend",
     "hardware",
+    "labs",
     "logger",
     "network",
     "system_health",
@@ -234,9 +236,14 @@ DEFAULT_INTEGRATIONS = {
     "input_text",
     "schedule",
     "timer",
+    #
+    # Base platforms:
+    *BASE_PLATFORMS,
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.
+    "backup",
+    "cloud",
     "frontend",
 }
 DEFAULT_INTEGRATIONS_SUPERVISOR = {
@@ -431,32 +438,56 @@ def _init_blocking_io_modules_in_executor() -> None:
     is_docker_env()
 
 
-async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
-    """Load the registries and modules that will do blocking I/O."""
+async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
+    """Load the registries and modules that will do blocking I/O.
+
+    Return whether loading succeeded.
+    """
     if DATA_REGISTRIES_LOADED in hass.data:
-        return
+        return True
+
     hass.data[DATA_REGISTRIES_LOADED] = None
     entity.async_setup(hass)
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
-    await asyncio.gather(
-        create_eager_task(get_internal_store_manager(hass).async_initialize()),
-        create_eager_task(area_registry.async_load(hass)),
-        create_eager_task(category_registry.async_load(hass)),
-        create_eager_task(device_registry.async_load(hass)),
-        create_eager_task(entity_registry.async_load(hass)),
-        create_eager_task(floor_registry.async_load(hass)),
-        create_eager_task(issue_registry.async_load(hass)),
-        create_eager_task(label_registry.async_load(hass)),
-        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-        create_eager_task(template.async_load_custom_templates(hass)),
-        create_eager_task(restore_state.async_load(hass)),
-        create_eager_task(hass.config_entries.async_initialize()),
-        create_eager_task(async_get_system_info(hass)),
-        create_eager_task(condition.async_setup(hass)),
-        create_eager_task(trigger.async_setup(hass)),
-    )
+
+    recovery = hass.config.recovery_mode
+    try:
+        await asyncio.gather(
+            create_eager_task(get_internal_store_manager(hass).async_initialize()),
+            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+            create_eager_task(template.async_load_custom_templates(hass)),
+            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+            create_eager_task(hass.config_entries.async_initialize()),
+            create_eager_task(async_get_system_info(hass)),
+            create_eager_task(condition.async_setup(hass)),
+            create_eager_task(trigger.async_setup(hass)),
+        )
+    except UnsupportedStorageVersionError as err:
+        # If we're already in recovery mode, we don't want to handle the exception
+        # and activate recovery mode again, as that would lead to an infinite loop.
+        if recovery:
+            raise
+
+        _LOGGER.error(
+            "Storage file %s was created by a newer version of Home Assistant"
+            " (storage version %s > %s); activating recovery mode; on-disk data"
+            " is preserved; upgrade Home Assistant or restore from a backup",
+            err.storage_key,
+            err.found_version,
+            err.max_supported_version,
+        )
+        return False
+
+    return True
 
 
 async def async_from_config_dict(
@@ -473,7 +504,9 @@ async def async_from_config_dict(
     # Prime custom component cache early so we know if registry entries are tied
     # to a custom integration
     await loader.async_get_custom_components(hass)
-    await async_load_base_functionality(hass)
+
+    if not await async_load_base_functionality(hass):
+        return None
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -513,38 +546,6 @@ async def async_from_config_dict(
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
-
-    if (
-        REQUIRED_NEXT_PYTHON_HA_RELEASE
-        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
-    ):
-        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
-        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
-        _LOGGER.warning(
-            (
-                "Support for the running Python version %s is deprecated and "
-                "will be removed in Home Assistant %s; "
-                "Please upgrade Python to %s"
-            ),
-            current_python_version,
-            REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            required_python_version,
-        )
-        issue_registry.async_create_issue(
-            hass,
-            core.DOMAIN,
-            f"python_version_{required_python_version}",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            translation_key="python_version",
-            translation_placeholders={
-                "current_python_version": current_python_version,
-                "required_python_version": required_python_version,
-                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            },
-        )
-
     return hass
 
 
@@ -621,13 +622,16 @@ async def async_enable_logging(
 
     if log_file is None:
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if "SUPERVISOR" in os.environ:
-            _LOGGER.info("Running in Supervisor, not logging to file")
+        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
             # Rename the default log file if it exists, since previous versions created
             # it even on Supervisor
-            if os.path.isfile(default_log_path):
-                with contextlib.suppress(OSError):
-                    os.rename(default_log_path, f"{default_log_path}.old")
+            def rename_old_file() -> None:
+                """Rename old log file in executor."""
+                if os.path.isfile(default_log_path):
+                    with contextlib.suppress(OSError):
+                        os.rename(default_log_path, f"{default_log_path}.old")
+
+            await hass.async_add_executor_job(rename_old_file)
             err_log_path = None
         else:
             err_log_path = default_log_path
@@ -997,7 +1001,7 @@ class _WatchPendingSetups:
             # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
             # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
+                "Waiting for integrations to complete setup: %s",
                 self._setup_started,
             )
 

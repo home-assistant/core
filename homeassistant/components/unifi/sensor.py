@@ -105,6 +105,15 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 
 
 @callback
+def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if client is wired and allowed."""
+    client = hub.api.clients[obj_id]
+    if not client.is_wired or client.wired_rate_mbps <= 0:
+        return False
+    return True
+
+
+@callback
 def async_wlan_client_value_fn(hub: UnifiHub, wlan: Wlan) -> int:
     """Calculate the amount of clients connected to a wlan."""
     return len(
@@ -407,6 +416,23 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
     ),
+    UnifiSensorEntityDescription[Clients, Client](
+        key="Wired client speed",
+        translation_key="wired_client_link_speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        allowed_fn=async_wired_client_allowed_fn,
+        api_handler_fn=lambda api: api.clients,
+        device_info_fn=async_client_device_info_fn,
+        is_connected_fn=async_client_is_connected_fn,
+        name_fn=lambda _: "Link speed",
+        object_fn=lambda api, obj_id: api.clients[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"wired_speed-{obj_id}",
+        value_fn=lambda hub, client: client.wired_rate_mbps,
+    ),
     UnifiSensorEntityDescription[Ports, Port](
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
@@ -458,6 +484,23 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.ports[obj_id],
         unique_id_fn=lambda hub, obj_id: f"port_tx-{obj_id}",
         value_fn=lambda hub, port: port.tx_bytes_r,
+    ),
+    UnifiSensorEntityDescription[Ports, Port](
+        key="Port speed",
+        translation_key="port_link_speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda port: f"{port.name} link speed",
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].raw.get("speed", 0) > 0,
+        unique_id_fn=lambda hub, obj_id: f"port_link_speed-{obj_id}",
+        value_fn=lambda hub, port: port.raw.get("speed", 0),
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",

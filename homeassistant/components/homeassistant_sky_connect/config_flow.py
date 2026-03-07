@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.components.usb import (
     usb_service_info_from_device,
@@ -78,6 +79,20 @@ class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant SkyConnect firmware methods."""
 
     context: ConfigFlowContext
+
+    ZIGBEE_BAUDRATE = 115200
+    # There is no hardware bootloader trigger
+    BOOTLOADER_RESET_METHODS: list[ResetTarget] = []
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
+        (ApplicationType.SPINEL, 460800),
+        # CPC baudrates can be removed once multiprotocol is removed
+        (ApplicationType.CPC, 115200),
+        (ApplicationType.CPC, 230400),
+        (ApplicationType.CPC, 460800),
+        (ApplicationType.ROUTER, 115200),
+    ]
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""

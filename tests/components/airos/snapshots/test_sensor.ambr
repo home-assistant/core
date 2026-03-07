@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Antenna gain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -130,6 +132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -192,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Network role',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -247,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Throughput receive (actual)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -306,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Throughput transmit (actual)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -365,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -422,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -478,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -536,6 +545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless frequency',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
@@ -592,6 +602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -650,6 +661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless role',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -703,6 +715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless SSID',
     'options': dict({
     }),
     'original_device_class': None,

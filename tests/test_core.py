@@ -49,7 +49,6 @@ from homeassistant.core import (
     callback,
     get_release_channel,
 )
-from homeassistant.core_config import Config
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -59,17 +58,11 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers.json import json_dumps
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .common import (
-    async_capture_events,
-    async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_alias,
-)
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -1354,18 +1347,6 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
         "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
     )
 
-    # Without cached translations the translation key is returned
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        hass.bus.async_fire(long_evt_name)
-
-    assert str(exc_info.value) == "max_length_exceeded"
-    assert exc_info.value.property_name == "event_type"
-    assert exc_info.value.max_length == 64
-    assert exc_info.value.value == long_evt_name
-
-    # Fetch translations
-    await async_setup_component(hass, "homeassistant", {})
-
     # With cached translations the formatted message is returned
     with pytest.raises(MaxLengthExceeded) as exc_info:
         hass.bus.async_fire(long_evt_name)
@@ -1374,6 +1355,7 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
         str(exc_info.value)
         == f"Value {long_evt_name} for property event_type has a maximum length of 64 characters"
     )
+    assert exc_info.value.translation_key == "max_length_exceeded"
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
@@ -1738,7 +1720,6 @@ async def test_serviceregistry_remove_service(hass: HomeAssistant) -> None:
 
 async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> None:
     """Test remove service that not exists."""
-    await async_setup_component(hass, "homeassistant", {})
     calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
     assert not hass.services.has_service("test_xxx", "test_yyy")
     hass.services.async_remove("test_xxx", "test_yyy")
@@ -1836,7 +1817,6 @@ async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test that non-blocking service calls cannot ask for response data."""
-    await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
     with pytest.raises(ServiceValidationError, match="blocking=False") as exc:
         await hass.services.async_call(
@@ -1866,7 +1846,6 @@ async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
     """Test service call response data must be json serializable objects."""
-    await async_setup_component(hass, "homeassistant", {})
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1903,7 +1882,6 @@ async def test_serviceregistry_return_response_arguments(
     expected_error: str,
 ) -> None:
     """Test service call response data invalid arguments."""
-    await async_setup_component(hass, "homeassistant", {})
 
     hass.services.async_register(
         "test_domain",
@@ -3017,16 +2995,6 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     cancel()
     await hass.async_stop()
     assert not evt.is_set()
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(ha)
-
-
-def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated Config class."""
-    import_and_test_deprecated_alias(caplog, ha, "Config", Config, "2025.11")
 
 
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:

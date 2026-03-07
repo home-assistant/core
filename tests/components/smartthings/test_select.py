@@ -1,6 +1,6 @@
 """Test for the SmartThings select platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
@@ -30,6 +30,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -189,3 +190,121 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+async def test_select_option_as_integer(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test selecting an option represented as an integer."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.clim_salon_dust_filter_alarm_threshold")
+    assert state.state == "500"
+    assert all(isinstance(option, str) for option in state.attributes[ATTR_OPTIONS])
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
+            ATTR_OPTION: "300",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+        Capability.SAMSUNG_CE_DUST_FILTER_ALARM,
+        Command.SET_ALARM_THRESHOLD,
+        MAIN,
+        argument=300,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_option_with_wrong_dishwasher_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.DISHWASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "run",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Can only be updated when dishwasher machine state is stop",
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.dishwasher_selected_zone", ATTR_OPTION: "lower"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_dishwasher_washing_option(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.dishwasher_selected_zone", ATTR_OPTION: "lower"},
+        blocking=True,
+    )
+    device_id = "7ff318f3-3772-524d-3c9f-72fcd26413ed"
+    devices.execute_device_command.assert_has_calls(
+        [
+            call(
+                device_id,
+                Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+                Command.CANCEL,
+                MAIN,
+                argument=False,
+            ),
+            call(
+                device_id,
+                Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+                Command.SET_WASHING_COURSE,
+                MAIN,
+                argument="eco",
+            ),
+            call(
+                device_id,
+                Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
+                Command.SET_OPTIONS,
+                MAIN,
+                argument={
+                    "selectedZone": "lower",
+                    "speedBooster": False,
+                    "sanitize": False,
+                },
+            ),
+        ]
+    )

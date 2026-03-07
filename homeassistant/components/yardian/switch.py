@@ -62,7 +62,7 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     @property
     def name(self) -> str:
         """Return the zone name."""
-        return self.coordinator.data.zones[self._zone_id][0]
+        return self.coordinator.data.zones[self._zone_id].name
 
     @property
     def is_on(self) -> bool:
@@ -72,7 +72,7 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     @property
     def available(self) -> bool:
         """Return the switch is available or not."""
-        return self.coordinator.data.zones[self._zone_id][1] == 1
+        return self.coordinator.data.zones[self._zone_id].is_enabled
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

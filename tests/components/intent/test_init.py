@@ -1,11 +1,27 @@
 """Tests for Intent component."""
 
+from typing import Any
+
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.button import SERVICE_PRESS
-from homeassistant.components.cover import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+    CoverState,
+)
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.valve import SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    SERVICE_STOP_VALVE,
+    ValveState,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -68,6 +84,70 @@ async def test_http_handle_intent(
             }
         },
         "language": hass.config.language,
+        "response_type": intent.IntentResponseType.ACTION_DONE.value,
+        "data": {"targets": [], "success": [], "failed": []},
+    }
+
+
+async def test_http_language_device_satellite_id(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test handle intent with language, device id, and satellite id."""
+    device_id = "test-device-id"
+    satellite_id = "test-satellite-id"
+    language = "en-GB"
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestIntent"
+
+        async def async_handle(self, intent_obj: intent.Intent):
+            """Handle the intent."""
+            assert intent_obj.context.user_id == hass_admin_user.id
+            # Verify language, device id, and satellite id were passed through.
+            assert intent_obj.language == language
+            assert intent_obj.device_id == device_id
+            assert intent_obj.satellite_id == satellite_id
+
+            response = intent_obj.create_response()
+            response.async_set_speech("Test response")
+            response.async_set_speech_slots({"slot1": "value 1", "slot2": 2})
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    result = await async_setup_component(hass, "intent", {})
+    assert result
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/intent/handle",
+        json={
+            "name": "TestIntent",
+            "language": language,
+            "device_id": device_id,
+            "satellite_id": satellite_id,
+        },
+    )
+
+    assert resp.status == 200
+    data = await resp.json()
+
+    # Also check speech slots.
+    assert data == {
+        "card": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Test response",
+            }
+        },
+        "speech_slots": {
+            "slot1": "value 1",
+            "slot2": 2,
+        },
+        "language": language,
         "response_type": "action_done",
         "data": {"targets": [], "success": [], "failed": []},
     }
@@ -97,6 +177,60 @@ async def test_http_handle_intent_match_failure(
     data = await resp.json()
 
     assert "DUPLICATE_NAME" in data["speech"]["plain"]["speech"]
+
+
+async def test_http_assistant(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test handle intent only targets exposed entities with 'assistant' set."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    hass.states.async_set(
+        "cover.garage_door_1", "closed", {ATTR_FRIENDLY_NAME: "Garage Door 1"}
+    )
+    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    client = await hass_client()
+
+    # Exposed
+    async_expose_entity(hass, conversation.DOMAIN, "cover.garage_door_1", True)
+    resp = await client.post(
+        "/api/intent/handle",
+        json={
+            "name": "HassTurnOn",
+            "data": {"name": "Garage Door 1"},
+            "assistant": conversation.DOMAIN,
+        },
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["response_type"] == intent.IntentResponseType.ACTION_DONE.value
+
+    # Not exposed
+    async_expose_entity(hass, conversation.DOMAIN, "cover.garage_door_1", False)
+    resp = await client.post(
+        "/api/intent/handle",
+        json={
+            "name": "HassTurnOn",
+            "data": {"name": "Garage Door 1"},
+            "assistant": conversation.DOMAIN,
+        },
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["response_type"] == intent.IntentResponseType.ERROR.value
+    assert data["data"]["code"] == intent.IntentResponseErrorCode.FAILED_TO_HANDLE.value
+
+    # No assistant (exposure is irrelevant)
+    resp = await client.post(
+        "/api/intent/handle",
+        json={"name": "HassTurnOn", "data": {"name": "Garage Door 1"}},
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["response_type"] == intent.IntentResponseType.ACTION_DONE.value
 
 
 async def test_cover_intents_loading(hass: HomeAssistant) -> None:
@@ -594,3 +728,66 @@ async def test_intents_respond_intent(hass: HomeAssistant) -> None:
         hass, "test", intent.INTENT_RESPOND, {"response": {"value": "Hello World"}}
     )
     assert response.speech["plain"]["speech"] == "Hello World"
+
+
+async def test_stop_moving_valve(hass: HomeAssistant) -> None:
+    """Test HassStopMoving intent for valves."""
+    assert await async_setup_component(hass, "intent", {})
+
+    entity_id = f"{VALVE_DOMAIN}.test_valve"
+    hass.states.async_set(entity_id, ValveState.OPEN)
+    calls = async_mock_service(hass, VALVE_DOMAIN, SERVICE_STOP_VALVE)
+
+    response = await intent.async_handle(
+        hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test valve"}}
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == VALVE_DOMAIN
+    assert call.service == SERVICE_STOP_VALVE
+    assert call.data == {"entity_id": entity_id}
+
+
+@pytest.mark.parametrize(
+    ("slots"),
+    [
+        ({"name": {"value": "test cover"}}),
+        ({"device_class": {"value": "shade"}}),
+    ],
+)
+async def test_stop_moving_cover(hass: HomeAssistant, slots: dict[str, Any]) -> None:
+    """Test HassStopMoving intent for covers."""
+    assert await async_setup_component(hass, "intent", {})
+
+    entity_id = f"{COVER_DOMAIN}.test_cover"
+    hass.states.async_set(
+        entity_id, CoverState.OPEN, attributes={"device_class": "shade"}
+    )
+    calls = async_mock_service(hass, COVER_DOMAIN, SERVICE_STOP_COVER)
+
+    response = await intent.async_handle(hass, "test", intent.INTENT_STOP_MOVING, slots)
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == COVER_DOMAIN
+    assert call.service == SERVICE_STOP_COVER
+    assert call.data == {"entity_id": entity_id}
+
+
+async def test_stop_moving_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassStopMoving intent fails with unsupported domain."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Can't stop lights
+    hass.states.async_set("light.test_light", "on")
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test light"}}
+        )

@@ -8,13 +8,18 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The Spotify account authenticated with does not match the account that needed re-authentication.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "user_not_premium": "The Spotify API has been changed and Developer applications created with a free account can no longer access the API. To continue using the Spotify integration, you should use an Spotify Developer application created with a Spotify Premium account, or upgrade to Spotify Premium."
     },
     "create_entry": {
       "default": "Successfully authenticated with Spotify."
+    },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
       "pick_implementation": {
@@ -34,7 +39,13 @@
   },
   "exceptions": {
     "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation unavailable, will retry"
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "issues": {
+    "user_not_premium": {
+      "description": "[%key:component::spotify::config::abort::user_not_premium%]",
+      "title": "Spotify integration requires a Spotify Premium account"
     }
   },
   "system_health": {

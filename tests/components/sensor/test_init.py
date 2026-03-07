@@ -9,12 +9,12 @@ import math
 from typing import Any
 from unittest.mock import patch
 
-from freezegun.api import freeze_time
 import pytest
 
 from homeassistant.components import sensor
 from homeassistant.components.number import (
     AMBIGUOUS_UNITS as NUMBER_AMBIGUOUS_UNITS,
+    UNIT_CONVERTERS as NUMBER_UNIT_CONVERTERS,
     NumberDeviceClass,
 )
 from homeassistant.components.sensor import (
@@ -477,7 +477,7 @@ async def test_restore_sensor_save_state(
     assert type(extra_data["native_value"]) is native_value_type
 
 
-@freeze_time("2020-02-08 15:00:00")
+@pytest.mark.freeze_time("2020-02-08 15:00:00")
 async def test_restore_sensor_save_state_frozen_time_datetime(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -505,7 +505,7 @@ async def test_restore_sensor_save_state_frozen_time_datetime(
     assert type(extra_data["native_value"]) is dict
 
 
-@freeze_time("2020-02-08 15:00:00")
+@pytest.mark.freeze_time("2020-02-08 15:00:00")
 async def test_restore_sensor_save_state_frozen_time_date(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -877,7 +877,7 @@ async def test_unit_translation_key_without_platform_raises(
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
             130,
-            pytest.approx(7.222222),
+            pytest.approx(7.215808),
             "7.2",
             1,
         ),
@@ -2119,6 +2119,16 @@ def test_device_classes_aligned() -> None:
         assert getattr(SensorDeviceClass, device_class.name).value == device_class.value
 
 
+def test_unit_converters_aligned() -> None:
+    """Make sure all number unit converters are also available in sensor converters."""
+
+    assert len(NUMBER_UNIT_CONVERTERS) == len(UNIT_CONVERTERS)
+
+    for device_class, converter in NUMBER_UNIT_CONVERTERS.items():
+        assert device_class.value in UNIT_CONVERTERS
+        assert UNIT_CONVERTERS[device_class.value] == converter
+
+
 async def test_value_unknown_in_enumeration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -3108,10 +3118,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.IRRADIANCE,
         SensorDeviceClass.MOISTURE,
         SensorDeviceClass.MONETARY,
-        SensorDeviceClass.NITROGEN_DIOXIDE,
-        SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
-        SensorDeviceClass.OZONE,
         SensorDeviceClass.PH,
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
@@ -3119,7 +3126,6 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM4,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
-        SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TIMESTAMP,
         SensorDeviceClass.WIND_DIRECTION,
     }

@@ -78,6 +78,9 @@
       },
       "valve": {
         "name": "Valve"
+      },
+      "ventilation_frost_protection": {
+        "name": "Ventilation frost protection"
       }
     },
     "button": {
@@ -212,11 +215,58 @@
       "compressor_hours_loadclass5": {
         "name": "Compressor hours load class 5"
       },
+      "compressor_inlet_pressure": {
+        "name": "Compressor inlet pressure"
+      },
+      "compressor_inlet_temperature": {
+        "name": "Compressor inlet temperature"
+      },
+      "compressor_modulation": {
+        "name": "Compressor modulation"
+      },
+      "compressor_outlet_pressure": {
+        "name": "Compressor outlet pressure"
+      },
+      "compressor_outlet_temperature": {
+        "name": "Compressor outlet temperature"
+      },
       "compressor_phase": {
-        "name": "Compressor phase"
+        "name": "Compressor phase",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "defrost": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "off": "[%key:common::state::off%]",
+          "passive_defrost": "Passive defrosting",
+          "pause": "[%key:common::state::idle%]",
+          "preparing": "Preparing",
+          "preparing_defrost": "Preparing defrost",
+          "ready": "[%key:common::state::idle%]"
+        }
+      },
+      "compressor_power": {
+        "name": "Compressor power"
       },
       "compressor_starts": {
         "name": "Compressor starts"
+      },
+      "condenser_liquid_temperature": {
+        "name": "Condenser liquid temperature"
+      },
+      "condenser_subcooling_temperature": {
+        "name": "Condenser subcooling temperature"
+      },
+      "cop_cooling": {
+        "name": "Coefficient of performance - cooling"
+      },
+      "cop_dhw": {
+        "name": "Coefficient of performance - domestic hot water"
+      },
+      "cop_heating": {
+        "name": "Coefficient of performance - heating"
+      },
+      "cop_total": {
+        "name": "Coefficient of performance"
       },
       "dhw_storage_bottom_temperature": {
         "name": "DHW storage bottom temperature"
@@ -292,6 +342,21 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
+      "evaporator_liquid_temperature": {
+        "name": "Evaporator liquid temperature"
+      },
+      "evaporator_overheat_temperature": {
+        "name": "Evaporator overheat temperature"
+      },
+      "filter_hours": {
+        "name": "Filter hours"
+      },
+      "filter_overdue_hours": {
+        "name": "Filter overdue hours"
+      },
+      "filter_remaining_hours": {
+        "name": "Filter remaining hours"
+      },
       "fuel_need": {
         "name": "Fuel need"
       },
@@ -349,6 +414,12 @@
       "heating_rod_starts": {
         "name": "Heating rod starts"
       },
+      "hot_gas_pressure": {
+        "name": "Hot gas pressure"
+      },
+      "hot_gas_temperature": {
+        "name": "Hot gas temperature"
+      },
       "hotwater_gas_consumption_heating_this_month": {
         "name": "DHW gas consumption this month"
       },
@@ -384,6 +455,21 @@
       },
       "hydraulic_separator_temperature": {
         "name": "Hydraulic separator temperature"
+      },
+      "inverter_current": {
+        "name": "Inverter current"
+      },
+      "inverter_power": {
+        "name": "Inverter power"
+      },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
+      },
+      "liquid_gas_temperature": {
+        "name": "Liquid gas temperature"
+      },
+      "outside_humidity": {
+        "name": "Outside humidity"
       },
       "outside_temperature": {
         "name": "Outside temperature"
@@ -449,6 +535,9 @@
       "power_production_today": {
         "name": "Energy production today"
       },
+      "primary_circuit_pump_rotation": {
+        "name": "Primary circuit pump rotation"
+      },
       "primary_circuit_return_temperature": {
         "name": "Primary circuit return temperature"
       },
@@ -488,6 +577,21 @@
       "spf_total": {
         "name": "Seasonal performance factor"
       },
+      "suction_gas_pressure": {
+        "name": "Suction gas pressure"
+      },
+      "suction_gas_temperature": {
+        "name": "Suction gas temperature"
+      },
+      "supply_fan_hours": {
+        "name": "Supply fan hours"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "supply_humidity": {
+        "name": "Supply humidity"
+      },
       "supply_pressure": {
         "name": "Supply pressure"
       },
@@ -496,6 +600,9 @@
       },
       "valve_position": {
         "name": "Valve position"
+      },
+      "ventilation_input_volumeflow": {
+        "name": "Ventilation input volume flow"
       },
       "ventilation_level": {
         "name": "Ventilation level",
@@ -506,6 +613,9 @@
           "leveltwo": "2",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "ventilation_output_volumeflow": {
+        "name": "Ventilation output volume flow"
       },
       "ventilation_reason": {
         "name": "Ventilation reason",

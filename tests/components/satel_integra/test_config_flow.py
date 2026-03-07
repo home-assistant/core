@@ -1,31 +1,22 @@
 """Test the satel integra config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
-    CONF_DEVICE_PARTITIONS,
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
-    CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigSubentry,
-)
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -119,93 +110,24 @@ async def test_setup_connection_failed(
 
 
 @pytest.mark.parametrize(
-    ("import_input", "entry_data", "entry_options"),
-    [
-        (
-            {
-                CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST],
-                CONF_PORT: MOCK_CONFIG_DATA[CONF_PORT],
-                CONF_CODE: MOCK_CONFIG_OPTIONS[CONF_CODE],
-                CONF_DEVICE_PARTITIONS: {
-                    "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
-                },
-                CONF_ZONES: {
-                    "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
-                    "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
-                },
-                CONF_OUTPUTS: {
-                    "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
-                    "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
-                },
-                CONF_SWITCHABLE_OUTPUTS: {
-                    "1": {CONF_NAME: "Switchable output Import 1"},
-                    "2": {CONF_NAME: "Switchable output Import 2"},
-                },
-            },
-            MOCK_CONFIG_DATA,
-            MOCK_CONFIG_OPTIONS,
-        )
-    ],
-)
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    import_input: dict[str, Any],
-    entry_data: dict[str, Any],
-    entry_options: dict[str, Any],
-) -> None:
-    """Test the import flow."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_input
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
-    assert result["data"] == entry_data
-    assert result["options"] == entry_options
-
-    assert len(result["subentries"]) == 7
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_connection_failure(
-    hass: HomeAssistant, mock_satel: AsyncMock
-) -> None:
-    """Test the import flow."""
-
-    mock_satel.connect.return_value = False
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=MOCK_CONFIG_DATA,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-@pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
-        (MOCK_CONFIG_OPTIONS, MOCK_CONFIG_OPTIONS),
+        ({CONF_CODE: "1111"}, {CONF_CODE: "1111"}),
         ({}, {CONF_CODE: None}),
     ],
 )
 async def test_options_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
     """Test general options flow."""
+    await setup_integration(hass, mock_config_entry)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    await setup_integration(hass, entry)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -215,7 +137,10 @@ async def test_options_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == entry_options
+    assert mock_config_entry.options == entry_options
+
+    # Assert the entry is reloaded to use the updated code
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -230,6 +155,7 @@ async def test_options_flow(
 async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
@@ -262,6 +188,9 @@ async def test_subentry_creation(
     assert mock_config_entry.subentries.get(subentry_id) == ConfigSubentry(
         **subentry_result
     )
+
+    # Assert the entry is reloaded to set up the entity
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(

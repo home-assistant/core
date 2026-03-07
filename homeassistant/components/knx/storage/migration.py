@@ -50,3 +50,8 @@ def migrate_2_1_to_2_2(data: dict[str, Any]) -> None:
             # "respond_to_read" was never used for binary_sensor and is not valid
             #  in the new schema. It was set as default in Store schema v1 and v2.1
             b_sensor["knx"].pop(CONF_RESPOND_TO_READ, None)
+
+
+def migrate_2_2_to_2_3(data: dict[str, Any]) -> None:
+    """Migrate from schema 2.2 to schema 2.3."""
+    data.setdefault("time_server", {})

@@ -57,24 +57,23 @@ type SelectType = Literal[
     "select_gateway_mode",
     "select_regulation_mode",
     "select_schedule",
+    "select_zone_profile",
 ]
 type SelectOptionsType = Literal[
+    "available_schedules",
     "dhw_modes",
     "gateway_modes",
     "regulation_modes",
-    "available_schedules",
+    "zone_profiles",
 ]
 
 # Default directives
 DEFAULT_MAX_TEMP: Final = 30
 DEFAULT_MIN_TEMP: Final = 4
 DEFAULT_PORT: Final = 80
-DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
-    "power": timedelta(seconds=10),
-    "stretch": timedelta(seconds=60),
-    "thermostat": timedelta(seconds=60),
-}
+DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
 DEFAULT_USERNAME: Final = "smile"
+P1_UPDATE_INTERVAL = timedelta(seconds=10)
 
 MASTER_THERMOSTATS: Final[list[str]] = [
     "thermostat",
@@ -82,3 +81,10 @@ MASTER_THERMOSTATS: Final[list[str]] = [
     "zone_thermometer",
     "zone_thermostat",
 ]
+
+# Select constants
+SELECT_DHW_MODE: Final = "select_dhw_mode"
+SELECT_GATEWAY_MODE: Final = "select_gateway_mode"
+SELECT_REGULATION_MODE: Final = "select_regulation_mode"
+SELECT_SCHEDULE: Final = "select_schedule"
+SELECT_ZONE_PROFILE: Final = "select_zone_profile"

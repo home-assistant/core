@@ -1,7 +1,9 @@
 """Tests for the OpenAI integration."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import httpx
 from openai import AuthenticationError, RateLimitError
 from openai.types.responses import (
@@ -29,6 +31,7 @@ from homeassistant.components.openai_conversation.const import (
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.helpers.llm import ToolInput
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -240,6 +243,7 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_reasoning_model: MockConfigEntry,
@@ -249,6 +253,44 @@ async def test_function_call(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function call from the assistant."""
+
+    # Add some pre-existing content from conversation.default_agent
+    mock_chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            tool_calls=[
+                ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="mock-tool-call-id",
+                    external=True,
+                )
+            ],
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="conversation.openai_conversation",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
+                "data": {"targets": [], "success": [], "failed": []},
+            },
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            content="12:00 PM",
+        )
+    )
+
     mock_create_stream.return_value = [
         # Initial conversation
         (
@@ -299,6 +341,7 @@ async def test_function_call(
     assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
+@freeze_time("2025-10-31 18:00:00")
 async def test_function_call_without_reasoning(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,

@@ -560,7 +560,11 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
-    if integration is None and "/" in filename and not filename.startswith("helpers/"):
+    if (
+        integration is None
+        and "/" in filename
+        and not filename.startswith(("core/", "helpers/"))
+    ):
         integration, filename = filename.split("/", 1)
 
     if integration is None:
@@ -697,6 +701,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
     has_entity_name: bool = attr.ib(default=False)
+    object_id_base: str | None = attr.ib(default=None)
     options: er.ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=er._protect_entity_options
     )
@@ -1531,7 +1536,7 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
         return loaded
 
     async def mock_write_data(
-        store: storage.Store, path: str, data_to_write: dict[str, Any]
+        store: storage.Store, data_to_write: dict[str, Any]
     ) -> None:
         """Mock version of write data."""
         # To ensure that the data can be serialized
@@ -1608,12 +1613,16 @@ def mock_integration(
     top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
-    integration = loader.Integration(
-        hass,
+    path = (
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
-        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        pathlib.Path(""),
+        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}"
+    )
+
+    integration = loader.Integration(
+        hass,
+        path,
+        pathlib.Path(path.replace(".", "/")),
         module.mock_manifest(),
         top_level_files,
     )

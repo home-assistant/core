@@ -13,6 +13,8 @@ from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -72,6 +74,10 @@ def get_device_serial(device: PyViCareDevice) -> str | None:
         _LOGGER.debug("Vicare API rate limit exceeded: %s", limit_exception)
     except PyViCareInvalidDataError as invalid_data_exception:
         _LOGGER.debug("Invalid data from Vicare server: %s", invalid_data_exception)
+    except PyViCareDeviceCommunicationError as comm_exception:
+        _LOGGER.debug("Device communication error: %s", comm_exception)
+    except PyViCareInternalServerError as server_exception:
+        _LOGGER.debug("Vicare server error: %s", server_exception)
     except requests.exceptions.ConnectionError:
         _LOGGER.debug("Unable to retrieve data from ViCare server")
     except ValueError:
@@ -130,6 +136,44 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     return []
 
 
+def get_condensers(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of condensers."""
+    try:
+        return device.condensors
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No condensers found")
+    except AttributeError as error:
+        _LOGGER.debug("No condensers found: %s", error)
+    return []
+
+
+def get_evaporators(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of evaporators."""
+    try:
+        return device.evaporators
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No evaporators found")
+    except AttributeError as error:
+        _LOGGER.debug("No evaporators found: %s", error)
+    return []
+
+
+def get_inverters(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of inverters."""
+    try:
+        return device.inverters
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No inverters found")
+    except AttributeError as error:
+        _LOGGER.debug("No inverters found: %s", error)
+    return []
+
+
 def filter_state(state: str) -> str | None:
     """Return the state if not 'nothing' or 'unknown'."""
     return None if state in ("nothing", "unknown") else state
+
+
+def normalize_state(state: str) -> str:
+    """Return the state with underscores instead of hyphens."""
+    return state.replace("-", "_")

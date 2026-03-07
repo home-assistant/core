@@ -1,0 +1,74 @@
+{
+  "serialNumber": "GS012345",
+  "type": "CoffeeMachine",
+  "name": "",
+  "location": null,
+  "modelCode": "GS3AV",
+  "modelName": "GS3AV",
+  "connected": true,
+  "connectionDate": 1742489087479,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "",
+  "bleAuthToken": null,
+  "widgets": [
+    {
+      "code": "CMMachineStatus",
+      "index": 1,
+      "output": {
+        "status": "PoweredOn",
+        "availableModes": ["BrewingMode", "StandBy"],
+        "mode": "BrewingMode",
+        "nextStatus": {
+          "status": "StandBy",
+          "startTime": 1742857195332
+        },
+        "brewingStartTime": 1746641060000
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMCoffeeBoiler",
+      "index": 1,
+      "output": {
+        "status": "Ready",
+        "enabled": true,
+        "enabledSupported": false,
+        "targetTemperature": 98.0,
+        "targetTemperatureMin": 80,
+        "targetTemperatureMax": 110,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamBoilerTemperature",
+      "index": 1,
+      "output": {
+        "status": "Off",
+        "enabled": true,
+        "enabledSupported": true,
+        "targetTemperature": 121.0,
+        "targetTemperatureSupported": true,
+        "targetTemperatureMin": 95,
+        "targetTemperatureMax": 140,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMNoWater",
+      "index": 1,
+      "output": {
+        "allarm": false
+      },
+      "tutorialUrl": null
+    }
+  ],
+  "invalidWidgets": [],
+  "runningCommands": []
+}

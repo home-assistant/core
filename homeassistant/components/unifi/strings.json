@@ -55,6 +55,12 @@
           "provisioning": "Provisioning",
           "upgrading": "Upgrading"
         }
+      },
+      "port_link_speed": {
+        "name": "Link speed"
+      },
+      "wired_client_link_speed": {
+        "name": "Link speed"
       }
     }
   },

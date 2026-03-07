@@ -78,7 +78,7 @@ def _pin_valid(pin: str) -> bool:
     """Check if the pin is valid."""
     try:
         int(pin)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
     return True
 
@@ -261,7 +261,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     errors=errors,
                 )
-        except (TimeoutError, BleakError):
+        except TimeoutError, BleakError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
@@ -325,7 +325,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=reauth_entry.data | {CONF_PIN: self.pin},
                     )
 
-            except (TimeoutError, BleakError):
+            except TimeoutError, BleakError:
                 # We don't want to abort a reauth flow when we can't connect, so
                 # we just show the form again with an error.
                 errors["base"] = "cannot_connect"

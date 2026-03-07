@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Outputs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -39,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Outputs',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -46,7 +48,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays-entry]
@@ -70,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +92,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -96,7 +100,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_bs4-entry]
@@ -120,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_BS4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -139,6 +144,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays_BS4',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -146,7 +152,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_module-entry]
@@ -170,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_Module',
     'options': dict({
     }),
     'original_device_class': None,
@@ -189,6 +196,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays_Module',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -196,6 +204,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---

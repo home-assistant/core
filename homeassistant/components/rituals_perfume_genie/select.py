@@ -34,8 +34,8 @@ ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         options=["15", "30", "60", "100"],
         current_fn=lambda diffuser: str(diffuser.room_size_square_meter),
-        select_fn=lambda diffuser, value: (
-            diffuser.set_room_size_square_meter(int(value))
+        select_fn=lambda diffuser, value: diffuser.set_room_size_square_meter(
+            int(value)
         ),
     ),
 )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -47,7 +48,7 @@ class FlockNotificationService(BaseNotificationService):
         self._url = url
         self._session = session
 
-    async def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
         payload = {"text": message}
 

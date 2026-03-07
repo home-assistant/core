@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pypck.lcn_defs import OutputPort, RelayPort
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_ON,
@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
 from tests.common import snapshot_platform
 
@@ -39,9 +39,9 @@ async def test_scene_activate(
 ) -> None:
     """Test the scene is activated."""
     await init_integration(hass, entry)
-    with patch.object(MockModuleConnection, "activate_scene") as activate_scene:
+    with patch.object(MockDeviceConnection, "activate_scene") as activate_scene:
         await hass.services.async_call(
-            DOMAIN_SCENE,
+            SCENE_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: "scene.testmodule_romantic"},
             blocking=True,

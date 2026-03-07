@@ -364,7 +364,7 @@
     "record_switch": true,
     "record_mode": 1,
     "pir_switch": 2,
-    "doorbell_pic": "",
+    "doorbell_pic": "**REDACTED**",
     "siren_switch": false,
     "basic_device_volume": 1,
     "motion_tracking": true,

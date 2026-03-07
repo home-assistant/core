@@ -1,13 +1,20 @@
 """The tests for the hassio component."""
 
 from datetime import timedelta
-import logging
 import os
+from pathlib import PurePath
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsStats
+from aiohasupervisor.models.mounts import (
+    CIFSMountResponse,
+    MountsInfo,
+    MountState,
+    MountType,
+    MountUsage,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous import Invalid
@@ -19,28 +26,27 @@ from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
     get_core_info,
-    get_supervisor_ip,
     hostname_from_addon_slug,
-    is_hassio as deprecated_is_hassio,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
     HASSIO_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml import load_yaml_dict
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    import_and_test_deprecated_constant,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -264,6 +270,29 @@ async def test_setup_api_panel(
         },
         "url_path": "hassio",
         "require_admin": True,
+        "show_in_sidebar": True,
+        "config_panel_domain": None,
+    }
+
+
+async def test_setup_app_panel(hass: HomeAssistant) -> None:
+    """Test app panel is registered."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+        assert result
+
+    panels = hass.data[frontend.DATA_PANELS]
+
+    assert panels.get("app").to_response() == {
+        "component_name": "app",
+        "icon": None,
+        "title": None,
+        "default_visible": True,
+        "config": None,
+        "url_path": "app",
+        "require_admin": False,
+        "show_in_sidebar": True,
         "config_panel_domain": None,
     }
 
@@ -477,10 +506,17 @@ async def test_warn_when_cannot_connect(
 async def test_service_register(hass: HomeAssistant) -> None:
     """Check if service will be setup."""
     assert await async_setup_component(hass, "hassio", {})
+    # New app services
+    assert hass.services.has_service("hassio", "app_start")
+    assert hass.services.has_service("hassio", "app_stop")
+    assert hass.services.has_service("hassio", "app_restart")
+    assert hass.services.has_service("hassio", "app_stdin")
+    # Legacy addon services (deprecated)
     assert hass.services.has_service("hassio", "addon_start")
     assert hass.services.has_service("hassio", "addon_stop")
     assert hass.services.has_service("hassio", "addon_restart")
     assert hass.services.has_service("hassio", "addon_stdin")
+    # Other services
     assert hass.services.has_service("hassio", "host_shutdown")
     assert hass.services.has_service("hassio", "host_reboot")
     assert hass.services.has_service("hassio", "host_reboot")
@@ -488,16 +524,21 @@ async def test_service_register(hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
     assert hass.services.has_service("hassio", "restore_partial")
+    assert hass.services.has_service("hassio", "mount_reload")
 
 
+@pytest.mark.parametrize(
+    "app_or_addon",
+    ["app", "addon"],
+)
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_service_calls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
     supervisor_client: AsyncMock,
     addon_installed: AsyncMock,
     supervisor_is_connected: AsyncMock,
+    app_or_addon: str,
 ) -> None:
     """Call service and check the API calls behind that."""
     supervisor_is_connected.side_effect = SupervisorError
@@ -521,11 +562,17 @@ async def test_service_calls(
         "http://127.0.0.1/backups/test/restore/partial", json={"result": "ok"}
     )
 
-    await hass.services.async_call("hassio", "addon_start", {"addon": "test"})
-    await hass.services.async_call("hassio", "addon_stop", {"addon": "test"})
-    await hass.services.async_call("hassio", "addon_restart", {"addon": "test"})
     await hass.services.async_call(
-        "hassio", "addon_stdin", {"addon": "test", "input": "test"}
+        "hassio", f"{app_or_addon}_start", {app_or_addon: "test"}
+    )
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_stop", {app_or_addon: "test"}
+    )
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_restart", {app_or_addon: "test"}
+    )
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_stdin", {app_or_addon: "test", "input": "test"}
     )
     await hass.async_block_till_done()
 
@@ -544,7 +591,7 @@ async def test_service_calls(
         "backup_partial",
         {
             "homeassistant": True,
-            "addons": ["test"],
+            "apps": ["test"],
             "folders": ["ssl"],
             "password": "123456",
         },
@@ -552,6 +599,7 @@ async def test_service_calls(
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
+    # API receives "addons" even when we pass "apps"
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -569,7 +617,7 @@ async def test_service_calls(
         {
             "slug": "test",
             "homeassistant": False,
-            "addons": ["test"],
+            "apps": ["test"],
             "folders": ["ssl"],
             "password": "123456",
         },
@@ -577,6 +625,7 @@ async def test_service_calls(
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
+    # API receives "addons" even when we pass "apps"
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -637,10 +686,15 @@ async def test_service_calls(
     }
 
 
+@pytest.mark.parametrize(
+    "app_or_addon",
+    ["app", "addon"],
+)
 async def test_invalid_service_calls(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     supervisor_is_connected: AsyncMock,
+    app_or_addon: str,
 ) -> None:
     """Call service with invalid input and check that it raises."""
     supervisor_is_connected.side_effect = SupervisorError
@@ -650,18 +704,57 @@ async def test_invalid_service_calls(
 
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", "addon_start", {"addon": "does_not_exist"}
+            "hassio", f"{app_or_addon}_start", {app_or_addon: "does_not_exist"}
         )
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", "addon_stdin", {"addon": "does_not_exist", "input": "test"}
+            "hassio",
+            f"{app_or_addon}_stdin",
+            {app_or_addon: "does_not_exist", "input": "test"},
         )
 
 
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            "backup_partial",
+            {"apps": ["test"], "addons": ["test"]},
+        ),
+        (
+            "restore_partial",
+            {"apps": ["test"], "addons": ["test"], "slug": "test"},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("addon_installed")
+async def test_service_calls_apps_addons_exclusive(
+    hass: HomeAssistant,
+    supervisor_is_connected: AsyncMock,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test that apps and addons parameters are mutually exclusive."""
+    supervisor_is_connected.side_effect = SupervisorError
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    with pytest.raises(
+        Invalid, match="two or more values in the same group of exclusion"
+    ):
+        await hass.services.async_call("hassio", service, service_data)
+
+
+@pytest.mark.parametrize(
+    "app_or_addon",
+    ["app", "addon"],
+)
 async def test_addon_service_call_with_complex_slug(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     supervisor_is_connected: AsyncMock,
+    app_or_addon: str,
 ) -> None:
     """Addon slugs can have ., - and _, confirm that passes validation."""
     supervisor_mock_data = {
@@ -692,7 +785,9 @@ async def test_addon_service_call_with_complex_slug(
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-    await hass.services.async_call("hassio", "addon_start", {"addon": "test.a_1-2"})
+    await hass.services.async_call(
+        "hassio", f"{app_or_addon}_start", {app_or_addon: "test.a_1-2"}
+    )
 
 
 @pytest.mark.usefixtures("hassio_env")
@@ -913,7 +1008,7 @@ async def test_coordinator_updates(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, supervisor_client: AsyncMock
 ) -> None:
     """Test coordinator updates."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
@@ -930,8 +1025,8 @@ async def test_coordinator_updates(
     supervisor_client.refresh_updates.assert_not_called()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -952,8 +1047,8 @@ async def test_coordinator_updates(
     supervisor_client.refresh_updates.reset_mock()
     supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -978,7 +1073,7 @@ async def test_coordinator_updates_stats_entities_enabled(
     supervisor_client: AsyncMock,
 ) -> None:
     """Test coordinator updates with stats entities enabled."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
@@ -1001,8 +1096,8 @@ async def test_coordinator_updates_stats_entities_enabled(
     supervisor_client.refresh_updates.assert_not_called()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -1022,8 +1117,8 @@ async def test_coordinator_updates_stats_entities_enabled(
     supervisor_client.refresh_updates.reset_mock()
     supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             "entity_id": [
                 "update.home_assistant_core_update",
@@ -1071,6 +1166,10 @@ async def test_setup_hardware_integration(
             f"homeassistant.components.{integration}.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",
+            return_value=None,
+        ),
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -1086,69 +1185,6 @@ def test_hostname_from_addon_slug() -> None:
     assert (
         hostname_from_addon_slug("core_silabs_multiprotocol")
         == "core-silabs-multiprotocol"
-    )
-
-
-def test_deprecated_function_is_hassio(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test calling deprecated_is_hassio function will create log entry."""
-
-    deprecated_is_hassio(hass)
-    assert caplog.record_tuples == [
-        (
-            "homeassistant.components.hassio",
-            logging.WARNING,
-            "The deprecated function is_hassio was called. It will be "
-            "removed in HA Core 2025.11. Use homeassistant.helpers"
-            ".hassio.is_hassio instead",
-        )
-    ]
-
-
-def test_deprecated_function_get_supervisor_ip(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test calling get_supervisor_ip function will create log entry."""
-
-    get_supervisor_ip()
-    assert caplog.record_tuples == [
-        (
-            "homeassistant.helpers.hassio",
-            logging.WARNING,
-            "The deprecated function get_supervisor_ip was called. It will "
-            "be removed in HA Core 2025.11. Use homeassistant.helpers"
-            ".hassio.get_supervisor_ip instead",
-        )
-    ]
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "HassioServiceInfo",
-            "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
-            HassioServiceInfo,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        hassio,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2025.11",
     )
 
 
@@ -1185,7 +1221,7 @@ async def test_deprecated_installation_issue_os_armv7(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1194,8 +1230,8 @@ async def test_deprecated_installation_issue_os_armv7(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1248,7 +1284,7 @@ async def test_deprecated_installation_issue_32bit_os(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1257,8 +1293,8 @@ async def test_deprecated_installation_issue_32bit_os(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1309,7 +1345,7 @@ async def test_deprecated_installation_issue_32bit_supervised(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1318,8 +1354,8 @@ async def test_deprecated_installation_issue_32bit_supervised(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1374,7 +1410,7 @@ async def test_deprecated_installation_issue_64bit_supervised(
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1383,8 +1419,8 @@ async def test_deprecated_installation_issue_64bit_supervised(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1435,7 +1471,7 @@ async def test_deprecated_installation_issue_supported_board(
             return_value={"hassos": True, "arch": "aarch64"},
         ),
     ):
-        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1444,8 +1480,8 @@ async def test_deprecated_installation_issue_supported_board(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {
                 "entity_id": [
                     "update.home_assistant_core_update",
@@ -1459,3 +1495,150 @@ async def test_deprecated_installation_issue_supported_board(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+async def mount_reload_test_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> dr.DeviceEntry:
+    """Set up mount reload test and return the device entry."""
+    supervisor_client.mounts.info = AsyncMock(
+        return_value=MountsInfo(
+            default_backup_mount=None,
+            mounts=[
+                CIFSMountResponse(
+                    share="files",
+                    server="1.2.3.4",
+                    name="NAS",
+                    type=MountType.CIFS,
+                    usage=MountUsage.SHARE,
+                    read_only=False,
+                    state=MountState.ACTIVE,
+                    user_path=PurePath("/share/nas"),
+                )
+            ],
+        )
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mount_NAS")})
+    assert device is not None
+    return device
+
+
+async def test_mount_reload_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    await hass.services.async_call(
+        "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+    )
+    supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")
+
+
+async def test_mount_reload_action_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call failure."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    supervisor_client.mounts.reload_mount = AsyncMock(
+        side_effect=SupervisorError("test failure")
+    )
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Failed to reload mount NAS: test failure"
+
+
+async def test_mount_reload_unknown_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with unknown device ID."""
+    await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": "1234"}, blocking=True
+        )
+    assert str(exc.value) == "Device ID not found"
+
+
+async def test_mount_reload_no_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with an unnamed device."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    device_registry.async_update_device(device.id, name=None)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_invalid_model(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with an invalid model."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    device_registry.async_update_device(device.id, model=None)
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_not_supervisor_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount with a device not belonging to the supervisor."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "test")},
+        name=device.name,
+        model=device.model,
+    )
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device2.id}, blocking=True
+        )
+    assert str(exc.value) == "Device is not a supervisor mount point"
+
+
+async def test_mount_reload_selector_matches_device_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that the model name in the selector of mount reload is valid."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    services = load_yaml_dict(f"{hassio.__path__[0]}/services.yaml")
+    assert (
+        services["mount_reload"]["fields"]["device_id"]["selector"]["device"]["filter"][
+            "model"
+        ]
+        == device.model
+    )

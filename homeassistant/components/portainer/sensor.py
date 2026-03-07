@@ -17,16 +17,20 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import StackType
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
-    PortainerCoordinator,
+    PortainerStackData,
 )
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
     PortainerEndpointEntity,
+    PortainerStackEntity,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,6 +47,13 @@ class PortainerEndpointSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[PortainerCoordinatorData], StateType]
 
 
+@dataclass(frozen=True, kw_only=True)
+class PortainerStackSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer stack sensor description."""
+
+    value_fn: Callable[[PortainerStackData], StateType]
+
+
 CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="image",
@@ -50,9 +61,18 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         value_fn=lambda data: data.container.image,
     ),
     PortainerContainerSensorEntityDescription(
+        key="container_state",
+        translation_key="container_state",
+        value_fn=lambda data: data.container.state,
+        device_class=SensorDeviceClass.ENUM,
+        options=["running", "exited", "paused", "restarting", "created", "dead"],
+    ),
+    PortainerContainerSensorEntityDescription(
         key="memory_limit",
         translation_key="memory_limit",
-        value_fn=lambda data: data.stats.memory_stats.limit,
+        value_fn=lambda data: (
+            data.stats.memory_stats.limit if data.stats is not None else 0
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -63,7 +83,9 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="memory_usage",
         translation_key="memory_usage",
-        value_fn=lambda data: data.stats.memory_stats.usage,
+        value_fn=lambda data: (
+            data.stats.memory_stats.usage if data.stats is not None else 0
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -76,7 +98,9 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="memory_usage_percentage",
         value_fn=lambda data: (
             (data.stats.memory_stats.usage / data.stats.memory_stats.limit) * 100.0
-            if data.stats.memory_stats.limit > 0 and data.stats.memory_stats.usage > 0
+            if data.stats is not None
+            and data.stats.memory_stats.limit > 0
+            and data.stats.memory_stats.usage > 0
             else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
@@ -89,7 +113,8 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="cpu_usage_total",
         value_fn=lambda data: (
             (total_delta / system_delta) * data.stats.cpu_stats.online_cpus * 100.0
-            if (prev := data.stats_pre) is not None
+            if data.stats is not None
+            and (prev := data.stats_pre) is not None
             and (
                 system_delta := (
                     data.stats.cpu_stats.system_cpu_usage
@@ -210,6 +235,82 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    PortainerEndpointSensorEntityDescription(
+        key="container_disk_usage_reclaimable",
+        translation_key="container_disk_usage_reclaimable",
+        value_fn=lambda data: data.docker_system_df.container_disk_usage.reclaimable,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="container_disk_usage_total_size",
+        translation_key="container_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.container_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="image_disk_usage_reclaimable",
+        translation_key="image_disk_usage_reclaimable",
+        value_fn=lambda data: data.docker_system_df.image_disk_usage.reclaimable,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="image_disk_usage_total_size",
+        translation_key="image_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.image_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="volume_disk_usage_total",
+        translation_key="volume_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.volume_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
+    PortainerStackSensorEntityDescription(
+        key="stack_type",
+        translation_key="stack_type",
+        value_fn=lambda data: (
+            "swarm"
+            if data.stack.type == StackType.SWARM
+            else "compose"
+            if data.stack.type == StackType.COMPOSE
+            else "kubernetes"
+            if data.stack.type == StackType.KUBERNETES
+            else None
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["swarm", "compose", "kubernetes"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerStackSensorEntityDescription(
+        key="stack_containers_count",
+        translation_key="stack_containers_count",
+        value_fn=lambda data: data.container_count,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
@@ -247,11 +348,26 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
-            if entity_description.value_fn(container) is not None
+        )
+
+    def _async_add_new_stacks(
+        stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
+    ) -> None:
+        """Add new stack sensors."""
+        async_add_entities(
+            PortainerStackSensor(
+                coordinator,
+                entity_description,
+                stack,
+                endpoint,
+            )
+            for (endpoint, stack) in stacks
+            for entity_description in STACK_SENSORS
         )
 
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
 
     _async_add_new_endpoints(
         [
@@ -267,30 +383,19 @@ async def async_setup_entry(
             for container in endpoint.containers.values()
         ]
     )
+    _async_add_new_stacks(
+        [
+            (endpoint, stack)
+            for endpoint in coordinator.data.values()
+            for stack in endpoint.stacks.values()
+        ]
+    )
 
 
 class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
     """Representation of a Portainer container sensor."""
 
     entity_description: PortainerContainerSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerContainerSensorEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.endpoint_id in self.coordinator.data
 
     @property
     def native_value(self) -> StateType:
@@ -303,25 +408,19 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
 
     entity_description: PortainerEndpointSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerEndpointSensorEntityDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer endpoint sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
         return self.entity_description.value_fn(endpoint_data)
+
+
+class PortainerStackSensor(PortainerStackEntity, SensorEntity):
+    """Representation of a Portainer stack sensor."""
+
+    entity_description: PortainerStackSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.stack_data)

@@ -1,4 +1,52 @@
 {
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted humidifiers.",
+    "condition_behavior_name": "Behavior",
+    "trigger_behavior_description": "The behavior of the targeted humidifiers to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_drying": {
+      "description": "Tests if one or more humidifiers are drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is drying"
+    },
+    "is_humidifying": {
+      "description": "Tests if one or more humidifiers are humidifying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is humidifying"
+    },
+    "is_off": {
+      "description": "Tests if one or more humidifiers are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more humidifiers are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is on"
+    }
+  },
   "device_automation": {
     "action_type": {
       "set_humidity": "Set humidity for {entity_name}",
@@ -86,6 +134,35 @@
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above a value",
+        "below": "Below a value",
+        "between": "In a range",
+        "outside": "Outside a range"
+      }
+    }
+  },
   "services": {
     "set_humidity": {
       "description": "Sets the target humidity.",
@@ -120,5 +197,83 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Humidifier"
+  "title": "Humidifier",
+  "triggers": {
+    "current_humidity_changed": {
+      "description": "Triggers after the humidity measured by one or more humidifiers changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the humidity is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the humidity is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Humidifier current humidity changed"
+    },
+    "current_humidity_crossed_threshold": {
+      "description": "Triggers after the humidity measured by one or more humidifiers crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Humidifier current humidity crossed threshold"
+    },
+    "started_drying": {
+      "description": "Triggers after one or more humidifiers start drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier started drying"
+    },
+    "started_humidifying": {
+      "description": "Triggers after one or more humidifiers start humidifying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier started humidifying"
+    },
+    "turned_off": {
+      "description": "Triggers after one or more humidifiers turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more humidifiers turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier turned on"
+    }
+  }
 }

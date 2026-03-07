@@ -22,6 +22,9 @@
       "jitter": {
         "name": "Jitter"
       },
+      "loss": {
+        "name": "Packet loss"
+      },
       "round_trip_time_avg": {
         "name": "Round-trip time average"
       },

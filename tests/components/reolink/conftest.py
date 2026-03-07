@@ -106,6 +106,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.protocol = "rtsp"
     host_mock.channels = [0]
     host_mock.stream_channels = [0]
+    host_mock.num_cameras = 1
     host_mock.new_devices = False
     host_mock.sw_version_update_required = False
     host_mock.hardware_version = "IPC_00000"
@@ -132,8 +133,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.whiteled_mode_list.return_value = []
     host_mock.post_recording_time_list.return_value = []
     host_mock.zoom_range.return_value = {
-        "zoom": {"pos": {"min": 0, "max": 100}},
-        "focus": {"pos": {"min": 0, "max": 100}},
+        "zoom": {"min": 0, "max": 100},
+        "focus": {"min": 0, "max": 100},
     }
     host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
     host_mock.checked_api_versions = {"GetEvents": 1}
@@ -184,6 +185,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.smart_ai_type_list.return_value = ["people"]
     host_mock.baichuan.smart_ai_index.return_value = 1
     host_mock.baichuan.smart_ai_name.return_value = "zone1"
+    host_mock.whiteled_brightness.return_value = None
 
     def ai_detect_type(channel: int, object_type: str) -> str | None:
         if object_type == "people":

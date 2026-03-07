@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "climate": {
+      "saunum_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:heat-wave",
+            "state": {
+              "type_1": "mdi:numeric-1-box-outline",
+              "type_2": "mdi:numeric-2-box-outline",
+              "type_3": "mdi:numeric-3-box-outline"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "fan_duration": {
+        "default": "mdi:fan-clock"
+      },
+      "sauna_duration": {
+        "default": "mdi:clock-edit-outline"
+      }
+    },
+    "sensor": {
+      "heater_elements_active": {
+        "default": "mdi:radiator"
+      }
+    }
+  },
+  "services": {
+    "start_session": {
+      "service": "mdi:heat-wave"
+    }
+  }
+}

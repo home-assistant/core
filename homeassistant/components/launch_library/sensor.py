@@ -19,14 +19,11 @@ from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime
 
-from . import LaunchLibraryData
 from .const import DOMAIN
+from .coordinator import LaunchLibraryCoordinator
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
@@ -126,7 +123,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
+    coordinator: LaunchLibraryCoordinator = hass.data[DOMAIN]
 
     async_add_entities(
         LaunchLibrarySensor(
@@ -139,9 +136,7 @@ async def async_setup_entry(
     )
 
 
-class LaunchLibrarySensor(
-    CoordinatorEntity[DataUpdateCoordinator[LaunchLibraryData]], SensorEntity
-):
+class LaunchLibrarySensor(CoordinatorEntity[LaunchLibraryCoordinator], SensorEntity):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
@@ -151,7 +146,7 @@ class LaunchLibrarySensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[LaunchLibraryData],
+        coordinator: LaunchLibraryCoordinator,
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
         name: str,

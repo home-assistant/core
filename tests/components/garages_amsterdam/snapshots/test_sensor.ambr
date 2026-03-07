@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long parking capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -72,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long parking free space',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short parking capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -175,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short parking free space',
     'options': dict({
     }),
     'original_device_class': None,

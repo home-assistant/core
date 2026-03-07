@@ -13,9 +13,9 @@
       'max_temp': 35.0,
       'min_temp': 0.0,
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -36,6 +36,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -63,11 +64,11 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 0.0,
-      'preset_mode': 'home',
+      'preset_mode': 'vacation',
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -97,9 +98,9 @@
       'max_temp': 35.0,
       'min_temp': 1.0,
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -120,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -149,9 +151,9 @@
       'min_temp': 1.0,
       'preset_mode': 'home',
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -203,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -285,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -366,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -447,6 +452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -529,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -611,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -694,6 +702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -777,6 +786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

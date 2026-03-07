@@ -9,3 +9,5 @@ updates:
     labels:
       - dependency
       - github_actions
+    cooldown:
+      default-days: 7

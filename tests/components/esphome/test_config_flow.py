@@ -344,7 +344,7 @@ async def test_user_resolve_error(hass: HomeAssistant, mock_client: APIClient) -
         user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -434,7 +434,7 @@ async def test_user_connection_error(
         user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -512,7 +512,7 @@ async def test_user_invalid_password(
         result["flow_id"], user_input={CONF_PASSWORD: "good"}
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -765,7 +765,7 @@ async def test_login_connection_error(
         result["flow_id"], user_input={CONF_PASSWORD: "good"}
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",

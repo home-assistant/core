@@ -1,0 +1,11 @@
+{
+  "domain": "gentex_homelink",
+  "name": "HomeLink",
+  "codeowners": ["@niaexa", "@ryanjones-gentex"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/gentex_homelink",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["homelink-integration-api==0.0.1"]
+}

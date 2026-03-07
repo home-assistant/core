@@ -11,6 +11,7 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -45,9 +46,10 @@ async def test_platform_setup_and_discovery(
     ["dj_mki13ie507rlry4r"],
 )
 @pytest.mark.parametrize(
-    ("turn_on_input", "expected_commands"),
+    ("service", "service_data", "expected_commands"),
     [
         (
+            SERVICE_TURN_ON,
             {
                 ATTR_WHITE: True,
             },
@@ -58,6 +60,7 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            SERVICE_TURN_ON,
             {
                 ATTR_BRIGHTNESS: 150,
             },
@@ -67,6 +70,7 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            SERVICE_TURN_ON,
             {
                 ATTR_WHITE: True,
                 ATTR_BRIGHTNESS: 150,
@@ -78,6 +82,7 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            SERVICE_TURN_ON,
             {
                 ATTR_WHITE: 150,
             },
@@ -87,17 +92,35 @@ async def test_platform_setup_and_discovery(
                 {"code": "bright_value_v2", "value": 592},
             ],
         ),
+        (
+            SERVICE_TURN_ON,
+            {
+                ATTR_BRIGHTNESS: 255,
+                ATTR_HS_COLOR: (10.1, 20.2),
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "work_mode", "value": "colour"},
+                {"code": "colour_data_v2", "value": '{"h": 10, "s": 202, "v": 1000}'},
+            ],
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            [{"code": "switch_led", "value": False}],
+        ),
     ],
 )
-async def test_turn_on_white(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    turn_on_input: dict[str, Any],
+    service: str,
+    service_data: dict[str, Any],
     expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test turn_on service."""
+    """Test light action."""
     entity_id = "light.garage_light"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -105,43 +128,14 @@ async def test_turn_on_white(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
-            **turn_on_input,
+            **service_data,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         expected_commands,
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["dj_mki13ie507rlry4r"],
-)
-async def test_turn_off(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test turn_off service."""
-    entity_id = "light.garage_light"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: entity_id,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "switch_led", "value": False}]
     )

@@ -11,6 +11,6 @@
     "aiosqlite==0.21.0",
     "asyncpg==0.30.0",
     "SQLAlchemy[asyncio]==2.0.41",
-    "sqlparse==0.5.0"
+    "sqlparse==0.5.5"
   ]
 }

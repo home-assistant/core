@@ -50,7 +50,9 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
         is_available=lambda v: v.is_remote_climate_stop_enabled,
         value_fn=lambda v: v.climate.is_climate_on,
         remote_service_on=lambda v: v.remote_services.trigger_remote_air_conditioning(),
-        remote_service_off=lambda v: v.remote_services.trigger_remote_air_conditioning_stop(),
+        remote_service_off=lambda v: (
+            v.remote_services.trigger_remote_air_conditioning_stop()
+        ),
     ),
     BMWSwitchEntityDescription(
         key="charging",

@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .const import TEST_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -51,7 +52,7 @@ async def test_pressing_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.vodafone_station_m123456789_restart"},
+        {ATTR_ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"},
         blocking=True,
     )
     mock_vodafone_station_router.restart_router.assert_called_once()
@@ -84,7 +85,7 @@ async def test_button_fails(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.vodafone_station_m123456789_restart"},
+            {ATTR_ENTITY_ID: f"button.vodafone_station_{TEST_SERIAL_NUMBER}_restart"},
             blocking=True,
         )
 

@@ -11,13 +11,11 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity_component import async_get_entity_suggested_object_id
 from homeassistant.helpers.json import json_dumps
 
 _LOGGER = logging.getLogger(__name__)
@@ -227,8 +225,10 @@ def websocket_update_entity(
             changes[key] = msg[key]
 
     if "aliases" in msg:
-        # Convert aliases to a set
-        changes["aliases"] = set(msg["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        changes["aliases"] = {s_strip for s in msg["aliases"] if (s_strip := s.strip())}
 
     if "labels" in msg:
         # Convert labels to a set
@@ -349,26 +349,12 @@ def websocket_get_automatic_entity_ids(
         if not (entry := registry.entities.get(entity_id)):
             automatic_entity_ids[entity_id] = None
             continue
-        try:
-            suggested = async_get_entity_suggested_object_id(hass, entity_id)
-        except HomeAssistantError as err:
-            # This is raised if the entity has no object.
-            _LOGGER.debug(
-                "Unable to get suggested object ID for %s, entity ID: %s (%s)",
-                entry.entity_id,
-                entity_id,
-                err,
-            )
-            automatic_entity_ids[entity_id] = None
-            continue
-        suggested_entity_id = registry.async_generate_entity_id(
-            entry.domain,
-            suggested or f"{entry.platform}_{entry.unique_id}",
-            current_entity_id=entity_id,
+        new_entity_id = registry.async_regenerate_entity_id(
+            entry,
             reserved_entity_ids=reserved_entity_ids,
         )
-        automatic_entity_ids[entity_id] = suggested_entity_id
-        reserved_entity_ids.add(suggested_entity_id)
+        automatic_entity_ids[entity_id] = new_entity_id
+        reserved_entity_ids.add(new_entity_id)
 
     connection.send_message(
         websocket_api.result_message(msg["id"], automatic_entity_ids)

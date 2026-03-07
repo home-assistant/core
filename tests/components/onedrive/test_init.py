@@ -11,7 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import AppRoot, Drive, File, Folder, ItemUpdate
+from onedrive_personal_sdk.models.items import AppRoot, Drive, File, Folder
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -28,7 +28,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-from .const import BACKUP_METADATA, INSTANCE_ID
+from .const import BACKUP_METADATA
 
 from tests.common import MockConfigEntry
 
@@ -128,38 +128,27 @@ async def test_get_integration_folder_creation_error(
     assert "Failed to get backups_123 folder" in caplog.text
 
 
-async def test_update_instance_id_description(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-    mock_folder: Folder,
-) -> None:
-    """Test we write the instance id to the folder."""
-    mock_folder.description = ""
-    await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
-
-    mock_onedrive_client.update_drive_item.assert_called_with(
-        mock_folder.id, ItemUpdate(description=INSTANCE_ID)
-    )
-
-
 async def test_migrate_metadata_files(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     mock_backup_file: File,
 ) -> None:
-    """Test migration of metadata files."""
+    """Test migration of metadata files from v1 to v2.
+
+    V1 stored metadata in the backup file's description field.
+    V2 stores metadata in a separate .metadata.json file.
+    """
     mock_backup_file.description = escape(
         dumps({**BACKUP_METADATA, "metadata_version": 1})
     )
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
+    # Should upload a new metadata file
     mock_onedrive_client.upload_file.assert_called_once()
-    assert mock_onedrive_client.update_drive_item.call_count == 2
-    assert mock_onedrive_client.update_drive_item.call_args[1]["data"].description == ""
+    # No longer updates descriptions (we don't rely on them anymore)
+    assert mock_onedrive_client.update_drive_item.call_count == 0
 
 
 async def test_migrate_metadata_files_errors(

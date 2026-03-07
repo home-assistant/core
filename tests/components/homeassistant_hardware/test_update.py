@@ -11,6 +11,11 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -173,7 +178,12 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    bootloader_reset_methods = []
+    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, 115200),
+        (ApplicationType.SPINEL, 460800),
+    ]
 
     def __init__(
         self,
@@ -222,8 +232,8 @@ async def mock_update_config_entry(
     hass: HomeAssistant,
 ) -> AsyncGenerator[ConfigEntry]:
     """Set up a mock Home Assistant Hardware firmware update entity."""
-    await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await async_setup_component(hass, DOMAIN, {})
 
     mock_integration(
         hass,
@@ -320,9 +330,8 @@ async def test_update_entity_installation(
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
         bootloader_reset_methods: Sequence[ResetTarget] = (),
+        application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
         progress_callback: Callable[[int, int], None] | None = None,
-        *,
-        domain: str = "homeassistant_hardware",
     ) -> FirmwareInfo:
         await asyncio.sleep(0)
         progress_callback(0, 100)
@@ -394,8 +403,8 @@ async def test_update_entity_installation_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": TEST_UPDATE_ENTITY_ID},
         blocking=True,
     )
@@ -438,8 +447,8 @@ async def test_update_entity_installation_probe_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": TEST_UPDATE_ENTITY_ID},
         blocking=True,
     )

@@ -25,7 +25,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
-    "pybluez",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
@@ -52,26 +51,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
-    # Pandas has issues building on armhf, it is expected they
-    # will drop the platform in the near future (they consider it
-    # "flimsy" on 386). The following packages depend on pandas,
-    # so we comment them out.
-    "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_armv7": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
     "wheels_amd64": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_i386": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
@@ -99,9 +79,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.75.1
-grpcio-status==1.75.1
-grpcio-reflection==1.75.1
+grpcio==1.78.0
+grpcio-status==1.78.0
+grpcio-reflection==1.78.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -139,6 +119,9 @@ multidict>=6.0.2
 
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
+
+# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
+Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.12.2
@@ -221,10 +204,6 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
 
-# rpds-py frequently updates cargo causing build failures
-# No wheels upstream available for armhf & armv7
-rpds-py==0.26.0
-
 # Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
 num2words==0.5.14
 
@@ -233,11 +212,19 @@ num2words==0.5.14
 # This ensures all use the same version
 pymodbus==3.11.2
 
-# Some packages don't support gql 4.0.0 yet
-gql<4.0.0
-
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+aiomqtt>=2.5.0
+
+# auth0-python v5.0 is a major rewrite with breaking changes
+# used by sharkiq==1.5.0
+# https://github.com/auth0/auth0-python/releases/tag/5.0.0
+auth0-python<5.0
+
+# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
+setuptools<82.0.0
 """
 
 GENERATED_MESSAGE = (
@@ -374,6 +361,24 @@ def gather_modules() -> dict[str, list[str]] | None:
     return reqs
 
 
+def gather_entity_platform_requirements() -> set[str]:
+    """Gather all of the requirements from manifests for entity platforms."""
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
+    reqs = set()
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if integration.disabled:
+            continue
+
+        if integration.integration_type != "entity":
+            continue
+
+        reqs.update(gather_recursive_requirements(integration.domain))
+    return reqs
+
+
 def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
@@ -456,7 +461,12 @@ def requirements_output() -> str:
         "\n",
         "# Home Assistant Core\n",
     ]
-    output.append("\n".join(core_requirements()))
+
+    requirements = set()
+    requirements.update(core_requirements())
+    requirements.update(gather_entity_platform_requirements())
+
+    output.append("\n".join(sorted(requirements, key=lambda key: key.lower())))
     output.append("\n")
 
     return "".join(output)

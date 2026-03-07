@@ -17,9 +17,13 @@ from homeassistant.components.conversation import (
     default_agent,
     get_agent_manager,
 )
+from homeassistant.components.conversation.chat_log import (
+    AssistantContent,
+    ToolResultContent,
+    async_get_chat_log,
+)
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
-from homeassistant.components.conversation.trigger import TriggerDetails
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
@@ -52,6 +56,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    chat_session,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -423,7 +428,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     manager = get_agent_manager(hass)
 
     callback = AsyncMock(return_value=trigger_response)
-    unregister = manager.register_trigger(TriggerDetails(trigger_sentences, callback))
+    unregister = manager.register_trigger(trigger_sentences, callback)
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -479,7 +484,7 @@ async def test_trigger_sentence_response_translation(
         return_value=translations.get(language),
     ):
         unregister = manager.register_trigger(
-            TriggerDetails(["test sentence"], AsyncMock(return_value=None))
+            ["test sentence"], AsyncMock(return_value=None)
         )
         result = await conversation.async_converse(
             hass, "test sentence", None, Context()
@@ -3175,15 +3180,83 @@ async def test_handle_intents_with_response_errors(
         agent_id=None,
     )
 
-    with patch(
-        "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
-        return_value=default_agent._make_error_result(
-            user_input.language, error_code, "Mock error message"
-        ),
-    ) as mock_process:
-        response = await agent.async_handle_intents(user_input)
+    with (
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
+            return_value=default_agent._make_error_result(
+                user_input.language, error_code, "Mock error message"
+            ),
+        ) as mock_process,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        response = await agent.async_handle_intents(user_input, chat_log)
 
     assert len(mock_process.mock_calls) == 1
+
+    if return_response:
+        assert response is not None and response.error_code == error_code
+    else:
+        assert response is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_code", "return_response"),
+    [
+        (
+            intent.MatchFailedError(
+                result=intent.MatchTargetsResult(is_match=False),
+                constraints=intent.MatchTargetsConstraints(),
+            ),
+            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+            False,
+        ),
+        (
+            intent.IntentHandleError(),
+            intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+            True,
+        ),
+        (intent.IntentUnexpectedError(), intent.IntentResponseErrorCode.UNKNOWN, True),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_handle_failed_intents(
+    hass: HomeAssistant,
+    init_components: None,
+    area_registry: ar.AreaRegistry,
+    side_effect: intent.IntentError,
+    error_code: intent.IntentResponseErrorCode,
+    return_response: bool,
+) -> None:
+    """Test that error results from intent handler are saved to chat_log."""
+    assert await async_setup_component(hass, "climate", {})
+    area_registry.async_create("living room")
+
+    agent = async_get_agent(hass)
+
+    user_input = ConversationInput(
+        text="What is the temperature in the living room?",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.conversation.default_agent.intent.async_handle",
+            side_effect=side_effect,
+        ) as mock_handle,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        response = await agent.async_handle_intents(user_input, chat_log)
+        assert len(chat_log.content) == 4  # System + user + tool call + tool results
+        assert chat_log.content[-1].role == "tool_result"
+
+    assert len(mock_handle.mock_calls) == 1
 
     if return_response:
         assert response is not None and response.error_code == error_code
@@ -3234,9 +3307,11 @@ async def test_handle_intents_filters_results(
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
         ) as mock_process,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(
-            user_input, intent_filter=_filter_intents
+            user_input, chat_log, intent_filter=_filter_intents
         )
 
         assert len(mock_recognize.mock_calls) == 1
@@ -3251,7 +3326,7 @@ async def test_handle_intents_filters_results(
 
         # Second time it is not filtered
         response = await agent.async_handle_intents(
-            user_input, intent_filter=_filter_intents
+            user_input, chat_log, intent_filter=_filter_intents
         )
 
         assert len(mock_recognize.mock_calls) == 2
@@ -3424,3 +3499,149 @@ async def test_fuzzy_matching(
         if slot_name != "preferred_area_id"  # context area
     }
     assert actual_slots == slots
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_tool_call_in_chat_log(hass: HomeAssistant) -> None:
+    """Test that intent tool calls are stored in the chat log."""
+    hass.states.async_set(
+        "light.test_light", "off", attributes={ATTR_FRIENDLY_NAME: "Test Light"}
+    )
+    async_mock_service(hass, "light", "turn_on")
+
+    result = await conversation.async_converse(
+        hass, "turn on test light", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        pass
+
+    # Find the tool call in the chat log
+    tool_call_content: AssistantContent | None = None
+    tool_result_content: ToolResultContent | None = None
+    assistant_content: AssistantContent | None = None
+
+    for content in chat_log.content:
+        if content.role == "assistant" and content.tool_calls:
+            tool_call_content = content
+        if content.role == "tool_result":
+            tool_result_content = content
+        if content.role == "assistant" and not content.tool_calls:
+            assistant_content = content
+
+    # Verify tool call was stored
+    assert tool_call_content is not None and tool_call_content.tool_calls is not None
+    assert len(tool_call_content.tool_calls) == 1
+    assert tool_call_content.tool_calls[0].tool_name == "HassTurnOn"
+    assert tool_call_content.tool_calls[0].external is True
+    assert tool_call_content.tool_calls[0].tool_args.get("name") == "Test Light"
+
+    # Verify tool result was stored
+    assert tool_result_content is not None
+    assert tool_result_content.tool_name == "HassTurnOn"
+    assert tool_result_content.tool_result["response_type"] == "action_done"
+
+    # Verify final assistant content with speech
+    assert assistant_content is not None
+    assert assistant_content.content is not None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
+    """Test that trigger tool calls are stored in the chat log."""
+    trigger_sentence = "test automation trigger"
+    trigger_response = "Trigger activated!"
+
+    manager = get_agent_manager(hass)
+    callback = AsyncMock(return_value=trigger_response)
+    manager.register_trigger([trigger_sentence], callback)
+
+    result = await conversation.async_converse(
+        hass, trigger_sentence, None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        pass
+
+    # Find the tool call in the chat log
+    tool_call_content: AssistantContent | None = None
+    tool_result_content: ToolResultContent | None = None
+
+    for content in chat_log.content:
+        if content.role == "assistant" and content.tool_calls:
+            tool_call_content = content
+        if content.role == "tool_result":
+            tool_result_content = content
+
+    # Verify tool call was stored
+    assert tool_call_content is not None and tool_call_content.tool_calls is not None
+    assert len(tool_call_content.tool_calls) == 1
+    assert tool_call_content.tool_calls[0].tool_name == "trigger_sentence"
+    assert tool_call_content.tool_calls[0].external is True
+    assert tool_call_content.tool_calls[0].tool_args == {}
+
+    # Verify tool result was stored
+    assert tool_result_content is not None
+    assert tool_result_content.tool_name == "trigger_sentence"
+    assert tool_result_content.tool_result["response"] == trigger_response
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_no_tool_call_on_no_intent_match(hass: HomeAssistant) -> None:
+    """Test that no tool call is stored when no intent is matched."""
+    result = await conversation.async_converse(
+        hass, "this is a random sentence that should not match", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        pass
+
+    # Verify no tool call was stored
+    for content in chat_log.content:
+        if content.role == "assistant":
+            assert content.tool_calls is None or len(content.tool_calls) == 0
+            break
+    else:
+        pytest.fail("No assistant content found in chat log")
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_tool_call_with_error_response(hass: HomeAssistant) -> None:
+    """Test that intent tool calls store error information correctly."""
+    # Request to turn on a non-existent device
+    result = await conversation.async_converse(
+        hass, "turn on the non existent device", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        pass
+
+    # Verify no tool call was stored for unmatched entities
+    tool_call_found = False
+    for content in chat_log.content:
+        if content.role == "assistant" and content.tool_calls:
+            tool_call_found = True
+
+    # No tool call should be stored since the entity could not be matched
+    assert not tool_call_found

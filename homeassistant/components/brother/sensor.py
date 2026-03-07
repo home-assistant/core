@@ -10,14 +10,14 @@ import logging
 from brother import BrotherSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -314,7 +314,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.brother.serial.lower()}_b/w_counter"
     if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     ):
         new_unique_id = f"{coordinator.brother.serial.lower()}_bw_counter"
         _LOGGER.debug(
@@ -345,12 +345,10 @@ class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_native_value = description.value(coordinator.data)
         self._attr_unique_id = f"{coordinator.brother.serial.lower()}_{description.key}"
         self.entity_description = description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the native value of the sensor."""
+        return self.entity_description.value(self.coordinator.data)

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -48,6 +49,63 @@
     'state': '2024-09-01T10:11:33+00:00',
   })
 # ---
+# name: test_sensor_setup[sensor.mock_title_cpu_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_cpu_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CPU temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'CPU temperature',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cpu_temperature',
+    'unique_id': '1C:ED:6F:12:34:11-cpu_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_cpu_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Title CPU temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_cpu_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
 # name: test_sensor_setup[sensor.mock_title_download_throughput-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -71,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -125,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External IP',
     'options': dict({
     }),
     'original_device_class': None,
@@ -173,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External IPv6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -223,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GB received',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -279,6 +341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GB sent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -333,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -382,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download noise margin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -431,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download power attenuation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -480,6 +546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -533,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload noise margin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -582,6 +650,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload power attenuation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -631,6 +700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -684,6 +754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max connection download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -737,6 +808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max connection upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -792,6 +864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -823,61 +896,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.4',
-  })
-# ---
-# name: test_sensor_setup[sensor.mock_title_cpu_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_cpu_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'CPU temperature',
-    'platform': 'fritz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cpu_temperature',
-    'unique_id': '1C:ED:6F:12:34:11-cpu_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensor_setup[sensor.mock_title_cpu_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Title CPU temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_cpu_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '69',
   })
 # ---

@@ -68,4 +68,4 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self.coordinator.data[LIGHT][self._device.index].status == STATE_ON
+        return bool(self.coordinator.data[LIGHT][self._device.index].status == STATE_ON)

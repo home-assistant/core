@@ -1,14 +1,14 @@
 {
   "config": {
     "abort": {
-      "addon_get_discovery_info_failed": "Failed to get Matter Server add-on discovery info.",
-      "addon_info_failed": "Failed to get Matter Server add-on info.",
-      "addon_install_failed": "Failed to install the Matter Server add-on.",
-      "addon_start_failed": "Failed to start the Matter Server add-on.",
+      "addon_get_discovery_info_failed": "Failed to get Matter Server app discovery info.",
+      "addon_info_failed": "Failed to get Matter Server app info.",
+      "addon_install_failed": "Failed to install the Matter Server app.",
+      "addon_start_failed": "Failed to start the Matter Server app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_matter_addon": "Discovered add-on is not the official Matter Server add-on.",
+      "not_matter_addon": "Discovered app is not the official Matter Server app.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
     },
     "error": {
@@ -18,15 +18,15 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "install_addon": "Please wait while the Matter Server add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Matter Server add-on starts. This add-on is what powers Matter in Home Assistant. This may take some seconds."
+      "install_addon": "Please wait while the Matter Server app installation finishes. This can take several minutes.",
+      "start_addon": "Please wait while the Matter Server app starts. This app is what powers Matter in Home Assistant. This may take some seconds."
     },
     "step": {
       "hassio_confirm": {
-        "title": "Set up the Matter integration with the Matter Server add-on"
+        "title": "Set up the Matter integration with the Matter Server app"
       },
       "install_addon": {
-        "title": "The add-on installation has started"
+        "title": "The app installation has started"
       },
       "manual": {
         "data": {
@@ -35,18 +35,21 @@
       },
       "on_supervisor": {
         "data": {
-          "use_addon": "Use the official Matter Server Supervisor add-on"
+          "use_addon": "Use the official Matter Server Supervisor app"
         },
-        "description": "Do you want to use the official Matter Server Supervisor add-on?\n\nIf you are already running the Matter Server in another add-on, in a custom container, natively etc., then do not select this option.",
+        "description": "Do you want to use the official Matter Server Supervisor app?\n\nIf you are already running the Matter Server in another app, in a custom container, natively etc., then do not select this option.",
         "title": "Select connection method"
       },
       "start_addon": {
-        "title": "Starting add-on."
+        "title": "Starting app."
       }
     }
   },
   "entity": {
     "binary_sensor": {
+      "actuator": {
+        "name": "Actuator"
+      },
       "alarm_door": {
         "name": "Door alarm"
       },
@@ -55,6 +58,9 @@
       },
       "boost_state": {
         "name": "Boost state"
+      },
+      "config_status_operational": {
+        "name": "Configuration status"
       },
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
@@ -88,6 +94,15 @@
       },
       "test_in_progress": {
         "name": "Test in progress"
+      },
+      "thermostat_remote_sensing_local_temperature": {
+        "name": "Local temperature remote sensing"
+      },
+      "thermostat_remote_sensing_occupancy": {
+        "name": "Occupancy remote sensing"
+      },
+      "thermostat_remote_sensing_outdoor_temperature": {
+        "name": "Outdoor temperature remote sensing"
       },
       "valve_fault_blocked": {
         "name": "Valve blocked"
@@ -194,7 +209,7 @@
         "name": "Altitude above sea level"
       },
       "auto_relock_timer": {
-        "name": "Autorelock time"
+        "name": "Auto-relock time"
       },
       "cook_time": {
         "name": "Cooking time"
@@ -207,6 +222,9 @@
       },
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
+      },
+      "occupied_setback": {
+        "name": "Occupied setback"
       },
       "off_transition_time": {
         "name": "Off transition time"
@@ -222,6 +240,9 @@
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "speaker_setpoint": {
+        "name": "Volume"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -245,6 +266,16 @@
       },
       "device_energy_management_mode": {
         "name": "Energy management mode"
+      },
+      "door_lock_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "no_remote_lock_unlock": "No remote lock/unlock",
+          "normal": "Normal",
+          "passage": "Passage",
+          "privacy": "Privacy",
+          "vacation": "Vacation"
+        }
       },
       "door_lock_sound_volume": {
         "name": "Sound volume",
@@ -364,6 +395,12 @@
       },
       "current_phase": {
         "name": "Current phase"
+      },
+      "door_closed_events": {
+        "name": "Door closed events"
+      },
+      "door_open_events": {
+        "name": "Door open events"
       },
       "energy_exported": {
         "name": "Energy exported"
@@ -527,6 +564,15 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "tvoc_level": {
+        "name": "TVOC level",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
       "valve_position": {
         "name": "Valve position"
       },
@@ -573,6 +619,17 @@
       }
     }
   },
+  "exceptions": {
+    "credential_type_not_supported": {
+      "message": "The lock does not support credential type `{credential_type}`."
+    },
+    "invalid_credential_data": {
+      "message": "Invalid credential data: {reason}."
+    },
+    "set_credential_failed": {
+      "message": "Failed to set credential: lock returned status `{status}`."
+    }
+  },
   "issues": {
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
@@ -584,6 +641,52 @@
     }
   },
   "services": {
+    "clear_lock_credential": {
+      "description": "Removes a credential from a lock.",
+      "fields": {
+        "credential_index": {
+          "description": "The credential slot index to clear.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential to clear.",
+          "name": "Credential type"
+        }
+      },
+      "name": "Clear lock credential"
+    },
+    "clear_lock_user": {
+      "description": "Deletes a lock user and all associated credentials. Use index 65534 to clear all users.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index (1-based) to clear, or 65534 to clear all.",
+          "name": "User index"
+        }
+      },
+      "name": "Clear lock user"
+    },
+    "get_lock_credential_status": {
+      "description": "Returns the status of a credential slot on a lock.",
+      "fields": {
+        "credential_index": {
+          "description": "The credential slot index to query.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential to query.",
+          "name": "Credential type"
+        }
+      },
+      "name": "Get lock credential status"
+    },
+    "get_lock_info": {
+      "description": "Returns lock capabilities including supported credential types, user capacity, and PIN length constraints.",
+      "name": "Get lock info"
+    },
+    "get_lock_users": {
+      "description": "Returns all users configured on a lock with their credentials.",
+      "name": "Get lock users"
+    },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
@@ -593,6 +696,58 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_lock_credential": {
+      "description": "Adds or updates a credential on a lock.",
+      "fields": {
+        "credential_data": {
+          "description": "The credential data. For PIN: digits only. For RFID: hexadecimal string.",
+          "name": "Credential data"
+        },
+        "credential_index": {
+          "description": "The credential slot index. Leave empty to auto-find an available slot.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential (e.g., pin, rfid, fingerprint).",
+          "name": "Credential type"
+        },
+        "user_index": {
+          "description": "The user index to associate the credential with. Leave empty for automatic assignment.",
+          "name": "User index"
+        },
+        "user_status": {
+          "description": "The user status to set when creating a new user for this credential.",
+          "name": "User status"
+        },
+        "user_type": {
+          "description": "The user type to set when creating a new user for this credential.",
+          "name": "User type"
+        }
+      },
+      "name": "Set lock credential"
+    },
+    "set_lock_user": {
+      "description": "Creates or updates a lock user.",
+      "fields": {
+        "credential_rule": {
+          "description": "The credential rule for the user.",
+          "name": "Credential rule"
+        },
+        "user_index": {
+          "description": "The user slot index (1-based). Leave empty to auto-find an available slot.",
+          "name": "User index"
+        },
+        "user_name": {
+          "description": "The name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user to create.",
+          "name": "User type"
+        }
+      },
+      "name": "Set lock user"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

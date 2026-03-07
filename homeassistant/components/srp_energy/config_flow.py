@@ -7,9 +7,14 @@ from typing import Any
 from srpenergy.client import SrpEnergyClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_IS_TOU, DOMAIN, LOGGER
@@ -40,52 +45,71 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    @callback
-    def _show_form(self, errors: dict[str, Any]) -> ConfigFlowResult:
-        """Show the form to the user."""
-        LOGGER.debug("Show Form")
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
-                    vol.Required(CONF_ID): str,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_IS_TOU, default=False): bool,
-                }
-            ),
-            errors=errors,
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         LOGGER.debug("Config entry")
         errors: dict[str, str] = {}
-        if not user_input:
-            return self._show_form(errors)
+        if user_input:
+            try:
+                await validate_input(self.hass, user_input)
+            except ValueError:
+                # Thrown when the account id is malformed
+                errors["base"] = "invalid_account"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+            else:
+                await self.async_set_unique_id(user_input[CONF_ID])
+                if self.source == SOURCE_USER:
+                    self._abort_if_unique_id_configured()
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
 
-        try:
-            await validate_input(self.hass, user_input)
-        except ValueError:
-            # Thrown when the account id is malformed
-            errors["base"] = "invalid_account"
-            return self._show_form(errors)
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-            return self._show_form(errors)
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+                if self.source == SOURCE_USER:
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME],
+                        data=user_input,
+                    )
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data=user_input,
+                )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_ID): (
+                            str
+                            if self.source == SOURCE_USER
+                            else self._get_reconfigure_entry().data[CONF_ID]
+                        ),
+                        vol.Required(
+                            CONF_NAME, default=self.hass.config.location_name
+                        ): str,
+                        vol.Required(CONF_USERNAME): str,
+                        vol.Required(CONF_PASSWORD): str,
+                        vol.Optional(CONF_IS_TOU, default=False): bool,
+                    }
+                ),
+                suggested_values=(
+                    user_input or self._get_reconfigure_entry().data
+                    if self.source == SOURCE_RECONFIGURE
+                    else None
+                ),
+            ),
+            errors=errors,
+        )
 
-        await self.async_set_unique_id(user_input[CONF_ID])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()
 
 
 class InvalidAuth(HomeAssistantError):
