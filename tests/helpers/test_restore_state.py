@@ -313,10 +313,7 @@ async def test_hass_final_write_after_entity_removed(hass: HomeAssistant) -> Non
     data = async_get(hass)
     await hass.async_block_till_done()
     await data.store.async_save([])
-
-    hass.data.pop(DATA_RESTORE_STATE)
-    await async_load(hass)
-    await hass.async_block_till_done()
+    data.last_states = {}
 
     platform = MockEntityPlatform(hass, domain="input_boolean")
     entity = RestoreEntity()
