@@ -38,6 +38,7 @@ from .const import (
     MODULE_STATISTICS_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
+    STORAGE_DATA_UPDATE_DELAY,
 )
 
 if TYPE_CHECKING:
@@ -332,6 +333,69 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 self.attributes[key]["soc"] = value["chargeLevel"]
 
         LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)
+
+
+class SolarEdgeStorageDataService(SolarEdgeDataService):
+    """Get and update the latest storage data."""
+
+    @property
+    def update_interval(self) -> timedelta:
+        """Update interval."""
+        return STORAGE_DATA_UPDATE_DELAY
+
+    async def async_update_data(self) -> None:
+        """Update the data from the SolarEdge Monitoring API."""
+        try:
+            data = await self.api.get_storage_data(
+                self.site_id,
+                datetime.now() - timedelta(days=1),
+                datetime.now(),
+            )
+            # Use direct key access to properly raise UpdateFailed on missing keys
+            storage_data = data["storageData"]
+            batteries = storage_data["batteries"]
+        except KeyError as ex:
+            raise UpdateFailed(f"Missing storage data key: {ex}") from ex
+
+        self.data = {}
+        self.attributes = {}
+
+        if not batteries:
+            LOGGER.debug("No batteries found in storage data")
+            return
+
+        # Aggregate totals across all batteries
+        total_charge_energy = 0.0
+        total_discharge_energy = 0.0
+        battery_count = len(batteries)
+
+        for battery in batteries:
+            serial = battery.get("serialNumber", "unknown")
+            telemetries = battery.get("telemetries", [])
+
+            if not telemetries:
+                continue
+
+            # Get the most recent telemetry entry
+            latest = telemetries[-1]
+            charge_energy = latest.get("chargeEnergy", 0.0)
+            discharge_energy = latest.get("dischargeEnergy", 0.0)
+
+            total_charge_energy += charge_energy
+            total_discharge_energy += discharge_energy
+
+            self.attributes[serial] = {
+                "charge_energy": charge_energy,
+                "discharge_energy": discharge_energy,
+                "state_of_charge": latest.get("batteryPercentageState"),
+                "power": latest.get("power"),
+            }
+
+        self.data["charge_energy"] = total_charge_energy
+        self.data["discharge_energy"] = total_discharge_energy
+        self.data["battery_count"] = battery_count
+
+        LOGGER.debug("Updated SolarEdge storage data: %s, %s", self.data, self.attributes)
 
 
 class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):

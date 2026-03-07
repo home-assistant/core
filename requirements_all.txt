@@ -401,7 +401,7 @@ aioskybell==22.7.0
 aioslimproto==3.0.0
 
 # homeassistant.components.solaredge
-aiosolaredge==0.2.0
+aiosolaredge==1.0.2
 
 # homeassistant.components.steamist
 aiosteamist==1.0.1
