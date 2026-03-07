@@ -44,6 +44,38 @@
       }
     }
   },
+  "exceptions": {
+    "account_not_initialized": {
+      "message": "Account not initialized: {entry}"
+    },
+    "album_not_found": {
+      "message": "Album not found"
+    },
+    "album_type_not_specified": {
+      "message": "Album type not specified"
+    },
+    "config_entry_not_found": {
+      "message": "Config entry not found for account: {entry}"
+    },
+    "config_entry_not_loaded": {
+      "message": "Config entry not loaded"
+    },
+    "incomplete_media_source_identifier": {
+      "message": "Incomplete media source identifier"
+    },
+    "invalid_media_source": {
+      "message": "Invalid media source"
+    },
+    "photo_not_found": {
+      "message": "Photo not found"
+    },
+    "unknown_media_item": {
+      "message": "Unknown media item"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type"
+    }
+  },
   "services": {
     "display_message": {
       "description": "Displays a message on an Apple device.",
