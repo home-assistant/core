@@ -2,7 +2,7 @@
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cover import ATTR_IS_CLOSED, DOMAIN as COVER_DOMAIN
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import get_device_class
@@ -65,8 +65,16 @@ class DoorOpenedTrigger(DoorTriggerBase):
     _cover_is_closed_target_value = False
 
 
+class DoorClosedTrigger(DoorTriggerBase):
+    """Trigger for door closed state changes."""
+
+    _binary_sensor_target_state = STATE_OFF
+    _cover_is_closed_target_value = True
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "opened": DoorOpenedTrigger,
+    "closed": DoorClosedTrigger,
 }
 
 
