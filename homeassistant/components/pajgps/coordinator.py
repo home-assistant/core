@@ -10,10 +10,12 @@ Responsibilities:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import dataclasses
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 
 import aiohttp
 from pajgps_api import PajGpsApi
@@ -70,7 +72,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: dict,
+        entry_data: Mapping[str, Any],
         config_entry: ConfigEntry | None = None,
         websession: aiohttp.ClientSession | None = None,
     ) -> None:
@@ -88,7 +90,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
             password=entry_data["password"],
             websession=websession,
         )
-        self._entry_data = entry_data
+        self._entry_data: Mapping[str, Any] = entry_data
         self._queue = DeviceRequestQueue()
         self._owns_websession = websession is None
 
@@ -211,6 +213,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
             await self.api.close()
 
     @property
-    def entry_data(self) -> dict:
+    def entry_data(self) -> Mapping[str, Any]:
         """Return the config entry data."""
         return self._entry_data
