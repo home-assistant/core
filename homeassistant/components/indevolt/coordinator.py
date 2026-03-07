@@ -21,8 +21,15 @@ from .const import (
     CONF_SERIAL_NUMBER,
     DEFAULT_PORT,
     DOMAIN,
+    ENERGY_MODE_READ_KEY,
+    ENERGY_MODE_WRITE_KEY,
+    PORTABLE_MODE,
+    REALTIME_ACTION_KEY,
+    REALTIME_ACTION_MODE,
     SENSOR_KEYS,
 )
+
+EMERGENCY_SOC_READ_KEY = "6105"
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = 30
@@ -30,9 +37,18 @@ SCAN_INTERVAL = 30
 type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
 
 
+class DeviceTimeoutError(HomeAssistantError):
+    """Raised when device push times out."""
+
+
+class DeviceConnectionError(HomeAssistantError):
+    """Raised when device push fails due to connection issues."""
+
+
 class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching and pushing data to indevolt devices."""
 
+    friendly_name: str
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
 
@@ -53,6 +69,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
+        self.friendly_name = entry.title
         self.serial_number = entry.data[CONF_SERIAL_NUMBER]
         self.device_model = entry.data[CONF_MODEL]
         self.generation = entry.data[CONF_GENERATION]
@@ -85,6 +102,48 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.set_data(sensor_key, value)
         except TimeOutException as err:
-            raise HomeAssistantError(f"Device push timed out: {err}") from err
+            raise DeviceTimeoutError(f"Device push timed out: {err}") from err
         except (ClientError, ConnectionError, OSError) as err:
-            raise HomeAssistantError(f"Device push failed: {err}") from err
+            raise DeviceConnectionError(f"Device push failed: {err}") from err
+
+    async def async_switch_energy_mode(self, target_mode: int) -> None:
+        """Attempt to switch device to given energy mode."""
+        current_mode = self.data.get(ENERGY_MODE_READ_KEY)
+
+        # Ensure current energy mode is known
+        if current_mode is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_retrieve_current_energy_mode",
+            )
+
+        # Ensure device is not in "Outdoor/Portable mode"
+        if current_mode == PORTABLE_MODE:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="energy_mode_change_unavailable_outdoor_portable",
+            )
+
+        # Switch energy mode if required
+        if current_mode != target_mode:
+            try:
+                await self.async_push_data(ENERGY_MODE_WRITE_KEY, target_mode)
+
+            except (DeviceTimeoutError, DeviceConnectionError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_switch_energy_mode",
+                ) from err
+
+            await self.async_request_refresh()
+
+    async def async_execute_realtime_action(self, action: list[int]) -> None:
+        """Switch mode, execute action, and refresh for real-time control."""
+
+        await self.async_switch_energy_mode(REALTIME_ACTION_MODE)
+        await self.async_push_data(REALTIME_ACTION_KEY, action)
+        await self.async_request_refresh()
+
+    def async_get_emergency_soc(self) -> int:
+        """Get the emergency SOC value."""
+        return self.data.get(EMERGENCY_SOC_READ_KEY, 10)

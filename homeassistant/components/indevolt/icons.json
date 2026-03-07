@@ -1,0 +1,13 @@
+{
+  "services": {
+    "charge": {
+      "service": "mdi:battery-arrow-up"
+    },
+    "discharge": {
+      "service": "mdi:battery-arrow-down"
+    },
+    "stop": {
+      "service": "mdi:battery-off"
+    }
+  }
+}
