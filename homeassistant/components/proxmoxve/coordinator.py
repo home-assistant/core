@@ -45,6 +45,8 @@ class ProxmoxNodeData:
     node: dict[str, str] = field(default_factory=dict)
     vms: dict[int, dict[str, Any]] = field(default_factory=dict)
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
+    version: str | None = None
+    updates: list[dict[str, Any]] = field(default_factory=list)
 
 
 class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
@@ -129,7 +131,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         """Fetch data from Proxmox VE API."""
 
         try:
-            nodes, vms_containers = await self.hass.async_add_executor_job(
+            nodes, node_data = await self.hass.async_add_executor_job(
                 self._fetch_all_nodes
             )
         except AuthenticationError as err:
@@ -163,13 +165,17 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
-        for node, (vms, containers) in zip(nodes, vms_containers, strict=True):
+        for node, (vms, containers, version, updates) in zip(
+            nodes, node_data, strict=True
+        ):
             data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
                 vms={int(vm["vmid"]): vm for vm in vms},
                 containers={
                     int(container["vmid"]): container for container in containers
                 },
+                version=version,
+                updates=updates,
             )
 
         self._async_add_remove_nodes(data)
@@ -208,21 +214,35 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _fetch_all_nodes(
         self,
     ) -> tuple[
-        list[dict[str, Any]], list[tuple[list[dict[str, Any]], list[dict[str, Any]]]]
+        list[dict[str, Any]],
+        list[
+            tuple[
+                list[dict[str, Any]],
+                list[dict[str, Any]],
+                str | None,
+                list[dict[str, Any]],
+            ]
+        ],
     ]:
-        """Fetch all nodes, and then proceed to the VMs and containers."""
+        """Fetch all nodes, and then proceed to the VMs, containers, version and updates."""
         nodes = self.proxmox.nodes.get() or []
-        vms_containers = [self._get_vms_containers(node) for node in nodes]
-        return nodes, vms_containers
+        node_data = [self._fetch_node_data(node) for node in nodes]
+        return nodes, node_data
 
-    def _get_vms_containers(
+    def _fetch_node_data(
         self,
         node: dict[str, Any],
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        """Get vms and containers for a node."""
+    ) -> tuple[
+        list[dict[str, Any]], list[dict[str, Any]], str | None, list[dict[str, Any]]
+    ]:
+        """Fetch VMs, containers, version and available updates for a node."""
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
-        return vms, containers
+        version_info = self.proxmox.nodes(node[CONF_NODE]).version.get() or {}
+        version = version_info.get("version")
+        updates = self.proxmox.nodes(node[CONF_NODE]).apt.update.get() or []
+
+        return vms, containers, version, updates
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
