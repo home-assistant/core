@@ -10,12 +10,13 @@ import pytest
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.helpers import (
     get_device_id,
+    get_node_binding_capabilities,
     get_node_from_device_entry,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .common import setup_integration_with_node_fixture
+from .common import create_node_from_fixture, setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 
@@ -67,3 +68,74 @@ async def test_get_node_from_device_entry(
         node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert "Matter server information is not available" in str(runtime_error.value)
+
+
+def test_get_node_binding_capabilities_light_switch() -> None:
+    """Test binding capabilities for a light switch (source only)."""
+    node = create_node_from_fixture("silabs_light_switch")
+    capabilities = get_node_binding_capabilities(node)
+
+    assert len(capabilities.source_endpoints) == 1
+    assert capabilities.source_endpoints[0].endpoint_id == 1
+    assert capabilities.source_endpoints[0].cluster_ids == {6, 768}
+    assert len(capabilities.target_endpoints) == 0
+
+
+def test_get_node_binding_capabilities_combo_device() -> None:
+    """Test binding capabilities for a combo device (source and target)."""
+    node = create_node_from_fixture("inovelli_vtm31")
+    capabilities = get_node_binding_capabilities(node)
+
+    assert len(capabilities.source_endpoints) == 1
+    assert capabilities.source_endpoints[0].endpoint_id == 2
+    assert capabilities.source_endpoints[0].cluster_ids == {6, 8}
+
+    assert len(capabilities.target_endpoints) == 2
+    assert capabilities.target_endpoints[0].endpoint_id == 1
+    assert capabilities.target_endpoints[0].cluster_ids == {6, 8}
+    assert capabilities.target_endpoints[1].endpoint_id == 6
+    assert capabilities.target_endpoints[1].cluster_ids == {6, 8, 768}
+
+
+def test_get_node_binding_capabilities_pure_target() -> None:
+    """Test binding capabilities for a dimmable light (target only)."""
+    node = create_node_from_fixture("mock_dimmable_light")
+    capabilities = get_node_binding_capabilities(node)
+
+    assert len(capabilities.source_endpoints) == 0
+    assert len(capabilities.target_endpoints) == 1
+    assert capabilities.target_endpoints[0].endpoint_id == 1
+    assert capabilities.target_endpoints[0].cluster_ids == {6, 8}
+
+
+def test_get_node_binding_capabilities_thermostat() -> None:
+    """Test binding capabilities for a thermostat (target only)."""
+    node = create_node_from_fixture("mock_thermostat")
+    capabilities = get_node_binding_capabilities(node)
+
+    assert len(capabilities.source_endpoints) == 0
+    assert len(capabilities.target_endpoints) == 1
+    assert capabilities.target_endpoints[0].endpoint_id == 1
+    assert capabilities.target_endpoints[0].cluster_ids == {513}
+
+
+def test_get_node_binding_capabilities_binding_without_client_clusters() -> None:
+    """Test endpoint with Binding cluster but no bindable client clusters."""
+    node = create_node_from_fixture("mock_occupancy_sensor")
+    capabilities = get_node_binding_capabilities(node)
+
+    # Endpoint 1 has Binding cluster but empty ClientList,
+    # so it must not appear as a source endpoint
+    assert len(capabilities.source_endpoints) == 0
+    # Endpoint 1 ServerList contains bindable clusters, so it is a target
+    assert len(capabilities.target_endpoints) == 1
+    assert capabilities.target_endpoints[0].endpoint_id == 1
+    assert capabilities.target_endpoints[0].cluster_ids == {
+        6,
+        8,
+        257,
+        258,
+        512,
+        513,
+        768,
+    }

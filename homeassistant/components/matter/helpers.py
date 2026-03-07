@@ -6,11 +6,14 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from chip.clusters import Objects as clusters
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, ID_TYPE_DEVICE_ID
+from .const import BINDABLE_CLUSTER_IDS, DOMAIN, ID_TYPE_DEVICE_ID
+from .models import EndpointBindingInfo, NodeBindingCapabilities
 
 if TYPE_CHECKING:
     from matter_server.client.models.node import MatterEndpoint, MatterNode
@@ -117,4 +120,62 @@ def get_node_from_device_entry(
             if get_device_id(server_info, endpoint) == device_id
         ),
         None,
+    )
+
+
+@callback
+def get_node_binding_capabilities(node: MatterNode) -> NodeBindingCapabilities:
+    """Get binding capabilities for a Matter node.
+
+    Determines which endpoints can act as binding sources (have the Binding
+    cluster and client clusters to send commands) and which can act as binding
+    targets (have server clusters to receive commands).
+    """
+    source_endpoints: list[EndpointBindingInfo] = []
+    target_endpoints: list[EndpointBindingInfo] = []
+
+    for endpoint in node.endpoints.values():
+        if endpoint.endpoint_id == 0:
+            continue
+
+        server_list: list[int] = (
+            endpoint.get_attribute_value(
+                None, clusters.Descriptor.Attributes.ServerList
+            )
+            or []
+        )
+        client_list: list[int] = (
+            endpoint.get_attribute_value(
+                None, clusters.Descriptor.Attributes.ClientList
+            )
+            or []
+        )
+
+        # Source: has Binding cluster and bindable client clusters
+        if endpoint.has_cluster(clusters.Binding):
+            source_cluster_ids = set(BINDABLE_CLUSTER_IDS & set(client_list))
+            if source_cluster_ids:
+                source_endpoints.append(
+                    EndpointBindingInfo(
+                        endpoint_id=endpoint.endpoint_id,
+                        cluster_ids=source_cluster_ids,
+                    )
+                )
+
+        # Target: has bindable server clusters
+        target_cluster_ids = set(BINDABLE_CLUSTER_IDS & set(server_list))
+        if target_cluster_ids:
+            target_endpoints.append(
+                EndpointBindingInfo(
+                    endpoint_id=endpoint.endpoint_id,
+                    cluster_ids=target_cluster_ids,
+                )
+            )
+
+    source_endpoints.sort(key=lambda e: e.endpoint_id)
+    target_endpoints.sort(key=lambda e: e.endpoint_id)
+
+    return NodeBindingCapabilities(
+        source_endpoints=source_endpoints,
+        target_endpoints=target_endpoints,
     )
