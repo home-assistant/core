@@ -125,6 +125,10 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value=None),
             ),
             patch(
+                "homeassistant.components.pajgps.async_get_clientsession",
+                return_value=MagicMock(),
+            ),
+            patch(
                 "homeassistant.components.pajgps.PajGpsCoordinator",
                 return_value=mock_coordinator,
             ),
@@ -146,6 +150,10 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
             patch(
                 "homeassistant.components.pajgps._validate_credentials",
                 new=AsyncMock(return_value=None),
+            ),
+            patch(
+                "homeassistant.components.pajgps.async_get_clientsession",
+                return_value=MagicMock(),
             ),
             patch(
                 "homeassistant.components.pajgps.PajGpsCoordinator",
@@ -174,6 +182,10 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value=None),
             ),
             patch(
+                "homeassistant.components.pajgps.async_get_clientsession",
+                return_value=MagicMock(),
+            ),
+            patch(
                 "homeassistant.components.pajgps.PajGpsCoordinator",
                 return_value=mock_coordinator,
             ),
@@ -197,6 +209,10 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
             patch(
                 "homeassistant.components.pajgps._validate_credentials",
                 new=AsyncMock(return_value=None),
+            ),
+            patch(
+                "homeassistant.components.pajgps.async_get_clientsession",
+                return_value=MagicMock(),
             ),
             patch(
                 "homeassistant.components.pajgps.PajGpsCoordinator",
