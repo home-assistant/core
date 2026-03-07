@@ -308,6 +308,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -422,6 +423,61 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments/rooms that can be cleaned on Q7 devices."""
+        map_content_trait = self.coordinator.api.map_content
+        if map_content_trait is None:
+            return []
+
+        try:
+            map_content = await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh Q7 map content: %s", err)
+            return []
+
+        if not map_content.rooms:
+            return []
+
+        return [
+            Segment(
+                id=str(room_id),
+                name=room_name,
+                group="Current map",
+            )
+            for room_id, room_name in sorted(map_content.rooms.items())
+        ]
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified room ids on Q7 devices.
+
+        Q7 uses room ids directly. We accept either "12" or "map_12"/"1_12"
+        formatted segment identifiers and normalize to integers.
+        """
+        room_ids: list[int] = []
+        for seg_id in segment_ids:
+            try:
+                room_ids.append(int(seg_id.split("_")[-1]))
+            except ValueError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="segment_id_parse_error",
+                    translation_placeholders={"segment_id": seg_id},
+                ) from err
+
+        if not room_ids:
+            return
+
+        try:
+            await self.coordinator.api.clean_segments(room_ids)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
+                },
+            ) from err
+
     async def async_send_command(
         self,
         command: str,
@@ -430,6 +486,19 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     ) -> None:
         """Send a command to a vacuum cleaner."""
         try:
+            if command == "app_segment_clean" and isinstance(params, list) and params:
+                first_param = params[0]
+                if (
+                    len(params) == 1
+                    and isinstance(first_param, dict)
+                    and isinstance(first_param.get("segments"), list)
+                    and set(first_param) <= {"segments"}
+                ):
+                    await self.async_clean_segments(
+                        [str(segment) for segment in first_param["segments"]]
+                    )
+                    return
+
             await self.coordinator.api.send(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
