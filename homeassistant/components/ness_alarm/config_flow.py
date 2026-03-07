@@ -111,9 +111,6 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            # Check if already configured
-            self._async_abort_entries_match({CONF_HOST: host})
-
             # Test connection to the alarm panel
             try:
                 await self._test_connection(host, port)
@@ -141,9 +138,6 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import YAML configuration."""
         host = import_data[CONF_HOST]
         port = import_data[CONF_PORT]
-
-        # Check if already configured
-        self._async_abort_entries_match({CONF_HOST: host})
 
         # Test connection to the alarm panel
         try:

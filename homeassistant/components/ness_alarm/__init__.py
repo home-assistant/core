@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -146,16 +145,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
         infer_arming_state=entry.data.get(CONF_INFER_ARMING_STATE, False),
     )
 
-    coordinator = NessAlarmCoordinator(hass, entry, client)
-
-    # Verify the client can connect to the alarm panel
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+    async def _close(event: Event) -> None:
         await client.close()
-        raise
+
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
+    entry.async_on_unload(client.close)
+
+    coordinator = NessAlarmCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register a dummy listener so the coordinator actually polls
+    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
 
     def on_zone_change(zone_id: int, state: bool) -> None:
         """Receive and propagate zone state updates."""
@@ -173,12 +175,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
 
     client.on_zone_change(on_zone_change)
     client.on_state_change(on_state_change)
-
-    async def _close(event: Event) -> None:
-        await client.close()
-
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
-    entry.async_on_unload(client.close)
 
     async def _started(hass: HomeAssistant) -> None:
         _LOGGER.debug("Invoking client keepalive()")
