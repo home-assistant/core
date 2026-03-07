@@ -1,4 +1,4 @@
-"""Diagnostics support for Indevolt."""
+"""Diagnostics support for Indevolt integration."""
 
 from __future__ import annotations
 
