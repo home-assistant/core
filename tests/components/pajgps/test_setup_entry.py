@@ -4,7 +4,7 @@ Coverage:
 - cannot_connect → raises ConfigEntryNotReady before coordinator is created
 - invalid_auth   → raises ConfigEntryAuthFailed before coordinator is created
 - valid credentials + coordinator success → returns True, runtime_data set
-- valid credentials + coordinator first-refresh fails → raises ConfigEntryAuthFailed
+- valid credentials + coordinator first-refresh fails → raises ConfigEntryNotReady
 """
 
 from __future__ import annotations
