@@ -180,4 +180,3 @@ async def test_keypad_uuid_migration(
     )
     assert device is not None
     assert device.name == "Test Keypad"
-
