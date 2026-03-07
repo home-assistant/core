@@ -1,6 +1,7 @@
 """The tests for the Universal Media player platform."""
 
 from copy import copy
+import datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -268,6 +269,65 @@ async def mock_states(hass: HomeAssistant) -> Mock:
 
     result.mock_media_image_url_id = f"{input_select.DOMAIN}.entity_picture"
     hass.states.async_set(result.mock_media_image_url_id, "/local/picture.png")
+
+    result.mock_assumed_state_id = switch.ENTITY_ID_FORMAT.format("assumed_state")
+    hass.states.async_set(result.mock_assumed_state_id, True)
+
+    result.mock_media_content_id_id = f"{input_select.DOMAIN}.media_content_id"
+    hass.states.async_set(result.mock_media_content_id_id, "spotify:track:123")
+
+    result.mock_media_content_type_id = f"{input_select.DOMAIN}.media_content_type"
+    hass.states.async_set(result.mock_media_content_type_id, "music")
+
+    result.mock_media_duration_id = f"{input_number.DOMAIN}.media_duration"
+    hass.states.async_set(result.mock_media_duration_id, 180)
+
+    result.mock_media_title_id = f"{input_select.DOMAIN}.media_title"
+    hass.states.async_set(result.mock_media_title_id, "Song Title")
+
+    result.mock_media_artist_id = f"{input_select.DOMAIN}.media_artist"
+    hass.states.async_set(result.mock_media_artist_id, "Artist Name")
+
+    result.mock_media_album_name_id = f"{input_select.DOMAIN}.media_album_name"
+    hass.states.async_set(result.mock_media_album_name_id, "Album Name")
+
+    result.mock_media_album_artist_id = f"{input_select.DOMAIN}.media_album_artist"
+    hass.states.async_set(result.mock_media_album_artist_id, "Album Artist")
+
+    result.mock_media_track_id = f"{input_number.DOMAIN}.media_track"
+    hass.states.async_set(result.mock_media_track_id, 5)
+
+    result.mock_media_series_title_id = f"{input_select.DOMAIN}.media_series_title"
+    hass.states.async_set(result.mock_media_series_title_id, "Series Title")
+
+    result.mock_media_season_id = f"{input_number.DOMAIN}.media_season"
+    hass.states.async_set(result.mock_media_season_id, "2nd season")
+
+    result.mock_media_episode_id = f"{input_number.DOMAIN}.media_episode"
+    hass.states.async_set(result.mock_media_episode_id, "Episode 10")
+
+    result.mock_media_channel_id = f"{input_select.DOMAIN}.media_channel"
+    hass.states.async_set(result.mock_media_channel_id, "BBC One")
+
+    result.mock_media_playlist_id = f"{input_select.DOMAIN}.media_playlist"
+    hass.states.async_set(result.mock_media_playlist_id, "My Playlist")
+
+    result.mock_app_id_id = f"{input_select.DOMAIN}.app_id"
+    hass.states.async_set(result.mock_app_id_id, "com.spotify.music")
+
+    result.mock_app_name_id = f"{input_select.DOMAIN}.app_name"
+    hass.states.async_set(result.mock_app_name_id, "Spotify")
+
+    result.mock_media_position_id = f"{input_number.DOMAIN}.media_position"
+    hass.states.async_set(result.mock_media_position_id, 45)
+
+    result.mock_media_position_updated_at_id = (
+        f"{input_select.DOMAIN}.media_position_updated_at"
+    )
+    hass.states.async_set(
+        result.mock_media_position_updated_at_id, "2023-01-01T12:00:00"
+    )
+
     return result
 
 
@@ -282,8 +342,24 @@ def config_children_and_attr(mock_states):
             media_player.ENTITY_ID_FORMAT.format("mock2"),
         ],
         "attributes": {
+            "assumed_state": mock_states.mock_assumed_state_id,
             "is_volume_muted": mock_states.mock_mute_switch_id,
             "volume_level": mock_states.mock_volume_id,
+            "media_content_id": mock_states.mock_media_content_id_id,
+            "media_content_type": mock_states.mock_media_content_type_id,
+            "media_duration": mock_states.mock_media_duration_id,
+            "media_title": mock_states.mock_media_title_id,
+            "media_artist": mock_states.mock_media_artist_id,
+            "media_album_name": mock_states.mock_media_album_name_id,
+            "media_album_artist": mock_states.mock_media_album_artist_id,
+            "media_track": mock_states.mock_media_track_id,
+            "media_series_title": mock_states.mock_media_series_title_id,
+            "media_season": mock_states.mock_media_season_id,
+            "media_episode": mock_states.mock_media_episode_id,
+            "media_channel": mock_states.mock_media_channel_id,
+            "media_playlist": mock_states.mock_media_playlist_id,
+            "app_id": mock_states.mock_app_id_id,
+            "app_name": mock_states.mock_app_name_id,
             "source": mock_states.mock_source_id,
             "source_list": mock_states.mock_source_list_id,
             "state": mock_states.mock_state_switch_id,
@@ -292,6 +368,8 @@ def config_children_and_attr(mock_states):
             "sound_mode_list": mock_states.mock_sound_mode_list_id,
             "sound_mode": mock_states.mock_sound_mode_id,
             "entity_picture": mock_states.mock_media_image_url_id,
+            "media_position": mock_states.mock_media_position_id,
+            "media_position_updated_at": mock_states.mock_media_position_updated_at_id,
         },
     }
 
@@ -673,6 +751,20 @@ async def test_volume_level_children_and_attr(
     assert ump.volume_level == 100
 
 
+async def test_assumed_state_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test assumed_state property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.assumed_state is True
+
+    hass.states.async_set(mock_states.mock_assumed_state_id, False)
+    assert ump.assumed_state is False
+
+
 async def test_is_volume_muted_children_and_attr(
     hass: HomeAssistant, config_children_and_attr, mock_states
 ) -> None:
@@ -685,6 +777,246 @@ async def test_is_volume_muted_children_and_attr(
 
     hass.states.async_set(mock_states.mock_mute_switch_id, STATE_ON)
     assert ump.is_volume_muted
+
+
+async def test_media_content_id_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_content_id property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_content_id == "spotify:track:123"
+
+    hass.states.async_set(mock_states.mock_media_content_id_id, "spotify:track:456")
+    assert ump.media_content_id == "spotify:track:456"
+
+
+async def test_media_content_type_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_content_type property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_content_type == "music"
+
+    hass.states.async_set(mock_states.mock_media_content_type_id, "podcast")
+    assert ump.media_content_type == "podcast"
+
+
+async def test_media_duration_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_duration property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_duration == 180
+
+    hass.states.async_set(mock_states.mock_media_duration_id, 240)
+    assert ump.media_duration == 240
+
+
+async def test_media_title_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_title property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_title == "Song Title"
+
+    hass.states.async_set(mock_states.mock_media_title_id, "Another Song")
+    assert ump.media_title == "Another Song"
+
+
+async def test_media_artist_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_artist property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_artist == "Artist Name"
+
+    hass.states.async_set(mock_states.mock_media_artist_id, "Other Artist")
+    assert ump.media_artist == "Other Artist"
+
+
+async def test_media_album_name_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_album_name property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_album_name == "Album Name"
+
+    hass.states.async_set(mock_states.mock_media_album_name_id, "Other Album")
+    assert ump.media_album_name == "Other Album"
+
+
+async def test_media_album_artist_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_album_artist property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_album_artist == "Album Artist"
+
+    hass.states.async_set(mock_states.mock_media_album_artist_id, "Other Album Artist")
+    assert ump.media_album_artist == "Other Album Artist"
+
+
+async def test_media_track_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_track property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_track == 5
+
+    hass.states.async_set(mock_states.mock_media_track_id, 10)
+    assert ump.media_track == 10
+
+
+async def test_media_series_title_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_series_title property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_series_title == "Series Title"
+
+    hass.states.async_set(mock_states.mock_media_series_title_id, "Other Series")
+    assert ump.media_series_title == "Other Series"
+
+
+async def test_media_season_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_season property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_season == "2nd season"
+
+    hass.states.async_set(mock_states.mock_media_season_id, "3rd season")
+    assert ump.media_season == "3rd season"
+
+
+async def test_media_episode_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_episode property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_episode == "Episode 10"
+
+    hass.states.async_set(mock_states.mock_media_episode_id, "Episode 8")
+    assert ump.media_episode == "Episode 8"
+
+
+async def test_media_channel_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_channel property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_channel == "BBC One"
+
+    hass.states.async_set(mock_states.mock_media_channel_id, "BBC Two")
+    assert ump.media_channel == "BBC Two"
+
+
+async def test_media_playlist_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_playlist property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_playlist == "My Playlist"
+
+    hass.states.async_set(mock_states.mock_media_playlist_id, "Other Playlist")
+    assert ump.media_playlist == "Other Playlist"
+
+
+async def test_app_id_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test app_id property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.app_id == "com.spotify.music"
+
+    hass.states.async_set(mock_states.mock_app_id_id, "com.youtube.tv")
+    assert ump.app_id == "com.youtube.tv"
+
+
+async def test_app_name_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test app_name property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.app_name == "Spotify"
+
+    hass.states.async_set(mock_states.mock_app_name_id, "YouTube")
+    assert ump.app_name == "YouTube"
+
+
+async def test_media_position_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_position property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_position == 45
+
+    hass.states.async_set(mock_states.mock_media_position_id, 60)
+    assert ump.media_position == 60
+
+
+async def test_media_position_updated_at_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test media_position_updated_at property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.media_position_updated_at == datetime.datetime(2023, 1, 1, 12, 0, 0)
+
+    hass.states.async_set(
+        mock_states.mock_media_position_updated_at_id, "2023-01-02T12:00:00"
+    )
+    assert ump.media_position_updated_at == datetime.datetime(2023, 1, 2, 12, 0, 0)
 
 
 async def test_supported_features_children_only(
