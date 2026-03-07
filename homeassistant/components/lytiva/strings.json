@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_not_connected": "The MQTT integration is not set up. Please configure MQTT first.",
+            "single_instance_allowed": "Already configured"
+        }
+    }
+}
