@@ -61,24 +61,13 @@ def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, str]:
     """Return a mapping of exposed MCP tool names to their underlying tool names."""
     exposed_names: dict[str, str] = {}
 
+    exposed_names: dict[str, str] = {}
     for tool in tools:
-        collision_index = 0
-        mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
-        while (
-            existing_tool := exposed_names.get(mcp_tool_name)
-        ) is not None and existing_tool != tool.name:
-            collision_index += 1
+        for collision_index in count():
             mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
-
-        if mcp_tool_name in exposed_names:
-            _LOGGER.warning(
-                "Skipping duplicate MCP tool name %s for tool %s",
-                mcp_tool_name,
-                tool.name,
-            )
-            continue
-
-        exposed_names[mcp_tool_name] = tool.name
+            if mcp_tool_name not in exposed_names:
+                exposed_names[mcp_tool_name] = tool.name
+                break
 
     return exposed_names
 
