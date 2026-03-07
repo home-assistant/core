@@ -12,7 +12,8 @@ from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -38,21 +39,26 @@ def _build_config_schema(
     )
 
 
-async def _validate_credentials(email: str, password: str) -> str | None:
+async def _validate_credentials(
+    email: str, password: str, hass: HomeAssistant | None = None
+) -> str | None:
     """Attempt a real login with the given credentials.
 
     Returns an error key string on failure, or None on success.
     """
+    websession = async_get_clientsession(hass) if hass is not None else None
     api: PajGpsApi | None = None
     try:
-        api = PajGpsApi(email=email, password=password)
+        api = PajGpsApi(email=email, password=password, websession=websession)
         await api.login()
-    except (AuthenticationError, TokenRefreshError):
+    except AuthenticationError, TokenRefreshError:
         return "invalid_auth"
     except Exception:  # noqa: BLE001
         return "cannot_connect"
     finally:
-        if api is not None:
+        # Only close the api (and its underlying session) if we created
+        # our own session — the HA-managed shared session must not be closed.
+        if api is not None and hass is None:
             try:
                 await api.close()
             except Exception:  # noqa: BLE001
@@ -86,7 +92,7 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 self._async_abort_entries_match({"email": self.data["email"]})
                 error_key = await _validate_credentials(
-                    self.data["email"], self.data["password"]
+                    self.data["email"], self.data["password"], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
@@ -129,7 +135,7 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "password_required"
             else:
                 error_key = await _validate_credentials(
-                    user_input["email"], user_input["password"]
+                    user_input["email"], user_input["password"], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
@@ -170,7 +176,7 @@ class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "password_required"
             else:
                 error_key = await _validate_credentials(
-                    user_input["email"], user_input["password"]
+                    user_input["email"], user_input["password"], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
@@ -256,7 +262,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "password_required"
             if not errors:
                 error_key = await _validate_credentials(
-                    user_input["email"], user_input["password"]
+                    user_input["email"], user_input["password"], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key

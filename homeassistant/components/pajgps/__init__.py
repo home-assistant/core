@@ -22,7 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: PajGpsConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
-    error_key = await _validate_credentials(entry.data["email"], entry.data["password"])
+    error_key = await _validate_credentials(
+        entry.data["email"], entry.data["password"], hass
+    )
     if error_key == "cannot_connect":
         raise ConfigEntryAuthFailed("Unable to reach the PAJ GPS API.")
     if error_key == "invalid_auth":
