@@ -95,4 +95,5 @@ def mock_adax_local():
 
         mock_adax_class.get_status = AsyncMock()
         mock_adax_class.get_status.return_value = LOCAL_DEVICE_DATA
+        mock_adax_class.set_target_temperature = AsyncMock()
         yield mock_adax_class
