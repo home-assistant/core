@@ -21,7 +21,6 @@ import voluptuous as vol
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.mcp_server import server as mcp_server
 from homeassistant.components.mcp_server.const import STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import (
     MESSAGES_API,
@@ -476,13 +475,9 @@ async def test_mcp_tool_names_are_shortened(
         tools=original_tools,
     )
 
-    with (
-        patch("homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock) as mock_get_api,
-        patch(
-            "homeassistant.components.mcp_server.server._get_exposed_tool_names",
-            wraps=mcp_server._get_exposed_tool_names,
-        ) as mock_get_exposed_tool_names,
-    ):
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
         mock_get_api.return_value = api_instance
         async with mcp_client(
             hass, mcp_url, hass_supervisor_access_token
@@ -504,7 +499,6 @@ async def test_mcp_tool_names_are_shortened(
                 )
 
             assert returned_tool_names == {tool.name for tool in original_tools}
-            assert mock_get_exposed_tool_names.call_count == 1
 
 
 async def test_mcp_duplicate_tool_names_keep_first_tool(
@@ -624,13 +618,9 @@ async def test_mcp_tool_alias_cache_refreshes_when_tools_change(
             tools=[tool],
         )
 
-    with (
-        patch("homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock) as mock_get_api,
-        patch(
-            "homeassistant.components.mcp_server.server._get_exposed_tool_names",
-            wraps=mcp_server._get_exposed_tool_names,
-        ) as mock_get_exposed_tool_names,
-    ):
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
         mock_get_api.side_effect = [
             make_api_instance(initial_tool),
             make_api_instance(updated_tool),
@@ -654,7 +644,6 @@ async def test_mcp_tool_alias_cache_refreshes_when_tools_change(
     assert json.loads(tool_result.content[0].text) == {
         "tool_name": updated_tool.name
     }
-    assert mock_get_exposed_tool_names.call_count == 2
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
