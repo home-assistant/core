@@ -73,6 +73,14 @@ def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, llm.Tool]:
             collision_index += 1
             mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
 
+        if mcp_tool_name in exposed_names:
+            _LOGGER.warning(
+                "Skipping duplicate MCP tool name %s for tool %s",
+                mcp_tool_name,
+                tool.name,
+            )
+            continue
+
         exposed_names[mcp_tool_name] = tool
 
     return exposed_names

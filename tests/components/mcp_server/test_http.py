@@ -507,6 +507,77 @@ async def test_mcp_tool_names_are_shortened(
             assert mock_get_exposed_tool_names.call_count == 1
 
 
+async def test_mcp_duplicate_tool_names_keep_first_tool(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test duplicate MCP tool names consistently keep the first tool."""
+
+    class DuplicateNameTool(llm.Tool):
+        """Tool with a duplicate name for MCP compatibility testing."""
+
+        parameters = vol.Schema({})
+
+        def __init__(self, name: str, description: str, identifier: str) -> None:
+            """Initialize the tool."""
+            self.name = name
+            self.description = description
+            self.identifier = identifier
+
+        async def async_call(
+            self,
+            _hass: HomeAssistant,
+            _tool_input: llm.ToolInput,
+            _llm_context: llm.LLMContext,
+        ) -> dict[str, str]:
+            """Return an identifier for the selected duplicate tool."""
+            return {"identifier": self.identifier}
+
+    original_tools = [
+        DuplicateNameTool("duplicate_tool", "First duplicate", "first"),
+        DuplicateNameTool("duplicate_tool", "Second duplicate", "second"),
+    ]
+    api_instance = llm.APIInstance(
+        api=SimpleNamespace(hass=hass, name="Assist"),
+        api_prompt="Prompt",
+        llm_context=llm.LLMContext(
+            platform="mcp_server",
+            context=None,
+            language=None,
+            assistant=None,
+            device_id=None,
+        ),
+        tools=original_tools,
+    )
+
+    caplog.set_level(logging.WARNING)
+
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
+        mock_get_api.return_value = api_instance
+        async with mcp_client(
+            hass, mcp_url, hass_supervisor_access_token
+        ) as session:
+            result = await session.list_tools()
+
+            assert len(result.tools) == 1
+            assert result.tools[0].name == "duplicate_tool"
+            assert result.tools[0].description == "First duplicate"
+
+            tool_result = await session.call_tool(
+                name="duplicate_tool", arguments={}
+            )
+
+    assert not tool_result.isError
+    assert json.loads(tool_result.content[0].text) == {"identifier": "first"}
+    assert "Skipping duplicate MCP tool name duplicate_tool" in caplog.text
+
+
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_prompt_list(
     hass: HomeAssistant,
