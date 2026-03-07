@@ -257,7 +257,7 @@
   },
   "services": {
     "create_snapshot": {
-      "description": "Creates a snapshot on a VM or LXC container. The snapshot name is built from the VM name and the current date. Set `version_entity` to use a version string instead of the date — useful before upgrading.",
+      "description": "Creates a snapshot on a VM or LXC container. The snapshot name is built from the VM name and the current date. Set `Version entity` to use a version string instead of the date — useful before upgrading.",
       "fields": {
         "description": {
           "description": "Description stored with the snapshot. Defaults to 'Snapshot triggered from Home Assistant on YYYY-MM-DD' if left empty.",
