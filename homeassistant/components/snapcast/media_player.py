@@ -298,8 +298,15 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 )
 
             # Extract client ID and join it to the current group
-            identifier = client.unique_id.split("_")[-1]
-            await self._current_group.add_client(identifier)
+            identifier = client.unique_id.removeprefix(
+                self.get_unique_id(self.coordinator.host_id, "")
+            )
+            try:
+                await self._current_group.add_client(identifier)
+            except KeyError:
+                raise ServiceValidationError(
+                    f"Client with identifier '{identifier}' does not exist on the server."
+                ) from None
 
         self.async_write_ha_state()
 

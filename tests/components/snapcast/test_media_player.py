@@ -142,6 +142,67 @@ async def test_join_exception(
     mock_group_1.add_client.assert_not_awaited()
 
 
+async def test_join_client_key_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_group_1: AsyncMock,
+) -> None:
+    """Test join service throws an exception when a key error is thrown."""
+
+    # add_client will throw a KeyError if the client identifier is not found on the server
+    type(mock_group_1).add_client = AsyncMock(side_effect=KeyError())
+
+    # Setup and verify the integration is loaded
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+            },
+            blocking=True,
+        )
+
+    mock_group_1.add_client.assert_awaited_once()
+
+
+async def test_join_client_identifier_underscore(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_group_1: AsyncMock,
+    mock_client_2: AsyncMock,
+) -> None:
+    """Test join service properly handles client identifiers with underscores."""
+
+    mock_client_2.identifier = "test_client_underscore"
+
+    # Setup and verify the integration is loaded
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+            ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+        },
+        blocking=True,
+    )
+
+    mock_group_1.add_client.assert_awaited_once_with("test_client_underscore")
+
+
 async def test_stream_not_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
