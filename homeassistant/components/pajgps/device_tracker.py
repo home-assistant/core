@@ -84,10 +84,12 @@ async def async_setup_entry(
         }
         new_ids = current_ids - known_device_ids
         if new_ids:
+            sorted_new_ids = sorted(new_ids)
             async_add_entities(
-                PajGPSDeviceTracker(coordinator, device_id) for device_id in new_ids
+                PajGPSDeviceTracker(coordinator, device_id)
+                for device_id in sorted_new_ids
             )
-            known_device_ids.update(new_ids)
+            known_device_ids.update(sorted_new_ids)
 
     # Initial population
     _async_add_new_devices()
