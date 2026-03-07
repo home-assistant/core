@@ -95,11 +95,17 @@
     }
   },
   "exceptions": {
+    "account_not_found": {
+      "message": "Mastodon account \"{account_name}\" not found."
+    },
     "auth_failed": {
       "message": "Authentication failed, please reauthenticate with Mastodon."
     },
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
+    },
+    "mute_duration_too_long": {
+      "message": "Mute duration is too long."
     },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
@@ -107,8 +113,14 @@
     "unable_to_get_account": {
       "message": "Unable to get account \"{account_name}\"."
     },
+    "unable_to_mute_account": {
+      "message": "Unable to mute account \"{account_name}\""
+    },
     "unable_to_send_message": {
       "message": "Unable to send message."
+    },
+    "unable_to_unmute_account": {
+      "message": "Unable to unmute account \"{account_name}\""
     },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
@@ -138,6 +150,28 @@
         }
       },
       "name": "Get account"
+    },
+    "mute_account": {
+      "description": "Mutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to mute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to mute this account on.",
+          "name": "Mastodon instance"
+        },
+        "duration": {
+          "description": "The duration to mute the account for (default: indefinitely).",
+          "name": "Duration"
+        },
+        "hide_notifications": {
+          "description": "Hide notifications from this account while muted.",
+          "name": "Hide notifications"
+        }
+      },
+      "name": "Mute account"
     },
     "post": {
       "description": "Posts a status on your Mastodon account.",
@@ -180,6 +214,20 @@
         }
       },
       "name": "Post"
+    },
+    "unmute_account": {
+      "description": "Unmutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to unmute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to unmute this account on.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Unmute account"
     }
   }
 }

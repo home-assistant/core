@@ -77,8 +77,8 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
-        self._name = f"{self._tag.name} {self.event.human_readable_name}"
         self._attr_device_class = SENSOR_TYPES[sensor_type]
+        self._attr_name = f"{self._tag.name} {self.event.human_readable_name}"
         self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
     async def async_added_to_hass(self) -> None:
@@ -95,7 +95,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._state == STATE_ON
 
@@ -117,7 +117,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         return self.principal_value
 
     @callback
-    def _on_binary_event_callback(self, new_tag):
+    def _on_binary_event_callback(self, new_tag: SensorTag) -> None:
         """Update state from arrived push notification."""
         self._tag = new_tag
         self._state = self.updated_state_value()

@@ -39,7 +39,7 @@
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 11>,
     'translation_key': 'water_heater',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterWaterHeater-513-18',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-MatterWaterHeater-513-18',
     'unit_of_measurement': None,
   })
 # ---

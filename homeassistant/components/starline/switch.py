@@ -71,15 +71,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         return super().available and self._device.online
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the switch."""
-        if self._key == "ign":
-            # Deprecated and should be removed in 2025.8
-            return self._account.engine_attrs(self._device)
-        return None
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._device.car_state.get(self._key)
 
