@@ -35,15 +35,17 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("user_input", "entry_data", "entry_options"),
+    ("user_input_connection", "user_input_code", "entry_data", "entry_options"),
     [
         (
-            {**MOCK_CONFIG_DATA, **MOCK_CONFIG_OPTIONS},
+            MOCK_CONFIG_DATA,
+            MOCK_CONFIG_OPTIONS,
             MOCK_CONFIG_DATA,
             MOCK_CONFIG_OPTIONS,
         ),
         (
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
+            {},
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
             {CONF_CODE: None},
         ),
@@ -53,7 +55,8 @@ async def test_setup_flow(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
-    user_input: dict[str, Any],
+    user_input_connection: dict[str, Any],
+    user_input_code: dict[str, Any],
     entry_data: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
@@ -68,7 +71,14 @@ async def test_setup_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input,
+        user_input_connection,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input_code,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
@@ -103,6 +113,14 @@ async def test_setup_connection_failed(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
