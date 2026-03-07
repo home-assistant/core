@@ -18,5 +18,22 @@
     "start": {
       "service": "mdi:play"
     }
+  },
+  "triggers": {
+    "cancelled": {
+      "trigger": "mdi:timer-cancel-outline"
+    },
+    "finished": {
+      "trigger": "mdi:timer-check-outline"
+    },
+    "paused": {
+      "trigger": "mdi:timer-pause-outline"
+    },
+    "restarted": {
+      "trigger": "mdi:timer-refresh-outline"
+    },
+    "started": {
+      "trigger": "mdi:timer-play-outline"
+    }
   }
 }

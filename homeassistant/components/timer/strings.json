@@ -68,5 +68,27 @@
       "name": "[%key:common::action::start%]"
     }
   },
-  "title": "Timer"
+  "title": "Timer",
+  "triggers": {
+    "cancelled": {
+      "description": "Triggers when the timer gets cancelled.",
+      "name": "Timer cancelled"
+    },
+    "finished": {
+      "description": "Triggers when the timer finishes.",
+      "name": "Timer finished"
+    },
+    "paused": {
+      "description": "Triggers when the timer pauses.",
+      "name": "Timer paused"
+    },
+    "restarted": {
+      "description": "Triggers when the timer restarts.",
+      "name": "Timer restarted"
+    },
+    "started": {
+      "description": "Triggers when the timer starts.",
+      "name": "Timer started"
+    }
+  }
 }
