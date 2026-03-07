@@ -33,9 +33,9 @@ class ConfigEntryAuth(YoLinkAuthMgr):
         oauth_session: OAuth2Session,
     ) -> None:
         """Initialize yolink Auth."""
+        super().__init__(websession)
         self.hass = hass
         self._oauth_session = oauth_session
-        self._session = websession
         self._token_url = OAUTH2_TOKEN
 
     async def async_get_access_token(self) -> str:
@@ -81,12 +81,12 @@ class UACAuth(YoLinkAuthMgr):
         secret_key: str,
     ) -> None:
         """Initialize yolink UAC Auth."""
+        super().__init__(websession)
         self.hass = hass
         self._uaid = uaid
         self._secret_key = secret_key
         self._access_token: str | None = None
         self._token_expiry: float = 0  # Unix timestamp when token expires
-        self._session = websession
         self._token_url = OAUTH2_TOKEN
 
     def access_token(self) -> str | None:
