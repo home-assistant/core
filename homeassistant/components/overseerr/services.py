@@ -20,13 +20,13 @@ from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
 from .const import (
+    ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
     ATTR_QUERY,
     ATTR_REQUESTED_BY,
     ATTR_SEASONS,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
-    ATTR_TMDB_ID,
     DOMAIN,
     LOGGER,
 )
@@ -58,7 +58,7 @@ SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(["movie", "tv"]),
-        vol.Required(ATTR_TMDB_ID): vol.Coerce(int),
+        vol.Required(ATTR_MEDIA_ID): vol.Coerce(int),
         vol.Optional(ATTR_SEASONS): vol.Any(
             vol.Coerce(int),
             [vol.Coerce(int)],
@@ -158,18 +158,18 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     )
     client = entry.runtime_data.client
     media_type = call.data[ATTR_MEDIA_TYPE]
-    tmdb_id = call.data[ATTR_TMDB_ID]
+    media_id = call.data[ATTR_MEDIA_ID]
     seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
 
     LOGGER.debug(
-        "Requesting %s with TMDB ID %s (seasons: %s)",
+        "Requesting %s with media ID %s (seasons: %s)",
         media_type,
-        tmdb_id,
+        media_id,
         seasons or "none",
     )
     try:
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
-        request = await client.create_request(media_type, tmdb_id, seasons)
+        request = await client.create_request(media_type, media_id, seasons)
     except OverseerrConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

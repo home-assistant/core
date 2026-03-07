@@ -56,7 +56,7 @@ request_media:
             - movie
             - tv
           translation_key: request_media_type
-    tmdb_id:
+    media_id:
       required: true
       selector:
         number:
