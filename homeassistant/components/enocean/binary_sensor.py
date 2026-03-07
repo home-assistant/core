@@ -47,7 +47,7 @@ async def async_setup_platform(
 
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
-    # register the device with the gateway
+    # register the device with the gateway (required for high-level processing and event generation)
     gateway: Gateway = hass.data.get(DOMAIN)
     if gateway is None:
         LOGGER.error("EnOcean gateway not found, cannot set up binary sensor")
