@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from unittest.mock import MagicMock
 
-from pysaunum import SaunumException
+from pysaunum import DEFAULT_DURATION, DEFAULT_FAN_DURATION, SaunumException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -50,7 +50,7 @@ async def test_set_sauna_duration(
     # Verify initial state
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "120"
+    assert state.state == str(DEFAULT_DURATION)
 
     # Set new duration
     await hass.services.async_call(
@@ -75,7 +75,7 @@ async def test_set_fan_duration(
     # Verify initial state
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "10"
+    assert state.state == str(DEFAULT_FAN_DURATION)
 
     # Set new duration
     await hass.services.async_call(
@@ -151,13 +151,13 @@ async def test_number_with_default_duration(
     mock_config_entry: MockConfigEntry,
     mock_saunum_client: MagicMock,
 ) -> None:
-    """Test number entities use default when device returns None."""
-    # Set duration to None (device hasn't set it yet)
+    """Test number entities use default when device returns 0."""
+    # Set duration to 0 (device hasn't set it yet / sauna type default)
     base_data = mock_saunum_client.async_get_data.return_value
     mock_saunum_client.async_get_data.return_value = replace(
         base_data,
-        sauna_duration=None,
-        fan_duration=None,
+        sauna_duration=0,
+        fan_duration=0,
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -167,11 +167,11 @@ async def test_number_with_default_duration(
     # Should show default values
     sauna_duration_state = hass.states.get("number.saunum_leil_sauna_duration")
     assert sauna_duration_state is not None
-    assert sauna_duration_state.state == "120"  # DEFAULT_DURATION_MIN
+    assert sauna_duration_state.state == str(DEFAULT_DURATION)
 
     fan_duration_state = hass.states.get("number.saunum_leil_fan_duration")
     assert fan_duration_state is not None
-    assert fan_duration_state.state == "15"  # DEFAULT_FAN_DURATION_MIN
+    assert fan_duration_state.state == str(DEFAULT_FAN_DURATION)
 
 
 async def test_number_with_valid_duration_from_device(
