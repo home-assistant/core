@@ -668,7 +668,7 @@ async def test_fix_issue_next_flow(
         assert resp.status == HTTPStatus.BAD_REQUEST
         assert data == {"message": "Unknown next flow: config_flow: fake_flow_id"}
 
-    if test in {FlowType.OPTIONS_FLOW, f"{FlowType.OPTIONS_FLOW}_fake_step"}:
+    if test == FlowType.OPTIONS_FLOW:
         assert resp.status == HTTPStatus.OK
 
         next_flow = hass.config_entries.options.async_get(data["next_flow"][1])
