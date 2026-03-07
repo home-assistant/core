@@ -2318,7 +2318,7 @@ async def test_mqtt_integration_level_imports(attr: str) -> None:
 async def test_yaml_config_without_entry(
     hass: HomeAssistant, hass_config: ConfigType
 ) -> None:
-    """Test the service call if topic is missing."""
+    """Test a repair issue is created for YAML setup without an active config entry."""
     await async_setup_component(hass, mqtt.DOMAIN, hass_config)
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
