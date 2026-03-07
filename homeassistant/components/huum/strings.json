@@ -14,10 +14,6 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
-        "data_description": {
-          "password": "The password used in the Huum mobile app.",
-          "username": "The username (email) used in the Huum mobile app."
-        },
         "description": "Log in with the same username and password that is used in the Huum mobile app.",
         "title": "Connect to the Huum"
       }
