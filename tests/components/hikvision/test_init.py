@@ -121,9 +121,7 @@ async def test_setup_entry_nvr_skips_videoloss(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_hik_nvr.return_value.inject_events.assert_called_once_with(
-        {"Motion": [1, 2]}
-    )
+    mock_hik_nvr.return_value.inject_events.assert_called_once_with({"Motion": [1, 2]})
 
 
 async def test_setup_entry_nvr_skips_unmapped_events(
@@ -142,9 +140,7 @@ async def test_setup_entry_nvr_skips_unmapped_events(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_hik_nvr.return_value.inject_events.assert_called_once_with(
-        {"Motion": [1]}
-    )
+    mock_hik_nvr.return_value.inject_events.assert_called_once_with({"Motion": [1]})
     assert "Skipping unmapped event type: audioexception" in caplog.text
 
 
