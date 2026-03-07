@@ -83,7 +83,6 @@ async def async_locate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -
     await hass.services.async_call(DOMAIN, SERVICE_LOCATE, data, blocking=True)
 
 
-@bind_hass
 def clean_area(
     hass: HomeAssistant, segments: list[str], entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
