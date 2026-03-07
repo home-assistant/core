@@ -19,7 +19,7 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import Device, OverkizServer, Scenario
 from pyoverkiz.utils import generate_local_server
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -87,6 +87,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         await client.login()
         setup = await client.get_setup()
 
+        # Hybrid mode: cloud only exposes devices not in local
+        devices = setup.devices
+        if api_type == APIType.CLOUD:
+            local_entry = _find_hybrid_local_entry(hass, entry)
+            if local_entry:
+                # Wait for local to be loaded before filtering devices out
+                if local_entry.state in (
+                    ConfigEntryState.NOT_LOADED,
+                    ConfigEntryState.SETUP_IN_PROGRESS,
+                ):
+                    raise ConfigEntryNotReady(
+                        "Waiting for local API entry to load first"
+                    )
+
+                original_count = len(devices)
+                devices = _hybrid_filter_local_devices(local_entry, devices)
+                filtered_count = original_count - len(devices)
+
+                if filtered_count > 0:
+                    LOGGER.debug(
+                        "Filtered %d devices from cloud entry (managed by local entry)",
+                        filtered_count,
+                    )
+
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
         if api_type == APIType.CLOUD:
@@ -111,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         entry,
         LOGGER,
         client=client,
-        devices=setup.devices,
+        devices=devices,
         places=setup.root_place,
     )
 
@@ -181,6 +205,26 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: OverkizDataConfigEntry
+) -> bool:
+    """Migrate config entry unique_id to include API type suffix for hybrid mode support."""
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        api_type = config_entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+        new_unique_id = f"{config_entry.unique_id}-{api_type}"
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, minor_version=2
+        )
+        LOGGER.info(
+            "Migrated Overkiz entry unique_id from %s to %s",
+            config_entry.unique_id,
+            new_unique_id,
+        )
+
+    return True
 
 
 async def _async_migrate_entries(
@@ -268,3 +312,51 @@ def create_cloud_client(
     return OverkizClient(
         username=username, password=password, session=session, server=server
     )
+
+
+def _get_gateway_id_from_unique_id(unique_id: str | None) -> str | None:
+    """Extract gateway ID from unique_id (format: 'XXXX-XXXX-XXXX-local/cloud')."""
+    if not unique_id:
+        return None
+    return unique_id.rsplit("-", 1)[0]
+
+
+def _find_hybrid_local_entry(
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+) -> OverkizDataConfigEntry | None:
+    """Find a local entry for the same gateway.
+
+    Returns the local entry if one exists for the same gateway, None otherwise.
+    """
+    gateway_id = _get_gateway_id_from_unique_id(entry.unique_id)
+
+    for other_entry in hass.config_entries.async_entries(DOMAIN):
+        if other_entry.entry_id == entry.entry_id:
+            continue
+        if other_entry.data.get(CONF_API_TYPE) != APIType.LOCAL:
+            continue
+        if _get_gateway_id_from_unique_id(other_entry.unique_id) != gateway_id:
+            continue
+        return other_entry
+
+    return None
+
+
+def _hybrid_filter_local_devices(
+    local_entry: OverkizDataConfigEntry,
+    devices: list[Device],
+) -> list[Device]:
+    """Filter out devices already managed by a local entry.
+
+    Returns a filtered list of devices excluding those managed by the local entry.
+    """
+    if not hasattr(local_entry, "runtime_data") or not local_entry.runtime_data:
+        return devices
+
+    local_device_urls = set(local_entry.runtime_data.coordinator.devices.keys())
+
+    if not local_device_urls:
+        return devices
+
+    return [d for d in devices if d.device_url not in local_device_urls]
