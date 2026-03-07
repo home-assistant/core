@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast
 
-from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
+from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
@@ -126,6 +126,7 @@ class RestoreStateData:
         )
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
+        self._cancel_interval_dump: CALLBACK_TYPE = lambda: None
 
     def set_load_empty(self) -> None:
         """Set the store to load empty and become read-only."""
@@ -134,6 +135,7 @@ class RestoreStateData:
     async def async_setup(self) -> None:
         """Set up up the instance of this data helper."""
         await self.async_load()
+        self.async_setup_final_write_dump()
 
         @callback
         def hass_start(hass: HomeAssistant) -> None:
@@ -222,7 +224,7 @@ class RestoreStateData:
 
     @callback
     def async_setup_dump(self, *args: Any) -> None:
-        """Set up the restore state listeners."""
+        """Set up the startup and periodic restore state dumps."""
 
         async def _async_dump_states(*_: Any) -> None:
             await self.async_dump_states()
@@ -241,14 +243,21 @@ class RestoreStateData:
             STATE_DUMP_INTERVAL,
             name="RestoreStateData dump states",
         )
+        self._cancel_interval_dump = cancel_interval
 
-        async def _async_dump_states_at_stop(*_: Any) -> None:
-            cancel_interval()
+    @callback
+    def async_setup_final_write_dump(self) -> None:
+        """Set up the shutdown restore state dump."""
+
+        async def _async_dump_states_at_final_write(*_: Any) -> None:
+            self._cancel_interval_dump()
             await self.async_dump_states()
 
-        # Dump states when stopping hass
+        # Final write runs after integrations remove entities, so last_states
+        # collected during shutdown are included in the persisted snapshot.
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
+            EVENT_HOMEASSISTANT_FINAL_WRITE,
+            _async_dump_states_at_final_write,
         )
 
     @callback
