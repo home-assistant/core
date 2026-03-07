@@ -1,0 +1,11 @@
+{
+  "domain": "pulsegrow",
+  "name": "Pulse Grow",
+  "codeowners": ["@pvizeli"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pulsegrow",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aiopulsegrow==25.12.6"]
+}

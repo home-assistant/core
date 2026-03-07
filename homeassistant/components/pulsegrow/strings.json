@@ -1,0 +1,76 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key from your PulseGrow account"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_pressure": {
+        "name": "Air pressure"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "bulk_ec": {
+        "name": "Bulk EC"
+      },
+      "co2": {
+        "name": "CO2"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "dli": {
+        "name": "DLI"
+      },
+      "ec": {
+        "name": "EC"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "mac_address": {
+        "name": "MAC address"
+      },
+      "ph": {
+        "name": "pH"
+      },
+      "pore_water_ec": {
+        "name": "Pore water EC"
+      },
+      "ppfd": {
+        "name": "PPFD"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "vpd": {
+        "name": "VPD"
+      },
+      "water_content": {
+        "name": "Water content"
+      }
+    }
+  }
+}
