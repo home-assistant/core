@@ -230,6 +230,7 @@ FLOWS = {
         "foscam",
         "freebox",
         "freedompro",
+        "freshr",
         "fressnapf_tracker",
         "fritz",
         "fritzbox",
