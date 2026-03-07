@@ -13,6 +13,7 @@ DATA_HASS_CONFIG = "hass_config"
 DEFAULT_NAME = "LG webOS TV"
 
 ATTR_PAYLOAD = "payload"
+ATTR_SCREEN_IS_ON = "screen_is_on"
 ATTR_SOUND_OUTPUT = "sound_output"
 
 CONF_ON_ACTION = "turn_on_action"
