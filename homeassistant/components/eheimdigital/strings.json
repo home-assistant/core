@@ -33,6 +33,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "is_lighting": {
+        "name": "Light"
+      },
+      "is_uvc_connected": {
+        "name": "UVC Lamp connected"
+      }
+    },
     "climate": {
       "heater": {
         "state_attributes": {
