@@ -7,7 +7,7 @@ here is independent of the lower level transport protocol.
 See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-example
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from hashlib import blake2s
 import json
 import logging
@@ -83,6 +83,62 @@ def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, str]:
     return exposed_names
 
 
+class _McpTools:
+    """Cache MCP tool aliases for a server session."""
+
+    def __init__(
+        self, get_api_instance: Callable[[], Awaitable[llm.APIInstance]]
+    ) -> None:
+        """Initialize the MCP tool cache."""
+        self._get_api_instance = get_api_instance
+        self._tool_name_by_alias: dict[str, str] = {}
+        self._alias_by_tool_name: dict[str, str] = {}
+        self._tool_signature: tuple[str, ...] | None = None
+
+    def _refresh(self, tools: list[llm.Tool]) -> None:
+        """Refresh cached aliases if the tool set changed."""
+        current_signature = tuple(tool.name for tool in tools)
+        if self._tool_signature == current_signature:
+            return
+
+        self._tool_name_by_alias = _get_exposed_tool_names(tools)
+        self._alias_by_tool_name = {
+            tool_name: alias
+            for alias, tool_name in self._tool_name_by_alias.items()
+        }
+        self._tool_signature = current_signature
+
+    async def async_list_tools(self) -> list[types.Tool]:
+        """Return MCP-formatted tools for the current API instance."""
+        llm_api = await self._get_api_instance()
+        self._refresh(llm_api.tools)
+
+        listed_tool_names: set[str] = set()
+        formatted_tools: list[types.Tool] = []
+        for tool in llm_api.tools:
+            if tool.name in listed_tool_names:
+                continue
+
+            listed_tool_names.add(tool.name)
+            formatted_tools.append(
+                _format_tool(
+                    self._alias_by_tool_name[tool.name],
+                    tool,
+                    llm_api.custom_serializer,
+                )
+            )
+
+        return formatted_tools
+
+    async def async_resolve_tool_name(
+        self, mcp_tool_name: str
+    ) -> tuple[llm.APIInstance, str]:
+        """Resolve an MCP tool name to the current Home Assistant tool name."""
+        llm_api = await self._get_api_instance()
+        self._refresh(llm_api.tools)
+        return llm_api, self._tool_name_by_alias.get(mcp_tool_name, mcp_tool_name)
+
+
 async def create_server(
     hass: HomeAssistant, llm_api_id: str | list[str], llm_context: llm.LLMContext
 ) -> Server:
@@ -95,30 +151,13 @@ async def create_server(
         llm_api_id = llm.LLM_API_ASSIST
 
     server = Server[Any]("home-assistant")
-    exposed_tool_names: dict[str, str] | None = None
-    exposed_tool_aliases: dict[str, str] | None = None
-    exposed_tool_signature: tuple[str, ...] | None = None
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
 
-    async def get_exposed_tools() -> tuple[llm.APIInstance, dict[str, str], dict[str, str]]:
-        """Get the selected API instance and cached MCP tool aliases."""
-        nonlocal exposed_tool_aliases, exposed_tool_names, exposed_tool_signature
-
-        llm_api = await get_api_instance()
-        current_signature = tuple(tool.name for tool in llm_api.tools)
-        if exposed_tool_signature != current_signature:
-            exposed_tool_names = _get_exposed_tool_names(llm_api.tools)
-            exposed_tool_aliases = {
-                tool_name: exposed_name
-                for exposed_name, tool_name in exposed_tool_names.items()
-            }
-            exposed_tool_signature = current_signature
-
-        return llm_api, exposed_tool_names, exposed_tool_aliases
+    mcp_tools = _McpTools(get_api_instance)
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
@@ -154,26 +193,12 @@ async def create_server(
     @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available MCP tools for the selected LLM API."""
-        llm_api, _, exposed_tool_aliases = await get_exposed_tools()
-        listed_tool_names: set[str] = set()
-        formatted_tools: list[types.Tool] = []
-        for tool in llm_api.tools:
-            if tool.name in listed_tool_names:
-                continue
-            listed_tool_names.add(tool.name)
-            formatted_tools.append(
-                _format_tool(
-                    exposed_tool_aliases[tool.name], tool, llm_api.custom_serializer
-                )
-            )
-
-        return formatted_tools
+        return await mcp_tools.async_list_tools()
 
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
-        llm_api, exposed_tool_names, _ = await get_exposed_tools()
-        tool_name = exposed_tool_names.get(name, name)
+        llm_api, tool_name = await mcp_tools.async_resolve_tool_name(name)
         tool_input = llm.ToolInput(
             tool_name=tool_name,
             tool_args=arguments,
