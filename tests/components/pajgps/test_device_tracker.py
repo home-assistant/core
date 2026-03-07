@@ -21,13 +21,12 @@ def _make_hass_and_config_entry(coordinator):
     return hass, config_entry
 
 
-def _make_sensor(device_id: int = 1, positions=None, elevations=None):
+def _make_sensor(device_id: int = 1, positions=None):
     """Create a PajGPSPositionSensor for testing."""
     coord = make_coordinator()
     coord.data = CoordinatorData(
         devices=[make_device(device_id)],
         positions=positions or {},
-        elevations=elevations or {},
     )
     return PajGPSPositionSensor(coord, device_id)
 

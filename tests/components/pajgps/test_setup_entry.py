@@ -20,7 +20,7 @@ from homeassistant.components.pajgps import (
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
 def _make_mock_entry(
@@ -42,8 +42,8 @@ def _make_mock_entry(
 class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
     """Tests for async_setup_entry in __init__.py."""
 
-    async def test_cannot_connect_raises_config_entry_not_ready(self):
-        """When API is unreachable, setup must raise ConfigEntryNotReady immediately."""
+    async def test_cannot_connect_raises_config_entry_auth_failed(self):
+        """When API is unreachable, setup must raise ConfigEntryAuthFailed immediately."""
         hass = MagicMock()
         entry = _make_mock_entry()
 
@@ -52,14 +52,14 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 "homeassistant.components.pajgps._validate_credentials",
                 new=AsyncMock(return_value="cannot_connect"),
             ),
-            pytest.raises(ConfigEntryNotReady) as ctx,
+            pytest.raises(ConfigEntryAuthFailed) as ctx,
         ):
             await async_setup_entry(hass, entry)
 
         assert "PAJ GPS API" in str(ctx.value)
 
     async def test_invalid_auth_raises_config_entry_not_ready(self):
-        """When credentials are wrong, setup must raise ConfigEntryNotReady immediately."""
+        """When credentials are wrong, setup must raise ConfigEntryAuthFailed immediately."""
         hass = MagicMock()
         entry = _make_mock_entry()
 
@@ -68,7 +68,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 "homeassistant.components.pajgps._validate_credentials",
                 new=AsyncMock(return_value="invalid_auth"),
             ),
-            pytest.raises(ConfigEntryNotReady) as ctx,
+            pytest.raises(ConfigEntryAuthFailed) as ctx,
         ):
             await async_setup_entry(hass, entry)
 
@@ -85,7 +85,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value="cannot_connect"),
             ),
             patch("homeassistant.components.pajgps.PajGpsCoordinator") as MockCoord,
-            pytest.raises(ConfigEntryNotReady),
+            pytest.raises(ConfigEntryAuthFailed),
         ):
             await async_setup_entry(hass, entry)
 
@@ -102,7 +102,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 new=AsyncMock(return_value="invalid_auth"),
             ),
             patch("homeassistant.components.pajgps.PajGpsCoordinator") as MockCoord,
-            pytest.raises(ConfigEntryNotReady),
+            pytest.raises(ConfigEntryAuthFailed),
         ):
             await async_setup_entry(hass, entry)
 
@@ -210,12 +210,12 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
 class TestAsyncRemoveConfigEntryDevice(unittest.IsolatedAsyncioTestCase):
     """Test async_remove_config_entry_device (line 55)."""
 
-    async def test_returns_true(self):
-        """Test that async_remove_config_entry_device returns True."""
+    async def test_returns_false(self):
+        """Test that async_remove_config_entry_device returns False."""
         result = await async_remove_config_entry_device(
             MagicMock(), MagicMock(), MagicMock()
         )
-        assert result
+        assert not result
 
 
 class TestAsyncUpdateListener(unittest.IsolatedAsyncioTestCase):

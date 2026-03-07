@@ -19,8 +19,6 @@ import time
 import aiohttp
 from pajgps_api import PajGpsApi
 from pajgps_api.models.device import Device
-from pajgps_api.models.notification import Notification
-from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 from pajgps_api.pajgps_api_error import (
     AuthenticationError,
@@ -56,17 +54,6 @@ class CoordinatorData:
 
     # device_id → last TrackPoint
     positions: dict[int, TrackPoint] = dataclasses.field(default_factory=dict)
-
-    # device_id → SensorData
-    sensor_data: dict[int, SensorData] = dataclasses.field(default_factory=dict)
-
-    # device_id → elevation in metres (None until first successful fetch)
-    elevations: dict[int, float | None] = dataclasses.field(default_factory=dict)
-
-    # device_id → list of unread Notification objects
-    notifications: dict[int, list[Notification]] = dataclasses.field(
-        default_factory=dict
-    )
 
 
 # ---------------------------------------------------------------------------

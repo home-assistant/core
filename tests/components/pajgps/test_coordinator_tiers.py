@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock
 
@@ -116,36 +115,3 @@ async def test_no_devices_exits_early() -> None:
     await coord._run_positions_tier()
 
     coord.api.get_all_last_positions.assert_not_awaited()
-
-
-async def test_sensor_none_response_is_silently_ignored() -> None:
-    """When sensor API returns None, no snapshot should be pushed (line 206)."""
-    coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
-    coord.api.get_all_last_positions = AsyncMock(return_value=[make_trackpoint(1)])
-    coord.api.get_last_sensor_data = AsyncMock(return_value=None)
-
-    snapshots = []
-    coord.async_set_updated_data = snapshots.append
-
-    await coord._run_positions_tier()
-    await asyncio.sleep(0.3)
-
-    # No sensor_data snapshot should have device 1 in sensor_data
-    assert not any(1 in s.sensor_data for s in snapshots)
-
-
-async def test_sensor_empty_list_response_is_silently_ignored() -> None:
-    """When sensor API returns [], no snapshot should be pushed (line 206)."""
-    coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
-    coord.api.get_all_last_positions = AsyncMock(return_value=[make_trackpoint(1)])
-    coord.api.get_last_sensor_data = AsyncMock(return_value=[])
-
-    snapshots = []
-    coord.async_set_updated_data = snapshots.append
-
-    await coord._run_positions_tier()
-    await asyncio.sleep(0.3)
-
-    assert not any(1 in s.sensor_data for s in snapshots)
