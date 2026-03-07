@@ -46,6 +46,7 @@ async def _validate_credentials(email: str, password: str) -> str | None:
 
     Returns an error key string on failure, or None on success.
     """
+    api: PajGpsApi | None = None
     try:
         api = PajGpsApi(email=email, password=password)
         await api.login()
@@ -53,6 +54,12 @@ async def _validate_credentials(email: str, password: str) -> str | None:
         return "invalid_auth"
     except Exception:  # noqa: BLE001
         return "cannot_connect"
+    finally:
+        if api is not None:
+            try:
+                await api.close()
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Error closing PajGpsApi session", exc_info=True)
     return None
 
 
