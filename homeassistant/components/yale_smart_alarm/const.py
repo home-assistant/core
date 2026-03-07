@@ -25,6 +25,8 @@ DOMAIN = "yale_smart_alarm"
 
 DEFAULT_SCAN_INTERVAL = 15
 
+ALARM_TRIGGER_WINDOW = 5
+
 LOGGER = logging.getLogger(__package__)
 
 ATTR_ONLINE = "online"
