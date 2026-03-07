@@ -253,6 +253,8 @@ class RestoreStateData:
             self._cancel_interval_dump()
             await self.async_dump_states()
 
+        # Final write runs after integrations remove entities, so last_states
+        # collected during shutdown are included in the persisted snapshot.
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_FINAL_WRITE,
             _async_dump_states_at_final_write,
