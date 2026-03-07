@@ -16,7 +16,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -141,7 +141,23 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
+def validate_clean_area_config(config: ConfigType) -> ConfigType:
+    """Check for a valid configuration and check segments."""
+    if (config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config) or (
+        not config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
+    ):
+        raise vol.Invalid(
+            f"Options `{CONF_SEGMENTS}` and "
+            f"`{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` must be defined together"
+        )
+    if config[CONF_SEGMENTS] and CONF_UNIQUE_ID not in config:
+        raise vol.Invalid(
+            f"Option `{CONF_SEGMENTS}` requires option `{CONF_UNIQUE_ID}` is configured"
+        )
+    return config
+
+
+_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_SEGMENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
@@ -171,7 +187,10 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA, validate_clean_area_config)
+DISCOVERY_SCHEMA = vol.All(
+    _BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_clean_area_config
+)
 
 
 async def async_setup_entry(
@@ -269,6 +288,19 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 CONF_PAYLOAD_LOCATE,
             )
         }
+
+    @callback
+    def _process_entity_update(self) -> None:
+        """Check vacuum segments with registry entry."""
+        if (
+            self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA
+            and self.last_seen_segments != self._segments
+        ):
+            self.async_create_segments_issue()
+
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Check vacuum segments with registry entry."""
+        self._process_entity_update()
 
     def _update_state_attributes(self, payload: dict[str, Any]) -> None:
         """Update the entity state attributes."""

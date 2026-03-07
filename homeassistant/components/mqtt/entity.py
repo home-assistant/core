@@ -1468,6 +1468,7 @@ class MqttEntity(
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
+        self._process_entity_update()
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
@@ -1567,8 +1568,13 @@ class MqttEntity(
         # Set the entity name if needed
         self._set_entity_name(config)
 
+    @callback
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+
+    @callback
+    def _process_entity_update(self) -> None:
+        """Process an entity discovery update."""
 
     @abstractmethod
     @callback
