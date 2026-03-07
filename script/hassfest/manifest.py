@@ -71,6 +71,7 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
+    "door",
     "downloader",
     "ffmpeg",
     "file_upload",

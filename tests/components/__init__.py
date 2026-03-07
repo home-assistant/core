@@ -355,17 +355,20 @@ def parametrize_trigger_states(
     trigger_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
+    extra_invalid_states: list[str | None | tuple[str | None, dict]] | None = None,
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts.
 
-    The target_states and other_states iterables are either iterables of
-    states or iterables of (state, attributes) tuples.
+    The target_states, other_states, and extra_invalid_states iterables are
+    either iterables of states or iterables of (state, attributes) tuples.
 
     Set `trigger_from_none` to False if the trigger is not expected to fire
-    when the initial state is None.
+    when the initial state is None, this is relevant for triggers that limit
+    entities to a certain device class because the device class can't be
+    determined when the state is None.
 
     Set `retrigger_on_target_state` to True if the trigger is expected to fire
     when the state changes to another target state.
@@ -374,6 +377,8 @@ def parametrize_trigger_states(
     where states is a list of TriggerStateDescription dicts.
     """
 
+    extra_invalid_states = extra_invalid_states or []
+    invalid_states = [STATE_UNAVAILABLE, STATE_UNKNOWN, *extra_invalid_states]
     additional_attributes = additional_attributes or {}
     trigger_options = trigger_options or {}
 
@@ -463,34 +468,19 @@ def parametrize_trigger_states(
                 )
             ),
         ),
-        # Initial state unavailable / unknown
+        # Initial state unavailable / unknown + extra invalid states
         (
             trigger,
             trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
-                        state_with_attributes(STATE_UNAVAILABLE, 0),
+                        state_with_attributes(invalid_state, 0),
                         state_with_attributes(target_state, 0),
                         state_with_attributes(other_state, 0),
                         state_with_attributes(target_state, 1),
                     )
-                    for target_state in target_states
-                    for other_state in other_states
-                )
-            ),
-        ),
-        (
-            trigger,
-            trigger_options,
-            list(
-                itertools.chain.from_iterable(
-                    (
-                        state_with_attributes(STATE_UNKNOWN, 0),
-                        state_with_attributes(target_state, 0),
-                        state_with_attributes(other_state, 0),
-                        state_with_attributes(target_state, 1),
-                    )
+                    for invalid_state in invalid_states
                     for target_state in target_states
                     for other_state in other_states
                 )
