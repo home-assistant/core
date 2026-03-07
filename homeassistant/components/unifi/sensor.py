@@ -314,8 +314,9 @@ def async_device_wan_status_supported_fn(
     hub: UnifiHub,
     obj_id: str,
 ) -> bool:
-    """Determine if device has WAN interfaces."""
-    return any(f"wan{i}" in hub.api.devices[obj_id].raw for i in range(1, 7))
+    """Determine if device has the specific WAN interface."""
+    wan_index = wan_name.removeprefix("WAN") or "1"
+    return f"wan{wan_index}" in hub.api.devices[obj_id].raw
 
 
 @callback
