@@ -1312,7 +1312,10 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         (tool for tool in api.tools if tool.name == "calendar_get_events"), None
     )
     assert tool is not None
-    assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
+    assert tool.parameters.schema["calendar"].container == [
+        "calendar.test_calendar",
+        "Mock Calendar Name",
+    ]
 
     calls = async_mock_service(
         hass,
@@ -1392,6 +1395,25 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         "end_date_time": dt_util.start_of_local_day() + timedelta(days=7),
     }
 
+    # Test using entity_id instead of name
+    tool_input = llm.ToolInput(
+        tool_name="calendar_get_events",
+        tool_args={
+            "calendar": "calendar.test_calendar",
+            "range": "today",
+        },
+    )
+    with patch("homeassistant.util.dt.now", return_value=now):
+        response = await api.async_call_tool(tool_input)
+
+    assert len(calls) == 3
+    assert calls[2].data == {
+        "entity_id": ["calendar.test_calendar"],
+        "start_date_time": now,
+        "end_date_time": dt_util.start_of_local_day() + timedelta(days=1),
+    }
+    assert response["success"] is True
+
 
 async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     """Test the todo get items tool."""
@@ -1412,7 +1434,10 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     api = await llm.async_get_api(hass, "assist", llm_context)
     tool = next((tool for tool in api.tools if tool.name == "todo_get_items"), None)
     assert tool is not None
-    assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
+    assert tool.parameters.schema["todo_list"].container == [
+        "todo.test_list",
+        "Mock Todo List Name",
+    ]
 
     calls = async_mock_service(
         hass,
@@ -1502,6 +1527,20 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         "entity_id": ["todo.test_list"],
         "status": ["needs_action", "completed"],
     }
+
+    # Test using entity_id instead of name
+    calls.clear()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput("todo_get_items", {"todo_list": "todo.test_list"}),
+        llm_context,
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["needs_action"],
+    }
+    assert result["success"] is True
 
 
 async def test_get_date_time_tool(hass: HomeAssistant) -> None:

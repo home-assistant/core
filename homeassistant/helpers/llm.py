@@ -597,15 +597,17 @@ class AssistAPI(API):
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
-                for info in exposed_entities[CALENDAR_DOMAIN].values():
+                for entity_id, info in exposed_entities[CALENDAR_DOMAIN].items():
+                    names.append(entity_id)
                     names.extend(info["names"].split(", "))
                 tools.append(CalendarGetEventsTool(names))
 
             if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
                 names = []
-                for info in exposed_entities["entities"].values():
+                for entity_id, info in exposed_entities["entities"].items():
                     if info["domain"] != TODO_DOMAIN:
                         continue
+                    names.append(entity_id)
                     names.extend(info["names"].split(", "))
                 tools.append(TodoGetItemsTool(names))
 
