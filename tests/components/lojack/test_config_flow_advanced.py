@@ -228,12 +228,17 @@ async def test_setup_entry_client_close_error_on_setup_failure(
             "homeassistant.components.lojack.AuthenticationError",
             MockAuthenticationError,
         ),
+        patch(
+            "homeassistant.components.lojack.coordinator.AuthenticationError",
+            MockAuthenticationError,
+        ),
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Should still fail setup even if close fails
+        # Auth error is caught by coordinator and raises ConfigEntryAuthFailed
+        # Close error is swallowed by the finally block
         assert mock_config_entry.state.name == "SETUP_ERROR"
 
 
@@ -249,7 +254,7 @@ async def test_unload_entry_client_close_error(
     mock_lojack_client.close = AsyncMock(side_effect=Exception("Close failed"))
 
     result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    
+
     # Should still succeed in unloading even if close fails
     assert result is True
 

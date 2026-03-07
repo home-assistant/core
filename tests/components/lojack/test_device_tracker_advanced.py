@@ -7,7 +7,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry
 

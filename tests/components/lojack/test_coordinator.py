@@ -4,16 +4,11 @@ from datetime import UTC, datetime, timedelta
 from email.utils import formatdate
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-from syrupy.assertion import SnapshotAssertion
-
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 from .conftest import MockApiError, MockAuthenticationError
-from .const import TEST_DEVICE_ID, TEST_PASSWORD, TEST_USERNAME
+from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry
 
@@ -91,7 +86,7 @@ async def test_coordinator_auth_error_refresh_success(
 
         # Now make the current client fail with auth error and mock new client creation
         old_client.list_devices = AsyncMock(side_effect=MockAuthenticationError("Token expired"))
-        
+
         with patch(
             "homeassistant.components.lojack.coordinator.LoJackClient.create",
             return_value=new_client,

@@ -50,7 +50,7 @@ async def test_setup_entry_close_fails_after_refresh_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup fails with error state when both refresh and close fail."""
+    """Test setup retries when refresh fails, even if close also fails."""
     client = AsyncMock()
     client.list_devices = AsyncMock(side_effect=MockApiError("API error"))
     client.close = AsyncMock(side_effect=Exception("Close failed"))
@@ -77,9 +77,9 @@ async def test_setup_entry_close_fails_after_refresh_failure(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # close() failure propagates through the finally block, overriding the
-        # original ApiError, so HA sees an unexpected exception → SETUP_ERROR
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+        # close() failure is caught in the finally block, so the original
+        # ApiError propagates as UpdateFailed → SETUP_RETRY
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_token_refresh_client_close_fails(
