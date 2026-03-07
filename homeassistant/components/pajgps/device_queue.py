@@ -95,7 +95,7 @@ class DeviceRequestQueue:
             self._queues[device_id] = asyncio.Queue()
             self._running[device_id] = None
             self._queued_types[device_id] = set()
-            self._workers[device_id] = asyncio.ensure_future(self._worker(device_id))
+            self._workers[device_id] = asyncio.create_task(self._worker(device_id))
 
     async def _worker(self, device_id: int) -> None:
         """Consume jobs from this device's queue indefinitely."""
