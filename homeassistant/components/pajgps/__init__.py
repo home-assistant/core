@@ -50,7 +50,7 @@ async def async_remove_config_entry_device(
     hass: core.HomeAssistant, config_entry: PajGpsConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a device from the integration."""
-    return True
+    return False
 
 
 async def _async_update_listener(
