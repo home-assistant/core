@@ -133,8 +133,9 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     )
     client = entry.runtime_data.client
     query = call.data[ATTR_QUERY]
+
+    LOGGER.debug("Searching for '%s'", query)
     try:
-        LOGGER.debug("Searching for '%s'", query)
         search_results = await client.search(query)
     except OverseerrConnectionError as err:
         raise HomeAssistantError(
@@ -160,13 +161,13 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     tmdb_id = call.data[ATTR_TMDB_ID]
     seasons = parse_seasons_input(call.data.get(ATTR_SEASONS))
 
+    LOGGER.debug(
+        "Requesting %s with TMDB ID %s (seasons: %s)",
+        media_type,
+        tmdb_id,
+        seasons or "none",
+    )
     try:
-        LOGGER.debug(
-            "Requesting %s with TMDB ID %s (seasons: %s)",
-            media_type,
-            tmdb_id,
-            seasons or "none",
-        )
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, tmdb_id, seasons)
     except OverseerrConnectionError as err:
