@@ -248,6 +248,7 @@ class RestoreStateData:
             _async_dump_states,
             STATE_DUMP_INTERVAL,
             name="RestoreStateData dump states",
+            cancel_on_shutdown=True,
         )
         self._cancel_interval_dump = cancel_interval
 
