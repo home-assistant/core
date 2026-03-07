@@ -794,6 +794,8 @@ build.json @home-assistant/supervisor
 /tests/components/indevolt/ @xirtnl
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
+/homeassistant/components/inet/ @JonatanMGit
+/tests/components/inet/ @JonatanMGit
 /homeassistant/components/influxdb/ @mdegat01 @Robbie1221
 /tests/components/influxdb/ @mdegat01 @Robbie1221
 /homeassistant/components/infrared/ @home-assistant/core

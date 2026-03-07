@@ -3151,6 +3151,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "inet": {
+      "name": "iNet Radio",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "influxdb": {
       "name": "InfluxDB",
       "integration_type": "hub",
