@@ -1,0 +1,9 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: counter
+
+incremented: *trigger_common
+decremented: *trigger_common
+maximum_reached: *trigger_common
+reset: *trigger_common

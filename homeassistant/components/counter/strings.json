@@ -49,5 +49,23 @@
       "name": "Set"
     }
   },
-  "title": "Counter"
+  "title": "Counter",
+  "triggers": {
+    "decremented": {
+      "description": "Triggers when a counter decrements.",
+      "name": "Counter decremented"
+    },
+    "incremented": {
+      "description": "Triggers when a counter increments.",
+      "name": "Counter incremented"
+    },
+    "maximum_reached": {
+      "description": "Triggers when a counter reaches its maximum value.",
+      "name": "Counter reached maximum"
+    },
+    "reset": {
+      "description": "Triggers when a counter is reset.",
+      "name": "Counter reset"
+    }
+  }
 }

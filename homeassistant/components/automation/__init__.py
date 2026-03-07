@@ -140,6 +140,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "binary_sensor",
     "button",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
     "door",
