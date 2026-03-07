@@ -103,6 +103,12 @@ def mock_proxmox_client():
                     "name": vm["name"],
                     "status": vm["status"],
                 }
+                snapshot_mock = MagicMock()
+                snapshot_mock.get.return_value = []
+                snapshot_mock.post.return_value = (
+                    "UPID:pve1:00000001:1234:5678ABCD:qmsnapshot:100:root@pam:"
+                )
+                resource.snapshot = snapshot_mock
                 qemu_mocks[vmid] = resource
             return qemu_mocks[vmid]
 
@@ -115,6 +121,12 @@ def mock_proxmox_client():
                     "name": ct["name"],
                     "status": ct["status"],
                 }
+                snapshot_mock = MagicMock()
+                snapshot_mock.get.return_value = []
+                snapshot_mock.post.return_value = (
+                    "UPID:pve1:00000001:1234:5678ABCD:lxcsnapshot:200:root@pam:"
+                )
+                resource.snapshot = snapshot_mock
                 lxc_mocks[vmid] = resource
             return lxc_mocks[vmid]
 
