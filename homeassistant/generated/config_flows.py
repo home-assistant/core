@@ -276,6 +276,7 @@ FLOWS = {
         "gpslogger",
         "gree",
         "green_planet_energy",
+        "greencell",
         "growatt_server",
         "guardian",
         "habitica",
