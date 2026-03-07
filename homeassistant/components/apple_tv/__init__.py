@@ -37,6 +37,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_CREDENTIALS,
     CONF_IDENTIFIERS,
+    CONF_OUTPUT_DEVICE_ID,
     CONF_START_OFF,
     DOMAIN,
     SIGNAL_CONNECTED,
@@ -329,7 +330,7 @@ class AppleTVManager(DeviceListener):
         self.atv.listener = self
 
         self._dispatch_send(SIGNAL_CONNECTED, self.atv)
-        self._address_updated(str(conf.address))
+        self._cached_data_updated(str(conf.address), conf.device_info.output_device_id)
 
         self._async_setup_device_registry()
 
@@ -377,11 +378,21 @@ class AppleTVManager(DeviceListener):
         """Return true if connection is in progress."""
         return self._task is not None
 
-    def _address_updated(self, address: str) -> None:
-        """Update cached address in config entry."""
-        _LOGGER.debug("Changing address to %s", address)
+    def _cached_data_updated(self, address: str, output_device_id: str | None) -> None:
+        """Update cached address and output_device_id in config entry."""
+
+        _LOGGER.debug(
+            "Updating address to %s, and output_device_id to %s",
+            address,
+            output_device_id,
+        )
         self.hass.config_entries.async_update_entry(
-            self.config_entry, data={**self.config_entry.data, CONF_ADDRESS: address}
+            self.config_entry,
+            data={
+                **self.config_entry.data,
+                CONF_ADDRESS: address,
+                CONF_OUTPUT_DEVICE_ID: output_device_id,
+            },
         )
 
     def _dispatch_send(self, signal: str, *args: Any) -> None:

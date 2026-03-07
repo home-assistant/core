@@ -29,6 +29,7 @@ from pyatv.interface import (
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -37,13 +38,17 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
+from .const import CONF_OUTPUT_DEVICE_ID, DOMAIN
 from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +75,7 @@ SUPPORT_APPLE_TV = (
     | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.GROUPING
 )
 
 
@@ -94,7 +100,65 @@ SUPPORT_FEATURE_MAPPING = {
     | MediaPlayerEntityFeature.SELECT_SOURCE,
     FeatureName.LaunchApp: MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE,
+    FeatureName.AddOutputDevices: MediaPlayerEntityFeature.GROUPING,
+    FeatureName.RemoveOutputDevices: MediaPlayerEntityFeature.GROUPING,
+    FeatureName.SetOutputDevices: MediaPlayerEntityFeature.GROUPING,
 }
+
+
+def entity_ids_by_output_device_id(
+    hass: HomeAssistant, output_device_ids: list[str]
+) -> dict[str, str | None]:
+    """Map pyatv output device IDs to MediaPlayer entity IDs.
+
+    Return a dict with the keys being the output device ID, and the values being
+    the mapped entity ID or `None` if no entity could be found.
+    """
+    players = dict.fromkeys(output_device_ids, None)
+
+    entity_registry = er.async_get(hass)
+
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if (
+            config_entry.state == ConfigEntryState.LOADED
+            and config_entry.unique_id is not None
+        ):
+            entity_id = entity_registry.async_get_entity_id(
+                MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
+            )
+            if (
+                output_device_id := config_entry.data.get(CONF_OUTPUT_DEVICE_ID, None)
+            ) is not None and output_device_id in players:
+                players[output_device_id] = entity_id
+
+    return players
+
+
+def output_device_ids_by_entity_id(
+    hass: HomeAssistant, entity_ids: list[str]
+) -> dict[str, str | None]:
+    """Map MediaPlayer entity IDs to pyatv output device IDs.
+
+    Return a dict with the keys being the entity IDs, and the values being the
+    mapped output device ID or `None`, if no output device ID could be found.
+    """
+    output_devices = dict.fromkeys(entity_ids, None)
+
+    entity_registry = er.async_get(hass)
+    config_entries = hass.config_entries
+
+    for entity_id in output_devices:
+        if (
+            (entity_entry := entity_registry.async_get(entity_id)) is not None
+            and (config_entry_id := entity_entry.config_entry_id) is not None
+            and (config_entry := config_entries.async_get_entry(config_entry_id))
+            is not None
+            and (output_device_id := config_entry.data.get(CONF_OUTPUT_DEVICE_ID, None))
+            is not None
+        ):
+            output_devices[entity_id] = output_device_id
+
+    return output_devices
 
 
 async def async_setup_entry(
@@ -123,6 +187,7 @@ class AppleTvMediaPlayer(
         self._playing: Playing | None = None
         self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
+        self._attr_group_members = []
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
@@ -153,6 +218,10 @@ class AppleTvMediaPlayer(
         # Listen to volume updates
         atv.audio.listener = self
 
+        self.manager.config_entry.async_create_task(
+            self.hass, self._update_group_members(), eager_start=False
+        )
+
         if atv.features.in_state(FeatureState.Available, FeatureName.AppList):
             self.manager.config_entry.async_create_task(
                 self.hass, self._update_app_list(), eager_start=True
@@ -175,6 +244,44 @@ class AppleTvMediaPlayer(
                 if (app_name := app.name) is not None
             }
             self.async_write_ha_state()
+
+    async def _update_group_members(self) -> None:
+        """Update group_members attr.
+
+        Find all apple_tv media_player entities that match the current list of `output_devices`.
+        Some of these devices may not be managed by homeassistant, so only
+        the best effort is made to map them to entities, which are then captured
+        in the `group_members` state attribute.
+        """
+
+        if (atv := self.atv) is None:
+            _LOGGER.debug(
+                "%s unable to update group members, missing atv", self.entity_id
+            )
+            return
+
+        output_device_ids = [dev.identifier for dev in atv.audio.output_devices]
+
+        players = entity_ids_by_output_device_id(self.hass, output_device_ids)
+
+        group_members = [
+            entity_id for entity_id in players.values() if entity_id is not None
+        ]
+        unmapped_device_ids = [
+            output_device_id
+            for (output_device_id, entity_id) in players.items()
+            if entity_id is None
+        ]
+
+        self._attr_group_members = group_members
+        self.async_write_ha_state()
+
+        if unmapped_device_ids:
+            _LOGGER.debug(
+                "%s unable to find entities for output_devices %s",
+                self.entity_id,
+                unmapped_device_ids,
+            )
 
     @callback
     def async_device_disconnected(self) -> None:
@@ -257,6 +364,9 @@ class AppleTvMediaPlayer(
 
         This is a callback function from pyatv.interface.AudioListener.
         """
+        self.manager.config_entry.async_create_task(
+            self.hass, self._update_group_members(), eager_start=False
+        )
 
     @property
     def app_id(self) -> str | None:
@@ -584,3 +694,106 @@ class AppleTvMediaPlayer(
         if self.atv:
             if app_id := self._app_list.get(source):
                 await self.atv.apps.launch_app(app_id)
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+
+        if (atv := self.atv) is None:
+            _LOGGER.debug(
+                "%s unable to join with %s, not connected to player",
+                self.entity_id,
+                group_members,
+            )
+            return
+
+        output_devices = output_device_ids_by_entity_id(
+            self.hass, [self.entity_id, *group_members]
+        )
+
+        mapped_entities = []
+        unmapped_entities = []
+        output_device_ids = []
+
+        for entity_id, output_device_id in output_devices.items():
+            if output_device_id is not None:
+                mapped_entities.append(entity_id)
+                output_device_ids.append(output_device_id)
+            else:
+                unmapped_entities.append(entity_id)
+
+        await atv.audio.set_output_devices(
+            # Need to check typing with pyatv.
+            # The method is defined with list[str] for each arg:
+            #   set_output_devices(*device_uids: List[str])
+            # but it is used in pyatv(tests, etc) as:
+            #   set_output_devices(*devices: str)
+            # mypy docs seem to suggest pyatv is wrong:
+            # https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html#functions
+            *output_device_ids  # type: ignore[arg-type]
+        )
+
+        if unmapped_entities:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_grouping_entities",
+                translation_placeholders={
+                    "entity_ids": ", ".join(unmapped_entities),
+                    "entity_id": self.entity_id,
+                },
+            )
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        if (atv := self.atv) is None:
+            _LOGGER.debug(
+                "%s unable to unjoin, not connected to player",
+                self.entity_id,
+            )
+            return
+
+        output_device_id = atv.device_info.output_device_id
+        output_device_ids = [device.identifier for device in atv.audio.output_devices]
+
+        if len(output_device_ids) <= 1:
+            # We don't know if we are the only device in a group or part of some other
+            # player's group, so we need to find the leader and ask it to remove us.
+            for config_entry in self.hass.config_entries.async_entries(DOMAIN):
+                if (
+                    config_entry.state == ConfigEntryState.LOADED
+                    and (mgr := config_entry.runtime_data) is not None
+                    and (leader_atv := mgr.atv) is not None
+                    and output_device_id
+                    in (dev.identifier for dev in mgr.atv.audio.output_devices)
+                ):
+                    _LOGGER.debug(
+                        "delegating unjoining to leader (%s), requesting to remove %s (%s)",
+                        leader_atv.device_info.output_device_id,
+                        self.entity_id,
+                        output_device_id,
+                    )
+                    await leader_atv.audio.remove_output_devices(output_device_id)
+                    return
+
+            _LOGGER.debug(
+                "%s unable to unjoin, could not find leader to delegate to",
+                self.entity_id,
+            )
+
+        elif output_device_id is not None:
+            # For now we can only unjoin a leader from a group by removing all other members,
+            # thus destroying the group.
+            # If we wanted to remove ourselves but leave the rest of the group intact,
+            # we would need to be able to transfer leadership to another player, and then
+            # remove ourselves from the group.
+
+            # Need to check typing with pyatv.
+            # The method is defined with list[str] for each arg:
+            #   set_output_devices(*device_uids: List[str])
+            # but it is used in pyatv(tests, etc) as:
+            #   set_output_devices(*devices: str)
+            # mypy docs seem to suggest pyatv is wrong:
+            # https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html#functions
+            await atv.audio.set_output_devices(output_device_id)  # type: ignore[arg-type]
+
+        else:
+            _LOGGER.debug("%s unable to unjoin, no output_device_id", self.entity_id)

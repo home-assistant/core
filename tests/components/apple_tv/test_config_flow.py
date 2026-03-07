@@ -152,6 +152,7 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
         },
         "identifiers": ["mrpid", "dmapid", "airplayid"],
         "name": "MRP Device",
+        "output_device_id": "test-output-device-id-1",
     }
 
 
@@ -185,6 +186,7 @@ async def test_user_adds_dmap_device(hass: HomeAssistant) -> None:
         "credentials": {Protocol.DMAP.value: "dmap_creds"},
         "identifiers": ["dmapid"],
         "name": "DMAP Device",
+        "output_device_id": None,
     }
 
 
@@ -251,6 +253,7 @@ async def test_user_pair_no_interaction(hass: HomeAssistant) -> None:
         "credentials": {Protocol.DMAP.value: None},
         "identifiers": ["dmapid"],
         "name": "DMAP Device",
+        "output_device_id": None,
     }
 
 
@@ -555,6 +558,7 @@ async def test_ignores_disabled_service(hass: HomeAssistant) -> None:
         },
         "identifiers": ["mrpid", "airplayid"],
         "name": "AirPlay Device",
+        "output_device_id": None,
     }
 
 
@@ -633,6 +637,7 @@ async def test_zeroconf_add_mrp_device(hass: HomeAssistant) -> None:
         "credentials": {Protocol.MRP.value: "mrp_creds"},
         "identifiers": ["mrpid"],
         "name": "MRP Device",
+        "output_device_id": "test-output-device-id-1",
     }
 
 
@@ -662,6 +667,7 @@ async def test_zeroconf_add_dmap_device(hass: HomeAssistant) -> None:
         "credentials": {Protocol.DMAP.value: "dmap_creds"},
         "identifiers": ["dmapid"],
         "name": "DMAP Device",
+        "output_device_id": None,
     }
 
 
@@ -1215,6 +1221,7 @@ async def test_reconfigure_update_credentials(
         "name": "MRP Device",
         "credentials": {Protocol.MRP.value: "mrp_creds"},
         "identifiers": ["mrpid"],
+        "output_device_id": "test-output-device-id-1",
     }
 
     await hass.async_block_till_done()
