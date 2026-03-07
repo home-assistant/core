@@ -5060,6 +5060,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "pajgps": {
+      "name": "PAJ GPS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "palazzetti": {
       "name": "Palazzetti",
       "integration_type": "device",

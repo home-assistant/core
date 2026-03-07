@@ -1514,6 +1514,9 @@ p1monitor==3.2.0
 # homeassistant.components.mqtt
 paho-mqtt==2.1.0
 
+# homeassistant.components.pajgps
+pajgps-api==0.3.1
+
 # homeassistant.components.panasonic_viera
 panasonic-viera==0.4.4
 

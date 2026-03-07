@@ -524,6 +524,7 @@ FLOWS = {
         "ovo_energy",
         "owntracks",
         "p1_monitor",
+        "pajgps",
         "palazzetti",
         "panasonic_viera",
         "paperless_ngx",
