@@ -430,6 +430,71 @@ async def test_clean_segments_command_with_id(
     ]
 
 
+async def test_clean_segments_command_update(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test cleanable segments update via discovery."""
+    # Prepare original entity config entry
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        mqtt.DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    await mqtt_mock_entry()
+    # Do initial discovery
+    config1 = CONFIG_CLEAN_SEGMENTS_2[mqtt.DOMAIN][vacuum.DOMAIN]
+    payload1 = json.dumps(config1)
+    config_topic = "homeassistant/vacuum/bla/config"
+    async_fire_mqtt_message(hass, config_topic, payload1)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+
+    issue_registry = ir.async_get(hass)
+    # The area mapping was already set
+    # so we do not expect a repair flow
+    assert len(issue_registry.issues) == 0
+
+    # Update the segments
+    config2 = config1.copy()
+    config2["segments"] = ["1.Livingroom", "2.Kitchen", "3.Diningroom"]
+    payload2 = json.dumps(config2)
+    async_fire_mqtt_message(hass, config_topic, payload2)
+    await hass.async_block_till_done()
+
+    # A repair flow should start
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+        {"id": "3", "name": "Diningroom", "group": None},
+    ]
+
+
 @pytest.mark.usefixtures("hass")
 @pytest.mark.parametrize(
     ("hass_config", "error_message"),
