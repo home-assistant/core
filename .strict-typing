@@ -413,6 +413,7 @@ homeassistant.components.otp.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.pajgps.*
 homeassistant.components.panel_custom.*
 homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*

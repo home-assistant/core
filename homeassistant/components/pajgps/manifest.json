@@ -1,0 +1,11 @@
+{
+  "domain": "pajgps",
+  "name": "PAJ GPS",
+  "codeowners": ["@skipperro"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pajgps",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "platinum",
+  "requirements": ["pajgps-api==0.3.1"]
+}
