@@ -14,6 +14,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelState,
 )
+from homeassistant.components.zha.const import ATTR_IEEE
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -22,6 +23,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -300,3 +302,306 @@ async def reset_alarm_panel(hass: HomeAssistant, cluster: Cluster, entity_id: st
         security.IasAce.AlarmStatus.No_Alarm,
     )
     cluster.client_command.reset_mock()
+
+
+@patch(
+    "zigpy.zcl.clusters.security.IasAce.client_command",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+async def test_set_entry_delay_service(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test set_entry_delay service."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [],
+                SIG_EP_OUTPUT: [security.IasAce.cluster_id],
+                SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device = gateway.get_device(zigpy_device.ieee)
+
+    # Get the IAS ACE cluster handler
+    ias_ace_ch = None
+    for endpoint in zha_device.endpoints.values():
+        if hasattr(endpoint, "client_cluster_handlers_by_name"):
+            ias_ace_ch = endpoint.client_cluster_handlers_by_name.get("ias_ace")
+            if ias_ace_ch:
+                break
+    assert ias_ace_ch is not None, "IAS ACE cluster handler not found"
+
+    # Test setting entry delay successfully
+    with patch.object(ias_ace_ch, "start_entry_delay") as mock_start_entry_delay:
+        await hass.services.async_call(
+            "zha",
+            "set_entry_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 45,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_start_entry_delay.assert_called_once_with(45)
+
+    # Test with different duration
+    with patch.object(ias_ace_ch, "start_entry_delay") as mock_start_entry_delay:
+        await hass.services.async_call(
+            "zha",
+            "set_entry_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 120,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_start_entry_delay.assert_called_once_with(120)
+
+    # Test error when device doesn't exist
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "zha",
+            "set_entry_delay",
+            {
+                ATTR_IEEE: "00:11:22:33:44:55:66:77",
+                "duration": 30,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    assert "not found" in str(exc_info.value).lower()
+
+
+@patch(
+    "zigpy.zcl.clusters.security.IasAce.client_command",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+async def test_set_exit_delay_service(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test set_exit_delay service."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [],
+                SIG_EP_OUTPUT: [security.IasAce.cluster_id],
+                SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device = gateway.get_device(zigpy_device.ieee)
+
+    # Get the IAS ACE cluster handler
+    ias_ace_ch = None
+    for endpoint in zha_device.endpoints.values():
+        if hasattr(endpoint, "client_cluster_handlers_by_name"):
+            ias_ace_ch = endpoint.client_cluster_handlers_by_name.get("ias_ace")
+            if ias_ace_ch:
+                break
+    assert ias_ace_ch is not None, "IAS ACE cluster handler not found"
+
+    # Test exit delay for "away" mode
+    with (
+        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
+        patch.object(
+            ias_ace_ch, "arm_response", new_callable=AsyncMock
+        ) as mock_arm_response,
+    ):
+        await hass.services.async_call(
+            "zha",
+            "set_exit_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 60,
+                "arm_mode": "away",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_start_exit_delay.assert_called_once_with(
+            60, security.IasAce.PanelStatus.Armed_Away
+        )
+        mock_arm_response.assert_called_once_with(
+            security.IasAce.ArmNotification.All_Zones_Armed
+        )
+
+    # Test exit delay for "home" mode
+    with (
+        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
+        patch.object(
+            ias_ace_ch, "arm_response", new_callable=AsyncMock
+        ) as mock_arm_response,
+    ):
+        await hass.services.async_call(
+            "zha",
+            "set_exit_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 90,
+                "arm_mode": "home",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_start_exit_delay.assert_called_once_with(
+            90, security.IasAce.PanelStatus.Armed_Stay
+        )
+        mock_arm_response.assert_called_once_with(
+            security.IasAce.ArmNotification.Only_Day_Home_Zones_Armed
+        )
+
+    # Test exit delay for "night" mode
+    with (
+        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
+        patch.object(
+            ias_ace_ch, "arm_response", new_callable=AsyncMock
+        ) as mock_arm_response,
+    ):
+        await hass.services.async_call(
+            "zha",
+            "set_exit_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 30,
+                "arm_mode": "night",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_start_exit_delay.assert_called_once_with(
+            30, security.IasAce.PanelStatus.Armed_Night
+        )
+        mock_arm_response.assert_called_once_with(
+            security.IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed
+        )
+
+    # Test error when device doesn't exist
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "zha",
+            "set_exit_delay",
+            {
+                ATTR_IEEE: "00:11:22:33:44:55:66:77",
+                "duration": 30,
+                "arm_mode": "away",
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    assert "not found" in str(exc_info.value).lower()
+
+
+@patch(
+    "zigpy.zcl.clusters.security.IasAce.client_command",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+async def test_set_entry_delay_service_no_ias_ace(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test set_entry_delay service with device that doesn't have IAS ACE cluster."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    # Create device without IAS ACE cluster
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [0],
+                SIG_EP_OUTPUT: [0],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Test error when device doesn't have IAS ACE cluster
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "zha",
+            "set_entry_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 30,
+            },
+            blocking=True,
+        )
+
+
+@patch(
+    "zigpy.zcl.clusters.security.IasAce.client_command",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+async def test_set_exit_delay_service_no_ias_ace(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test set_exit_delay service with device that doesn't have IAS ACE cluster."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    # Create device without IAS ACE cluster
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [0],
+                SIG_EP_OUTPUT: [0],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Test error when device doesn't have IAS ACE cluster
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "zha",
+            "set_exit_delay",
+            {
+                ATTR_IEEE: str(zigpy_device.ieee),
+                "duration": 30,
+                "arm_mode": "away",
+            },
+            blocking=True,
+        )

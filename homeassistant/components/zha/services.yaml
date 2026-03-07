@@ -34,6 +34,47 @@ remove:
       selector:
         text:
 
+set_entry_delay:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    duration:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 255
+          unit_of_measurement: seconds
+
+set_exit_delay:
+  fields:
+    ieee:
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    duration:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 255
+          unit_of_measurement: seconds
+    arm_mode:
+      required: true
+      example: "away"
+      selector:
+        select:
+          options:
+            - "away"
+            - "home"
+            - "night"
+
 reconfigure_device:
   fields:
     ieee:

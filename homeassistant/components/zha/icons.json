@@ -272,6 +272,12 @@
     "remove": {
       "service": "mdi:cellphone-remove"
     },
+    "set_entry_delay": {
+      "service": "mdi:timer-alert-outline"
+    },
+    "set_exit_delay": {
+      "service": "mdi:timer-alert-outline"
+    },
     "set_lock_user_code": {
       "service": "mdi:lock"
     },
