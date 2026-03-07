@@ -170,6 +170,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                     },
+                    title=user_input[CONF_HOST],
                     reload_even_if_entry_is_unchanged=False,
                 )
 
