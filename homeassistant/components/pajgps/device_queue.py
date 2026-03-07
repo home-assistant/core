@@ -16,6 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
 
+# A single slot in the per-device queue: (job_type, coro_factory, result_future).
+# The result type varies per job so Any is intentional and confined here.
+type _QueueItem = tuple[str, Callable[[], Awaitable[Any]], asyncio.Future[Any]]
+
 
 class DeviceRequestQueue:
     """Serialises PAJ GPS API calls for each device.
@@ -29,9 +33,9 @@ class DeviceRequestQueue:
     def __init__(self) -> None:
         """Initialize the device request queue with empty state."""
         # device_id → asyncio.Queue of (job_type, coro_factory, Future) triples
-        self._queues: dict[int, asyncio.Queue[Any]] = {}
+        self._queues: dict[int, asyncio.Queue[_QueueItem]] = {}
         # device_id → worker Task
-        self._workers: dict[int, asyncio.Task] = {}
+        self._workers: dict[int, asyncio.Task[None]] = {}
         # device_id → job_type currently being executed
         self._running: dict[int, str | None] = {}
         # device_id → set of job_types already waiting in the queue
@@ -94,10 +98,11 @@ class DeviceRequestQueue:
     def _ensure_device(self, device_id: int) -> None:
         """Create queue and worker for device_id if they do not exist yet."""
         if device_id not in self._queues:
-            self._queues[device_id] = asyncio.Queue()
+            self._queues[device_id] = asyncio.Queue[_QueueItem]()
             self._running[device_id] = None
             self._queued_types[device_id] = set()
-            self._workers[device_id] = asyncio.create_task(self._worker(device_id))
+            worker: asyncio.Task[None] = asyncio.create_task(self._worker(device_id))
+            self._workers[device_id] = worker
 
     async def _worker(self, device_id: int) -> None:
         """Consume jobs from this device's queue indefinitely."""
