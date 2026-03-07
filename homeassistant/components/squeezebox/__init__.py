@@ -22,11 +22,13 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    DeviceEntry,
     DeviceEntryType,
     format_mac,
 )
@@ -77,6 +79,9 @@ class SqueezeboxData:
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
+    player_coordinators: dict[str, SqueezeBoxPlayerUpdateCoordinator] = field(
+        default_factory=dict
+    )
     known_player_ids: set[str] = field(default_factory=set)
 
 
@@ -216,6 +221,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                     hass, entry, player, lms.uuid
                 )
                 await player_coordinator.async_refresh()
+                entry.runtime_data.player_coordinators[player.player_id] = (
+                    player_coordinator
+                )
                 entry.runtime_data.known_player_ids.add(player.player_id)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, player_coordinator
@@ -259,3 +267,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
         hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SqueezeboxConfigEntry,
+    device_entry: DeviceEntry,
+) -> bool:
+    """Allow removal of a Squeezebox player only if its coordinator is unavailable."""
+    data = config_entry.runtime_data
+
+    player_id = next(
+        (id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN), None
+    )
+
+    if device_entry.entry_type is DeviceEntryType.SERVICE:
+        raise HomeAssistantError(
+            f"Cannot remove Lyrion Music Server '{device_entry.name}' directly. "
+            "Please delete the associated config entry instead."
+        )
+
+    if not player_id:
+        return False  # Not a Squeezebox device
+
+    coordinator = data.player_coordinators.get(player_id)
+
+    if coordinator is None:
+        return True
+
+    if coordinator.available:
+        raise HomeAssistantError(
+            f"Cannot remove Squeezebox player '{coordinator.player_uuid}' "
+            "because it is currently online."
+        )
+
+    return True
