@@ -316,6 +316,7 @@ async def test_hass_final_write_after_entity_removed(hass: HomeAssistant) -> Non
 
     hass.data.pop(DATA_RESTORE_STATE)
     await async_load(hass)
+    await hass.async_block_till_done()
 
     platform = MockEntityPlatform(hass, domain="input_boolean")
     entity = RestoreEntity()
@@ -333,8 +334,8 @@ async def test_hass_final_write_after_entity_removed(hass: HomeAssistant) -> Non
         hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         await hass.async_block_till_done()
 
-    assert mock_write_data.called
-    written_states = mock_write_data.mock_calls[0][1][0]
+    assert mock_write_data.call_count == 1
+    written_states = mock_write_data.call_args.args[0]
     assert len(written_states) == 1
     state = json_round_trip(written_states[0])
     assert state["state"]["entity_id"] == entity.entity_id
