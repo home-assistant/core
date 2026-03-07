@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "charge_state_off_peak_charging_enabled": {
+        "default": "mdi:battery-clock-outline"
+      },
       "charge_state_scheduled_charging_pending": {
         "default": "mdi:battery-clock"
       },
@@ -199,6 +202,24 @@
       "charge_state_minutes_to_full_charge": {
         "default": "mdi:clock-end"
       },
+      "charge_state_off_peak_charging_times": {
+        "default": "mdi:calendar-clock"
+      },
+      "charge_state_off_peak_hours_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "charge_state_preconditioning_times": {
+        "default": "mdi:calendar-clock"
+      },
+      "charge_state_scheduled_charging_mode": {
+        "default": "mdi:battery-clock"
+      },
+      "charge_state_scheduled_charging_start_time_minutes": {
+        "default": "mdi:clock-start"
+      },
+      "charge_state_scheduled_departure_time_minutes": {
+        "default": "mdi:car-clock"
+      },
       "drive_state_active_route_destination": {
         "default": "mdi:map-marker"
       },
@@ -294,6 +315,14 @@
       "vehicle_state_valet_mode": {
         "default": "mdi:bow-tie"
       }
+    }
+  },
+  "services": {
+    "set_scheduled_charging": {
+      "service": "mdi:battery-clock"
+    },
+    "set_scheduled_departure": {
+      "service": "mdi:car-clock"
     }
   }
 }

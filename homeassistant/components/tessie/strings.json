@@ -48,6 +48,9 @@
       "charge_state_conn_charge_cable": {
         "name": "Charge cable"
       },
+      "charge_state_off_peak_charging_enabled": {
+        "name": "Off-peak charging enabled"
+      },
       "charge_state_preconditioning_enabled": {
         "name": "Preconditioning enabled"
       },
@@ -398,6 +401,28 @@
       "charge_state_minutes_to_full_charge": {
         "name": "Time to full charge"
       },
+      "charge_state_off_peak_charging_times": {
+        "name": "Off-peak charging schedule",
+        "state": {
+          "all_week": "All week",
+          "weekdays": "Weekdays"
+        }
+      },
+      "charge_state_preconditioning_times": {
+        "name": "Preconditioning schedule",
+        "state": {
+          "all_week": "[%key:component::tessie::entity::sensor::charge_state_off_peak_charging_times::state::all_week%]",
+          "weekdays": "[%key:component::tessie::entity::sensor::charge_state_off_peak_charging_times::state::weekdays%]"
+        }
+      },
+      "charge_state_scheduled_charging_mode": {
+        "name": "Scheduled charging mode",
+        "state": {
+          "depart_by": "Depart by",
+          "off": "[%key:common::state::off%]",
+          "start_at": "Start at"
+        }
+      },
       "charge_state_usable_battery_level": {
         "name": "Battery level"
       },
@@ -643,6 +668,9 @@
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
     },
+    "invalid_device": {
+      "message": "Device {device_id} is not valid."
+    },
     "invalid_energy_history_data": {
       "message": "Invalid energy history data."
     },
@@ -652,8 +680,75 @@
     "not_supported": {
       "message": "{name} is not supported."
     },
+    "set_scheduled_charging_time": {
+      "message": "Scheduled charging time is required when enabling."
+    },
+    "set_scheduled_departure_off_peak": {
+      "message": "Off-peak charging end time is required when enabling."
+    },
+    "set_scheduled_departure_preconditioning": {
+      "message": "Preconditioning departure time is required when enabling."
+    },
     "unknown": {
       "message": "An unknown issue occurred changing {name}."
+    }
+  },
+  "services": {
+    "set_scheduled_charging": {
+      "description": "Sets a time at which charging should be started.",
+      "fields": {
+        "device_id": {
+          "description": "The vehicle to set the scheduled charging for.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "Whether to enable or disable scheduled charging.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "time": {
+          "description": "The time to start charging.",
+          "name": "Time"
+        }
+      },
+      "name": "Set scheduled charging"
+    },
+    "set_scheduled_departure": {
+      "description": "Sets the departure time for a vehicle to schedule charging and preconditioning.",
+      "fields": {
+        "departure_time": {
+          "description": "The time to be preconditioned by.",
+          "name": "Departure time"
+        },
+        "device_id": {
+          "description": "The vehicle to set the scheduled departure for.",
+          "name": "Vehicle"
+        },
+        "enable": {
+          "description": "Whether to enable or disable scheduled departure.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "end_off_peak_time": {
+          "description": "The time when off-peak hours end.",
+          "name": "End off-peak time"
+        },
+        "off_peak_charging_enabled": {
+          "description": "Whether to enable off-peak charging.",
+          "name": "Off-peak charging enabled"
+        },
+        "off_peak_charging_weekdays_only": {
+          "description": "Whether to limit off-peak charging to weekdays.",
+          "name": "Off-peak charging weekdays only"
+        },
+        "preconditioning_enabled": {
+          "description": "Whether to enable preconditioning before departure.",
+          "name": "Preconditioning enabled"
+        },
+        "preconditioning_weekdays_only": {
+          "description": "Whether to limit preconditioning to weekdays.",
+          "name": "Preconditioning weekdays only"
+        }
+      },
+      "name": "Set scheduled departure"
     }
   }
 }

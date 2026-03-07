@@ -56,6 +56,10 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
+        key="charge_state_off_peak_charging_enabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
         key="charge_state_trip_charging",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
