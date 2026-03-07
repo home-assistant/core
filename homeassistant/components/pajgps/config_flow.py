@@ -27,9 +27,6 @@ def _build_config_schema(
     entry_name: str = "My Paj GPS Account",
     email: str = "",
     password: str = "",
-    mark_alerts_as_read: bool = True,
-    fetch_elevation: bool = False,
-    force_battery: bool = False,
 ) -> vol.Schema:
     """Build config schema with optional pre-filled defaults."""
     return vol.Schema(
