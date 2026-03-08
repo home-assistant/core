@@ -64,7 +64,7 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kaiterra."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -99,9 +99,7 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle the start of a reauthentication flow."""
         return await self.async_step_reauth_confirm()
 
