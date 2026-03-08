@@ -38,6 +38,8 @@ from .const import (
     PRESET_NONE,
     PRESET_SHABAT,
     SCAN_INTERVAL_SEC,
+    SENSOR_TEMP_SCALE_THRESHOLD,
+    SENSOR_TEMP_SHIFT_BITS,
     UNAVAILABLE_THRESH_SEC,
 )
 
@@ -265,8 +267,8 @@ class ElectraClimateEntity(ClimateEntity):
             self._electra_ac_device.get_fan_speed()
         ]
         raw_temp = self._electra_ac_device.get_sensor_temperature()
-        if raw_temp is not None and raw_temp > 100:
-            raw_temp = raw_temp >> 8
+        if raw_temp is not None and raw_temp > SENSOR_TEMP_SCALE_THRESHOLD:
+            raw_temp = raw_temp >> SENSOR_TEMP_SHIFT_BITS
         self._attr_current_temperature = raw_temp
         self._attr_target_temperature = self._electra_ac_device.get_temperature()
 
