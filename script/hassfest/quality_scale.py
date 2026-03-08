@@ -1186,7 +1186,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
-    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",

@@ -571,9 +571,6 @@ base36==0.1.1
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
 
-# homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.17.3
-
 # homeassistant.components.esphome
 bleak-esphome==3.7.1
 

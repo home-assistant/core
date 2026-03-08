@@ -631,9 +631,6 @@ beautifulsoup4==4.13.3
 # homeassistant.components.beewi_smartclim
 # beewi-smartclim==0.0.10
 
-# homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.17.3
-
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
