@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import WizConfigEntry
+from .coordinator import WizConfigEntry
 
 TO_REDACT = {"roomId", "homeId"}
 

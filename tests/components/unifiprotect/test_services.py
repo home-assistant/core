@@ -5,9 +5,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import Camera, Chime, Color, Light, ModelType
+from uiprotect.data import Camera, Chime, Color, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
-from uiprotect.exceptions import BadRequest
+from uiprotect.exceptions import BadRequest, ClientError
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_MESSAGE,
@@ -20,8 +20,10 @@ from homeassistant.components.unifiprotect.const import (
     KEYRINGS_USER_STATUS,
 )
 from homeassistant.components.unifiprotect.services import (
+    ATTR_PRESET,
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_GET_USER_KEYRING_INFO,
+    SERVICE_PTZ_GOTO_PRESET,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
@@ -29,7 +31,7 @@ from homeassistant.components.unifiprotect.services import (
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
@@ -339,4 +341,212 @@ async def test_get_user_keyring_info_no_users(
             {ATTR_DEVICE_ID: camera_entry.device_id},
             blocking=True,
             return_response=True,
+        )
+
+
+# --- PTZ Preset Service Tests ---
+
+
+def _make_presets() -> list[PTZPreset]:
+    """Create mock PTZ presets."""
+    return [
+        PTZPreset(
+            id="preset1",
+            name="Preset 1",
+            slot=0,
+            ptz={"pan": 100, "tilt": 50, "zoom": 0},
+        ),
+        PTZPreset(
+            id="preset2",
+            name="Preset 2",
+            slot=1,
+            ptz={"pan": 200, "tilt": 100, "zoom": 50},
+        ),
+    ]
+
+
+async def test_ptz_goto_preset(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service with a named preset."""
+    ptz_camera.get_ptz_presets.return_value = _make_presets()
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with patch_ufp_method(
+        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with(slot=0)
+
+
+async def test_ptz_goto_preset_home(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service with home preset."""
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with patch_ufp_method(
+        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with(slot=-1)
+
+
+async def test_ptz_goto_preset_not_found(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service with non-existent preset."""
+    ptz_camera.get_ptz_presets.return_value = []
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with pytest.raises(ServiceValidationError, match="Could not find PTZ preset"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {
+                ATTR_DEVICE_ID: camera_entry.device_id,
+                ATTR_PRESET: "Does Not Exist",
+            },
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_preset_not_ptz_camera(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test ptz_goto_preset service on a non-PTZ camera."""
+    await init_entry(hass, ufp, [doorbell])
+
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+
+    with pytest.raises(ServiceValidationError, match="does not support PTZ"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_preset_client_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service when get_ptz_presets raises ClientError."""
+    ptz_camera.get_ptz_presets.side_effect = ClientError("Connection failed")
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_preset_public_client_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service when ptz_goto_preset_public raises ClientError."""
+    ptz_camera.get_ptz_presets.return_value = _make_presets()
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with (
+        patch_ufp_method(
+            ptz_camera,
+            "ptz_goto_preset_public",
+            new_callable=AsyncMock,
+            side_effect=ClientError("Connection failed"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_home_preset_client_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service with home preset when ptz_goto_preset_public raises ClientError."""
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with (
+        patch_ufp_method(
+            ptz_camera,
+            "ptz_goto_preset_public",
+            new_callable=AsyncMock,
+            side_effect=ClientError("Connection failed"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
         )

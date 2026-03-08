@@ -30,7 +30,7 @@ class QSLight(QSToggleEntity, LightEntity):
     """Light based on a Qwikswitch relay/dimmer module."""
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
         return self.device.value if self.device.is_dimmer else None
 

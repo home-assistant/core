@@ -76,6 +76,10 @@ async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
             "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
             autospec=True,
         ) as mock_get_request,
+        patch(
+            "homeassistant.components.forked_daapd.async_setup_entry",
+            return_value=True,
+        ),
     ):
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
@@ -229,10 +233,16 @@ async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
 
-    with patch(
-        "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
-        autospec=True,
-    ) as mock_get_request:
+    with (
+        patch(
+            "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
+            autospec=True,
+        ) as mock_get_request,
+        patch(
+            "homeassistant.components.forked_daapd.async_setup_entry",
+            return_value=True,
+        ),
+    ):
         mock_get_request.return_value = SAMPLE_CONFIG
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)

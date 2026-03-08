@@ -1,6 +1,6 @@
 {
   "domain": "litterrobot",
-  "name": "Litter-Robot",
+  "name": "Whisker",
   "codeowners": ["@natekspencer", "@tkdrob"],
   "config_flow": true,
   "dhcp": [
