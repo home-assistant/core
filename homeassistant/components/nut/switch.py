@@ -47,13 +47,13 @@ async def async_setup_entry(
         with suppress(ValueError):
             outlet_numbers.update(range(1, int(num_outlets) + 1))
 
-# Detect outlets from status
+    # Detect outlets from status
     for key in status:
         match = re.match(r"outlet\.(\d+)\.status", key)
         if match:
             outlet_numbers.add(int(match.group(1)))
 
-# Detect outlets from commands
+    # Detect outlets from commands
     for cmd in map(str, user_available_commands):
         match = re.match(r"outlet\.(\d+)\.load\.(on|off)", cmd)
         if match:
