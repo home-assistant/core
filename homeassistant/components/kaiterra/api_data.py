@@ -1,106 +1,127 @@
-"""Data for all Kaiterra devices."""
+"""API helpers for the Kaiterra integration."""
+
+from __future__ import annotations
 
 import asyncio
-from logging import getLogger
+from collections.abc import Mapping
+from http import HTTPStatus
+from typing import Any
 
-from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
-from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
+from aiohttp import ClientResponseError
+from aiohttp.client_exceptions import ClientConnectorError
+from kaiterra_async_client import AQIStandard, KaiterraAPIClient
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_DEVICES, CONF_TYPE
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from .const import AQI_LEVEL, AQI_SCALE
 
-from .const import (
-    AQI_LEVEL,
-    AQI_SCALE,
-    CONF_AQI_STANDARD,
-    CONF_PREFERRED_UNITS,
-    DISPATCHER_KAITERRA,
-)
-
-_LOGGER = getLogger(__name__)
-
-POLLUTANTS = {"rpm25c": "PM2.5", "rpm10c": "PM10", "rtvoc": "TVOC", "rco2": "CO2"}
+POLLUTANTS = {
+    "rpm25c": "PM2.5",
+    "rpm10c": "PM10",
+    "tvoc": "TVOC",
+    "rco2": "CO2",
+}
 
 
-class KaiterraApiData:
-    """Get data from Kaiterra API."""
+class KaiterraApiError(Exception):
+    """Base Kaiterra API error."""
 
-    def __init__(self, hass, config, session):
-        """Initialize the API data object."""
 
-        api_key = config[CONF_API_KEY]
-        aqi_standard = config[CONF_AQI_STANDARD]
-        devices = config[CONF_DEVICES]
-        units = config[CONF_PREFERRED_UNITS]
+class KaiterraApiAuthError(KaiterraApiError):
+    """Raised when the API key is invalid."""
 
-        self._hass = hass
+
+class KaiterraDeviceNotFoundError(KaiterraApiError):
+    """Raised when the configured device does not exist."""
+
+
+class KaiterraApiClient:
+    """Wrapper around the Kaiterra async client."""
+
+    def __init__(self, session, api_key: str, aqi_standard: str) -> None:
+        """Initialize the API client."""
         self._api = KaiterraAPIClient(
             session,
             api_key=api_key,
             aqi_standard=AQIStandard.from_str(aqi_standard),
-            preferred_units=[Units.from_str(unit) for unit in units],
         )
-        self._devices_ids = [device[CONF_DEVICE_ID] for device in devices]
-        self._devices = [
-            f"/{device[CONF_TYPE]}s/{device[CONF_DEVICE_ID]}" for device in devices
-        ]
         self._scale = AQI_SCALE[aqi_standard]
         self._level = AQI_LEVEL[aqi_standard]
-        self._update_listeners = []
-        self.data = {}
 
-    async def async_update(self) -> None:
-        """Get the data from Kaiterra API."""
-
+    async def async_get_latest_sensor_readings(
+        self, device_id: str
+    ) -> dict[str, dict[str, Any]]:
+        """Fetch and normalize the latest sensor readings for one device."""
         try:
             async with asyncio.timeout(10):
-                data = await self._api.get_latest_sensor_readings(self._devices)
-        except (ClientResponseError, ClientConnectorError, TimeoutError) as err:
-            _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", err)
-            self.data = {}
-            async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
-            return
+                data = await self._api.get_latest_sensor_readings(
+                    [f"/devices/{device_id}/top"]
+                )
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.UNAUTHORIZED:
+                raise KaiterraApiAuthError from err
+            raise KaiterraApiError from err
+        except (ClientConnectorError, TimeoutError, ValueError) as err:
+            raise KaiterraApiError from err
 
-        _LOGGER.debug("New data retrieved: %s", data)
+        if not data or data[0] is None:
+            raise KaiterraDeviceNotFoundError(device_id)
 
         try:
-            self.data = {}
-            for i, device in enumerate(data):
-                if not device:
-                    self.data[self._devices_ids[i]] = {}
-                    continue
+            return _normalize_device_data(data[0], self._scale, self._level)
+        except (IndexError, TypeError, ValueError) as err:
+            raise KaiterraApiError from err
 
-                aqi, main_pollutant = None, None
-                for sensor_name, sensor in device.items():
-                    if not (points := sensor.get("points")):
-                        continue
 
-                    point = points[0]
-                    sensor["value"] = point.get("value")
+def _normalize_device_data(
+    payload: Mapping[str, Any], scale: list[int], levels: list[str]
+) -> dict[str, dict[str, Any]]:
+    """Normalize a single Kaiterra device payload."""
+    normalized: dict[str, dict[str, Any]] = {}
+    overall_aqi: int | None = None
+    main_pollutant: str | None = None
 
-                    if "aqi" not in point:
-                        continue
+    for sensor_name, sensor in payload.items():
+        if not isinstance(sensor, Mapping):
+            continue
 
-                    sensor["aqi"] = point["aqi"]
-                    if not aqi or aqi < point["aqi"]:
-                        aqi = point["aqi"]
-                        main_pollutant = POLLUTANTS.get(sensor_name)
+        points = sensor.get("points")
+        if not points or not isinstance(points, list):
+            continue
 
-                level = None
-                if aqi is not None:
-                    for j in range(1, len(self._scale)):
-                        if aqi <= self._scale[j]:
-                            level = self._level[j - 1]
-                            break
+        point = points[0]
+        if not isinstance(point, Mapping):
+            continue
 
-                device["aqi"] = {"value": aqi}
-                device["aqi_level"] = {"value": level}
-                device["aqi_pollutant"] = {"value": main_pollutant}
+        sensor_data: dict[str, Any] = {"value": point.get("value")}
+        if (unit := _normalize_unit(sensor.get("units"))) is not None:
+            sensor_data["unit"] = unit
 
-                self.data[self._devices_ids[i]] = device
-        except IndexError as err:
-            _LOGGER.error("Parsing error %s", err)
-        except TypeError as err:
-            _LOGGER.error("Type error %s", err)
+        if "aqi" in point:
+            sensor_data["aqi"] = point["aqi"]
+            if overall_aqi is None or point["aqi"] > overall_aqi:
+                overall_aqi = point["aqi"]
+                main_pollutant = POLLUTANTS.get(sensor_name)
 
-        async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+        normalized[sensor_name] = sensor_data
+
+    level: str | None = None
+    if overall_aqi is not None:
+        for index in range(1, len(scale)):
+            if overall_aqi <= scale[index]:
+                level = levels[index - 1]
+                break
+
+    normalized["aqi"] = {"value": overall_aqi}
+    normalized["aqi_level"] = {"value": level}
+    normalized["aqi_pollutant"] = {"value": main_pollutant}
+    return normalized
+
+
+def _normalize_unit(unit: Any) -> str | None:
+    """Normalize unit values returned by the API client."""
+    if unit is None:
+        return None
+    if hasattr(unit, "value"):
+        return unit.value
+    if isinstance(unit, str):
+        return unit
+    return str(unit)
