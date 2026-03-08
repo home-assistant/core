@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
-from opower import AggregateType, CostRead, ReadResolution
+from opower import AggregateType, CostRead
 from opower.exceptions import ApiException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -244,47 +244,59 @@ async def test_coordinator_migration(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
+@pytest.mark.parametrize(
+    ("method", "aggregate_type"),
+    [
+        ("async_get_accounts", None),
+        ("async_get_forecast", None),
+        ("async_get_cost_reads", AggregateType.BILL),
+        ("async_get_cost_reads", AggregateType.DAY),
+        ("async_get_cost_reads", AggregateType.HOUR),
+    ],
+)
 async def test_coordinator_api_exceptions(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
+    method: str,
+    aggregate_type: AggregateType | None,
 ) -> None:
-    """Test the coordinator handles API exceptions."""
+    """Test the coordinator handles API exceptions during data fetching."""
     coordinator = OpowerCoordinator(hass, mock_config_entry)
 
-    # Error getting accounts
-    mock_opower_api.async_get_accounts.side_effect = ApiException(
-        "Error getting accounts", "http://example.com"
-    )
+    if method == "async_get_cost_reads":
+
+        async def side_effect(account, agg_type, start, end):
+            if agg_type == aggregate_type:
+                raise ApiException("Error", "http://example.com")
+            # For other calls, return some dummy data to proceed if needed
+            return [
+                CostRead(
+                    start_time=dt_util.utcnow() - timedelta(days=1),
+                    end_time=dt_util.utcnow(),
+                    consumption=1.0,
+                    provided_cost=0.1,
+                )
+            ]
+
+        mock_opower_api.async_get_cost_reads.side_effect = side_effect
+    else:
+        getattr(mock_opower_api, method).side_effect = ApiException(
+            "Error", "http://example.com"
+        )
+
     with pytest.raises(ApiException):
         await coordinator._async_update_data()
-    mock_opower_api.async_get_accounts.side_effect = None
-
-    # Error getting forecasts
-    mock_opower_api.async_get_forecast.side_effect = ApiException(
-        "Error getting forecasts", "http://example.com"
-    )
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
-    mock_opower_api.async_get_forecast.side_effect = None
-
-    # Error getting cost reads (monthly)
-    mock_opower_api.async_get_cost_reads.side_effect = ApiException(
-        "Error getting monthly cost reads", "http://example.com"
-    )
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
-    mock_opower_api.async_get_cost_reads.side_effect = None
 
 
-async def test_coordinator_finer_cost_reads_coverage(
+async def test_coordinator_updates_with_finer_grained_data(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test _update_with_finer_cost_reads coverage."""
+    """Test that coarse data is updated when finer-grained data becomes available."""
     coordinator = OpowerCoordinator(hass, mock_config_entry)
 
     # Mock accounts to return only one account to simplify
@@ -293,229 +305,49 @@ async def test_coordinator_finer_cost_reads_coverage(
 
     t1 = dt_util.as_utc(datetime(2023, 1, 1, 0))
     t2 = dt_util.as_utc(datetime(2023, 1, 2, 0))
-    t3 = dt_util.as_utc(datetime(2023, 1, 3, 0))
 
     def mock_get_cost_reads(acc, aggregate_type, start, end):
         if aggregate_type == AggregateType.BILL:
+            # Coarse bill data
             return [
                 CostRead(
                     start_time=t1, end_time=t2, consumption=10.0, provided_cost=2.0
-                ),
-                CostRead(
-                    start_time=t2, end_time=t3, consumption=10.0, provided_cost=2.0
-                ),
+                )
             ]
         if aggregate_type == AggregateType.DAY:
-            # finer_cost_read.start_time == cost_read.start_time (t1)
+            # Finer day data starting at the same time
             return [
                 CostRead(
                     start_time=t1,
                     end_time=t1 + timedelta(hours=12),
                     consumption=5.0,
                     provided_cost=1.0,
-                ),
+                )
             ]
         if aggregate_type == AggregateType.HOUR:
-            # finer_cost_read.start_time == cost_read.end_time (t1 + 12h)
+            # Even finer hour data starting later
             return [
                 CostRead(
                     start_time=t1 + timedelta(hours=12),
                     end_time=t1 + timedelta(hours=13),
                     consumption=1.0,
                     provided_cost=0.2,
-                ),
+                )
             ]
         return []
 
     mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads
 
     await coordinator._async_update_data()
-
-
-async def test_coordinator_migration_no_stats(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test _async_maybe_migrate_statistics when source_stats is empty."""
-    statistic_id = "opower:pge_elec_111111_energy_consumption"
-    target_id = "opower:pge_elec_111111_energy_return"
-
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-
-    migrated = await coordinator._async_maybe_migrate_statistics(
-        "111111",
-        {statistic_id: target_id},
-        {
-            statistic_id: StatisticMetaData(
-                has_sum=True,
-                mean_type=StatisticMeanType.NONE,
-                name="consumption",
-                source=DOMAIN,
-                statistic_id=statistic_id,
-                unit_class=EnergyConverter.UNIT_CLASS,
-                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            ),
-            target_id: StatisticMetaData(
-                has_sum=True,
-                mean_type=StatisticMeanType.NONE,
-                name="return",
-                source=DOMAIN,
-                statistic_id=target_id,
-                unit_class=EnergyConverter.UNIT_CLASS,
-                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            ),
-        },
-    )
-    # It returns True because an issue is created at the end
-    assert migrated is True
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
-    assert issue is not None
-
-
-async def test_coordinator_more_api_exceptions(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test more API exceptions in _async_get_cost_reads."""
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-    account = mock_opower_api.async_get_accounts.return_value[0]
-    mock_opower_api.async_get_accounts.return_value = [account]
-
-    async def mock_get_cost_reads(acc, aggregate_type, start, end):
-        if aggregate_type == AggregateType.BILL:
-            return [
-                CostRead(
-                    start_time=dt_util.utcnow(),
-                    end_time=dt_util.utcnow(),
-                    consumption=1.0,
-                    provided_cost=0.1,
-                )
-            ]
-        if aggregate_type == AggregateType.DAY:
-            raise ApiException("Error getting daily cost reads", "http://example.com")
-        return []
-
-    mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
-
-    async def mock_get_cost_reads_hourly(acc, aggregate_type, start, end):
-        if aggregate_type == AggregateType.BILL:
-            return [
-                CostRead(
-                    start_time=dt_util.utcnow(),
-                    end_time=dt_util.utcnow(),
-                    consumption=1.0,
-                    provided_cost=0.1,
-                )
-            ]
-        if aggregate_type == AggregateType.DAY:
-            return []
-        if aggregate_type == AggregateType.HOUR:
-            raise ApiException("Error getting hourly cost reads", "http://example.com")
-        return []
-
-    mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads_hourly
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_migration_negative_state(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test migration logic with negative state to cover line 434."""
-    statistic_id = "opower:pge_elec_111111_energy_consumption"
-    metadata = StatisticMetaData(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        name="Opower pge elec 111111 consumption",
-        source=DOMAIN,
-        statistic_id=statistic_id,
-        unit_class=EnergyConverter.UNIT_CLASS,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    )
-    statistics_to_add = [
-        StatisticData(
-            start=dt_util.as_utc(datetime(2023, 1, 1, 8)), state=1.5, sum=1.5
-        ),
-        StatisticData(
-            start=dt_util.as_utc(datetime(2023, 1, 1, 9)), state=-0.5, sum=1.0
-        ),
-    ]
-    async_add_external_statistics(hass, metadata, statistics_to_add)
     await async_wait_recording_done(hass)
 
-    mock_opower_api.async_get_cost_reads.return_value = []
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-    await coordinator._async_update_data()
-    await async_wait_recording_done(hass)
-    # This covers line 434: new_target_state = max(0, -state) when state is negative
-
-
-async def test_coordinator_update_data_api_exceptions(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test API exceptions in _async_update_data."""
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-
-    # Error getting accounts
-    mock_opower_api.async_get_accounts.side_effect = ApiException(
-        "Error", "http://example.com"
+    # Verify that we have statistics for the electric account
+    statistic_id = "opower:pge_elec_111111_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
-    mock_opower_api.async_get_accounts.side_effect = None
-
-    # Error getting forecasts
-    mock_opower_api.async_get_forecast.side_effect = ApiException(
-        "Error", "http://example.com"
-    )
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
-    mock_opower_api.async_get_forecast.side_effect = None
-
-
-async def test_coordinator_get_cost_reads_api_exception(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test ApiException in _async_get_cost_reads during daily/hourly reads."""
-    coordinator = OpowerCoordinator(hass, mock_config_entry)
-    account = mock_opower_api.async_get_accounts.return_value[0]
-    account.read_resolution = ReadResolution.HOUR
-    mock_opower_api.async_get_accounts.return_value = [account]
-
-    async def mock_get_cost_reads(acc, aggregate_type, start, end):
-        if aggregate_type == AggregateType.BILL:
-            return [
-                CostRead(
-                    start_time=dt_util.utcnow() - timedelta(days=60),
-                    end_time=dt_util.utcnow() - timedelta(days=30),
-                    consumption=1.0,
-                    provided_cost=0.1,
-                )
-            ]
-        if aggregate_type == AggregateType.DAY:
-            raise ApiException("Error", "http://example.com")
-        return []
-
-    mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads
-    with pytest.raises(ApiException):
-        await coordinator._async_update_data()
+    assert statistic_id in stats
+    assert stats[statistic_id][0]["sum"] > 0
 
 
 async def test_coordinator_migration_empty_source_stats(
@@ -524,7 +356,7 @@ async def test_coordinator_migration_empty_source_stats(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test _async_maybe_migrate_statistics with empty source stats to cover line 400."""
+    """Test migration logic when source statistics are unexpectedly missing."""
     statistic_id = "opower:pge_elec_111111_energy_consumption"
     target_id = "opower:pge_elec_111111_energy_return"
 
@@ -558,4 +390,102 @@ async def test_coordinator_migration_empty_source_stats(
                 ),
             },
         )
+
+    # Migration should complete (creating the issue) even if no individual stats were processed
     assert migrated is True
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
+    assert issue is not None
+
+
+async def test_coordinator_migration_negative_state(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test that negative consumption states are correctly migrated to return-to-grid statistics."""
+    statistic_id = "opower:pge_elec_111111_energy_consumption"
+    target_id = "opower:pge_elec_111111_energy_return"
+    metadata = StatisticMetaData(
+        has_sum=True,
+        mean_type=StatisticMeanType.NONE,
+        name="Opower pge elec 111111 consumption",
+        source=DOMAIN,
+        statistic_id=statistic_id,
+        unit_class=EnergyConverter.UNIT_CLASS,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    )
+    statistics_to_add = [
+        StatisticData(
+            start=dt_util.as_utc(datetime(2023, 1, 1, 8)), state=1.5, sum=1.5
+        ),
+        StatisticData(
+            start=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            state=-0.5,
+            sum=1.0,  # Negative consumption state
+        ),
+    ]
+    async_add_external_statistics(hass, metadata, statistics_to_add)
+    await async_wait_recording_done(hass)
+
+    mock_opower_api.async_get_cost_reads.return_value = []
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # Check that the return-to-grid stat was created with the absolute value of the negative consumption
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(2023, 1, 1, 9)),
+        dt_util.as_utc(datetime(2023, 1, 1, 10)),
+        {target_id},
+        "hour",
+        None,
+        {"state"},
+    )
+    assert stats[target_id][0]["state"] == 0.5
+
+
+async def test_coordinator_no_new_cost_reads_after_initial_load(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test that the coordinator correctly identifies when no new data is available."""
+    # First run to get some stats
+    t1 = dt_util.as_utc(datetime(2023, 1, 1, 8))
+    t2 = dt_util.as_utc(datetime(2023, 1, 1, 9))
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=t1,
+            end_time=t2,
+            consumption=1.5,
+            provided_cost=0.5,
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # Second run: API returns data that has already been recorded
+    mock_opower_api.async_get_cost_reads.return_value = [
+        CostRead(
+            start_time=t1,
+            end_time=t2,
+            consumption=1.5,
+            provided_cost=0.5,
+        ),
+    ]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # Sum should still be 1.5
+    statistic_id = "opower:pge_elec_111111_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
+    )
+    assert stats[statistic_id][0]["sum"] == 1.5
