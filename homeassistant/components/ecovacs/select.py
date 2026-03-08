@@ -1,7 +1,7 @@
 """Ecovacs select entity module."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import CapabilityMap, CapabilitySet, CapabilitySetTypes
@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
+from .const import INTELLIGENT_HOSTING
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -38,6 +39,8 @@ class EcovacsSelectEntityDescription[EventT: Event](
     set_option_fn: Callable[[CapabilitySetTypes, str], CommandWithMessageHandling] = (
         lambda cap, option: cap.set(option)
     )
+    # Options in this set are stored as local HA state only; no robot command is sent.
+    local_options: frozenset[str] = field(default_factory=frozenset)
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
@@ -56,7 +59,9 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WorkModeEvent](
         capability_fn=lambda caps: caps.clean.work_mode,
         current_option_fn=lambda e: get_name_key(e.mode),
-        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
+        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types]
+        + [INTELLIGENT_HOSTING],
+        local_options=frozenset({INTELLIGENT_HOSTING}),
         key="work_mode",
         translation_key="work_mode",
         entity_registry_enabled_default=False,
@@ -126,6 +131,13 @@ class EcovacsSelectEntity[EventT: Event](
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
+        # Always optimistically update the local state so the UI reflects the selection
+        # immediately, even if the robot doesn't send a confirming event (e.g. when the
+        # target mode was already the robot's active mode before the change).
+        self._attr_current_option = option
+        self.async_write_ha_state()
+        if option in self.entity_description.local_options:
+            return
         await self._device.execute_command(
             self.entity_description.set_option_fn(self._capability, option)
         )

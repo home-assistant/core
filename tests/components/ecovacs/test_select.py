@@ -161,3 +161,72 @@ async def test_selects_change(
         blocking=True,
     )
     device._execute_command.assert_called_with(command)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["n0vyif"])
+async def test_work_mode_intelligent_hosting_local_only(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+) -> None:
+    """Test that selecting intelligent_hosting stores state locally without a robot command."""
+    entity_id = "select.x8_pro_omni_work_mode"
+    device = controller.devices[0]
+    await notify_events(hass, device.events)
+
+    assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
+    assert state.state == "vacuum"
+
+    device._execute_command.reset_mock()
+    await hass.services.async_call(
+        select.DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "intelligent_hosting"},
+        blocking=True,
+    )
+    # intelligent_hosting is stored locally in HA only — no command sent to robot
+    device._execute_command.assert_not_called()
+    assert (
+        state := hass.states.get(entity_id)
+    ), f"State of {entity_id} is missing after option change"
+    assert state.state == "intelligent_hosting"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["n0vyif"])
+async def test_work_mode_switch_from_intelligent_hosting_updates_state(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+) -> None:
+    """Test that switching from intelligent_hosting to a real mode updates state immediately.
+
+    When intelligent_hosting is set (local-only), the robot's actual mode is unchanged.
+    Switching back to a real mode (e.g. vacuum) sends setWorkMode to the robot. If the
+    robot was already in that mode it won't fire a WorkModeEvent, so the state must be
+    updated optimistically to avoid the dropdown appearing stuck.
+    """
+    entity_id = "select.x8_pro_omni_work_mode"
+    device = controller.devices[0]
+    await notify_events(hass, device.events)
+
+    # Set intelligent_hosting locally
+    await hass.services.async_call(
+        select.DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "intelligent_hosting"},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == "intelligent_hosting"
+
+    # Switch back to a real work mode — state must update immediately (optimistic),
+    # even if no WorkModeEvent is fired (robot was already in that mode).
+    await hass.services.async_call(
+        select.DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "vacuum"},
+        blocking=True,
+    )
+    # Command is sent to the robot
+    assert device._execute_command.call_count == 1
+    # State is updated immediately without waiting for a robot event
+    assert hass.states.get(entity_id).state == "vacuum"
