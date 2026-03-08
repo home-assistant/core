@@ -343,11 +343,28 @@ async def test_coordinator_updates_with_finer_grained_data(
 
     # Verify that we have statistics for the electric account
     statistic_id = "opower:pge_elec_111111_energy_consumption"
-    stats = await hass.async_add_executor_job(
+    # Check the last statistic to ensure data was written at all
+    last_stats = await hass.async_add_executor_job(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
-    assert statistic_id in stats
-    assert stats[statistic_id][0]["sum"] > 0
+    assert statistic_id in last_stats
+    assert last_stats[statistic_id][0]["sum"] > 0
+    # Check statistics over the full period to ensure finer-grained data was stored
+    period_stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        t1,
+        t2,
+        {statistic_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert statistic_id in period_stats
+    # If only a single coarse (e.g., monthly) point were stored for this 1-day
+    # interval, we would see at most one data point here. More than one point
+    # indicates that finer-grained reads have been merged into the statistics.
+    assert len(period_stats[statistic_id]) > 1
 
 
 async def test_coordinator_migration_empty_source_stats(
@@ -391,12 +408,12 @@ async def test_coordinator_migration_empty_source_stats(
             },
         )
 
-    # Migration should complete (creating the issue) even if no individual stats were processed
-    assert migrated is True
+    # Migration should return False and not create an issue if no individual stats were found
+    assert migrated is False
 
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
-    assert issue is not None
+    assert issue is None
 
 
 async def test_coordinator_migration_negative_state(
