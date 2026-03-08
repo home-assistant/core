@@ -77,7 +77,7 @@ async def _validate_credentials(
     return None
 
 
-class CustomFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PajGPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for PAJ GPS Tracker."""
 
     data: dict[str, Any] | None
