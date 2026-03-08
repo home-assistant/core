@@ -61,9 +61,9 @@
         'scheduled': 2,
       }),
       'site': dict({
+        'site_uuid': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         'title': 'Test Ghost',
         'url': 'https://test.ghost.io',
-        'uuid': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
       }),
     }),
     'entry_data': dict({
