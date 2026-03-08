@@ -31,13 +31,14 @@
       }),
       'domain': 'unifi',
       'entry_id': '1',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
         'allow_bandwidth_sensors': True,
         'allow_uptime_sensors': True,
         'block_client': list([
           '00:00:00:00:00:00',
         ]),
+        'track_clients': True,
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
