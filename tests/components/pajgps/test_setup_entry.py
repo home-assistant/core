@@ -196,7 +196,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
     async def test_generic_exception_during_first_refresh_raises_config_entry_not_ready(
         self,
     ):
-        """A generic Exception during first refresh must be wrapped in ConfigEntryNotReady (lines 40-41)."""
+        """A generic Exception during first refresh propagates unchanged."""
         hass = MagicMock()
         entry = _make_mock_entry()
 
@@ -218,11 +218,11 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
                 "homeassistant.components.pajgps.PajGpsCoordinator",
                 return_value=mock_coordinator,
             ),
-            pytest.raises(ConfigEntryNotReady) as ctx,
+            pytest.raises(RuntimeError) as ctx,
         ):
             await async_setup_entry(hass, entry)
 
-        assert "Failed to connect" in str(ctx.value)
+        assert "unexpected boom" in str(ctx.value)
 
 
 class TestAsyncRemoveConfigEntryDevice(unittest.IsolatedAsyncioTestCase):
