@@ -73,7 +73,8 @@ async def async_setup_entry(
                     key=f"outlet.{outlet_num}.load.poweronoff",
                     translation_key="outlet_number_load_poweronoff",
                     translation_placeholders={
-                        "outlet_name": status.get(f"outlet.{outlet_num}.desc")
+                        "outlet_name": status.get(f"outlet.{outlet_num}.name")
+                        or status.get(f"outlet.{outlet_num}.desc")
                         or str(outlet_num)
                     },
                     device_class=SwitchDeviceClass.OUTLET,
