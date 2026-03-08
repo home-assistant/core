@@ -17,16 +17,20 @@ from .ics import InvalidIcsException, parse_calendar
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_CALENDAR_NAME): str,
-    vol.Required(CONF_URL): str,
-    vol.Required(CONF_VERIFY_SSL, default=True): bool,
-})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CALENDAR_NAME): str,
+        vol.Required(CONF_URL): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str,
-})
+STEP_AUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -48,9 +52,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         errors: dict[str, str] = {}
-        self._async_abort_entries_match({
-            CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]
-        })
+        self._async_abort_entries_match(
+            {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
+        )
         if user_input[CONF_URL].startswith("webcal://"):
             user_input[CONF_URL] = user_input[CONF_URL].replace(
                 "webcal://", "https://", 1
