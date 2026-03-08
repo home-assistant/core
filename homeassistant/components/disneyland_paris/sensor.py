@@ -500,8 +500,6 @@ async def async_setup_entry(
             *(
                 DisneylandSensor(coordinator, description)
                 for description in DISNEYLAND_ATTRACTION_SENSORS
-                if description.key
-                in coordinator.client.parks[Parks.DISNEYLAND].standby_wait_times
             ),
             *(
                 DisneyAdventureWorldSensor(coordinator, description)
@@ -510,10 +508,6 @@ async def async_setup_entry(
             *(
                 DisneyAdventureWorldSensor(coordinator, description)
                 for description in DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS
-                if description.key
-                in coordinator.client.parks[
-                    Parks.WALT_DISNEY_STUDIOS
-                ].standby_wait_times
             ),
         ]
     )
@@ -528,9 +522,12 @@ class DisneylandSensor(DisneylandEntity, SensorEntity):
     def native_value(self) -> int | datetime | None:
         """Return the native value of the sensor."""
 
-        return self.entity_description.value_fn(
-            self.coordinator.client.parks[Parks.DISNEYLAND]
-        )
+        park = self.coordinator.client.parks.get(Parks.DISNEYLAND)
+
+        if park is None:
+            return None
+
+        return self.entity_description.value_fn(park)
 
 
 class DisneyAdventureWorldSensor(DisneyAdventureWorldEntity, SensorEntity):
@@ -542,6 +539,9 @@ class DisneyAdventureWorldSensor(DisneyAdventureWorldEntity, SensorEntity):
     def native_value(self) -> int | datetime | None:
         """Return the native value of the sensor."""
 
-        return self.entity_description.value_fn(
-            self.coordinator.client.parks[Parks.WALT_DISNEY_STUDIOS]
-        )
+        park = self.coordinator.client.parks.get(Parks.WALT_DISNEY_STUDIOS)
+
+        if park is None:
+            return None
+
+        return self.entity_description.value_fn(park)
