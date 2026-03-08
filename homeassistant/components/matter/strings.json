@@ -244,6 +244,9 @@
       "speaker_setpoint": {
         "name": "Volume"
       },
+      "startup_current_level": {
+        "name": "Start-up current level"
+      },
       "temperature_offset": {
         "name": "Temperature offset"
       },
