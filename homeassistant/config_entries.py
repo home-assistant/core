@@ -319,8 +319,8 @@ class FlowType(StrEnum):
     """Flow type."""
 
     CONFIG_FLOW = "config_flow"
-    # Add other flow types here as needed in the future,
-    # if we want to support them in the `next_flow` parameter.
+    OPTIONS_FLOW = "options_flow"
+    CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
@@ -1752,6 +1752,7 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
+
         return result
 
     async def async_create_flow(
