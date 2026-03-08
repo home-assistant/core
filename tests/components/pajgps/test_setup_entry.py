@@ -1,10 +1,9 @@
 """Unit tests for __init__.py async_setup_entry.
 
 Coverage:
-- cannot_connect → raises ConfigEntryNotReady before coordinator is created
-- invalid_auth   → raises ConfigEntryAuthFailed before coordinator is created
-- valid credentials + coordinator success → returns True, runtime_data set
-- valid credentials + coordinator first-refresh fails → raises ConfigEntryNotReady
+- coordinator success → returns True, runtime_data set
+- coordinator first-refresh fails (ConfigEntryNotReady) → propagates
+- coordinator first-refresh fails (generic exception) → propagates unchanged
 """
 
 from __future__ import annotations
@@ -22,7 +21,7 @@ from homeassistant.components.pajgps import (
 )
 from homeassistant.components.pajgps.const import DOMAIN
 from homeassistant.components.pajgps.coordinator import CoordinatorData
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 
 def _make_mock_entry(
@@ -44,74 +43,8 @@ def _make_mock_entry(
 class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
     """Tests for async_setup_entry in __init__.py."""
 
-    async def test_cannot_connect_raises_config_entry_not_ready(self):
-        """When API is unreachable, setup must raise ConfigEntryNotReady immediately."""
-        hass = MagicMock()
-        entry = _make_mock_entry()
-
-        with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value="cannot_connect"),
-            ),
-            pytest.raises(ConfigEntryNotReady) as ctx,
-        ):
-            await async_setup_entry(hass, entry)
-
-        assert "PAJ GPS API" in str(ctx.value)
-
-    async def test_invalid_auth_raises_config_entry_auth_failed(self):
-        """When credentials are wrong, setup must raise ConfigEntryAuthFailed immediately."""
-        hass = MagicMock()
-        entry = _make_mock_entry()
-
-        with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value="invalid_auth"),
-            ),
-            pytest.raises(ConfigEntryAuthFailed) as ctx,
-        ):
-            await async_setup_entry(hass, entry)
-
-        assert "credentials" in str(ctx.value)
-
-    async def test_coordinator_not_created_on_cannot_connect(self):
-        """PajGpsCoordinator must never be instantiated when the API is unreachable."""
-        hass = MagicMock()
-        entry = _make_mock_entry()
-
-        with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value="cannot_connect"),
-            ),
-            patch("homeassistant.components.pajgps.PajGpsCoordinator") as MockCoord,
-            pytest.raises(ConfigEntryNotReady),
-        ):
-            await async_setup_entry(hass, entry)
-
-        MockCoord.assert_not_called()
-
-    async def test_coordinator_not_created_on_invalid_auth(self):
-        """PajGpsCoordinator must never be instantiated when credentials are invalid."""
-        hass = MagicMock()
-        entry = _make_mock_entry()
-
-        with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value="invalid_auth"),
-            ),
-            patch("homeassistant.components.pajgps.PajGpsCoordinator") as MockCoord,
-            pytest.raises(ConfigEntryAuthFailed),
-        ):
-            await async_setup_entry(hass, entry)
-
-        MockCoord.assert_not_called()
-
     async def test_valid_credentials_completes_setup(self):
-        """Valid credentials and a healthy coordinator must return True."""
+        """A healthy coordinator must cause setup to return True."""
         hass = MagicMock()
         hass.config_entries.async_forward_entry_setups = AsyncMock()
         entry = _make_mock_entry()
@@ -120,10 +53,6 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
         mock_coordinator.async_config_entry_first_refresh = AsyncMock()
 
         with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value=None),
-            ),
             patch(
                 "homeassistant.components.pajgps.async_get_clientsession",
                 return_value=MagicMock(),
@@ -147,10 +76,6 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
         mock_coordinator.async_config_entry_first_refresh = AsyncMock()
 
         with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value=None),
-            ),
             patch(
                 "homeassistant.components.pajgps.async_get_clientsession",
                 return_value=MagicMock(),
@@ -178,10 +103,6 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
 
         with (
             patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value=None),
-            ),
-            patch(
                 "homeassistant.components.pajgps.async_get_clientsession",
                 return_value=MagicMock(),
             ),
@@ -193,7 +114,7 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
         ):
             await async_setup_entry(hass, entry)
 
-    async def test_generic_exception_during_first_refresh_raises_config_entry_not_ready(
+    async def test_generic_exception_during_first_refresh_propagates(
         self,
     ):
         """A generic Exception during first refresh propagates unchanged."""
@@ -206,10 +127,6 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
         )
 
         with (
-            patch(
-                "homeassistant.components.pajgps._validate_credentials",
-                new=AsyncMock(return_value=None),
-            ),
             patch(
                 "homeassistant.components.pajgps.async_get_clientsession",
                 return_value=MagicMock(),
