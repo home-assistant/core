@@ -28,9 +28,6 @@ async def async_setup_entry(
     config_entry: NutConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    
-    _LOGGER.warning("NUT switch platform loaded")
-    
     """Set up the NUT switches."""
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
