@@ -43,9 +43,11 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         # Set up websocket callback for push updates
         self.charger.callback = self._async_websocket_callback
+        self.charge_current = None
 
     async def _async_websocket_callback(self) -> None:
         """Handle websocket data update."""
+        await self.async_refresh_charge_current()
         self.async_set_updated_data(None)
 
     def start_websocket(self) -> None:
@@ -61,7 +63,12 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Fetch data from OpenEVSE charger."""
         try:
             await self.charger.update()
+            await self.async_refresh_charge_current()
         except TimeoutError as error:
             raise UpdateFailed(
                 f"Timeout communicating with charger: {error}"
             ) from error
+
+    async def async_refresh_charge_current(self) -> None:
+        """Fetch the current charge current."""
+        self.charge_current = await self.charger.async_charge_current()
