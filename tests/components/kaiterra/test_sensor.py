@@ -34,3 +34,24 @@ def test_native_value_filters_invalid_api_value_types() -> None:
     sensor = _build_sensor({"aqi": {"value": {"raw": 78}}}, "aqi")
 
     assert sensor.native_value is None
+
+
+def test_temperature_sensor_normalizes_fahrenheit_units() -> None:
+    """Test temperature sensors normalize Fahrenheit units."""
+    sensor = _build_sensor({"rtemp": {"value": 72.3, "unit": "F"}}, "rtemp")
+
+    assert sensor.native_unit_of_measurement == "°F"
+
+
+def test_temperature_sensor_normalizes_celsius_units() -> None:
+    """Test temperature sensors normalize Celsius units."""
+    sensor = _build_sensor({"rtemp": {"value": 22.3, "unit": "C"}}, "rtemp")
+
+    assert sensor.native_unit_of_measurement == "°C"
+
+
+def test_sensor_returns_empty_data_for_invalid_payload_shape() -> None:
+    """Test non-dict payloads are treated as missing sensor data."""
+    sensor = _build_sensor({"tvoc": "invalid"}, "tvoc")
+
+    assert sensor.native_value is None

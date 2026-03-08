@@ -40,11 +40,12 @@ class KaiterraDataUpdateCoordinator(DataUpdateCoordinator[KaiterraData]):
         self.api = api
         self.device_id = device_id
         self.device_name = device_name
+        self._unavailable_logged = False
 
     async def _async_update_data(self) -> KaiterraData:
         """Fetch data from the API."""
         try:
-            return await self.api.async_get_latest_sensor_readings(self.device_id)
+            data = await self.api.async_get_latest_sensor_readings(self.device_id)
         except KaiterraApiAuthError as err:
             raise ConfigEntryAuthFailed("Invalid API key") from err
         except KaiterraDeviceNotFoundError as err:
@@ -52,7 +53,15 @@ class KaiterraDataUpdateCoordinator(DataUpdateCoordinator[KaiterraData]):
                 f"Configured device {self.device_id} was not found"
             ) from err
         except KaiterraApiError as err:
+            if not self._unavailable_logged:
+                LOGGER.info("Device %s is unavailable: %s", self.device_name, err)
+                self._unavailable_logged = True
             raise UpdateFailed("Cannot connect to Kaiterra API") from err
+
+        if self._unavailable_logged:
+            self._unavailable_logged = False
+
+        return data
 
 
 type KaiterraConfigEntry = ConfigEntry[KaiterraDataUpdateCoordinator]

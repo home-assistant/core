@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
+from homeassistant.components.kaiterra.api_data import (
+    KaiterraApiAuthError,
+    KaiterraApiError,
+)
 from homeassistant.components.kaiterra.const import AQI_SCALE, CONF_AQI_STANDARD, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
@@ -101,6 +107,46 @@ async def test_user_flow_missing_device(hass, mock_kaiterra_device_not_found) ->
     assert result["errors"] == {"base": "device_not_found"}
 
 
+async def test_user_flow_connection_error(hass, mock_kaiterra_api_error) -> None:
+    """Test the user flow when the API cannot be reached."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "test-api-key",
+            CONF_DEVICE_ID: "device-123",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_unknown_error(hass) -> None:
+    """Test the user flow on an unexpected validation error."""
+    with patch(
+        "homeassistant.components.kaiterra.config_flow.validate_input",
+        side_effect=RuntimeError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "test-api-key",
+                CONF_DEVICE_ID: "device-123",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_options_flow(hass, mock_config_entry) -> None:
     """Test updating the AQI standard via the options flow."""
     mock_config_entry.add_to_hass(hass)
@@ -170,3 +216,38 @@ async def test_reauth_flow(hass, mock_config_entry, mock_kaiterra_device_data) -
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (KaiterraApiAuthError, "invalid_auth"),
+        (KaiterraApiError, "cannot_connect"),
+        (RuntimeError, "unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass,
+    mock_config_entry,
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test reauthentication flow error handling."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.kaiterra.config_flow.validate_input",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+            data=mock_config_entry.data,
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
