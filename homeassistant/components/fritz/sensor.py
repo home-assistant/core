@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DSL_CONNECTION, UPTIME_DEVIATION
+from .const import DSL_CONNECTION
 from .coordinator import FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 from .models import ConnectionInfo
@@ -38,31 +38,18 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
-    """Calculate uptime with deviation."""
-    delta_uptime = utcnow() - timedelta(seconds=seconds_uptime)
-
-    if (
-        not last_value
-        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
-    ):
-        return delta_uptime
-
-    return last_value
-
-
 def _retrieve_device_uptime_state(
-    status: FritzStatus, last_value: datetime
+    status: FritzStatus, last_value: datetime | None
 ) -> datetime:
     """Return uptime from device."""
-    return _uptime_calculation(status.device_uptime, last_value)
+    return utcnow() - timedelta(seconds=status.device_uptime)
 
 
 def _retrieve_connection_uptime_state(
     status: FritzStatus, last_value: datetime | None
 ) -> datetime:
     """Return uptime from connection."""
-    return _uptime_calculation(status.connection_uptime, last_value)
+    return utcnow() - timedelta(seconds=status.connection_uptime)
 
 
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
@@ -172,7 +159,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="device_uptime",
         translation_key="device_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
         is_suitable=lambda info: True,
@@ -180,7 +167,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="connection_uptime",
         translation_key="connection_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),

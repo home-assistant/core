@@ -2212,6 +2212,7 @@
             'options': list([
               'date',
               'timestamp',
+              'uptime',
               'absolute_humidity',
               'apparent_power',
               'aqi',

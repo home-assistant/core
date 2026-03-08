@@ -51,6 +51,7 @@ from .const import (  # noqa: F401
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
     UNITS_PRECISION,
+    UPTIME_DRIFT_TOLERANCE,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -201,6 +202,19 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
+    _previous_uptime_value: datetime | None = None
+
+    def _normalize_uptime(self, current_uptime: datetime) -> datetime:
+        """Normalize uptime to suppress small drift between updates."""
+        if (
+            not (previous_uptime := self._previous_uptime_value)
+            or abs((current_uptime - previous_uptime).total_seconds())
+            > UPTIME_DRIFT_TOLERANCE
+        ):
+            self._previous_uptime_value = current_uptime
+            return current_uptime
+
+        return previous_uptime
 
     @callback
     def add_to_platform_start(
@@ -610,10 +624,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Checks below only apply if there is a value
         if value is None:
+            if device_class is SensorDeviceClass.UPTIME:
+                self._previous_uptime_value = None
             return None
 
         # Received a datetime
-        if device_class is SensorDeviceClass.TIMESTAMP:
+        if device_class in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -627,10 +643,13 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 if value.tzinfo != UTC:
                     value = value.astimezone(UTC)
 
+                if device_class is SensorDeviceClass.UPTIME:
+                    value = self._normalize_uptime(value)
+
                 return value.isoformat(timespec="seconds")
             except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"Invalid datetime: {self.entity_id} has {device_class} device class "
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
