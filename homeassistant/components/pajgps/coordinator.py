@@ -10,12 +10,10 @@ Responsibilities:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import dataclasses
 from datetime import timedelta
 import logging
 import time
-from typing import Any
 
 import aiohttp
 from pajgps_api import PajGpsApi
@@ -73,8 +71,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: Mapping[str, Any],
-        config_entry: ConfigEntry | None = None,
+        config_entry: ConfigEntry,
         websession: aiohttp.ClientSession | None = None,
     ) -> None:
         """Initialize the coordinator from config-entry data."""
@@ -86,12 +83,12 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
             config_entry=config_entry,
         )
 
+        self.guid: str = config_entry.data["guid"]
         self.api = PajGpsApi(
-            email=entry_data[CONF_EMAIL],
-            password=entry_data[CONF_PASSWORD],
+            email=config_entry.data[CONF_EMAIL],
+            password=config_entry.data[CONF_PASSWORD],
             websession=websession,
         )
-        self._entry_data: Mapping[str, Any] = entry_data
         self._queue = DeviceRequestQueue()
         self._owns_websession = websession is None
 
@@ -196,7 +193,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     model = device_models[0].get("model") or "Unknown"
 
                 return DeviceInfo(
-                    identifiers={(DOMAIN, f"{self._entry_data['guid']}_{device_id}")},
+                    identifiers={(DOMAIN, f"{self.guid}_{device_id}")},
                     name=device.name or f"PAJ GPS {device_id}",
                     manufacturer="PAJ GPS",
                     model=model,
@@ -212,8 +209,3 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
         await self._queue.shutdown()
         if self._owns_websession:
             await self.api.close()
-
-    @property
-    def entry_data(self) -> Mapping[str, Any]:
-        """Return the config entry data."""
-        return self._entry_data

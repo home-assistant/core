@@ -112,6 +112,8 @@ def make_coordinator(
     if hass is None:
         hass = MagicMock()
         hass.async_create_task = asyncio.ensure_future
-    coord = PajGpsCoordinator(hass, make_entry_data(**entry_kwargs))
+    config_entry = MagicMock()
+    config_entry.data = make_entry_data(**entry_kwargs)
+    coord = PajGpsCoordinator(hass, config_entry)
     coord.api.login = AsyncMock()
     return coord

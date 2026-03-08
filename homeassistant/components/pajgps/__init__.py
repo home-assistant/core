@@ -21,9 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
-    pajgps_coordinator = PajGpsCoordinator(
-        hass, dict(entry.data), entry, async_get_clientsession(hass)
-    )
+    pajgps_coordinator = PajGpsCoordinator(hass, entry, async_get_clientsession(hass))
     await pajgps_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = pajgps_coordinator

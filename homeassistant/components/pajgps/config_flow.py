@@ -66,14 +66,7 @@ async def _validate_credentials(
         return "invalid_auth"
     except Exception:  # noqa: BLE001
         return "cannot_connect"
-    finally:
-        # Only close the api (and its underlying session) if we created
-        # our own session — the HA-managed shared session must not be closed.
-        if api is not None and hass is None:
-            try:
-                await api.close()
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("Error closing PajGpsApi session", exc_info=True)
+
     return None
 
 

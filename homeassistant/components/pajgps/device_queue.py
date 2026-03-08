@@ -110,15 +110,26 @@ class DeviceRequestQueue:
             job_type, coro_factory, fut = await self._queues[device_id].get()
             self._running[device_id] = job_type
             self._queued_types[device_id].discard(job_type)
+            cancelled = False
             try:
-                result = await coro_factory()
-                if not fut.done():
-                    fut.set_result(result)
-            except Exception as exc:  # noqa: BLE001
-                if not fut.done():
-                    fut.set_exception(exc)
+                try:
+                    result = await coro_factory()
+                except asyncio.CancelledError:
+                    cancelled = True
+                    if not fut.done():
+                        fut.cancel()
+                    # Propagate cancellation so the worker task stops.
+                    raise
+                except Exception as exc:  # noqa: BLE001
+                    if not fut.done():
+                        fut.set_exception(exc)
+                else:
+                    if not fut.done():
+                        fut.set_result(result)
             finally:
                 self._running[device_id] = None
                 self._queues[device_id].task_done()
-                # Honor the minimum inter-request delay before taking the next job
-                await asyncio.sleep(REQUEST_DELAY)
+                # Honor the minimum inter-request delay before taking the next job,
+                # but avoid delaying shutdown when the worker is cancelled.
+                if not cancelled:
+                    await asyncio.sleep(REQUEST_DELAY)
