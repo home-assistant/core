@@ -68,6 +68,7 @@ async def async_setup_entry(
         descriptions += [
             OpenDisplaySensorEntityDescription(
                 key="battery_voltage",
+                translation_key="battery_voltage",
                 device_class=SensorDeviceClass.VOLTAGE,
                 native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
                 state_class=SensorStateClass.MEASUREMENT,

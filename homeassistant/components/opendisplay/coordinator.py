@@ -62,6 +62,7 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
     ) -> None:
         """Handle a Bluetooth advertisement event."""
         if MANUFACTURER_ID not in service_info.manufacturer_data:
+            super()._async_handle_bluetooth_event(service_info, change)
             return
 
         if self._was_unavailable:
@@ -72,9 +73,11 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
             advertisement = parse_advertisement(
                 service_info.manufacturer_data[MANUFACTURER_ID]
             )
-        except ValueError:
+        except ValueError as err:
             _LOGGER.debug(
-                "%s: Failed to parse advertisement data", service_info.address
+                "%s: Failed to parse advertisement data: %s",
+                service_info.address,
+                err,
             )
         else:
             self.data = OpenDisplayUpdate(
