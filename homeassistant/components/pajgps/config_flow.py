@@ -12,6 +12,7 @@ from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -33,8 +34,8 @@ def _build_config_schema(
     return vol.Schema(
         {
             vol.Required("entry_name", default=entry_name): cv.string,
-            vol.Required("email", default=email): cv.string,
-            vol.Required("password", default=password): cv.string,
+            vol.Required(CONF_EMAIL, default=email): cv.string,
+            vol.Required(CONF_PASSWORD, default=password): cv.string,
         }
     )
 
@@ -96,10 +97,10 @@ class PajGPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 # Normalize email for duplicate protection and storage
                 normalized_email = self.data["email"].strip().lower()
-                self.data["email"] = normalized_email
-                self._async_abort_entries_match({"email": normalized_email})
+                self.data[CONF_EMAIL] = normalized_email
+                self._async_abort_entries_match({CONF_EMAIL: normalized_email})
                 error_key = await _validate_credentials(
-                    self.data["email"], self.data["password"], self.hass
+                    self.data[CONF_EMAIL], self.data[CONF_PASSWORD], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
@@ -112,8 +113,8 @@ class PajGPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=_build_config_schema(
                     entry_name=user_input.get("entry_name", ""),
-                    email=user_input.get("email", ""),
-                    password=user_input.get("password", ""),
+                    email=user_input.get(CONF_EMAIL, ""),
+                    password=user_input.get(CONF_PASSWORD, ""),
                 ),
                 errors=errors,
             )
@@ -136,13 +137,13 @@ class PajGPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            if not user_input.get("email"):
+            if not user_input.get(CONF_EMAIL):
                 errors["base"] = "email_required"
-            elif not user_input.get("password"):
+            elif not user_input.get(CONF_PASSWORD):
                 errors["base"] = "password_required"
             else:
                 error_key = await _validate_credentials(
-                    user_input["email"], user_input["password"], self.hass
+                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
@@ -177,22 +178,22 @@ class PajGPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not user_input.get("entry_name"):
                 errors["base"] = "entry_name_required"
-            elif not user_input.get("email"):
+            elif not user_input.get(CONF_EMAIL):
                 errors["base"] = "email_required"
-            elif not user_input.get("password"):
+            elif not user_input.get(CONF_PASSWORD):
                 errors["base"] = "password_required"
             else:
                 # Prevent changing to an email that is already configured
-                email = user_input["email"]
+                email = user_input[CONF_EMAIL]
                 if any(
                     entry.entry_id != reconfigure_entry.entry_id
-                    and entry.data.get("email") == email
+                    and entry.data.get(CONF_EMAIL) == email
                     for entry in self._async_current_entries()
                 ):
                     errors["base"] = "already_configured"
                 else:
                     error_key = await _validate_credentials(
-                        email, user_input["password"], self.hass
+                        email, user_input[CONF_PASSWORD], self.hass
                     )
                     if error_key:
                         errors["base"] = error_key
@@ -217,14 +218,14 @@ class PajGPSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     else reconfigure_entry.data.get("entry_name", "")
                 ),
                 email=(
-                    user_input.get("email") or ""
+                    user_input.get(CONF_EMAIL) or ""
                     if user_input
-                    else reconfigure_entry.data.get("email", "")
+                    else reconfigure_entry.data.get(CONF_EMAIL, "")
                 ),
                 password=(
-                    user_input.get("password") or ""
+                    user_input.get(CONF_PASSWORD) or ""
                     if user_input
-                    else reconfigure_entry.data.get("password", "")
+                    else reconfigure_entry.data.get(CONF_PASSWORD, "")
                 ),
             ),
             errors=errors,
@@ -265,21 +266,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             if not user_input.get("entry_name"):
                 errors["base"] = "entry_name_required"
-            elif not user_input.get("email"):
+            elif not user_input.get(CONF_EMAIL):
                 errors["base"] = "email_required"
-            elif not user_input.get("password"):
+            elif not user_input.get(CONF_PASSWORD):
                 errors["base"] = "password_required"
             if not errors:
-                email = user_input["email"]
+                email = user_input[CONF_EMAIL]
                 if any(
                     entry.entry_id != self._config_entry.entry_id
-                    and entry.data.get("email") == email
+                    and entry.data.get(CONF_EMAIL) == email
                     for entry in self.hass.config_entries.async_entries(DOMAIN)
                 ):
                     errors["base"] = "already_configured"
             if not errors:
                 error_key = await _validate_credentials(
-                    user_input["email"], user_input["password"], self.hass
+                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD], self.hass
                 )
                 if error_key:
                     errors["base"] = error_key
@@ -287,8 +288,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 new_data = {
                     "guid": self._config_entry.data["guid"],
                     "entry_name": user_input["entry_name"],
-                    "email": user_input["email"],
-                    "password": user_input["password"],
+                    "email": user_input[CONF_EMAIL],
+                    "password": user_input[CONF_PASSWORD],
                 }
                 self.hass.config_entries.async_update_entry(
                     self._config_entry,
