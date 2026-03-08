@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import CONF_MEDIA, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
