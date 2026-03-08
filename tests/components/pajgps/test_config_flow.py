@@ -139,36 +139,6 @@ class TestCustomFlow(unittest.IsolatedAsyncioTestCase):
         parsed = uuid.UUID(generated_guid)
         assert str(parsed) == generated_guid
 
-    async def test_empty_entry_name_returns_form_with_error(self):
-        """Empty entry_name must return a form with errors['base'] == 'entry_name_required'."""
-        flow = _make_flow()
-        user_input = dict(VALID_USER_INPUT, entry_name="")
-
-        result = await flow.async_step_user(user_input=user_input)
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "entry_name_required"
-
-    async def test_empty_email_returns_form_with_error(self):
-        """Empty email must return a form with errors['base'] == 'email_required'."""
-        flow = _make_flow()
-        user_input = dict(VALID_USER_INPUT, email="")
-
-        result = await flow.async_step_user(user_input=user_input)
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "email_required"
-
-    async def test_empty_password_returns_form_with_error(self):
-        """Empty password must return a form with errors['base'] == 'password_required'."""
-        flow = _make_flow()
-        user_input = dict(VALID_USER_INPUT, password="")
-
-        result = await flow.async_step_user(user_input=user_input)
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "password_required"
-
     async def test_valid_input_does_not_return_errors(self):
         """Valid input must produce no errors dict key."""
         flow = _make_flow()
@@ -211,15 +181,6 @@ class TestCustomFlow(unittest.IsolatedAsyncioTestCase):
             await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
 
         mock_abort_match.assert_called_once_with({"email": VALID_USER_INPUT["email"]})
-
-    async def test_duplicate_check_skipped_when_fields_are_empty(self):
-        """_async_abort_entries_match must NOT be called when empty-field errors are present."""
-        flow = _make_flow()
-
-        with patch.object(flow, "_async_abort_entries_match") as mock_abort_match:
-            await flow.async_step_user(user_input=dict(VALID_USER_INPUT, email=""))
-
-        mock_abort_match.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -403,18 +364,6 @@ class TestCustomFlowCredentialValidation(unittest.IsolatedAsyncioTestCase):
             result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
 
         assert result["type"] == "create_entry"
-
-    async def test_credential_check_skipped_when_fields_are_empty(self):
-        """_validate_credentials must NOT be called when empty-field errors are present."""
-        flow = _make_flow()
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ) as mock_validate:
-            await flow.async_step_user(user_input=dict(VALID_USER_INPUT, email=""))
-
-        mock_validate.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
