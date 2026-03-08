@@ -48,11 +48,11 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
         """Handle the device going unavailable."""
-        super()._async_handle_unavailable(service_info)
         if self._was_unavailable:
             return
         self._was_unavailable = True
         _LOGGER.info("%s: Device is unavailable", service_info.address)
+        super()._async_handle_unavailable(service_info)
 
     @callback
     def _async_handle_bluetooth_event(
@@ -78,6 +78,7 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 "%s: Failed to parse advertisement data: %s",
                 service_info.address,
                 err,
+                exc_info=True,
             )
         else:
             self.data = OpenDisplayUpdate(

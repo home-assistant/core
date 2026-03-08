@@ -74,7 +74,7 @@ async def test_battery_sensors_not_created_for_usb_devices(
 
     # Battery sensors must not exist at all
     assert entity_registry.async_get("sensor.opendisplay_1234_battery") is None
-    assert entity_registry.async_get("sensor.opendisplay_1234_voltage") is None
+    assert entity_registry.async_get("sensor.opendisplay_1234_battery_voltage") is None
 
 
 async def test_battery_sensors_with_battery_sense(
@@ -110,7 +110,7 @@ async def test_battery_sensors_with_battery_sense(
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    voltage_state = hass.states.get("sensor.opendisplay_1234_voltage")
+    voltage_state = hass.states.get("sensor.opendisplay_1234_battery_voltage")
     assert voltage_state is not None
     assert voltage_state.state == "3700"
 
@@ -133,7 +133,7 @@ async def test_no_sensors_for_non_flex_devices(
 
     assert entity_registry.async_get("sensor.opendisplay_1234_temperature") is None
     assert entity_registry.async_get("sensor.opendisplay_1234_battery") is None
-    assert entity_registry.async_get("sensor.opendisplay_1234_voltage") is None
+    assert entity_registry.async_get("sensor.opendisplay_1234_battery_voltage") is None
 
 
 async def test_coordinator_ignores_unknown_manufacturer(
@@ -150,8 +150,5 @@ async def test_coordinator_ignores_unknown_manufacturer(
     inject_bluetooth_service_info(hass, unknown_service_info)
     await hass.async_block_till_done()
 
-    # Coordinator has no data, all sensors still unavailable
-    assert (
-        hass.states.get("sensor.opendisplay_1234_temperature").state
-        == STATE_UNAVAILABLE
-    )
+    # Coordinator has no data, sensor state is unknown (device visible but no OD data)
+    assert hass.states.get("sensor.opendisplay_1234_temperature").state == "unknown"

@@ -84,10 +84,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
 
     coordinator = OpenDisplayCoordinator(hass, address)
 
+    manufacturer = device_config.manufacturer
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, address)},
         name=entry.title,
+        manufacturer=manufacturer.manufacturer_name,
+        sw_version=f"{fw['major']}.{fw['minor']}",
+        hw_version=(
+            f"{manufacturer.board_type_name or manufacturer.board_type}"
+            f" rev. {manufacturer.board_revision}"
+        )
+        if is_flex
+        else None,
+        configuration_url="https://opendisplay.org/firmware/config/"
+        if is_flex
+        else None,
     )
 
     entry.runtime_data = OpenDisplayRuntimeData(
