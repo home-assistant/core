@@ -48,6 +48,8 @@ def state_1_fixture(client: Mock) -> State:
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_video_parameters.return_value = None
+    state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     return state
@@ -63,6 +65,8 @@ def state_2_fixture(client: Mock) -> State:
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_video_parameters.return_value = None
+    state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     return state
@@ -92,7 +96,10 @@ async def player_setup_fixture(
 ) -> AsyncGenerator[str]:
     """Get standard player."""
     config_entry = MockConfigEntry(
-        domain="arcam_fmj", data=MOCK_CONFIG_ENTRY, title=MOCK_NAME
+        domain="arcam_fmj",
+        data=MOCK_CONFIG_ENTRY,
+        title=MOCK_NAME,
+        unique_id=MOCK_UUID,
     )
     config_entry.add_to_hass(hass)
 
@@ -109,6 +116,14 @@ async def player_setup_fixture(
         patch("homeassistant.components.arcam_fmj.Client", return_value=client),
         patch(
             "homeassistant.components.arcam_fmj.media_player.State",
+            side_effect=state_mock,
+        ),
+        patch(
+            "homeassistant.components.arcam_fmj.sensor.State",
+            side_effect=state_mock,
+        ),
+        patch(
+            "homeassistant.components.arcam_fmj.binary_sensor.State",
             side_effect=state_mock,
         ),
         patch("homeassistant.components.arcam_fmj._run_client", return_value=None),
