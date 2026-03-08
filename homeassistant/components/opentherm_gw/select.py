@@ -156,9 +156,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         ],
         select_action=partial(set_gpio_mode, "A"),
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
-            if state in PyotgwGPIOMode
-            else None
+            lambda state: (
+                OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
+                if state in PyotgwGPIOMode
+                else None
+            )
         ),
     ),
     OpenThermSelectEntityDescription(
@@ -169,9 +171,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         options=list(OpenThermSelectGPIOMode),
         select_action=partial(set_gpio_mode, "B"),
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
-            if state in PyotgwGPIOMode
-            else None
+            lambda state: (
+                OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
+                if state in PyotgwGPIOMode
+                else None
+            )
         ),
     ),
     OpenThermSelectEntityDescription(

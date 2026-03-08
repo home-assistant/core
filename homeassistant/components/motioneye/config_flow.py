@@ -143,7 +143,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         title = user_input[CONF_URL]
         if self._hassio_discovery:
-            title = "Add-on"
+            title = "App"
 
         return self.async_create_entry(
             title=title,

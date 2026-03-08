@@ -1,14 +1,23 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "incomplete_discovery": "The discovered air-Q device did not provide a device ID. Ensure the firmware is up to date."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
     },
+    "flow_title": "{name}",
     "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Do you want to set up **{name}**?",
+        "title": "Set up air-Q"
+      },
       "user": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
@@ -119,11 +128,17 @@
       "propane": {
         "name": "Propane"
       },
+      "r32": {
+        "name": "Refrigerant R-32"
+      },
+      "r454b": {
+        "name": "Refrigerant R-454B"
+      },
+      "r454c": {
+        "name": "Refrigerant R-454C"
+      },
       "radon": {
         "name": "Radon"
-      },
-      "refigerant": {
-        "name": "Refrigerant"
       },
       "relative_pressure": {
         "name": "Relative pressure"

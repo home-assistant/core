@@ -63,7 +63,7 @@ class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
             found = await _async_can_discover_devices()
         except AddressInUseError:
             errors["base"] = ERROR_MSG_ADDRESS_IN_USE
-        except (ListenerError, EndpointError, CancelledError):
+        except ListenerError, EndpointError, CancelledError:
             errors["base"] = ERROR_MSG_CANNOT_CONNECT
 
         if not found and not errors:

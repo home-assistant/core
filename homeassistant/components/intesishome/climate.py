@@ -218,16 +218,16 @@ class IntesisAC(ClimateEntity):
             raise PlatformNotReady from ex
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attrs = {}
-        if self._outdoor_temp:
+        if self._outdoor_temp is not None:
             attrs["outdoor_temp"] = self._outdoor_temp
-        if self._power_consumption_heat:
+        if self._power_consumption_heat is not None:
             attrs["power_consumption_heat_kw"] = round(
                 self._power_consumption_heat / 1000, 1
             )
-        if self._power_consumption_cool:
+        if self._power_consumption_cool is not None:
             attrs["power_consumption_cool_kw"] = round(
                 self._power_consumption_cool / 1000, 1
             )
@@ -244,7 +244,7 @@ class IntesisAC(ClimateEntity):
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
 
-        if temperature := kwargs.get(ATTR_TEMPERATURE):
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
             await self._controller.set_temperature(self._device_id, temperature)
             self._attr_target_temperature = temperature
@@ -271,7 +271,7 @@ class IntesisAC(ClimateEntity):
         await self._controller.set_mode(self._device_id, MAP_HVAC_MODE_TO_IH[hvac_mode])
 
         # Send the temperature again in case changing modes has changed it
-        if self._attr_target_temperature:
+        if self._attr_target_temperature is not None:
             await self._controller.set_temperature(
                 self._device_id, self._attr_target_temperature
             )

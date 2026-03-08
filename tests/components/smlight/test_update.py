@@ -16,7 +16,7 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
-    DOMAIN as PLATFORM,
+    DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
@@ -113,7 +113,7 @@ async def test_update_firmware(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -167,7 +167,7 @@ async def test_update_zigbee2_firmware(
     assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -212,7 +212,7 @@ async def test_update_legacy_firmware_v2(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -253,7 +253,7 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -300,7 +300,7 @@ async def test_update_reboot_timeout(
         ),
     ):
         await hass.services.async_call(
-            PLATFORM,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: entity_id},
             blocking=False,

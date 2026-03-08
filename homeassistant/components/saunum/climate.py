@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 
 from pysaunum import MAX_TEMPERATURE, MIN_TEMPERATURE, SaunumException
@@ -235,6 +236,39 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_preset_failed",
                 translation_placeholders={"preset_mode": preset_mode},
+            ) from err
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_start_session(
+        self,
+        duration: timedelta = timedelta(minutes=120),
+        target_temperature: int = 80,
+        fan_duration: timedelta = timedelta(minutes=10),
+    ) -> None:
+        """Start a sauna session with custom parameters."""
+        if self.coordinator.data.door_open:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="door_open",
+            )
+
+        try:
+            # Set all parameters before starting the session
+            await self.coordinator.client.async_set_sauna_duration(
+                int(duration.total_seconds() // 60)
+            )
+            await self.coordinator.client.async_set_target_temperature(
+                target_temperature
+            )
+            await self.coordinator.client.async_set_fan_duration(
+                int(fan_duration.total_seconds() // 60)
+            )
+            await self.coordinator.client.async_start_session()
+        except SaunumException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="start_session_failed",
             ) from err
 
         await self.coordinator.async_request_refresh()

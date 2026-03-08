@@ -3,13 +3,17 @@
 from enum import StrEnum, unique
 
 import voluptuous as vol
+from xknx.dpt import DPTNumeric
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.number import (
+    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
+    NumberDeviceClass,
+    NumberMode,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
-    DEVICE_CLASS_STATE_CLASSES,
-    DEVICE_CLASS_UNITS,
-    STATE_CLASS_UNITS,
+    DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -42,9 +46,11 @@ from ..const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    NumberConf,
     SceneConf,
 )
 from ..dpt import get_supported_dpts
+from ..validation import validate_number_attributes, validate_sensor_attributes
 from .const import (
     CONF_ALWAYS_CALLBACK,
     CONF_COLOR,
@@ -424,6 +430,65 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
+
+def _number_limit_sub_validator(config: dict) -> dict:
+    """Validate min, max, and step values for a number entity."""
+    dpt = config[CONF_GA_SENSOR][CONF_DPT]
+    transcoder = DPTNumeric.parse_transcoder(dpt)
+    assert transcoder is not None  # already checked by GASelector
+    return validate_number_attributes(transcoder, config)
+
+
+NUMBER_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Required(CONF_GA_SENSOR): GASelector(
+                write_required=True, dpt=["numeric"]
+            ),
+            vol.Optional(
+                CONF_RESPOND_TO_READ, default=False
+            ): selector.BooleanSelector(),
+            "section_advanced_options": KNXSectionFlat(collapsible=True),
+            vol.Required(CONF_MODE, default=NumberMode.AUTO): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(NumberMode),
+                    translation_key="component.knx.config_panel.entities.create.number.knx.mode",
+                ),
+            ),
+            vol.Optional(NumberConf.MIN): selector.NumberSelector(),
+            vol.Optional(NumberConf.MAX): selector.NumberSelector(),
+            vol.Optional(NumberConf.STEP): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, step="any", mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=sorted(
+                        {
+                            str(unit)
+                            for units in NUMBER_DEVICE_CLASS_UNITS.values()
+                            for unit in units
+                            if unit is not None
+                        }
+                    ),
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    custom_value=True,
+                ),
+            ),
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in NumberDeviceClass],
+                    translation_key="component.knx.selector.sensor_device_class",  # should align with sensor
+                    sort=True,
+                )
+            ),
+            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        },
+    ),
+    _number_limit_sub_validator,
+)
+
 SCENE_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SCENE): GASelector(
@@ -617,62 +682,11 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
 )
 
 
-def _validate_sensor_attributes(config: dict) -> dict:
+def _sensor_attribute_sub_validator(config: dict) -> dict:
     """Validate that state_class is compatible with device_class and unit_of_measurement."""
     dpt = config[CONF_GA_SENSOR][CONF_DPT]
     dpt_metadata = get_supported_dpts()[dpt]
-    state_class = config.get(
-        CONF_SENSOR_STATE_CLASS,
-        dpt_metadata["sensor_state_class"],
-    )
-    device_class = config.get(
-        CONF_DEVICE_CLASS,
-        dpt_metadata["sensor_device_class"],
-    )
-    unit_of_measurement = config.get(
-        CONF_UNIT_OF_MEASUREMENT,
-        dpt_metadata["unit"],
-    )
-    if (
-        state_class
-        and device_class
-        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
-        and state_class not in state_classes
-    ):
-        raise vol.Invalid(
-            f"State class '{state_class}' is not valid for device class '{device_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, state_classes), key=str.casefold))}",
-            path=[CONF_SENSOR_STATE_CLASS],
-        )
-    if (
-        device_class
-        and (d_c_units := DEVICE_CLASS_UNITS.get(device_class)) is not None
-        and unit_of_measurement not in d_c_units
-    ):
-        raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}' is not valid for device class '{device_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, d_c_units), key=str.casefold))}",
-            path=(
-                [CONF_DEVICE_CLASS]
-                if CONF_DEVICE_CLASS in config
-                else [CONF_UNIT_OF_MEASUREMENT]
-            ),
-        )
-    if (
-        state_class
-        and (s_c_units := STATE_CLASS_UNITS.get(state_class)) is not None
-        and unit_of_measurement not in s_c_units
-    ):
-        raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}' is not valid for state class '{state_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, s_c_units), key=str.casefold))}",
-            path=(
-                [CONF_SENSOR_STATE_CLASS]
-                if CONF_SENSOR_STATE_CLASS in config
-                else [CONF_UNIT_OF_MEASUREMENT]
-            ),
-        )
-    return config
+    return validate_sensor_attributes(dpt_metadata, config)
 
 
 SENSOR_KNX_SCHEMA = AllSerializeFirst(
@@ -687,7 +701,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     options=sorted(
                         {
                             str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
+                            for units in SENSOR_DEVICE_CLASS_UNITS.values()
                             for unit in units
                             if unit is not None
                         }
@@ -721,7 +735,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
             ),
         },
     ),
-    _validate_sensor_attributes,
+    _sensor_attribute_sub_validator,
 )
 
 KNX_SCHEMA_FOR_PLATFORM = {
@@ -732,6 +746,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
+    Platform.NUMBER: NUMBER_KNX_SCHEMA,
     Platform.SCENE: SCENE_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,

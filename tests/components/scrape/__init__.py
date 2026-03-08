@@ -39,12 +39,14 @@ class MockRestData:
     ) -> None:
         """Init RestDataMock."""
         self.data: str | None = None
+        self.headers: dict[str, str] | None = None
         self.payload = payload
         self.count = 0
 
     async def async_update(self, data: bool | None = True) -> None:
         """Update."""
         self.count += 1
+        self.headers = {}
         if self.payload == "test_scrape_sensor":
             self.data = (
                 # Default
@@ -74,5 +76,33 @@ class MockRestData:
             self.data = "<div class='return'>secret text</div>"
         if self.payload == "test_scrape_sensor_no_data":
             self.data = None
+        if self.payload == "test_scrape_xml":
+            # XML/RSS content for testing XML parser detection via Content-Type
+            self.headers = {"Content-Type": "application/rss+xml"}
+            self.data = (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                "<rss><channel><title>Test RSS Feed</title>"
+                "<item><title>Test Item</title><link>https://example.com/item</link></item>"
+                "</channel></rss>"
+            )
+        if self.payload == "test_scrape_xml_fallback":
+            # XML/RSS content with non-XML Content-Type for testing content-based detection
+            self.headers = {"Content-Type": "text/html"}
+            self.data = (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                "<rss><channel><title>Test RSS Feed</title>"
+                "<item><title>Test Item</title><link>https://example.com/item</link></item>"
+                "</channel></rss>"
+            )
+        if self.payload == "test_scrape_html5_with_xml_declaration":
+            # HTML5 with XML declaration, no Content-Type header, and uppercase tags
+            # Tests: XML stripping, content detection, case-insensitive selectors
+            self.data = (
+                '<?xml version="1.0" encoding="UTF-8"?>\n'
+                "<!DOCTYPE html>\n"
+                "<html><head><TITLE>Test Page</TITLE></head>"
+                "<body><DIV class='current-version'>"
+                "<H1>Current Version: 2021.12.10</H1></DIV></body></html>"
+            )
         if self.count == 3:
             self.data = None

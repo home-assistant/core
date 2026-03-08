@@ -24,6 +24,7 @@ import datetime
 import logging
 import os
 import pathlib
+import shutil
 from typing import Any
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
@@ -70,7 +71,8 @@ STORAGE_VERSION = 1
 # Buffer writes every few minutes (plus guaranteed to be written at shutdown)
 STORAGE_SAVE_DELAY_SECONDS = 120
 # Path under config directory
-MEDIA_PATH = f"{DOMAIN}/event_media"
+LEGACY_MEDIA_PATH = f"{DOMAIN}/event_media"
+MEDIA_CACHE_PATH = "event_media"
 
 # Size of small in-memory disk cache to avoid excessive disk reads
 DISK_READ_LRU_MAX_SIZE = 32
@@ -83,19 +85,39 @@ async def async_get_media_event_store(
     hass: HomeAssistant, subscriber: GoogleNestSubscriber
 ) -> EventMediaStore:
     """Create the disk backed EventMediaStore."""
-    media_path = hass.config.path(MEDIA_PATH)
-
-    def mkdir() -> None:
-        os.makedirs(media_path, exist_ok=True)
-
-    await hass.async_add_executor_job(mkdir)
+    media_path = pathlib.Path(hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH))
+    legacy_media_path = pathlib.Path(hass.config.path(LEGACY_MEDIA_PATH))
+    await hass.async_add_executor_job(
+        _prepare_media_cache_dir, media_path, legacy_media_path
+    )
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    return NestEventMediaStore(hass, subscriber, store, media_path)
+    return NestEventMediaStore(hass, subscriber, store, str(media_path))
+
+
+def _prepare_media_cache_dir(
+    media_path: pathlib.Path, legacy_media_path: pathlib.Path
+) -> None:
+    """Prepare the media cache directory."""
+    # Migrate media from legacy path to new path.
+    if legacy_media_path.exists() and not media_path.exists():
+        _LOGGER.info(
+            "Migrating media cache directory from %s to %s",
+            legacy_media_path,
+            media_path,
+        )
+        media_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.move(legacy_media_path, media_path)
+        except OSError as error:
+            _LOGGER.info(
+                "Failed to migrate media cache directory, abandoning: %s", error
+            )
+    media_path.mkdir(parents=True, exist_ok=True)
 
 
 async def async_get_transcoder(hass: HomeAssistant) -> Transcoder:
     """Get a nest clip transcoder."""
-    media_path = hass.config.path(MEDIA_PATH)
+    media_path = hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH)
     ffmpeg_manager = get_ffmpeg_manager(hass)
     return Transcoder(ffmpeg_manager.binary, media_path)
 

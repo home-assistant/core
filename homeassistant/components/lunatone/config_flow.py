@@ -22,11 +22,6 @@ DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
 )
 
 
-def compose_title(name: str | None, serial_number: int) -> str:
-    """Compose a title string from a given name and serial number."""
-    return f"{name or 'DALI Gateway'} {serial_number}"
-
-
 class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Lunatone config flow."""
 
@@ -54,22 +49,17 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if info_api.data is None or info_api.serial_number is None:
+                if info_api.serial_number is None:
                     errors["base"] = "missing_device_info"
                 else:
                     await self.async_set_unique_id(str(info_api.serial_number))
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(
-                            self._get_reconfigure_entry(),
-                            data_updates=data,
-                            title=compose_title(info_api.name, info_api.serial_number),
+                            self._get_reconfigure_entry(), data_updates=data, title=url
                         )
                     self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=compose_title(info_api.name, info_api.serial_number),
-                        data={CONF_URL: url},
-                    )
+                    return self.async_create_entry(title=url, data={CONF_URL: url})
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,

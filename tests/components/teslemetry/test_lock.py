@@ -111,7 +111,6 @@ async def test_lock_services(
 
 async def test_lock_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -134,13 +133,9 @@ async def test_lock_streaming(
 
     await reload_platform(hass, entry, [Platform.LOCK])
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "lock.test_lock",
-        "lock.test_charge_cable_lock",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-locked")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("lock.test_lock").state == LockState.LOCKED
+    assert hass.states.get("lock.test_charge_cable_lock").state == LockState.LOCKED
 
     # Stream update
     mock_add_listener.send(
@@ -157,10 +152,6 @@ async def test_lock_streaming(
 
     await reload_platform(hass, entry, [Platform.LOCK])
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "lock.test_lock",
-        "lock.test_charge_cable_lock",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-unlocked")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("lock.test_lock").state == LockState.UNLOCKED
+    assert hass.states.get("lock.test_charge_cable_lock").state == LockState.UNLOCKED

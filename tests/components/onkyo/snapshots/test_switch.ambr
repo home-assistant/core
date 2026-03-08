@@ -1,0 +1,638 @@
+# serializer version: 1
+# name: test_entities[switch.tx_nr7100_mute_center-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_center',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute center',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute center',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-center',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_center-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute center',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_center',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute front left',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute front left',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute front right',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute front right',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_1_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_height_1_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute height 1 left',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute height 1 left',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-height_1_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_1_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute height 1 left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_height_1_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_1_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_height_1_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute height 1 right',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute height 1 right',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-height_1_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_1_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute height 1 right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_height_1_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_2_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_height_2_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute height 2 left',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute height 2 left',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-height_2_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_2_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute height 2 left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_height_2_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_2_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_height_2_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute height 2 right',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute height 2 right',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-height_2_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_height_2_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute height 2 right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_height_2_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_subwoofer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_subwoofer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute subwoofer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute subwoofer',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-subwoofer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_subwoofer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute subwoofer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_subwoofer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_subwoofer_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_subwoofer_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute subwoofer 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute subwoofer 2',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-subwoofer_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_subwoofer_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute subwoofer 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_subwoofer_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_back_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_surround_back_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute surround back left',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute surround back left',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-surround_back_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_back_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute surround back left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_surround_back_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_back_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_surround_back_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute surround back right',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute surround back right',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-surround_back_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_back_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute surround back right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_surround_back_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_surround_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute surround left',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute surround left',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-surround_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute surround left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_surround_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tx_nr7100_mute_surround_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX-NR7100 Mute surround right',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Mute surround right',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0009B0123456-channel_muting-surround_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.tx_nr7100_mute_surround_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Mute surround right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tx_nr7100_mute_surround_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

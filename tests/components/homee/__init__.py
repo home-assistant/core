@@ -31,8 +31,8 @@ def build_mock_node(file: str) -> AsyncMock:
             for key, value in attribute.items():
                 setattr(att, key, value)
             att.is_reversed = False
-            att.get_value = (
-                lambda att=att: att.data if att.unit == "text" else att.current_value
+            att.get_value = lambda att=att: (
+                att.data if att.unit == "text" else att.current_value
             )
             mock_attributes.append(att)
         return mock_attributes

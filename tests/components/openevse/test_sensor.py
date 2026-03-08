@@ -1,13 +1,13 @@
 """Tests for the OpenEVSE sensor platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -24,8 +24,9 @@ async def test_entities(
     mock_charger: MagicMock,
 ) -> None:
     """Test the sensor entities."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("homeassistant.components.openevse.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -55,6 +56,28 @@ async def test_disabled_by_default_entities(
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_missing_sensor_graceful_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test that missing sensor attributes are handled gracefully."""
+    mock_charger.vehicle_soc = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # The sensor with missing attribute should be unknown
+    state = hass.states.get("sensor.openevse_mock_config_vehicle_state_of_charge")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Other sensors should still work
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state is not None
+    assert state.state == "Charging"
 
 
 async def test_sensor_unavailable_on_coordinator_timeout(

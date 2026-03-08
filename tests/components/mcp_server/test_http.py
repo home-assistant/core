@@ -6,6 +6,7 @@ from http import HTTPStatus
 import json
 import logging
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import mcp
@@ -478,3 +479,42 @@ async def test_get_unknown_prompt(
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(McpError):
             await session.get_prompt(name="Unknown")
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])
+async def test_mcp_tool_call_unicode(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the tool call endpoint preserves unicode characters."""
+
+    # Mock the API instance
+    mock_api = AsyncMock()
+    mock_api.api.name = "Assist"
+    mock_api.tools = []
+    mock_api.custom_serializer = None
+    mock_api.async_call_tool.return_value = {"message": "这是一个测试"}
+
+    # We need to ensure when the server calls llm.async_get_api, it gets our mock
+    # async_get_api is awaited, so we need an AsyncMock
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
+        mock_get_api.return_value = mock_api
+        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+            result = await session.call_tool(
+                name="AnyTool",
+                arguments={},
+            )
+
+    assert not result.isError
+    assert len(result.content) == 1
+    assert result.content[0].type == "text"
+
+    # Check that the text contains the raw unicode characters, NOT the escaped version
+    response_text = result.content[0].text
+    assert "这是一个测试" in response_text
+    assert "\\u" not in response_text
