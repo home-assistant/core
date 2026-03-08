@@ -13,6 +13,7 @@ from hass_nabucasa import account_link
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow, event
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DATA_CLOUD, DOMAIN
 
@@ -38,6 +39,24 @@ async def async_provide_implementation(
     hass: HomeAssistant, domain: str
 ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
     """Provide an implementation for a domain."""
+    # Cloud account linking requires My Home Assistant for the OAuth callback
+    # redirect. Without it, the callback from account-link.nabucasa.com fails.
+    if "my" not in hass.config.components:
+        _LOGGER.warning(
+            "Cloud account linking unavailable for %s: "
+            "My Home Assistant is not configured",
+            domain,
+        )
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "my_not_configured_account_link",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="my_not_configured_account_link",
+        )
+        return []
+
     services = await _get_services(hass)
 
     for service in services:
