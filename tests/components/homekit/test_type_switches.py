@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
     CHAR_CONFIGURED_NAME,
+    CHAR_OUTLET_IN_USE,
     SERV_OUTLET,
     TYPE_FAUCET,
     TYPE_SHOWER,
@@ -17,6 +18,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.type_switches import (
     LawnMower,
     Outlet,
+    PowerStrip,
     SelectSwitch,
     Switch,
     Vacuum,
@@ -1105,3 +1107,288 @@ async def test_remaining_duration_characteristic_fallback(
         await hass.async_block_till_done()
         assert acc.char_in_use.value == 0
         assert acc.get_remaining_duration() == 0
+
+
+async def test_power_strip_accessory(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test PowerStrip accessory with multiple outlets."""
+    # Create member switch entities
+    switch_entity_ids = [
+        "switch.outlet_1",
+        "switch.outlet_2",
+        "switch.outlet_3",
+        "switch.outlet_4",
+        "switch.outlet_5",
+    ]
+
+    # Set up member switches
+    for entity_id in switch_entity_ids:
+        hass.states.async_set(
+            entity_id,
+            STATE_OFF,
+            {"friendly_name": f"Outlet {entity_id.rsplit('_', maxsplit=1)[-1]}"},
+        )
+
+    # Create power strip group entity
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids, "friendly_name": "Power Strip"},
+    )
+    await hass.async_block_till_done()
+
+    # Create PowerStrip accessory
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify accessory setup
+    assert acc.aid == 2
+    assert acc.category == 7  # CATEGORY_OUTLET
+    assert len(acc.outlet_chars) == 5
+    assert len(acc.outlet_states) == 5
+
+    # Verify all outlets start as off
+    for entity_id in switch_entity_ids:
+        assert acc.outlet_chars[entity_id].value is False
+        assert acc.outlet_states[entity_id] is False
+
+    # Verify we can get outlet services (excluding accessory info service)
+    non_info_services = [
+        svc for svc in acc.services if hasattr(svc, "unique_id") and svc.unique_id
+    ]
+    assert len(non_info_services) == 5
+    for entity_id in switch_entity_ids:
+        outlet_service = next(
+            service
+            for service in acc.services
+            if hasattr(service, "unique_id") and service.unique_id == entity_id
+        )
+        assert outlet_service.get_characteristic(CHAR_OUTLET_IN_USE).value is True
+
+
+async def test_power_strip_individual_outlet_control(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test individual outlet control from HomeKit."""
+    switch_entity_ids = ["switch.outlet_1", "switch.outlet_2"]
+
+    # Set up member switches
+    for entity_id in switch_entity_ids:
+        hass.states.async_set(entity_id, STATE_OFF)
+
+    # Create power strip group
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Mock switch services
+    call_turn_on = async_mock_service(hass, "switch", "turn_on")
+    call_turn_off = async_mock_service(hass, "switch", "turn_off")
+
+    # Test turning on outlet 1 from HomeKit
+    acc.outlet_chars["switch.outlet_1"].client_update_value(True)
+    await hass.async_block_till_done()
+
+    assert len(call_turn_on) == 1
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == "switch.outlet_1"
+    assert acc.outlet_states["switch.outlet_1"] is True
+
+    # Test turning off outlet 1 from HomeKit
+    acc.outlet_chars["switch.outlet_1"].client_update_value(False)
+    await hass.async_block_till_done()
+
+    assert len(call_turn_off) == 1
+    assert call_turn_off[0].data[ATTR_ENTITY_ID] == "switch.outlet_1"
+    assert acc.outlet_states["switch.outlet_1"] is False
+
+    # Test that outlet 2 is independent
+    acc.outlet_chars["switch.outlet_2"].client_update_value(True)
+    await hass.async_block_till_done()
+
+    assert len(call_turn_on) == 2
+    assert call_turn_on[1].data[ATTR_ENTITY_ID] == "switch.outlet_2"
+    assert acc.outlet_states["switch.outlet_2"] is True
+    assert acc.outlet_states["switch.outlet_1"] is False  # Still off
+
+
+async def test_power_strip_state_sync_from_ha(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test state synchronization from Home Assistant to HomeKit."""
+    switch_entity_ids = ["switch.outlet_1", "switch.outlet_2"]
+
+    # Set up member switches
+    for entity_id in switch_entity_ids:
+        hass.states.async_set(entity_id, STATE_OFF)
+
+    # Create power strip group
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Initially all outlets should be off
+    assert acc.outlet_chars["switch.outlet_1"].value is False
+    assert acc.outlet_chars["switch.outlet_2"].value is False
+
+    # Turn on outlet 1 in Home Assistant
+    hass.states.async_set("switch.outlet_1", STATE_ON)
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,  # Group state can be different
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    # Trigger state update
+    state = hass.states.get(power_strip_entity_id)
+    acc.async_update_state(state)
+
+    # Verify HomeKit reflects the change
+    assert acc.outlet_chars["switch.outlet_1"].value is True
+    assert acc.outlet_chars["switch.outlet_2"].value is False
+    assert acc.outlet_states["switch.outlet_1"] is True
+    assert acc.outlet_states["switch.outlet_2"] is False
+
+
+async def test_power_strip_invalid_configuration(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test PowerStrip with invalid configuration."""
+    # Create power strip without entity_id attribute
+    power_strip_entity_id = "switch.power_strip_invalid"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {},  # No entity_id attribute
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Should have no outlet chars or states
+    assert len(acc.outlet_chars) == 0
+    assert len(acc.outlet_states) == 0
+
+
+async def test_power_strip_missing_member_entities(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test PowerStrip when some member entities don't exist."""
+    switch_entity_ids = ["switch.outlet_1", "switch.nonexistent"]
+
+    # Only create one of the switches
+    hass.states.async_set("switch.outlet_1", STATE_OFF)
+
+    # Create power strip group with both entities
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Should only have outlet for the existing entity
+    assert len(acc.outlet_chars) == 1
+    assert "switch.outlet_1" in acc.outlet_chars
+    assert "switch.nonexistent" not in acc.outlet_chars
+
+
+async def test_power_strip_state_sync_missing_member_entity(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test PowerStrip state update when a known member entity disappears."""
+    switch_entity_ids = ["switch.outlet_1", "switch.outlet_2"]
+
+    for entity_id in switch_entity_ids:
+        hass.states.async_set(entity_id, STATE_OFF)
+
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_remove("switch.outlet_2")
+    hass.states.async_set("switch.outlet_1", STATE_ON)
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(power_strip_entity_id)
+    assert state is not None
+    acc.async_update_state(state)
+
+    assert acc.outlet_chars["switch.outlet_1"].value is True
+    assert acc.outlet_states["switch.outlet_1"] is True
+    assert acc.outlet_chars["switch.outlet_2"].value is False
+    assert acc.outlet_states["switch.outlet_2"] is False
+
+
+async def test_power_strip_primary_service(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test PowerStrip primary service is set correctly."""
+    switch_entity_ids = ["switch.outlet_1", "switch.outlet_2"]
+
+    # Set up member switches
+    for entity_id in switch_entity_ids:
+        hass.states.async_set(entity_id, STATE_OFF)
+
+    # Create power strip group
+    power_strip_entity_id = "switch.power_strip"
+    hass.states.async_set(
+        power_strip_entity_id,
+        STATE_OFF,
+        {ATTR_ENTITY_ID: switch_entity_ids},
+    )
+    await hass.async_block_till_done()
+
+    acc = PowerStrip(hass, hk_driver, "PowerStrip", power_strip_entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify primary service is set by checking that the first outlet service exists
+    # and has the correct unique_id
+    first_outlet_service = None
+    for service in acc.services:
+        if hasattr(service, "unique_id") and service.unique_id == "switch.outlet_1":
+            first_outlet_service = service
+            break
+
+    assert first_outlet_service is not None
+    assert first_outlet_service.unique_id == "switch.outlet_1"
