@@ -55,9 +55,11 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key=KEY_LAST_ELECTRICITY_COST,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
-        value=lambda usage: usage.electricity[-1].cost.amount
-        if usage.electricity[-1].cost is not None
-        else None,
+        value=lambda usage: (
+            usage.electricity[-1].cost.amount
+            if usage.electricity[-1].cost is not None
+            else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_start_time",
@@ -89,9 +91,9 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key=KEY_LAST_GAS_COST,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
-        value=lambda usage: usage.gas[-1].cost.amount
-        if usage.gas[-1].cost is not None
-        else None,
+        value=lambda usage: (
+            usage.gas[-1].cost.amount if usage.gas[-1].cost is not None else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_start_time",

@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
@@ -47,6 +48,7 @@ class EufyLifeSensorEntity(SensorEntity):
     """Representation of an EufyLife sensor."""
 
     _attr_has_entity_name = True
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, data: EufyLifeData) -> None:
         """Initialize the weight sensor entity."""

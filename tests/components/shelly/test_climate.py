@@ -57,6 +57,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from . import (
     MOCK_MAC,
     init_integration,
+    mutate_rpc_device_status,
     patch_platforms,
     register_device,
     register_entity,
@@ -1046,6 +1047,16 @@ async def test_rpc_linkedgo_st802_thermostat(
     mock_rpc_device.boolean_set.assert_called_once_with(201, False)
     assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.OFF
+
+    # Test current temperature update
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.1
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "number:201", "value", 22.4)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.4
 
 
 async def test_rpc_linkedgo_st1820_thermostat(

@@ -45,9 +45,9 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
     }
     if due := item.due:
         if isinstance(due, datetime.datetime):
-            item_data["due_datetime"] = due.isoformat()
+            item_data["due_datetime"] = due
         else:
-            item_data["due_date"] = due.isoformat()
+            item_data["due_date"] = due
         # In order to not lose any recurrence metadata for the task, we need to
         # ensure that we send the `due_string` param if the task has it set.
         # NOTE: It's ok to send stale data for non-recurring tasks. Any provided

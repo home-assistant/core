@@ -29,7 +29,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
-    'original_icon': 'mdi:battery-alert',
+    'original_icon': None,
     'original_name': 'Backup reserve',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -45,7 +45,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Energy Site Backup reserve',
-      'icon': 'mdi:battery-alert',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -90,7 +89,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
-    'original_icon': 'mdi:battery-unknown',
+    'original_icon': None,
     'original_name': 'Off-grid reserve',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -106,7 +105,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Energy Site Off-grid reserve',
-      'icon': 'mdi:battery-unknown',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,

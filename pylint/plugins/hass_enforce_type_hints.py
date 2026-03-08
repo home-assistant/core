@@ -683,18 +683,22 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="capability_attributes",
         return_type=["Mapping[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="state_attributes",
         return_type=["dict[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="extra_state_attributes",
         return_type=["Mapping[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="device_info",
         return_type=["DeviceInfo", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="device_class",
@@ -708,6 +712,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="icon",
         return_type=["str", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="entity_picture",
@@ -781,20 +786,24 @@ _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="async_get_last_state",
         return_type=["State", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="async_get_last_extra_data",
         return_type=["ExtraStoredData", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="extra_restore_state_data",
         return_type=["ExtraStoredData", None],
+        mandatory=True,
     ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
         return_type=["bool", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="turn_on",
@@ -936,6 +945,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="is_on",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
             ],
         ),
@@ -1588,6 +1598,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="speed_count",
@@ -1602,10 +1613,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="current_direction",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="oscillating",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_mode",
@@ -1615,6 +1628,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_modes",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
@@ -1683,14 +1697,17 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="distance",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="latitude",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="longitude",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
             ],
         ),
@@ -1834,6 +1851,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="brightness",
                     return_type=["int", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="color_mode",
@@ -1843,10 +1861,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="hs_color",
                     return_type=["tuple[float, float]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="xy_color",
                     return_type=["tuple[float, float]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="rgb_color",
@@ -1864,31 +1884,34 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="color_temp",
+                    function_name="color_temp_kelvin",
                     return_type=["int", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="min_mireds",
+                    function_name="max_color_temp_kelvin",
                     return_type="int",
                     mandatory=True,
                 ),
                 TypeHintMatch(
-                    function_name="max_mireds",
+                    function_name="min_color_temp_kelvin",
                     return_type="int",
                     mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="effect_list",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="effect",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="capability_attributes",
                     return_type=["dict[str, Any]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_color_modes",
@@ -1908,10 +1931,9 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         "brightness_step": "int | None",
                         "brightness_step_pct": "float | None",
                         "color_name": "str | None",
-                        "color_temp": "int | None",
+                        "color_temp_kelvin": "int | None",
                         "effect": "str | None",
                         "flash": "str | None",
-                        "kelvin": "int | None",
                         "hs_color": "tuple[float, float] | None",
                         "rgb_color": "tuple[int, int, int] | None",
                         "rgbw_color": "tuple[int, int, int, int] | None",
@@ -1943,48 +1965,58 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="code_format",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_locked",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_locking",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_unlocking",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_jammed",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="LockEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="lock",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="unlock",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="open",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2527,7 +2559,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="state_class",
-                    return_type=["SensorStateClass", "str", None],
+                    return_type=["SensorStateClass", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
@@ -2560,10 +2592,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="extra_restore_state_data",
                     return_type="SensorExtraStoredData",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_get_last_sensor_data",
                     return_type=["SensorExtraStoredData", None],
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2587,10 +2621,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="available_tones",
                     return_type=["dict[int, str]", "list[int | str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="SirenEntityFeature",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2602,31 +2638,38 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="supported_languages",
                     return_type="list[str]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_formats",
                     return_type="list[AudioFormats]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_codecs",
                     return_type="list[AudioCodecs]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_bit_rates",
                     return_type="list[AudioBitRates]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_sample_rates",
                     return_type="list[AudioSampleRates]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_channels",
                     return_type="list[AudioChannels]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_process_audio_stream",
                     arg_types={1: "SpeechMetadata", 2: "AsyncIterable[bytes]"},
                     return_type="SpeechResult",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2670,6 +2713,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="todo_items",
                     return_type=["list[TodoItem]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_create_todo_item",
@@ -2677,6 +2721,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "TodoItem",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_update_todo_item",
@@ -2684,6 +2729,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "TodoItem",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_delete_todo_items",
@@ -2691,6 +2737,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "list[str]",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_move_todo_item",
@@ -2699,6 +2746,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         2: "str | None",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2752,10 +2800,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="auto_update",
                     return_type="bool",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="installed_version",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="device_class",
@@ -2765,30 +2815,37 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="in_progress",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="latest_version",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="release_summary",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="release_url",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="UpdateEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="title",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="update_percentage",
                     return_type=["int", "float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="install",
@@ -2796,11 +2853,13 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="release_notes",
                     return_type=["str", None],
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2820,64 +2879,77 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="state",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="activity",
                     return_type=["VacuumActivity", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="battery_level",
                     return_type=["int", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="battery_icon",
                     return_type="str",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="fan_speed",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="fan_speed_list",
                     return_type="list[str]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="VacuumEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="stop",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="start",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="pause",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="return_to_base",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="clean_spot",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="locate",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_fan_speed",
@@ -2887,6 +2959,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="send_command",
@@ -2897,6 +2970,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2916,72 +2990,88 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="current_operation",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="current_temperature",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_away_mode_on",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="max_temp",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="min_temp",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="operation_list",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="precision",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="WaterHeaterEntityFeature",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature_high",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="target_temperature_low",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="temperature_unit",
                     return_type="str",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_temperature",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="set_operation_mode",
                     arg_types={1: "str"},
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_away_mode_on",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_away_mode_off",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -3001,62 +3091,82 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="native_temperature",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_temperature_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_pressure",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_pressure_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="humidity",
                     return_type=["float", None],
+                    mandatory=True,
+                ),
+                TypeHintMatch(
+                    function_name="native_wind_gust_speed",
+                    return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_wind_speed",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_wind_speed_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="wind_bearing",
                     return_type=["float", "str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="ozone",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_visibility",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_visibility_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="forecast",
                     return_type=["list[Forecast]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_precipitation_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="precision",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="condition",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
             ],
         ),

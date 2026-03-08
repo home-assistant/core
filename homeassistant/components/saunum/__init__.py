@@ -8,8 +8,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import LeilSaunaCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -19,7 +23,15 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 type LeilSaunaConfigEntry = ConfigEntry[LeilSaunaCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Saunum component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
@@ -30,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
         client = await SaunumClient.create(host)
     except SaunumConnectionError as exc:
         raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
+
+    entry.async_on_unload(client.async_close)
 
     coordinator = LeilSaunaCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -43,7 +57,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.client.async_close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

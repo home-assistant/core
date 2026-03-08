@@ -2386,7 +2386,7 @@
     'object_id_base': 'VPP backup reserve',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'VPP backup reserve',
     'platform': 'teslemetry',
@@ -2401,7 +2401,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -2416,7 +2415,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -2653,7 +2651,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'iec',
+        'sae',
+        'gb_ac',
+        'gb_dc',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2672,7 +2677,7 @@
     'object_id_base': 'Charge cable',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charge cable',
     'platform': 'teslemetry',
@@ -2687,27 +2692,41 @@
 # name: test_sensors[sensor.test_charge_cable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Test Charge cable',
+      'options': list([
+        'iec',
+        'sae',
+        'gb_ac',
+        'gb_dc',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_cable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'IEC',
+    'state': 'iec',
   })
 # ---
 # name: test_sensors[sensor.test_charge_cable-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Test Charge cable',
+      'options': list([
+        'iec',
+        'sae',
+        'gb_ac',
+        'gb_dc',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_charge_cable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'IEC',
+    'state': 'iec',
   })
 # ---
 # name: test_sensors[sensor.test_charge_energy_added-entry]

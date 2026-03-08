@@ -293,7 +293,7 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             await self._on_ws_connected()
-        except (TransportError, CannotConnectError):
+        except TransportError, CannotConnectError:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.warning("Unable to connect to Kodi via websocket")
@@ -304,7 +304,7 @@ class KodiEntity(MediaPlayerEntity):
     async def _ping(self):
         try:
             await self._kodi.ping()
-        except (TransportError, CannotConnectError):
+        except TransportError, CannotConnectError:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.warning("Unable to ping Kodi via websocket")
@@ -346,7 +346,7 @@ class KodiEntity(MediaPlayerEntity):
 
         try:
             self._players = await self._kodi.get_players()
-        except (TransportError, ProtocolError):
+        except TransportError, ProtocolError:
             if not self._connection.can_subscribe:
                 self._reset_state()
                 return
@@ -836,7 +836,7 @@ class KodiEntity(MediaPlayerEntity):
             image_url, _, _ = await get_media_info(
                 self._kodi, media_content_id, media_content_type
             )
-        except (ProtocolError, TransportError):
+        except ProtocolError, TransportError:
             return (None, None)
 
         if image_url:

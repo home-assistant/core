@@ -115,6 +115,12 @@
       },
       "gas_usage_to_date": {
         "name": "Current bill gas usage to date"
+      },
+      "last_changed": {
+        "name": "Last changed"
+      },
+      "last_updated": {
+        "name": "Last updated"
       }
     }
   },

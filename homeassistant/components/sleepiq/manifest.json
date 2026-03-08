@@ -9,7 +9,8 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["asyncsleepiq"],
-  "requirements": ["asyncsleepiq==1.6.0"]
+  "requirements": ["asyncsleepiq==1.7.0"]
 }
