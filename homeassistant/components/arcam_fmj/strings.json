@@ -19,6 +19,11 @@
       }
     }
   },
+  "device_automation": {
+    "trigger_type": {
+      "turn_on": "{entity_name} was requested to turn on"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "incoming_video_interlaced": {
@@ -26,14 +31,14 @@
       }
     },
     "sensor": {
-      "incoming_video_horizontal_resolution": {
-        "name": "Zone {zone} incoming video horizontal resolution"
+      "incoming_audio_config": {
+        "name": "Zone {zone} incoming audio configuration"
       },
-      "incoming_video_vertical_resolution": {
-        "name": "Zone {zone} incoming video vertical resolution"
+      "incoming_audio_format": {
+        "name": "Zone {zone} incoming audio format"
       },
-      "incoming_video_refresh_rate": {
-        "name": "Zone {zone} incoming video refresh rate"
+      "incoming_audio_sample_rate": {
+        "name": "Zone {zone} incoming audio sample rate"
       },
       "incoming_video_aspect_ratio": {
         "name": "Zone {zone} incoming video aspect ratio"
@@ -41,20 +46,15 @@
       "incoming_video_colorspace": {
         "name": "Zone {zone} incoming video colorspace"
       },
-      "incoming_audio_format": {
-        "name": "Zone {zone} incoming audio format"
+      "incoming_video_horizontal_resolution": {
+        "name": "Zone {zone} incoming video horizontal resolution"
       },
-      "incoming_audio_config": {
-        "name": "Zone {zone} incoming audio configuration"
+      "incoming_video_refresh_rate": {
+        "name": "Zone {zone} incoming video refresh rate"
       },
-      "incoming_audio_sample_rate": {
-        "name": "Zone {zone} incoming audio sample rate"
+      "incoming_video_vertical_resolution": {
+        "name": "Zone {zone} incoming video vertical resolution"
       }
-    }
-  },
-  "device_automation": {
-    "trigger_type": {
-      "turn_on": "{entity_name} was requested to turn on"
     }
   }
 }
