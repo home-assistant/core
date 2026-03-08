@@ -24,6 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
+from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -50,7 +51,10 @@ async def test_setup_exceptions(
     assert mock_config_entry.state == expected_state
 
 
-async def test_migrations(hass: HomeAssistant) -> None:
+async def test_migrations(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+) -> None:
     """Test migration from v1 config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -73,7 +77,8 @@ async def test_migrations(hass: HomeAssistant) -> None:
     assert entry.data[CONF_API_TOKEN] == "test_key"
     assert entry.data[CONF_VERIFY_SSL] is True
     # Confirm we went through all current migrations
-    assert entry.version == 4
+    assert entry.version == 5
+    assert entry.unique_id == TEST_INSTANCE_ID
 
 
 @pytest.mark.parametrize(
@@ -110,6 +115,7 @@ async def test_remove_config_entry_device(
 
 async def test_migration_v3_to_v4(
     hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -117,8 +123,9 @@ async def test_migration_v3_to_v4(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "http://test_host",
-            CONF_API_KEY: "test_key",
+            CONF_URL: "http://test_host",
+            CONF_API_TOKEN: "test_key",
+            CONF_VERIFY_SSL: True,
         },
         unique_id="1",
         version=3,
@@ -156,7 +163,7 @@ async def test_migration_v3_to_v4(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 4
+    assert entry.version == 5
 
     # Fetch again, to assert the new identifiers
     container_after = device_registry.async_get(container_device.id)
@@ -167,6 +174,61 @@ async def test_migration_v3_to_v4(
         (DOMAIN, f"{entry.entry_id}_1_adguard"),
     }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+
+
+async def test_migration_v4_to_v5(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+) -> None:
+    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_TEST_CONFIG,
+        unique_id=MOCK_TEST_CONFIG[CONF_API_TOKEN],
+        version=4,
+    )
+    entry.add_to_hass(hass)
+    assert entry.version == 4
+    assert entry.unique_id == MOCK_TEST_CONFIG[CONF_API_TOKEN]
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 5
+    assert entry.unique_id == TEST_INSTANCE_ID
+
+
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        (PortainerAuthenticationError),
+        (PortainerConnectionError),
+        (PortainerTimeoutError),
+        (Exception("Some other error")),
+    ],
+)
+async def test_migration_v4_to_v5_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    exception: type[Exception],
+) -> None:
+    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_TEST_CONFIG,
+        unique_id=MOCK_TEST_CONFIG[CONF_API_TOKEN],
+        version=4,
+    )
+    entry.add_to_hass(hass)
+    assert entry.version == 4
+    assert entry.unique_id == MOCK_TEST_CONFIG[CONF_API_TOKEN]
+
+    mock_portainer_client.portainer_system_status.side_effect = exception
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_registry(
