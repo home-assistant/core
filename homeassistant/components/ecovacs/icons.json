@@ -48,9 +48,6 @@
       "reset_lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
       },
-      "start_intelligent_hosting": {
-        "default": "mdi:robot-vacuum"
-      },
       "station_action_clean_base": {
         "default": "mdi:home"
       },

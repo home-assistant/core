@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 
 from deebot_client.capabilities import (
-    Capabilities,
     CapabilityExecute,
     CapabilityExecuteTypes,
     CapabilityLifeSpan,
@@ -24,9 +23,6 @@ from .entity import (
     EcovacsEntity,
 )
 from .util import get_supported_entities
-
-_CLEAN_V2_COMMAND = "clean_V2"
-_INTELLIGENT_HOSTING_ARGS = {"act": "start", "content": {"type": "entrust"}}
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -82,12 +78,6 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
 )
 
 
-_INTELLIGENT_HOSTING_DESCRIPTION = ButtonEntityDescription(
-    key="start_intelligent_hosting",
-    translation_key="start_intelligent_hosting",
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
@@ -114,11 +104,6 @@ async def async_setup_entry(
         if device.capabilities.station
         for description in STATION_ENTITY_DESCRIPTIONS
         if description.action in device.capabilities.station.action.types
-    )
-    entities.extend(
-        EcovacsIntelligentHostingButtonEntity(device, device.capabilities)
-        for device in controller.devices
-        if device.capabilities.clean.work_mode is not None
     )
     async_add_entities(entities)
 
@@ -163,19 +148,4 @@ class EcovacsStationActionButtonEntity(
         """Press the button."""
         await self._device.execute_command(
             self._capability.execute(self.entity_description.action)
-        )
-
-
-class EcovacsIntelligentHostingButtonEntity(
-    EcovacsEntity[Capabilities],
-    ButtonEntity,
-):
-    """Ecovacs Intelligent Hosting (AI Cleaning) button entity."""
-
-    entity_description = _INTELLIGENT_HOSTING_DESCRIPTION
-
-    async def async_press(self) -> None:
-        """Start Intelligent Hosting (AI Cleaning) mode."""
-        await self._device.execute_command(
-            self._capability.custom.set(_CLEAN_V2_COMMAND, _INTELLIGENT_HOSTING_ARGS)
         )

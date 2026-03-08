@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import CapabilityMap, CapabilitySet, CapabilitySetTypes
 from deebot_client.command import CommandWithMessageHandling
+from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.device import Device
 from deebot_client.events import WorkModeEvent, auto_empty
 from deebot_client.events.base import Event
@@ -40,6 +41,20 @@ class EcovacsSelectEntityDescription[EventT: Event](
     )
 
 
+_INTELLIGENT_HOSTING = "intelligent_hosting"
+
+
+def _set_work_mode(
+    cap: CapabilitySetTypes, option: str
+) -> CommandWithMessageHandling:
+    """Return the command for the given work mode option."""
+    if option == _INTELLIGENT_HOSTING:
+        return CustomCommand(
+            "clean_V2", {"act": "start", "content": {"type": "entrust"}}
+        )
+    return cap.set(option)
+
+
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterAmountEvent](
         capability_fn=lambda caps: (
@@ -56,7 +71,9 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WorkModeEvent](
         capability_fn=lambda caps: caps.clean.work_mode,
         current_option_fn=lambda e: get_name_key(e.mode),
-        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
+        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types]
+        + [_INTELLIGENT_HOSTING],
+        set_option_fn=_set_work_mode,
         key="work_mode",
         translation_key="work_mode",
         entity_registry_enabled_default=False,

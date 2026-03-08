@@ -3,6 +3,7 @@
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.commands.json.auto_empty import SetAutoEmpty
+from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.event_bus import EventBus
 from deebot_client.events import auto_empty
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent, Map
@@ -135,6 +136,13 @@ async def test_selects(
             "auto",
             "smart",
             SetAutoEmpty(None, auto_empty.Frequency.SMART),
+        ),
+        (
+            "n0vyif",
+            "select.x8_pro_omni_work_mode",
+            "vacuum",
+            "intelligent_hosting",
+            CustomCommand("clean_V2", {"act": "start", "content": {"type": "entrust"}}),
         ),
     ],
 )

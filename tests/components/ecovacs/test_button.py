@@ -7,7 +7,6 @@ from deebot_client.commands.json import (
     SetRelocationState,
     station_action,
 )
-from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.events import LifeSpan
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -96,44 +95,8 @@ def platforms() -> Platform | list[Platform]:
                 ),
             ],
         ),
-        (
-            "n0vyif",
-            [
-                ("button.x8_pro_omni_relocate", SetRelocationState()),
-                (
-                    "button.x8_pro_omni_reset_main_brush_lifespan",
-                    ResetLifeSpan(LifeSpan.BRUSH),
-                ),
-                (
-                    "button.x8_pro_omni_reset_filter_lifespan",
-                    ResetLifeSpan(LifeSpan.FILTER),
-                ),
-                (
-                    "button.x8_pro_omni_reset_hand_filter_lifespan",
-                    ResetLifeSpan(LifeSpan.HAND_FILTER),
-                ),
-                (
-                    "button.x8_pro_omni_reset_side_brush_lifespan",
-                    ResetLifeSpan(LifeSpan.SIDE_BRUSH),
-                ),
-                (
-                    "button.x8_pro_omni_reset_unit_care_lifespan",
-                    ResetLifeSpan(LifeSpan.UNIT_CARE),
-                ),
-                (
-                    "button.x8_pro_omni_empty_dustbin",
-                    station_action.StationAction(StationAction.EMPTY_DUSTBIN),
-                ),
-                (
-                    "button.x8_pro_omni_start_intelligent_hosting",
-                    CustomCommand(
-                        "clean_V2", {"act": "start", "content": {"type": "entrust"}}
-                    ),
-                ),
-            ],
-        ),
     ],
-    ids=["yna5x1", "5xu9h3", "qhe2o2", "n0vyif"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2"],
 )
 async def test_buttons(
     hass: HomeAssistant,

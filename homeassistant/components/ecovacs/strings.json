@@ -82,9 +82,6 @@
       "reset_lifespan_uv_sanitizer": {
         "name": "Reset UV sanitizer lifespan"
       },
-      "start_intelligent_hosting": {
-        "name": "Start Intelligent Hosting"
-      },
       "station_action_clean_base": {
         "name": "Clean base"
       },
@@ -154,6 +151,7 @@
       "work_mode": {
         "name": "Work mode",
         "state": {
+          "intelligent_hosting": "Intelligent Hosting",
           "mop": "Mop",
           "mop_after_vacuum": "Mop after vacuum",
           "vacuum": "Vacuum",
