@@ -57,7 +57,7 @@ async def _validate_credentials(
 
     Returns an error key string on failure, or None on success.
     """
-    websession = async_get_clientsession(hass) if hass is not None else None
+    websession = async_get_clientsession(hass)
     api: PajGpsApi | None = None
     try:
         api = PajGpsApi(email=email, password=password, websession=websession)
