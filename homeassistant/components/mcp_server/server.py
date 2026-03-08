@@ -9,6 +9,7 @@ See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-ex
 
 from collections.abc import Awaitable, Callable, Sequence
 from hashlib import blake2s
+from itertools import count
 import json
 import logging
 from typing import Any
@@ -61,23 +62,13 @@ def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, str]:
     """Return a mapping of exposed MCP tool names to their underlying tool names."""
     exposed_names: dict[str, str] = {}
 
+    exposed_names: dict[str, str] = {}
     for tool in tools:
-        collision_index = 0
-        while True:
+        for collision_index in count():
             mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
             if mcp_tool_name not in exposed_names:
                 exposed_names[mcp_tool_name] = tool.name
                 break
-
-            if exposed_names[mcp_tool_name] == tool.name:
-                _LOGGER.warning(
-                    "Skipping duplicate MCP tool name %s for tool %s",
-                    mcp_tool_name,
-                    tool.name,
-                )
-                break
-
-            collision_index += 1
 
     return exposed_names
 
