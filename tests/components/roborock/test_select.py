@@ -7,6 +7,7 @@ import pytest
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     RoborockDockDustCollectionModeCode,
+    RoborockDockWashTowelModeCode,
     WaterLevelMapping,
     ZeoProgram,
 )
@@ -383,3 +384,61 @@ async def test_update_failure_zeo_invalid_option() -> None:
         await entity.async_select_option("invalid_option")
 
     coordinator.api.set_value.assert_not_called()
+
+
+async def test_mop_wash_mode_state(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that the mop wash mode select shows the correct current mode."""
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.wash_towel_mode
+    fake_vacuum.v1_properties.wash_towel_mode.wash_mode = (
+        RoborockDockWashTowelModeCode.deep
+    )
+
+    await async_setup_component(hass, DOMAIN, {})
+
+    select_entity = hass.states.get("select.roborock_s7_maxv_dock_mop_wash_mode")
+    assert select_entity
+    assert select_entity.state == "deep"
+
+
+async def test_mop_wash_mode_select(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that selecting a mop wash mode sends the correct command."""
+    entity_id = "select.roborock_s7_maxv_dock_mop_wash_mode"
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "deep"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.command.send.call_count == 1
+    assert fake_vacuum.v1_properties.command.send.call_args == call(
+        RoborockCommand.SET_WASH_TOWEL_MODE,
+        params=[RoborockDockWashTowelModeCode.as_dict()["deep"]],
+    )
+
+
+async def test_mop_wash_mode_not_created_when_none(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that the mop wash mode select is absent when wash_towel_mode is None."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.wash_towel_mode = None
+
+    await async_setup_component(hass, DOMAIN, {})
+
+    assert hass.states.get("select.roborock_s7_maxv_dock_mop_wash_mode") is None

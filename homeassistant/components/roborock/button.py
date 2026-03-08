@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import itertools
 import logging
 from typing import Any
 
+from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -97,6 +100,41 @@ ZEO_BUTTON_DESCRIPTIONS = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockDockCommandButtonDescription(ButtonEntityDescription):
+    """Describes a Roborock dock command button entity."""
+
+    api_command: RoborockCommand
+    availability_fn: Callable[[PropertiesApi], bool]
+    """Return True if this button should be created for the given device."""
+
+
+DOCK_COMMAND_BUTTON_DESCRIPTIONS: list[RoborockDockCommandButtonDescription] = [
+    RoborockDockCommandButtonDescription(
+        key="dock_empty",
+        translation_key="dock_empty",
+        api_command=RoborockCommand.APP_START_COLLECT_DUST,
+        availability_fn=lambda api: api.dust_collection_mode is not None,
+        entity_registry_enabled_default=False,
+    ),
+    RoborockDockCommandButtonDescription(
+        key="dock_wash_mop",
+        translation_key="dock_wash_mop",
+        api_command=RoborockCommand.APP_START_WASH,
+        # wash_towel_mode being non-None is the API proxy for "has mop washing station"
+        availability_fn=lambda api: api.wash_towel_mode is not None,
+        entity_registry_enabled_default=False,
+    ),
+    RoborockDockCommandButtonDescription(
+        key="dock_stop_drying",
+        translation_key="dock_stop_drying",
+        api_command=RoborockCommand.APP_STOP_WASH,
+        availability_fn=lambda api: api.wash_towel_mode is not None,
+        entity_registry_enabled_default=False,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -138,6 +176,13 @@ async def async_setup_entry(
                 for coordinator in config_entry.runtime_data.a01
                 if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
                 for description in ZEO_BUTTON_DESCRIPTIONS
+            ),
+            (
+                RoborockDockCommandButtonEntity(coordinator, description)
+                for coordinator in config_entry.runtime_data.v1
+                for description in DOCK_COMMAND_BUTTON_DESCRIPTIONS
+                if isinstance(coordinator, RoborockDataUpdateCoordinator)
+                if description.availability_fn(coordinator.properties_api)
             ),
         )
     )
@@ -233,3 +278,26 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
             ) from err
         finally:
             await self.coordinator.async_request_refresh()
+
+
+class RoborockDockCommandButtonEntity(RoborockEntityV1, ButtonEntity):
+    """A class to define Roborock dock command button entities."""
+
+    entity_description: RoborockDockCommandButtonDescription
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockDockCommandButtonDescription,
+    ) -> None:
+        """Create a dock command button entity."""
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator.dock_device_info,
+            api=coordinator.properties_api.command,
+        )
+        self.entity_description = entity_description
+
+    async def async_press(self, **kwargs: Any) -> None:
+        """Send the dock command."""
+        await self.send(self.entity_description.api_command)

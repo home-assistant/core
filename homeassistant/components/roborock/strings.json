@@ -84,6 +84,15 @@
       }
     },
     "button": {
+      "dock_empty": {
+        "name": "Empty"
+      },
+      "dock_stop_drying": {
+        "name": "Stop drying"
+      },
+      "dock_wash_mop": {
+        "name": "Wash mop"
+      },
       "pause": {
         "name": "Pause"
       },
@@ -191,6 +200,15 @@
           "fast": "Fast",
           "smart_mode": "SmartPlan",
           "standard": "Standard"
+        }
+      },
+      "mop_wash_mode": {
+        "name": "Mop wash mode",
+        "state": {
+          "balanced": "Balanced",
+          "deep": "Deep",
+          "light": "Light",
+          "smart": "Smart"
         }
       },
       "program": {
