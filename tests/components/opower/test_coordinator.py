@@ -269,7 +269,7 @@ async def test_coordinator_api_exceptions(
 
         async def side_effect(account, agg_type, start, end):
             if agg_type == aggregate_type:
-                raise ApiException("Error", "http://example.com")
+                raise ApiException(message="Error", url="http://example.com")
             # For other calls, return some dummy data to proceed if needed
             return [
                 CostRead(
@@ -283,7 +283,7 @@ async def test_coordinator_api_exceptions(
         mock_opower_api.async_get_cost_reads.side_effect = side_effect
     else:
         getattr(mock_opower_api, method).side_effect = ApiException(
-            "Error", "http://example.com"
+            message="Error", url="http://example.com"
         )
 
     with pytest.raises(ApiException):
