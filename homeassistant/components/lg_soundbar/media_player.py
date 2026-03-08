@@ -41,7 +41,9 @@ class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     _attr_should_poll = False
-    _attr_state = MediaPlayerState.ON
+    _attr_state = MediaPlayerState.OFF
+    _attr_device_on = False
+    _attr_stream_type = 0
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -113,6 +115,7 @@ class LGDevice(MediaPlayerEntity):
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
             if "b_powerstatus" in data:
+                self._attr_device_on = data["b_powerstatus"]
                 if data["b_powerstatus"]:
                     self._attr_state = MediaPlayerState.ON
                 else:
@@ -158,16 +161,32 @@ class LGDevice(MediaPlayerEntity):
     def _update_playinfo(self, data: dict[str, Any]) -> None:
         """Update the player info."""
         if "i_play_ctrl" in data:
-            if data["i_play_ctrl"] == 0:
-                self._attr_state = MediaPlayerState.PLAYING
-            else:
-                self._attr_state = MediaPlayerState.PAUSED
+            if self._attr_device_on:
+                if data["i_play_ctrl"] == 0:
+                    self._attr_state = MediaPlayerState.PLAYING
+                else:
+                    self._attr_state = MediaPlayerState.PAUSED
+        if "i_stream_type" in data:
+            self._attr_stream_type = data["i_stream_type"]
+            if data["i_stream_type"] == 0:
+                self._attr_media_image_url = None
+                self._attr_media_artist = None
+                self._attr_media_title = None
         if "s_albumart" in data:
-            self._attr_media_image_url = data["s_albumart"]
+            if data["s_albumart"].strip():
+                self._attr_media_image_url = data["s_albumart"]
+            else:
+                self._attr_media_image_url = None
         if "s_artist" in data:
-            self._attr_media_artist = data["s_artist"]
+            if data["s_artist"].strip():
+                self._attr_media_artist = data["s_artist"]
+            else:
+                self._attr_media_artist = None
         if "s_title" in data:
-            self._attr_media_title = data["s_title"]
+            if data["s_title"].strip():
+                self._attr_media_title = data["s_title"]
+            else:
+                self._attr_media_title = None
         if "b_support_play_ctrl" in data:
             self._support_play_control = data["b_support_play_ctrl"]
 
