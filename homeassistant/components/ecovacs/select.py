@@ -131,9 +131,12 @@ class EcovacsSelectEntity[EventT: Event](
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
+        # Always optimistically update the local state so the UI reflects the selection
+        # immediately, even if the robot doesn't send a confirming event (e.g. when the
+        # target mode was already the robot's active mode before the change).
+        self._attr_current_option = option
+        self.async_write_ha_state()
         if option in self.entity_description.local_options:
-            self._attr_current_option = option
-            self.async_write_ha_state()
             return
         await self._device.execute_command(
             self.entity_description.set_option_fn(self._capability, option)
