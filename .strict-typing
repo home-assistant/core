@@ -123,7 +123,6 @@ homeassistant.components.blueprint.*
 homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
-homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.bosch_alarm.*
 homeassistant.components.braviatv.*
@@ -545,6 +544,7 @@ homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
+homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*
