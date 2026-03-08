@@ -7,11 +7,13 @@ here is independent of the lower level transport protocol.
 See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-example
 """
 
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
+from functools import cache
 from hashlib import blake2s
 from itertools import count
 import json
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from mcp import types
@@ -58,16 +60,15 @@ def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
     return f"{tool_name[:prefix_length]}_{digest}"
 
 
-def _get_exposed_tool_names(tools: list[llm.Tool]) -> dict[str, str]:
+def _get_exposed_tool_names(tool_names: Sequence[str]) -> dict[str, str]:
     """Return a mapping of exposed MCP tool names to their underlying tool names."""
     exposed_names: dict[str, str] = {}
 
-    exposed_names: dict[str, str] = {}
-    for tool in tools:
+    for tool_name in tool_names:
         for collision_index in count():
-            mcp_tool_name = _get_mcp_tool_name(tool.name, collision_index)
+            mcp_tool_name = _get_mcp_tool_name(tool_name, collision_index)
             if mcp_tool_name not in exposed_names:
-                exposed_names[mcp_tool_name] = tool.name
+                exposed_names[mcp_tool_name] = tool_name
                 break
 
     return exposed_names
@@ -81,27 +82,34 @@ class _McpTools:
     ) -> None:
         """Initialize the MCP tool cache."""
         self._get_api_instance = get_api_instance
-        self._tool_name_by_alias: dict[str, str] = {}
-        self._alias_by_tool_name: dict[str, str] = {}
-        self._tool_signature: tuple[str, ...] | None = None
 
-    def _refresh(self, tools: list[llm.Tool]) -> None:
-        """Refresh cached aliases if the tool set changed."""
-        current_signature = tuple(tool.name for tool in tools)
-        if self._tool_signature == current_signature:
-            return
+    @cache
+    def _get_tool_maps(
+        self, tool_names: tuple[str, ...]
+    ) -> tuple[Mapping[str, str], Mapping[str, str]]:
+        """Return cached alias mappings for a tool-name signature."""
+        tool_name_by_alias = MappingProxyType(
+            _get_exposed_tool_names(tool_names)
+        )
+        alias_by_tool_name = MappingProxyType(
+            {
+                tool_name: alias
+                for alias, tool_name in tool_name_by_alias.items()
+            }
+        )
+        return tool_name_by_alias, alias_by_tool_name
 
-        self._tool_name_by_alias = _get_exposed_tool_names(tools)
-        self._alias_by_tool_name = {
-            tool_name: alias
-            for alias, tool_name in self._tool_name_by_alias.items()
-        }
-        self._tool_signature = current_signature
+    def _get_tool_maps_for_api(
+        self, llm_api: llm.APIInstance
+    ) -> tuple[Mapping[str, str], Mapping[str, str]]:
+        """Return cached alias mappings for an API instance."""
+        tool_names = tuple(tool.name for tool in llm_api.tools)
+        return self._get_tool_maps(tool_names)
 
     async def async_list_tools(self) -> list[types.Tool]:
         """Return MCP-formatted tools for the current API instance."""
         llm_api = await self._get_api_instance()
-        self._refresh(llm_api.tools)
+        _, alias_by_tool_name = self._get_tool_maps_for_api(llm_api)
 
         listed_tool_names: set[str] = set()
         formatted_tools: list[types.Tool] = []
@@ -112,7 +120,7 @@ class _McpTools:
             listed_tool_names.add(tool.name)
             formatted_tools.append(
                 _format_tool(
-                    self._alias_by_tool_name[tool.name],
+                    alias_by_tool_name[tool.name],
                     tool,
                     llm_api.custom_serializer,
                 )
@@ -120,13 +128,10 @@ class _McpTools:
 
         return formatted_tools
 
-    async def async_resolve_tool_name(
-        self, mcp_tool_name: str
-    ) -> tuple[llm.APIInstance, str]:
+    def resolve_tool_name(self, llm_api: llm.APIInstance, mcp_tool_name: str) -> str:
         """Resolve an MCP tool name to the current Home Assistant tool name."""
-        llm_api = await self._get_api_instance()
-        self._refresh(llm_api.tools)
-        return llm_api, self._tool_name_by_alias.get(mcp_tool_name, mcp_tool_name)
+        tool_name_by_alias, _ = self._get_tool_maps_for_api(llm_api)
+        return tool_name_by_alias.get(mcp_tool_name, mcp_tool_name)
 
 
 async def create_server(
@@ -188,7 +193,8 @@ async def create_server(
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
-        llm_api, tool_name = await mcp_tools.async_resolve_tool_name(name)
+        llm_api = await get_api_instance()
+        tool_name = mcp_tools.resolve_tool_name(llm_api, name)
         tool_input = llm.ToolInput(
             tool_name=tool_name,
             tool_args=arguments,
