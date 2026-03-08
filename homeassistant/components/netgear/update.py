@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import NetgearConfigEntry, NetgearFirmwareCoordinator
 from .entity import NetgearRouterCoordinatorEntity
-from .router import NetgearRouter
 
 LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +25,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Netgear component."""
-    router = entry.runtime_data.router
     coordinator = entry.runtime_data.coordinator_firmware
-    entities = [NetgearUpdateEntity(coordinator, router)]
+    entities = [NetgearUpdateEntity(coordinator)]
 
     async_add_entities(entities)
 
@@ -44,11 +42,10 @@ class NetgearUpdateEntity(
     def __init__(
         self,
         coordinator: NetgearFirmwareCoordinator,
-        router: NetgearRouter,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router)
-        self._attr_unique_id = f"{router.serial_number}-update"
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.router.serial_number}-update"
 
     @property
     def installed_version(self) -> str | None:

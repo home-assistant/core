@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import NetgearConfigEntry, NetgearDataCoordinator
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearDeviceEntity, NetgearRouterEntity
 from .router import NetgearRouter
 
@@ -126,9 +126,7 @@ async def async_setup_entry(
 
             new_entities.extend(
                 [
-                    NetgearAllowBlock(
-                        coordinator_tracker, router, device, entity_description
-                    )
+                    NetgearAllowBlock(coordinator_tracker, device, entity_description)
                     for entity_description in SWITCH_TYPES
                 ]
             )
@@ -149,13 +147,12 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: NetgearDataCoordinator[bool],
-        router: NetgearRouter,
+        coordinator: NetgearTrackerCoordinator,
         device: dict,
         entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router, device)
+        super().__init__(coordinator, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._mac}-{entity_description.key}"
         self.async_update_device()

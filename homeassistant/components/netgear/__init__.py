@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import Any
 
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
@@ -14,17 +12,18 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import PLATFORMS
 from .coordinator import (
     NetgearConfigEntry,
-    NetgearDataCoordinator,
     NetgearFirmwareCoordinator,
+    NetgearLinkCoordinator,
     NetgearRuntimeData,
+    NetgearSpeedTestCoordinator,
+    NetgearTrackerCoordinator,
+    NetgearTrafficMeterCoordinator,
+    NetgearUtilizationCoordinator,
 )
 from .errors import CannotLoginException
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=30)
-SPEED_TEST_INTERVAL = timedelta(hours=2)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> bool:
@@ -52,70 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
             router.ssl,
         )
 
-    async def async_update_devices() -> bool:
-        """Fetch data from the router."""
-        if router.track_devices:
-            return await router.async_update_device_trackers()
-        return False
-
-    async def async_update_traffic_meter() -> dict[str, Any] | None:
-        """Fetch data from the router."""
-        return await router.async_get_traffic_meter()
-
-    async def async_update_speed_test() -> dict[str, Any] | None:
-        """Fetch data from the router."""
-        return await router.async_get_speed_test()
-
-    async def async_update_utilization() -> dict[str, Any] | None:
-        """Fetch data from the router."""
-        return await router.async_get_utilization()
-
-    async def async_check_link_status() -> dict[str, Any] | None:
-        """Fetch data from the router."""
-        return await router.async_get_link_status()
-
     # Create update coordinators
-    coordinator_tracker = NetgearDataCoordinator(
-        hass,
-        router,
-        entry,
-        name="Devices",
-        update_method=async_update_devices,
-        update_interval=SCAN_INTERVAL,
-    )
-    coordinator_traffic_meter = NetgearDataCoordinator(
-        hass,
-        router,
-        entry,
-        name="Traffic meter",
-        update_method=async_update_traffic_meter,
-        update_interval=SCAN_INTERVAL,
-    )
-    coordinator_speed_test = NetgearDataCoordinator(
-        hass,
-        router,
-        entry,
-        name="Speed test",
-        update_method=async_update_speed_test,
-        update_interval=SPEED_TEST_INTERVAL,
-    )
+    coordinator_tracker = NetgearTrackerCoordinator(hass, router, entry)
+    coordinator_traffic_meter = NetgearTrafficMeterCoordinator(hass, router, entry)
+    coordinator_speed_test = NetgearSpeedTestCoordinator(hass, router, entry)
     coordinator_firmware = NetgearFirmwareCoordinator(hass, router, entry)
-    coordinator_utilization = NetgearDataCoordinator(
-        hass,
-        router,
-        entry,
-        name="Utilization",
-        update_method=async_update_utilization,
-        update_interval=SCAN_INTERVAL,
-    )
-    coordinator_link = NetgearDataCoordinator(
-        hass,
-        router,
-        entry,
-        name="Ethernet Link Status",
-        update_method=async_check_link_status,
-        update_interval=SCAN_INTERVAL,
-    )
+    coordinator_utilization = NetgearUtilizationCoordinator(hass, router, entry)
+    coordinator_link = NetgearLinkCoordinator(hass, router, entry)
 
     if router.track_devices:
         await coordinator_tracker.async_config_entry_first_refresh()
