@@ -17,7 +17,7 @@ Open API V1 (API token):
   successful V1 API call is unnecessary — if it returned, the token was valid.
 
 Error handling pattern for reauth:
-- Classic API: check login_response["success"] and msg == LOGIN_INVALID_AUTH_CODE
+- Classic API: check NOT login_response["success"] and msg == LOGIN_INVALID_AUTH_CODE
   → raise ConfigEntryAuthFailed
 - V1 API: catch GrowattV1ApiError with error_code == V1_API_ERROR_NO_PRIVILEGE
   → raise ConfigEntryAuthFailed
