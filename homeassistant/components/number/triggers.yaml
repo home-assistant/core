@@ -1,0 +1,6 @@
+changed:
+  target:
+    entity:
+      domain:
+        - number
+        - input_number
