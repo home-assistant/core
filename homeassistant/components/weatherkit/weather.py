@@ -94,18 +94,22 @@ condition_code_to_hass = {
 
 
 def _map_daily_forecast(forecast: dict[str, Any]) -> Forecast:
+    snowfall = forecast.get("snowfallAmount", 0)
     return {
         "datetime": forecast["forecastStart"],
         "condition": condition_code_to_hass[forecast["conditionCode"]],
         "native_temperature": forecast["temperatureMax"],
         "native_templow": forecast["temperatureMin"],
-        "native_precipitation": forecast["precipitationAmount"],
+        "native_precipitation": snowfall
+        if snowfall > 0
+        else forecast["precipitationAmount"],
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "uv_index": forecast["maxUvIndex"],
     }
 
 
 def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
+    snowfall_amount = forecast.get("snowfallAmount", 0)
     return {
         "datetime": forecast["forecastStart"],
         "condition": condition_code_to_hass[forecast["conditionCode"]],
@@ -117,7 +121,9 @@ def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
         "native_wind_speed": forecast["windSpeed"],
         "wind_bearing": forecast.get("windDirection"),
         "humidity": forecast["humidity"] * 100,
-        "native_precipitation": forecast.get("precipitationAmount"),
+        "native_precipitation": snowfall_amount
+        if snowfall_amount > 0
+        else forecast.get("precipitationAmount"),
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "cloud_coverage": forecast["cloudCover"] * 100,
         "uv_index": forecast["uvIndex"],

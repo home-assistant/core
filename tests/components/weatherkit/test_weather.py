@@ -1,5 +1,7 @@
 """Weather entity tests for the WeatherKit integration."""
 
+from typing import Any
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,6 +22,10 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.components.weatherkit.const import ATTRIBUTION
+from homeassistant.components.weatherkit.weather import (
+    _map_daily_forecast,
+    _map_hourly_forecast,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
@@ -128,3 +134,70 @@ async def test_daily_forecast(
         return_response=True,
     )
     assert response == snapshot
+
+
+def _daily_forecast_data(**overrides: Any) -> dict[str, Any]:
+    """Return a minimal daily forecast dict with optional overrides."""
+    base: dict[str, Any] = {
+        "forecastStart": "2023-12-01T07:00:00Z",
+        "conditionCode": "Snow",
+        "temperatureMax": -2.0,
+        "temperatureMin": -10.0,
+        "precipitationAmount": 5.0,
+        "precipitationChance": 0.8,
+        "snowfallAmount": 0.0,
+        "maxUvIndex": 2,
+    }
+    base.update(overrides)
+    return base
+
+
+def _hourly_forecast_data(**overrides: Any) -> dict[str, Any]:
+    """Return a minimal hourly forecast dict with optional overrides."""
+    base: dict[str, Any] = {
+        "forecastStart": "2023-12-01T08:00:00Z",
+        "conditionCode": "Snow",
+        "temperature": -5.0,
+        "temperatureApparent": -8.0,
+        "temperatureDewPoint": -6.0,
+        "pressure": 1015.0,
+        "windGust": 20.0,
+        "windSpeed": 10.0,
+        "windDirection": 180,
+        "humidity": 0.85,
+        "precipitationAmount": 3.0,
+        "precipitationChance": 0.7,
+        "snowfallAmount": 0.0,
+        "cloudCover": 0.9,
+        "uvIndex": 1,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_daily_forecast_uses_snowfall_when_positive() -> None:
+    """Test that snowfallAmount is used when it is greater than zero."""
+    forecast = _daily_forecast_data(snowfallAmount=25.0, precipitationAmount=5.0)
+    result = _map_daily_forecast(forecast)
+    assert result["native_precipitation"] == 25.0
+
+
+def test_daily_forecast_uses_precipitation_when_no_snowfall() -> None:
+    """Test that precipitationAmount is used when snowfallAmount is zero."""
+    forecast = _daily_forecast_data(snowfallAmount=0.0, precipitationAmount=5.0)
+    result = _map_daily_forecast(forecast)
+    assert result["native_precipitation"] == 5.0
+
+
+def test_hourly_forecast_uses_snowfall_when_positive() -> None:
+    """Test that snowfallAmount is used when it is greater than zero."""
+    forecast = _hourly_forecast_data(snowfallAmount=12.0, precipitationAmount=3.0)
+    result = _map_hourly_forecast(forecast)
+    assert result["native_precipitation"] == 12.0
+
+
+def test_hourly_forecast_uses_precipitation_when_no_snowfall() -> None:
+    """Test that precipitationAmount is used when snowfallAmount is zero."""
+    forecast = _hourly_forecast_data(snowfallAmount=0.0, precipitationAmount=3.0)
+    result = _map_hourly_forecast(forecast)
+    assert result["native_precipitation"] == 3.0
