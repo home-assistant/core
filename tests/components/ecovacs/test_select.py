@@ -186,9 +186,9 @@ async def test_work_mode_intelligent_hosting_local_only(
     )
     # intelligent_hosting is stored locally in HA only — no command sent to robot
     device._execute_command.assert_not_called()
-    assert (
-        state := hass.states.get(entity_id)
-    ), f"State of {entity_id} is missing after option change"
+    assert (state := hass.states.get(entity_id)), (
+        f"State of {entity_id} is missing after option change"
+    )
     assert state.state == "intelligent_hosting"
 
 

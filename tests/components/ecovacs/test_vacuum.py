@@ -14,7 +14,12 @@ import pytest
 from homeassistant.components import select, vacuum
 from homeassistant.components.ecovacs.const import INTELLIGENT_HOSTING
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    SERVICE_SELECT_OPTION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 

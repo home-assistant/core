@@ -59,8 +59,9 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WorkModeEvent](
         capability_fn=lambda caps: caps.clean.work_mode,
         current_option_fn=lambda e: get_name_key(e.mode),
-        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types]
-        + [INTELLIGENT_HOSTING],
+        options_fn=lambda cap: (
+            [get_name_key(mode) for mode in cap.types] + [INTELLIGENT_HOSTING]
+        ),
         local_options=frozenset({INTELLIGENT_HOSTING}),
         key="work_mode",
         translation_key="work_mode",
