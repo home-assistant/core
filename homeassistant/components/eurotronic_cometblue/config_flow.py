@@ -149,7 +149,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
 
-            await self.async_set_unique_id(address, raise_on_progress=False)
+            await self.async_set_unique_id(format_mac(address))
             self._abort_if_unique_id_configured()
 
             self._discovery_info = next(

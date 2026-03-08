@@ -1,8 +1,9 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "There aren't any Comet Blue Bluetooth TRVs nearby.",
-      "reconfigure_successful": "Re-configuration was successful"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "No Comet Blue Bluetooth TRVs discovered.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "flow_title": "{name}",
     "step": {
@@ -13,7 +14,13 @@
           "timeout": "Connection timeout in seconds"
         },
         "description": "Configure Comet Blue TRV?",
-        "title": "Discovered Comet Blue TRV"
+        "title": "Comet Blue TRV"
+      },
+      "pick_device": {
+        "data": {
+          "address": "Discovered Comet Blue devices"
+        },
+        "title": "Comet Blue TRV"
       }
     }
   },
