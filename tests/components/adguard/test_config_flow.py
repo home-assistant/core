@@ -173,7 +173,7 @@ async def test_full_flow_implementation(
     assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
-        CONF_PATH: "/control",
+        CONF_PATH: DEFAULT_BASE_PATH,
         CONF_PORT: 3000,
         CONF_SSL: False,
         CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
@@ -322,7 +322,7 @@ async def test_hassio_confirm(
     assert config_entry.data == {
         CONF_HOST: "mock-adguard",
         CONF_PASSWORD: None,
-        CONF_PATH: "/control",
+        CONF_PATH: DEFAULT_BASE_PATH,
         CONF_PORT: 3000,
         CONF_SSL: False,
         CONF_USERNAME: None,
