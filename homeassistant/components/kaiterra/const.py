@@ -15,7 +15,7 @@ MANUFACTURER = "Kaiterra"
 CONF_AQI_STANDARD = "aqi_standard"
 
 DEFAULT_AQI_STANDARD = "us"
-UPDATE_INTERVAL = timedelta(seconds=30)
+UPDATE_INTERVAL = timedelta(minutes=1)
 PLATFORMS = [Platform.SENSOR]
 AVAILABLE_AQI_STANDARDS = ["us", "cn", "in"]
 DEFAULT_MODEL = "Air quality monitor"
@@ -53,6 +53,5 @@ AQI_LEVEL = {
     ],
 }
 
-ATTR_VOC = "volatile_organic_compounds"
 ATTR_AQI_LEVEL = "air_quality_index_level"
 ATTR_AQI_POLLUTANT = "air_quality_index_pollutant"

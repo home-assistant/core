@@ -8,17 +8,21 @@ import pytest
 
 from homeassistant.components.kaiterra.api_data import (
     KaiterraApiAuthError,
+    KaiterraApiClient,
     KaiterraApiError,
 )
-from homeassistant.components.kaiterra.const import AQI_SCALE, CONF_AQI_STANDARD, DOMAIN
+from homeassistant.components.kaiterra.const import CONF_AQI_STANDARD, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 
 
-async def test_user_flow_success(hass, mock_kaiterra_device_data) -> None:
+async def test_user_flow_success(
+    hass: HomeAssistant, mock_kaiterra_device_data
+) -> None:
     """Test a successful user flow."""
     with patch(
         "homeassistant.components.kaiterra.async_setup_entry",
@@ -36,21 +40,21 @@ async def test_user_flow_success(hass, mock_kaiterra_device_data) -> None:
             user_input={
                 CONF_API_KEY: "test-api-key",
                 CONF_DEVICE_ID: "device-123",
-                CONF_NAME: "Office",
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Office"
+    assert result["title"] == "device-123"
     assert result["data"] == {
         CONF_API_KEY: "test-api-key",
         CONF_DEVICE_ID: "device-123",
-        CONF_NAME: "Office",
     }
     assert mock_setup_entry.call_count == 1
 
 
-async def test_user_flow_duplicate_device(hass, mock_config_entry) -> None:
+async def test_user_flow_duplicate_device(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
     """Test duplicate device configuration aborts."""
     mock_config_entry.add_to_hass(hass)
 
@@ -63,7 +67,6 @@ async def test_user_flow_duplicate_device(hass, mock_config_entry) -> None:
         user_input={
             CONF_API_KEY: "test-api-key",
             CONF_DEVICE_ID: "device-123",
-            CONF_NAME: "Office",
         },
     )
 
@@ -71,7 +74,9 @@ async def test_user_flow_duplicate_device(hass, mock_config_entry) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_invalid_auth(hass, mock_kaiterra_auth_error) -> None:
+async def test_user_flow_invalid_auth(
+    hass: HomeAssistant, mock_kaiterra_auth_error
+) -> None:
     """Test the user flow on invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -89,7 +94,9 @@ async def test_user_flow_invalid_auth(hass, mock_kaiterra_auth_error) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_flow_missing_device(hass, mock_kaiterra_device_not_found) -> None:
+async def test_user_flow_missing_device(
+    hass: HomeAssistant, mock_kaiterra_device_not_found
+) -> None:
     """Test the user flow when the device does not exist."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -107,7 +114,9 @@ async def test_user_flow_missing_device(hass, mock_kaiterra_device_not_found) ->
     assert result["errors"] == {"base": "device_not_found"}
 
 
-async def test_user_flow_connection_error(hass, mock_kaiterra_api_error) -> None:
+async def test_user_flow_connection_error(
+    hass: HomeAssistant, mock_kaiterra_api_error
+) -> None:
     """Test the user flow when the API cannot be reached."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -125,7 +134,7 @@ async def test_user_flow_connection_error(hass, mock_kaiterra_api_error) -> None
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_flow_unknown_error(hass) -> None:
+async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
     """Test the user flow on an unexpected validation error."""
     with patch(
         "homeassistant.components.kaiterra.config_flow.validate_input",
@@ -147,7 +156,7 @@ async def test_user_flow_unknown_error(hass) -> None:
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow(hass, mock_config_entry) -> None:
+async def test_options_flow(hass: HomeAssistant, mock_config_entry) -> None:
     """Test updating the AQI standard via the options flow."""
     mock_config_entry.add_to_hass(hass)
 
@@ -164,35 +173,41 @@ async def test_options_flow(hass, mock_config_entry) -> None:
 
 
 async def test_options_flow_updates_options_and_reloads(
-    hass, mock_config_entry, mock_kaiterra_device_data
+    hass: HomeAssistant, mock_config_entry, mock_kaiterra_device_data
 ) -> None:
     """Test the options flow updates the entry and reloads the integration."""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.kaiterra.KaiterraApiClient",
+        wraps=KaiterraApiClient,
+    ) as mock_api_client:
+        await setup_integration(hass, mock_config_entry)
 
-    original_coordinator = mock_config_entry.runtime_data
+        original_coordinator = mock_config_entry.runtime_data
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not mock_config_entry.update_listeners
-    assert original_coordinator.api._scale == AQI_SCALE["us"]
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert not mock_config_entry.update_listeners
+        assert mock_api_client.call_args_list[0].args[2] == "us"
 
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
+        result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_AQI_STANDARD: "cn"},
-    )
-    await hass.async_block_till_done()
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_AQI_STANDARD: "cn"},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_AQI_STANDARD: "cn"}
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.options == {CONF_AQI_STANDARD: "cn"}
     assert mock_config_entry.runtime_data is not original_coordinator
-    assert mock_config_entry.runtime_data.api._scale == AQI_SCALE["cn"]
+    assert mock_api_client.call_args_list[-1].args[2] == "cn"
 
 
-async def test_reauth_flow(hass, mock_config_entry, mock_kaiterra_device_data) -> None:
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry, mock_kaiterra_device_data
+) -> None:
     """Test reauthentication updates the API key."""
     mock_config_entry.add_to_hass(hass)
 
@@ -227,7 +242,7 @@ async def test_reauth_flow(hass, mock_config_entry, mock_kaiterra_device_data) -
     ],
 )
 async def test_reauth_flow_errors(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     side_effect: type[Exception],
     expected_error: str,

@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -46,7 +46,6 @@ USER_DATA_SCHEMA = vol.Schema(
             )
         ),
         vol.Required(CONF_DEVICE_ID): str,
-        vol.Optional(CONF_NAME): str,
     }
 )
 
@@ -87,8 +86,9 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                title = user_input.get(CONF_NAME) or user_input[CONF_DEVICE_ID]
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_DEVICE_ID], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",

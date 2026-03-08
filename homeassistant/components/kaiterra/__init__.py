@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -70,8 +70,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: KaiterraConfigEntry) -> bool:
     """Set up Kaiterra from a config entry."""
-    _async_remove_legacy_air_quality_entity(hass, entry)
-
     coordinator = KaiterraDataUpdateCoordinator(
         hass,
         entry,
@@ -81,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KaiterraConfigEntry) -> 
             entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
         ),
         entry.data[CONF_DEVICE_ID],
-        entry.data.get(CONF_NAME) or entry.title,
+        entry.title,
     )
 
     await coordinator.async_config_entry_first_refresh()

@@ -12,11 +12,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import ATTR_AQI_LEVEL, ATTR_AQI_POLLUTANT
-from .coordinator import KaiterraConfigEntry
+from .coordinator import KaiterraConfigEntry, KaiterraDataUpdateCoordinator
 from .entity import KaiterraEntity
 
 PARALLEL_UPDATES = 0
@@ -83,7 +84,7 @@ def _get_state_value(sensor_data: dict[str, Any]) -> StateType:
 
 
 async def async_setup_entry(
-    hass,
+    hass: HomeAssistant,
     entry: KaiterraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -101,7 +102,7 @@ class KaiterraSensor(KaiterraEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: KaiterraDataUpdateCoordinator,
         description: KaiterraSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
