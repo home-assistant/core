@@ -6,11 +6,10 @@ from typing import Any, Final, cast
 from aiopyarr import exceptions
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector, service
 
 from .const import DOMAIN
 from .coordinator import RadarrConfigEntry
@@ -49,24 +48,6 @@ SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 )
 
 
-def _get_config_entry_from_service_data(call: ServiceCall) -> RadarrConfigEntry:
-    """Return config entry for entry id."""
-    config_entry_id: str = call.data[ATTR_ENTRY_ID]
-    if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return cast(RadarrConfigEntry, entry)
-
-
 async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
     """Handle API errors and raise HomeAssistantError with user-friendly messages."""
     try:
@@ -79,9 +60,11 @@ async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
         raise HomeAssistantError(f"Radarr API error: {ex}") from ex
 
 
-async def _async_get_movies(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_movies(call: ServiceCall) -> dict[str, Any]:
     """Get all Radarr movies."""
-    entry = _get_config_entry_from_service_data(service)
+    entry: RadarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
 
     api_client = entry.runtime_data.status.api_client
     movies_list = await _handle_api_errors(api_client.async_get_movies)
@@ -95,10 +78,12 @@ async def _async_get_movies(service: ServiceCall) -> dict[str, Any]:
     }
 
 
-async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
+async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
     """Get Radarr queue."""
-    entry = _get_config_entry_from_service_data(service)
-    max_items: int = service.data[CONF_MAX_ITEMS]
+    entry: RadarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
+    max_items: int = call.data[CONF_MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
 

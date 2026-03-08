@@ -41,25 +41,27 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud API does not require updating entry data from network discovery.
   discovery: done
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not have any entities that should be disabled by default.
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: The only configuration option is the API key, which is handled by the reauthentication flow.

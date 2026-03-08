@@ -73,20 +73,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     started = False
 
     async def _async_handle_labs_update(
-        event: Event[labs.EventLabsUpdatedData],
+        event_data: labs.EventLabsUpdatedData,
     ) -> None:
         """Handle labs feature toggle."""
-        await analytics.save_preferences({ATTR_SNAPSHOTS: event.data["enabled"]})
+        await analytics.save_preferences({ATTR_SNAPSHOTS: event_data["enabled"]})
         if started:
             await analytics.async_schedule()
-
-    @callback
-    def _async_labs_event_filter(event_data: labs.EventLabsUpdatedData) -> bool:
-        """Filter labs events for this integration's snapshot feature."""
-        return (
-            event_data["domain"] == DOMAIN
-            and event_data["preview_feature"] == LABS_SNAPSHOT_FEATURE
-        )
 
     async def start_schedule(_event: Event) -> None:
         """Start the send schedule after the started event."""
@@ -94,10 +86,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         started = True
         await analytics.async_schedule()
 
-    hass.bus.async_listen(
-        labs.EVENT_LABS_UPDATED,
-        _async_handle_labs_update,
-        event_filter=_async_labs_event_filter,
+    labs.async_subscribe_preview_feature(
+        hass, DOMAIN, LABS_SNAPSHOT_FEATURE, _async_handle_labs_update
     )
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 

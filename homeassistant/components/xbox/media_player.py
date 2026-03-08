@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .browse_media import build_item_response
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
-from .entity import XboxConsoleBaseEntity
+from .entity import XboxConsoleBaseEntity, to_https
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,10 +148,12 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType:
         """Media content type."""
-        app_details = self.data.app_details
-        if app_details and app_details.product_family == "Games":
-            return MediaType.GAME
-        return MediaType.APP
+
+        return (
+            MediaType.GAME
+            if self.data.app_details and self.data.app_details.product_family == "Games"
+            else MediaType.APP
+        )
 
     @property
     def media_content_id(self) -> str | None:
@@ -161,25 +163,25 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if not (app_details := self.data.app_details):
-            return None
         return (
-            app_details.localized_properties[0].product_title
-            or app_details.localized_properties[0].short_title
+            (
+                app_details.localized_properties[0].product_title
+                or app_details.localized_properties[0].short_title
+            )
+            if (app_details := self.data.app_details)
+            else None
         )
 
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        if not (app_details := self.data.app_details) or not (
-            image := _find_media_image(app_details.localized_properties[0].images)
-        ):
-            return None
 
-        url = image.uri
-        if url[0] == "/":
-            url = f"http:{url}"
-        return url
+        return (
+            to_https(image.uri)
+            if (app_details := self.data.app_details)
+            and (image := _find_media_image(app_details.localized_properties[0].images))
+            else None
+        )
 
     @exception_handler
     async def async_turn_on(self) -> None:

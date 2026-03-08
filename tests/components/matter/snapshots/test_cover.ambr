@@ -41,6 +41,7 @@
       'current_position': 100,
       'device_class': 'shade',
       'friendly_name': 'Eve Shutter Switch 20ECI1701',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -94,6 +95,7 @@
       'current_tilt_position': 100,
       'device_class': 'awning',
       'friendly_name': 'Mock Full Window Covering',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
@@ -136,7 +138,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -145,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'awning',
       'friendly_name': 'Mock Lift Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -187,7 +190,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -197,6 +200,7 @@
       'current_position': 51,
       'device_class': 'shade',
       'friendly_name': 'Longan link WNCV DA01',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -239,7 +243,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -249,6 +253,7 @@
       'current_tilt_position': 100,
       'device_class': 'blind',
       'friendly_name': 'Mock PA Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -291,7 +296,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -300,6 +305,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'blind',
       'friendly_name': 'Mock Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -352,6 +358,7 @@
       'current_position': 0,
       'device_class': 'shade',
       'friendly_name': 'Zemismart MT25B Roller Motor',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

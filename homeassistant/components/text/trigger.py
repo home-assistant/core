@@ -14,7 +14,7 @@ from .const import DOMAIN
 class TextChangedTrigger(EntityTriggerBase):
     """Trigger for text entity when its content changes."""
 
-    _domain = DOMAIN
+    _domains = {DOMAIN}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:

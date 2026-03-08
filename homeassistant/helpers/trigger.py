@@ -149,14 +149,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -335,7 +336,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain: str
+    _domains: set[str]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -385,11 +386,11 @@ class EntityTriggerBase(Trigger):
         )
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
+        """Filter entities of these domains."""
         return {
             entity_id
             for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
+            if split_entity_id(entity_id)[0] in self._domains
         }
 
     @override
@@ -656,6 +657,24 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
         return True
 
 
+class EntityNumericalStateChangedTriggerBase(EntityTriggerBase):
+    """Trigger for numerical state changes."""
+
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected one."""
+        if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        try:
+            float(state.state)
+        except TypeError, ValueError:
+            # State is not a valid number, don't trigger
+            return False
+        return True
+
+
 CONF_LOWER_LIMIT = "lower_limit"
 CONF_UPPER_LIMIT = "upper_limit"
 CONF_THRESHOLD_TYPE = "threshold_type"
@@ -791,7 +810,7 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _to_states = to_states_set
 
     return CustomTrigger
@@ -805,7 +824,7 @@ def make_entity_transition_trigger(
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_states = from_states
         _to_states = to_states
 
@@ -820,7 +839,7 @@ def make_entity_origin_state_trigger(
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_state = from_state
 
     return CustomTrigger
@@ -834,7 +853,7 @@ def make_entity_numerical_state_attribute_changed_trigger(
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
 
     return CustomTrigger
@@ -848,8 +867,21 @@ def make_entity_numerical_state_attribute_crossed_threshold_trigger(
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_changed_trigger(
+    domains: set[str],
+) -> type[EntityNumericalStateChangedTriggerBase]:
+    """Create a trigger for numerical state change."""
+
+    class CustomTrigger(EntityNumericalStateChangedTriggerBase):
+        """Trigger for numerical state changes."""
+
+        _domains = domains
 
     return CustomTrigger
 
@@ -862,7 +894,7 @@ def make_entity_target_state_attribute_trigger(
     class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
         _attribute_to_state = to_state
 

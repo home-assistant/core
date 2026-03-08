@@ -176,6 +176,66 @@
     'state': '0.5',
   })
 # ---
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 25,
+      'min': -25,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.floor_heating_thermostat_temperature_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature offset',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_offset',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TemperatureOffset-513-16',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Floor Heating Thermostat Temperature offset',
+      'max': 25,
+      'min': -25,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.floor_heating_thermostat_temperature_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -330,7 +390,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -568,7 +628,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -1116,122 +1176,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_off_intensity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 75,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_led_off_intensity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'LED off intensity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'LED off intensity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'led_indicator_intensity_off',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_off_intensity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED off intensity',
-      'max': 75,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.inovelli_led_off_intensity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_on_intensity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 75,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.inovelli_led_on_intensity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'LED on intensity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'LED on intensity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'led_indicator_intensity_on',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_on_intensity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED on intensity',
-      'max': 75,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.inovelli_led_on_intensity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '33',
-  })
-# ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1562,7 +1506,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1621,7 +1565,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -1679,7 +1623,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1738,7 +1682,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1914,7 +1858,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1973,7 +1917,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2032,7 +1976,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
@@ -2090,7 +2034,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2149,7 +2093,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2208,7 +2152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
@@ -2560,7 +2504,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2619,7 +2563,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -2677,7 +2621,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2736,7 +2680,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2795,7 +2739,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2854,7 +2798,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -2912,7 +2856,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2971,7 +2915,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3030,7 +2974,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3089,7 +3033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -3147,7 +3091,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3206,7 +3150,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3265,7 +3209,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3324,7 +3268,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -3382,7 +3326,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_setpoint',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-pump_setpoint-8-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-pump_setpoint-8-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3463,6 +3407,66 @@
     'state': '47',
   })
 # ---
+# name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 25,
+      'min': -25,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_thermostat_temperature_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature offset',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_offset',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-TemperatureOffset-513-16',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Thermostat Temperature offset',
+      'max': 25,
+      'min': -25,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_thermostat_temperature_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_numbers[mock_valve][number.mock_valve_default_open_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3500,7 +3504,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_configuration_and_control_default_open_duration',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3559,7 +3563,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -3617,7 +3621,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3676,7 +3680,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3735,7 +3739,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3794,7 +3798,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
@@ -3852,7 +3856,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
