@@ -28,6 +28,7 @@ from pajgps_api.pajgps_api_error import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -86,8 +87,8 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
 
         self.api = PajGpsApi(
-            email=entry_data["email"],
-            password=entry_data["password"],
+            email=entry_data[CONF_EMAIL],
+            password=entry_data[CONF_PASSWORD],
             websession=websession,
         )
         self._entry_data: Mapping[str, Any] = entry_data
