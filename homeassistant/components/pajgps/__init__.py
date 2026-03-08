@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: PajGpsConfigEntry) -> bool:
+async def async_setup_entry(hass:  HomeAssistant, entry: PajGpsConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
     error_key = await _validate_credentials(
         entry.data["email"], entry.data["password"], hass
