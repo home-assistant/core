@@ -134,7 +134,11 @@ async def test_dynamic_and_stale_devices(
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert len(devices) == 2
+    assert len(entities) == 20
 
     # Remove the second account and update data
     mock_opower_api.async_get_accounts.return_value = [original_accounts[0]]
@@ -147,7 +151,11 @@ async def test_dynamic_and_stale_devices(
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert len(devices) == 1
+    assert len(entities) == 10
 
     # Add back the second account
     mock_opower_api.async_get_accounts.return_value = original_accounts
@@ -159,4 +167,8 @@ async def test_dynamic_and_stale_devices(
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert len(devices) == 2
+    assert len(entities) == 20

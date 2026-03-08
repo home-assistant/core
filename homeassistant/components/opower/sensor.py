@@ -272,7 +272,7 @@ async def async_setup_entry(
                 )
                 if device_entry:
                     for entity_entry in er.async_entries_for_device(
-                        entity_registry, device_entry.id
+                        entity_registry, device_entry.id, include_disabled_entities=True
                     ):
                         entity_registry.async_remove(entity_entry.entity_id)
                     device_registry.async_update_device(
