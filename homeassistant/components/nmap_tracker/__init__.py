@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import logging
-import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
+import logging
 from typing import Final
 
 import aiooui
@@ -30,10 +29,10 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_HOURS_TO_PRUNE,
     CONF_HOME_INTERVAL,
     CONF_HOSTS_EXCLUDE,
     CONF_HOSTS_LIST,
+    CONF_HOURS_TO_PRUNE,
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DEFAULT_HOURS_TO_PRUNE,
@@ -241,8 +240,6 @@ class NmapDeviceScanner:
         self._hours_to_prune = cv.positive_int(
             config.get(CONF_HOURS_TO_PRUNE, DEFAULT_HOURS_TO_PRUNE)
         )
-        if self._debug_fake_mac:
-            _LOGGER.warning("Debug synthetic MAC mode is enabled ")
         self._scan_lock = asyncio.Lock()
         if self._hass.state is CoreState.running:
             await self._async_start_scanner()

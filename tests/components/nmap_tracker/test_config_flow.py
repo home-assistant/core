@@ -262,9 +262,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    assert list(result["data_schema"].schema)[-1].schema == CONF_HOURS_TO_PRUNE
+    schema_defaults = result["data_schema"]({})
+    assert CONF_HOURS_TO_PRUNE in schema_defaults
 
-    assert result["data_schema"]({}) == {
+    assert schema_defaults == {
         CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
         CONF_HOME_INTERVAL: 3,
         CONF_HOSTS_LIST: ["192.168.1.0/24"],
