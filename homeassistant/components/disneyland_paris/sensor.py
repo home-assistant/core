@@ -49,6 +49,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="its_a_small_world_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA07"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -57,6 +58,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA00"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -65,6 +67,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA00"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -72,6 +75,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="autopia_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA03"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -79,6 +83,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="big_thunder_mountain_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1RA00"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -87,6 +92,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA01"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -94,6 +100,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="buzz_lightyear_laser_blast_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA04"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -102,6 +109,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA03"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -110,6 +118,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA10"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -118,6 +127,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA16"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -126,6 +136,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1RA10"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -133,6 +144,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="disneyland_railroad_main_street_station_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1MA05"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -141,6 +153,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA05"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -149,6 +162,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1RA07"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -156,6 +170,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="indiana_jones_and_the_temple_of_peril_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA02"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -164,6 +179,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA01"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -172,6 +188,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA06"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -180,6 +197,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA12"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -188,6 +206,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA02"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -196,6 +215,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA03"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -204,6 +224,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA09"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -212,6 +233,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA06"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -220,6 +242,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA13"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -228,6 +251,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA08"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -236,6 +260,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1MA04"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -244,6 +269,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA07"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -251,6 +277,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="peter_pans_flight_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1NA10"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -258,6 +285,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="phantom_manor_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1RA03"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -266,6 +294,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA08"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -273,6 +302,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="pirates_of_the_caribbean_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA04"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -281,6 +311,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1AA05"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -289,6 +320,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1RA05"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -296,6 +328,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="star_tours_the_adventures_continue_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA09"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -303,6 +336,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         translation_key="star_wars_hyperspace_mountain_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1DA08"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -311,6 +345,7 @@ DISNEYLAND_ATTRACTION_SENSORS: tuple[DisneylandParisSensorEntityDescription, ...
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P1RA06"),
     ),
 )
@@ -340,6 +375,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="avengers_assemble_flight_force_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2AC01"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -348,6 +384,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA02"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -356,6 +393,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA00"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -363,6 +401,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="crushs_coaster_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA03"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -370,6 +409,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="frozen_ever_after_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2EA00"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -378,6 +418,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA05"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -386,6 +427,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2DA00"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -393,6 +435,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="ratatouille_remy_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA09"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -400,6 +443,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="rc_racer_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA06"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -408,6 +452,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA08"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -415,6 +460,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="spider_man_web_adventure_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2AC02"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -422,6 +468,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="tower_of_terror_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2ZA02"),
     ),
     DisneylandParisSensorEntityDescription(
@@ -429,6 +476,7 @@ DISNEY_ADVENTURE_WORLD_ATTRACTION_SENSORS: tuple[
         translation_key="toy_soldiers_parachute_drop_standby_wait_time",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda park: park.standby_wait_times.get("P2XA07"),
     ),
 )
@@ -439,7 +487,7 @@ async def async_setup_entry(
     entry: DisneylandParisConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors using the platform schema."""
+    """Set up sensors from a config entry."""
 
     coordinator = entry.runtime_data
 
@@ -478,7 +526,7 @@ class DisneylandSensor(DisneylandEntity, SensorEntity):
 
     @property
     def native_value(self) -> int | datetime | None:
-        """Set Sensor Value."""
+        """Return the native value of the sensor."""
 
         return self.entity_description.value_fn(
             self.coordinator.client.parks[Parks.DISNEYLAND]
@@ -492,7 +540,7 @@ class DisneyAdventureWorldSensor(DisneyAdventureWorldEntity, SensorEntity):
 
     @property
     def native_value(self) -> int | datetime | None:
-        """Set Sensor Value."""
+        """Return the native value of the sensor."""
 
         return self.entity_description.value_fn(
             self.coordinator.client.parks[Parks.WALT_DISNEY_STUDIOS]

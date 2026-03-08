@@ -22,7 +22,7 @@ class DisneylandParisConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             connection = await self._validate_connection()
-            if connection is not None:
+            if connection:
                 await self.async_set_unique_id(DOMAIN)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Disneyland Paris", data={})
@@ -34,7 +34,7 @@ class DisneylandParisConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _validate_connection(self) -> bool | None:
+    async def _validate_connection(self) -> bool:
         """Try to fetch park data to confirm the Disneyland Paris service is working."""
 
         client = DLPWaitAPI(async_get_clientsession(self.hass))
@@ -42,6 +42,6 @@ class DisneylandParisConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.update()
         except DLPWaitError:
-            return None
+            return False
 
         return True

@@ -23,7 +23,7 @@
     'object_id_base': 'Avengers Assemble: Flight Force standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -77,7 +77,7 @@
     'object_id_base': 'Cars Quatre Roues Rallye standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -131,7 +131,7 @@
     'object_id_base': 'Cars ROAD TRIP standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -185,7 +185,7 @@
     'object_id_base': "Crush's Coaster standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -239,7 +239,7 @@
     'object_id_base': 'Frozen Ever After standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -293,7 +293,7 @@
     'object_id_base': 'Les Tapis Volants - Flying Carpets Over Agrabah standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -447,7 +447,7 @@
     'object_id_base': 'Raiponce Tangled Spin standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -501,7 +501,7 @@
     'object_id_base': 'Ratatouille : L’Aventure Totalement Toquée de Rémy standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -555,7 +555,7 @@
     'object_id_base': 'RC Racer standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -609,7 +609,7 @@
     'object_id_base': 'Slinky Dog Zigzag Spin standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -663,7 +663,7 @@
     'object_id_base': 'Spider-Man W.E.B. Adventure standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -717,7 +717,7 @@
     'object_id_base': 'The Twilight Zone Tower of Terror standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -771,7 +771,7 @@
     'object_id_base': 'Toy Soldiers Parachute Drop standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -825,7 +825,7 @@
     'object_id_base': 'Adventure Isle standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -879,7 +879,7 @@
     'object_id_base': "Alice's Curious Labyrinth standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -933,7 +933,7 @@
     'object_id_base': 'Autopia standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -987,7 +987,7 @@
     'object_id_base': 'Big Thunder Mountain standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1041,7 +1041,7 @@
     'object_id_base': 'Blanche-Neige et les Sept Nains standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1095,7 +1095,7 @@
     'object_id_base': 'Buzz Lightyear Laser Blast standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1149,7 +1149,7 @@
     'object_id_base': 'Casey Jr. – le Petit Train du Cirque standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1203,7 +1203,7 @@
     'object_id_base': 'Disneyland Railroad Discoveryland Station standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1257,7 +1257,7 @@
     'object_id_base': 'Disneyland Railroad Fantasyland Station standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1311,7 +1311,7 @@
     'object_id_base': 'Disneyland Railroad Frontierland Depot standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1365,7 +1365,7 @@
     'object_id_base': 'Disneyland Railroad Main Street Station standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1419,7 +1419,7 @@
     'object_id_base': 'Dumbo the Flying Elephant standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1473,7 +1473,7 @@
     'object_id_base': 'Frontierland Playground standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1527,7 +1527,7 @@
     'object_id_base': 'Indiana Jones and the Temple of Peril standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1581,7 +1581,7 @@
     'object_id_base': "it's a small world standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1635,7 +1635,7 @@
     'object_id_base': 'La Cabane des Robinson standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1689,7 +1689,7 @@
     'object_id_base': 'La Galerie de la Belle au Bois Dormant standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1743,7 +1743,7 @@
     'object_id_base': 'La Tanière du Dragon standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1797,7 +1797,7 @@
     'object_id_base': 'Le Carrousel de Lancelot standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1851,7 +1851,7 @@
     'object_id_base': "Le Passage Enchanté d'Aladdin standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1905,7 +1905,7 @@
     'object_id_base': 'Le Pays des Contes de Fées standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1959,7 +1959,7 @@
     'object_id_base': 'Les Mystères du Nautilus standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2013,7 +2013,7 @@
     'object_id_base': 'Les Voyages de Pinocchio standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2067,7 +2067,7 @@
     'object_id_base': "Mad Hatter's Tea Cups standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2121,7 +2121,7 @@
     'object_id_base': 'Main Street Vehicles standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2175,7 +2175,7 @@
     'object_id_base': 'Orbitron standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2329,7 +2329,7 @@
     'object_id_base': "Peter Pan's Flight standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2383,7 +2383,7 @@
     'object_id_base': 'Phantom Manor standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2437,7 +2437,7 @@
     'object_id_base': 'Pirate Galleon standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2491,7 +2491,7 @@
     'object_id_base': "Pirates' Beach standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2545,7 +2545,7 @@
     'object_id_base': 'Pirates of the Caribbean standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2599,7 +2599,7 @@
     'object_id_base': "Rustler Roundup Shootin' Gallery standby wait time",
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2653,7 +2653,7 @@
     'object_id_base': 'Star Tours: The Adventures Continue standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2707,7 +2707,7 @@
     'object_id_base': 'Star Wars Hyperspace Mountain standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -2761,7 +2761,7 @@
     'object_id_base': 'Thunder Mesa Riverboat Landing standby wait time',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,

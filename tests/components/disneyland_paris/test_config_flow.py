@@ -65,7 +65,7 @@ async def test_successful_recovery_after_connection_error(
     mock_disneyland_paris_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test error shown when connection fails."""
+    """Test error is shown when connection fails, and configuration succeeds after retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
