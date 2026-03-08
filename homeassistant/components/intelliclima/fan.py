@@ -62,6 +62,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         super().__init__(coordinator, device)
 
         self._speed_range = (int(FanSpeed.sleep), int(FanSpeed.high))
+        self._attr_unique_id = device.id
 
     @property
     def is_on(self) -> bool:

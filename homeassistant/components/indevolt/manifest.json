@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["indevolt-api==1.1.2"]
+  "requirements": ["indevolt-api==1.2.3"]
 }

@@ -39,13 +39,8 @@ class RainCloudEntity(Entity):
         """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = f"{self.data.name} {KEY_MAP.get(self._sensor_type)}"
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = f"{self.data.name} {KEY_MAP.get(self._sensor_type)}"
+        self._attr_icon = ICON_MAP.get(self._sensor_type)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -63,8 +58,3 @@ class RainCloudEntity(Entity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"identifier": self.data.serial}
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON_MAP.get(self._sensor_type)
