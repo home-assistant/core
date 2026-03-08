@@ -869,8 +869,8 @@ build.json @home-assistant/supervisor
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley @msavazzi
 /tests/components/jvc_projector/ @SteveEasley @msavazzi
-/homeassistant/components/kaiterra/ @Michsior14
-/tests/components/kaiterra/ @Michsior14
+/homeassistant/components/kaiterra/ @Michsior14 @archcorsair
+/tests/components/kaiterra/ @Michsior14 @archcorsair
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
 /homeassistant/components/keba/ @dannerph
