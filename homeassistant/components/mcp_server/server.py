@@ -111,22 +111,14 @@ class _McpTools:
         llm_api = await self._get_api_instance()
         _, alias_by_tool_name = self._get_tool_maps_for_api(llm_api)
 
-        listed_tool_names: set[str] = set()
-        formatted_tools: list[types.Tool] = []
-        for tool in llm_api.tools:
-            if tool.name in listed_tool_names:
-                continue
-
-            listed_tool_names.add(tool.name)
-            formatted_tools.append(
-                _format_tool(
-                    alias_by_tool_name[tool.name],
-                    tool,
-                    llm_api.custom_serializer,
-                )
+        return [
+            _format_tool(
+                alias_by_tool_name[tool.name],
+                tool,
+                llm_api.custom_serializer,
             )
-
-        return formatted_tools
+            for tool in llm_api.tools
+        ]
 
     def resolve_tool_name(self, llm_api: llm.APIInstance, mcp_tool_name: str) -> str:
         """Resolve an MCP tool name to the current Home Assistant tool name."""
