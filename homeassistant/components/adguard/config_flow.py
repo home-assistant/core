@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import SplitResult, urlsplit
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -21,41 +21,41 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .const import DOMAIN
-
-DEFAULT_PORT = 3000
-DEFAULT_BASE_PATH = "/control"
+from .const import DEFAULT_BASE_PATH, DEFAULT_PORT, DOMAIN
 
 
 def _parse_address(address: str) -> tuple[str, int, str, bool]:
     """Parse user provided address into host, port, path, and TLS mode."""
     normalized_address = address.strip()
-    split_result: SplitResult
+    has_scheme = "://" in normalized_address
 
-    if "://" in normalized_address:
-        split_result = urlsplit(normalized_address)
-        if split_result.scheme not in {"http", "https"}:
-            raise ValueError
-        tls = split_result.scheme == "https"
-        port = split_result.port or (443 if tls else 80)
-    else:
-        split_result = urlsplit(f"//{normalized_address}")
-        tls = False
-        port = split_result.port or DEFAULT_PORT
+    if not has_scheme:
+        normalized_address = f"http://{normalized_address}"
+
+    url = URL(normalized_address)
 
     if (
-        not split_result.hostname
-        or split_result.username
-        or split_result.password
-        or split_result.query
-        or split_result.fragment
+        url.scheme not in {"http", "https"}
+        or not url.host
+        or url.user
+        or url.password
+        or url.query
+        or url.fragment
     ):
         raise ValueError
 
+    tls = url.scheme == "https"
+    if has_scheme:
+        port = url.explicit_port or (443 if tls else 80)
+    else:
+        port = url.explicit_port or DEFAULT_PORT
+
+    path = DEFAULT_BASE_PATH if url.path in {"", "/"} else url.path
+
     return (
-        split_result.hostname,
+        url.host,
         port,
-        split_result.path or DEFAULT_BASE_PATH,
+        path,
         tls,
     )
 
@@ -107,7 +107,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return await self._show_setup_form()
 
         errors = {}
 

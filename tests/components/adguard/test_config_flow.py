@@ -4,7 +4,12 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.adguard.const import DOMAIN
+from homeassistant.components.adguard.config_flow import _parse_address
+from homeassistant.components.adguard.const import (
+    DEFAULT_BASE_PATH,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -58,6 +63,53 @@ async def test_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize(
+    ("address", "expected"),
+    [
+        (
+            "adguard.local",
+            ("adguard.local", DEFAULT_PORT, DEFAULT_BASE_PATH, False),
+        ),
+        (
+            "adguard.local:3001",
+            ("adguard.local", 3001, DEFAULT_BASE_PATH, False),
+        ),
+        (
+            "https://adguard.local",
+            ("adguard.local", 443, DEFAULT_BASE_PATH, True),
+        ),
+        (
+            "http://adguard.local",
+            ("adguard.local", 80, DEFAULT_BASE_PATH, False),
+        ),
+        (
+            "https://adguard.local/custom/path",
+            ("adguard.local", 443, "/custom/path", True),
+        ),
+    ],
+)
+def test_parse_address_valid(address: str, expected: tuple[str, int, str, bool]) -> None:
+    """Test valid address formats are parsed correctly."""
+    assert _parse_address(address) == expected
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "ftp://adguard.local",
+        "http://user:pass@adguard.local",
+        "http://adguard.local?query=1",
+        "http://adguard.local#fragment",
+        "http://",
+        "",
+    ],
+)
+def test_parse_address_invalid(address: str) -> None:
+    """Test invalid address formats are rejected."""
+    with pytest.raises(ValueError):
+        _parse_address(address)
 
 
 @pytest.mark.parametrize(
