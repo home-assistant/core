@@ -51,7 +51,7 @@ def _build_options_schema(
 
 
 async def _validate_credentials(
-    email: str, password: str, hass: HomeAssistant | None = None
+    email: str, password: str, hass: HomeAssistant
 ) -> str | None:
     """Attempt a real login with the given credentials.
 
