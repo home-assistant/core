@@ -468,7 +468,7 @@
           "clear_water_box_hoare": "Check the clean water tank",
           "cliff_sensor_error": "Cliff sensor error",
           "collect_dust_error_3": "Clean auto-empty dock",
-          "collect_dust_error_4": "Auto empty dock voltage error",
+          "collect_dust_error_4": "Auto-empty dock voltage error",
           "compass_error": "Strong magnetic field detected",
           "dirty_water_box_hoare": "Check the dirty water tank",
           "dock": "Dock not connected to power",
