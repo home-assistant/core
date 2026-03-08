@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 import re
 from typing import Any
 
@@ -12,17 +11,13 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .const import (
     CONF_AZIMUTH,
@@ -31,8 +26,9 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
-    CONF_PLANES,
     DOMAIN,
+    MAX_PLANES,
+    SUBENTRY_TYPE_PLANE,
 )
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
@@ -66,7 +62,7 @@ def _get_plane_schema(
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Forecast.Solar."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
@@ -75,6 +71,14 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ForecastSolarOptionFlowHandler:
         """Get the options flow for this handler."""
         return ForecastSolarOptionFlowHandler()
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {SUBENTRY_TYPE_PLANE: PlaneSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -87,11 +91,18 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
                 },
-                options={
-                    CONF_AZIMUTH: user_input[CONF_AZIMUTH],
-                    CONF_DECLINATION: user_input[CONF_DECLINATION],
-                    CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
-                },
+                subentries=[
+                    {
+                        "subentry_type": SUBENTRY_TYPE_PLANE,
+                        "data": {
+                            CONF_DECLINATION: user_input[CONF_DECLINATION],
+                            CONF_AZIMUTH: user_input[CONF_AZIMUTH],
+                            CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
+                        },
+                        "title": f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                        "unique_id": None,
+                    },
+                ],
             )
 
         return self.async_show_form(
@@ -121,43 +132,13 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ForecastSolarOptionFlowHandler(OptionsFlowWithReload):
+class ForecastSolarOptionFlowHandler(OptionsFlow):
     """Handle options."""
-
-    def _has_api_key(self) -> bool:
-        """Check if an API key is configured."""
-        api_key = self.config_entry.options.get(CONF_API_KEY)
-        return api_key is not None and api_key != ""
-
-    def _get_planes(self) -> list[dict[str, Any]]:
-        """Get the list of additional planes."""
-        planes: list[dict[str, Any]] = self.config_entry.options.get(CONF_PLANES, [])
-        return planes
-
-    def _get_plane_options(self) -> list[SelectOptionDict]:
-        """Get plane options for the remove selector."""
-        planes = self._get_planes()
-        return [
-            SelectOptionDict(
-                value=str(i),
-                label=f"Plane {i + 2}: {plane[CONF_DECLINATION]}° / {plane[CONF_AZIMUTH]}° / {plane[CONF_MODULES_POWER]}W",
-            )
-            for i, plane in enumerate(planes)
-        ]
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=["settings", "add_plane", "remove_plane"],
-        )
-
-    async def async_step_settings(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the main settings."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if (api_key := user_input.get(CONF_API_KEY)) and RE_API_KEY.match(
@@ -165,16 +146,12 @@ class ForecastSolarOptionFlowHandler(OptionsFlowWithReload):
             ) is None:
                 errors[CONF_API_KEY] = "invalid_api_key"
             else:
-                # Preserve existing planes when updating settings
-                new_options = user_input | {CONF_API_KEY: api_key or None}
-                if CONF_PLANES in self.config_entry.options:
-                    new_options[CONF_PLANES] = deepcopy(
-                        self.config_entry.options[CONF_PLANES]
-                    )
-                return self.async_create_entry(title="", data=new_options)
+                return self.async_create_entry(
+                    title="", data=user_input | {CONF_API_KEY: api_key or None}
+                )
 
         return self.async_show_form(
-            step_id="settings",
+            step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
@@ -185,18 +162,6 @@ class ForecastSolarOptionFlowHandler(OptionsFlowWithReload):
                             )
                         },
                     ): str,
-                    vol.Required(
-                        CONF_DECLINATION,
-                        default=self.config_entry.options[CONF_DECLINATION],
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
-                    vol.Required(
-                        CONF_AZIMUTH,
-                        default=self.config_entry.options.get(CONF_AZIMUTH),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=360)),
-                    vol.Required(
-                        CONF_MODULES_POWER,
-                        default=self.config_entry.options[CONF_MODULES_POWER],
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
                     vol.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(
@@ -222,70 +187,63 @@ class ForecastSolarOptionFlowHandler(OptionsFlowWithReload):
             errors=errors,
         )
 
-    async def async_step_add_plane(
+
+class PlaneSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for adding/editing a plane."""
+
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Add an additional plane."""
-        if not self._has_api_key():
+    ) -> SubentryFlowResult:
+        """Handle the user step to add a new plane."""
+        entry = self._get_entry()
+        plane_count = sum(
+            1
+            for subentry in entry.subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_PLANE
+        )
+        if plane_count >= MAX_PLANES:
+            return self.async_abort(reason="max_planes")
+        if plane_count >= 1 and not entry.options.get(CONF_API_KEY):
             return self.async_abort(reason="api_key_required")
 
-        planes = self._get_planes()
-        # Forecast.Solar allows: 2 planes for Personal Plus, 3 for Professional, 4 for Professional Plus
-        # We'll allow up to 3 additional planes (4 total including the main one)
-        if len(planes) >= 3:
-            return self.async_abort(reason="max_planes_reached")
-
         if user_input is not None:
-            new_plane = {
-                CONF_DECLINATION: user_input[CONF_DECLINATION],
-                CONF_AZIMUTH: user_input[CONF_AZIMUTH],
-                CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
-            }
-            new_options = deepcopy({**self.config_entry.options})
-            if CONF_PLANES not in new_options:
-                new_options[CONF_PLANES] = []
-            new_options[CONF_PLANES].append(new_plane)
-            return self.async_create_entry(title="", data=new_options)
+            return self.async_create_entry(
+                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                data={
+                    CONF_DECLINATION: user_input[CONF_DECLINATION],
+                    CONF_AZIMUTH: user_input[CONF_AZIMUTH],
+                    CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
+                },
+            )
 
         return self.async_show_form(
-            step_id="add_plane",
+            step_id="user",
             data_schema=_get_plane_schema(),
         )
 
-    async def async_step_remove_plane(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Remove an additional plane."""
-        planes = self._get_planes()
-
-        if not planes:
-            return self.async_abort(reason="no_planes_to_remove")
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of an existing plane."""
+        subentry = self._get_reconfigure_subentry()
 
         if user_input is not None:
-            # Get selected indices and sort in reverse order to remove from end first
-            indices_to_remove = sorted(
-                [int(idx) for idx in user_input["plane_indices"]], reverse=True
+            return self.async_update_reload_and_abort(
+                self._get_entry(),
+                subentry,
+                data={
+                    CONF_DECLINATION: user_input[CONF_DECLINATION],
+                    CONF_AZIMUTH: user_input[CONF_AZIMUTH],
+                    CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
+                },
+                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
             )
-            new_options = deepcopy({**self.config_entry.options})
-            for plane_index in indices_to_remove:
-                new_options[CONF_PLANES].pop(plane_index)
-            if not new_options[CONF_PLANES]:
-                del new_options[CONF_PLANES]
-            return self.async_create_entry(title="", data=new_options)
-
-        plane_options = self._get_plane_options()
 
         return self.async_show_form(
-            step_id="remove_plane",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("plane_indices"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=plane_options,
-                            mode=SelectSelectorMode.LIST,
-                            multiple=True,
-                        )
-                    ),
-                }
+            step_id="reconfigure",
+            data_schema=_get_plane_schema(
+                declination=subentry.data[CONF_DECLINATION],
+                azimuth=subentry.data[CONF_AZIMUTH],
+                modules_power=subentry.data[CONF_MODULES_POWER],
             ),
         )

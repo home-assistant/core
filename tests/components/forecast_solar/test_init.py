@@ -10,6 +10,7 @@ from homeassistant.components.forecast_solar.const import (
     CONF_DAMPING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
+    CONF_MODULES_POWER,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -55,12 +56,15 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_migration(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test config entry version 1 -> 2 migration."""
+async def test_migration_from_v1(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test config entry migration from version 1."""
     mock_config_entry = MockConfigEntry(
         title="Green House",
         unique_id="unique",
         domain=DOMAIN,
+        version=1,
         data={
             CONF_LATITUDE: 52.42,
             CONF_LONGITUDE: 4.42,
@@ -79,3 +83,56 @@ async def test_migration(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_get_entry(mock_config_entry.entry_id) == snapshot
+
+
+async def test_migration_from_v2(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test config entry migration from version 2."""
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        domain=DOMAIN,
+        version=2,
+        data={
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+        options={
+            CONF_API_KEY: "abcdef12345",
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH: 190,
+            CONF_MODULES_POWER: 5100,
+            CONF_INVERTER_SIZE: 2000,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id) == snapshot
+
+
+async def test_setup_entry_no_planes(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+) -> None:
+    """Test setup fails when all plane subentries have been removed."""
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+        options={
+            CONF_API_KEY: "abcdef1234567890",
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

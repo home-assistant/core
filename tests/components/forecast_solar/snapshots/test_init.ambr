@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_migration
+# name: test_migration_from_v1
   ConfigEntrySnapshot({
     'data': dict({
       'latitude': 52.42,
@@ -13,20 +13,65 @@
     'minor_version': 1,
     'options': dict({
       'api_key': 'abcdef12345',
-      'azimuth': 190,
       'damping_evening': 0.5,
       'damping_morning': 0.5,
-      'declination': 30,
       'inverter_size': 2000,
-      'modules_power': 5100,
     }),
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
     'subentries': list([
+      dict({
+        'data': dict({
+          'azimuth': 190,
+          'declination': 30,
+          'modules_power': 5100,
+        }),
+        'subentry_id': <ANY>,
+        'subentry_type': 'plane',
+        'title': '30° / 190° / 5100W',
+        'unique_id': None,
+      }),
     ]),
     'title': 'Green House',
     'unique_id': 'unique',
-    'version': 2,
+    'version': 3,
+  })
+# ---
+# name: test_migration_from_v2
+  ConfigEntrySnapshot({
+    'data': dict({
+      'latitude': 52.42,
+      'longitude': 4.42,
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'forecast_solar',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+      'api_key': 'abcdef12345',
+      'inverter_size': 2000,
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'azimuth': 190,
+          'declination': 30,
+          'modules_power': 5100,
+        }),
+        'subentry_id': <ANY>,
+        'subentry_type': 'plane',
+        'title': '30° / 190° / 5100W',
+        'unique_id': None,
+      }),
+    ]),
+    'title': 'Green House',
+    'unique_id': 'unique',
+    'version': 3,
   })
 # ---

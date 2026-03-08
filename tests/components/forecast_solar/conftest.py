@@ -15,7 +15,9 @@ from homeassistant.components.forecast_solar.const import (
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
+    SUBENTRY_TYPE_PLANE,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -38,7 +40,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="Green House",
         unique_id="unique",
-        version=2,
+        version=3,
         domain=DOMAIN,
         data={
             CONF_LATITUDE: 52.42,
@@ -46,13 +48,23 @@ def mock_config_entry() -> MockConfigEntry:
         },
         options={
             CONF_API_KEY: "abcdef1234567890",
-            CONF_DECLINATION: 30,
-            CONF_AZIMUTH: 190,
-            CONF_MODULES_POWER: 5100,
             CONF_DAMPING_MORNING: 0.5,
             CONF_DAMPING_EVENING: 0.5,
             CONF_INVERTER_SIZE: 2000,
         },
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH: 190,
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="mock_plane_id",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / 190° / 5100W",
+                unique_id=None,
+            ),
+        ],
     )
 
 

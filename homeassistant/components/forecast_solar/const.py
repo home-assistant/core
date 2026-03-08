@@ -14,4 +14,5 @@ CONF_DAMPING = "damping"
 CONF_DAMPING_MORNING = "damping_morning"
 CONF_DAMPING_EVENING = "damping_evening"
 CONF_INVERTER_SIZE = "inverter_size"
-CONF_PLANES = "planes"
+MAX_PLANES = 4
+SUBENTRY_TYPE_PLANE = "plane"
