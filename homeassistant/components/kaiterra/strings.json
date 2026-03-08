@@ -5,13 +5,11 @@
         "title": "Connect Kaiterra device",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "device_id": "Device ID",
-          "name": "Name"
+          "device_id": "Device ID"
         },
         "data_description": {
           "api_key": "The API key used to access your Kaiterra device",
-          "device_id": "The device ID from your Kaiterra account",
-          "name": "Optional name to use for this device in Home Assistant"
+          "device_id": "The device ID from your Kaiterra account"
         }
       },
       "reauth_confirm": {

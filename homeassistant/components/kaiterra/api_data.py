@@ -58,9 +58,11 @@ class KaiterraApiClient:
         except ClientResponseError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise KaiterraApiAuthError from err
-            raise KaiterraApiError from err
+            raise KaiterraApiError(
+                f"API request failed with status {err.status}: {err.message}"
+            ) from err
         except (ClientConnectorError, TimeoutError, ValueError) as err:
-            raise KaiterraApiError from err
+            raise KaiterraApiError(str(err)) from err
 
         if not data or data[0] is None:
             raise KaiterraDeviceNotFoundError(device_id)
@@ -68,7 +70,7 @@ class KaiterraApiClient:
         try:
             return _normalize_device_data(data[0], self._scale, self._level)
         except (IndexError, TypeError, ValueError) as err:
-            raise KaiterraApiError from err
+            raise KaiterraApiError(f"Failed to normalize sensor payload: {err}") from err
 
 
 def _normalize_device_data(

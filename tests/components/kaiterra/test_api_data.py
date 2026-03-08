@@ -97,15 +97,18 @@ async def test_api_client_raises_generic_api_errors() -> None:
             message="Bad gateway",
         )
     )
-    with pytest.raises(KaiterraApiError):
+    with pytest.raises(
+        KaiterraApiError,
+        match="API request failed with status 502: Bad gateway",
+    ):
         await client.async_get_latest_sensor_readings("device-123")
 
     client._api.get_latest_sensor_readings = AsyncMock(side_effect=TimeoutError)
-    with pytest.raises(KaiterraApiError):
+    with pytest.raises(KaiterraApiError, match="^$"):
         await client.async_get_latest_sensor_readings("device-123")
 
     client._api.get_latest_sensor_readings = AsyncMock(side_effect=ValueError)
-    with pytest.raises(KaiterraApiError):
+    with pytest.raises(KaiterraApiError, match="^$"):
         await client.async_get_latest_sensor_readings("device-123")
 
 
@@ -132,7 +135,9 @@ async def test_api_client_wraps_normalization_failures() -> None:
             "homeassistant.components.kaiterra.api_data._normalize_device_data",
             side_effect=ValueError,
         ),
-        pytest.raises(KaiterraApiError),
+        pytest.raises(
+            KaiterraApiError, match="Failed to normalize sensor payload:"
+        ),
     ):
         await client.async_get_latest_sensor_readings("device-123")
 
