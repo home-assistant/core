@@ -1,12 +1,11 @@
 """Ecovacs select entity module."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import CapabilityMap, CapabilitySet, CapabilitySetTypes
 from deebot_client.command import CommandWithMessageHandling
-from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.device import Device
 from deebot_client.events import WorkModeEvent, auto_empty
 from deebot_client.events.base import Event
@@ -39,21 +38,11 @@ class EcovacsSelectEntityDescription[EventT: Event](
     set_option_fn: Callable[[CapabilitySetTypes, str], CommandWithMessageHandling] = (
         lambda cap, option: cap.set(option)
     )
+    # Options in this set are stored as local HA state only; no robot command is sent.
+    local_options: frozenset[str] = field(default_factory=frozenset)
 
 
 _INTELLIGENT_HOSTING = "intelligent_hosting"
-
-
-def _set_work_mode(
-    cap: CapabilitySetTypes, option: str
-) -> CommandWithMessageHandling:
-    """Return the command for the given work mode option."""
-    if option == _INTELLIGENT_HOSTING:
-        return CustomCommand(
-            "clean_V2", {"act": "start", "content": {"type": "entrust"}}
-        )
-    return cap.set(option)
-
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterAmountEvent](
@@ -73,7 +62,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         current_option_fn=lambda e: get_name_key(e.mode),
         options_fn=lambda cap: [get_name_key(mode) for mode in cap.types]
         + [_INTELLIGENT_HOSTING],
-        set_option_fn=_set_work_mode,
+        local_options=frozenset({_INTELLIGENT_HOSTING}),
         key="work_mode",
         translation_key="work_mode",
         entity_registry_enabled_default=False,
@@ -143,6 +132,10 @@ class EcovacsSelectEntity[EventT: Event](
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
+        if option in self.entity_description.local_options:
+            self._attr_current_option = option
+            self.async_write_ha_state()
+            return
         await self._device.execute_command(
             self.entity_description.set_option_fn(self._capability, option)
         )

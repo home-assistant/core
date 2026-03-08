@@ -3,7 +3,6 @@
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.commands.json.auto_empty import SetAutoEmpty
-from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.event_bus import EventBus
 from deebot_client.events import auto_empty
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent, Map
@@ -137,13 +136,6 @@ async def test_selects(
             "smart",
             SetAutoEmpty(None, auto_empty.Frequency.SMART),
         ),
-        (
-            "n0vyif",
-            "select.x8_pro_omni_work_mode",
-            "vacuum",
-            "intelligent_hosting",
-            CustomCommand("clean_V2", {"act": "start", "content": {"type": "entrust"}}),
-        ),
     ],
 )
 async def test_selects_change(
@@ -169,3 +161,32 @@ async def test_selects_change(
         blocking=True,
     )
     device._execute_command.assert_called_with(command)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["n0vyif"])
+async def test_work_mode_intelligent_hosting_local_only(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+) -> None:
+    """Test that selecting intelligent_hosting stores state locally without a robot command."""
+    entity_id = "select.x8_pro_omni_work_mode"
+    device = controller.devices[0]
+    await notify_events(hass, device.events)
+
+    assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
+    assert state.state == "vacuum"
+
+    device._execute_command.reset_mock()
+    await hass.services.async_call(
+        select.DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "intelligent_hosting"},
+        blocking=True,
+    )
+    # intelligent_hosting is stored locally in HA only — no command sent to robot
+    device._execute_command.assert_not_called()
+    assert (
+        state := hass.states.get(entity_id)
+    ), f"State of {entity_id} is missing after option change"
+    assert state.state == "intelligent_hosting"
