@@ -1,7 +1,7 @@
 """Config flow for growatt server integration."""
 
-import logging
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 import growattServer
@@ -32,6 +32,7 @@ from .const import (
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
+    V1_API_ERROR_NO_PRIVILEGE,
 )
 
 _URL_TO_REGION = {v: k for k, v in SERVER_URLS_NAMES.items()}
@@ -63,9 +64,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             menu_options=["password_auth", "token_auth"],
         )
 
-    async def async_step_reauth(
-        self, _: Mapping[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauth."""
         return await self.async_step_reauth_confirm()
 
@@ -93,7 +92,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except requests.exceptions.RequestException:
                     errors["base"] = ERROR_CANNOT_CONNECT
-                except (ValueError, KeyError, TypeError, AttributeError):
+                except ValueError, KeyError, TypeError, AttributeError:
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     if not isinstance(login_response, dict):
@@ -121,9 +120,12 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.async_add_executor_job(api.plant_list)
                 except requests.exceptions.RequestException:
                     errors["base"] = ERROR_CANNOT_CONNECT
-                except growattServer.GrowattV1ApiError:
-                    errors["base"] = ERROR_INVALID_AUTH
-                except (ValueError, KeyError, TypeError, AttributeError):
+                except growattServer.GrowattV1ApiError as err:
+                    if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
+                        errors["base"] = ERROR_INVALID_AUTH
+                    else:
+                        errors["base"] = ERROR_CANNOT_CONNECT
+                except ValueError, KeyError, TypeError, AttributeError:
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     return self.async_update_reload_and_abort(

@@ -95,14 +95,22 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # login only required for classic API
         if self.api_version == "classic":
             login_response = self.api.login(self.username, self.password)
-            if not login_response.get("success"):
-                if login_response.get("msg") == LOGIN_INVALID_AUTH_CODE:
+            if not isinstance(login_response, dict) or not login_response.get(
+                "success"
+            ):
+                if (
+                    isinstance(login_response, dict)
+                    and login_response.get("msg") == LOGIN_INVALID_AUTH_CODE
+                ):
                     raise ConfigEntryAuthFailed(
                         "Username, password, or URL may be incorrect"
                     )
-                raise UpdateFailed(
-                    f"Growatt login failed: {login_response.get('msg', 'Unknown error')}"
+                msg = (
+                    login_response.get("msg", "Unknown error")
+                    if isinstance(login_response, dict)
+                    else "Invalid response from server"
                 )
+                raise UpdateFailed(f"Growatt login failed: {msg}")
 
         if self.device_type == "total":
             if self.api_version == "v1":
@@ -119,7 +127,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 except growattServer.GrowattV1ApiError as err:
                     if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
                         raise ConfigEntryAuthFailed(
-                            f"Authentication failed for Growatt API: {getattr(err, 'error_msg', None)}"
+                            f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
                         ) from err
                     raise UpdateFailed(
                         f"Error fetching plant energy overview: {err}"
@@ -147,7 +155,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for Growatt API: {getattr(err, 'error_msg', None)}"
+                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
                     ) from err
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
 

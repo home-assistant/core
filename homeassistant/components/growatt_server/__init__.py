@@ -6,7 +6,7 @@ Classic API (username/password):
 - Authenticates via api.login(), which returns a dict with a "success" key.
 - Auth failure is signalled by success=False and msg="502" (LOGIN_INVALID_AUTH_CODE).
 - A failed login does NOT raise an exception — the return value must be checked.
-- Session cookies expire daily; the coordinator re-logs in on every update cycle.
+- The coordinator calls api.login() on every update cycle to maintain the session.
 
 Open API V1 (API token):
 - Stateless — no login call, token is sent as a Bearer header on every request.
@@ -254,10 +254,10 @@ def get_device_list_v1(
     except growattServer.GrowattV1ApiError as e:
         if getattr(e, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
             raise ConfigEntryAuthFailed(
-                f"Authentication failed for Growatt API: {getattr(e, 'error_msg', None)}"
+                f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
             ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e} (Code: {getattr(e, 'error_code', None)}, Message: {getattr(e, 'error_msg', None)})"
+            f"API error during device list: {e.error_msg or str(e)} (Code: {getattr(e, 'error_code', None)})"
         ) from e
     devices = devices_dict.get("devices", [])
     # Only MIN device (type = 7) support implemented in current V1 API

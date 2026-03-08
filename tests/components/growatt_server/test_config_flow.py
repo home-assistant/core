@@ -22,6 +22,7 @@ from homeassistant.components.growatt_server.const import (
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
+    V1_API_ERROR_NO_PRIVILEGE,
 )
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -815,8 +816,8 @@ async def test_reauth_token_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    error = growattServer.GrowattV1ApiError("Invalid token")
-    error.error_code = 100
+    error = growattServer.GrowattV1ApiError("No privilege access")
+    error.error_code = V1_API_ERROR_NO_PRIVILEGE
     mock_growatt_v1_api.plant_list.side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT_TOKEN
@@ -870,6 +871,31 @@ async def test_reauth_token_connection_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_token_non_auth_api_error(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth token with non-auth V1 API error (e.g. rate limit) shows cannot_connect."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    error = growattServer.GrowattV1ApiError("Rate limit exceeded")
+    error.error_code = 10012  # V1_API_ERROR_RATE_LIMITED — not an auth error
+    mock_growatt_v1_api.plant_list.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
 
 async def test_reauth_password_invalid_response(
