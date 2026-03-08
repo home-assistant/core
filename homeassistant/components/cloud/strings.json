@@ -42,6 +42,10 @@
       },
       "title": "A deprecated voice was used"
     },
+    "my_not_configured_account_link": {
+      "description": "Cloud account linking is unavailable because [My Home Assistant](https://my.home-assistant.io) is not configured. The OAuth callback from Home Assistant Cloud requires My Home Assistant to redirect back to your local instance. To fix this, set up My Home Assistant or use application credentials instead.",
+      "title": "Cloud account linking unavailable"
+    },
     "legacy_subscription": {
       "fix_flow": {
         "abort": {

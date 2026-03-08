@@ -13,7 +13,7 @@ from homeassistant.components.cloud import account_link
 from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed, mock_platform
@@ -43,6 +43,32 @@ def flow_handler(
         yield TestFlowHandler
 
 
+async def test_provide_implementation_without_my(hass: HomeAssistant) -> None:
+    """Test that cloud implementation is not provided without My Home Assistant."""
+    account_link.async_setup(hass)
+
+    # Ensure "my" is not loaded
+    assert "my" not in hass.config.components
+
+    with patch(
+        "homeassistant.components.cloud.account_link._get_services",
+        return_value=[
+            {"service": "test", "min_version": "0.1.0"},
+        ],
+    ):
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            hass, "test"
+        )
+
+    assert "cloud" not in implementations
+
+    # Verify a repair issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("cloud", "my_not_configured_account_link")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
 async def test_setup_provide_implementation(hass: HomeAssistant) -> None:
     """Test that we provide implementations."""
     legacy_entry = MockConfigEntry(
@@ -57,6 +83,7 @@ async def test_setup_provide_implementation(hass: HomeAssistant) -> None:
     )
     none_cloud_entry.add_to_hass(hass)
     legacy_entry.add_to_hass(hass)
+    hass.config.components.add("my")
     account_link.async_setup(hass)
 
     with (
