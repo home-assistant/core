@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
@@ -118,7 +118,11 @@ async def async_migrate_entities(
             entry.unique_id,
             config_entry=config_entry,
             disabled_by=entry.disabled_by,
-            object_id_base=entry.object_id_base or split_entity_id(entry.entity_id)[1],
+            object_id_base=(
+                entry.object_id_base
+                or entry.translation_key
+                or entry.unique_id.rsplit("_", 1)[-1]
+            ),
             device_id=entry.device_id,
             entity_category=entry.entity_category,
             has_entity_name=entry.has_entity_name,
