@@ -7,7 +7,8 @@ from dataclasses import dataclass
 
 from enocean_async import EEP
 from enocean_async.eep import EEP_SPECIFICATIONS
-from enocean_async.eep.handler import EEPHandler, EEPMessage, ERP1Telegram
+from enocean_async.eep.handler import EEPHandler, EEPMessage
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
