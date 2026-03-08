@@ -1,7 +1,6 @@
 """Tests for Shelly sensor platform."""
 
 from copy import deepcopy
-import time
 from unittest.mock import Mock, PropertyMock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_EM3
@@ -2221,16 +2220,20 @@ async def test_rpc_rgbcct_sensors(
     assert entry.name is None
     assert entry.translation_key is None  # entity with device class and no channel name
 
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_switch_timer_remaining_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test timer remaining sensor for switch component."""
+    # Freeze time for deterministic test
+    freezer.move_to("2025-01-15 12:00:00+00:00")
     # Timer started 10 seconds ago, duration 60, so 50 seconds remaining
-    current_time = time.time()
+    current_time = 1736942400.0  # 2025-01-15 12:00:00 UTC
     timer_started_at = current_time - 10.0
     timer_duration = 60
 
@@ -2249,8 +2252,7 @@ async def test_rpc_switch_timer_remaining_sensor(
     entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_timer_remaining"
 
     assert (state := hass.states.get(entity_id))
-    # Sensor should return integer seconds remaining (approximately 50, allowing for timing)
-    assert int(state.state) in (49, 50)
+    assert state.state == "50"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DURATION
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.SECONDS
 

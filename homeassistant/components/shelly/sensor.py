@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import time
 from typing import Final, cast
 
 from aioshelly.block_device import Block
@@ -44,6 +43,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -207,17 +207,30 @@ class RpcSwitchTimerSensor(ShellyRpcAttributeEntity, SensorEntity):
     entity_description: RpcSensorDescription
     _update_unsub: CALLBACK_TYPE | None = None
 
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize timer sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self.configure_translation_attributes()
+
     def _get_timer_remaining_seconds(self) -> int | None:
         """Get timer remaining time in seconds."""
         timer_started_at = self.status.get("timer_started_at")
         timer_duration = self.status.get("timer_duration")
 
-        # Timer not active
-        if timer_started_at is None or timer_started_at == 0 or timer_duration is None:
+        # Timer not active or invalid types
+        if not isinstance(timer_started_at, (int, float)) or timer_started_at == 0:
+            return None
+        if not isinstance(timer_duration, (int, float)) or timer_duration is None:
             return None
 
         # Calculate elapsed time
-        current_time = time.time()
+        current_time = dt_util.utcnow().timestamp()
         elapsed = current_time - timer_started_at
         timer_remaining = timer_duration - elapsed
 
@@ -232,10 +245,9 @@ class RpcSwitchTimerSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Return timer remaining time in seconds."""
         return self._get_timer_remaining_seconds()
 
-    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
+        await super().async_added_to_hass()
         self.async_on_remove(self._cancel_update_interval)
         self._check_and_schedule_updates()
 
@@ -249,6 +261,7 @@ class RpcSwitchTimerSensor(ShellyRpcAttributeEntity, SensorEntity):
     @callback
     def _update_timer_state(self, _: datetime) -> None:
         """Update timer state every second."""
+        self._check_and_schedule_updates()
         self.async_write_ha_state()
 
     @callback
