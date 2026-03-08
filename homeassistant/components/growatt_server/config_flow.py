@@ -91,12 +91,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                     )
                 except requests.exceptions.RequestException:
-                    _LOGGER.debug("Network error during reauth login", exc_info=True)
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except ValueError, KeyError, TypeError, AttributeError:
-                    _LOGGER.debug(
-                        "Invalid response format during reauth login", exc_info=True
-                    )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     if not isinstance(login_response, dict):
@@ -123,24 +119,13 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     await self.hass.async_add_executor_job(api.plant_list)
                 except requests.exceptions.RequestException:
-                    _LOGGER.debug(
-                        "Network error during reauth token validation", exc_info=True
-                    )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except growattServer.GrowattV1ApiError as err:
                     if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
                         errors["base"] = ERROR_INVALID_AUTH
                     else:
-                        _LOGGER.debug(
-                            "V1 API error during reauth token validation (code %s)",
-                            getattr(err, "error_code", None),
-                        )
                         errors["base"] = ERROR_CANNOT_CONNECT
                 except ValueError, KeyError, TypeError, AttributeError:
-                    _LOGGER.debug(
-                        "Invalid response format during reauth token validation",
-                        exc_info=True,
-                    )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     return self.async_update_reload_and_abort(
