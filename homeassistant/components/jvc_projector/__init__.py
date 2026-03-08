@@ -13,8 +13,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
+from .const import DOMAIN
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 
 PLATFORMS = [
@@ -77,13 +79,66 @@ async def async_migrate_entities(
     coordinator: JvcProjectorDataUpdateCoordinator,
 ) -> None:
     """Migrate old entities as needed."""
+    entity_registry = er.async_get(hass)
+
+    # Fix legacy unique_id of power binary_sensor entry. Can be removed ~2027.3+.
 
     @callback
     def _update_entry(entry: RegistryEntry) -> dict[str, str] | None:
-        """Fix unique_id of power binary_sensor entry."""
+        """Generate a new unique_id for power binary_sensor entry."""
         if entry.domain == Platform.BINARY_SENSOR and ":" not in entry.unique_id:
             if entry.unique_id.endswith("_power"):
                 return {"new_unique_id": f"{coordinator.unique_id}_power"}
         return None
 
     await async_migrate_entries(hass, config_entry.entry_id, _update_entry)
+
+    # Move legacy sensor entities that became selects. Can be removed ~2027.3+.
+
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if (
+            entry.platform != DOMAIN
+            or entry.domain != Platform.SENSOR
+            or not any(
+                entry.unique_id.endswith(f"_{key}")
+                for key in ("hdr_processing", "picture_mode")
+            )
+        ):
+            continue
+
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, entry.unique_id
+        )
+
+        new_entry = entity_registry.async_get_or_create(
+            Platform.SELECT,
+            DOMAIN,
+            entry.unique_id,
+            config_entry=config_entry,
+            disabled_by=entry.disabled_by,
+            object_id_base=(
+                entry.object_id_base
+                or entry.translation_key
+                or entry.unique_id.rsplit("_", 1)[-1]
+            ),
+            device_id=entry.device_id,
+            entity_category=entry.entity_category,
+            has_entity_name=entry.has_entity_name,
+            original_name=entry.original_name,
+            translation_key=entry.translation_key,
+        )
+
+        if entity_id is None:
+            entity_registry.async_update_entity(
+                new_entry.entity_id,
+                area_id=entry.area_id,
+                categories=entry.categories,
+                hidden_by=entry.hidden_by,
+                icon=entry.icon,
+                labels=entry.labels,
+                name=entry.name,
+            )
+
+        entity_registry.async_remove(entry.entity_id)
