@@ -64,7 +64,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(login, self.hass, user_input)
-            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(title=VICARE_NAME, data=user_input)
@@ -99,7 +99,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(login, self.hass, data)
-            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=data)

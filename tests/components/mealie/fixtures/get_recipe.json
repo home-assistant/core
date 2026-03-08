@@ -185,6 +185,42 @@
       "title": null,
       "originalText": null,
       "referenceId": "ef023f23-7816-4871-87f6-4d29f9a283f7"
+    },
+    {
+      "quantity": 250.0,
+      "unit": {
+        "id": "34a3e8e3-c405-49fc-9fec-92dd5241a5c4",
+        "name": "millilitre",
+        "pluralName": null,
+        "description": "",
+        "extras": {},
+        "fraction": true,
+        "abbreviation": "ml",
+        "pluralAbbreviation": "",
+        "useAbbreviation": false,
+        "aliases": [],
+        "createdAt": "2024-08-25T13:29:25.641593Z",
+        "updatedAt": "2024-08-25T13:29:25.641610Z"
+      },
+      "food": {
+        "id": "8bc852fd-362a-48d2-9e77-2388ad9f3c0c",
+        "name": "Water",
+        "pluralName": null,
+        "description": "",
+        "extras": {},
+        "labelId": null,
+        "aliases": [],
+        "householdsWithIngredientFood": ["family"],
+        "label": null,
+        "createdAt": "2026-01-05T11:06:53.830472Z",
+        "updatedAt": "2026-01-05T11:06:53.830491Z"
+      },
+      "referencedRecipe": null,
+      "note": "",
+      "display": "250 millilitre Water",
+      "title": "",
+      "originalText": null,
+      "referenceId": "82f534de-ecef-4470-9d7a-6e24ded4a53a"
     }
   ],
   "recipeInstructions": [

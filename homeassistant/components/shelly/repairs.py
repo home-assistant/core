@@ -5,12 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.const import (
-    MODEL_OUT_PLUG_S_G3,
-    MODEL_PLUG,
-    MODEL_PLUG_S_G3,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
@@ -24,7 +19,6 @@ from homeassistant.helpers import issue_registry as ir
 from .const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
-    COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
@@ -163,51 +157,6 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
 
 
 @callback
-def async_manage_coiot_unconfigured_issue(
-    hass: HomeAssistant,
-    entry: ShellyConfigEntry,
-) -> None:
-    """Manage the CoIoT unconfigured issue."""
-    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)
-
-    if TYPE_CHECKING:
-        assert entry.runtime_data.block is not None
-
-    device = entry.runtime_data.block.device
-
-    if device.model == MODEL_PLUG:
-        # Shelly Plug Gen 1 does not have CoIoT settings
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
-        return
-
-    coiot_config = device.settings["coiot"]
-    coiot_enabled = coiot_config.get("enabled")
-
-    # Check if CoIoT is disabled or peer address is not correctly set
-    if not coiot_enabled or (
-        (peer_config := coiot_config.get("peer"))
-        and peer_config != get_coiot_address(hass)
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=True,
-            is_persistent=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="coiot_unconfigured",
-            translation_placeholders={
-                "device_name": device.name,
-                "ip_address": device.ip_address,
-            },
-            data={"entry_id": entry.entry_id},
-        )
-        return
-
-    ir.async_delete_issue(hass, DOMAIN, issue_id)
-
-
-@callback
 def async_manage_open_wifi_ap_issue(
     hass: HomeAssistant,
     entry: ShellyConfigEntry,
@@ -275,7 +224,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
-        coiot_addr = get_coiot_address(self.hass)
+        coiot_addr = await get_coiot_address(self.hass)
         coiot_port = get_coiot_port(self.hass)
         if coiot_addr is None or coiot_port is None:
             return self.async_abort(reason="cannot_configure")
@@ -346,7 +295,7 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
             return self.async_abort(reason="update_not_available")
         try:
             await self._device.trigger_ota_update()
-        except (DeviceConnectionError, RpcCallError):
+        except DeviceConnectionError, RpcCallError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
@@ -369,7 +318,7 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
             )
             if result["restart_required"]:
                 await self._device.trigger_reboot()
-        except (DeviceConnectionError, RpcCallError):
+        except DeviceConnectionError, RpcCallError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
@@ -405,7 +354,7 @@ class DisableOpenWiFiApFlow(RepairsFlow):
             result = await self._device.wifi_setconfig(ap_enable=False)
             if result.get("restart_required"):
                 await self._device.trigger_reboot()
-        except (DeviceConnectionError, RpcCallError):
+        except DeviceConnectionError, RpcCallError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})

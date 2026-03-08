@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from spotifyaio import SpotifyClient
+from spotifyaio import SpotifyClient, SpotifyForbiddenError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
@@ -41,6 +41,9 @@ class SpotifyFlowHandler(
 
         try:
             current_user = await spotify.get_current_user()
+        except SpotifyForbiddenError:
+            self.logger.exception("User is not subscribed to Spotify")
+            return self.async_abort(reason="user_not_premium")
         except Exception:
             self.logger.exception("Error while connecting to Spotify")
             return self.async_abort(reason="connection_error")

@@ -517,7 +517,7 @@ class PrometheusMetrics:
         for key, value in state.attributes.items():
             try:
                 value = float(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 continue
 
             self._metric(

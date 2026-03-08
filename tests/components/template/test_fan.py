@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
     NotValidPresetModeError,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -469,7 +469,17 @@ async def test_state_template(hass: HomeAssistant) -> None:
         ("{{ True }}", STATE_ON),
         ("{{ False }}", STATE_OFF),
         ("{{ x - 1 }}", STATE_UNAVAILABLE),
-        ("{{ 7.45 }}", STATE_OFF),
+        ("{{ 1 }}", STATE_ON),
+        ("{{ 'true' }}", STATE_ON),
+        ("{{ 'yes' }}", STATE_ON),
+        ("{{ 'on' }}", STATE_ON),
+        ("{{ 'enable' }}", STATE_ON),
+        ("{{ 0 }}", STATE_OFF),
+        ("{{ 'false' }}", STATE_OFF),
+        ("{{ 'no' }}", STATE_OFF),
+        ("{{ 'off' }}", STATE_OFF),
+        ("{{ 'disable' }}", STATE_OFF),
+        ("{{ None }}", STATE_UNKNOWN),
     ],
 )
 @pytest.mark.parametrize(
@@ -564,8 +574,8 @@ async def test_icon_template(hass: HomeAssistant) -> None:
     [
         ("0", 0),
         ("33", 33),
-        ("invalid", 0),
-        ("5000", 0),
+        ("invalid", None),
+        ("5000", None),
         ("100", 100),
     ],
 )
@@ -751,7 +761,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "value_template": "{{ 'unavailable' }}",
                 **OPTIMISTIC_ON_OFF_ACTIONS,
             },
-            [STATE_OFF, None, None, None],
+            [STATE_UNKNOWN, None, None, None],
         ),
         (
             ConfigurationStyle.MODERN,
@@ -759,7 +769,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "state": "{{ 'unavailable' }}",
                 **OPTIMISTIC_ON_OFF_ACTIONS,
             },
-            [STATE_OFF, None, None, None],
+            [STATE_UNKNOWN, None, None, None],
         ),
         (
             ConfigurationStyle.TRIGGER,
@@ -767,7 +777,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "state": "{{ 'unavailable' }}",
                 **OPTIMISTIC_ON_OFF_ACTIONS,
             },
-            [STATE_OFF, None, None, None],
+            [STATE_UNKNOWN, None, None, None],
         ),
         (
             ConfigurationStyle.LEGACY,
@@ -858,7 +868,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "direction_template": "{{ 'right' }}",
                 **DIRECTION_ACTION,
             },
-            [STATE_OFF, 0, None, None],
+            [STATE_UNKNOWN, 0, None, None],
         ),
         (
             ConfigurationStyle.MODERN,
@@ -871,7 +881,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "direction": "{{ 'right' }}",
                 **DIRECTION_ACTION,
             },
-            [STATE_OFF, 0, None, None],
+            [STATE_UNKNOWN, 0, None, None],
         ),
         (
             ConfigurationStyle.TRIGGER,
@@ -884,7 +894,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "direction": "{{ 'right' }}",
                 **DIRECTION_ACTION,
             },
-            [STATE_OFF, 0, None, None],
+            [STATE_UNKNOWN, 0, None, None],
         ),
     ],
 )

@@ -10,11 +10,9 @@ import pytest
 
 from homeassistant import core
 from homeassistant.components import fan
-from homeassistant.components.bond.const import (
-    DOMAIN,
-    SERVICE_SET_FAN_SPEED_TRACKED_STATE,
-)
+from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
+from homeassistant.components.bond.services import SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_PERCENTAGE,

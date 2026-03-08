@@ -45,8 +45,8 @@ async def test_select_unknown_device_parameters(
     mock_return_value: Any,
 ) -> None:
     """Test that select entity shows unknown when get_current_option returns various invalid values."""
-    mock_connector.get_current_option.side_effect = (
-        lambda device_id, parameter_code: mock_return_value
+    mock_connector.get_current_option.side_effect = lambda device_id, parameter_code: (
+        mock_return_value
     )
     await setup_integration(hass, mock_config_entry)
 

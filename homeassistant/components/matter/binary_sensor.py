@@ -105,8 +105,9 @@ DISCOVERY_SCHEMAS = [
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: x
-            != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
+            device_to_ha=lambda x: (
+                x != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
@@ -174,6 +175,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="LockActuatorEnabledSensor",
+            translation_key="actuator",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.ActuatorEnabled,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -249,6 +260,18 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmCOStateSensor",
+            device_class=BinarySensorDeviceClass.CO,
+            device_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.COState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -493,8 +516,8 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # unset Operational bit from ConfigStatus bitmap means problem
-            device_to_ha=lambda x: not bool(
-                x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
+            device_to_ha=lambda x: (
+                not bool(x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational)
             ),
         ),
         entity_class=MatterBinarySensor,

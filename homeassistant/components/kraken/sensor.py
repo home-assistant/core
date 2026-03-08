@@ -22,13 +22,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import KrakenData
 from .const import (
     CONF_TRACKED_ASSET_PAIRS,
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
     KrakenResponse,
 )
+from .coordinator import KrakenData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,7 +225,7 @@ class KrakenSensor(
         self._device_name = create_device_name(tracked_asset_pair)
         self._attr_unique_id = "_".join(
             [
-                tracked_asset_pair.split("/")[0],
+                tracked_asset_pair.split("/", maxsplit=1)[0],
                 tracked_asset_pair.split("/")[1],
                 description.key,
             ]
@@ -291,4 +291,4 @@ class KrakenSensor(
 
 def create_device_name(tracked_asset_pair: str) -> str:
     """Create the device name for a given tracked asset pair."""
-    return f"{tracked_asset_pair.split('/')[0]} {tracked_asset_pair.split('/')[1]}"
+    return f"{tracked_asset_pair.split('/', maxsplit=1)[0]} {tracked_asset_pair.split('/')[1]}"

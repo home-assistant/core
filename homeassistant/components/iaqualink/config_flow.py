@@ -46,7 +46,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"
-            except (AqualinkServiceException, httpx.HTTPError):
+            except AqualinkServiceException, httpx.HTTPError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=username, data=user_input)

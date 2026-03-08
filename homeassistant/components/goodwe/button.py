@@ -45,7 +45,7 @@ async def async_setup_entry(
     # read current time from the inverter
     try:
         await inverter.read_setting("time")
-    except (InverterError, ValueError):
+    except InverterError, ValueError:
         # Inverter model does not support clock synchronization
         _LOGGER.debug("Could not read inverter current clock time")
     else:

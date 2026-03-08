@@ -14,7 +14,7 @@ from .helpers import get_base_url
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_bot_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
 ) -> BaseTelegramBot | None:
     """Set up the Telegram polling platform."""
@@ -35,7 +35,7 @@ def error_callback(bot: Bot, error: Exception, update: object | None = None) -> 
     """Log the error."""
     try:
         raise error
-    except (TimedOut, NetworkError, RetryAfter):
+    except TimedOut, NetworkError, RetryAfter:
         # Long polling timeout or connection problem. Nothing serious.
         pass
     except TelegramError:

@@ -15,6 +15,7 @@ UPDATE_INTERVAL = timedelta(seconds=300)
 
 API_VIRUS = "virus_index"
 API_MOLD = "mold_index"
+API_INFLUENZA = "influenza_index"
 API_TEMP = "temperature"
 API_HUMIDITY = "humidity"
 API_PM25 = "pm25"

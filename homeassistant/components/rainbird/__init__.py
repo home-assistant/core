@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 import aiohttp
-from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.async_client import AsyncRainbirdController, create_controller
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
 from homeassistant.const import (
@@ -18,19 +19,26 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SERIAL_NUMBER
+from .const import CONF_SERIAL_NUMBER, DOMAIN, TIMEOUT_SECONDS
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
     RainbirdUpdateCoordinator,
     async_create_clientsession,
 )
+from .services import async_setup_services
 from .types import RainbirdConfigEntry, RainbirdData
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CALENDAR,
@@ -38,9 +46,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-
-DOMAIN = "rainbird"
 
 
 def _async_register_clientsession_shutdown(
@@ -61,19 +66,31 @@ def _async_register_clientsession_shutdown(
     entry.async_on_unload(_async_close_websession)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
 
     clientsession = async_create_clientsession()
     _async_register_clientsession_shutdown(hass, entry, clientsession)
 
-    controller = AsyncRainbirdController(
-        AsyncRainbirdClient(
-            clientsession,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PASSWORD],
-        )
-    )
+    try:
+        async with asyncio.timeout(TIMEOUT_SECONDS):
+            controller = await create_controller(
+                clientsession,
+                entry.data[CONF_HOST],
+                entry.data[CONF_PASSWORD],
+            )
+    except TimeoutError as err:
+        raise ConfigEntryNotReady from err
+    except RainbirdAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except RainbirdApiException as err:
+        raise ConfigEntryNotReady from err
 
     if not (await _async_fix_unique_id(hass, controller, entry)):
         return False

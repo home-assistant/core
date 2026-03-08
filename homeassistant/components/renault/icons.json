@@ -9,6 +9,12 @@
       }
     },
     "button": {
+      "flash_lights": {
+        "default": "mdi:lightbulb-on"
+      },
+      "sound_horn": {
+        "default": "mdi:bugle"
+      },
       "start_air_conditioner": {
         "default": "mdi:air-conditioner"
       },
@@ -45,6 +51,13 @@
       },
       "charging_remaining_time": {
         "default": "mdi:timer"
+      },
+      "charging_settings_mode": {
+        "default": "mdi:calendar-remove",
+        "state": {
+          "delayed": "mdi:calendar-clock",
+          "scheduled": "mdi:calendar-month"
+        }
       },
       "fuel_autonomy": {
         "default": "mdi:gas-station"

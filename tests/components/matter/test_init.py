@@ -28,7 +28,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import create_node_from_fixture, setup_integration_with_node_fixture
+from .common import (
+    FIXTURES,
+    create_node_from_fixture,
+    load_and_parse_node_fixture,
+    setup_integration_with_node_fixture,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -50,12 +55,29 @@ def listen_ready_timeout_fixture() -> Generator[int]:
         yield timeout
 
 
+def test_fixture_list() -> None:
+    """Test validity of the fixture list."""
+    # Ensure it is sorted - makes it easier to identify duplicate entries or
+    # locate specific fixtures
+    assert sorted(FIXTURES) == FIXTURES, "Fixture list is not sorted"
+    # Ensure all fixtures have a unique node id
+    node_ids = set()
+    for fixture in FIXTURES:
+        node_data = load_and_parse_node_fixture(fixture)
+        if (node_id := node_data["node_id"]) in node_ids:
+            pytest.fail(
+                f"Duplicate node ID {node_id} found in fixture {fixture}, "
+                f"please use: {next(i for i in range(1, 1000) if i not in node_ids)}"
+            )
+        node_ids.add(node_id)
+
+
 async def test_entry_setup_unload(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
     """Test the integration set up and unload."""
-    node = create_node_from_fixture("onoff_light")
+    node = create_node_from_fixture("mock_onoff_light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
     entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})

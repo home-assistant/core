@@ -193,7 +193,7 @@ def webhook_response(
     )
 
 
-def device_info(registration: dict) -> DeviceInfo:
+def device_info(registration: Mapping[str, Any]) -> DeviceInfo:
     """Return the device info for this registration."""
     return DeviceInfo(
         identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},

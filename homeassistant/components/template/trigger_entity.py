@@ -7,9 +7,16 @@ from typing import Any
 
 from homeassistant.const import CONF_STATE, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.template import _SENTINEL
-from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
+from homeassistant.helpers.template import (
+    _SENTINEL,
+    render_complex as template_render_complex,
+)
+from homeassistant.helpers.trigger_template_entity import (
+    TriggerBaseEntity,
+    log_triggered_template_error,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
@@ -59,7 +66,9 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
         """Set up a template that manages the main state of the entity."""
-        if self.add_template(option, attribute, validator, on_update):
+        if self.add_template(
+            option, attribute, validator, on_update, none_on_template_error=False
+        ):
             self._to_render_simple.append(option)
             self._parse_result.add(option)
 
@@ -69,6 +78,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        none_on_template_error: bool = True,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
 
@@ -84,8 +95,22 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
         """
-        self.setup_state_template(option, attribute, validator, on_update)
+        if self.add_template(
+            option, attribute, validator, on_update, none_on_template_error
+        ):
+            if render_complex:
+                self._to_render_complex.append(option)
+            else:
+                self._to_render_simple.append(option)
+            self._parse_result.add(option)
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -104,6 +129,33 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
         return self._rendered_entity_variables or {}
+
+    def _render_single_template(
+        self,
+        key: str,
+        variables: dict[str, Any],
+        strict: bool = False,
+    ) -> Any:
+        """Render a single template."""
+        try:
+            if key in self._to_render_complex:
+                return template_render_complex(self._config[key], variables)
+
+            return self._config[key].async_render(
+                variables, parse_result=key in self._parse_result, strict=strict
+            )
+        except TemplateError as err:
+            log_triggered_template_error(self.entity_id, err, key=key)
+            # Filter out state templates because they have unique behavior
+            # with none_on_template_error.
+            if (
+                key != CONF_STATE
+                and key in self._templates
+                and not self._templates[key].none_on_template_error
+            ):
+                return err
+
+        return _SENTINEL
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
@@ -131,19 +183,18 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         # Handle any templates.
         write_state = False
         for option, entity_template in self._templates.items():
-            value = _SENTINEL
-            if (rendered := self._rendered.get(option)) is not None:
-                value = rendered
-
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.
-            if value is _SENTINEL:
+            if (rendered := self._rendered.get(option, _SENTINEL)) is _SENTINEL:
                 write_state = True
                 continue
 
-            if entity_template.validator:
-                value = entity_template.validator(rendered)
+            value = (
+                entity_template.validator(rendered)
+                if entity_template.validator
+                else rendered
+            )
 
             if entity_template.on_update:
                 entity_template.on_update(value)

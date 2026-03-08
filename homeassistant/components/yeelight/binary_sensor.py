@@ -48,6 +48,6 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
         return f"{self._unique_id}-nightlight_sensor"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if nightlight mode is on."""
         return self._device.is_nightlight_enabled

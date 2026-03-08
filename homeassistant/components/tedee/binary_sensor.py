@@ -56,8 +56,10 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         key="uncalibrated",
         translation_key="uncalibrated",
         is_on_fn=(
-            lambda lock: lock.state is TedeeLockState.UNCALIBRATED
-            or lock.state is TedeeLockState.UNKNOWN
+            lambda lock: (
+                lock.state is TedeeLockState.UNCALIBRATED
+                or lock.state is TedeeLockState.UNKNOWN
+            )
         ),
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -68,8 +70,10 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda lock: lock.door_state is TedeeDoorState.OPENED,
         device_class=BinarySensorDeviceClass.DOOR,
         supported_fn=lambda lock: lock.door_state is not TedeeDoorState.NOT_PAIRED,
-        available_fn=lambda lock: lock.door_state
-        not in [TedeeDoorState.UNCALIBRATED, TedeeDoorState.DISCONNECTED],
+        available_fn=lambda lock: (
+            lock.door_state
+            not in [TedeeDoorState.UNCALIBRATED, TedeeDoorState.DISCONNECTED]
+        ),
     ),
 )
 

@@ -5,7 +5,9 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+import voluptuous as vol
 
+from homeassistant.components.lovelace import _validate_url_slug
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -96,3 +98,30 @@ async def test_create_dashboards_when_not_onboarded(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"strategy": {"type": "map"}}
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("lovelace", "lovelace"),
+        ("my-dashboard", "my-dashboard"),
+        ("my-cool-dashboard", "my-cool-dashboard"),
+    ],
+)
+def test_validate_url_slug_valid(value: str, expected: str) -> None:
+    """Test _validate_url_slug with valid values."""
+    assert _validate_url_slug(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "error_message"),
+    [
+        (None, r"Slug should not be None"),
+        ("nodash", r"Url path needs to contain a hyphen \(-\)"),
+        ("my-dash board", r"invalid slug my-dash board \(try my-dash-board\)"),
+    ],
+)
+def test_validate_url_slug_invalid(value: Any, error_message: str) -> None:
+    """Test _validate_url_slug with invalid values."""
+    with pytest.raises(vol.Invalid, match=error_message):
+        _validate_url_slug(value)

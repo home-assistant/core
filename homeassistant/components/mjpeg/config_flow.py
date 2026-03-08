@@ -123,7 +123,7 @@ async def async_validate_input(
             )
     except InvalidAuth:
         errors["username"] = "invalid_auth"
-    except (OSError, HTTPError, Timeout):
+    except OSError, HTTPError, Timeout:
         LOGGER.exception("Cannot connect to %s", user_input[CONF_MJPEG_URL])
         errors[field] = "cannot_connect"
 
