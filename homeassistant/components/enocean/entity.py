@@ -76,13 +76,16 @@ class NewEnOceanEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, eurid: EURID, enocean_entity_id: str, sender: SenderAddress | None = None
+        self,
+        enocean_device_id: EURID,
+        enocean_entity_id: str,
+        sender: SenderAddress | None = None,
     ) -> None:
         """Initialize the device."""
         super().__init__()
-        self.eurid = eurid
+        self.enocean_device_id = enocean_device_id
         self.enocean_entity_id = enocean_entity_id
-        self._attr_unique_id = f"{eurid.to_string()}.{enocean_entity_id}"
+        self._attr_unique_id = f"{enocean_device_id.to_string()}.{enocean_entity_id}"
 
         # legacy naming; to be removed once all entities have been migrated to the new format
-        self._attr_name = f"EnOcean {eurid.to_string()} {enocean_entity_id}"
+        self._attr_name = f"EnOcean {enocean_device_id.to_string()} {enocean_entity_id}"
