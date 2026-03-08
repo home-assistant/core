@@ -66,7 +66,7 @@ async def async_setup_entry(
     for outlet_num in sorted(outlet_numbers):
         if (
             f"outlet.{outlet_num}.load.on" in cmds
-            or "load.on" in cmds
+            and f"outlet.{outlet_num}.load.off" in cmds
         ):
             switch_descriptions.append(
                 SwitchEntityDescription(
