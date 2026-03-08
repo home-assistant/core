@@ -34,12 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bo
     pajgps_coordinator = PajGpsCoordinator(
         hass, dict(entry.data), entry, async_get_clientsession(hass)
     )
-    try:
-        await pajgps_coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        raise
-    except Exception as exc:
-        raise ConfigEntryNotReady(f"Failed to connect to PAJ GPS: {exc}") from exc
+    await pajgps_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = pajgps_coordinator
 
