@@ -57,6 +57,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Android TV Remote."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     api: AndroidTVRemote
     host: str
