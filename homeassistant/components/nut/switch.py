@@ -63,10 +63,14 @@ async def async_setup_entry(
             key=f"outlet.{outlet_num}.load.poweronoff",
             translation_key="outlet_number_load_poweronoff",
             translation_placeholders={
-                "outlet_name": status.get(f"outlet.{outlet_num}.desc")
-                or str(outlet_num)
+                "outlet_name": (
+                    status.get(f"outlet.{outlet_num}.name")
+                    or status.get(f"outlet.{outlet_num}.desc")
+                    or f"Outlet {outlet_num}"
+                )
             },
             device_class=SwitchDeviceClass.OUTLET,
+            has_entity_name=True,
         )
         for outlet_num in sorted(outlet_numbers)
         if f"outlet.{outlet_num}.load.on" in cmds or "load.on" in cmds
