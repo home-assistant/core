@@ -58,25 +58,19 @@ async def async_setup_entry(
 
     cmds = set(map(str, user_available_commands))
 
-    switch_descriptions: list[SwitchEntityDescription] = []
-
-    for outlet_num in sorted(outlet_numbers):
-        if (
-            f"outlet.{outlet_num}.load.on" in cmds
-            and f"outlet.{outlet_num}.load.off" in cmds
-        ):
-            switch_descriptions.append(
-                SwitchEntityDescription(
-                    key=f"outlet.{outlet_num}.load.poweronoff",
-                    translation_key="outlet_number_load_poweronoff",
-                    translation_placeholders={
-                        "outlet_name": status.get(f"outlet.{outlet_num}.name")
-                        or status.get(f"outlet.{outlet_num}.desc")
-                        or str(outlet_num)
-                    },
-                    device_class=SwitchDeviceClass.OUTLET,
-                )
-            )
+    switch_descriptions = [
+        SwitchEntityDescription(
+            key=f"outlet.{outlet_num}.load.poweronoff",
+            translation_key="outlet_number_load_poweronoff",
+            translation_placeholders={
+                "outlet_name": status.get(f"outlet.{outlet_num}.desc")
+                or str(outlet_num)
+            },
+            device_class=SwitchDeviceClass.OUTLET,
+        )
+        for outlet_num in sorted(outlet_numbers)
+        if f"outlet.{outlet_num}.load.on" in cmds or "load.on" in cmds
+    ]
 
     async_add_entities(
         NUTSwitch(coordinator, description, data, unique_id)
