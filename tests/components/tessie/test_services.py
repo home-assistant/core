@@ -6,6 +6,7 @@ import pytest
 from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.components.tessie.const import DOMAIN
+from homeassistant.components.tessie.models import TessieData
 from homeassistant.components.tessie.services import (
     ATTR_DEPARTURE_TIME,
     ATTR_ENABLE,
@@ -181,6 +182,32 @@ async def test_set_scheduled_charging_tesla_fleet_error(
         )
 
 
+async def test_set_scheduled_charging_vehicle_not_in_runtime_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test scheduled charging with a missing vehicle in runtime data."""
+    mock_entry = await setup_platform(hass, [Platform.SENSOR])
+
+    assert (config_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
+    runtime_data = config_entry.runtime_data
+    config_entry.runtime_data = TessieData([], runtime_data.energysites)
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+                ATTR_TIME: "10:00",
+            },
+            blocking=True,
+        )
+
+
 async def test_set_scheduled_departure_full_params(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -245,6 +272,31 @@ async def test_set_scheduled_departure_disable(
         assert call_kwargs.kwargs["enable"] is False
         assert call_kwargs.kwargs["departure_time_mins"] == 0
         assert call_kwargs.kwargs["end_off_peak_time_mins"] == 0
+
+
+async def test_set_scheduled_departure_vehicle_not_in_runtime_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test scheduled departure with a missing vehicle in runtime data."""
+    mock_entry = await setup_platform(hass, [Platform.SENSOR])
+
+    assert (config_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
+    runtime_data = config_entry.runtime_data
+    config_entry.runtime_data = TessieData([], runtime_data.energysites)
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
 
 
 async def test_set_scheduled_departure_preconditioning_without_time(

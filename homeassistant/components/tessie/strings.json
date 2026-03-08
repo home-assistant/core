@@ -688,7 +688,7 @@
       "fields": {
         "device_id": {
           "description": "The vehicle to set the scheduled charging for.",
-          "name": "Vehicle"
+          "name": "[%key:component::tessie::entity::sensor::vin::name%]"
         },
         "enable": {
           "description": "Whether to enable or disable scheduled charging.",
@@ -710,7 +710,7 @@
         },
         "device_id": {
           "description": "The vehicle to set the scheduled departure for.",
-          "name": "Vehicle"
+          "name": "[%key:component::tessie::entity::sensor::vin::name%]"
         },
         "enable": {
           "description": "Whether to enable or disable scheduled departure.",
