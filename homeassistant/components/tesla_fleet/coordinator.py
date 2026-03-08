@@ -176,7 +176,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.update_interval = ENERGY_INTERVAL
 
         try:
-            data = (await self.api.live_status())["response"]
+            raw_data = (await self.api.live_status())["response"]
         except RateLimited as e:
             if isinstance(e.data, dict) and "after" in e.data:
                 LOGGER.warning(
@@ -193,9 +193,24 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        if not isinstance(raw_data, dict):
+            LOGGER.debug(
+                "%s got unexpected live status response type: %s",
+                self.name,
+                type(raw_data).__name__,
+            )
+            return self.data
+
+        data = raw_data
+
         # Convert Wall Connectors from array to dict
+        wall_connectors = data.get("wall_connectors")
+        if not isinstance(wall_connectors, list):
+            wall_connectors = []
         data["wall_connectors"] = {
-            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+            wc["din"]: wc
+            for wc in wall_connectors
+            if isinstance(wc, dict) and "din" in wc
         }
 
         self.updated_once = True

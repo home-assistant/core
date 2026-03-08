@@ -41,7 +41,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_platform
 from .conftest import create_config_entry
-from .const import VEHICLE_ASLEEP, VEHICLE_DATA_ALT
+from .const import LIVE_STATUS, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -350,6 +350,42 @@ async def test_energy_live_refresh_error(
     mock_live_status.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
+
+
+async def test_energy_live_refresh_bad_response(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with malformed live status payload."""
+    bad_live_status = deepcopy(LIVE_STATUS)
+    bad_live_status["response"] = "site data is unavailable"
+    mock_live_status.side_effect = None
+    mock_live_status.return_value = bad_live_status
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state != "unavailable"
+
+
+async def test_energy_live_refresh_bad_wall_connectors(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with malformed wall connector payload."""
+    bad_live_status = deepcopy(LIVE_STATUS)
+    bad_live_status["response"]["wall_connectors"] = "site data is unavailable"
+    mock_live_status.side_effect = None
+    mock_live_status.return_value = bad_live_status
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state != "unavailable"
 
 
 # Test Energy Site Coordinator
