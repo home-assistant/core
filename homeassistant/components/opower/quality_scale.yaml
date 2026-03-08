@@ -58,7 +58,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -71,7 +71,7 @@ rules:
     status: exempt
     comment: The integration has no user-configurable options that are not authentication-related.
   repair-issues: done
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

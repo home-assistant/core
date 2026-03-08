@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -114,3 +114,49 @@ async def test_sensors(
     state = hass.states.get("sensor.gas_account_222222_last_updated")
     assert state
     assert state.state == "2023-01-02T08:00:00+00:00"
+
+
+async def test_dynamic_and_stale_devices(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the dynamic addition and removal of Opower devices."""
+    original_accounts = mock_opower_api.async_get_accounts.return_value
+    original_forecasts = mock_opower_api.async_get_forecast.return_value
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 2
+
+    # Remove the second account and update data
+    mock_opower_api.async_get_accounts.return_value = [original_accounts[0]]
+    mock_opower_api.async_get_forecast.return_value = [original_forecasts[0]]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 1
+
+    # Add back the second account
+    mock_opower_api.async_get_accounts.return_value = original_accounts
+    mock_opower_api.async_get_forecast.return_value = original_forecasts
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 2
