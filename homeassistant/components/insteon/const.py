@@ -107,7 +107,6 @@ SIGNAL_REMOVE_DEVICE_OVERRIDE = "insteon_remove_device_override"
 SIGNAL_REMOVE_ENTITY = "insteon_remove_entity"
 SIGNAL_ADD_X10_DEVICE = "insteon_add_x10_device"
 SIGNAL_REMOVE_X10_DEVICE = "insteon_remove_x10_device"
-SIGNAL_ADD_DEFAULT_LINKS = "add_default_links"
 
 HOUSECODES = [
     "a",

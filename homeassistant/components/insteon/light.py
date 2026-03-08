@@ -16,8 +16,6 @@ from .const import SIGNAL_ADD_ENTITIES
 from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
 
-MAX_BRIGHTNESS = 255
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,7 +75,7 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
             brightness = int(kwargs[ATTR_BRIGHTNESS])
         elif self._insteon_device_group.group == 1:
             brightness = self.get_device_property(ON_LEVEL)
-        if brightness:
+        if brightness is not None:
             await self._insteon_device.async_on(
                 on_level=brightness, group=self._insteon_device_group.group
             )

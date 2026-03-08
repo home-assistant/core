@@ -64,7 +64,7 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return the boolean response if the node is on."""
-        return bool(self.current_cover_position)
+        return not bool(self.current_cover_position)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
