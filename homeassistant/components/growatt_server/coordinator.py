@@ -95,21 +95,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # login only required for classic API
         if self.api_version == "classic":
             login_response = self.api.login(self.username, self.password)
-            if not isinstance(login_response, dict) or not login_response.get(
-                "success"
-            ):
-                if (
-                    isinstance(login_response, dict)
-                    and login_response.get("msg") == LOGIN_INVALID_AUTH_CODE
-                ):
+            if not login_response.get("success"):
+                msg = login_response.get("msg", "Unknown error")
+                if msg == LOGIN_INVALID_AUTH_CODE:
                     raise ConfigEntryAuthFailed(
                         "Username, password, or URL may be incorrect"
                     )
-                msg = (
-                    login_response.get("msg", "Unknown error")
-                    if isinstance(login_response, dict)
-                    else "Invalid response from server"
-                )
                 raise UpdateFailed(f"Growatt login failed: {msg}")
 
         if self.device_type == "total":
