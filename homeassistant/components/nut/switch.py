@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
+import re
 from typing import Any
 
 from homeassistant.components.switch import (
@@ -26,42 +28,62 @@ async def async_setup_entry(
     config_entry: NutConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
+    
+    _LOGGER.warning("NUT switch platform loaded")
+    
     """Set up the NUT switches."""
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
     status = coordinator.data
 
-    # Dynamically add outlet switch types
-    if (num_outlets := status.get("outlet.count")) is None:
-        return
-
     data = pynut_data.data
     unique_id = pynut_data.unique_id
     user_available_commands = pynut_data.user_available_commands
-    switch_descriptions = [
-        SwitchEntityDescription(
-            key=f"outlet.{outlet_num!s}.load.poweronoff",
-            translation_key="outlet_number_load_poweronoff",
-            translation_placeholders={
-                "outlet_name": status.get(f"outlet.{outlet_num!s}.name")
-                or str(outlet_num)
-            },
-            device_class=SwitchDeviceClass.OUTLET,
-            entity_registry_enabled_default=True,
-        )
-        for outlet_num in range(1, int(num_outlets) + 1)
+
+    outlet_numbers: set[int] = set()
+
+    # Prefer outlet.count
+    if (num_outlets := status.get("outlet.count")) is not None:
+        with suppress(ValueError):
+            outlet_numbers.update(range(1, int(num_outlets) + 1))
+
+# Detect outlets from status
+    for key in status:
+        match = re.match(r"outlet\.(\d+)\.status", key)
+        if match:
+            outlet_numbers.add(int(match.group(1)))
+
+# Detect outlets from commands
+    for cmd in map(str, user_available_commands):
+        match = re.match(r"outlet\.(\d+)\.load\.(on|off)", cmd)
+        if match:
+            outlet_numbers.add(int(match.group(1)))
+
+    cmds = set(map(str, user_available_commands))
+
+    switch_descriptions: list[SwitchEntityDescription] = []
+
+    for outlet_num in sorted(outlet_numbers):
         if (
-            status.get(f"outlet.{outlet_num!s}.switchable") == "yes"
-            and f"outlet.{outlet_num!s}.load.on" in user_available_commands
-            and f"outlet.{outlet_num!s}.load.off" in user_available_commands
-        )
-    ]
+            f"outlet.{outlet_num}.load.on" in cmds
+            or "load.on" in cmds
+        ):
+            switch_descriptions.append(
+                SwitchEntityDescription(
+                    key=f"outlet.{outlet_num}.load.poweronoff",
+                    translation_key="outlet_number_load_poweronoff",
+                    translation_placeholders={
+                        "outlet_name": status.get(f"outlet.{outlet_num}.desc")
+                        or str(outlet_num)
+                    },
+                    device_class=SwitchDeviceClass.OUTLET,
+                )
+            )
 
     async_add_entities(
         NUTSwitch(coordinator, description, data, unique_id)
         for description in switch_descriptions
     )
-
 
 class NUTSwitch(NUTBaseEntity, SwitchEntity):
     """Representation of a switch entity for NUT status values."""
