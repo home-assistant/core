@@ -497,7 +497,11 @@ class APITemplateView(HomeAssistantView):
             )
         tpl = _cached_template(data["template"], request.app[KEY_HASS])
         try:
-            return tpl.async_render(variables=data.get("variables"), parse_result=False)  # type: ignore[no-any-return]
+            return web.Response(
+                text=tpl.async_render(
+                    variables=data.get("variables"), parse_result=False
+                )
+            )
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTPStatus.BAD_REQUEST
