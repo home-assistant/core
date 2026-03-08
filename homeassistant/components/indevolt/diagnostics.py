@@ -15,6 +15,7 @@ from .coordinator import IndevoltConfigEntry
 TO_REDACT = {
     CONF_HOST,
     CONF_SERIAL_NUMBER,
+    "0",
     "9008",
     "9032",
     "9051",
