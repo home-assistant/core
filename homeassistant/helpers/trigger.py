@@ -797,6 +797,74 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
         return not between
 
 
+class EntityNumericalStateCrossedThresholdTriggerBase(EntityTriggerBase):
+    """Trigger for numerical state changes.
+
+    This trigger only fires when the observed state changes from not within to within
+    the defined threshold.
+    """
+
+    _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
+
+    _lower_limit: float | str | None = None
+    _upper_limit: float | str | None = None
+    _threshold_type: ThresholdType
+
+    _converter: Callable[[Any], float] = float
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the state trigger."""
+        super().__init__(hass, config)
+        self._lower_limit = self._options.get(CONF_LOWER_LIMIT)
+        self._upper_limit = self._options.get(CONF_UPPER_LIMIT)
+        self._threshold_type = self._options[CONF_THRESHOLD_TYPE]
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return not self.is_valid_state(from_state)
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute matches the expected one."""
+        if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        if self._lower_limit is not None:
+            if (
+                lower_limit := _get_numerical_value(self._hass, self._lower_limit)
+            ) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+
+        if self._upper_limit is not None:
+            if (
+                upper_limit := _get_numerical_value(self._hass, self._upper_limit)
+            ) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+
+        try:
+            current_value = self._converter(state.state)
+        except TypeError, ValueError:
+            # Attribute is not a valid number, don't trigger
+            return False
+
+        # Note: We do not need to check for lower_limit/upper_limit being None here
+        # because of the validation done in the schema.
+        if self._threshold_type == ThresholdType.ABOVE:
+            return current_value > lower_limit  # type: ignore[operator]
+        if self._threshold_type == ThresholdType.BELOW:
+            return current_value < upper_limit  # type: ignore[operator]
+
+        # Mode is BETWEEN or OUTSIDE
+        between = lower_limit < current_value < upper_limit  # type: ignore[operator]
+        if self._threshold_type == ThresholdType.BETWEEN:
+            return between
+        return not between
+
+
 def make_entity_target_state_trigger(
     domain: str, to_states: str | set[str]
 ) -> type[EntityTargetStateTriggerBase]:
@@ -879,6 +947,19 @@ def make_entity_numerical_state_changed_trigger(
     """Create a trigger for numerical state change."""
 
     class CustomTrigger(EntityNumericalStateChangedTriggerBase):
+        """Trigger for numerical state changes."""
+
+        _domains = domains
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_crossed_threshold_trigger(
+    domains: set[str],
+) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
+    """Create a trigger for numerical state change."""
+
+    class CustomTrigger(EntityNumericalStateCrossedThresholdTriggerBase):
         """Trigger for numerical state changes."""
 
         _domains = domains

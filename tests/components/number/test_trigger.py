@@ -1,5 +1,7 @@
 """Test number entity trigger."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -15,6 +17,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    parametrize_numerical_crossed_threshold_trigger_states,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -37,6 +40,7 @@ async def target_input_numbers(hass: HomeAssistant) -> list[str]:
     "trigger_key",
     [
         "number.changed",
+        "number.crossed_threshold",
     ],
 )
 async def test_number_triggers_gated_by_labs_flag(
@@ -221,4 +225,312 @@ async def test_input_number_changed_trigger_behavior(
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_crossed_threshold_trigger_states(
+            "number.crossed_threshold"
+        )
+    ],
+)
+async def test_number_crossed_threshold_trigger_behavior_any(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_numbers: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the number crossed threshold trigger fires when any number state changes to a specific state."""
+    other_entity_ids = set(target_numbers) - {entity_id}
+
+    # Set all numbers, including the tested number, to the initial state
+    for eid in target_numbers:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Check if changing other numbers also triggers
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(INPUT_NUMBER_DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_crossed_threshold_trigger_states(
+            "number.crossed_threshold"
+        )
+    ],
+)
+async def test_input_number_crossed_threshold_trigger_behavior_any(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_input_numbers: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the number crossed threshold trigger fires when any input number state changes to a specific state."""
+    other_entity_ids = set(target_input_numbers) - {entity_id}
+
+    # Set all input numbers, including the tested input number, to the initial state
+    for eid in target_input_numbers:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Check if changing other numbers also triggers
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_crossed_threshold_trigger_states(
+            "number.crossed_threshold"
+        )
+    ],
+)
+async def test_number_crossed_threshold_trigger_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_numbers: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the number crossed threshold trigger fires when the first number state changes to a specific state."""
+    other_entity_ids = set(target_numbers) - {entity_id}
+
+    # Set all numbers, including the tested number, to the initial state
+    for eid in target_numbers:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "first"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Triggering other climates should not cause the trigger to fire again
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(INPUT_NUMBER_DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_crossed_threshold_trigger_states(
+            "number.crossed_threshold"
+        )
+    ],
+)
+async def test_input_number_crossed_threshold_trigger_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_input_numbers: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the number crossed threshold trigger fires when any input number state changes to a specific state."""
+    other_entity_ids = set(target_input_numbers) - {entity_id}
+
+    # Set all input numbers, including the tested input number, to the initial state
+    for eid in target_input_numbers:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "first"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Triggering other climates should not cause the trigger to fire again
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_crossed_threshold_trigger_states(
+            "number.crossed_threshold"
+        )
+    ],
+)
+async def test_number_crossed_threshold_trigger_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_numbers: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the number crossed threshold trigger fires when the last number state changes to a specific state."""
+    other_entity_ids = set(target_numbers) - {entity_id}
+
+    # Set all numbers, including the tested number, to the initial state
+    for eid in target_numbers:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        included_state = state["included"]
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(INPUT_NUMBER_DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_crossed_threshold_trigger_states(
+            "number.crossed_threshold"
+        )
+    ],
+)
+async def test_input_number_crossed_threshold_trigger_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_input_numbers: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the number crossed threshold trigger fires when the last input number state changes to a specific state."""
+    other_entity_ids = set(target_input_numbers) - {entity_id}
+
+    # Set all input numbers, including the tested input number, to the initial state
+    for eid in target_input_numbers:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        included_state = state["included"]
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
