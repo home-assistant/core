@@ -50,7 +50,7 @@ async def async_setup_entry(
         if match:
             outlet_numbers.add(int(match.group(1)))
 
-# Detect outlets from commands
+    # Detect outlets from commands
     for cmd in map(str, user_available_commands):
         match = re.fullmatch(r"outlet\.(\d+)\.load\.(on|off)", cmd)
         if match:
@@ -76,6 +76,8 @@ async def async_setup_entry(
         NUTSwitch(coordinator, description, data, unique_id)
         for description in switch_descriptions
     )
+
+
 class NUTSwitch(NUTBaseEntity, SwitchEntity):
     """Representation of a switch entity for NUT status values."""
 
