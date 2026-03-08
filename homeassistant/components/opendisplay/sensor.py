@@ -56,6 +56,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OpenDisplay sensor entities."""
+    if not entry.runtime_data.is_flex:
+        return
+
     coordinator = entry.runtime_data.coordinator
     power_config = entry.runtime_data.device_config.power
     descriptions: list[OpenDisplaySensorEntityDescription] = [_TEMPERATURE_DESCRIPTION]

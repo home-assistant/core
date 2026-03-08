@@ -121,6 +121,21 @@ async def test_battery_sensors_with_battery_sense(
     assert int(battery_state.state) > 0
 
 
+async def test_no_sensors_for_non_flex_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that no sensor entities are created for non-Flex devices."""
+    mock_opendisplay_device.is_flex = False
+    await _setup_entry(hass, mock_config_entry)
+
+    assert entity_registry.async_get("sensor.opendisplay_1234_temperature") is None
+    assert entity_registry.async_get("sensor.opendisplay_1234_battery") is None
+    assert entity_registry.async_get("sensor.opendisplay_1234_voltage") is None
+
+
 async def test_coordinator_ignores_unknown_manufacturer(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
