@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
     StateType,
 )
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     EntityCategory,
     UnitOfVolume,
@@ -171,7 +172,9 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Spray.current_sector.unique_id,
         translation_key="spray_current_sector",
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DEGREE,
         char=Spray.current_sector,
     ),
     GardenaBluetoothSensorEntityDescription(

@@ -63,6 +63,40 @@
         "name": "Sector"
       }
     },
+    "select": {
+      "active_position": {
+        "name": "Active position",
+        "state": {
+          "position_1": "Position 1",
+          "position_2": "Position 2",
+          "position_3": "Position 3",
+          "position_4": "Position 4",
+          "position_5": "Position 5"
+        }
+      },
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "active": "Active",
+          "deep_sleep": "Deep sleep",
+          "manual_mode": "Manual",
+          "pre_winter": "Winter preparation"
+        }
+      },
+      "watering_active": {
+        "name": "Watering",
+        "state": {
+          "contour_1": "Contour 1",
+          "contour_2": "Contour 2",
+          "contour_3": "Contour 3",
+          "contour_4": "Contour 4",
+          "contour_5": "Contour 5",
+          "preview": "Preview",
+          "rest": "Idle",
+          "setup_mode": "Setup"
+        }
+      }
+    },
     "sensor": {
       "activation_reason": {
         "name": "Activation reason"

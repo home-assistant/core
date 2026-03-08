@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_setup
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqua Contour Watering',
+      'options': list([
+        'preview',
+        'setup_mode',
+        'rest',
+        'contour_1',
+        'contour_2',
+        'contour_3',
+        'contour_4',
+        'contour_5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqua_contour_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rest',
+  })
+# ---
+# name: test_setup.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqua Contour Watering',
+      'options': list([
+        'preview',
+        'setup_mode',
+        'rest',
+        'contour_1',
+        'contour_2',
+        'contour_3',
+        'contour_4',
+        'contour_5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqua_contour_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'contour_1',
+  })
+# ---
