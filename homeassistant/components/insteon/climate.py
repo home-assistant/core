@@ -153,7 +153,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         high = self._insteon_device.groups[HUMIDITY_HIGH].value
         low = self._insteon_device.groups[HUMIDITY_LOW].value
         # May not be loaded yet so return a default if required
-        return (high + low) / 2 if high is not None and low is not None else None
+        return int((high + low) / 2) if high is not None and low is not None else None
 
     @property
     def hvac_action(self) -> HVACAction:
