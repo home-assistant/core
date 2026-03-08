@@ -44,6 +44,9 @@
     },
     "started_mowing": {
       "trigger": "mdi:play"
+    },
+    "started_returning": {
+      "trigger": "mdi:home-import-outline"
     }
   }
 }

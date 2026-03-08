@@ -18,7 +18,7 @@
         "data_description": {
           "admin_api_key": "[%key:component::ghost::config::step::user::data_description::admin_api_key%]"
         },
-        "description": "Your API key for {title} is invalid. [Create a new integration key]({docs_url}) to reauthenticate.",
+        "description": "Your API key for {title} is invalid. [Create a new integration key]({setup_url}) to reauthenticate.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
@@ -30,7 +30,7 @@
           "admin_api_key": "The Admin API key for your Ghost integration",
           "api_url": "The API URL for your Ghost integration"
         },
-        "description": "[Create a custom integration]({docs_url}) to get your API URL and Admin API key.",
+        "description": "[Create a custom integration]({setup_url}) to get your API URL and Admin API key.",
         "title": "Connect to Ghost"
       }
     }
