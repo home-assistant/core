@@ -17,6 +17,7 @@ from opendisplay import (
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -27,15 +28,19 @@ if TYPE_CHECKING:
     from opendisplay.models import FirmwareVersion
 
 from .const import DOMAIN
+from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
 class OpenDisplayRuntimeData:
     """Runtime data for an OpenDisplay config entry."""
 
+    coordinator: OpenDisplayCoordinator
     firmware: FirmwareVersion
     device_config: GlobalConfig
     is_flex: bool
@@ -77,40 +82,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     if TYPE_CHECKING:
         assert device_config is not None
 
+    coordinator = OpenDisplayCoordinator(hass, address)
+
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(CONNECTION_BLUETOOTH, address)},
+        name=entry.title,
+    )
+
     entry.runtime_data = OpenDisplayRuntimeData(
+        coordinator=coordinator,
         firmware=fw,
         device_config=device_config,
         is_flex=is_flex,
     )
 
-    # Will be moved to DeviceInfo object in entity.py once entities are added
-    manufacturer = device_config.manufacturer
-    display = device_config.displays[0]
-    color_scheme_enum = display.color_scheme_enum
-    color_scheme = (
-        str(color_scheme_enum)
-        if isinstance(color_scheme_enum, int)
-        else color_scheme_enum.name
-    )
-    size = (
-        f'{display.screen_diagonal_inches:.1f}"'
-        if display.screen_diagonal_inches is not None
-        else f"{display.pixel_width}x{display.pixel_height}"
-    )
-
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(CONNECTION_BLUETOOTH, address)},
-        manufacturer=manufacturer.manufacturer_name,
-        model=f"{size} {color_scheme}",
-        sw_version=f"{fw['major']}.{fw['minor']}",
-        hw_version=f"{manufacturer.board_type_name or manufacturer.board_type} rev. {manufacturer.board_revision}"
-        if is_flex
-        else None,
-        configuration_url="https://opendisplay.org/firmware/config/"
-        if is_flex
-        else None,
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(coordinator.async_start())
 
     return True
 
@@ -124,4 +112,4 @@ async def async_unload_entry(
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
