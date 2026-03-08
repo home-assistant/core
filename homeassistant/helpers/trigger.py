@@ -827,7 +827,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityTriggerBase):
         return not self.is_valid_state(from_state)
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
+        """Check if the new state matches the expected thresholds."""
         if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 

@@ -241,8 +241,8 @@
       "description": "Triggers after the value of one or more numbers crosses a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::climate::common::trigger_behavior_description%]",
-          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+          "description": "[%key:component::number::common::trigger_behavior_description%]",
+          "name": "[%key:component::number::common::trigger_behavior_name%]"
         },
         "lower_limit": {
           "description": "Lower threshold limit.",

@@ -252,7 +252,7 @@ async def test_number_crossed_threshold_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the number crossed threshold trigger fires when any number state changes to a specific state."""
+    """Test that the number crossed threshold trigger fires when any number crosses a threshold."""
     other_entity_ids = set(target_numbers) - {entity_id}
 
     # Set all numbers, including the tested number, to the initial state
@@ -375,7 +375,7 @@ async def test_number_crossed_threshold_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other climates should not cause the trigger to fire again
+        # Triggering other numbers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
         await hass.async_block_till_done()
@@ -427,7 +427,7 @@ async def test_input_number_crossed_threshold_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other climates should not cause the trigger to fire again
+        # Triggering other input numbers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
         await hass.async_block_till_done()
