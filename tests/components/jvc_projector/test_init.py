@@ -6,9 +6,9 @@ from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_MAC
@@ -87,3 +87,60 @@ async def test_config_entry_auth_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_migrate_legacy_sensor_entities_to_select(
+    hass: HomeAssistant,
+    mock_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration of legacy sensor entries that became selects."""
+    entity_registry = er.async_get(hass)
+    mac = format_mac(MOCK_MAC)
+    mock_config_entry.add_to_hass(hass)
+
+    legacy_hdr_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mac}_hdr_processing",
+        config_entry=mock_config_entry,
+        disabled_by=None,
+    )
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mac}_picture_mode",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(legacy_hdr_entry.entity_id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{mac}_hdr_processing"
+        )
+        is None
+    )
+
+    migrated_hdr_entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{mac}_hdr_processing"
+    )
+    assert migrated_hdr_entity_id is not None
+    migrated_hdr_entry = entity_registry.async_get(migrated_hdr_entity_id)
+    assert migrated_hdr_entry is not None
+    assert migrated_hdr_entry.disabled_by is None
+
+    migrated_picture_mode_entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{mac}_picture_mode"
+    )
+    assert migrated_picture_mode_entity_id is not None
+    migrated_picture_mode_entry = entity_registry.async_get(
+        migrated_picture_mode_entity_id
+    )
+    assert migrated_picture_mode_entry is not None
+    assert (
+        migrated_picture_mode_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    )

@@ -1,4 +1,4 @@
-"""Tests for the JVC Projector binary sensor device."""
+"""Tests for JVC Projector sensor platform."""
 
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -12,7 +12,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 POWER_ID = "sensor.jvc_projector_status"
 HDR_ENTITY_ID = "sensor.jvc_projector_hdr"
-HDR_PROCESSING_ENTITY_ID = "sensor.jvc_projector_hdr_processing"
 
 
 async def test_entity_state(
@@ -34,7 +33,7 @@ async def test_enable_hdr_sensor(
     mock_device,
     mock_integration: MockConfigEntry,
 ) -> None:
-    """Test enabling the HDR select (disabled by default)."""
+    """Test enabling the HDR sensor (disabled by default)."""
 
     # Test entity is disabled initially
     entry = entity_registry.async_get(HDR_ENTITY_ID)
@@ -43,8 +42,6 @@ async def test_enable_hdr_sensor(
 
     # Enable entity
     entity_registry.async_update_entity(HDR_ENTITY_ID, disabled_by=None)
-    entity_registry.async_update_entity(HDR_PROCESSING_ENTITY_ID, disabled_by=None)
-
     # Add to hass
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
@@ -65,4 +62,4 @@ async def test_enable_hdr_sensor(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None
+    assert hass.states.get(HDR_ENTITY_ID) is not None

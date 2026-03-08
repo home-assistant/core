@@ -71,6 +71,15 @@
           "off": "[%key:common::state::off%]"
         }
       },
+      "hdr_processing": {
+        "name": "HDR Processing",
+        "state": {
+          "frame-by-frame": "Frame-by-Frame",
+          "hdr10p": "HDR10+",
+          "scene-by-scene": "Scene-by-Scene",
+          "static": "Static"
+        }
+      },
       "input": {
         "name": "Input",
         "state": {
@@ -100,6 +109,23 @@
           "low": "[%key:common::state::low%]",
           "mid": "[%key:common::state::medium%]",
           "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "picture_mode": {
+        "name": "Picture Mode",
+        "state": {
+          "frame-adapt-hdr": "Frame Adapt HDR",
+          "frame-adapt-hdr2": "Frame Adapt HDR2",
+          "frame-adapt-hdr3": "Frame Adapt HDR3",
+          "hdr1": "HDR1",
+          "hdr10": "HDR10",
+          "hdr10-ll": "HDR10 LL",
+          "hdr2": "HDR2",
+          "last-setting": "Last Setting",
+          "pana-pq": "Pana PQ",
+          "user-4": "User 4",
+          "user-5": "User 5",
+          "user-6": "User 6"
         }
       }
     },
@@ -134,34 +160,8 @@
           "smpte-st-2084": "SMPTE ST 2084"
         }
       },
-      "hdr_processing": {
-        "name": "HDR Processing",
-        "state": {
-          "frame-by-frame": "Frame-by-Frame",
-          "hdr10p": "HDR10+",
-          "scene-by-scene": "Scene-by-Scene",
-          "static": "Static"
-        }
-      },
       "light_time": {
         "name": "Light Time"
-      },
-      "picture_mode": {
-        "name": "Picture Mode",
-        "state": {
-          "frame-adapt-hdr": "Frame Adapt HDR",
-          "frame-adapt-hdr2": "Frame Adapt HDR2",
-          "frame-adapt-hdr3": "Frame Adapt HDR3",
-          "hdr1": "HDR1",
-          "hdr10": "HDR10",
-          "hdr10-ll": "HDR10 LL",
-          "hdr2": "HDR2",
-          "last-setting": "Last Setting",
-          "pana-pq": "Pana PQ",
-          "user-4": "User 4",
-          "user-5": "User 5",
-          "user-6": "User 6"
-        }
       },
       "power": {
         "name": "Status",
