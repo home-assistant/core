@@ -151,9 +151,9 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "email", default=reauth_entry.data.get("email", "")
+                        CONF_EMAIL, default=reauth_entry.data.get(CONF_EMAIL, "")
                     ): cv.string,
-                    vol.Required("password"): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,
@@ -194,8 +194,8 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
                             data={
                                 **reconfigure_entry.data,
                                 "entry_name": user_input["entry_name"],
-                                "email": email,
-                                "password": user_input["password"],
+                                CONF_EMAIL: email,
+                                CONF_PASSWORD: user_input[CONF_PASSWORD],
                             },
                             title=user_input["entry_name"],
                         )
@@ -248,10 +248,10 @@ class OptionsFlowHandler(OptionsFlow):
             "entry_name", self._config_entry.data.get("entry_name", "")
         )
         default_email = self._config_entry.options.get(
-            "email", self._config_entry.data.get("email", "")
+            CONF_EMAIL, self._config_entry.data.get(CONF_EMAIL, "")
         )
         default_password = self._config_entry.options.get(
-            "password", self._config_entry.data.get("password", "")
+            CONF_PASSWORD, self._config_entry.data.get(CONF_PASSWORD, "")
         )
 
         if user_input is not None:
@@ -279,8 +279,8 @@ class OptionsFlowHandler(OptionsFlow):
                 new_data = {
                     "guid": self._config_entry.data["guid"],
                     "entry_name": user_input["entry_name"],
-                    "email": user_input[CONF_EMAIL],
-                    "password": user_input[CONF_PASSWORD],
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
                 }
                 self.hass.config_entries.async_update_entry(
                     self._config_entry,
@@ -295,8 +295,8 @@ class OptionsFlowHandler(OptionsFlow):
                 step_id="init",
                 data_schema=_build_config_schema(
                     entry_name=user_input.get("entry_name", default_entry_name),
-                    email=user_input.get("email", default_email),
-                    password=user_input.get("password", default_password),
+                    email=user_input.get(CONF_EMAIL, default_email),
+                    password=user_input.get(CONF_PASSWORD, default_password),
                 ),
                 errors=errors,
             )
