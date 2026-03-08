@@ -3,7 +3,7 @@
 aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 aiodns==4.0.0
-aiogithubapi==24.6.0
+aiogithubapi==26.0.0
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
@@ -40,8 +40,8 @@ habluetooth==5.8.0
 hass-nabucasa==1.15.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20260128.6
-home-assistant-intents==2026.2.13
+home-assistant-frontend==20260304.0
+home-assistant-intents==2026.3.3
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -51,7 +51,7 @@ openai==2.21.0
 orjson==3.11.5
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==12.0.0
+Pillow==12.1.1
 propcache==0.4.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
@@ -64,19 +64,19 @@ python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.3
 requests==2.32.5
-securetar==2025.2.1
+securetar==2026.2.0
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==1.5.2
 urllib3>=2.0
-uv==0.9.26
+uv==0.10.6
 voluptuous-openapi==0.2.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.22.0
+yarl==1.23.0
 zeroconf==0.148.0
 
 # Constrain pycryptodome to avoid vulnerability
@@ -222,9 +222,6 @@ num2words==0.5.14
 # downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.2
-
-# Some packages don't support gql 4.0.0 yet
-gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
