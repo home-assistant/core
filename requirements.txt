@@ -40,7 +40,7 @@ packaging>=23.1
 Pillow==12.1.1
 propcache==0.4.1
 psutil-home-assistant==0.0.1
-PyJWT==2.10.1
+PyJWT==2.11.0
 pymicro-vad==1.0.1
 pyOpenSSL==25.3.0
 pyspeex-noise==1.0.2
