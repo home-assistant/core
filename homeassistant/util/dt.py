@@ -398,7 +398,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
-        res = sorted(int(x) for x in parameter)
+        res = [int(x) for x in parameter]
 
     for val in res:
         if val < min_value or val > max_value:
@@ -407,7 +407,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
                 f"({min_value} to {max_value})"
             )
 
-    return res
+    return sorted(set(res))
 
 
 def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
