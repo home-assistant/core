@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
+from .const import INTELLIGENT_HOSTING
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -42,8 +43,6 @@ class EcovacsSelectEntityDescription[EventT: Event](
     local_options: frozenset[str] = field(default_factory=frozenset)
 
 
-_INTELLIGENT_HOSTING = "intelligent_hosting"
-
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterAmountEvent](
         capability_fn=lambda caps: (
@@ -61,8 +60,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         capability_fn=lambda caps: caps.clean.work_mode,
         current_option_fn=lambda e: get_name_key(e.mode),
         options_fn=lambda cap: [get_name_key(mode) for mode in cap.types]
-        + [_INTELLIGENT_HOSTING],
-        local_options=frozenset({_INTELLIGENT_HOSTING}),
+        + [INTELLIGENT_HOSTING],
+        local_options=frozenset({INTELLIGENT_HOSTING}),
         key="work_mode",
         translation_key="work_mode",
         entity_registry_enabled_default=False,

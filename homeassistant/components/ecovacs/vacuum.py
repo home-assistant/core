@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import Capabilities, DeviceType
+from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.device import Device
 from deebot_client.events import (
     CachedMapInfoEvent,
@@ -27,11 +28,12 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, INTELLIGENT_HOSTING
 from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
@@ -318,6 +320,23 @@ class EcovacsVacuum(
 
     async def async_start(self) -> None:
         """Start the vacuum cleaner."""
+        if self._capability.clean.work_mode is not None:
+            did = self._device.device_info["did"]
+            entity_registry = er.async_get(self.hass)
+            work_mode_entity_id = entity_registry.async_get_entity_id(
+                "select", DOMAIN, f"{did}_work_mode"
+            )
+            if work_mode_entity_id and (
+                state := self.hass.states.get(work_mode_entity_id)
+            ):
+                if state.state == INTELLIGENT_HOSTING:
+                    await self._device.execute_command(
+                        CustomCommand(
+                            "clean_V2",
+                            {"act": "start", "content": {"type": "entrust"}},
+                        )
+                    )
+                    return
         await self._clean_command(CleanAction.START)
 
     async def _clean_command(self, action: CleanAction) -> None:

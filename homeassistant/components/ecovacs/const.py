@@ -40,6 +40,9 @@ LEGACY_SUPPORTED_LIFESPANS = (
 )
 
 
+INTELLIGENT_HOSTING = "intelligent_hosting"
+
+
 class InstanceMode(StrEnum):
     """Instance mode."""
 
