@@ -123,6 +123,7 @@ async def test_reconfigure_flow_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
@@ -143,9 +144,14 @@ async def test_reconfigure_flow_success(
         result["flow_id"], {CONF_HOST: new_host}
     )
 
-    # Verify entry is updated and flow is aborted
+    # Verify flow is aborted
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    # Flush pending tasks
+    await hass.async_block_till_done()
+
+    # Verify entry is updated
     assert mock_config_entry.data[CONF_HOST] == new_host
     assert mock_config_entry.data[CONF_SERIAL_NUMBER] == TEST_DEVICE_SN_GEN2
 
@@ -163,6 +169,7 @@ async def test_reconfigure_flow_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
+    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -195,11 +202,15 @@ async def test_reconfigure_flow_error(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
+    # Flush pending tasks
+    await hass.async_block_till_done()
+
 
 async def test_reconfigure_flow_different_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfigure aborts when connecting to a different device."""
     mock_config_entry.add_to_hass(hass)
@@ -228,3 +239,6 @@ async def test_reconfigure_flow_different_device(
     # Verify flow is aborted with correct reason
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "different_device"
+
+    # Flush pending tasks
+    await hass.async_block_till_done()
