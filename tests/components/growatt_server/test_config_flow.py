@@ -23,6 +23,7 @@ from homeassistant.components.growatt_server.const import (
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
     V1_API_ERROR_NO_PRIVILEGE,
+    V1_API_ERROR_RATE_LIMITED,
 )
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -887,7 +888,7 @@ async def test_reauth_token_non_auth_api_error(
     assert result["step_id"] == "reauth_confirm"
 
     error = growattServer.GrowattV1ApiError("Rate limit exceeded")
-    error.error_code = 10012  # V1_API_ERROR_RATE_LIMITED — not an auth error
+    error.error_code = V1_API_ERROR_RATE_LIMITED
     mock_growatt_v1_api.plant_list.side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT_TOKEN
