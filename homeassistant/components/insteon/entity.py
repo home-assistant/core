@@ -34,7 +34,7 @@ class InsteonEntity(Entity):
     _attr_should_poll = False
 
     def __init__(self, device, group):
-        """Initialize the INSTEON binary sensor."""
+        """Initialize the INSTEON entity."""
         self._insteon_device_group = device.groups[group]
         self._insteon_device = device
 
@@ -124,10 +124,14 @@ class InsteonEntity(Entity):
             async_dispatcher_connect(self.hass, load_signal, self._async_read_aldb)
         )
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
-        async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        )
         default_links_signal = f"{self.entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
-        async_dispatcher_connect(
-            self.hass, default_links_signal, self._async_add_default_links
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, default_links_signal, self._async_add_default_links
+            )
         )
         remove_signal = f"{self._insteon_device.address.id}_{SIGNAL_REMOVE_ENTITY}"
         self.async_on_remove(

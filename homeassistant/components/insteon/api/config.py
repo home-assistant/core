@@ -104,7 +104,7 @@ def remove_x10_device(hass: HomeAssistant, housecode: str, unitcode: int):
     hass.config_entries.async_update_entry(entry=config_entry, options=new_options)
 
 
-def add_device_overide(hass: HomeAssistant, override: DeviceOverride):
+def add_device_override(hass: HomeAssistant, override: DeviceOverride):
     """Add an Insteon device override."""
 
     config_entry = get_insteon_config_entry(hass)
@@ -270,12 +270,13 @@ async def websocket_add_device_override(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get the schema for the modem configuration."""
+    """Add a device override to the Insteon configuration."""
     override = msg[OVERRIDE]
     try:
-        add_device_overide(hass, override)
+        add_device_override(hass, override)
     except ValueError:
         connection.send_error(msg[ID], "duplicate", "Duplicate device address")
+        return
 
     connection.send_result(msg[ID])
 
@@ -293,7 +294,7 @@ async def websocket_remove_device_override(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get the schema for the modem configuration."""
+    """Remove a device override from the Insteon configuration."""
     address = Address(msg[DEVICE_ADDRESS])
     remove_device_override(hass, address)
     async_dispatcher_send(hass, SIGNAL_REMOVE_DEVICE_OVERRIDE, address)
