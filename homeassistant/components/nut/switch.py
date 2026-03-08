@@ -85,7 +85,6 @@ async def async_setup_entry(
         NUTSwitch(coordinator, description, data, unique_id)
         for description in switch_descriptions
     )
-
 class NUTSwitch(NUTBaseEntity, SwitchEntity):
     """Representation of a switch entity for NUT status values."""
 
