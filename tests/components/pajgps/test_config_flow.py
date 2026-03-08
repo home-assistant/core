@@ -27,8 +27,8 @@ from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
 
 from homeassistant.components.pajgps.config_flow import (
-    CustomFlow,
     OptionsFlowHandler,
+    PajGPSConfigFlow,
     _validate_credentials,
 )
 from homeassistant.data_entry_flow import AbortFlow
@@ -48,9 +48,9 @@ def _make_mock_config_entry(
     return entry
 
 
-def _make_flow() -> CustomFlow:
-    """Return a CustomFlow instance with a mocked hass."""
-    flow = CustomFlow()
+def _make_flow() -> PajGPSConfigFlow:
+    """Return a PajGPSConfigFlow instance with a mocked hass."""
+    flow = PajGPSConfigFlow()
     flow.hass = MagicMock()
     # async_create_entry and async_show_form are inherited from FlowHandler;
     # they just build result dicts — we call them directly without a real hass.
@@ -531,5 +531,5 @@ class TestAsyncGetOptionsFlow(unittest.TestCase):
     def test_returns_options_flow_handler(self):
         """async_get_options_flow must return an OptionsFlowHandler instance."""
         config_entry = MagicMock()
-        result = CustomFlow.async_get_options_flow(config_entry)
+        result = PajGPSConfigFlow.async_get_options_flow(config_entry)
         assert isinstance(result, OptionsFlowHandler)
