@@ -2,12 +2,19 @@
 
 from unittest.mock import Mock
 
+from arcam.fmj import ConnectionFailed
 import pytest
 
+from homeassistant.components.arcam_fmj.const import (
+    SIGNAL_CLIENT_DATA,
+    SIGNAL_CLIENT_STARTED,
+    SIGNAL_CLIENT_STOPPED,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .conftest import MOCK_UUID
+from .conftest import MOCK_HOST, MOCK_UUID
 
 SENSOR_KEYS = [
     "incoming_video_horizontal_resolution",
@@ -143,3 +150,150 @@ async def test_sensor_none_values(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_sensor_connection_failed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    state_1: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sensor handles ConnectionFailed during setup."""
+    state_1.update.side_effect = ConnectionFailed()
+
+    key = "incoming_audio_sample_rate"
+    entity_id = _get_entity_id(entity_registry, 1, key)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Connection lost during addition" in caplog.text
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_sensor_signal_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    state_1: Mock,
+) -> None:
+    """Test sensor updates on data signal."""
+    state_1.get_incoming_audio_sample_rate.return_value = 44100
+
+    key = "incoming_audio_sample_rate"
+    entity_id = _get_entity_id(entity_registry, 1, key)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "44100"
+
+    # Change value and send data signal
+    state_1.get_incoming_audio_sample_rate.return_value = 96000
+    async_dispatcher_send(hass, SIGNAL_CLIENT_DATA, MOCK_HOST)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "96000"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_sensor_signal_data_wrong_host(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    state_1: Mock,
+) -> None:
+    """Test sensor ignores data signal from different host."""
+    state_1.get_incoming_audio_sample_rate.return_value = 44100
+
+    key = "incoming_audio_sample_rate"
+    entity_id = _get_entity_id(entity_registry, 1, key)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "44100"
+
+    # Change value but send signal for wrong host
+    state_1.get_incoming_audio_sample_rate.return_value = 96000
+    async_dispatcher_send(hass, SIGNAL_CLIENT_DATA, "wrong_host")
+    await hass.async_block_till_done()
+
+    # State should not have changed
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "44100"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_sensor_signal_stopped(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    state_1: Mock,
+) -> None:
+    """Test sensor becomes unavailable on stopped signal."""
+    state_1.get_incoming_audio_sample_rate.return_value = 48000
+
+    key = "incoming_audio_sample_rate"
+    entity_id = _get_entity_id(entity_registry, 1, key)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "48000"
+
+    async_dispatcher_send(hass, SIGNAL_CLIENT_STOPPED, MOCK_HOST)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_sensor_signal_started(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    state_1: Mock,
+) -> None:
+    """Test sensor becomes available on started signal."""
+    state_1.get_incoming_audio_sample_rate.return_value = 48000
+
+    key = "incoming_audio_sample_rate"
+    entity_id = _get_entity_id(entity_registry, 1, key)
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # First make it unavailable
+    async_dispatcher_send(hass, SIGNAL_CLIENT_STOPPED, MOCK_HOST)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Then bring it back
+    async_dispatcher_send(hass, SIGNAL_CLIENT_STARTED, MOCK_HOST)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "48000"
