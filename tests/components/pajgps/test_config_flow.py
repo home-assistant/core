@@ -488,39 +488,73 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
 
     async def test_returns_none_on_successful_login(self):
         """A successful api.login() call must return None (no error)."""
-        with patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi:
+        mock_hass = MagicMock()
+        with (
+            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch(
+                "homeassistant.components.pajgps.config_flow.async_get_clientsession",
+                return_value=MagicMock(),
+            ),
+        ):
             MockApi.return_value.login = AsyncMock()
-            result = await _validate_credentials("user@example.com", "secret")
+            result = await _validate_credentials(
+                "user@example.com", "secret", mock_hass
+            )
 
         assert result is None
 
     async def test_returns_invalid_auth_on_authentication_error(self):
         """AuthenticationError from login() must map to 'invalid_auth'."""
-        with patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi:
+        mock_hass = MagicMock()
+        with (
+            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch(
+                "homeassistant.components.pajgps.config_flow.async_get_clientsession",
+                return_value=MagicMock(),
+            ),
+        ):
             MockApi.return_value.login = AsyncMock(
                 side_effect=AuthenticationError("bad creds")
             )
-            result = await _validate_credentials("user@example.com", "wrong")
+            result = await _validate_credentials("user@example.com", "wrong", mock_hass)
 
         assert result == "invalid_auth"
 
     async def test_returns_invalid_auth_on_token_refresh_error(self):
         """TokenRefreshError from login() must map to 'invalid_auth'."""
-        with patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi:
+        mock_hass = MagicMock()
+        with (
+            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch(
+                "homeassistant.components.pajgps.config_flow.async_get_clientsession",
+                return_value=MagicMock(),
+            ),
+        ):
             MockApi.return_value.login = AsyncMock(
                 side_effect=TokenRefreshError("refresh failed")
             )
-            result = await _validate_credentials("user@example.com", "secret")
+            result = await _validate_credentials(
+                "user@example.com", "secret", mock_hass
+            )
 
         assert result == "invalid_auth"
 
     async def test_returns_cannot_connect_on_generic_exception(self):
         """Any unexpected exception from login() must map to 'cannot_connect'."""
-        with patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi:
+        mock_hass = MagicMock()
+        with (
+            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch(
+                "homeassistant.components.pajgps.config_flow.async_get_clientsession",
+                return_value=MagicMock(),
+            ),
+        ):
             MockApi.return_value.login = AsyncMock(
                 side_effect=ConnectionError("timeout")
             )
-            result = await _validate_credentials("user@example.com", "secret")
+            result = await _validate_credentials(
+                "user@example.com", "secret", mock_hass
+            )
 
         assert result == "cannot_connect"
 
