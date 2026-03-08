@@ -44,7 +44,7 @@ async def async_migrate_entry(
         # Migrate the main plane from options to a subentry
         declination = entry.options.get(CONF_DECLINATION, 25)
         azimuth = entry.options.get(CONF_AZIMUTH, 180)
-        modules_power = entry.options.get(CONF_MODULES_POWER, 0)
+        modules_power = entry.options.get(CONF_MODULES_POWER, 1)
 
         subentry = ConfigSubentry(
             data=MappingProxyType(
