@@ -155,9 +155,9 @@ async def test_unique_id_migration_conflict(
 
 
 async def test_unique_id_migration_connection_failure(
-    hass: HomeAssistant, mock_account: MagicMock
+    hass: HomeAssistant,
 ) -> None:
-    """Test that migration succeeds without unique_id when API is unreachable."""
+    """Test that migration fails when the API is unreachable during unique_id backfill."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
@@ -169,16 +169,13 @@ async def test_unique_id_migration_connection_failure(
     with patch(
         "homeassistant.components.litterrobot.Account.connect",
         side_effect=LitterRobotException,
-    ), patch(
-        "homeassistant.components.litterrobot.coordinator.Account",
-        return_value=mock_account,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.unique_id is None
-    assert entry.minor_version == 2
-    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 1
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_remove_devices(

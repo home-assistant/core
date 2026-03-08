@@ -63,7 +63,7 @@ async def async_migrate_entry(
             user_id = account.user_id
         except LitterRobotException:
             _LOGGER.debug("Could not connect to set unique_id during migration")
-            user_id = None
+            return False
         finally:
             await account.disconnect()
 
