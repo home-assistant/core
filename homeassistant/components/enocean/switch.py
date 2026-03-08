@@ -133,10 +133,10 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
             msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
-            if "DT" in msg.values and msg.values["DT"].raw == 1:
+            if "DT" in msg.raw and msg.raw["DT"] == 1:
                 # this packet reports the current value
-                raw_val = msg.values["MR"].raw
-                divisor = msg.values["DIV"].raw
+                raw_val = msg.raw["MR"]
+                divisor = msg.raw["DIV"]
                 watts = raw_val / (10**divisor)
                 if watts > 1:
                     self._attr_is_on = True
@@ -149,9 +149,9 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 return
 
             msg = EEPHandler(eep).decode(telegram)
-            if msg.values["CMD"].raw == 4:
-                channel = msg.values["I/O"].raw
-                output = msg.values["OV"].raw
+            if msg.raw["CMD"] == 4:
+                channel = msg.raw["I/O"]
+                output = msg.raw["OV"]
                 if channel == self.channel:
                     self._attr_is_on = output > 0
                     self.schedule_update_ha_state()

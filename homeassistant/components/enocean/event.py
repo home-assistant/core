@@ -72,9 +72,9 @@ class EnOceanButtonEvent(NewEnOceanEntity, EventEntity):
     @callback
     def _handle_observation(self, observation: Observation) -> None:
         """Handle an incoming observation and fire an event if it matches."""
-        if observation.device_id != self.eurid:
+        if observation.device != self.eurid:
             return
-        if observation.entity_id != self.enocean_entity_id:
+        if observation.entity != self.enocean_entity_id:
             return
 
         push_button_value = observation.values.get(Observable.PUSH_BUTTON)
