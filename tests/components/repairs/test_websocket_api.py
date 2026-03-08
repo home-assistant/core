@@ -11,7 +11,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.config_entries import (
@@ -27,6 +26,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -215,6 +215,14 @@ class MockFixFlowCreateEntry(RepairsFlow):
                     step_id="reconfigure", data_schema=vol.Schema({})
                 )
 
+            async def async_step_fake(
+                self, user_input: dict[str, Any] | None = None
+            ) -> ConfigFlowResult:
+                """Handle a fake step."""
+                if user_input is not None:
+                    return self.async_update_and_abort(reason="fake")
+                return self.async_show_form(step_id="fake", data_schema=vol.Schema({}))
+
         class TestFlow(config_entries.ConfigFlow):
             """Test flow."""
 
@@ -333,7 +341,9 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
             if data["test"] == FlowType.CONFIG_SUBENTRIES_FLOW:
                 return MockFixFlowCreateEntry(flow_type=FlowType.CONFIG_SUBENTRIES_FLOW)
             if data["test"] == f"{FlowType.CONFIG_SUBENTRIES_FLOW}_invalid_source":
-                return MockFixFlowCreateEntry(init_step="fake")
+                return MockFixFlowCreateEntry(
+                    flow_type=FlowType.CONFIG_SUBENTRIES_FLOW, init_step="fake"
+                )
         return MockFixFlow()
 
     mock_platform(

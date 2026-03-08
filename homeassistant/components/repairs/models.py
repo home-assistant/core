@@ -75,6 +75,8 @@ class RepairsFlow(
             if flow_type in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
                 if flow_type == FlowType.CONFIG_FLOW:
                     flow = self.hass.config_entries.flow.async_get(flow_id)
+                    if "context" not in flow or "entry_id" not in flow["context"]:
+                        raise data_entry_flow.FlowError("entry_id is not in context")
                     entry_id = flow["context"]["entry_id"]
                 else:  # subentry flow
                     flow = self.hass.config_entries.subentries.async_get(flow_id)
