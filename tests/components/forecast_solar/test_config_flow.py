@@ -283,7 +283,7 @@ async def test_subentry_flow_no_api_key(
     config_entry = MockConfigEntry(
         title="Green House",
         unique_id="unique",
-        version=2,
+        version=3,
         domain=DOMAIN,
         data={
             CONF_LATITUDE: 52.42,
