@@ -1,0 +1,91 @@
+rules:
+  # Bronze
+  config-flow: done
+  brands: done
+  dependency-transparency: done
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup: done
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register actions.
+  runtime-data: done
+
+  # Silver
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: done
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register actions.
+  docs-installation-parameters: done
+  integration-owner: done
+  parallel-updates:
+    status: todo
+    comment: |
+      No platform defines the PARALLEL_UPDATES constant yet. Read-only platforms (binary_sensor, sensor)
+      should set it to 0; action platforms should declare an explicit limit.
+  test-coverage:
+    status: todo
+    comment: |
+      Several test gaps are still visible:
+      test_form_cloud and test_form_only_cloud_supported only check that setup was called, not the created entry data or unique ID;
+      test_form_invalid_auth_cloud still stops at the error form instead of proving the flow can recover to ABORT or CREATE_ENTRY;
+      test_dhcp_flow and test_zeroconf_flow still do not assert the discovered unique ID;
+      test_init.py still uses async_setup_component() instead of hass.config_entries.async_setup().
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not provide configuration parameters.
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: done
+  entity-device-class: done
+  entity-translations:
+    status: todo
+    comment: |
+      OverkizEntity still sets _attr_name = None in the base class, and OverkizDescriptiveEntity still assigns raw description.name strings.
+      Name handling should be moved to the entities that really need custom names so translated entity names can be implemented consistently.
+  docs-data-update: done
+  entity-disabled-by-default: done
+  discovery: done
+  exception-translations: todo
+  devices: done
+  docs-supported-devices: done
+  icon-translations: todo
+  docs-known-limitations: done
+  stale-devices:
+    status: todo
+    comment: |
+      coordinator.py already removes the device registry entry on DEVICE_REMOVED and deletes the device from coordinator.devices.
+      This still needs a clear determination of whether the current cleanup behavior fully satisfies the stale-devices rule.
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: done
+  dynamic-devices:
+    status: todo
+    comment: |
+      coordinator.py reloads the config entry when Overkiz emits DEVICE_CREATED or DEVICE_UPDATED.
+      This still needs a clear determination of whether reloading on new devices is sufficient for this rule, or whether devices should be added without a full integration reload.
+  docs-troubleshooting: todo
+  diagnostics: done
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: done
+  strict-typing: done
+  inject-websession: done
