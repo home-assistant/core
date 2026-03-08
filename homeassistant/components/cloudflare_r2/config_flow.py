@@ -34,6 +34,23 @@ from .const import (
     DOMAIN,
 )
 
+S3_API_VERSION = "2006-03-01"
+
+
+def _preload_botocore_data(session: AioSession) -> None:
+    """Pre-load botocore S3 data to avoid blocking the event loop.
+
+    botocore performs synchronous file I/O (os.listdir, gzip.open) when loading
+    service model data during client creation. Pre-loading the data into the
+    session's internal loader cache avoids these blocking calls.
+    """
+    loader = session.get_component("data_loader")
+    loader.load_service_model("s3", "service-2", S3_API_VERSION)
+    loader.load_service_model("s3", "endpoint-rule-set-1", S3_API_VERSION)
+    loader.load_data("partitions")
+    loader.load_data("sdk-default-configuration")
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCESS_KEY_ID): cv.string,
@@ -74,11 +91,15 @@ class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     session = AioSession()
+                    await self.hass.async_add_executor_job(
+                        _preload_botocore_data, session
+                    )
                     async with session.create_client(
                         "s3",
                         endpoint_url=user_input.get(CONF_ENDPOINT_URL),
                         aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
                         aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
+                        api_version=S3_API_VERSION,
                     ) as client:
                         await client.head_bucket(Bucket=user_input[CONF_BUCKET])
                 except ClientError:

@@ -33,18 +33,38 @@ type R2ConfigEntry = ConfigEntry[S3Client]
 _LOGGER = logging.getLogger(__name__)
 
 
+S3_API_VERSION = "2006-03-01"
+
+
+def _preload_botocore_data(session: AioSession) -> None:
+    """Pre-load botocore S3 data to avoid blocking the event loop.
+
+    botocore performs synchronous file I/O (os.listdir, gzip.open) when loading
+    service model data during client creation. Pre-loading the data into the
+    session's internal loader cache avoids these blocking calls.
+    """
+    loader = session.get_component("data_loader")
+    loader.load_service_model("s3", "service-2", S3_API_VERSION)
+    loader.load_service_model("s3", "endpoint-rule-set-1", S3_API_VERSION)
+    loader.load_data("partitions")
+    loader.load_data("sdk-default-configuration")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
     """Set up Cloudflare R2 from a config entry."""
 
     data = cast(dict, entry.data)
+    session = AioSession()
+    await hass.async_add_executor_job(_preload_botocore_data, session)
+
     try:
-        session = AioSession()
         # pylint: disable-next=unnecessary-dunder-call
         client = await session.create_client(
             "s3",
             endpoint_url=data.get(CONF_ENDPOINT_URL),
             aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=data[CONF_ACCESS_KEY_ID],
+            api_version=S3_API_VERSION,
         ).__aenter__()
         await client.head_bucket(Bucket=data[CONF_BUCKET])
     except ClientError as err:
