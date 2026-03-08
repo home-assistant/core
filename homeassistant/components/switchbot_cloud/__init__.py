@@ -33,6 +33,7 @@ PLATFORMS: list[Platform] = [
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
@@ -62,6 +63,7 @@ class SwitchbotDevices:
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     humidifiers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    images: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -196,7 +198,7 @@ async def make_device_data(
         devices_data.sensors.append((device, coordinator))
         devices_data.binary_sensors.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in ["Bot"]:
+    if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
@@ -206,9 +208,7 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
-        "Relay Switch 2PM",
-    ]:
+    if isinstance(device, Device) and device.device_type == "Relay Switch 2PM":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
@@ -230,13 +230,13 @@ async def make_device_data(
         )
         devices_data.sensors.append((device, coordinator))
         devices_data.binary_sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in ["Hub 3"]:
+    if isinstance(device, Device) and device.device_type == "Hub 3":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
         )
         devices_data.sensors.append((device, coordinator))
         devices_data.binary_sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in ["Water Detector"]:
+    if isinstance(device, Device) and device.device_type == "Water Detector":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
         )
@@ -265,9 +265,7 @@ async def make_device_data(
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Garage Door Opener",
-    ]:
+    if isinstance(device, Device) and device.device_type == "Garage Door Opener":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
@@ -310,6 +308,14 @@ async def make_device_data(
         )
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type == "AI Art Frame":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.buttons.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+        devices_data.images.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -502,7 +502,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
             for choice in self.config["choices"].values():
                 try:
                     validated = selector(choice["selector"])(data)  # type: ignore[operator]
-                except (vol.Invalid, vol.MultipleInvalid):
+                except vol.Invalid, vol.MultipleInvalid:
                     continue
                 else:
                     return validated
@@ -838,6 +838,7 @@ class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
 
@@ -853,9 +854,11 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable seconds field in frontend.
+            vol.Optional("enable_second", default=True): cv.boolean,
             # Enable millisecond field in frontend.
             vol.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations. Will default to False in HA Core 2025.6.0.
+            # Allow negative durations.
             vol.Optional("allow_negative"): cv.boolean,
         }
     )
@@ -866,7 +869,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", True):
+        if self.config.get("allow_negative", False):
             cv.time_period_dict(data)
         else:
             cv.positive_time_period_dict(data)

@@ -104,7 +104,7 @@ class Pet(SurePetcareBinarySensor):
         state = surepy_entity.location
         try:
             self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             self._attr_is_on = False
         if state:
             self._attr_extra_state_attributes = {

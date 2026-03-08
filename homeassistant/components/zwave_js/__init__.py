@@ -737,7 +737,7 @@ class ControllerEvents:
             name=node.name or node.device_config.description or f"Node {node.node_id}",
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location if node.location else UNDEFINED,
+            suggested_area=node.location or UNDEFINED,
             via_device=via_identifier,
         )
 

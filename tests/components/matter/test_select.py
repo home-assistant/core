@@ -29,7 +29,7 @@ async def test_selects(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SELECT)
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_mode_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -79,7 +79,7 @@ async def test_mode_select_entities(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_attribute_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -218,7 +218,7 @@ async def test_map_select_entities(
     assert state.state == "normal"
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -237,7 +237,7 @@ async def test_pump(
     assert state.state == "local"
 
 
-@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+@pytest.mark.parametrize("node_fixture", ["mock_microwave_oven"])
 async def test_microwave_oven(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -248,7 +248,7 @@ async def test_microwave_oven(
     # SupportedWatts    from MicrowaveOvenControl cluster (1/96/6)
     # SelectedWattIndex from MicrowaveOvenControl cluster (1/96/7)
     matter_client.write_attribute.reset_mock()
-    state = hass.states.get("select.microwave_oven_power_level_w")
+    state = hass.states.get("select.mock_microwave_oven_power_level_w")
     assert state
     assert state.state == "1000"
     assert state.attributes["options"] == [
@@ -269,7 +269,7 @@ async def test_microwave_oven(
         "select",
         "select_option",
         {
-            "entity_id": "select.microwave_oven_power_level_w",
+            "entity_id": "select.mock_microwave_oven_power_level_w",
             "option": "900",
         },
         blocking=True,

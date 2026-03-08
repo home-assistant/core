@@ -1,6 +1,6 @@
 """Diagnostic tests for airOS."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,6 +21,7 @@ async def test_diagnostics(
     mock_config_entry: MockConfigEntry,
     ap_fixture: AirOS8Data,
     snapshot: SnapshotAssertion,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test diagnostics."""
 

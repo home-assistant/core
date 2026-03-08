@@ -112,7 +112,7 @@ def _get_title(id_string: str) -> str:
         # Format is S://server/share/folder
         # If just S: this will be in the mappings; otherwise use the last folder in path.
         title = LIBRARY_TITLES_MAPPING.get(
-            id_string, urllib.parse.unquote(id_string.split("/")[-1])
+            id_string, urllib.parse.unquote(id_string.rsplit("/", maxsplit=1)[-1])
         )
     else:
         parts = id_string.split("/")
@@ -330,7 +330,7 @@ async def root_payload(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
-                thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
+                thumbnail="/api/brands/integration/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -345,7 +345,7 @@ async def root_payload(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="library",
-                thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
+                thumbnail="/api/brands/integration/sonos/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -358,7 +358,7 @@ async def root_payload(
                 media_class=MediaClass.APP,
                 media_content_id="",
                 media_content_type="plex",
-                thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+                thumbnail="/api/brands/integration/plex/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -585,10 +585,30 @@ def get_media(
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
     if item_id.startswith("A:ALBUM/") or search_type == "tracks":
-        search_term = urllib.parse.unquote(item_id.split("/")[-1])
+        # Some Sonos libraries return album ids in the shape:
+        # A:ALBUM/<album>/<artist>, where the artist part disambiguates results.
+        # Use the album segment for searching.
+        if item_id.startswith("A:ALBUM/"):
+            splits = item_id.split("/")
+            search_term = urllib.parse.unquote(splits[1]) if len(splits) > 1 else ""
+            album_title: str | None = search_term
+        else:
+            search_term = urllib.parse.unquote(item_id.split("/")[-1])
+            album_title = None
+
         matches = media_library.get_music_library_information(
             search_type, search_term=search_term, full_album_art_uri=True
         )
+        if item_id.startswith("A:ALBUM/") and len(matches) > 1:
+            if result := next(
+                (item for item in matches if item_id == item.item_id), None
+            ):
+                matches = [result]
+            elif album_title:
+                if result := next(
+                    (item for item in matches if album_title == item.title), None
+                ):
+                    matches = [result]
     elif search_type == SONOS_SHARE:
         # In order to get the MusicServiceItem, we browse the parent folder
         # and find one that matches on item_id.

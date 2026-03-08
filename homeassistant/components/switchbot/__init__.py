@@ -1,6 +1,9 @@
 """Support for Switchbot devices."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import switchbot
 
@@ -20,10 +23,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     ENCRYPTED_MODELS,
@@ -48,7 +53,11 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
-    SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
+    SupportedModels.HYGROMETER_CO2.value: [
+        Platform.BUTTON,
+        Platform.SENSOR,
+        Platform.SELECT,
+    ],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
@@ -118,8 +127,16 @@ PLATFORMS_BY_TYPE = {
         Platform.BINARY_SENSOR,
         Platform.BUTTON,
     ],
-    SupportedModels.KEYPAD_VISION.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
-    SupportedModels.KEYPAD_VISION_PRO.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.KEYPAD_VISION.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+    ],
+    SupportedModels.KEYPAD_VISION_PRO.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -159,6 +176,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.HYGROMETER_CO2.value: switchbot.SwitchbotMeterProCO2,
 }
 
 
@@ -183,12 +201,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_ADDRESS: mac},
-        )
-
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
@@ -241,6 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         entry.data.get(CONF_NAME, entry.title),
         connectable,
         switchbot_model,
+        entry,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
@@ -254,6 +267,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
+    """Migrate old entry."""
+    version = entry.version
+    minor_version = entry.minor_version
+    _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
+
+    if version > 1:
+        return False
+
+    if version == 1 and minor_version < 2:
+        new_options: dict[str, Any] = {**entry.options}
+
+        if CONF_RETRY_COUNT not in new_options:
+            new_options[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
+
+        sensor_type = entry.data.get(CONF_SENSOR_TYPE)
+        if (
+            sensor_type == SupportedModels.CURTAIN
+            and CONF_CURTAIN_SPEED not in new_options
+        ):
+            new_options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+
+        hass.config_entries.async_update_entry(
+            entry,
+            options=new_options,
+            minor_version=2,
+        )
+        _LOGGER.debug("Migration to version %s.2 successful", version)
 
     return True
 

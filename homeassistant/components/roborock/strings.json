@@ -9,6 +9,7 @@
       "invalid_code": "The code you entered was incorrect, please check it and try again.",
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
+      "invalid_email_or_region": "Either there is no account associated with the email you entered, or there is no account in the selected region.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
@@ -30,9 +31,11 @@
       },
       "user": {
         "data": {
+          "region": "Roborock server region",
           "username": "[%key:common::config_flow::data::email%]"
         },
         "data_description": {
+          "region": "The server region your Roborock account is registered in when setting up the app. Auto is recommended unless you are having issues.",
           "username": "The email address used to sign in to the Roborock app."
         },
         "description": "Enter your Roborock email address."
@@ -47,6 +50,13 @@
       "clean_fluid_empty": {
         "name": "Cleaning fluid"
       },
+      "detergent_empty": {
+        "name": "Detergent",
+        "state": {
+          "off": "Available",
+          "on": "[%key:common::state::empty%]"
+        }
+      },
       "dirty_box_full": {
         "name": "Dirty water box"
       },
@@ -59,6 +69,13 @@
       "mop_drying_status": {
         "name": "Mop drying"
       },
+      "softener_empty": {
+        "name": "Softener",
+        "state": {
+          "off": "Available",
+          "on": "[%key:common::state::empty%]"
+        }
+      },
       "water_box_attached": {
         "name": "Water box attached"
       },
@@ -67,6 +84,9 @@
       }
     },
     "button": {
+      "pause": {
+        "name": "Pause"
+      },
       "reset_air_filter_consumable": {
         "name": "Reset air filter consumable"
       },
@@ -78,6 +98,12 @@
       },
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      },
+      "start": {
+        "name": "Start"
       }
     },
     "number": {
@@ -94,6 +120,25 @@
           "vacuum": "Vacuum only"
         }
       },
+      "detergent_type": {
+        "name": "Detergent type",
+        "state": {
+          "empty": "[%key:common::state::empty%]",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "drying_mode": {
+        "name": "Drying mode",
+        "state": {
+          "iron": "Iron",
+          "none": "No drying",
+          "quick": "Quick",
+          "store": "Store",
+          "time_dry": "Time dry"
+        }
+      },
       "dust_collection_mode": {
         "name": "Empty mode",
         "state": {
@@ -101,6 +146,19 @@
           "light": "Light",
           "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
           "smart": "Smart"
+        }
+      },
+      "mode": {
+        "name": "Operating mode",
+        "state": {
+          "drain": "Drain",
+          "dry": "Dry",
+          "heavy": "Heavy",
+          "pre_wash": "Pre-wash",
+          "rinse_spin": "Rinse & spin",
+          "spin": "Spin",
+          "wash": "Wash",
+          "wash_and_dry": "Wash and dry"
         }
       },
       "mop_intensity": {
@@ -115,9 +173,12 @@
           "max": "Max",
           "medium": "[%key:common::state::medium%]",
           "mild": "Mild",
+          "min": "Min",
           "moderate": "Moderate",
           "off": "[%key:common::state::off%]",
+          "slight": "Slight",
           "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
+          "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
           "vac_followed_by_mop": "Vacuum followed by mop"
         }
       },
@@ -132,8 +193,89 @@
           "standard": "Standard"
         }
       },
+      "program": {
+        "name": "Wash program",
+        "state": {
+          "air_refresh": "Air refresh",
+          "anti_allergen": "Anti-allergen",
+          "anti_mites": "Anti-mites",
+          "baby_care": "Baby care",
+          "bedding": "Bedding",
+          "boiling_wash": "Boiling wash",
+          "bra": "Bra",
+          "cotton_linen": "Cotton/Linen",
+          "custom": "Custom",
+          "down": "Down",
+          "down_clean": "Down clean",
+          "exo_40_60": "Exo 40/60",
+          "gentle": "Gentle",
+          "intensive": "Intensive",
+          "new_clothes": "New clothes",
+          "night": "Night",
+          "panties": "Panties",
+          "quick": "Quick",
+          "rinse_and_spin": "Rinse and spin",
+          "sanitize": "Sanitize",
+          "season": "Season",
+          "shirts": "Shirts",
+          "silk": "Silk",
+          "socks": "Socks",
+          "sportswear": "Sportswear",
+          "stain_removal": "Stain removal",
+          "standard": "Standard",
+          "synthetics": "Synthetics",
+          "t_shirts": "T-shirts",
+          "towels": "Towels",
+          "twenty_c": "20°C",
+          "underwear": "Underwear",
+          "warming": "Warming",
+          "wool": "Wool"
+        }
+      },
+      "rinse_times": {
+        "name": "Rinse times",
+        "state": {
+          "high": "4",
+          "low": "2",
+          "max": "5",
+          "mid": "3",
+          "min": "1",
+          "none": "Default"
+        }
+      },
       "selected_map": {
         "name": "Selected map"
+      },
+      "softener_type": {
+        "name": "Softener type",
+        "state": {
+          "empty": "[%key:common::state::empty%]",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "spin_level": {
+        "name": "Spin level",
+        "state": {
+          "high": "1000 RPM",
+          "max": "1400 RPM",
+          "mid": "800 RPM",
+          "none": "Default",
+          "very_high": "1200 RPM",
+          "very_low": "600 RPM"
+        }
+      },
+      "temperature": {
+        "name": "Water temperature",
+        "state": {
+          "30": "30°C",
+          "40": "40°C",
+          "60": "60°C",
+          "90": "90°C",
+          "auto": "[%key:common::state::auto%]",
+          "cold": "Cold"
+        }
       },
       "water_flow": {
         "name": "Water flow",
@@ -301,6 +443,9 @@
       "strainer_time_left": {
         "name": "Strainer time left"
       },
+      "times_after_clean": {
+        "name": "Times after clean"
+      },
       "total_cleaning_area": {
         "name": "Total cleaning area"
       },
@@ -369,14 +514,14 @@
           "communication_error": "Communication error",
           "door_lock_error": "Door lock error",
           "drain_error": "Drain error",
-          "drying_error": "Drying error",
-          "drying_error_e_12": "Drying error E12",
+          "drying_error": "Drying error: check air inlet temperature sensor",
+          "drying_error_e_12": "Drying error: check air outlet temperature sensor",
           "drying_error_e_13": "Drying error E13",
-          "drying_error_e_14": "Drying error E14",
-          "drying_error_e_15": "Drying error E15",
-          "drying_error_e_16": "Drying error E16",
-          "drying_error_restart": "Restart the washer",
-          "drying_error_water_flow": "Check water flow",
+          "drying_error_e_14": "Drying error: check inlet condenser temperature sensor",
+          "drying_error_e_15": "Drying error: check heating element or turntable",
+          "drying_error_e_16": "Drying error: check drying fan",
+          "drying_error_restart": "Drying error: restart the washer",
+          "drying_error_water_flow": "Drying error: check water flow",
           "heating_error": "Heating error",
           "inverter_error": "Inverter error",
           "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
@@ -414,6 +559,9 @@
       "off_peak_switch": {
         "name": "Off-peak charging"
       },
+      "sound_setting": {
+        "name": "Sound setting"
+      },
       "status_indicator": {
         "name": "Status indicator light"
       }
@@ -445,6 +593,7 @@
               "max_plus": "Max plus",
               "medium": "[%key:common::state::medium%]",
               "off": "[%key:common::state::off%]",
+              "off_raise_main_brush": "Off (raised brush)",
               "quiet": "Quiet",
               "silent": "Silent",
               "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
@@ -457,6 +606,9 @@
     }
   },
   "exceptions": {
+    "button_press_failed": {
+      "message": "Failed to press button"
+    },
     "command_failed": {
       "message": "Error while calling {command}"
     },
@@ -484,6 +636,12 @@
     "position_not_found": {
       "message": "Robot position not found"
     },
+    "segment_id_parse_error": {
+      "message": "Invalid segment ID format: {segment_id}"
+    },
+    "select_option_failed": {
+      "message": "Failed to set selected option"
+    },
     "update_data_fail": {
       "message": "Failed to update data"
     },
@@ -497,7 +655,6 @@
       "title": "Cloud API used"
     }
   },
-
   "options": {
     "step": {
       "drawables": {
@@ -542,6 +699,17 @@
           "zones": "Show zones on the map."
         },
         "description": "Specify which features to draw on the map."
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "auto": "Auto",
+        "cn": "CN",
+        "eu": "EU",
+        "ru": "RU",
+        "us": "US"
       }
     }
   },

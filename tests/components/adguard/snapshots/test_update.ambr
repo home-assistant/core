@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/adguard/icon.png',
+      'entity_picture': '/api/brands/integration/adguard/icon.png',
       'friendly_name': 'AdGuard Home',
       'in_progress': False,
       'installed_version': 'v0.107.50',

@@ -4,21 +4,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from satel_integra.satel_integra import AsyncSatel
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_SWITCHABLE_OUTPUT_NUMBER,
-    SIGNAL_OUTPUTS_UPDATED,
+    DOMAIN,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
 
 
@@ -29,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra switch devices."""
 
-    controller = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
 
     switchable_output_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
@@ -42,7 +40,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraSwitch(
-                    controller,
+                    runtime_data.coordinator_outputs,
                     config_entry.entry_id,
                     subentry,
                     switchable_output_num,
@@ -53,12 +51,14 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
+class SatelIntegraSwitch(
+    SatelIntegraEntity[SatelIntegraOutputsCoordinator], SwitchEntity
+):
     """Representation of an Satel Integra switch."""
 
     def __init__(
         self,
-        controller: AsyncSatel,
+        coordinator: SatelIntegraOutputsCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
@@ -66,7 +66,7 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(
-            controller,
+            coordinator,
             config_entry_id,
             subentry,
             device_number,
@@ -74,33 +74,38 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
         self._code = code
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self._attr_is_on = self._device_number in self._satel.violated_outputs
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
-            )
-        )
+        self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
-    def _devices_updated(self, outputs: dict[int, int]) -> None:
-        """Update switch state, if needed."""
-        if self._device_number in outputs:
-            new_state = outputs[self._device_number] == 1
-            if new_state != self._attr_is_on:
-                self._attr_is_on = new_state
-                self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self._get_state_from_coordinator()
+        self.async_write_ha_state()
+
+    def _get_state_from_coordinator(self) -> bool | None:
+        """Method to get switch state from coordinator data."""
+        return self.coordinator.data.get(self._device_number)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._satel.set_output(self._code, self._device_number, True)
+        if self._code is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_output_access_code",
+            )
+
+        await self._controller.set_output(self._code, self._device_number, True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._satel.set_output(self._code, self._device_number, False)
+        if self._code is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_output_access_code",
+            )
+
+        await self._controller.set_output(self._code, self._device_number, False)
         self._attr_is_on = False
         self.async_write_ha_state()
